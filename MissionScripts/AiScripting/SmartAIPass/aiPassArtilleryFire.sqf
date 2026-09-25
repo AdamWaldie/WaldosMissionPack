@@ -8,8 +8,9 @@
  * the ammo or magazine name) and fires two rounds, or does nothing if the battery has none. The aim point is displaced by the target's
  * position error plus 1% of the range (capped at 150 m), from Digii. A mission that the engine
  * reports as unreachable (getArtilleryETA below 0) is not fired. The battery is busy until its rounds
- * have landed. With Waldo_AIPass_Artillery_ShootAndScoot, a mobile battery drives 200-350 m to a new
- * position once the mission is complete, through an inserted waypoint.
+ * have landed. With shoot and scoot on (Waldo_AIPass_Artillery_ShootAndScoot for support,
+ * Waldo_AIPass_CounterBattery_ShootAndScoot for counter-battery), a mobile battery drives 200-350 m
+ * to a new position once the mission is complete, through an inserted waypoint.
  * Locality and authority: call where the artillery vehicle is local.
  *
  * Arguments:
@@ -17,6 +18,8 @@
  * 1: target <ARRAY> - ATL position
  * 2: error <NUMBER> - estimated position error in metres (optional, default: 0)
  * 3: mode <STRING> - "HE" or "SMOKE" (optional, default: "HE")
+ * 4: rounds <NUMBER> - HE rounds to fire (optional, default: -1 = Waldo_AIPass_Artillery_Rounds)
+ * 5: shoot and scoot <BOOL, NUMBER> (optional, default: -1 = Waldo_AIPass_Artillery_ShootAndScoot)
  *
  * Return Value:
  * Boolean - true when the mission was fired
@@ -28,7 +31,10 @@
  * Current callers: Waldo_fnc_AIPassArtilleryRequest and the counter-battery handler.
  */
 
-params [["_battery", objNull, [objNull]], ["_target", [], [[]]], ["_error", 0, [0]], ["_mode", "HE", [""]]];
+params [["_battery", objNull, [objNull]], ["_target", [], [[]]], ["_error", 0, [0]], ["_mode", "HE", [""]],
+    ["_roundsWanted", -1, [0]], ["_scoot", -1, [0, true]]];
+if (_roundsWanted < 1) then {_roundsWanted = missionNamespace getVariable ["Waldo_AIPass_Artillery_Rounds", 3]};
+if (_scoot isEqualType 0) then {_scoot = missionNamespace getVariable ["Waldo_AIPass_Artillery_ShootAndScoot", true]};
 if (isNull _battery || {!alive _battery} || {!local _battery} || {!alive gunner _battery} || {count _target < 2}) exitWith {false};
 private _smoke = toUpperANSI _mode == "SMOKE";
 private _best = "";
@@ -50,12 +56,12 @@ private _aim = _target getPos [random _dispersion, random 360];
 if !(_aim inRangeOfArtillery [[_battery], _best]) exitWith {false};
 private _eta = _battery getArtilleryETA [_aim, _best];
 if (_eta < 0) exitWith {false};
-private _rounds = [(missionNamespace getVariable ["Waldo_AIPass_Artillery_Rounds", 3]) max 1, 2] select _smoke;
+private _rounds = [_roundsWanted max 1, 2] select _smoke;
 _battery doArtilleryFire [_aim, _best, _rounds];
 _battery setVariable ["Waldo_AIPass_BusyUntil", time + _eta + _rounds * 6 + 20];
 missionNamespace setVariable ["Waldo_AIPass_ArtilleryMissions", (missionNamespace getVariable ["Waldo_AIPass_ArtilleryMissions", 0]) + 1];
 diag_log format ["[WMP AI PASS] Artillery %1 fired %2 x %3 at %4 (eta %5 s)", typeOf _battery, _rounds, _best, _aim, round _eta];
-if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_ShootAndScoot", true]) && {!(_battery isKindOf "StaticWeapon")}) then {
+if (_scoot && {!(_battery isKindOf "StaticWeapon")}) then {
     [{
         params ["_job"];
         private _battery = _job get "battery";

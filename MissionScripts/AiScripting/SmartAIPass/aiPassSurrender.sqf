@@ -35,7 +35,7 @@ private _aceCaptives = !isNil "ace_captives_fnc_setSurrendered";
             private _weapon = _loadout select _x;
             if (_weapon isNotEqualTo []) then {_holder addWeaponWithAttachmentsCargoGlobal [_weapon, 1]};
         } forEach [0, 1, 2];
-        {_unit removeWeaponGlobal _x} forEach [primaryWeapon _unit, secondaryWeapon _unit, handgunWeapon _unit];
+        {_unit removeWeaponGlobal _x} forEach ([primaryWeapon _unit, secondaryWeapon _unit, handgunWeapon _unit] select {_x != ""});
         _unit setVariable ["Waldo_AIPass_Exclude", true, true];
         _unit setVariable ["Waldo_AI_Exclude", true, true];
         if (_aceCaptives) then {

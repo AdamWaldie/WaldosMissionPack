@@ -420,6 +420,11 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Reinforce_Enable` | Idle nearby squads move up behind a squad in contact. Default `true`. |
 | `Waldo_AIPass_Reinforce_Radius` | How far away responding squads may be. Default `600`. |
 | `Waldo_AIPass_Reinforce_MaxResponders` | Responding squads per squad in contact. Default `2`. |
+| `Waldo_AIPass_BehaviourProfile` | Tactics profile for every squad without its own or its faction's; `""` follows the AI Rebalance profile. Live-tunable with the AI Tuning Zeus module, like every setting marked *(AI Tuning)* below. Default `""`. |
+| `Waldo_AIPass_Aggression` | *(AI Tuning)* Scales how often squads flank, assault, advance, investigate and coordinate. Default `1`. |
+| `Waldo_AIPass_Cohesion` | *(AI Tuning)* Above `1` squads take more before morale breaks, below `1` they break sooner. Default `1`. |
+| `Waldo_AIPass_ReactionSpeed` | *(AI Tuning)* Above `1` squads re-assess more often (more server time). Default `1`. |
+| `Waldo_AIPass_Artillery_DefaultRole` | *(AI Tuning)* Missions a gun takes without its own role: `SUPPORT`, `COUNTER` or `BOTH`. Default `"BOTH"`. |
 | `Waldo_AIPass_Artillery_Enable` | Squads call fire from friendly AI artillery on well-located enemies only. Default `false`. |
 | `Waldo_AIPass_Artillery_Rounds` | Rounds per fire mission. Default `3`. |
 | `Waldo_AIPass_Artillery_MinFriendlyDistance` | No mission lands within this distance of friendlies or civilians. Default `200`. |
@@ -430,6 +435,11 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_CounterBattery_Mode` | KNOWN answers only spotted batteries; RADAR also uses radars registered with Waldo_fnc_AIPassRegisterRadar. Default `"KNOWN"`. |
 | `Waldo_AIPass_CounterBattery_RadarRange` | Detection range of a registered counter-battery radar. Default `8000`. |
 | `Waldo_AIPass_CounterBattery_Delay` | Seconds before counter-battery fire is returned. Default `20`. |
+| `Waldo_AIPass_CounterBattery_Rounds` | *(AI Tuning)* Rounds per counter-battery mission. Default `4`. |
+| `Waldo_AIPass_CounterBattery_MaxError` | *(AI Tuning)* Largest enemy-gun position error accepted in KNOWN mode. Default `100`. |
+| `Waldo_AIPass_CounterBattery_MinFriendlyDistance` | *(AI Tuning)* No counter-battery fire when friendlies or civilians are this close to the enemy gun. Default `200`. |
+| `Waldo_AIPass_CounterBattery_Interval` | *(AI Tuning)* Seconds before the same enemy gun is answered again. Default `60`. |
+| `Waldo_AIPass_CounterBattery_ShootAndScoot` | *(AI Tuning)* Mobile guns relocate after a counter-battery mission. Default `true`. |
 | `Waldo_AIPass_Airborne_Enable` | AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. Default `false`. |
 | `Waldo_AIPass_Airborne_ApproachDistance` | Within this distance (m) of a known enemy the aircraft climbs to jump altitude. Default `2000`. |
 | `Waldo_AIPass_Airborne_DeployDistance` | The squad jumps once its aircraft is this close (m) to a known enemy. Default `700`. |

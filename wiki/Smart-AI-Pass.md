@@ -32,7 +32,10 @@ it any order, the pass steps back from that squad:
 The squad is left alone for `Waldo_AIPass_ZeusHoldSeconds` (default 120 s) after the last Zeus
 interaction. If Zeus gave it waypoints, it is left alone until it has finished them. The pass never
 removes or reorders a Zeus waypoint, and Zeus waypoints also cancel any WMP garrison, defence or clear
-order on that squad. Use **AI Orders** to keep a squad for Zeus permanently, or to hand it back.
+order on that squad. Use **AI Orders** to keep a squad for Zeus permanently, or to hand it back. An
+order given through **AI Orders** (garrison, defend, clear, parachute out) counts as handing the squad
+to the pass: it clears the hold Zeus set by selecting the squad, and any earlier Zeus waypoints, so they
+cannot refuse or cancel the order.
 
 ## Enable the pass
 
@@ -110,10 +113,59 @@ pass never changes them. Behaviour profiles set how willing a squad is to fight 
 A squad uses, in order:
 1. its own profile (`(group this) setVariable ["Waldo_AIPass_Profile", "ELITE", true];`);
 2. its faction's entry in `Waldo_AIPass_FactionProfiles`;
-3. the active AI Rebalance profile;
-4. LINE.
+3. `Waldo_AIPass_BehaviourProfile`, the mission-wide choice (empty follows AI Rebalance);
+4. the active AI Rebalance profile;
+5. LINE.
 
 Edit `Waldo_AIPass_ProfileBehaviour` in `aiConfig.sqf` to change the numbers.
+
+## Difficulty and tuning
+
+These settings set how hard the AI are without touching their skill values. Set them in
+`aiConfig.sqf` for the start of the mission, and change any of them during play with **WMP AI & Combat
+> AI Tuning** in Zeus. Changes reach the server and every headless client at once, including
+headless clients that join later. Each squad uses them from its next step; nothing restarts.
+
+| Setting | Default | Effect |
+|---|---|---|
+| `Waldo_AIPass_BehaviourProfile` | `""` | Tactics profile for every squad without its own or its faction's. Empty follows the AI Rebalance profile. |
+| `Waldo_AIPass_Aggression` | `1` | Scales how often squads flank, assault, advance, investigate and join coordinated assaults. `0` never, `2` twice as often. |
+| `Waldo_AIPass_Cohesion` | `1` | How much punishment a squad takes before it breaks. Above `1` they hold longer. |
+| `Waldo_AIPass_ReactionSpeed` | `1` | How often squads re-assess. Above `1` they react faster and use more server time. |
+| `Waldo_AIPass_EngageRange` | `800` | Known enemies within this range (m) are acted on. |
+| `Waldo_AIPass_Flank_MaxRange` | `400` | Farther enemies are not flanked. |
+| `Waldo_AIPass_Morale_RetreatDistance` | `200` | How far a broken squad falls back. |
+| `Waldo_AIPass_ZeusHoldSeconds` | `120` | How long the pass leaves a squad alone after Zeus touches it. |
+| `Waldo_AIPass_ContactReports_Radius` | `500` | Radio report range. |
+| `Waldo_AIPass_Reinforce_Radius`, `_MaxResponders` | `600`, `2` | How far away, and how many, squads come to help. |
+| `Waldo_AIPass_Artillery_Rounds`, `_MaxError`, `_Cooldown`, `_MinFriendlyDistance`, `_ShootAndScoot` | `3`, `50`, `120`, `200`, on | Squads' artillery support. |
+| `Waldo_AIPass_Artillery_DefaultRole` | `"BOTH"` | Missions a gun takes when it has no role of its own (see below). |
+| `Waldo_AIPass_CounterBattery_Mode`, `_Rounds`, `_MaxError`, `_Delay`, `_Interval`, `_MinFriendlyDistance`, `_ShootAndScoot` | `KNOWN`, `4`, `100`, `20`, `60`, `200`, on | Counter-battery, set separately from support. |
+| `Waldo_AIPass_Airborne_DeployDistance`, `_Altitude`, `_MinAltitude` | `700`, `250`, `120` | Airborne insertion. |
+
+The behaviour switches (which behaviours run at all) stay in **AI Control**. From a trigger or
+script:
+
+```sqf
+[createHashMapFromArray [["Waldo_AIPass_Aggression", 1.5], ["Waldo_AIPass_Cohesion", 0.8]]] call Waldo_fnc_AIPassTuning;
+```
+
+Only the settings above are accepted, and numbers are kept inside the same ranges as the Zeus
+sliders.
+
+### Artillery support and counter-battery
+
+The two have separate switches (`Waldo_AIPass_Artillery_Enable`, `Waldo_AIPass_CounterBattery_Enable`)
+and separate settings. Each gun can also be limited to one job:
+
+```sqf
+[this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole;   // gun's init field: counter-battery only
+[this, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole;   // squads' fire requests (and smoke) only
+```
+
+Guns without a role use `Waldo_AIPass_Artillery_DefaultRole`. In Zeus, **AI Orders** has the same
+three choices for a group's guns. Counter-battery never fires when friendlies or civilians are within
+`Waldo_AIPass_CounterBattery_MinFriendlyDistance` of the enemy gun.
 
 ### Survivor regroup in detail
 
@@ -239,15 +291,14 @@ profiles. While ENDEX or SafeStart is active the pass holds all behaviour and re
 Every setting is listed with its default in
 [Mission Configuration Files](Feature-Configuration-Files). The ones you are most likely to change:
 
+Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tuning).
+
 | Setting | Default | Meaning |
 |---|---|---|
 | `Waldo_AIPass_Enable` | `false` | Master switch. `false` means no pass code runs anywhere. |
 | `Waldo_AIPass_IncludedSides` | `["WEST", "EAST", "GUER"]` | Sides the pass may command. |
 | `Waldo_AIPass_LambsMode` | `"SPLIT"` | Only matters with LAMBS loaded (see above). |
-| `Waldo_AIPass_ZeusHoldSeconds` | `120` | How long the pass leaves a squad alone after Zeus touches it. |
 | `Waldo_AIPass_FactionProfiles` | empty | Per-faction behaviour profile, for example OPF_F to ELITE. |
-| `Waldo_AIPass_Morale_RetreatDistance` | `200` | How far a broken squad falls back. |
-| `Waldo_AIPass_Reinforce_Radius` | `600` | How far away helping squads may be. |
 | `Waldo_AIPass_TickBudgetMs` | `1` | Milliseconds of work allowed per scheduler tick. |
 | `Waldo_AIPass_Debug` | `false` | Extra RPT lines for contact, flanks, morale and retreats. |
 
@@ -256,6 +307,9 @@ Every setting is listed with its default in
 - **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*): skill profile, the Smart AI
   Pass master switch, every behaviour switch and the LAMBS mode. Changes reach every machine,
   including headless clients that join later.
+- **WMP AI & Combat > AI Tuning**: every difficulty and tuning setting in
+  [Difficulty and tuning](#difficulty-and-tuning), opening on the live values. Applying takes effect
+  on each squad's next step.
 - **WMP AI & Combat > AI Orders**: place it at a spot, pick a nearby AI group (a unit under the
   module is listed first), and choose an order:
   - garrison buildings here;
@@ -263,6 +317,7 @@ Every setting is listed with its default in
   - release a garrison or defence;
   - clear the building here;
   - parachute out now, for a squad riding as cargo in an AI-flown aircraft at least 120 m over land;
+  - artillery role for the group's guns: support only, counter-battery only, or both;
   - keep the group for Zeus (exclude it from the pass);
   - return it to the pass.
 
@@ -307,6 +362,8 @@ Mission diagnostics include rows under area `ai`:
   defences;
 - `smart-ai-pass-zeus`: squads held by Zeus, squads on Zeus waypoints, squads excluded;
 - `smart-ai-pass-support`: artillery, radars, airborne drops, flares;
+- `smart-ai-pass-tuning`: behaviour profile, aggression, cohesion, reaction speed, default battery
+  role and counter-battery mode;
 - `smart-ai-pass-lambs`: LAMBS detection and mode.
 
 Counters are for the server; headless-client squads are counted on their own machine. RPT lines

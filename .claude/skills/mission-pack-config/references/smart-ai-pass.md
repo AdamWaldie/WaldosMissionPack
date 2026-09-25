@@ -80,8 +80,14 @@ on a unit or `group this`. `Waldo_AI_Exclude` excludes from every WMP AI change.
 
 ## Runtime and diagnostics
 
-Zeus: **WMP AI & Combat > AI Control** (every switch) and **AI Orders** (garrison, defend, release,
+Difficulty (set here, or live with the **AI Tuning** Zeus module / `Waldo_fnc_AIPassTuning`):
+`Waldo_AIPass_BehaviourProfile` ("" follows AI Rebalance), `_Aggression`, `_Cohesion`, `_ReactionSpeed`
+(all 1 = normal), plus ranges, support, artillery, counter-battery and airborne numbers. Artillery
+support and counter-battery have separate switches and settings; per gun
+`[this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole;` (SUPPORT/COUNTER/BOTH).
+
+Zeus: **WMP AI & Combat > AI Control** (every switch), **AI Tuning** (difficulty) and **AI Orders** (garrison, defend, release,
 clear, parachute out now for a squad in an aircraft, keep for Zeus, return to pass). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
-`-drills`, `-zeus`, `-support`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
+`-drills`, `-zeus`, `-support`, `-tuning`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.

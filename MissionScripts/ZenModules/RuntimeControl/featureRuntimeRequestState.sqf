@@ -110,6 +110,8 @@ private _names = [
         "Waldo_Recovery_ScanInterval", "Waldo_Recovery_NotificationRadius", "Waldo_Recovery_CreateWorkshopMarkers",
         "Waldo_Recovery_PackageClasses"
 ];
+// Smart AI Pass difficulty and tuning, from the same list the AI Tuning Zeus module uses.
+{_names pushBackUnique (_x select 0)} forEach ([] call Waldo_fnc_AIPassTuningSpec);
 private _snapshot = [];
 {
     private _value = missionNamespace getVariable [_x, nil];

@@ -6,7 +6,8 @@
  * suppression (20%), losing the leader it started the fight with (10%), being outnumbered by enemies
  * seen in the last 30 s (15%), known armour within 400 m with no anti-tank gunner in the squad (20%)
  * and average wounds (10%). Average courage skill offsets it, so AI Rebalance profiles and mission
- * skills still matter. Morale falls quickly towards the pressure and recovers slowly (60% versus 10%
+ * skills still matter. Waldo_AIPass_Cohesion (AI Tuning, default 1) divides the pressure, so squads
+ * hold longer above 1 and break sooner below it. Morale falls quickly towards the pressure and recovers slowly (60% versus 10%
  * of the gap per step). The thresholds come from the group's behaviour profile
  * (Waldo_fnc_AIPassProfile): STEADY at moraleShaken or more, SHAKEN above moraleBroken, BROKEN below
  * it. A broken squad must recover 0.1 above moraleBroken before it counts as shaken again, so it
@@ -61,6 +62,8 @@ private _armour = [0, 1] select (!_hasAT && {_enemies findIf {
 } >= 0});
 private _pressure = 0.45 * (1 - _count / _peak) + 0.2 * _suppression + 0.1 * _leaderLost
     + 0.15 * (_outnumbered / 2) + 0.2 * _armour + 0.1 * _wounds - 0.3 * (_courage - 0.5);
+// Cohesion (AI Tuning): above 1 squads take more before they break, below 1 they break sooner.
+_pressure = _pressure / ((missionNamespace getVariable ["Waldo_AIPass_Cohesion", 1]) max 0.1);
 private _target = ((1 - _pressure) max 0) min 1;
 private _morale = _state getOrDefault ["morale", 1];
 _morale = if (_target < _morale) then {_morale + (_target - _morale) * 0.6} else {_morale + (_target - _morale) * 0.1};

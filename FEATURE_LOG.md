@@ -22,6 +22,11 @@ with CBA, ACE, ZEN and ACRE2 (and once more with LAMBS Danger and Waypoints) and
   time clear of the airframe, parachute opens, backpack kept, SAD after landing; an unload waypoint
   lands instead; the AI Orders "parachute out now" order;
 - landed Paradrop AI jumpers and the dismounted crew of a written-off transport are taken over;
+- AI Tuning module: opens on the live values, a change reaches a headless client (and a headless
+  client that joins afterwards), and aggression, cohesion and reaction speed visibly change squads;
+- artillery roles: a support-only gun ignores enemy artillery, a counter-battery-only gun ignores
+  squads' calls, and no counter-battery lands near friendlies;
+- airborne passengers in FFV seats jump too; a helicopter with an unload waypoint still ahead lands;
 - final assault, bounding advance, investigation, defence line reserve and coordinated assault;
 - Zeus priority on a dedicated server: selection, waypoints, target designation, remote control and
   ZEN AI actions each release the squad, and AI Orders exclude/return work;

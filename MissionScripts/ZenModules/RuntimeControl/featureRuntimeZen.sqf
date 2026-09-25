@@ -564,6 +564,39 @@ switch (toUpperANSI _feature) do {
             }
         ] call zen_dialog_fnc_create;
     };
+    case "AI_TUNING": {
+        // Built from Waldo_fnc_AIPassTuningSpec so the dialog always matches what the server accepts.
+        // Each control opens on the live value; applying changes squads on their next step.
+        private _spec = [] call Waldo_fnc_AIPassTuningSpec;
+        private _controls = _spec apply {
+            _x params ["_variable", "_label", "_tooltip", "_kind", "_options", "_default"];
+            private _current = missionNamespace getVariable [_variable, _default];
+            switch (_kind) do {
+                case "SLIDER": {
+                    _options params ["_min", "_max", "_decimals"];
+                    if !(_current isEqualType 0) then {_current = _default};
+                    ["SLIDER", [_label, _tooltip], [_min, _max, (_current max _min) min _max, _decimals]]
+                };
+                case "CHECKBOX": {["CHECKBOX", [_label, _tooltip], [_default, _current] select (_current isEqualType true)]};
+                default {
+                    _options params ["_values", "_labels"];
+                    private _index = (_values apply {toUpperANSI _x}) find toUpperANSI (["", _current] select (_current isEqualType ""));
+                    ["COMBO", [_label, _tooltip], [_values, _labels, _index max 0]]
+                };
+            }
+        };
+        [
+            "AI Tuning (Smart AI Pass difficulty)",
+            _controls,
+            {
+                params ["_values", "_spec"];
+                private _pairs = [];
+                {_pairs pushBack [(_spec select _forEachIndex) select 0, _x]} forEach _values;
+                ["AI_TUNING", _pairs] call Waldo_fnc_FeatureRuntimeApply;
+            },
+            {}, _spec
+        ] call zen_dialog_fnc_create;
+    };
     case "AI_ORDERS": {
         private _preferred = if (!isNull _objectPos && {_objectPos isKindOf "CAManBase"} && {!isPlayer _objectPos}) then {group _objectPos} else {grpNull};
         private _ranked = [];
@@ -584,9 +617,11 @@ switch (toUpperANSI _feature) do {
         [
             "AI Orders",
             [
-                ["COMBO", ["Order", "Every order uses the selected group. Airborne makes a squad riding in an AI-flown aircraft parachute out now. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
-                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "EXCLUDE", "RETURN"],
-                    ["Garrison buildings here", "Defend a line here", "Release garrison or defence", "Clear the building here", "Parachute out now (squad in an aircraft)", "Keep for Zeus (exclude from the pass)", "Return to the Smart AI Pass"], 0]],
+                ["COMBO", ["Order", "Every order uses the selected group. Airborne makes a squad riding in an AI-flown aircraft parachute out now. The artillery orders set which fire missions the group's guns take. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
+                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "ARTY_SUPPORT", "ARTY_COUNTER", "ARTY_BOTH", "EXCLUDE", "RETURN"],
+                    ["Garrison buildings here", "Defend a line here", "Release garrison or defence", "Clear the building here", "Parachute out now (squad in an aircraft)",
+                        "Artillery: support fire only", "Artillery: counter-battery only", "Artillery: support and counter-battery",
+                        "Keep for Zeus (exclude from the pass)", "Return to the Smart AI Pass"], 0]],
                 ["COMBO", ["Group", "Nearby AI groups, nearest first; a unit under the module is listed first."], [_groupIndices, _groupLabels, 0]],
                 ["SLIDER", ["Garrison radius / line width", "Garrison: metres searched for building positions. Defend: width of the line."], [15, 150, 50, 0]],
                 ["SLIDER", ["Defence facing", "Compass direction the defence line faces."], [0, 359, round (getDir curatorCamera), 0]]

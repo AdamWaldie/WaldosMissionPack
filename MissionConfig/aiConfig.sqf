@@ -153,16 +153,29 @@
  * - Waldo_AIPass_Reinforce_Enable (MISSION MAKER): idle nearby squads move up behind a squad in contact.
  * - Waldo_AIPass_Reinforce_Radius (ADVANCED): how far away responding squads may be.
  * - Waldo_AIPass_Reinforce_MaxResponders (ADVANCED): responding squads per squad in contact.
+ * - Difficulty (MISSION MAKER; all of these, and the support, artillery, counter-battery and airborne
+ *   numbers below, can be changed during the mission with the AI Tuning Zeus module or
+ *   Waldo_fnc_AIPassTuning):
+ *   - Waldo_AIPass_BehaviourProfile: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics mission-wide (group and faction profiles still win).
+ *   - Waldo_AIPass_Aggression: scales flank, assault, advance, investigate and coordinated-assault chances (1 = the profile's own).
+ *   - Waldo_AIPass_Cohesion: how much punishment squads take before morale breaks (1 = normal).
+ *   - Waldo_AIPass_ReactionSpeed: how often squads re-assess (1 = normal; higher costs more server time).
  * - Waldo_AIPass_Artillery_Enable (MISSION MAKER): squads call fire from friendly AI artillery on well-located enemies only.
  * - Waldo_AIPass_Artillery_Rounds (ADVANCED): rounds per fire mission.
  * - Waldo_AIPass_Artillery_MinFriendlyDistance (ADVANCED): no mission lands within this distance of friendlies or civilians.
  * - Waldo_AIPass_Artillery_MaxError (ADVANCED): largest target position error accepted for a mission.
  * - Waldo_AIPass_Artillery_Cooldown (ADVANCED): seconds between missions called by one squad.
- * - Waldo_AIPass_Artillery_ShootAndScoot (ADVANCED): mobile batteries move 200-350 m after firing.
+ * - Waldo_AIPass_Artillery_ShootAndScoot (ADVANCED): mobile batteries move 200-350 m after a support mission.
+ * - Waldo_AIPass_Artillery_DefaultRole (MISSION MAKER): missions a battery takes unless you set its own role: SUPPORT (squads' calls only), COUNTER (counter-battery only) or BOTH. Per gun: [this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole; or the AI Orders Zeus module.
  * - Waldo_AIPass_CounterBattery_Enable (MISSION MAKER): AI artillery answers enemy artillery whose position is known.
  * - Waldo_AIPass_CounterBattery_Mode (MISSION MAKER): KNOWN answers only spotted batteries; RADAR also uses radars registered with Waldo_fnc_AIPassRegisterRadar.
  * - Waldo_AIPass_CounterBattery_RadarRange (ADVANCED): detection range of a registered counter-battery radar.
  * - Waldo_AIPass_CounterBattery_Delay (ADVANCED): seconds before counter-battery fire is returned.
+ * - Waldo_AIPass_CounterBattery_Rounds (ADVANCED): rounds per counter-battery mission.
+ * - Waldo_AIPass_CounterBattery_MaxError (ADVANCED): largest position error on the enemy gun accepted in KNOWN mode.
+ * - Waldo_AIPass_CounterBattery_MinFriendlyDistance (ADVANCED): no counter-battery fire when friendlies or civilians are this close to the enemy gun.
+ * - Waldo_AIPass_CounterBattery_Interval (ADVANCED): seconds before the same enemy gun is answered again.
+ * - Waldo_AIPass_CounterBattery_ShootAndScoot (ADVANCED): mobile batteries move 200-350 m after a counter-battery mission.
  * - Waldo_AIPass_Airborne_Enable (MISSION MAKER): AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. [group this] call Waldo_fnc_AIPassAirborneDrop orders a drop at any time.
  * - Waldo_AIPass_Airborne_ApproachDistance (ADVANCED): within this distance of a known enemy the aircraft climbs to jump altitude.
  * - Waldo_AIPass_Airborne_DeployDistance (MISSION MAKER): the squad jumps once its aircraft is this close to a known enemy.
@@ -260,6 +273,10 @@ createHashMapFromArray [
         ["Waldo_AIPass_Regroup_StuckSeconds", 20], // SECONDS: without progress, survivors join where they stand.
         ["Waldo_AIPass_Regroup_TimeoutSeconds", 120], // SECONDS: limit for finding a host and for walking to it.
         ["Waldo_AIPass_Regroup_SettleSeconds", 5], // SECONDS: delay after a kill before the remnant is assessed.
+        ["Waldo_AIPass_BehaviourProfile", ""], // STRING: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics for every squad without its own.
+        ["Waldo_AIPass_Aggression", 1], // 0-2: scales how often squads flank, assault, advance, investigate and coordinate.
+        ["Waldo_AIPass_Cohesion", 1], // 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner.
+        ["Waldo_AIPass_ReactionSpeed", 1], // 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often.
         ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads).
         ["Waldo_AIPass_Debug", false], // BOOL: extra [WMP AI PASS] RPT lines for contact, flanks, morale and retreats.
         ["Waldo_AIPass_EngageRange", 800], // METRES: enemies the leader knows about within this range are considered.
@@ -306,11 +323,17 @@ createHashMapFromArray [
         ["Waldo_AIPass_Artillery_MinFriendlyDistance", 200], // METRES: no mission near friendlies or civilians.
         ["Waldo_AIPass_Artillery_MaxError", 50], // METRES: largest target position error accepted.
         ["Waldo_AIPass_Artillery_Cooldown", 120], // SECONDS: between missions called by one squad.
-        ["Waldo_AIPass_Artillery_ShootAndScoot", true], // BOOL: mobile batteries relocate after firing.
+        ["Waldo_AIPass_Artillery_ShootAndScoot", true], // BOOL: mobile batteries relocate after a support mission.
+        ["Waldo_AIPass_Artillery_DefaultRole", "BOTH"], // STRING: SUPPORT, COUNTER or BOTH for guns with no role of their own.
         ["Waldo_AIPass_CounterBattery_Enable", false], // BOOL: AI artillery answers enemy artillery whose position is known.
         ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"], // STRING: KNOWN (spotted only) or RADAR (also registered radars).
         ["Waldo_AIPass_CounterBattery_RadarRange", 8000], // METRES: radar detection range.
         ["Waldo_AIPass_CounterBattery_Delay", 20], // SECONDS: before counter-battery fire.
+        ["Waldo_AIPass_CounterBattery_Rounds", 4], // COUNT: rounds per counter-battery mission.
+        ["Waldo_AIPass_CounterBattery_MaxError", 100], // METRES: largest enemy-gun position error accepted (KNOWN).
+        ["Waldo_AIPass_CounterBattery_MinFriendlyDistance", 200], // METRES: no fire near friendlies or civilians.
+        ["Waldo_AIPass_CounterBattery_Interval", 60], // SECONDS: before the same enemy gun is answered again.
+        ["Waldo_AIPass_CounterBattery_ShootAndScoot", true], // BOOL: mobile batteries relocate after counter-battery.
         ["Waldo_AIPass_Airborne_Enable", false], // BOOL: AI passengers parachute out near known enemies.
         ["Waldo_AIPass_Airborne_ApproachDistance", 2000], // METRES: climb to jump altitude inside this range.
         ["Waldo_AIPass_Airborne_DeployDistance", 700], // METRES: jump inside this range of a known enemy.

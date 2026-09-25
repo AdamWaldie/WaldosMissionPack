@@ -8,9 +8,12 @@
  * "how willing is this squad to flank, assault or hold". Resolution order:
  * 1. the group variable Waldo_AIPass_Profile (a mission maker's per-group choice);
  * 2. Waldo_AIPass_FactionProfiles (a map of CfgFactionClasses name to profile) for the leader's faction;
- * 3. Waldo_AIRebalance_Profile, the active AI Rebalance profile (PUBLIC and STANDARD map to MILITIA
+ * 3. Waldo_AIPass_BehaviourProfile, the mission-wide tuning choice ("" to follow AI Rebalance);
+ * 4. Waldo_AIRebalance_Profile, the active AI Rebalance profile (PUBLIC and STANDARD map to MILITIA
  *    and LINE);
- * 4. LINE.
+ * 5. LINE.
+ * Waldo_AIPass_Aggression (default 1, set live by the AI Tuning Zeus module) then scales every chance
+ * key, capped at 1.
  * Missing keys in a mission-edited profile fall back to LINE's values, and an unknown profile name
  * uses LINE.
  * Keys: flankChance, assaultChance, advanceChance, investigateChance, coordinatedChance (0-1 rolls),
@@ -38,6 +41,7 @@ private _name = _group getVariable ["Waldo_AIPass_Profile", ""];
 if (_name == "") then {
     _name = (missionNamespace getVariable ["Waldo_AIPass_FactionProfiles", createHashMap]) getOrDefault [faction leader _group, ""];
 };
+if (_name == "") then {_name = missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""]};
 if (_name == "") then {
     _name = if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
         missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
@@ -52,8 +56,15 @@ private _defaults = createHashMapFromArray [
 ];
 private _line = _table getOrDefault ["LINE", createHashMap];
 private _profile = _table getOrDefault [_name, _line];
-if (_key != "") exitWith {_profile getOrDefault [_key, _line getOrDefault [_key, _defaults getOrDefault [_key, 0]]]};
+private _aggression = (missionNamespace getVariable ["Waldo_AIPass_Aggression", 1]) max 0;
+private _chanceKeys = ["flankChance", "assaultChance", "advanceChance", "investigateChance", "coordinatedChance"];
+if (_key != "") exitWith {
+    private _value = _profile getOrDefault [_key, _line getOrDefault [_key, _defaults getOrDefault [_key, 0]]];
+    if (_key in _chanceKeys) then {_value = (_value * _aggression) min 1};
+    _value
+};
 private _merged = +_defaults;
 _merged merge [_line, true];
 _merged merge [_profile, true];
+{_merged set [_x, ((_merged get _x) * _aggression) min 1]} forEach _chanceKeys;
 _merged

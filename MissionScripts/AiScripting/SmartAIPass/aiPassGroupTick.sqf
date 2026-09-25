@@ -19,6 +19,7 @@
  * RETREAT (morale broken or a damaged vehicle withdrawing) -> REGROUP.
  * Any sighting during SECURITY, SEARCH or REGROUP returns the group to CONTACT.
  * CARELESS groups are left entirely to the mission maker.
+ * Waldo_AIPass_ReactionSpeed (AI Tuning) divides the step interval, so squads re-assess faster or slower.
  * A squad riding as cargo in an AI-flown aircraft is handled by airborne insertion instead
  * (Waldo_fnc_AIPassAirborneCheck) until it has parachuted and landed.
  *
@@ -360,4 +361,5 @@ switch (_state get "phase") do {
         };
     };
 };
-_delay
+// Reaction speed (AI Tuning): above 1 squads re-assess more often, below 1 less often.
+(_delay / ((missionNamespace getVariable ["Waldo_AIPass_ReactionSpeed", 1]) max 0.25)) max 0.5

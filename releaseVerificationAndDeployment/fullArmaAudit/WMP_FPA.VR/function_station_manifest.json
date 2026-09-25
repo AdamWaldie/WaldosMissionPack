@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1177,
+  "registeredFunctionCount": 1181,
   "runtimeFunctionCount": 383,
-  "functionCount": 1560,
+  "functionCount": 1564,
   "stations": [
     {
       "id": "control",
@@ -943,6 +943,30 @@
     {
       "name": "Waldo_fnc_AIPassParachuteJump",
       "file": "MissionScripts/AiScripting/SmartAIPass/aiPassParachuteJump.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassTuning",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassTuning.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassTuningSpec",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassTuningSpec.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryRole",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryRole.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassSetArtilleryRole",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSetArtilleryRole.sqf",
       "station": "ai",
       "activation": "manual"
     },

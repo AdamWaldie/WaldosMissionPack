@@ -358,7 +358,10 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   error, a friendly and civilian standoff at impact, range-scaled dispersion, shoot and scoot. A
   SMOKE mode screens retreats.
 - **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): `KNOWN` or
-  `RADAR` via `Waldo_fnc_AIPassRegisterRadar`.
+  `RADAR` via `Waldo_fnc_AIPassRegisterRadar`, with its own rounds, accuracy, interval, friendly
+  standoff and shoot-and-scoot settings. Each gun's role (`Waldo_fnc_AIPassArtilleryRole`: SUPPORT,
+  COUNTER or BOTH, set with `Waldo_fnc_AIPassSetArtilleryRole` or `Waldo_AIPass_Artillery_DefaultRole`)
+  decides which missions it takes.
 - **Airborne insertion** (`Waldo_fnc_AIPassAirborneCheck`, from the group tick;
   `Waldo_fnc_AIPassAirborneDropStep`; `Waldo_fnc_AIPassParachuteJump`): PROTOCOL Airborne's idea,
   rewritten. Nothing is spawned. An eligible AI squad riding as cargo in an AI-flown aircraft climbs
@@ -427,11 +430,21 @@ individual behaviours.
 - **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*): the master switch, every
   behaviour switch and the LAMBS mode. `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case
   publishes them, and they are in the joining-machine snapshot list.
+- **WMP AI & Combat > AI Tuning** (`AI_TUNING`): difficulty and tuning, applied live. The dialog is
+  built from `Waldo_fnc_AIPassTuningSpec` (one list for the dialog, validation and the joining-machine
+  snapshot) and applies through `Waldo_fnc_AIPassTuning`, which clamps and broadcasts the values. Keys:
+  `Waldo_AIPass_BehaviourProfile` (mission-wide profile, between faction and AI Rebalance in
+  `Waldo_fnc_AIPassProfile`), `Waldo_AIPass_Aggression` (scales the profile chance keys),
+  `Waldo_AIPass_Cohesion` (divides morale pressure), `Waldo_AIPass_ReactionSpeed` (divides the group
+  tick interval), plus ranges, support, artillery, counter-battery and airborne numbers.
 - **WMP AI & Combat > AI Orders** (`AI_ORDERS` / `AI_ORDER`): garrison, defend, release, clear
-  building, airborne, exclude (keep for Zeus), return. Orders run next frame, outside the curator's remote-exec context, because the order APIs
+  building, airborne, artillery role (support/counter-battery/both via
+  `Waldo_fnc_AIPassSetArtilleryRole`), exclude (keep for Zeus), return. Garrison, defend, clear and
+  airborne first clear the group's Zeus hold and Zeus-waypoint flag, since a Zeus order hands the group
+  to the pass. Orders run next frame, outside the curator's remote-exec context, because the order APIs
   refuse remote senders other than the server.
 
-**Diagnostics:** rows `ai/smart-ai-pass`, `-regroup`, `-groups`, `-drills`, `-zeus`, `-support` and `-lambs` in
+**Diagnostics:** rows `ai/smart-ai-pass`, `-regroup`, `-groups`, `-drills`, `-zeus`, `-support`, `-tuning` and `-lambs` in
 `Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP AI PASS]`. See `wiki/Smart-AI-Pass.md`.
 
 ### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
@@ -1959,13 +1972,14 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 - Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
 - AI Control → `AI` case of `Waldo_fnc_FeatureRuntimeZen` (AI Rebalance profile plus every Smart AI Pass switch; applied by `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case)
-- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, defend, release, clear building, parachute out now for a squad riding an aircraft, exclude or return for a nearby AI group; applied by the `AI_ORDER` case)
+- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, defend, release, clear building, parachute out now for a squad riding an aircraft, artillery role for a group's guns, exclude or return for a nearby AI group; applied by the `AI_ORDER` case)
+- AI Tuning → `AI_TUNING` case of `Waldo_fnc_FeatureRuntimeZen` (Smart AI Pass difficulty and tuning built from `Waldo_fnc_AIPassTuningSpec`; applied live through `Waldo_fnc_AIPassTuning`)
 - Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 48 without them, 51 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 49 without them, 52 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

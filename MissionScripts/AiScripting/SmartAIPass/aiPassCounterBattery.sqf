@@ -7,12 +7,16 @@
  * when Waldo_AIPass_CounterBattery_Enable is true. The audit found PROTOCOL's counter-battery
  * omniscient (any enemy artillery within 7 km was answered), so WMP requires knowledge:
  * - "KNOWN" mode: a local friendly squad leader knows about the firing vehicle (knowsAbout 1.5 or
- *   more) with a position error within twice Waldo_AIPass_Artillery_MaxError;
+ *   more) with a position error within Waldo_AIPass_CounterBattery_MaxError;
  * - "RADAR" mode: additionally, a counter-battery radar registered with
  *   Waldo_fnc_AIPassRegisterRadar for the answering side is within
  *   Waldo_AIPass_CounterBattery_RadarRange of the firing battery, which gives a 30 m fix.
  * The answer is fired after Waldo_AIPass_CounterBattery_Delay seconds by the first idle battery in
- * range. Each firing battery is answered at most once a minute.
+ * range whose role allows counter-battery (Waldo_fnc_AIPassArtilleryRole: COUNTER or BOTH), with
+ * Waldo_AIPass_CounterBattery_Rounds rounds and its own shoot-and-scoot setting. Nothing is fired if
+ * friendlies or civilians are within Waldo_AIPass_CounterBattery_MinFriendlyDistance of the enemy gun.
+ * Each firing battery is answered at most once every Waldo_AIPass_CounterBattery_Interval seconds.
+ * These settings are separate from squads' artillery support, which has its own switch and settings.
  * Locality and authority: runs on every AI-owning machine; each uses only its own batteries.
  *
  * Arguments:
@@ -35,11 +39,11 @@ if (time < (_vehicle getVariable ["Waldo_AIPass_CounterBatteryAt", -1])) exitWit
 private _enemySide = side group ([_gunner, gunner _vehicle] select isNull _gunner);
 private _batteries = (missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]) select {
     alive _x && {local _x} && {alive gunner _x} && {!([group gunner _x] call Waldo_fnc_AIPassZeusHeld)} && {(side group gunner _x) getFriend _enemySide < 0.6}
-    && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}
+    && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time} && {[_x, "COUNTER"] call Waldo_fnc_AIPassArtilleryRole}
 };
 if (_batteries isEqualTo []) exitWith {false};
 private _ourSide = side group gunner (_batteries select 0);
-private _maxError = (missionNamespace getVariable ["Waldo_AIPass_Artillery_MaxError", 50]) * 2;
+private _maxError = missionNamespace getVariable ["Waldo_AIPass_CounterBattery_MaxError", 100];
 private _fix = [];
 {
     private _leader = leader _x;
@@ -58,11 +62,19 @@ if (_fix isEqualTo [] && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPa
     } >= 0) then {_fix = [getPosATL _vehicle, 30]};
 };
 if (_fix isEqualTo []) exitWith {false};
-_vehicle setVariable ["Waldo_AIPass_CounterBatteryAt", time + 60];
+// Never shell friends or civilians standing near the enemy gun.
+private _standoff = missionNamespace getVariable ["Waldo_AIPass_CounterBattery_MinFriendlyDistance", 200];
+if (((_fix select 0) nearEntities [["CAManBase", "LandVehicle"], _standoff]) findIf {
+    private _otherSide = side group _x;
+    alive _x && {_otherSide == civilian || {_ourSide getFriend _otherSide >= 0.6}}
+} >= 0) exitWith {false};
+_vehicle setVariable ["Waldo_AIPass_CounterBatteryAt", time + (missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Interval", 60])];
 [{
     params ["_job"];
     {
-        if ([_x, _job get "target", _job get "error"] call Waldo_fnc_AIPassArtilleryFire) exitWith {};
+        if ([_x, _job get "target", _job get "error", "HE",
+            missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Rounds", 4],
+            missionNamespace getVariable ["Waldo_AIPass_CounterBattery_ShootAndScoot", true]] call Waldo_fnc_AIPassArtilleryFire) exitWith {};
     } forEach ((_job get "batteries") select {alive _x && {local _x} && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}});
     -1
 }, createHashMapFromArray [["target", _fix select 0], ["error", _fix select 1], ["batteries", _batteries]],

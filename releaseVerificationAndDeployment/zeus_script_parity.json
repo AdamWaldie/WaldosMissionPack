@@ -428,7 +428,16 @@
     "via": "Waldo_fnc_FeatureRuntimeApply",
     "script_api": "Waldo_fnc_AIPassGarrison",
     "parity": "adapter",
-    "notes": "One dialog routes the orders to their script APIs: garrison (Waldo_fnc_AIPassGarrison), defend (Waldo_fnc_AIPassDefend), release (Waldo_fnc_AIPassGarrisonRelease / Waldo_fnc_AIPassDefendRelease), clear building (Waldo_fnc_AIPassClearBuilding) and parachute out now (Waldo_fnc_AIPassAirborneDrop); exclude and return set Waldo_AIPass_Exclude and clear Zeus holds. The curator picks a nearby group instead of passing one."
+    "notes": "One dialog routes the orders to their script APIs: garrison (Waldo_fnc_AIPassGarrison), defend (Waldo_fnc_AIPassDefend), release (Waldo_fnc_AIPassGarrisonRelease / Waldo_fnc_AIPassDefendRelease), clear building (Waldo_fnc_AIPassClearBuilding) parachute out now (Waldo_fnc_AIPassAirborneDrop) and artillery roles (Waldo_fnc_AIPassSetArtilleryRole); exclude and return set Waldo_AIPass_Exclude and clear Zeus holds. The curator picks a nearby group instead of passing one."
+  },
+  {
+    "category": "core",
+    "module": "AI Tuning",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassTuning",
+    "parity": "full",
+    "notes": "The dialog is built from Waldo_fnc_AIPassTuningSpec and applies through the same Waldo_fnc_AIPassTuning call a trigger or script uses: behaviour profile, aggression, cohesion, reaction speed, ranges, support, artillery, counter-battery and airborne values, validated and published live to the server and headless clients."
   },
   {
     "category": "core",

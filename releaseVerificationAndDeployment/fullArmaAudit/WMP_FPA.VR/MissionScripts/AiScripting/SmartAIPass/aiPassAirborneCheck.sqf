@@ -14,16 +14,19 @@
  * - Within Waldo_AIPass_Airborne_DeployDistance, with the aircraft at least
  *   Waldo_AIPass_Airborne_MinAltitude above ground and not over water, the drop starts
  *   (Waldo_fnc_AIPassAirborneDropStep).
- * Never drops from an aircraft flown or commanded by a player, from one whose pilots are on an
- * unload or get-out waypoint (the mission maker wants it to land), or from aircraft owned by another
- * WMP feature (the squad would already be ineligible: Transport Services, Paradrop, Gunship).
+ * Passengers are the cargo seats and the person-turret (FFV) seats many helicopters use for troops;
+ * crew never jump. Never drops from an aircraft flown or commanded by a player, while an unload or
+ * get-out waypoint is still ahead for the pilots or the squad (the mission maker planned a landing;
+ * the aircraft is not climbed either), or from aircraft owned by another WMP feature (the squad
+ * would already be ineligible: Transport Services, Paradrop, Gunship). The aircraft keeps the jump
+ * altitude afterwards; give it a new flyInHeight in a later waypoint if it should fly lower.
  * Locality and authority: call where the group is local.
  *
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP> - from Waldo_fnc_AIPassGroupState
- * 2: force <BOOL> (optional, default: false) - drop now whatever the enemy distance (Zeus and
- *    Waldo_fnc_AIPassAirborneDrop); altitude and water are still checked
+ * 2: force <BOOL> (optional, default: false) - drop now whatever the enemy distance or planned
+ *    landing (Zeus and Waldo_fnc_AIPassAirborneDrop); altitude, water and AI pilots are still checked
  *
  * Return Value:
  * Number - -1 when the squad is not riding an aircraft (the group tick continues normally), otherwise
@@ -38,20 +41,35 @@
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_force", false, [false]]];
 if (!_force && {!(missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false])}) exitWith {-1};
-private _cargo = (units _group) select {
-    alive _x && {local _x} && {!isPlayer _x} && {(vehicle _x) isKindOf "Air"} && {(vehicle _x) getCargoIndex _x >= 0}
+// Passengers: cargo seats and the person-turret (FFV) seats many helicopters use for troops. Crew
+// (pilots, gunners, commanders) never counts.
+private _passengersOf = {
+    params ["_vehicle"];
+    ((fullCrew [_vehicle, "cargo"]) + ((fullCrew [_vehicle, "turret"]) select {_x select 4})) apply {_x select 0}
 };
+private _riding = (units _group) select {
+    alive _x && {local _x} && {!isPlayer _x} && {(vehicle _x) isKindOf "Air"} && {!((vehicle _x) isKindOf "ParachuteBase")}
+};
+if (_riding isEqualTo []) exitWith {-1};
+private _aircraft = vehicle (_riding select 0);
+private _passengers = [_aircraft] call _passengersOf;
+private _cargo = _riding select {vehicle _x == _aircraft && {_x in _passengers}};
 if (_cargo isEqualTo []) exitWith {-1};
-private _aircraft = vehicle (_cargo select 0);
-_cargo = _cargo select {vehicle _x == _aircraft};
 
 private _pilot = driver _aircraft;
 if (!alive _aircraft || {!alive _pilot} || {isPlayer _pilot} || {isPlayer effectiveCommander _aircraft}) exitWith {[5, -1] select _force};
 if (time < (_aircraft getVariable ["Waldo_AIPass_DropUntil", -1])) exitWith {[5, -1] select _force};
-private _pilotGroup = group _pilot;
-private _waypointIndex = currentWaypoint _pilotGroup;
-if (_waypointIndex < count waypoints _pilotGroup
-    && {waypointType [_pilotGroup, _waypointIndex] in ["TR UNLOAD", "UNLOAD", "GETOUT"]}) exitWith {[5, -1] select _force};
+// The mission maker planned a landing: an unload or get-out still ahead on the pilots' or the squad's
+// own waypoints. Zeus and scripted drops (force) are deliberate and override it.
+private _plannedLanding = {
+    params ["_waypointGroup"];
+    private _found = false;
+    for "_index" from (currentWaypoint _waypointGroup) to ((count waypoints _waypointGroup) - 1) do {
+        if (waypointType [_waypointGroup, _index] in ["TR UNLOAD", "UNLOAD", "GETOUT"]) exitWith {_found = true};
+    };
+    _found
+};
+if (!_force && {[group _pilot] call _plannedLanding || {[_group] call _plannedLanding}}) exitWith {10};
 
 private _target = getPosATL _aircraft;
 if (!_force) then {

@@ -63,6 +63,7 @@ if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]) && {
         } forEach ((missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]) select {
             alive _x && {local _x} && {alive gunner _x} && {side group gunner _x == _side}
             && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time} && {!([group gunner _x] call Waldo_fnc_AIPassZeusHeld)}
+            && {[_x, "SUPPORT"] call Waldo_fnc_AIPassArtilleryRole}
         });
     };
 };

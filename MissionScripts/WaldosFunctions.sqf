@@ -170,6 +170,10 @@ class CfgFunctions
             class AIPassAirborneDropStep {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAirborneDropStep.sqf";};
             class AIPassAirborneDrop {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAirborneDrop.sqf";};
             class AIPassParachuteJump {file = "MissionScripts\AiScripting\SmartAIPass\aiPassParachuteJump.sqf";};
+            class AIPassTuning {file = "MissionScripts\AiScripting\SmartAIPass\aiPassTuning.sqf";};
+            class AIPassTuningSpec {file = "MissionScripts\AiScripting\SmartAIPass\aiPassTuningSpec.sqf";};
+            class AIPassArtilleryRole {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryRole.sqf";};
+            class AIPassSetArtilleryRole {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSetArtilleryRole.sqf";};
             class AIPassReleaseFeatureCrew {file = "MissionScripts\AiScripting\SmartAIPass\aiPassReleaseFeatureCrew.sqf";};
             class AIPassAntiArmour {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAntiArmour.sqf";};
             class AIPassArtilleryFire {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryFire.sqf";};

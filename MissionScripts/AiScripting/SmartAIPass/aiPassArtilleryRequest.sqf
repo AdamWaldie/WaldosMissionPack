@@ -8,7 +8,8 @@
  * no larger than Waldo_AIPass_Artillery_MaxError. The caller needs a working, unjammed radio
  * (Waldo_fnc_AIPassCanTransmit). The mission is refused if any friendly or civilian soldier or
  * vehicle is within the minimum distance of the impact point. The first idle same-side battery in
- * range fires (Waldo_fnc_AIPassArtilleryFire). A squad may call once per
+ * range whose role allows support (Waldo_fnc_AIPassArtilleryRole: SUPPORT or BOTH) fires
+ * (Waldo_fnc_AIPassArtilleryFire). Counter-battery has its own switch and settings. A squad may call once per
  * Waldo_AIPass_Artillery_Cooldown seconds. Batteries owned by another machine are not used.
  * Locality and authority: call where the requesting group is local.
  *
@@ -31,7 +32,7 @@ params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap
 if ([_state, "artillery"] call Waldo_fnc_AIPassCooldown) exitWith {false};
 private _batteries = (missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]) select {
     alive _x && {local _x} && {alive gunner _x} && {!([group gunner _x] call Waldo_fnc_AIPassZeusHeld)} && {side group gunner _x == side _group}
-    && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}
+    && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time} && {[_x, "SUPPORT"] call Waldo_fnc_AIPassArtilleryRole}
 };
 if (_batteries isEqualTo []) exitWith {false};
 private _minimum = missionNamespace getVariable ["Waldo_AIPass_Artillery_MinFriendlyDistance", 200];

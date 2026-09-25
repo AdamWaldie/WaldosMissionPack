@@ -389,6 +389,15 @@ switch (toUpperANSI _action) do {
             [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
         };
     };
+    case "AI_TUNING": {
+        // The curator was authenticated above; Waldo_fnc_AIPassTuning validates each value against the
+        // tuning list and publishes it to the server and every headless client.
+        private _applied = [createHashMapFromArray (_settings select {_x isEqualType [] && {count _x == 2}})] call Waldo_fnc_AIPassTuning;
+        if (_requestOwner > 2) then {
+            ["AI TUNING", format ["%1 settings applied. Squads use them from their next step.", _applied], ["ERROR", "SUCCESS"] select (_applied > 0), "AI_TUNING", 7]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+        };
+    };
     case "AI_ORDER": {
         _settings params [["_order", "", [""]], ["_group", grpNull, [grpNull]], ["_position", [], [[]]], ["_radius", 50, [0]],
             ["_building", objNull, [objNull]], ["_facing", 0, [0]]];
@@ -396,6 +405,12 @@ switch (toUpperANSI _action) do {
         // context, because the order APIs refuse calls whose remote sender is not the server.
         [{
             params ["_order", "_group", "_position", "_radius", "_building", "_facing", "_requestOwner"];
+            // An order from Zeus hands the group to the pass: clear the hold Zeus set just by selecting
+            // it, and any earlier Zeus waypoints, so they cannot cancel or refuse the order.
+            if (!isNull _group && {_order in ["GARRISON", "DEFEND", "CLEAR", "AIRBORNE"]}) then {
+                _group setVariable ["Waldo_AIPass_ZeusWaypoints", false, true];
+                _group setVariable ["Waldo_AIPass_ZeusHold", [random 1e6, 0], true];
+            };
             private _accepted = switch (_order) do {
                 case "GARRISON": {[_group, _position, (_radius max 15) min 150] call Waldo_fnc_AIPassGarrison};
                 case "DEFEND": {[_group, _position, _facing, (_radius max 15) min 150] call Waldo_fnc_AIPassDefend};
@@ -420,10 +435,13 @@ switch (toUpperANSI _action) do {
                 };
                 case "CLEAR": {[_group, [_building, _position] select isNull _building] call Waldo_fnc_AIPassClearBuilding};
                 case "AIRBORNE": {[_group] call Waldo_fnc_AIPassAirborneDrop};
+                case "ARTY_SUPPORT": {[_group, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole};
+                case "ARTY_COUNTER": {[_group, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole};
+                case "ARTY_BOTH": {[_group, "BOTH"] call Waldo_fnc_AIPassSetArtilleryRole};
                 default {false};
             };
             private _message = if (_accepted) then {format ["The %1 order was accepted.", toLowerANSI _order]} else {
-                format ["The %1 order was refused. Check that the Smart AI Pass is enabled and the group is valid; an airborne drop also needs the squad riding an AI-flown aircraft at least 120 m over land.", toLowerANSI _order]
+                format ["The %1 order was refused. Check that the Smart AI Pass is enabled and the group is valid; an airborne drop also needs the squad riding an AI-flown aircraft at least 120 m over land, and an artillery order needs a group crewing artillery.", toLowerANSI _order]
             };
             diag_log format ["[WMP ZEN SERVER] action=AI_ORDER owner=%1 order=%2 accepted=%3", _requestOwner, _order, _accepted];
             if (_requestOwner > 2) then {
