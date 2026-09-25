@@ -2,11 +2,17 @@
 
 > **Use this page when:** adding a ground action that seats a player in a live aircraft's cargo compartment.
 
+This helper puts a boarding action on an Eden object, such as a stand or sign. A player can use it while the named aircraft is alive and has a free cargo seat. It does not assign a pilot or turret position.
+
+## Set up a boarding point
+
 Name the aircraft in Eden. Put this in the boarding object's **Init** field, replacing `aircraft` with that name:
 
 ```sqf
 [this, aircraft, "ARGUS 1-4"] call Waldo_fnc_MoveInCargoPlane;
 ```
+
+## Call and parameters
 
 `Waldo_fnc_MoveInCargoPlane` accepts:
 

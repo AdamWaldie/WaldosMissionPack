@@ -4,9 +4,21 @@
 
 _Associated Files: MissionScripts\MissionMakerResourceScripts\_
 
-These scripts are **development and debugging tools** for the mission maker's use during production. They are not part of the runtime mission framework and should not be called in live missions.
+These are optional mission-maker aids. The arsenal exporter, damage monitor and config
+logger belong in a test session. The unhiding file is a template for a mission event;
+edit its hard-coded group names before using it during play. None is enabled by a WMP
+feature toggle.
 
----
+| Script | Inputs and type | Result | Where it runs |
+| --- | --- | --- | --- |
+| `ToolkitAceLimitedArsenal.sqf` | No arguments; reads BLUFOR units and their loadouts | Copies an item-class Array to the local clipboard | Mission-maker debug console on an interface client. |
+| `vehicleDamageMonitor.sqf` | No arguments; reads local `cursorObject` Object | Starts a local `real_vicwatch` Script handle and displays hit-point damage | Mission-maker debug console while aiming at a vehicle. |
+| `ExampleUnhidingScript.sqf` | No arguments; names of groups are edited inside the file | Reveals and enables simulation on those units and vehicles | Server-owned trigger or server script after you adapt it. |
+| `DEBUG_GetNameOfModConfigPatch.sqf` | No arguments; reads loaded `CfgPatches` classes | Writes names to the local `.rpt` log | Mission-maker debug session. |
+
+`execVM` returns a Script handle. None of these files returns a WMP object-registration
+result. They do not publish JIP state as a feature service; for a live unhiding event,
+design its trigger and late-join behaviour for your mission.
 
 ## ACE Limited Arsenal Toolkit
 
@@ -32,8 +44,6 @@ Generates a ready-to-paste ACE Arsenal items array from the loadouts of all play
 
 > This method is best for highly curated loadout pools. For mission packs with standard player loadouts, use the automatic [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) instead.
 
----
-
 ## Vehicle Damage Monitor
 
 **File:** `vehicleDamageMonitor.sqf`
@@ -46,8 +56,6 @@ Displays a live hint showing the damage percentage of every hit-point on a targe
 2. Aim your crosshair at the vehicle you want to monitor.
 3. Open the debug console, paste the script, and click **Local Execute**.
 4. A continuously updating hint appears until the vehicle is destroyed.
-
----
 
 ## Example Unhiding Script
 
@@ -74,8 +82,6 @@ The core pattern per group is:
     _vehicle enableSimulationGlobal true;
 } forEach (units YourGroupNameHere);
 ```
-
----
 
 ## Debug Mod Config Patch Logger
 

@@ -12,6 +12,11 @@ The Buy System lets players **purchase vehicles** with their side's [resources](
 
 ## Purchase terminals
 
+`Waldo_fnc_EcoBuy_registerTerminal` takes one existing laptop Object and has no
+documented return value. The server publishes its terminal tag; interface clients,
+including joiners, install their own interaction. Use the Eden Init call below on
+the object itself.
+
 Players buy from a **purchase terminal** (`Land_Laptop_unfolded_F`) via the ACE interaction menu. Spawn one in Zeus (**WMP Economy Systems → Buy → Spawn Purchase Terminal**), from script, or designate an editor-placed laptop:
 
 ```sqf
@@ -19,6 +24,17 @@ Players buy from a **purchase terminal** (`Land_Laptop_unfolded_F`) via the ACE 
 ```
 
 ## Drop points
+
+| `Waldo_fnc_EcoBuy_createDropPoint` argument | Type | Default or rule |
+| --- | --- | --- |
+| Position | Position Array | Function default `[0,0,0]`; provide a real location. |
+| Type | String | `"Ground"` if omitted; choose `Ground`, `Air` or `Naval`. |
+| Direction | Number, degrees | `0` if omitted. |
+| Side | String | `"ANY"` if omitted, or a side key such as `WEST`. |
+
+The server returns a drop-point ID String. A client call forwards the request
+and has no immediate ID. Author fixed drop points in
+`MissionConfig/economyConfig.sqf` or place them with the ZEN module.
 
 A **drop point** is where purchased vehicles spawn, typed by **Ground**, **Air** or **Naval** so each kind of vehicle appears somewhere sensible (a motor pool, a helipad, a dock). Drop points can be restricted by side. Create them in Zeus (**Buy → Create Drop Point**) or from script:
 
@@ -32,6 +48,22 @@ When a vehicle is purchased, the system finds an available drop point of the mat
 
 ## Defining purchases
 
+| Purchase row field | Type | Default or rule |
+| --- | --- | --- |
+| Name | String | Required unique catalogue name. |
+| Description | String | `""` if omitted. |
+| Costs | Array of `[resource name String, amount Number]` rows | `[]` if omitted. |
+| Requirements | Array of completed research/building-name Strings | `[]` if omitted. |
+| Vehicle class | `CfgVehicles` classname String | `""` if omitted; provide a valid class for a usable purchase. |
+| Type | String | `"Ground"` if omitted; matches a drop-point type. |
+| Availability | String | `"EVERYONE"` if omitted, or one supported side. |
+| Icon | Image-path String | WMP default resource icon if omitted. |
+| Colour | Hex-colour String | WMP default resource colour if omitted. |
+
+`Waldo_fnc_EcoBuy_setPurchaseCatalog` takes one Array of these rows,
+replaces the published catalogue and returns nothing. Define the resources
+and any named requirements before authoring the purchase rows.
+
 Each purchase entry has a **name**, **description**, **cost**, **requirements**, the vehicle **classname**, a **type** (Ground/Air/Naval, which selects the drop point), and a **side** restriction (`EVERYONE` or a specific side).
 
 In Zeus: **Buy → Configure Purchases**. From script:
@@ -44,8 +76,8 @@ In Zeus: **Buy → Configure Purchases**. From script:
 ]] call Waldo_fnc_EcoBuy_setPurchaseCatalog;
 ```
 
-* `costRows` — `[["Resource", amount], ...]`
-* `requirementList` — completed research or built structures that gate the purchase
+* `costRows`: `[["Resource", amount], ...]`
+* `requirementList`: completed research or built structures that gate the purchase
 
 ## If a purchase is refused
 

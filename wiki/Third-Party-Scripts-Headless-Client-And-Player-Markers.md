@@ -40,15 +40,20 @@ Inside `ThirdPartyScriptInit.sqf`, uncomment and tune the call:
 
 ### Options
 
-| Option | Effect |
-|---|---|
-| `"players"` | Show players. |
-| `"ais"` | Show AI. |
-| `"allsides"` | Show all sides, not just the player's own side. |
-| `"all"` | Enable all of the above. |
-| `"stop"` | Stop the script. |
+| Option | Type and default | Effect |
+|---|---|---|
+| `"players"` | String in the argument Array; default with empty Array | Show players. |
+| `"ais"` | String in the argument Array; defaults on only in single-player when the Array is empty | Show AI. |
+| `"allsides"` | String in the argument Array; off by default | Show all sides, including those other than the local player's. |
+| `"all"` | String in the argument Array | Enable all of the above. |
+| `"stop"` | String in the argument Array | Stop the local marker script. |
 
 You can combine options, e.g. `["players", "ais"] execVM "...player_markers.sqf";`. Calling the script again replaces the previous run; `["stop"]` halts it. Markers are created **locally** on each client.
+
+`execVM` returns a Script handle for the launched file, not a marker or a WMP success
+value. The marker script exits on machines without a player interface. Each joining
+player runs their own optional loader when `init.sqf` is enabled; no server marker
+registry is published.
 
 ---
 
@@ -58,9 +63,9 @@ Check that the optional loader line is active in `init.sqf` and that the third-p
 
 ## See also
 
-* [Headless Client Support](Headless-Client-Support) — the native, opt-in replacement for the legacy headless-client script
-* [Mission Configuration Reference](Mission-Configuration-Reference) — where the loader line lives in `init.sqf`
-* [Waldos AI Tweak](Waldos-AI-Tweak) — AI skill tuning that works alongside headless offloading
+* [Headless Client Support](Headless-Client-Support): the native, opt-in replacement for the legacy headless-client script
+* [Mission Configuration Reference](Mission-Configuration-Reference): where the loader line lives in `init.sqf`
+* [Waldos AI Tweak](Waldos-AI-Tweak): AI skill tuning that works alongside headless offloading
 * [AI Convoy System](AI-Convoy-System)
 
 <!-- WMP-WIKI-NAV -->

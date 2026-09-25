@@ -2,6 +2,10 @@
 
 > **Use this page when:** adding a single scroll-wheel action that moves the player to a destination.
 
+This helper gives one Eden object a simple teleport action. The destination can be a named map marker or a live world reference. It uses a fixed arrival offset, so check the landing space before players use it.
+
+## Set up a teleport action
+
 Put a destination marker or object in Eden. Name it, then put this in the interaction object's **Init** field:
 
 ```sqf
@@ -9,6 +13,8 @@ Put a destination marker or object in Eden. Name it, then put this in the intera
 ```
 
 The marker named `respawn_west` must exist in the mission. The call also accepts an object, map location, group or task as its destination.
+
+## Call and parameters
 
 `Waldo_fnc_Teleport` accepts:
 
@@ -18,7 +24,7 @@ The marker named `respawn_west` must exist in the mission. The call also accepts
 | 1 | String | `"Teleport"` | Label players see. |
 | 2 | Object, marker-name string, Location, Group or Task | Interaction object | Destination that exists when the player selects the action. Use a quoted marker name such as `"respawn_west"`, not the marker's visible text. |
 
-The function returns the local `addAction` ID. An Init field runs on every machine, so each player's interface gets its own action.
+The function returns the local `addAction` ID. An Init field runs on every machine, so each player's interface gets its own action. Repeating the call installs another action. This helper does not remove an earlier one. If you create the interaction object during play, set up its action on each interface client, including joining players.
 
 The helper adds a green vanilla scroll-wheel action. It moves the player about three metres east and north of the destination and shows the built-in “A few minutes later...” fade. It does not search for clear ground. Test the arrival point, especially inside buildings or near obstacles.
 

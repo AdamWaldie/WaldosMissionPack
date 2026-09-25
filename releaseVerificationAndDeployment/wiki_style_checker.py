@@ -60,6 +60,14 @@ TYPED_GUIDES = {
     "Waldos-AI-Tweak",
     "Medical-Vehicle-Flags", "Unit-Insignias",
     "Map-Location-Tools",
+    "Airborne-Gunship-Support",
+    "Cover-Loading-Screen-Generation", "Third-Party-Scripts-Headless-Client-And-Player-Markers",
+    "Radio-Reports,-Checklists,-Support-Calls-And-Documentation",
+    "Mission-Maker-Resource-Scripts",
+    "Waldos-Economy-Systems-Resource-System", "Waldos-Economy-Systems-Research-System",
+    "Waldos-Economy-Systems-Build-System", "Waldos-Economy-Systems-Buy-System",
+    "Waldos-Mini-Games-Table-Games",
+    "Waldos-Economy-Systems-Ground-Command-And-Tools",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -85,6 +93,7 @@ SETTING_CONTRACTS = {
     "Headless-Client-Support": ("headlessConfig.sqf", ("Waldo_Headless_",)),
     "Obituary-and-Confirmed-Deaths": ("interfaceConfig.sqf", ("Waldo_Obituary_",)),
     "Waldos-AI-Tweak": ("aiConfig.sqf", ("Waldo_AIRebalance_", "Waldo_AI_")),
+    "Airborne-Gunship-Support": ("airOperationsConfig.sqf", ("Waldo_Gunship_",)),
 }
 
 # These are player-facing feature guides with independent setup paths. Add a new
@@ -110,11 +119,13 @@ FEATURE_GUIDES = {
     "Explosive-Breaching",
     "Object-Scaling",
     "UI-Visual-Themes",
+    "Aircraft-Boarding-Actions",
+    "Teleport-Actions",
 }
 
 GUIDE_SECTIONS = {
     "setup": re.compile(r"^## (?:Before|Enable|Set |Start |Place |Try |The quickest|Change an object|Setup|Quick|Create a first|Scale one)", re.I | re.M),
-    "reference": re.compile(r"^## (?:Script|Settings|Parameters|Choose|Change crate|Mission-wide|Mission extensions|The jamming model|Configuration|Set handling|WMP-created|Supported Throwables|Seats covered|Calls and settings|Change access|Change the result|Choose the safety|Choose the cards|Change the player|Configure another|Limits and placement)", re.I | re.M),
+    "reference": re.compile(r"^## (?:Call|Script|Settings|Parameters|Choose|Change crate|Mission-wide|Mission extensions|The jamming model|Configuration|Set handling|WMP-created|Supported Throwables|Seats covered|Calls and settings|Change access|Change the result|Choose the safety|Choose the cards|Change the player|Configure another|Limits and placement)", re.I | re.M),
     "limits": re.compile(r"^## (?:If |During play and troubleshooting|Engine boundaries|Carrying cargo away|Limitations|Runtime and troubleshooting|Salvage and troubleshooting|Remove or diagnose)", re.I | re.M),
     "related": re.compile(r"^## See also\s*$", re.I | re.M),
 }
@@ -236,9 +247,10 @@ def audit() -> tuple[int, list[str]]:
                 if not pattern.search(text):
                     findings.append(f"{page.name}: missing {section} section required by the Wiki Page Standard")
 
-        if page.stem in TYPED_GUIDES:
+        if page.stem in indexed_features or page.stem in TYPED_GUIDES:
             if not re.search(r"^\|[^\n]*\bType\b[^\n]*\|", text, re.I | re.M):
                 findings.append(f"{page.name}: add a typed argument or settings table")
+        if page.stem in TYPED_GUIDES:
             if "Waldo_fnc_" in text and not re.search(r"\breturns?\b|\bReturn Value\b", text, re.I):
                 findings.append(f"{page.name}: explain what the public call returns")
         if page.stem in SETTING_CONTRACTS:

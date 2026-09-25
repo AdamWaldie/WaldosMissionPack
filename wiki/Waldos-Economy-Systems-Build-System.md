@@ -6,7 +6,7 @@ _Associated Files: MissionScripts\EconomySystems\Build\ (`Waldo_fnc_EcoBuild_*`)
 
 ![Construction catalog](images/economy/economy-build.png)
 
-The Build System is the most intricate part of [Waldos Economy Systems](Waldos-Economy-Systems). It lets players construct and upgrade buildings that shape the economy — producing [resources](Waldos-Economy-Systems-Resource-System), raising storage, speeding up [research](Waldos-Economy-Systems-Research-System)/construction, or revealing the enemy.
+The Build System lets players construct and upgrade buildings. Buildings can produce [resources](Waldos-Economy-Systems-Resource-System), raise storage, speed up [research](Waldos-Economy-Systems-Research-System) and construction, or reveal enemies.
 
 ## Construction vehicles
 
@@ -28,7 +28,9 @@ the WMP operations-console visual treatment.
 
 ## Defining buildings
 
-Each build entry is rich — you give it a **name**, **description**, **cost**, **requirements**, **build time**, the **classname** to spawn, and any of: **resource production** (resource + amount + interval), **storage capacity** boosts, **research-** and **construction-speed** boosts, **upkeep**, **side availability**, **build limits**, and upgrade targets.
+Each build entry names the object to construct, its cost, requirements and build
+time. Optional fields control production, storage, speed boosts, upkeep, side
+access, limits and upgrades.
 
 In Zeus: **Build → Configure Buildings** (a tabbed editor for the many fields). From script, trailing fields are optional and default sensibly:
 
@@ -41,39 +43,45 @@ In Zeus: **Build → Configure Buildings** (a tabbed editor for the many fields)
 ]] call Waldo_fnc_EcoBuild_setBuildCatalog;
 ```
 
-* `costRows` — `[["Resource", amount], ...]`  ·  `requirementList` — research/building names that must exist first
+* `costRows`: `[["Resource", amount], ...]`. `requirementList`: research/building names that must exist first
 * Production: a building can output a resource every N seconds while it stands (subject to the side's storage cap).
 * Boosts: buildings can shorten research and construction times, and raise resource storage caps.
 * Upkeep: a building can consume resources over time to keep running.
 
 ### Full row reference
 
-Every field beyond `name` is optional and defaults sensibly if omitted — the example above only sets the first 12:
+Every field beyond `name` is optional. The example above sets the first 12:
 
-| # | Field | Default | Purpose |
-|---|---|---|---|
-| 0 | `name` | required | Catalogue key and display name |
-| 1 | `description` | `""` | Shown in the build menu |
-| 2 | `costRows` | `[]` | `[["Resource", amount], ...]` |
-| 3 | `requirements` | `[]` | Research/building names that must exist first |
-| 4 | `buildTime` | `60` | Seconds, minimum `1` |
-| 5 | `icon` | resource default icon | Menu icon path |
-| 6 | `color` | resource default colour | Menu accent colour |
-| 7 | *(reserved)* | `false` | Internal "already built" flag — leave as `false` in a catalogue definition |
-| 8 | `className` | `""` | `CfgVehicles` classname spawned on completion |
-| 9 | `produceResource` | `""` | Resource name this building generates while standing |
-| 10 | `produceAmount` | `0` | Amount produced per interval |
-| 11 | `produceInterval` | `0` | Seconds between production ticks |
-| 12 | `researchSpeedBoost` | `0` | Reduces research time mission-wide while standing |
-| 13 | `buildSpeedBoost` | `0` | Reduces construction time mission-wide while standing |
-| 14 | `detectorRange` | `0` | Non-zero makes this a RADAR building (see below) |
-| 15 | `upkeepCosts` | `[]` | `[["Resource", amount], ...]` consumed per upkeep interval |
-| 16 | `upkeepInterval` | `0` | Seconds between upkeep charges |
-| 17 | `storageRows` | `[]` | `[["Resource", capacityBoost], ...]` |
-| 18 | `upgradeTo` | `""` | Name of the catalogue entry this building can upgrade into |
-| 19 | `buildLimit` | `0` | Maximum standing count per side; `0` is unlimited |
-| 20 | `availability` | `["ALL"]` | Sides allowed to build this entry |
-| 21 | `category` | `""` | Optional menu grouping label |
+| # | Field | Type | Default | Purpose |
+|---|---|---|---|---|
+| 0 | `name` | String | required | Catalogue key and display name |
+| 1 | `description` | String | `""` | Shown in the build menu |
+| 2 | `costRows` | Array of `[resource String, amount Number]` rows | `[]` | Resource cost |
+| 3 | `requirements` | Array of name Strings | `[]` | Research/building names that must exist first |
+| 4 | `buildTime` | Number, seconds | `60` | Minimum `1` |
+| 5 | `icon` | Image-path String | resource default icon | Menu icon |
+| 6 | `color` | Hex-colour String | resource default colour | Menu accent colour |
+| 7 | *(reserved)* | Boolean | `false` | Normalizer forces `false`; leave this slot in long rows |
+| 8 | `className` | `CfgVehicles` class String | `""` | Object spawned on completion |
+| 9 | `produceResource` | Resource-name String | `""` | Resource generated while standing |
+| 10 | `produceAmount` | Number | `0` | Amount produced per interval |
+| 11 | `produceInterval` | Number, seconds | `0` | Time between production ticks |
+| 12 | `researchSpeedBoost` | Number | `0` | Reduces research time while standing |
+| 13 | `buildSpeedBoost` | Number | `0` | Reduces construction time while standing |
+| 14 | `detectorRange` | Number, metres | `0` | Non-zero makes this a RADAR building |
+| 15 | `upkeepCosts` | Array of `[resource String, amount Number]` rows | `[]` | Consumed per upkeep interval |
+| 16 | `upkeepInterval` | Number, seconds | `0` | Time between upkeep charges |
+| 17 | `storageRows` | Array of `[resource String, capacity boost Number]` rows | `[]` | Raises storage cap |
+| 18 | `upgradeTo` | Catalogue-name String | `""` | Entry this building can upgrade into |
+| 19 | `buildLimit` | Number | `0` | Maximum standing count per side; zero is unlimited |
+| 20 | `availability` | Array of side-name Strings | `["ALL"]` | Sides allowed to build this entry |
+| 21 | `category` | String | `""` | Optional menu grouping label |
+
+`Waldo_fnc_EcoBuild_setBuildCatalog` takes one Array of these rows, replaces
+the server-owned catalogue and returns nothing. Put authored calls in
+`MissionConfig/economyConfig.sqf`. The
+`Waldo_fnc_EcoBuild_registerConstructionVehicle` call takes one existing vehicle
+Object, tags it for client/JIP actions and has no documented return value.
 
 ## Upgrades & limits
 
@@ -81,7 +89,7 @@ Buildings can be **upgraded** into a higher tier, and you can cap how many of a 
 
 ## RADAR
 
-A building flagged as a RADAR periodically reveals enemy units on the map for its side — a powerful, upkeep-worthy structure for map awareness.
+A building flagged as a RADAR periodically reveals enemy units on the map for its side. It can have an upkeep cost.
 
 ## If a building is unavailable
 
@@ -89,7 +97,7 @@ Check its catalogue entry, required research, side access, resource cost and bui
 
 ## See also
 
-* [Resource System](Waldos-Economy-Systems-Resource-System) — production and storage feed the Build System.
+* [Resource System](Waldos-Economy-Systems-Resource-System): production and storage feed the Build System.
 * [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)
 
 <!-- WMP-WIKI-NAV -->
