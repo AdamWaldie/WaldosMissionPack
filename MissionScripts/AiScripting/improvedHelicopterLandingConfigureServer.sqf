@@ -3,15 +3,20 @@
  * Validates and broadcasts live improved-helicopter-landing settings. Remote changes require an
  * assigned curator. Connected machines receive one ordered payload before the event-driven handler
  * is initialised; the server's durable values are included in the normal JIP runtime snapshot.
+ * Locality and authority: call on the server for an immediate acceptance result. A client call
+ * forwards to server and returns false before acceptance is known. Repeating replaces the live
+ * global settings; the ordered update and normal JIP snapshot reach current and joining clients.
  *
  * Arguments:
- * 0: settings <ARRAY> - enabled, minimum distance, transit altitude, glideslope ratio, tree radius,
- *    tree buffer, go-around height, maximum climb, maximum descent, maximum go-arounds and
- *    touchdown settling delay.
+ * 0: settings <ARRAY> - exactly 11 entries: enabled <BOOL>, minimum distance <NUMBER metres>,
+ *    transit altitude <NUMBER metres>, glide ratio <NUMBER>, tree radius <NUMBER metres>,
+ *    tree buffer <NUMBER metres>, go-around height <NUMBER metres>, maximum climb and descent
+ *    <NUMBER metres/second each>, maximum go-arounds <NUMBER>, touchdown hold <NUMBER seconds>.
  *
- * Return Value: BOOL - true when accepted.
+ * Return Value: BOOL - true when accepted on the server; a forwarded client request returns false.
  *
  * Example: [[true, 50, 30, 4, 25, 5, 150, 8, 10, 1, 8]] call Waldo_fnc_ImprovedHelicopterLandingConfigureServer;
+ * Result: the server publishes this landing profile to current and joining clients.
  * Current callers: mission scripts that intentionally change the live global landing profile.
  */
 

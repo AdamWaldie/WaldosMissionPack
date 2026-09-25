@@ -29,13 +29,13 @@ Safestart is available automatically but starts **inactive**. To begin a mission
 ["Waldo_SafeStart_AutoStart", true, true]
 ```
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `Waldo_SafeStart_AutoStart` | `false` | `false` starts live while retaining all Zeus controls; `true` begins protected. |
-| `Waldo_SafeStart_Confine` | `false` | Set `true` to pull players back into the configured area while protection is active. |
-| `Waldo_SafeStart_Radius` | `150` | Confinement radius in metres around each player's start position when no zone marker is set. |
-| `Waldo_SafeStart_ZoneMarker` | `""` | Set to a marker name to confine everyone to **one shared zone** (the marker's position and size) instead of a per-player radius. |
-| `Waldo_SafeStart_GoLiveHintDuration` | `12` (script fallback) | Seconds the go-live explanation remains visible. This is not a shipped config row; advanced missions can set it on the server before the notice. |
+| Variable | Type | Shipped default | Purpose |
+|---|---|---|---|
+| `Waldo_SafeStart_AutoStart` | Boolean | `false` | `false` starts live while retaining all Zeus controls; `true` begins protected. |
+| `Waldo_SafeStart_Confine` | Boolean | `false` | Set `true` to pull players back into the configured area while protection is active. |
+| `Waldo_SafeStart_Radius` | Number, metres | `150` | Confinement radius around each player's start position when no zone marker is set. |
+| `Waldo_SafeStart_ZoneMarker` | Marker-name string | `""` | Blank uses the per-player radius; an existing Eden area marker name uses one shared zone, including that marker's size. This is a **string**, not an Object. |
+| `Waldo_SafeStart_GoLiveHintDuration` | Number, seconds | `12` (script fallback) | Time the go-live explanation stays visible. This is not a shipped config row; advanced missions can set it on the server before the notice. |
 
 ## Going live & the scripting API
 
@@ -46,6 +46,14 @@ The API is **server-authoritative** — it is safe to call from a client, it for
 [false] call Waldo_fnc_SafeStart;        // go live (admin overrule; also cancels any countdown)
 [300]   call Waldo_fnc_SafeStartTimer;   // go live automatically in 300 seconds (banner shows the clock)
 ```
+
+| Call | Position | Type | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `Waldo_fnc_SafeStart` | `0: enable` | Boolean | `true` | `true` starts protection; `false` ends it and cancels the countdown. |
+| `Waldo_fnc_SafeStart` | `1: reason` | String | `"MANUAL"` | Reason recorded with the state change. Normal mission calls can omit it. |
+| `Waldo_fnc_SafeStartTimer` | `0: seconds` | Number, seconds | `300` | Delay until go-live. Zero or less goes live now. A new timer replaces an earlier deadline. |
+
+Both calls return nothing. A client call only forwards the request; read the published state if a later step depends on completion. `initServer.sqf` calls SafeStart only when `AutoStart` is on. The SafeStart ZEN controls and timer use the same authority path. Players joining during protection receive the current state and countdown.
 
 `Waldo_fnc_SafeStartTimer` makes sure Safestart is active, then publishes the go-live time so every player's banner shows a live countdown, and lifts the freeze automatically when it expires. Calling it again restarts/extends the timer. An admin can overrule a running countdown at any time with `[false] call Waldo_fnc_SafeStart`.
 

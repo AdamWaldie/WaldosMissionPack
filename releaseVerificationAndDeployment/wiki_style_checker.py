@@ -45,6 +45,7 @@ TYPED_GUIDES = {
     "Emergency-Dismount", "Explosive-Breaching", "Object-Scaling",
     "EMP-Burst", "Signal-Trackers", "Vehicle-Recovery", "WMP-HUD",
     "Loadout-Saving-and-Respawn",
+    "Safestart", "Transport-Services", "Improved-AI-Helicopter-Landings",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -62,6 +63,8 @@ SETTING_CONTRACTS = {
     "Vehicle-Recovery": ("logisticsConfig.sqf", ("Waldo_Recovery_",)),
     "WMP-HUD": ("interfaceConfig.sqf", ("Waldo_WmpHud_",)),
     "Loadout-Saving-and-Respawn": ("logisticsConfig.sqf", ("Waldo_Respawn_",)),
+    "Safestart": ("missionSystemsConfig.sqf", ("Waldo_SafeStart_",)),
+    "Improved-AI-Helicopter-Landings": ("aiConfig.sqf", ("Waldo_ImprovedHelicopterLanding_",)),
 }
 
 # These are player-facing feature guides with independent setup paths. Add a new

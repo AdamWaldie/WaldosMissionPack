@@ -49,6 +49,18 @@ its base. An empty vehicle is rejected with a clear error; add its AI driver and
 
 The optional fifth argument is a readable HashMap. Omit it for the safe defaults:
 
+`Waldo_fnc_TransportRegister` accepts one existing, AI-crewed vehicle. It does not create its own vehicle or crew. Put the call in that vehicle's Eden Init field or run it from a server script. Eden's client copies are ignored; the server owns the registration and publishes the object state for joining players.
+
+| Position | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `0: vehicle` | Object | Required | Simulated helicopter, land vehicle or boat with its AI driver already aboard. |
+| `1: service type` | String: `"HELICOPTER"`, `"GROUND"` or `"BOAT"` | `"GROUND"` | Chooses the independent player-request pool. |
+| `2: service ID` | String | `""` | Stable unique key. Empty asks WMP to generate one; supply your own when another script must refer to this service. |
+| `3: display name` | String | `""` | Player-facing name. Empty uses the crew group's ID. |
+| `4: options` | HashMap or array of `[key, value]` rows | Empty HashMap | Per-service choices below. An empty map uses the shipped defaults. |
+
+The call returns `true` when the server registers the vehicle, or when a duplicate Eden client copy was ignored. It returns `false` for a rejected vehicle/type or server validation failure. Read the result on the server when you need to know whether the vehicle actually entered the service pool. The ZEN registration module uses the same server path.
+
 ```sqf
 [this, "HELICOPTER", "RAVEN_1", "Raven One", createHashMapFromArray [
     ["leadersOnly", true],
@@ -151,27 +163,36 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 
 ## Per-service options
 
-| Option | Beginner meaning |
-|---|---|
-| `landingSearchRadius` | Maximum metres a helicopter LZ may move away from the clicked point. Default `500`. |
-| `landingClearanceScale` | Multiplies the helicopter's real model width and length for LZ clearance. Default `1.5`; values below `1` are rejected. |
-| `roadSearchRadius` | Maximum metres searched for a road around a ground-transport click. |
-| `waterSearchRadius` | Maximum metres a boat service point may move away from the clicked position while searching for open water. Default `300`. |
-| `minimumSeparation` | Minimum metres between active destinations and bulk service slots. Defaults to 60 for helicopters, 18 for ground vehicles and 25 for boats. Prepared bases may be closer; registration rejects only physically overlapping vehicle footprints. |
-| `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
-| `boatSpeedLimit` | Maximum boat-transport speed in km/h. Default `45`. |
-| `pathRetrySeconds` | Seconds without progress before the driver receives the same order again (ground and boat). |
-| `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey (ground and boat). |
-| `avoidRoadObstacles` | Ground only, default `true`: the first stalled retry drops the road-follow order so off-road pathfinding can route around whatever blocked the road. Set `false` to keep retrying the same road-locked path instead. |
-| `useImprovedLanding` | Default `true`: apply WMP's vector-guided final approach to pickup `TR UNLOAD` and the destination's transport-qualified `MOVE` route. Set `false` to use the direct `land "LAND"` fallback only. |
-| `destinationDwell` | Seconds before the optional forced-exit request. Default `45`. It never authorizes RTB while a human remains aboard. |
-| `forceDisembark` | Default `false`: nobody is ejected and the transport waits for every player to leave. When true, WMP requests `moveOut` after `destinationDwell`, but RTB still waits for every human-occupied `fullCrew` row to clear. |
-| `Waldo_Transport_DestinationSettleSeconds` | Advanced global safety setting. Continuous grounded/slow time required before automatic RTB; default `3` seconds. |
-| `Waldo_Transport_DestinationEmptyConfirmSeconds` | Advanced global safety setting. Continuous human-empty confirmation required before automatic RTB; default `2` seconds. |
-| `Waldo_Transport_DestinationSettleSpeedKph` | Advanced global safety setting. Maximum total speed still considered settled; default `5 km/h`. |
+| Option key | Type | Default | Effect |
+|---|---|---|---|
+| `cruiseAltitude` | Number, metres | `50` | Helicopter cruise height. |
+| `stopRadius` | Number, metres | `35` helicopter; `12` otherwise | Arrival distance. |
+| `boardingSeconds` | Number, seconds | `300` | Time allowed to board after pickup. |
+| `destinationDwell` | Number, seconds | `45` | Delay before an optional forced-exit request. It never authorizes RTB with a human aboard. |
+| `allowedSides` | Array of Side values | `[side driver vehicle]` | Sides allowed to request this service. |
+| `allowedGroups` | Array of group IDs | `[]` | Empty adds no group restriction. |
+| `leadersOnly` | Boolean | `false` | Restrict requests to group leaders. |
+| `showMarker` | Boolean | `true` | Show the named, moving service marker. |
+| `repairAtBase` | Boolean | `false` | Repair the service when it returns to base. |
+| `refuelAtBase` | Boolean | `true` | Refuel the service at base. |
+| `invulnerable` | Boolean | `false` | Protect the vehicle and original AI crew, never passenger players. |
+| `forceDisembark` | Boolean | `false` | Request `moveOut` after `destinationDwell`; RTB still waits for every human to leave. |
+| `failSafeReset` | Boolean | `false` | Permit emergency repositioning after an empty physical RTB fails. |
+| `speedMode` | String | `"NORMAL"` ground; `"FULL"` otherwise | AI route speed mode. |
+| `behaviour` | String | `"CARELESS"` | AI group behaviour during service. |
+| `landingSearchRadius` | Number, metres | `500` | Furthest a helicopter LZ may move from the click. Minimum 10. |
+| `landingClearanceScale` | Number, multiplier | `1.5` | Scales real helicopter width/length for LZ clearance. Minimum 1. |
+| `roadSearchRadius` | Number, metres | `200` | Ground vehicle road search around the click. Minimum 0. |
+| `waterSearchRadius` | Number, metres | `300` | Boat open-water search around the click. Minimum 0. |
+| `minimumSeparation` | Number, metres | `60` helicopter; `18` ground; `25` boat | Spacing between active destinations and bulk service slots. |
+| `groundSpeedLimit` | Number, km/h | `60` | Ground speed cap. Minimum 5. |
+| `boatSpeedLimit` | Number, km/h | `45` | Boat speed cap. Minimum 5. |
+| `pathRetrySeconds` | Number, seconds | `25` | No-progress time before retry for ground/boat routes. Minimum 10. |
+| `pathRetryLimit` | Number, whole retries | `3` | Maximum ground/boat route retries; negative becomes zero. |
+| `avoidRoadObstacles` | Boolean | `true` | On the first stalled ground retry, permit off-road pathfinding around an obstacle. |
+| `useImprovedLanding` | Boolean | `true` | Use WMP's guided final helicopter approach. `false` uses the direct LAND fallback. |
 
-| `invulnerable` | Default `false`: when enabled, protects the transport and its original AI service crew across locality changes. Passenger players remain vulnerable. |
-| `failSafeReset` | Default `false`; opt-in emergency teleport after an empty physical RTB fails. |
+`Waldo_Transport_DestinationSettleSeconds` (Number, `3` seconds), `Waldo_Transport_DestinationEmptyConfirmSeconds` (Number, `2` seconds) and `Waldo_Transport_DestinationSettleSpeedKph` (Number, `5` km/h) are **mission-wide safety settings** in `MissionConfig/logisticsConfig.sqf`, not keys in the per-service HashMap. They control the grounded, slow, human-empty wait before automatic RTB.
 
 ## ZEN and lifecycle
 
