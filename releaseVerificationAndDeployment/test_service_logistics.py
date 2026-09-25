@@ -284,15 +284,17 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             ('MissionScripts/ZenModules/ZenSpawnCrateServer.sqf', '_crate'),
             ('MissionScripts/ZenModules/Zen_loadoutSaveModule.sqf', '_target'),
             ('MissionScripts/ZenModules/RuntimeControl/featureRuntimeApply.sqf', '_hub'),
+            ('MissionScripts/Logistics/FieldResupply/fieldResupplyServerHandle.sqf', '_crate'),
         ):
             # Remote-executed callers finish cargo setup from CBA's next frame, where the
             # object is passed as _this select 0 (see test_registration_leaves_remote_context).
             deferred = path.endswith(('LogiBoxes.sqf', 'quartermasterExtendedSpawn.sqf', 'ZenSpawnCrateServer.sqf',
-                                      'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
+                                      'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf',
+                                      'fieldResupplyServerHandle.sqf'))
             target = '_this select 0' if deferred else object_name
             self.assertIn(f'[{target}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'
-                          if path.endswith(('ZenSpawnCrateServer.sqf',
-                                            'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
+                          if path.endswith(('ZenSpawnCrateServer.sqf', 'Zen_loadoutSaveModule.sqf',
+                                            'featureRuntimeApply.sqf', 'fieldResupplyServerHandle.sqf'))
                           else f'[{target}, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes',
                           source(path), path)
         starter = source('MissionScripts/Logistics/Crates/doStarterCrate.sqf')
@@ -362,6 +364,27 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         live = source('MissionScripts/MissionFlowAndUi/uiThemeApplyDisplayLocal.sqf')
         self.assertIn('Waldo_UI_BaseFontHeight', live)
         self.assertIn('ctrlTextWidth _control > (_width * 0.94)', live)
+
+    def test_wmp_setup_paths_apply_standard_ace_handling(self):
+        helper = source('MissionScripts/Logistics/Crates/logisticsApplyAceHandling.sqf')
+        self.assertIn('_object isKindOf "CAManBase"', helper)
+        self.assertIn('!(_object isKindOf "StaticWeapon")', helper)
+        self.assertIn('true, true, true, true] call Waldo_fnc_SetCargoAttributes', helper)
+        self.assertIn('class LogisticsApplyAceHandling', source('MissionScripts/WaldosFunctions.sqf'))
+        for path in ('MissionScripts/Logistics/Crates/doSupplyCrate.sqf',
+                     'MissionScripts/Logistics/Crates/doMedicalCrate.sqf'):
+            text = source(path)
+            self.assertIn('[_this select 0, 1] call Waldo_fnc_LogisticsApplyAceHandling;', text, path)
+            self.assertLess(text.index('LogisticsApplyAceHandling'), text.index('_this spawn Waldo_fnc_LogisticsRegisterSpawned'))
+        zen = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
+        for case, registrar in (('BASE_UPSERT', 'BaseServicesRegisterNode'),
+                                ('SUPPLY_REGISTER', 'SupplyTransfersRegister'),
+                                ('PHYSICAL_ENABLE', 'PhysicalCargoRegister')):
+            block = zen[zen.index(f'case "{case}"'):]
+            self.assertLess(block.index('[_target] call Waldo_fnc_LogisticsApplyAceHandling;'),
+                            block.index(f'Waldo_fnc_{registrar}'), case)
+            # Applied inside the deferred worker, never in the curator's remote context.
+            self.assertLess(block.index('[{_this spawn {'), block.index('LogisticsApplyAceHandling'), case)
 
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")

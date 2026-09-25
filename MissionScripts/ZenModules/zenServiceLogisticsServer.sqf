@@ -33,6 +33,9 @@ switch (toUpperANSI _operation) do {
             // curator request's context, so start every such worker from CBA's next frame.
             [{_this spawn {
                 params ["_target", "_group", "_label", "_services", "_transition", "_replyOwner"];
+                // Objects set up through WMP's ZEN modules get the standard ACE handling; people and
+                // vehicles (other than static weapons) are left unchanged by the helper.
+                [_target] call Waldo_fnc_LogisticsApplyAceHandling;
                 private _applied = [_target, _group, _label, _services, "", _transition]
                     call Waldo_fnc_BaseServicesRegisterNode;
                 diag_log format ["[WMP ZEN] BASE_UPSERT applied=%1 target=%2 group=%3", _applied, netId _target, _group];
@@ -108,6 +111,7 @@ switch (toUpperANSI _operation) do {
         } else {
             [{_this spawn {
                 params ["_target", "_replyOwner"];
+                [_target] call Waldo_fnc_LogisticsApplyAceHandling;
                 private _applied = [_target] call Waldo_fnc_SupplyTransfersRegister;
                 diag_log format ["[WMP ZEN] SUPPLY_REGISTER applied=%1 target=%2 class=%3 maxLoad=%4",
                     _applied, netId _target, typeOf _target, maxLoad _target];
@@ -140,6 +144,7 @@ switch (toUpperANSI _operation) do {
                 || {_target isKindOf "Air"} || {_target isKindOf "Ship"})}) then {
             [{_this spawn {
                 params ["_target", "_replyOwner"];
+                [_target] call Waldo_fnc_LogisticsApplyAceHandling;
                 private _applied = [_target] call Waldo_fnc_PhysicalCargoRegister;
                 diag_log format ["[WMP ZEN] PHYSICAL_ENABLE applied=%1 target=%2", _applied, netId _target];
                 if (_replyOwner > 2) then {

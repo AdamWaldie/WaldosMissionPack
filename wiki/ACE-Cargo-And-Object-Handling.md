@@ -60,7 +60,15 @@ If you omit the handling Booleans, WMP allows Drag and Carry for portable object
 
 ## WMP-created crates
 
-Quartermaster issues and WMP ZEN supply and medical crates allow Drag and Carry regardless of ACE's weight limits. Each takes one ACE cargo slot. WMP leaves the class's storage space unchanged. Check that space before letting a crate hold other ACE cargo objects.
+Quartermaster issues, WMP ZEN supply and medical crates, crates filled by the supply and medical
+crate helpers, and deployed Field Resupply crates allow Drag and Carry regardless of ACE's weight
+limits. Each takes one ACE cargo slot. WMP leaves the class's storage space unchanged. Check that
+space before letting a crate hold other ACE cargo objects.
+
+An object you set up with the WMP Logistics ZEN modules (**Physical Cargo - Eligibility**,
+**Supply Transfers** register or a **Base Services** node) also gets Drag and Carry regardless of
+weight, and keeps its own cargo size. People and vehicles are left unchanged, except static
+weapons, which get the same handling.
 
 Starter crates stay in place. WMP disables Drag, Carry and ACE loading for them. You can still change a chosen object's values deliberately with the ZEN module or script call.
 
