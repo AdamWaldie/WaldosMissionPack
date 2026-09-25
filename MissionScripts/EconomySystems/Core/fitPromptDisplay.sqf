@@ -110,6 +110,14 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             _newWidth,
             _newHeight
         ];
+        // Apply the theme's button font before measuring. Fitting text with the default font and
+        // swapping to a wider theme font afterwards (monospace/Purista themes) overran buttons.
+        if ((ctrlType _x) in [1, 16]) then {
+            _x ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.035, 0.16, 0.28, 0.98]]);
+            _x ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.08, 0.48, 0.78, 1]]);
+            _x ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);
+            _x ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
+        };
         if ((ctrlType _x) in [0, 1, 2, 4, 11, 16, 41] && {ctrlText _x != ""}) then {
             private _fontHeight = ctrlFontHeight _x;
             if (_fontHeight > 0) then {
@@ -130,12 +138,6 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
                 };
             };
         };
-        if ((ctrlType _x) in [1, 16]) then {
-            _x ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.035, 0.16, 0.28, 0.98]]);
-            _x ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.08, 0.48, 0.78, 1]]);
-            _x ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);
-            _x ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
-        };
         _x ctrlCommit 0;
     } forEach _controls;
 
@@ -146,6 +148,14 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
         private _newWidth = _width * _scale;
         private _newHeight = _height * _scale;
         _x ctrlSetPosition [_xPos * _scale, _yPos * _scale, _newWidth, _newHeight];
+        // Apply the theme's button font before measuring. Fitting text with the default font and
+        // swapping to a wider theme font afterwards (monospace/Purista themes) overran buttons.
+        if ((ctrlType _x) in [1, 16]) then {
+            _x ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.035, 0.16, 0.28, 0.98]]);
+            _x ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.08, 0.48, 0.78, 1]]);
+            _x ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);
+            _x ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
+        };
         if ((ctrlType _x) in [0, 1, 2, 4, 11, 16, 41] && {ctrlText _x != ""}) then {
             private _fontHeight = (ctrlFontHeight _x) * _scale;
             if (_fontHeight > 0) then {
@@ -165,12 +175,6 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
                     _x ctrlCommit 0;
                 };
             };
-        };
-        if ((ctrlType _x) in [1, 16]) then {
-            _x ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.035, 0.16, 0.28, 0.98]]);
-            _x ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.08, 0.48, 0.78, 1]]);
-            _x ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);
-            _x ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
         };
         _x ctrlCommit 0;
     } forEach _nestedControls;

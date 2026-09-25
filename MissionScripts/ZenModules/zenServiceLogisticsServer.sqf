@@ -38,7 +38,7 @@ switch (toUpperANSI _operation) do {
                 diag_log format ["[WMP ZEN] BASE_UPSERT applied=%1 target=%2 group=%3", _applied, netId _target, _group];
                 if (_replyOwner > 2) then {
                     ["BASE SERVICES", if (_applied) then {format ["%1 registered in %2.", _label, _group]}
-                        else {"Base node could not be registered; check the feature flag and target."},
+                        else {"Base node could not be registered: Base Services is disabled or the network or node name is empty. Any object can be a node."},
                         if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_BASE_NODE", 7]
                         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                 };

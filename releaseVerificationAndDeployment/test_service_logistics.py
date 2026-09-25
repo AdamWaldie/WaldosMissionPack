@@ -350,6 +350,19 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             line = next(l for l in text.splitlines() if 'player addAction' in l and label in l)
             self.assertIn("Waldo_TransportService_Type", line, label)
 
+    def test_theme_font_applied_before_button_text_is_fitted(self):
+        fit = source('MissionScripts/EconomySystems/Core/fitPromptDisplay.sqf')
+        # Both the card and nested-group passes set the theme font before the shrink loop.
+        starts = [i for i in range(len(fit)) if fit.startswith('ctrlSetFont (_theme getOrDefault ["font"', i)]
+        loops = [i for i in range(len(fit)) if fit.startswith('ctrlTextWidth _x > (_newWidth', i)]
+        self.assertEqual(len(starts), 2)
+        self.assertEqual(len(loops), 2)
+        for font, loop in zip(starts, loops):
+            self.assertLess(font, loop)
+        live = source('MissionScripts/MissionFlowAndUi/uiThemeApplyDisplayLocal.sqf')
+        self.assertIn('Waldo_UI_BaseFontHeight', live)
+        self.assertIn('ctrlTextWidth _control > (_width * 0.94)', live)
+
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
         load = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetAceLoadServer.sqf")
