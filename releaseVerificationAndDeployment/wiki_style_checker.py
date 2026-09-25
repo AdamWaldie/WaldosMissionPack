@@ -47,6 +47,7 @@ TYPED_GUIDES = {
     "Loadout-Saving-and-Respawn",
     "Safestart", "Transport-Services", "Improved-AI-Helicopter-Landings",
     "Dynamic-Anti-Air", "Dynamic-AO-Generation", "Paradrop", "Custom-3D-World-Markers",
+    "Custom-UI-Notifications", "Vehicle-Appearance", "Vehicle-Weapon-Loadout",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),

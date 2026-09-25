@@ -45,6 +45,16 @@ can still confirm a real selection name yourself first with **Vehicle Customisat
 ]] call Waldo_fnc_VehicleAppearanceApply;
 ```
 
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `vehicle` | Object | `objNull` (rejected) | A live vehicle or static weapon; a unit is not eligible. Use `this` in the vehicle's Eden Init field. |
+| 1 `rows` | Array of appearance rows | `[]` | One or more `[targetType, selector, action, value]` entries, applied in order. |
+
+The server returns `[[ok, detail], ...]`, one result per row. A client call forwards the rows and
+returns `[]` immediately, so an empty client result does not prove the change failed. Repeating
+the call applies each new row to the vehicle's current appearance. Check the appearance on a
+joining client when using a modded vehicle or a model-specific selection name.
+
 | Field | Type | Meaning |
 |---|---|---|
 | `targetType` | STRING | `"TEXTURE"` or `"SELECTION"` |
@@ -86,6 +96,12 @@ Leave `turretPath` as `[]` for a purely cosmetic component with no associated we
 re-shows the selection - re-arm the turret separately with
 [`Waldo_fnc_VehicleWeaponLoadoutApply`](Vehicle-Weapon-Loadout) if you want the weapon back.
 
+`Waldo_fnc_VehicleComponentRemove` accepts a vehicle Object (position 0, required), model selection
+name String (position 1, required), turret-path Array (position 2, default `[]`) and hide Boolean
+(position 3, default `true`). The server returns `[appearanceResult, weaponResult]`; `weaponResult`
+is empty when no turret was cleared. A client forwards the call and returns `[[], []]` before the
+server changes the vehicle. Confirm selection names and turret paths on the actual vehicle first.
+
 ### Discovering candidate components automatically
 
 ```sqf
@@ -119,6 +135,10 @@ vehicle's model actually exposes, valid for hiding or not (there is no way to te
 engine alone; hiding one you shouldn't have is reversible with no lasting effect - test it against the
 real vehicle). `pasteReadyText` is just the comma-joined selection names, comment-free - this is what
 the ZEN Inspect module copies to the clipboard, deliberately never the full `reportText`.
+
+`Waldo_fnc_VehicleAppearanceInspect` takes one vehicle Object at position 0. It defaults to
+`objNull`, which returns an invalid-vehicle report. Inspection is read-only and runs where called;
+it does not require a server request or change the vehicle.
 
 ## Zeus modules
 
