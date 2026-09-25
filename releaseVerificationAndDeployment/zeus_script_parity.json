@@ -423,6 +423,15 @@
   },
   {
     "category": "core",
+    "module": "AI Orders",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassGarrison",
+    "parity": "adapter",
+    "notes": "One dialog routes four orders to their script APIs: garrison (Waldo_fnc_AIPassGarrison), release (Waldo_fnc_AIPassGarrisonRelease), clear building (Waldo_fnc_AIPassClearBuilding) and airborne reinforcement (Waldo_fnc_AIPassAirborneRequest). The curator picks a nearby group instead of passing one."
+  },
+  {
+    "category": "core",
     "module": "UI QA - Set Visual Theme",
     "handler": "Waldo_fnc_UiThemeZen",
     "via": "Waldo_fnc_UiThemeSetServer",

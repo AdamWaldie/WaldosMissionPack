@@ -190,6 +190,9 @@ for "_buildingIndex" from 0 to (_usableGarrisons - 1) do {
     private _positions = (_buildings select _buildingIndex) buildingPos -1;
     private _group = createGroup _side;
     [_group] call _trackGroup;
+    // Lets the Smart AI Pass apply its garrison handling when Waldo_AIPass_Garrison_DynamicAO is true.
+    _group setVariable ["Waldo_DynamicAO_Role", "GARRISON", true];
+    _group setVariable ["Waldo_DynamicAO_Building", _buildings select _buildingIndex, true];
     private _occupants = (2 + floor random 3) min count _positions;
     for "_unitIndex" from 0 to (_occupants - 1) do {
         private _unit = [_group, selectRandom _infantry, _positions select _unitIndex] call _spawnUnit;

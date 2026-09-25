@@ -214,22 +214,24 @@ The compatibility profile preserves established missions. New missions can selec
 ### Smart AI Pass (`MissionConfig\aiConfig.sqf`)
 
 Optional behaviour improvements for non-player AI groups. It is written from scratch for WMP; the
-design comes from an audit of several community AI mods, keeping their ideas and fixing their
-locality, performance and network faults. Off by default (`Waldo_AIPass_Enable = false`). Every
-behaviour has its own `Waldo_AIPass_<Behaviour>_Enable` switch; survivor regroup
-(`Waldo_AIPass_Regroup_Enable`) is the first shipped behaviour.
+design comes from an audit of Smart Combat V2, Digii AI, Scorpion's Advanced AI, PROTOCOL, Smart
+Merge, Smart Aircraft and Better Static, keeping their ideas and fixing their locality, performance
+and network faults. Off by default (`Waldo_AIPass_Enable = false`). Every behaviour has its own
+`Waldo_AIPass_<Behaviour>_Enable` switch. Artillery, counter-battery, airborne, surrender, grenade
+evasion and aircraft flares default off.
 
 ```sqf
 ["Waldo_AIPass_Enable", true],                            // master switch
 ["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // sides the pass may command
-["Waldo_AIPass_Regroup_Enable", true],                    // survivor regroup
+["Waldo_AIPass_LambsMode", "SPLIT"],                      // SPLIT or WMP when LAMBS Danger is loaded
 ```
 
 **Where it runs:** the server and headless clients only. `init.sqf` calls `Waldo_fnc_AIPassInit`
 on the server, which publishes `Waldo_AIPass_Enable` and replays itself to headless clients under
 the JIP key `Waldo_AIPass_RuntimeInit`. Player clients return immediately. Remote calls from
-anything other than the server are refused. `Waldo_fnc_AIPassStop` reverses all of it and sends
-survivors still walking back to their own orders with `doFollow`.
+anything other than the server are refused. `Waldo_fnc_AIPassStop` removes every handler and job and
+releases every managed group (`Waldo_fnc_AIPassReleaseGroup`). Surrenders, merges and explicit
+garrison orders stay.
 
 **Scheduler:** one CBA per-frame handler per machine (0.25 s) runs `Waldo_fnc_AIPassSchedulerTick`
 over a machine-local job queue (`Waldo_fnc_AIPassQueueJob`). A job is code that takes a state
@@ -238,7 +240,96 @@ hashmap and returns its next delay or -1. At least one due job runs per tick; ot
 `Waldo_AIPass_LowFpsThreshold`, delays double. While `Waldo_ENDEX_Active` or
 `Waldo_SafeStart_Active` is set (`Waldo_fnc_AIPassIsPaused`), jobs are postponed rather than run.
 Jobs never sleep, never broadcast, and command only units local to their machine. New behaviours
-must go through this scheduler, not their own loops.
+must go through this scheduler, not their own loops (the static performance audit only inspects
+`while` loops, so this is a design rule, not something CI enforces).
+
+**Discovery and group ticks:** `Waldo_fnc_AIPassDiscover` is a job that runs every
+`Waldo_AIPass_DiscoveryInterval` seconds on each AI-owning machine. It:
+- caches player positions;
+- starts a `Waldo_fnc_AIPassGroupTick` job for each newly local, eligible group. This is how groups
+  handed over by ACE or WMP Headless are adopted: the old owner's job retires when the group stops
+  being local;
+- re-applies garrison orders after a locality change;
+- applies Dynamic AO garrison handling (`Waldo_AIPass_Garrison_DynamicAO`, via the
+  `Waldo_DynamicAO_Role`/`Waldo_DynamicAO_Building` group variables Dynamic AO now sets);
+- in LAMBS "WMP" mode, turns LAMBS group AI off;
+- caches local eligible artillery;
+- installs `IncomingMissile` flare handlers on local WMP gunships and Dynamic AA fighters.
+
+Group state is a machine-local hashmap (`Waldo_fnc_AIPassGroupState`).
+
+**State ladder:**
+- `CALM` → `CONTACT` when an enemy was seen in the last 10 s.
+- `CONTACT` → `SECURITY` → `SEARCH` (two riflemen) → `REGROUP` → `CALM`, once contact has been lost
+  for `Waldo_AIPass_PostContact_LostSeconds`.
+- `RETREAT` (broken morale or a withdrawing vehicle) → `REGROUP`.
+- CARELESS groups are skipped.
+
+Tick cadence follows distance to the nearest player (`TickContact`/`TickNear`/`TickMid`/`TickFar`).
+Beyond `Waldo_AIPass_FarRange` only the ladder and morale run.
+
+Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `getHideFrom` and
+`targetKnowledge`. The pass never adds detection.
+
+**Movement rules** (these avoid the audited faults):
+- Whole-group moves use one inserted `MOVE` waypoint tagged "WMP AI PASS" (`Waldo_fnc_AIPassGroupMove`,
+  cleared by `Waldo_fnc_AIPassGroupMoveClear`), so the group's own waypoints resume. Group `move` is
+  never used.
+- The leader never gets `doMove` from a drill.
+- Features a drill disables (`TARGET`/`AUTOTARGET` while bounding) are recorded only if they were on,
+  and re-enabled exactly.
+- Behaviour and speed are restored only if the pass changed them (`Waldo_fnc_AIPassRestoreCalm`).
+- `disableAI "FSM"` and group `move` are not used.
+
+**Behaviours:**
+- **Contact and post-contact:** the state ladder above (`Waldo_fnc_AIPassGroupTick`).
+- **Flanking** (`Waldo_fnc_AIPassFlankStart`/`FlankStep`/`FlankEnd`): base of fire (leader, MG, AT)
+  plus a 2-5 rifleman element. The element takes two legs (wide at 70°, close at 60°) cut into bounds.
+  Each bound spot is snapped to cover (`Waldo_fnc_AIPassFindCover`, far side of the object's bounding
+  radius, line-of-fire ray blocked, never under the object's own roof).
+- **Street crossing:** a leg that crosses a road (`isOnRoad`/`roadAt`/`getRoadInfo`, bridges
+  excluded) stops at the near edge, throws smoke (`Waldo_fnc_AIPassThrowSmoke`) and crosses in one
+  bound.
+- **Fire control** (`Waldo_fnc_AIPassFireControl`): close threats first; target distribution; MG-first
+  suppression of known-but-unseen enemies, requiring 2+ magazines and 60 rounds and a clear cone
+  (`Waldo_fnc_AIPassLineOfFireClear`).
+- **Morale** (`Waldo_fnc_AIPassMorale`): weighted pressure with courage offset; falls fast and
+  recovers slowly; STEADY/SHAKEN/BROKEN with hysteresis. BROKEN leads to `Waldo_fnc_AIPassRetreat`,
+  or to `Waldo_fnc_AIPassSurrender` (ACE Captives when loaded) if surrender is on and the squad is
+  isolated.
+- **Anti-armour** (`Waldo_fnc_AIPassAntiArmour`): best launcher gunner, with a backblast check.
+- **Vehicles** (`Waldo_fnc_AIPassVehicles`): cargo infantry dismount under fire and remount at CALM;
+  a damaged vehicle smokes (`Waldo_fnc_AIPassFireCountermeasure`, which finds `cmlauncher` weapons)
+  and withdraws when fully mounted.
+- **Grenade evasion** (`Waldo_fnc_AIPassGrenadeCheck`, from a `ProjectileCreated` handler installed
+  only while enabled).
+- **Contact reports** (`Waldo_fnc_AIPassContactReport`): `reveal`, same machine only, delayed by
+  distance.
+- **Reinforcement** (`Waldo_fnc_AIPassReinforce`): responder cap; responders move to a rally point
+  behind the squad in contact.
+- **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): known positions only, a maximum
+  error, a friendly and civilian standoff at impact, range-scaled dispersion, shoot and scoot.
+- **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): `KNOWN` or
+  `RADAR` via `Waldo_fnc_AIPassRegisterRadar`.
+- **Airborne** (`Waldo_fnc_AIPassAirborneRequest` → `Waldo_fnc_ParadropCreateDropZone`, run next
+  frame so the paradrop curator check does not refuse it; `Waldo_fnc_AIPassAirborneWatch` releases
+  the landed jumpers).
+
+Radio-dependent calls (reports, reinforcement, artillery) go through `Waldo_fnc_AIPassCanTransmit`,
+so radio jamming (`Waldo_fnc_JammingFactor` ≥ 0.5) blocks them.
+
+**Orders:**
+- `Waldo_fnc_AIPassGarrison` / `Waldo_fnc_AIPassGarrisonRelease`: roofed and highest positions first,
+  PATH locked on arrival, ducking handlers, published per-unit positions for re-apply on a new owner,
+  and a break at `Waldo_AIPass_Garrison_BreakFraction`.
+- `Waldo_fnc_AIPassClearBuilding`: position reservations, 25 s per position, 240 s overall.
+
+Both forward from the server to the group owner. Both need the pass running, except when handed
+to LAMBS Waypoints in SPLIT mode.
+
+**LAMBS:** `SPLIT` leaves flanking, fire control, anti-armour, vehicles and contact reports to LAMBS
+Danger for groups without `lambs_danger_disableGroupAI`. `WMP` sets that variable on managed groups
+and restores it on release.
 
 **Eligibility:** `Waldo_fnc_AIPassIsEligible [group]` is the single exclusion gate for every
 behaviour. It refuses:
@@ -272,11 +363,16 @@ individual behaviours.
   `Waldo_AIPass_Regroup_JoinDistance`. If they stop making progress or time out, they join where
   they stand. Unconscious ACE casualties are not moved.
 
-Zeus: **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*) adds *Smart AI Pass* and
-*Survivor regroup* checkboxes. `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case publishes both
-switches, and they are in the joining-machine snapshot list. Diagnostics: `ai/smart-ai-pass` and
-`ai/smart-ai-pass-regroup` in `Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP AI PASS]`. Planned
-behaviours are tracked in `FEATURE_LOG.md`. See `wiki/Smart-AI-Pass.md`.
+**Zeus:**
+- **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*): the master switch, every
+  behaviour switch and the LAMBS mode. `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case
+  publishes them, and they are in the joining-machine snapshot list.
+- **WMP AI & Combat > AI Orders** (`AI_ORDERS` / `AI_ORDER`): garrison, release, clear building,
+  airborne. Orders run next frame, outside the curator's remote-exec context, because the order APIs
+  refuse remote senders other than the server.
+
+**Diagnostics:** rows `ai/smart-ai-pass`, `-regroup`, `-groups`, `-support` and `-lambs` in
+`Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP AI PASS]`. See `wiki/Smart-AI-Pass.md`.
 
 ### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
 
@@ -1576,7 +1672,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionInit/ElectronicWarfare/` — EMP burst (`Waldo_fnc_EMP`) and signal trackers / C-Track (`Waldo_fnc_Tracker`)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
-- `AiScripting/SmartAIPass/` — Smart AI Pass: budgeted server/HC scheduler, central eligibility gate, survivor regroup
+- `AiScripting/SmartAIPass/` — Smart AI Pass: budgeted server/HC scheduler, discovery sweep, central eligibility gate, group state ladder, combat behaviours (flanking, street crossing, fire control, morale, anti-armour, vehicles, grenade evasion), support (contact reports, reinforcement, artillery, counter-battery, airborne), orders (garrison, clear building), survivor regroup
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
@@ -1802,12 +1898,14 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 - Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
+- AI Control → `AI` case of `Waldo_fnc_FeatureRuntimeZen` (AI Rebalance profile plus every Smart AI Pass switch; applied by `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case)
+- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, release, clear building or airborne reinforcement for a nearby AI group; applied by the `AI_ORDER` case)
 - Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 47 without them, 50 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 48 without them, 51 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

@@ -64,7 +64,7 @@ Cleanup is repeat-safe:
 | `faction` | required | Runtime `CfgFactionClasses` classname containing public assets |
 | `radius` | `500` | 100–2000 m |
 | `patrolGroups` | `3` | 0–12; four to eight infantry per group |
-| `garrisonGroups` | `3` | 0–30; two to four infantry per building, capped by usable buildings |
+| `garrisonGroups` | `3` | 0–30; two to four infantry per building, capped by usable buildings. With the [Smart AI Pass](Smart-AI-Pass) and `Waldo_AIPass_Garrison_DynamicAO` on, garrisons watch outward, duck under fire and break at heavy losses |
 | `staticTurrets` | `0` | 0–20 manned faction static weapons |
 | `vehiclePatrols` | `0` | 0–10 |
 | `vehicleMix` | `[34,33,33]` | Car/APC/tank relative weights |

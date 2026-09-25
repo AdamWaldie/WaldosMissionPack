@@ -97,7 +97,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Comp
 | [Waldo's AI Tuning](Waldos-AI-Tweak) | Day/night AI behavior profiles |
 | [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
 | [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional cruise-only correction for helicopters that zoom-climb while braking |
-| [Smart AI Pass](Smart-AI-Pass) | Optional behaviour improvements for non-player AI squads, starting with survivor regroup |
+| [Smart AI Pass](Smart-AI-Pass) | Optional squad behaviour for non-player AI: contact drills, flanking, fire control, morale, support, orders and survivor regroup |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
 | [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
 | [Headless Client Support](Headless-Client-Support) | Optional AI distribution across connected headless clients; disabled by default |

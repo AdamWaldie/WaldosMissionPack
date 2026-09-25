@@ -529,13 +529,70 @@ switch (toUpperANSI _feature) do {
                 ["CHECKBOX", ["Enable", "Apply the selected profile to local AI on every machine."], missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]],
                 ["COMBO", ["Lighting conditions", "Low light reduces AI combat and sensing skills; assigned NVG/HMD equipment offsets the penalty."], [["DAY", "NIGHT"], ["Daylight", "Low light (NVG-aware)"], (["DAY", "NIGHT"] find (missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"])) max 0]],
                 ["COMBO", ["WMP opposition profile", "These are WMP encounter presets, not Arma difficulty levels. Mission-defined profiles are included by display name."], [_profileValues, _profileLabels, (_profileValues find _activeProfile) max 0]],
-                ["CHECKBOX", ["Smart AI Pass", "Behaviour improvements for non-player AI, run on the server and headless clients. Other WMP features' AI are always excluded."], missionNamespace getVariable ["Waldo_AIPass_Enable", false]],
-                ["CHECKBOX", ["Survivor regroup", "Survivors of a destroyed squad walk to and join a nearby friendly squad. Requires Smart AI Pass."], missionNamespace getVariable ["Waldo_AIPass_Regroup_Enable", true]]
+                ["CHECKBOX", ["Smart AI Pass", "Behaviour improvements for non-player AI, run on the server and headless clients. Other WMP features' AI are always excluded. Every option below requires this."], missionNamespace getVariable ["Waldo_AIPass_Enable", false]],
+                ["CHECKBOX", ["Survivor regroup", "Survivors of a destroyed squad walk to and join a nearby friendly squad."], missionNamespace getVariable ["Waldo_AIPass_Regroup_Enable", true]],
+                ["CHECKBOX", ["Contact handling", "Squads switch to combat on contact and return to their previous behaviour and waypoints afterwards. Needed by every combat option below."], missionNamespace getVariable ["Waldo_AIPass_Contact_Enable", true]],
+                ["CHECKBOX", ["Post-contact search", "After contact is lost: hold, send two soldiers to check the last known position, regroup."], missionNamespace getVariable ["Waldo_AIPass_PostContact_Enable", true]],
+                ["CHECKBOX", ["Flanking", "Half the squad flanks in covered bounds while the rest suppresses."], missionNamespace getVariable ["Waldo_AIPass_Flank_Enable", true]],
+                ["CHECKBOX", ["Street crossing", "Flanking squads stop at roads, throw smoke and cross in one bound."], missionNamespace getVariable ["Waldo_AIPass_StreetCrossing_Enable", true]],
+                ["CHECKBOX", ["Fire control", "Close threats first, spread fire across visible enemies, disciplined suppression with a friendly-fire check."], missionNamespace getVariable ["Waldo_AIPass_FireControl_Enable", true]],
+                ["CHECKBOX", ["Morale and retreat", "Squads under heavy losses and fire break and fall back under smoke."], missionNamespace getVariable ["Waldo_AIPass_Morale_Enable", true]],
+                ["CHECKBOX", ["Surrender", "The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded)."], missionNamespace getVariable ["Waldo_AIPass_Surrender_Enable", false]],
+                ["CHECKBOX", ["Grenade evasion", "AI move away from a live grenade they can see. Test before live use."], missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", false]],
+                ["CHECKBOX", ["Anti-armour", "The best anti-tank gunner engages known armour, clear of backblast."], missionNamespace getVariable ["Waldo_AIPass_AntiArmour_Enable", true]],
+                ["CHECKBOX", ["Vehicle drills", "Infantry dismount under fire; damaged vehicles smoke and withdraw."], missionNamespace getVariable ["Waldo_AIPass_Vehicles_Enable", true]],
+                ["CHECKBOX", ["Contact reports", "Squads share sighted enemies by radio (blocked by jamming) or by voice."], missionNamespace getVariable ["Waldo_AIPass_ContactReports_Enable", true]],
+                ["CHECKBOX", ["Reinforcement", "Idle nearby squads move up behind a squad in contact."], missionNamespace getVariable ["Waldo_AIPass_Reinforce_Enable", true]],
+                ["CHECKBOX", ["Artillery support", "Squads call fire from friendly AI artillery on well-located enemies only."], missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]],
+                ["CHECKBOX", ["Counter-battery", "AI artillery answers enemy artillery whose position is known."], missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]],
+                ["CHECKBOX", ["Airborne reinforcement", "Allow paradropped AI reinforcements (triggers, scripts and AI Orders)."], missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false]],
+                ["CHECKBOX", ["Automatic airborne", "Call a paradrop automatically when no ground squad can reinforce."], missionNamespace getVariable ["Waldo_AIPass_Airborne_Auto", false]],
+                ["CHECKBOX", ["Aircraft flares", "WMP gunships and Dynamic AA fighters fire flares at incoming missiles."], missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]],
+                ["COMBO", ["With LAMBS loaded", "Split: LAMBS keeps in-contact unit tactics, WMP the rest. WMP only: LAMBS group AI is turned off for managed squads."], [["SPLIT", "WMP"], ["Split by feature", "WMP only"], (["SPLIT", "WMP"] find toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"])) max 0]]
             ],
             {
                 params ["_values"];
                 ["AI_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;
             }
+        ] call zen_dialog_fnc_create;
+    };
+    case "AI_ORDERS": {
+        private _preferred = if (!isNull _objectPos && {_objectPos isKindOf "CAManBase"} && {!isPlayer _objectPos}) then {group _objectPos} else {grpNull};
+        private _ranked = [];
+        {
+            private _leader = leader _x;
+            if (alive _leader && {(units _x) findIf {isPlayer _x} < 0} && {side _x in [west, east, independent, civilian]}
+                && {_leader distance2D _modulePos <= 250}) then {
+                _ranked pushBack [[1, 0] select (_x == _preferred), _leader distance2D _modulePos, _forEachIndex, _x];
+            };
+        } forEach allGroups;
+        _ranked sort true;
+        private _groups = _ranked apply {_x select 3};
+        private _groupLabels = _ranked apply {format ["%1 (%2 soldiers, %3 m)", groupId (_x select 3), {alive _x} count units (_x select 3), round (_x select 1)]};
+        if (_groups isEqualTo []) then {_groupLabels = ["No AI group within 250 m (airborne only)"]};
+        private _groupIndices = [];
+        {_groupIndices pushBack _forEachIndex} forEach _groupLabels;
+        private _building = if (!isNull _objectPos && {_objectPos isKindOf "House"}) then {_objectPos} else {nearestBuilding _modulePos};
+        [
+            "AI Orders",
+            [
+                ["COMBO", ["Order", "Garrison and clear use the selected group. Airborne drops a new squad at this position."], [["GARRISON", "RELEASE", "CLEAR", "AIRBORNE"], ["Garrison buildings here", "Release garrison", "Clear the building here", "Airborne reinforcement here"], 0]],
+                ["COMBO", ["Group", "Nearby AI groups, nearest first; a unit under the module is listed first."], [_groupIndices, _groupLabels, 0]],
+                ["SLIDER", ["Garrison radius", "Metres around the module searched for building positions."], [15, 150, 50, 0]],
+                ["COMBO", ["Airborne side", "Side that receives the airborne reinforcement."], [[0, 1, 2], ["BLUFOR", "OPFOR", "Independent"], 1]],
+                ["SLIDER", ["Airborne jumpers", "Paratroopers generated for the drop (limited by the aircraft's seats)."], [2, 16, missionNamespace getVariable ["Waldo_AIPass_Airborne_JumperCount", 8], 0]]
+            ],
+            {
+                params ["_values", "_arguments"];
+                _values params ["_order", "_groupIndex", "_radius", "_sideIndex", "_jumpers"];
+                _arguments params ["_groups", "_modulePos", "_building"];
+                private _group = _groups param [_groupIndex, grpNull];
+                if (_order != "AIRBORNE" && {isNull _group}) exitWith {
+                    ["AI ORDERS", "Select an AI group for this order.", "ERROR", "AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal;
+                };
+                ["AI_ORDER", [_order, _group, _modulePos, round _radius, [west, east, independent] select _sideIndex, round _jumpers, _building]] call Waldo_fnc_FeatureRuntimeApply;
+            },
+            {}, [_groups, _modulePos, _building]
         ] call zen_dialog_fnc_create;
     };
     case "HAZARD_CREATE": {

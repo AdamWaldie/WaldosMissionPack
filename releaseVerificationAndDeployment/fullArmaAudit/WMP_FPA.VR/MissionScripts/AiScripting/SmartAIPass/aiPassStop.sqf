@@ -2,9 +2,12 @@
  * Author: WaldoTheWarfighter
  * Stops the Smart AI Pass on this machine and hands every affected group back to its own orders.
  *
- * Removes the scheduler and kill handlers and discards queued jobs. Survivors still walking to a
- * host get doFollow so they return to their own group's formation and waypoints; nothing the pass
- * did stays in force. Merges that have already happened are not undone.
+ * Removes the scheduler and every event handler and discards queued jobs. Every locally managed
+ * group is released (Waldo_fnc_AIPassReleaseGroup): drills end with only the AI features they
+ * disabled re-enabled, pass waypoints are removed, behaviour and speed are restored and LAMBS group AI
+ * is handed back. Survivors still walking to a host get doFollow. Merges, surrenders and explicit
+ * garrison orders that already happened are not undone; release a garrison with
+ * Waldo_fnc_AIPassGarrisonRelease.
  * Locality and authority: the server clears Waldo_AIPass_Enable and the JIP key
  * Waldo_AIPass_RuntimeInit, then asks every other machine to stop. Remote calls from anything other
  * than the server are refused. Each machine handles only the groups it owns.
@@ -37,11 +40,23 @@ if (!isNil "_handle") then {
     [_handle] call CBA_fnc_removePerFrameHandler;
     missionNamespace setVariable ["Waldo_AIPass_SchedulerHandle", nil];
 };
-private _killed = missionNamespace getVariable "Waldo_AIPass_KilledHandler";
-if (!isNil "_killed") then {
-    removeMissionEventHandler ["EntityKilled", _killed];
-    missionNamespace setVariable ["Waldo_AIPass_KilledHandler", nil];
-};
+{
+    _x params ["_variable", "_event"];
+    private _handler = missionNamespace getVariable _variable;
+    if (!isNil "_handler") then {
+        removeMissionEventHandler [_event, _handler];
+        missionNamespace setVariable [_variable, nil];
+    };
+} forEach [
+    ["Waldo_AIPass_KilledHandler", "EntityKilled"],
+    ["Waldo_AIPass_ProjectileHandler", "ProjectileCreated"],
+    ["Waldo_AIPass_ArtilleryHandler", "ArtilleryShellFired"]
+];
+{
+    if (local _x && {count (_x getVariable ["Waldo_AIPass_State", createHashMap]) > 0 || {_x getVariable ["Waldo_AIPass_Managed", false]}}) then {
+        [_x] call Waldo_fnc_AIPassReleaseGroup;
+    };
+} forEach allGroups;
 
 private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []]);
 {
@@ -58,4 +73,5 @@ private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (miss
 } forEach _jobs;
 missionNamespace setVariable ["Waldo_AIPass_Jobs", []];
 missionNamespace setVariable ["Waldo_AIPass_PendingJobs", []];
+missionNamespace setVariable ["Waldo_AIPass_DiscoveryQueued", false];
 diag_log "[WMP AI PASS] Stopped.";

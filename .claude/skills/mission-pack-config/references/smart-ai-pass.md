@@ -1,36 +1,66 @@
 # Smart AI Pass
 
-Optional behaviour improvements for non-player AI groups. Off by default. All settings are in
-`MissionConfig\aiConfig.sqf` (`shared` scope). Edit that file; do not add a call to `init.sqf`.
-`init.sqf` already starts the pass on the server when the switch is on, and the server replays the
-start to headless clients.
+Optional behaviour improvements for non-player AI squads. Off by default. All settings are in
+`MissionConfig\aiConfig.sqf` (`shared` scope). Edit that file; do not add a call to `init.sqf`
+(it already starts the pass on the server, which replays it to headless clients).
 
 ```sqf
-["Waldo_AIPass_Enable", true],                         // master switch (default false)
+["Waldo_AIPass_Enable", true],                            // master switch (default false)
 ["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // sides the pass may command
-["Waldo_AIPass_Regroup_Enable", true],                 // survivor regroup behaviour
+["Waldo_AIPass_LambsMode", "SPLIT"],                      // SPLIT or WMP; only matters with LAMBS Danger
 ```
 
-- **Every behaviour has its own `Waldo_AIPass_<Behaviour>_Enable` switch.** Survivor regroup is the
-  only behaviour shipped so far. Do not invent switches for planned behaviours (garrison, building
-  clearing, artillery, contact drills); they do not exist yet.
-- **Scope:** every non-player AI group on the included sides. It also honours the shared AI filters
-  `Waldo_AI_IncludedFactions`, `Waldo_AI_ExcludedFactions` and `Waldo_AI_ExcludedClasses`.
-- **Automatically excluded:** groups with a living player; Gunship, Transport Services (including
-  dismounted crews), Paradrop aircraft and jumpers, Dynamic AA, AI Convoy, dialogue speakers,
-  drones. Dynamic AO groups are included on purpose.
-- **Manual opt-out:** `this setVariable ["Waldo_AIPass_Exclude", true, true];` on a unit, or on
-  `group this`. `Waldo_AI_Exclude` also works and excludes the unit from every WMP AI change.
-- **Survivor regroup tuning (ADVANCED):** `Waldo_AIPass_Regroup_MaxRemnantSize` (2),
-  `_MinimumPeakSize` (3; smaller teams such as snipers are never merged), `_SearchRadius` (400 m),
-  `_MaxGroupSize` (12), `_JoinDistance` (30 m), `_StuckSeconds` (20), `_TimeoutSeconds` (120),
-  `_SettleSeconds` (5).
-- **Performance tuning (ADVANCED):** `Waldo_AIPass_TickBudgetMs` (1 ms per 0.25 s tick) and
-  `Waldo_AIPass_LowFpsThreshold` (25). Leave these alone unless profiling.
-- **Pauses** while ENDEX or SafeStart is active.
-- **Runtime:** Zeus **WMP AI & Combat > AI Control** has *Smart AI Pass* and *Survivor regroup*
-  checkboxes. Script: `[] call Waldo_fnc_AIPassInit;` / `[] call Waldo_fnc_AIPassStop;` on the server.
-- **Diagnostics:** rows `ai/smart-ai-pass` and `ai/smart-ai-pass-regroup`. RPT lines are tagged
-  `[WMP AI PASS]`.
+## Behaviour switches (each `Waldo_AIPass_<Name>_Enable`)
+
+| Switch | Default | Notes |
+|---|---|---|
+| `Regroup` | true | survivors of a destroyed squad join a nearby squad |
+| `Contact` | true | state ladder CALM/CONTACT/SECURITY/SEARCH/REGROUP/RETREAT; every combat behaviour needs it |
+| `PostContact` | true | hold, two-man search, regroup |
+| `Flank` | true | base of fire + flanking element in covered bounds |
+| `StreetCrossing` | true | flanks smoke and cross roads in one bound |
+| `FireControl` | true | close threats, fire distribution, disciplined suppression |
+| `Morale` | true | broken squads retreat under smoke |
+| `Surrender` | false | last isolated survivors surrender (ACE Captives) |
+| `GrenadeEvasion` | false | needs in-engine testing first |
+| `AntiArmour` | true | best AT gunner, backblast check |
+| `Vehicles` | true | dismount under fire; damaged vehicles smoke and withdraw |
+| `ContactReports` | true | radio (jammable) or voice sharing |
+| `Reinforce` | true | idle squads move up behind a squad in contact |
+| `Artillery` | false | fire missions on well-located enemies only |
+| `CounterBattery` | false | `Waldo_AIPass_CounterBattery_Mode` "KNOWN" or "RADAR" |
+| `Airborne` | false | paradropped reinforcements; `Waldo_AIPass_Airborne_Auto` for automatic calls |
+| `AircraftFlares` | false | WMP gunships and Dynamic AA fighters |
+
+Tuning rows (`_Flank_*`, `_Morale_*`, `_Artillery_*`, `_Airborne_*`, `_Tick*`, ranges) are ADVANCED;
+leave them unless the user asks. Airborne aircraft and jumper classes are per-side hashmaps
+(`Waldo_AIPass_Airborne_AircraftClasses`, `_JumperClasses`); set them to the mission's factions when
+mods are used.
+
+## Orders (call where the group is local or on the server; need the pass running)
+
+```sqf
+[group this, getPosATL this, 40] call Waldo_fnc_AIPassGarrison;          // garrison buildings within 40 m
+[_group] call Waldo_fnc_AIPassGarrisonRelease;
+[group this, nearestBuilding this] call Waldo_fnc_AIPassClearBuilding;   // clear one building
+[thisTrigger, east] call Waldo_fnc_AIPassAirborneRequest;                // trigger On Activation, server only
+[this, west] call Waldo_fnc_AIPassRegisterRadar;                         // counter-battery RADAR mode
+```
+
+`Waldo_AIPass_Garrison_DynamicAO = true` gives Dynamic AO garrisons the WMP garrison handling. With
+LAMBS Waypoints loaded in SPLIT mode, garrison and clear orders are handed to LAMBS.
+
+## Exclusions
+
+Automatic: groups with a living player; Gunship, Transport Services (including dismounted crews),
+Paradrop aircraft and jumpers until landed, Dynamic AA, AI Convoy, dialogue speakers, drones. Dynamic
+AO groups are included on purpose. Manual: `this setVariable ["Waldo_AIPass_Exclude", true, true];`
+on a unit or `group this`. `Waldo_AI_Exclude` excludes from every WMP AI change.
+
+## Runtime and diagnostics
+
+Zeus: **WMP AI & Combat > AI Control** (every switch) and **AI Orders** (garrison, release, clear,
+airborne at the module position). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
+`-support`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.

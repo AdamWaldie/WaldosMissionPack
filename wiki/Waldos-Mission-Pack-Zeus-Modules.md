@@ -149,7 +149,9 @@ These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig
 
 ## AI Control
 
-**AI Control** (formerly *AI Rebalance - Control*) enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier. The same dialog switches the [Smart AI Pass](Smart-AI-Pass) and its **Survivor regroup** behaviour on or off across the server and headless clients.
+**AI Control** (formerly *AI Rebalance - Control*) enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier. The same dialog switches the [Smart AI Pass](Smart-AI-Pass) and each of its behaviours on or off across the server and headless clients, and chooses how it shares work with LAMBS.
+
+**AI Orders** gives one nearby AI group an order: garrison the buildings around the module, release a garrison, or clear the building at the module. It can also call an airborne reinforcement to the module position for a chosen side, with the number of paratroopers set in the dialog. A unit under the module puts its group first in the list. Orders need the Smart AI Pass enabled; airborne drops need **Airborne reinforcement** enabled and count against each side's budget.
 
 ## Field Resupply
 

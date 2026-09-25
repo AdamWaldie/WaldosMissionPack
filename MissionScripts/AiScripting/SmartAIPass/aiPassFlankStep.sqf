@@ -1,0 +1,128 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Advances a running flank drill by one step: issue a bound, wait for arrival, pause and overwatch,
+ * cross streets under smoke, and finish with a hold on the enemy's flank.
+ *
+ * Each bound gives every element member his own spot, spread 5 m apart across the direction of
+ * travel. Ordinary bounds and the final position are snapped to cover facing the enemy
+ * (Waldo_fnc_AIPassFindCover); street crossings are not. While moving, members have TARGET and
+ * AUTOTARGET switched off so they do not stop to trade fire mid-bound. Only features that were on
+ * are switched off, and they are switched back on at every halt, so mission-maker disableAI settings
+ * survive (Smart Combat V2 re-enabled them unconditionally). A bound ends when every member is within
+ * 7 m of his spot or after Waldo_AIPass_Flank_BoundTimeout. Halts last Waldo_AIPass_Flank_BoundPause
+ * seconds, 3 s at a street edge, and 20 s at the final position.
+ * The drill aborts when the group leaves CONTACT, loses half the element, or an enemy is believed
+ * within 30 m of the element (fire control takes over). Only element members receive move orders;
+ * the leader never does, which avoids the leader-freeze fault the audit traced in Smart Combat V2.
+ * Locality and authority: scheduler job on the group owner.
+ *
+ * Arguments:
+ * 0: job <HASHMAP> - contains "group"
+ *
+ * Return Value:
+ * Number - seconds until the next step, or -1 when the drill ended
+ *
+ * Example:
+ * [Waldo_fnc_AIPassFlankStep, createHashMapFromArray [["group", _group]], 0] call Waldo_fnc_AIPassQueueJob;
+ * Result: the element moves one stage further round the flank.
+ *
+ * Current caller: Waldo_fnc_AIPassFlankStart.
+ */
+
+params [["_job", createHashMap, [createHashMap]]];
+private _group = _job getOrDefault ["group", grpNull];
+if (isNull _group || {!local _group}) exitWith {-1};
+private _state = _group getVariable ["Waldo_AIPass_State", createHashMap];
+private _drill = _state getOrDefault ["drill", createHashMap];
+if (count _drill == 0) exitWith {-1};
+private _end = {
+    [_group, _state, _this] call Waldo_fnc_AIPassFlankEnd;
+    -1
+};
+if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false]) || {(_state getOrDefault ["phase", ""]) != "CONTACT"}) exitWith {"ABORT" call _end};
+private _allUnits = _drill get "units";
+private _units = _allUnits select {alive _x && {local _x} && {vehicle _x == _x} && {group _x == _group}};
+if (count _units < ((count _allUnits / 2) max 1)) exitWith {"LOSSES" call _end};
+private _centroid = [0, 0, 0];
+{_centroid = _centroid vectorAdd getPosATL _x} forEach _units;
+_centroid = _centroid vectorMultiply (1 / count _units);
+private _enemyPos = _state getOrDefault ["enemyPos", _drill get "enemyPos"];
+if (_centroid distance2D _enemyPos < 30) exitWith {"CLOSE" call _end};
+
+private _points = _drill get "points";
+private _now = time;
+private _restoreFeatures = {
+    {
+        _x params ["_unit", "_feature"];
+        if (alive _unit && {local _unit}) then {_unit enableAI _feature};
+    } forEach (_drill get "disabled");
+    _drill set ["disabled", []];
+};
+private _issue = {
+    (_points select (_drill get "index")) params ["_point", "_kind"];
+    private _direction = _centroid getDir _point;
+    private _spots = [];
+    private _disabled = [];
+    {
+        private _unit = _x;
+        private _spot = _point getPos [(_forEachIndex - (count _units - 1) / 2) * 5, _direction + 90];
+        if (_kind in ["BOUND", "FINAL"]) then {
+            _spot = ([_spot, _enemyPos, 10, _spots] call Waldo_fnc_AIPassFindCover) select 0;
+        };
+        _spots pushBack _spot;
+        {
+            if (_unit checkAIFeature _x) then {
+                _unit disableAI _x;
+                _disabled pushBack [_unit, _x];
+            };
+        } forEach ["TARGET", "AUTOTARGET"];
+        _unit doMove _spot;
+    } forEach _units;
+    _drill set ["spots", _spots];
+    _drill set ["movers", +_units];
+    _drill set ["disabled", _disabled];
+    _drill set ["boundStart", _now];
+    _drill set ["stage", "MOVE"];
+};
+
+private _result = 1.5;
+switch (_drill get "stage") do {
+    case "START": {call _issue};
+    case "MOVE": {
+        private _spots = _drill get "spots";
+        private _movers = _drill get "movers";
+        private _arrived = true;
+        {
+            if (alive _x && {_x in _units} && {_x distance2D (_spots select _forEachIndex) > 7}) exitWith {_arrived = false};
+        } forEach _movers;
+        if (_arrived || {_now - (_drill get "boundStart") > (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout", 25])}) then {
+            call _restoreFeatures;
+            private _kind = (_points select (_drill get "index")) select 1;
+            switch (_kind) do {
+                case "CROSS_NEAR": {
+                    _drill set ["stage", "PAUSE"];
+                    _drill set ["pauseUntil", _now + 3];
+                    [selectRandom _units, _enemyPos] call Waldo_fnc_AIPassThrowSmoke;
+                };
+                case "FINAL": {
+                    _drill set ["stage", "HOLD"];
+                    _drill set ["pauseUntil", _now + 20];
+                };
+                default {
+                    _drill set ["stage", "PAUSE"];
+                    _drill set ["pauseUntil", _now + (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause", 4])];
+                };
+            };
+        };
+    };
+    case "PAUSE": {
+        if (_now >= (_drill get "pauseUntil")) then {
+            _drill set ["index", (_drill get "index") + 1];
+            if ((_drill get "index") >= count _points) then {_result = "COMPLETE" call _end} else {call _issue};
+        };
+    };
+    case "HOLD": {
+        if (_now >= (_drill get "pauseUntil")) then {_result = "COMPLETE" call _end};
+    };
+};
+_result
