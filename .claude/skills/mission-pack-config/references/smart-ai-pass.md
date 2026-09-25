@@ -10,6 +10,16 @@ Optional behaviour improvements for non-player AI squads. Off by default. All se
 ["Waldo_AIPass_LambsMode", "SPLIT"],                      // SPLIT or WMP; only matters with LAMBS Danger
 ```
 
+**Zeus always has priority.** Selecting a squad, giving it waypoints or a target, moving or
+remote-controlling its soldiers, or ZEN AI actions pause the pass for that squad
+(`Waldo_AIPass_ZeusHoldSeconds`, default 120; Zeus waypoints hold it until finished). No setting is
+needed; do not tell users to disable the pass for Zeus-run missions.
+
+**Behaviour profiles** follow the AI Rebalance profile name (MILITIA/LINE/VETERAN/ELITE) and never
+change skills. Override per faction with `Waldo_AIPass_FactionProfiles` (a map of faction classname
+to profile), or per group with `(group this) setVariable ["Waldo_AIPass_Profile", "ELITE", true];`.
+The numbers are in `Waldo_AIPass_ProfileBehaviour` (ADVANCED).
+
 ## Behaviour switches (each `Waldo_AIPass_<Name>_Enable`)
 
 | Switch | Default | Notes |
@@ -17,6 +27,15 @@ Optional behaviour improvements for non-player AI squads. Off by default. All se
 | `Regroup` | true | survivors of a destroyed squad join a nearby squad |
 | `Contact` | true | state ladder CALM/CONTACT/SECURITY/SEARCH/REGROUP/RETREAT; every combat behaviour needs it |
 | `PostContact` | true | hold, two-man search, regroup |
+| `Investigate` | true | two riflemen check known but unseen enemies |
+| `Assault` | true | flank ends with grenade and rush |
+| `Advance` | true | fire team bounds towards the squad's waypoint in long firefights |
+| `CoordinatedAssault` | true | reinforcing squads assault from both sides |
+| `Stance` | true | stance matches the cover in front |
+| `AmmoShare` | true | magazines passed to squad-mates who are out |
+| `VehicleGunnery` | true | gunners hit AT soldiers first; armour keeps distance from AT |
+| `ArtillerySmoke` | true | smoke screen for retreats (needs `Artillery`) |
+| `AircraftBreak` | false | gunships/fighters jink from missiles; test first |
 | `Flank` | true | base of fire + flanking element in covered bounds |
 | `StreetCrossing` | true | flanks smoke and cross roads in one bound |
 | `FireControl` | true | close threats, fire distribution, disciplined suppression |
@@ -41,6 +60,8 @@ mods are used.
 
 ```sqf
 [group this, getPosATL this, 40] call Waldo_fnc_AIPassGarrison;          // garrison buildings within 40 m
+[group this, getMarkerPos "ridge", 45, 80] call Waldo_fnc_AIPassDefend;  // defence line facing 045, 80 m wide
+[_group] call Waldo_fnc_AIPassDefendRelease;
 [_group] call Waldo_fnc_AIPassGarrisonRelease;
 [group this, nearestBuilding this] call Waldo_fnc_AIPassClearBuilding;   // clear one building
 [thisTrigger, east] call Waldo_fnc_AIPassAirborneRequest;                // trigger On Activation, server only
@@ -59,8 +80,8 @@ on a unit or `group this`. `Waldo_AI_Exclude` excludes from every WMP AI change.
 
 ## Runtime and diagnostics
 
-Zeus: **WMP AI & Combat > AI Control** (every switch) and **AI Orders** (garrison, release, clear,
-airborne at the module position). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
-`-support`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
+Zeus: **WMP AI & Combat > AI Control** (every switch) and **AI Orders** (garrison, defend, release,
+clear, airborne at the module position, keep for Zeus, return to pass). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
+`-drills`, `-zeus`, `-support`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.

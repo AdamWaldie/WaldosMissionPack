@@ -396,7 +396,6 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_PostContact_SearchSeconds` | Time limit for the two-man search. Default `45`. |
 | `Waldo_AIPass_PostContact_RegroupSeconds` | Time limit for the squad to close up before returning to CALM. Default `30`. |
 | `Waldo_AIPass_Flank_Enable` | Half the squad flanks in covered bounds while the rest suppresses. Default `true`. |
-| `Waldo_AIPass_Flank_Chance` | Chance that a qualifying squad flanks (0-1). Default `0.5`. |
 | `Waldo_AIPass_Flank_MinGroupSize` | Soldiers on foot needed before a squad may flank. Default `6`. |
 | `Waldo_AIPass_Flank_MinRange` | Enemies nearer than this are fought, not flanked. Default `60`. |
 | `Waldo_AIPass_Flank_MaxRange` | Enemies farther than this are not flanked. Default `400`. |
@@ -439,8 +438,26 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Airborne_AircraftClasses` | Transport aircraft class per side key (WEST, EAST, GUER); use mod aircraft if you run them. Defaults are vanilla classes. |
 | `Waldo_AIPass_Airborne_JumperClasses` | Paratrooper unit class per side key; use your faction's rifleman. Defaults are vanilla classes. |
 | `Waldo_AIPass_Garrison_DynamicAO` | Dynamic AO garrisons duck under fire, watch outward and break at losses. Default `false`. |
-| `Waldo_AIPass_Garrison_BreakFraction` | A garrison breaks when down to this share of its strength at the time of the order. Default `0.5`. |
+| `Waldo_AIPass_Garrison_BreakFraction` | A garrison or defence line breaks when down to this share of its strength at the time of the order. Default `0.5`. |
 | `Waldo_AIPass_AircraftFlares_Enable` | WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first. Default `false`. |
+| `Waldo_AIPass_ProfileBehaviour` | Behaviour per profile name, alongside AI Rebalance's skill values (which are never changed by the pass): flank, assault, advance, investigate and coordinated-assault chances (0-1), morale thresholds, retreat distance scale and the largest squad that may surrender. The group uses Waldo_AIPass_Profile on the group, then Waldo_AIPass_FactionProfiles, then the active Waldo_AIRebalance_Profile, then LINE. Default `per profile`. |
+| `Waldo_AIPass_FactionProfiles` | Optional map of faction classname to behaviour profile name, overriding the AI Rebalance profile for that faction's squads. Default `empty`. |
+| `Waldo_AIPass_ZeusHoldSeconds` | Seconds the pass leaves a group alone after Zeus selects, edits or orders it; Zeus waypoints hold it until they are finished. Default `120`. |
+| `Waldo_AIPass_Investigate_Enable` | Squads send two riflemen to check enemies they know about but have not seen (reported, or heard firing). Default `true`. |
+| `Waldo_AIPass_Investigate_Range` | How far away a known but unseen enemy may be to be investigated. Default `300`. |
+| `Waldo_AIPass_Investigate_Seconds` | Time limit for an investigation. Default `60`. |
+| `Waldo_AIPass_Assault_Enable` | A flank can finish with a grenade and a rush on the enemy position while the base of fire suppresses. Default `true`. |
+| `Waldo_AIPass_Assault_Range` | The enemy must be believed this close to the flanking element before an assault. Default `80`. |
+| `Waldo_AIPass_Advance_Enable` | Squads in a long firefight that still have a waypoint to reach push a fire team forward in covered bounds. Default `true`. |
+| `Waldo_AIPass_Advance_MinContactSeconds` | Seconds in contact before a bounding advance is considered. Default `30`. |
+| `Waldo_AIPass_CoordinatedAssault_Enable` | Squads that came to reinforce assault the enemy from both sides while the squad in contact fires. Default `true`. |
+| `Waldo_AIPass_Stance_Enable` | Soldiers stand, kneel or go prone to match the cover in front of them. Default `true`. |
+| `Waldo_AIPass_AmmoShare_Enable` | Soldiers down to their last magazine get one from a nearby squad-mate with plenty. Default `true`. |
+| `Waldo_AIPass_AmmoShare_Distance` | How close a squad-mate must be to hand over a magazine. Default `10`. |
+| `Waldo_AIPass_VehicleGunnery_Enable` | AI gunners engage anti-tank soldiers first, then armour; armour backs away from known AT teams. Default `true`. |
+| `Waldo_AIPass_Vehicles_StandoffDistance` | Distance armour tries to keep from known anti-tank soldiers. Default `250`. |
+| `Waldo_AIPass_ArtillerySmoke_Enable` | A retreating squad with a radio gets an artillery smoke screen; needs artillery support on and a battery with smoke. Default `true`. |
+| `Waldo_AIPass_AircraftBreak_Enable` | WMP gunships and Dynamic AA fighters jink sideways away from a missile launch; test your aircraft first. Default `false`. |
 
 ## `airOperationsConfig.sqf`
 

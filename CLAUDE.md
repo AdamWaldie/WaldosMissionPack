@@ -226,6 +226,36 @@ evasion and aircraft flares default off.
 ["Waldo_AIPass_LambsMode", "SPLIT"],                      // SPLIT or WMP when LAMBS Danger is loaded
 ```
 
+**Zeus priority:** the pass never fights a curator for control. `Waldo_fnc_AIPassZeusWatchLocal`
+(installed from `initPlayerLocal.sqf`) adds curator event handlers on each Zeus player's own machine
+whenever the Zeus display opens (`zen_curatorDisplayLoaded`), because curator events fire only there.
+The handlers cover group and object selection, double-click, object edited, and waypoint
+placed/edited/deleted. They call `Waldo_fnc_AIPassZeusMark`, which publishes a hold as a
+`[randomToken, seconds]` pair (`Waldo_AIPass_ZeusHold`, timed on the owner's own clock), plus
+`Waldo_AIPass_ZeusWaypoints` when Zeus changed waypoints. Target designation creates a DESTROY
+waypoint, so it is covered.
+
+`Waldo_fnc_AIPassZeusHeld`, checked inside `Waldo_fnc_AIPassIsEligible`, treats a group as held
+until `Waldo_AIPass_ZeusHoldSeconds` have passed and any Zeus waypoints are finished. Eligibility
+also refuses:
+- remote-controlled members (`bis_fnc_moduleRemoteControl_owner`, used by vanilla and ZEN);
+- ZEN AI orders (`zen_ai_garrisoned`, `zen_ai_isSuppressing`).
+
+A held group is released and skipped by every behaviour. Zeus waypoints also release WMP garrison,
+defence and clear orders on that group. Running drills, clear-building jobs and survivor regroups
+stop when their group becomes held. AI Orders EXCLUDE/RETURN set or clear `Waldo_AIPass_Exclude` and
+cancel holds.
+
+**Behaviour profiles:** `Waldo_fnc_AIPassProfile` resolves, in order:
+1. the group's `Waldo_AIPass_Profile`;
+2. `Waldo_AIPass_FactionProfiles`;
+3. the active `Waldo_AIRebalance_Profile`;
+4. LINE.
+
+It then reads that profile's entry in `Waldo_AIPass_ProfileBehaviour`: flank, assault, advance,
+investigate and coordinated-assault chances, morale thresholds, retreat scale and surrender size. The
+pass never calls `setSkill`; it only reads the courage and general skills.
+
 **Where it runs:** the server and headless clients only. `init.sqf` calls `Waldo_fnc_AIPassInit`
 on the server, which publishes `Waldo_AIPass_Enable` and replays itself to headless clients under
 the JIP key `Waldo_AIPass_RuntimeInit`. Player clients return immediately. Remote calls from
@@ -284,11 +314,24 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
 **Behaviours:**
 - **Contact and post-contact:** the state ladder above (`Waldo_fnc_AIPassGroupTick`).
 - **Flanking** (`Waldo_fnc_AIPassFlankStart`/`FlankStep`/`FlankEnd`): base of fire (leader, MG, AT)
-  plus a 2-5 rifleman element. The element takes two legs (wide at 70°, close at 60°) cut into bounds.
-  Each bound spot is snapped to cover (`Waldo_fnc_AIPassFindCover`, far side of the object's bounding
-  radius, line-of-fire ray blocked, never under the object's own roof).
+  plus a 2-5 rifleman element. The element takes two legs (wide at 70°, close at 60°), cut into bounds
+  by `Waldo_fnc_AIPassPlanRoute`. Each bound spot is snapped to cover (`Waldo_fnc_AIPassFindCover`,
+  far side of the object's bounding radius, line-of-fire ray blocked, never under the object's own
+  roof). A completed drill leaves its element holding ground ("holders"); holders rejoin when the
+  leader comes within 30 m, at CALM, or on retreat. Other endings `doFollow` immediately.
+- **Final assault** (inside `FlankStep`): after the hold, a frag grenade
+  (`Waldo_fnc_AIPassThrowGrenade`, never near friendlies), then ASSAULT (covered, 12 m short) and
+  CLEAR bounds.
+- **Bounding advance** (`Waldo_fnc_AIPassAdvanceStart`): the same drill engine, up to three bounds
+  toward the current MOVE/SAD/DESTROY waypoint.
+- **Investigation:** the `INVESTIGATE` phase in the tick, for known-but-unseen enemies.
+- **Defence line** (`Waldo_fnc_AIPassDefend`/`DefendApplyLocal`/`DefendStep`/`DefendRelease`): the
+  line and reserve are published per unit and re-applied by discovery; the reserve is committed once.
+- **Coordinated assault** (`Waldo_fnc_AIPassCoordinatedAssault`): arrived responders get SAD
+  waypoints on alternate sides.
+- **Stance from cover** (`Waldo_fnc_AIPassStance`) and **ammo sharing** (`Waldo_fnc_AIPassAmmoShare`).
 - **Street crossing:** a leg that crosses a road (`isOnRoad`/`roadAt`/`getRoadInfo`, bridges
-  excluded) stops at the near edge, throws smoke (`Waldo_fnc_AIPassThrowSmoke`) and crosses in one
+  excluded) stops at the near edge, throws smoke (`Waldo_fnc_AIPassThrowGrenade`) and crosses in one
   bound.
 - **Fire control** (`Waldo_fnc_AIPassFireControl`): close threats first; target distribution; MG-first
   suppression of known-but-unseen enemies, requiring 2+ magazines and 60 rounds and a clear cone
@@ -300,15 +343,18 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
 - **Anti-armour** (`Waldo_fnc_AIPassAntiArmour`): best launcher gunner, with a backblast check.
 - **Vehicles** (`Waldo_fnc_AIPassVehicles`): cargo infantry dismount under fire and remount at CALM;
   a damaged vehicle smokes (`Waldo_fnc_AIPassFireCountermeasure`, which finds `cmlauncher` weapons)
-  and withdraws when fully mounted.
+  and withdraws when fully mounted; gunner priority is AT infantry, then armour, then the rest;
+  armour keeps a standoff distance from known AT teams.
 - **Grenade evasion** (`Waldo_fnc_AIPassGrenadeCheck`, from a `ProjectileCreated` handler installed
   only while enabled).
 - **Contact reports** (`Waldo_fnc_AIPassContactReport`): `reveal`, same machine only, delayed by
   distance.
 - **Reinforcement** (`Waldo_fnc_AIPassReinforce`): responder cap; responders move to a rally point
-  behind the squad in contact.
+  behind the squad in contact. Squads with AT are preferred, and an extra AT-only request is made
+  against armour.
 - **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): known positions only, a maximum
-  error, a friendly and civilian standoff at impact, range-scaled dispersion, shoot and scoot.
+  error, a friendly and civilian standoff at impact, range-scaled dispersion, shoot and scoot. A
+  SMOKE mode screens retreats.
 - **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): `KNOWN` or
   `RADAR` via `Waldo_fnc_AIPassRegisterRadar`.
 - **Airborne** (`Waldo_fnc_AIPassAirborneRequest` → `Waldo_fnc_ParadropCreateDropZone`, run next
@@ -367,11 +413,11 @@ individual behaviours.
 - **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*): the master switch, every
   behaviour switch and the LAMBS mode. `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case
   publishes them, and they are in the joining-machine snapshot list.
-- **WMP AI & Combat > AI Orders** (`AI_ORDERS` / `AI_ORDER`): garrison, release, clear building,
-  airborne. Orders run next frame, outside the curator's remote-exec context, because the order APIs
+- **WMP AI & Combat > AI Orders** (`AI_ORDERS` / `AI_ORDER`): garrison, defend, release, clear
+  building, airborne, exclude (keep for Zeus), return. Orders run next frame, outside the curator's remote-exec context, because the order APIs
   refuse remote senders other than the server.
 
-**Diagnostics:** rows `ai/smart-ai-pass`, `-regroup`, `-groups`, `-support` and `-lambs` in
+**Diagnostics:** rows `ai/smart-ai-pass`, `-regroup`, `-groups`, `-drills`, `-zeus`, `-support` and `-lambs` in
 `Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP AI PASS]`. See `wiki/Smart-AI-Pass.md`.
 
 ### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
@@ -1672,7 +1718,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionInit/ElectronicWarfare/` — EMP burst (`Waldo_fnc_EMP`) and signal trackers / C-Track (`Waldo_fnc_Tracker`)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
-- `AiScripting/SmartAIPass/` — Smart AI Pass: budgeted server/HC scheduler, discovery sweep, central eligibility gate, group state ladder, combat behaviours (flanking, street crossing, fire control, morale, anti-armour, vehicles, grenade evasion), support (contact reports, reinforcement, artillery, counter-battery, airborne), orders (garrison, clear building), survivor regroup
+- `AiScripting/SmartAIPass/` — Smart AI Pass: budgeted server/HC scheduler, discovery sweep, central eligibility gate with Zeus priority, behaviour profiles, group state ladder, combat behaviours (flanking, final assault, bounding advance, street crossing, investigation, fire control, stance, morale, anti-armour, vehicles, grenade evasion, ammo sharing), support (contact reports, reinforcement, coordinated assault, artillery, counter-battery, airborne), orders (garrison, defend, clear building), survivor regroup
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
@@ -1899,7 +1945,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 - Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
 - AI Control → `AI` case of `Waldo_fnc_FeatureRuntimeZen` (AI Rebalance profile plus every Smart AI Pass switch; applied by `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case)
-- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, release, clear building or airborne reinforcement for a nearby AI group; applied by the `AI_ORDER` case)
+- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, defend, release, clear building, airborne reinforcement, exclude or return for a nearby AI group; applied by the `AI_ORDER` case)
 - Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is

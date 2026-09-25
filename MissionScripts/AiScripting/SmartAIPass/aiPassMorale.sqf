@@ -7,11 +7,14 @@
  * seen in the last 30 s (15%), known armour within 400 m with no anti-tank gunner in the squad (20%)
  * and average wounds (10%). Average courage skill offsets it, so AI Rebalance profiles and mission
  * skills still matter. Morale falls quickly towards the pressure and recovers slowly (60% versus 10%
- * of the gap per step). STEADY at 0.55 or more, SHAKEN from 0.3, BROKEN below 0.3; a broken squad
- * must recover to 0.4 before it counts as shaken again, so it cannot flicker.
- * Shaken squads do not start flank drills. Broken squads retreat; with Waldo_AIPass_Surrender_Enable,
- * a broken squad of two or fewer, with an enemy believed within 60 m and no friendly squad within
- * 300 m, surrenders instead (Scorpion's rule).
+ * of the gap per step). The thresholds come from the group's behaviour profile
+ * (Waldo_fnc_AIPassProfile): STEADY at moraleShaken or more, SHAKEN above moraleBroken, BROKEN below
+ * it. A broken squad must recover 0.1 above moraleBroken before it counts as shaken again, so it
+ * cannot flicker. With the shipped table, MILITIA breaks much sooner than ELITE.
+ * Shaken squads do not start flank, assault or advance drills. Broken squads retreat; with
+ * Waldo_AIPass_Surrender_Enable, a broken squad no larger than the profile's surrenderSurvivors, with
+ * an enemy believed within 60 m and no friendly squad within 300 m, surrenders instead (Scorpion's
+ * rule).
  * Morale inputs come from state the pass already holds; there are no allUnits scans (the fault the
  * audit found in Scorpion's morale tick).
  * Locality and authority: call where the group is local.
@@ -63,9 +66,11 @@ private _morale = _state getOrDefault ["morale", 1];
 _morale = if (_target < _morale) then {_morale + (_target - _morale) * 0.6} else {_morale + (_target - _morale) * 0.1};
 _state set ["morale", _morale];
 private _previous = _state getOrDefault ["moraleState", "STEADY"];
+private _profile = [_group] call Waldo_fnc_AIPassProfile;
+private _broken = _profile get "moraleBroken";
 private _current = switch (true) do {
-    case (_morale < 0.3 || {_previous == "BROKEN" && {_morale < 0.4}}): {"BROKEN"};
-    case (_morale < 0.55): {"SHAKEN"};
+    case (_morale < _broken || {_previous == "BROKEN" && {_morale < _broken + 0.1}}): {"BROKEN"};
+    case (_morale < (_profile get "moraleShaken")): {"SHAKEN"};
     default {"STEADY"};
 };
 _state set ["moraleState", _current];
@@ -74,7 +79,7 @@ if (_current != _previous && {missionNamespace getVariable ["Waldo_AIPass_Debug"
 };
 if (_current != "BROKEN") exitWith {""};
 
-if (missionNamespace getVariable ["Waldo_AIPass_Surrender_Enable", false] && {_count <= 2}
+if (missionNamespace getVariable ["Waldo_AIPass_Surrender_Enable", false] && {_count <= (_profile get "surrenderSurvivors")}
     && {_enemies findIf {(_x select 3) < 60} >= 0}) then {
     private _leaderPos = getPosATL leader _group;
     private _side = side _group;

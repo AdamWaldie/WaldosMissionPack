@@ -12,7 +12,9 @@
  * - optionally applies WMP garrison handling to Dynamic AO garrison groups;
  * - in LAMBS "WMP" mode, turns LAMBS group AI off for managed groups (restored on release);
  * - caches locally owned, eligible artillery for fire support and counter-battery;
- * - installs the missile-warning flare handler on locally owned WMP gunships and Dynamic AA fighters.
+ * - re-applies defence-line orders after a locality change;
+ * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
+ *   WMP gunships and Dynamic AA fighters.
  * Locality and authority: machine-local; nothing is broadcast except the documented LAMBS and
  * garrison group variables.
  *
@@ -44,6 +46,9 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_GarrisonApplied", false])}) then {
             [_group] call Waldo_fnc_AIPassGarrisonApplyLocal;
         };
+        if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_DefendApplied", false])}) then {
+            [_group] call Waldo_fnc_AIPassDefendApplyLocal;
+        };
         if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_AIPassIsEligible}) then {
             _group setVariable ["Waldo_AIPass_Managed", true];
             _group setVariable ["Waldo_AIPass_PeakSize", (_group getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _group)];
@@ -64,7 +69,8 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
 
 private _wantArtillery = (missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false])
     || {missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]};
-private _wantFlares = missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false];
+private _wantFlares = (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false])
+    || {missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]};
 if (_wantArtillery || _wantFlares) then {
     private _artillery = [];
     {
@@ -78,13 +84,21 @@ if (_wantArtillery || _wantFlares) then {
                 && {!isNil {_vehicle getVariable "Waldo_Gunship_Id"} || {!isNil {_vehicle getVariable "Waldo_DynamicAA_SystemId"}}}) then {
                 _vehicle setVariable ["Waldo_AIPass_FlaresInstalled", true];
                 _vehicle addEventHandler ["IncomingMissile", {
-                    params ["_vehicle"];
-                    if (!local _vehicle || {isPlayer driver _vehicle} || {!(missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false])}
-                        || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {};
+                    params ["_vehicle", "", "_shooter"];
+                    if (!local _vehicle || {isPlayer driver _vehicle} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {};
                     if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
                     _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
-                    for "_burst" from 0 to 2 do {
-                        [{[_this] call Waldo_fnc_AIPassFireCountermeasure}, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
+                    if (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]) then {
+                        for "_burst" from 0 to 2 do {
+                            [{[_this] call Waldo_fnc_AIPassFireCountermeasure}, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
+                        };
+                    };
+                    // Smart Aircraft's break: one sideways jink away from the shooter, without touching
+                    // the aircraft's waypoints or orbit (Waldo_AIPass_AircraftBreak_Enable, off by default).
+                    if ((missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]) && {!isNull _shooter}) then {
+                        private _velocity = velocityModelSpace _vehicle;
+                        private _side = [18, -18] select ((_vehicle getRelDir _shooter) < 180);
+                        _vehicle setVelocityModelSpace [(_velocity select 0) + _side, _velocity select 1, (_velocity select 2) - 4];
                     };
                 }];
             };

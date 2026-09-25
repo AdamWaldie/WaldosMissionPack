@@ -2,7 +2,7 @@
 
 > **Use this page when:** you want non-player AI squads to fight, move and support each other more sensibly without adding an AI mod.
 
-_Associated Files: `MissionConfig/aiConfig.sqf`; `MissionScripts/AiScripting/SmartAIPass/` (scheduler, eligibility, group tick and every behaviour); `MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf` (AI Control and AI Orders dialogs)_
+_Associated Files: `MissionConfig/aiConfig.sqf`; `MissionScripts/AiScripting/SmartAIPass/` (scheduler, eligibility, Zeus priority, group tick, profiles and every behaviour); `MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf` (AI Control and AI Orders dialogs); `initPlayerLocal.sqf` (Zeus watcher)_
 
 The Smart AI Pass improves how AI squads behave. [Waldo's AI Tuning](Waldos-AI-Tweak) changes how
 well they shoot and spot; this pass changes what they do. It covers every non-player AI group,
@@ -19,6 +19,20 @@ Static). Their good ideas were kept and their faults fixed:
 - mission-maker AI settings are never overwritten.
 
 It is **off by default**, and every behaviour has its own switch.
+
+**Zeus always comes first.** The moment a curator selects a squad (or one of its soldiers), gives
+it any order, the pass steps back from that squad:
+- move and attack waypoints;
+- designating a target (a kill order);
+- moving it;
+- remote-controlling a soldier;
+- ZEN AI actions such as suppressive fire, stance or behaviour;
+- editing its attributes.
+
+The squad is left alone for `Waldo_AIPass_ZeusHoldSeconds` (default 120 s) after the last Zeus
+interaction. If Zeus gave it waypoints, it is left alone until it has finished them. The pass never
+removes or reorders a Zeus waypoint, and Zeus waypoints also cancel any WMP garrison, defence or clear
+order on that squad. Use **AI Orders** to keep a squad for Zeus permanently, or to hand it back.
 
 ## Enable the pass
 
@@ -39,6 +53,7 @@ really changes, so it does not flicker between them.
 | State | What the squad does |
 |---|---|
 | CALM | Its own orders and waypoints. |
+| INVESTIGATE | The squad knows about an enemy it has not seen (reported to it, or heard firing) within 300 m. Two riflemen check the spot while the rest watch it, for up to 60 s. |
 | CONTACT | Entered when an enemy was seen in the last 10 s. The squad switches to combat, reports the contact, may call for help, and uses the combat behaviours below. |
 | SECURITY | Contact lost for 30 s: the squad holds and watches for 10 s. |
 | SEARCH | Two riflemen check the last known enemy position. |
@@ -55,20 +70,50 @@ touched.
 | Survivor regroup | `Waldo_AIPass_Regroup_Enable` (on) | Survivors of a nearly destroyed squad walk to the nearest friendly squad and join it. Snipers, sentries and other small teams are never merged. |
 | Contact handling | `Waldo_AIPass_Contact_Enable` (on) | The state ladder above. Every combat behaviour needs it. |
 | Post-contact search | `Waldo_AIPass_PostContact_Enable` (on) | Security hold, two-man search, regroup. |
-| Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. The leader, machine gunners and AT gunners stay as the base of fire. |
+| Investigation | `Waldo_AIPass_Investigate_Enable` (on) | The INVESTIGATE state above. |
+| Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. The leader, machine gunners and AT gunners stay as the base of fire. The flanking team then holds the ground it took until the squad catches up. |
+| Final assault | `Waldo_AIPass_Assault_Enable` (on) | After a flank, if the enemy is within 80 m, one soldier throws a grenade (never near friendlies). The team then bounds to cover 12 m short of the enemy and rushes the position while the base of fire keeps suppressing. |
+| Bounding advance | `Waldo_AIPass_Advance_Enable` (on) | A squad that has been in a firefight for 30 s and still has a waypoint to reach pushes a fire team up to three covered bounds towards it, instead of stalling. |
+| Coordinated assault | `Waldo_AIPass_CoordinatedAssault_Enable` (on) | Once reinforcing squads reach their rally point, they assault the enemy from both sides while the squad in contact fires. |
 | Street crossing | `Waldo_AIPass_StreetCrossing_Enable` (on) | A flanking element stops at the road edge, throws smoke and crosses in one bound. |
+| Stance from cover | `Waldo_AIPass_Stance_Enable` (on) | Soldiers stand behind tall cover, kneel behind waist-high cover and go prone behind low cover. Stances you set yourself are left alone. |
+| Ammo sharing | `Waldo_AIPass_AmmoShare_Enable` (on) | A soldier down to his last magazine gets one from a squad-mate within 10 m who has plenty. |
 | Fire control | `Waldo_AIPass_FireControl_Enable` (on) | Soldiers deal with enemies within 20 m first and spread their fire across visible enemies. Machine gunners (and riflemen with ammunition to spare) suppress enemies that are known but hidden. Nobody is ordered to fire through friendlies or civilians. |
 | Morale and retreat | `Waldo_AIPass_Morale_Enable` (on) | Morale is driven by casualties, suppression, a lost leader, being outnumbered, and armour the squad cannot fight. Braver soldiers hold longer. A broken squad falls back 200 m under smoke. |
 | Surrender | `Waldo_AIPass_Surrender_Enable` (off) | The last one or two survivors of a broken, isolated squad drop their weapons and surrender. With ACE Captives loaded, players can take them prisoner. |
 | Grenade evasion | `Waldo_AIPass_GrenadeEvasion_Enable` (off) | AI move away from a live grenade they can see. Test it in your setup first (see Limitations). |
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
 | Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Infantry riding in the squad's vehicle get out under fire and get back in afterwards. A badly damaged vehicle fires its smoke and, if the whole squad is mounted, withdraws. |
+| Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
 | Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass sighted enemies to nearby friendly squads. The range is 500 m with a working radio, or 35 m by voice. Radio jamming blocks the radio report. |
-| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Calling for help needs a radio. |
+| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Calling for help needs a radio. |
 | Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | A squad with a good fix on the enemy calls a fire mission from friendly AI artillery. The target must be at least 200 m from friendlies and civilians, and mobile guns relocate after firing. Jamming blocks the call. |
+| Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
 | Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Friendly AI artillery answers enemy artillery, but only if its position is known (see below). |
 | Airborne reinforcement | `Waldo_AIPass_Airborne_Enable` (off) | Paradropped AI squads from triggers, scripts or Zeus. With `Waldo_AIPass_Airborne_Auto`, a squad in contact calls one when no ground squad can help. |
 | Aircraft flares | `Waldo_AIPass_AircraftFlares_Enable` (off) | WMP gunships and Dynamic AA fighters fire flares when a missile is launched at them. |
+| Aircraft break-away | `Waldo_AIPass_AircraftBreak_Enable` (off) | The same aircraft jink sideways away from the launch, without changing their orbit or waypoints. |
+
+## Behaviour profiles
+
+The pass reads the same profile names as [Waldo's AI Tuning](Waldos-AI-Tweak) (MILITIA, LINE,
+VETERAN, ELITE; LEGACY behaves like LINE). Skill profiles set how well AI shoot and spot, and the
+pass never changes them. Behaviour profiles set how willing a squad is to fight smart:
+
+| Profile | Flank | Assault | Breaks at | Retreats | Surrenders at |
+|---|---|---|---|---|---|
+| MILITIA | 30% | 20% | early | 1.5x further | 3 survivors |
+| LINE | 50% | 40% | normal | normal | 2 survivors |
+| VETERAN | 60% | 55% | late | 0.8x | 1 survivor |
+| ELITE | 70% | 70% | very late | 0.7x | 1 survivor |
+
+A squad uses, in order:
+1. its own profile (`(group this) setVariable ["Waldo_AIPass_Profile", "ELITE", true];`);
+2. its faction's entry in `Waldo_AIPass_FactionProfiles`;
+3. the active AI Rebalance profile;
+4. LINE.
+
+Edit `Waldo_AIPass_ProfileBehaviour` in `aiConfig.sqf` to change the numbers.
 
 ### Survivor regroup in detail
 
@@ -104,6 +149,18 @@ Two orders are given to a specific squad from a script or from Zeus (**WMP AI & 
 ```sqf
 [group this, getPosATL this, 40] call Waldo_fnc_AIPassGarrison;   // garrison within 40 m
 [_group] call Waldo_fnc_AIPassGarrisonRelease;                    // let them move again
+```
+
+**Defend** forms a firing line across a facing direction:
+- two thirds of the squad hold covered spots along the line, watching overlapping sectors;
+- the rest wait in reserve 40 m behind;
+- the reserve is committed once, to a gap when a third of the line has fallen, or to the point an
+  enemy is closing on;
+- the line breaks at half strength or when morale breaks.
+
+```sqf
+[group this, getMarkerPos "ridge", 45, 80] call Waldo_fnc_AIPassDefend;   // face 045, 80 m wide
+[_group] call Waldo_fnc_AIPassDefendRelease;
 ```
 
 **Clear building**: the leader holds outside while the rest work through every room. The order ends
@@ -179,7 +236,8 @@ Every setting is listed with its default in
 | `Waldo_AIPass_Enable` | `false` | Master switch. `false` means no pass code runs anywhere. |
 | `Waldo_AIPass_IncludedSides` | `["WEST", "EAST", "GUER"]` | Sides the pass may command. |
 | `Waldo_AIPass_LambsMode` | `"SPLIT"` | Only matters with LAMBS loaded (see above). |
-| `Waldo_AIPass_Flank_Chance` | `0.5` | How often a qualifying squad flanks. |
+| `Waldo_AIPass_ZeusHoldSeconds` | `120` | How long the pass leaves a squad alone after Zeus touches it. |
+| `Waldo_AIPass_FactionProfiles` | empty | Per-faction behaviour profile, for example OPF_F to ELITE. |
 | `Waldo_AIPass_Morale_RetreatDistance` | `200` | How far a broken squad falls back. |
 | `Waldo_AIPass_Reinforce_Radius` | `600` | How far away helping squads may be. |
 | `Waldo_AIPass_TickBudgetMs` | `1` | Milliseconds of work allowed per scheduler tick. |
@@ -191,9 +249,15 @@ Every setting is listed with its default in
   Pass master switch, every behaviour switch and the LAMBS mode. Changes reach every machine,
   including headless clients that join later.
 - **WMP AI & Combat > AI Orders**: place it at a spot, pick a nearby AI group (a unit under the
-  module is listed first), and choose one of: garrison buildings here, release garrison, clear the
-  building here, or an airborne reinforcement here (side and number of jumpers). Zeus airborne drops
-  skip the cooldown but still count against the budget.
+  module is listed first), and choose an order:
+  - garrison buildings here;
+  - defend a line here (width and facing);
+  - release a garrison or defence;
+  - clear the building here;
+  - airborne reinforcement here (side and number of jumpers). Zeus drops skip the cooldown but still
+    count against the budget;
+  - keep the group for Zeus (exclude it from the pass);
+  - return it to the pass.
 
 ## Performance and network
 
@@ -210,6 +274,8 @@ Every setting is listed with its default in
 ## Limitations
 
 - Not yet run in the engine. Test with the full audit mission before live use.
+- A Zeus waypoint that cycles (a CYCLE patrol) keeps the squad Zeus's until you return it with AI
+  Orders.
 - Grenade evasion and aircraft flares are off by default:
   - grenade evasion depends on where the engine raises the `ProjectileCreated` event in multiplayer;
     if it is not raised where the AI live, the feature silently does nothing;
@@ -230,6 +296,9 @@ Mission diagnostics include rows under area `ai`:
 - `smart-ai-pass-regroup`: regroups and units joined;
 - `smart-ai-pass-groups`: managed squads, squads in contact and retreating, garrisons, flanks,
   retreats, surrenders, reinforcements, grenade reactions;
+- `smart-ai-pass-drills`: assaults, advances, investigations, coordinated assaults, magazines shared,
+  defences;
+- `smart-ai-pass-zeus`: squads held by Zeus, squads on Zeus waypoints, squads excluded;
 - `smart-ai-pass-support`: artillery, radars, airborne drops, flares;
 - `smart-ai-pass-lambs`: LAMBS detection and mode.
 

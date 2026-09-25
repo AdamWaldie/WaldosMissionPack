@@ -7,13 +7,14 @@
  * which Waldo_fnc_AIPassFireControl uses to suppress. Up to half the squad (2-5 riflemen) becomes
  * the manoeuvre element. The route has two legs: a wide swing about 70 degrees off the enemy's line
  * to the squad, then a close-in position about 60 degrees off, 35-60 m from the enemy. Each leg is cut
- * into bounds of Waldo_AIPass_Flank_BoundDistance. Where a leg crosses a road
+ * into bounds by Waldo_fnc_AIPassPlanRoute. Where a leg crosses a road
  * (Waldo_AIPass_StreetCrossing_Enable), the route stops at the near edge, throws smoke and crosses in
- * one bound to the far edge, using the road width from getRoadInfo. Bridges are not treated as
- * crossings. Legs over water switch to the other flank or cancel the drill.
+ * one bound to the far edge. Legs over water switch to the other flank or cancel the drill. When the
+ * element reaches its flanking position it may go on to a final assault (Waldo_fnc_AIPassFlankStep).
  * Gates: infantry squad of at least Waldo_AIPass_Flank_MinGroupSize with 60% of its peak strength,
  * morale STEADY, a seen enemy between Waldo_AIPass_Flank_MinRange and MaxRange, no drill running, no
- * cooldown, and a Waldo_AIPass_Flank_Chance roll (a failed roll waits 30 s).
+ * cooldown, and a roll against the group's behaviour profile flankChance (Waldo_fnc_AIPassProfile; a
+ * failed roll waits 30 s).
  * Locality and authority: call where the group is local. The drill runs as its own scheduler job.
  *
  * Arguments:
@@ -46,7 +47,7 @@ private _targetIndex = _enemies findIf {
     && {(_x select 3) <= (missionNamespace getVariable ["Waldo_AIPass_Flank_MaxRange", 400])}
 };
 if (_targetIndex < 0) exitWith {false};
-if (random 1 > (missionNamespace getVariable ["Waldo_AIPass_Flank_Chance", 0.5])) exitWith {
+if (random 1 > ([_group, "flankChance"] call Waldo_fnc_AIPassProfile)) exitWith {
     [_state, "flank", 30] call Waldo_fnc_AIPassCooldown;
     false
 };
@@ -71,56 +72,13 @@ private _legs = [];
 } forEach (selectRandom [[1, -1], [-1, 1]]);
 if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_AIPassCooldown; false};
 
-// Route points: [positionATL, kind], kind BOUND, CROSS_NEAR, CROSS_FAR or FINAL.
-private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
-private _streets = missionNamespace getVariable ["Waldo_AIPass_StreetCrossing_Enable", true];
 private _start = [0, 0, 0];
 {_start = _start vectorAdd getPosATL _x} forEach _element;
 _start = _start vectorMultiply (1 / count _element);
-private _points = [];
-private _from = _start;
-{
-    private _to = _x;
-    private _length = _from distance2D _to;
-    private _direction = _from getDir _to;
-    private _crossings = [];
-    if (_streets) then {
-        private _clearUntil = -1;
-        for "_along" from 6 to (_length - 3) step 6 do {
-            if (_along > _clearUntil) then {
-                private _sample = _from getPos [_along, _direction];
-                if (isOnRoad _sample) then {
-                    private _road = roadAt _sample;
-                    if (!isNull _road) then {
-                        private _info = getRoadInfo _road;
-                        if !(_info param [8, false]) then {
-                            private _halfWidth = ((_info param [1, 8]) max 4) / 2;
-                            _crossings pushBack [_along, _halfWidth];
-                            _clearUntil = _along + _halfWidth * 2 + 6;
-                        };
-                    };
-                };
-            };
-        };
-    };
-    private _marks = [];
-    for "_along" from _bound to (_length - 1) step _bound do {
-        private _mark = _along;
-        if (_crossings findIf {abs (_mark - (_x select 0)) < (_x select 1) + 6} < 0) then {_marks pushBack [_mark, "BOUND"]};
-    };
-    {
-        _x params ["_centre", "_halfWidth"];
-        _marks pushBack [(_centre - _halfWidth - 3) max 1, "CROSS_NEAR"];
-        _marks pushBack [(_centre + _halfWidth + 4) min _length, "CROSS_FAR"];
-    } forEach _crossings;
-    _marks sort true;
-    {_points pushBack [_from getPos [_x select 0, _direction], _x select 1]} forEach _marks;
-    _points pushBack [_to, if (_forEachIndex == count _legs - 1) then {"FINAL"} else {"BOUND"}];
-    _from = _to;
-} forEach _legs;
+private _points = [_start, _legs] call Waldo_fnc_AIPassPlanRoute;
 
 _state set ["drill", createHashMapFromArray [
-    ["units", _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],
+    ["type", "FLANK"], ["units", _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],
     ["disabled", []], ["spots", []], ["started", time], ["boundStart", time], ["pauseUntil", 0]
 ]];
 [Waldo_fnc_AIPassFlankStep, createHashMapFromArray [["group", _group]], 0] call Waldo_fnc_AIPassQueueJob;

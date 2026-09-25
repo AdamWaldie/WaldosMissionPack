@@ -129,7 +129,6 @@
  * - Waldo_AIPass_PostContact_SearchSeconds (ADVANCED): time limit for the two-man search.
  * - Waldo_AIPass_PostContact_RegroupSeconds (ADVANCED): time limit for the squad to close up before returning to CALM.
  * - Waldo_AIPass_Flank_Enable (MISSION MAKER): half the squad flanks in covered bounds while the rest suppresses.
- * - Waldo_AIPass_Flank_Chance (ADVANCED): chance that a qualifying squad flanks (0-1).
  * - Waldo_AIPass_Flank_MinGroupSize (ADVANCED): soldiers on foot needed before a squad may flank.
  * - Waldo_AIPass_Flank_MinRange (ADVANCED): enemies nearer than this are fought, not flanked.
  * - Waldo_AIPass_Flank_MaxRange (ADVANCED): enemies farther than this are not flanked.
@@ -172,8 +171,30 @@
  * - Waldo_AIPass_Airborne_AircraftClasses (MISSION MAKER): transport aircraft class per side key (WEST, EAST, GUER); use mod aircraft if you run them.
  * - Waldo_AIPass_Airborne_JumperClasses (MISSION MAKER): paratrooper unit class per side key; use your faction's rifleman.
  * - Waldo_AIPass_Garrison_DynamicAO (MISSION MAKER): Dynamic AO garrisons duck under fire, watch outward and break at losses.
- * - Waldo_AIPass_Garrison_BreakFraction (ADVANCED): a garrison breaks when down to this share of its strength at the time of the order.
+ * - Waldo_AIPass_Garrison_BreakFraction (ADVANCED): a garrison or defence line breaks when down to this share of its strength at the time of the order.
  * - Waldo_AIPass_AircraftFlares_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first.
+ * - Waldo_AIPass_ProfileBehaviour (ADVANCED): behaviour per profile name, alongside AI Rebalance's skill
+ *   values (which the pass never changes): flank, assault, advance, investigate and coordinated-assault
+ *   chances (0-1), morale thresholds, retreat distance scale and the largest squad that may surrender.
+ *   A group uses Waldo_AIPass_Profile set on the group, then Waldo_AIPass_FactionProfiles, then the
+ *   active Waldo_AIRebalance_Profile, then LINE.
+ * - Waldo_AIPass_FactionProfiles (MISSION MAKER): optional map of faction classname to behaviour profile name, overriding the AI Rebalance profile for that faction's squads.
+ * - Waldo_AIPass_ZeusHoldSeconds (MISSION MAKER): seconds the pass leaves a group alone after Zeus selects, edits or orders it; Zeus waypoints hold it until they are finished.
+ * - Waldo_AIPass_Investigate_Enable (MISSION MAKER): squads send two riflemen to check enemies they know about but have not seen (reported, or heard firing).
+ * - Waldo_AIPass_Investigate_Range (ADVANCED): how far away a known but unseen enemy may be to be investigated.
+ * - Waldo_AIPass_Investigate_Seconds (ADVANCED): time limit for an investigation.
+ * - Waldo_AIPass_Assault_Enable (MISSION MAKER): a flank can finish with a grenade and a rush on the enemy position while the base of fire suppresses.
+ * - Waldo_AIPass_Assault_Range (ADVANCED): the enemy must be believed this close to the flanking element before an assault.
+ * - Waldo_AIPass_Advance_Enable (MISSION MAKER): squads in a long firefight that still have a waypoint to reach push a fire team forward in covered bounds.
+ * - Waldo_AIPass_Advance_MinContactSeconds (ADVANCED): seconds in contact before a bounding advance is considered.
+ * - Waldo_AIPass_CoordinatedAssault_Enable (MISSION MAKER): squads that came to reinforce assault the enemy from both sides while the squad in contact fires.
+ * - Waldo_AIPass_Stance_Enable (MISSION MAKER): soldiers stand, kneel or go prone to match the cover in front of them.
+ * - Waldo_AIPass_AmmoShare_Enable (MISSION MAKER): soldiers down to their last magazine get one from a nearby squad-mate with plenty.
+ * - Waldo_AIPass_AmmoShare_Distance (ADVANCED): how close a squad-mate must be to hand over a magazine.
+ * - Waldo_AIPass_VehicleGunnery_Enable (MISSION MAKER): AI gunners engage anti-tank soldiers first, then armour; armour backs away from known AT teams.
+ * - Waldo_AIPass_Vehicles_StandoffDistance (ADVANCED): distance armour tries to keep from known anti-tank soldiers.
+ * - Waldo_AIPass_ArtillerySmoke_Enable (MISSION MAKER): a retreating squad with a radio gets an artillery smoke screen; needs artillery support on and a battery with smoke.
+ * - Waldo_AIPass_AircraftBreak_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters jink sideways away from a missile launch; test your aircraft first.
  */
 createHashMapFromArray [
     ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings", "AI Helicopter Deceleration", "Smart AI Pass"]],
@@ -257,7 +278,6 @@ createHashMapFromArray [
         ["Waldo_AIPass_PostContact_SearchSeconds", 45], // SECONDS: search time limit.
         ["Waldo_AIPass_PostContact_RegroupSeconds", 30], // SECONDS: regroup time limit.
         ["Waldo_AIPass_Flank_Enable", true], // BOOL: base of fire plus a flanking element in covered bounds.
-        ["Waldo_AIPass_Flank_Chance", 0.5], // 0-1: chance a qualifying squad flanks; a failed roll waits 30 s.
         ["Waldo_AIPass_Flank_MinGroupSize", 6], // COUNT: soldiers on foot needed to flank.
         ["Waldo_AIPass_Flank_MinRange", 60], // METRES: nearer enemies are fought, not flanked.
         ["Waldo_AIPass_Flank_MaxRange", 400], // METRES: farther enemies are not flanked.
@@ -302,6 +322,30 @@ createHashMapFromArray [
         ["Waldo_AIPass_Garrison_DynamicAO", false], // BOOL: WMP garrison handling for Dynamic AO garrisons.
         ["Waldo_AIPass_Garrison_BreakFraction", 0.5], // 0-1: a garrison breaks at this share of its strength.
         ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
+        ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: behaviour per AI Rebalance profile name.
+            ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.3], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
+            ["LINE", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.5], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
+            ["LEGACY", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.5], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
+            ["VETERAN", createHashMapFromArray [["flankChance", 0.6], ["assaultChance", 0.55], ["advanceChance", 0.6], ["investigateChance", 0.75], ["coordinatedChance", 0.5], ["moraleShaken", 0.45], ["moraleBroken", 0.22], ["retreatScale", 0.8], ["surrenderSurvivors", 1]]],
+            ["ELITE", createHashMapFromArray [["flankChance", 0.7], ["assaultChance", 0.7], ["advanceChance", 0.7], ["investigateChance", 0.85], ["coordinatedChance", 0.6], ["moraleShaken", 0.4], ["moraleBroken", 0.18], ["retreatScale", 0.7], ["surrenderSurvivors", 1]]]
+        ]],
+        ["Waldo_AIPass_FactionProfiles", createHashMap], // MAP: CfgFactionClasses name to behaviour profile, for example OPF_F to ELITE.
+        ["Waldo_AIPass_ZeusHoldSeconds", 120], // SECONDS: the pass leaves a group alone this long after Zeus selects or edits it.
+        ["Waldo_AIPass_Investigate_Enable", true], // BOOL: squads check out enemies they know about but have not seen.
+        ["Waldo_AIPass_Investigate_Range", 300], // METRES: how far away a known enemy may be to be investigated.
+        ["Waldo_AIPass_Investigate_Seconds", 60], // SECONDS: investigation time limit.
+        ["Waldo_AIPass_Assault_Enable", true], // BOOL: a flank can finish with a grenade and a rush on the enemy position.
+        ["Waldo_AIPass_Assault_Range", 80], // METRES: the enemy must be this close to the flanking element to assault.
+        ["Waldo_AIPass_Advance_Enable", true], // BOOL: pinned squads with somewhere to go push a team forward in bounds.
+        ["Waldo_AIPass_Advance_MinContactSeconds", 30], // SECONDS: in contact before an advance is considered.
+        ["Waldo_AIPass_CoordinatedAssault_Enable", true], // BOOL: reinforcing squads assault together while the first squad fires.
+        ["Waldo_AIPass_Stance_Enable", true], // BOOL: stance chosen from the height of the cover in front.
+        ["Waldo_AIPass_AmmoShare_Enable", true], // BOOL: soldiers low on magazines get one from a squad-mate.
+        ["Waldo_AIPass_AmmoShare_Distance", 10], // METRES: how close the squad-mate must be.
+        ["Waldo_AIPass_VehicleGunnery_Enable", true], // BOOL: gunners prioritise AT soldiers; armour keeps away from them.
+        ["Waldo_AIPass_Vehicles_StandoffDistance", 250], // METRES: distance armour keeps from known AT soldiers.
+        ["Waldo_AIPass_ArtillerySmoke_Enable", true], // BOOL: a retreating squad gets an artillery smoke screen (needs Artillery).
+        ["Waldo_AIPass_AircraftBreak_Enable", false], // BOOL: WMP gunships and fighters jink sideways from missiles; test first.
         ["Waldo_AI_ProfileDisplayNames", createHashMapFromArray [ // ADVANCED: labels only; keys are implementation IDs.
             ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
             ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]

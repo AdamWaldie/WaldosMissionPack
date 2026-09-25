@@ -30,7 +30,7 @@
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
 if ([_state, "artillery"] call Waldo_fnc_AIPassCooldown) exitWith {false};
 private _batteries = (missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]) select {
-    alive _x && {local _x} && {alive gunner _x} && {side group gunner _x == side _group}
+    alive _x && {local _x} && {alive gunner _x} && {!([group gunner _x] call Waldo_fnc_AIPassZeusHeld)} && {side group gunner _x == side _group}
     && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}
 };
 if (_batteries isEqualTo []) exitWith {false};

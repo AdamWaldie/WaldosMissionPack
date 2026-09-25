@@ -14,6 +14,7 @@
  * 0: group <GROUP>
  * 1: position <ARRAY> - ATL destination
  * 2: completion radius <NUMBER> - metres (optional, default: 25)
+ * 3: type <STRING> - waypoint type, MOVE or SAD (optional, default: "MOVE")
  *
  * Return Value:
  * Array - the waypoint [group, index]
@@ -22,13 +23,14 @@
  * [_group, _rallyPoint] call Waldo_fnc_AIPassGroupMove;
  * Result: the group moves to the rally point, then resumes its own waypoints.
  *
- * Current callers: retreat, reinforcement, vehicle withdrawal and shoot-and-scoot.
+ * Current callers: retreat, reinforcement, coordinated assault, investigation, vehicle withdrawal and
+ * standoff, and shoot-and-scoot.
  */
 
-params [["_group", grpNull, [grpNull]], ["_position", [], [[]]], ["_radius", 25, [0]]];
+params [["_group", grpNull, [grpNull]], ["_position", [], [[]]], ["_radius", 25, [0]], ["_type", "MOVE", [""]]];
 [_group] call Waldo_fnc_AIPassGroupMoveClear;
 private _waypoint = _group addWaypoint [_position, 0, currentWaypoint _group];
-_waypoint setWaypointType "MOVE";
+_waypoint setWaypointType _type;
 _waypoint setWaypointCompletionRadius _radius;
 _waypoint setWaypointDescription "WMP AI PASS";
 _group setCurrentWaypoint _waypoint;

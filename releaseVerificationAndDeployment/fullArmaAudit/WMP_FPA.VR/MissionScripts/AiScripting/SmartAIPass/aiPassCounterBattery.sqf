@@ -34,7 +34,7 @@ if (isNull _vehicle || {!(missionNamespace getVariable ["Waldo_AIPass_CounterBat
 if (time < (_vehicle getVariable ["Waldo_AIPass_CounterBatteryAt", -1])) exitWith {false};
 private _enemySide = side group ([_gunner, gunner _vehicle] select isNull _gunner);
 private _batteries = (missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]) select {
-    alive _x && {local _x} && {alive gunner _x} && {(side group gunner _x) getFriend _enemySide < 0.6}
+    alive _x && {local _x} && {alive gunner _x} && {!([group gunner _x] call Waldo_fnc_AIPassZeusHeld)} && {(side group gunner _x) getFriend _enemySide < 0.6}
     && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}
 };
 if (_batteries isEqualTo []) exitWith {false};

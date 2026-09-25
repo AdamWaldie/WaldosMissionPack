@@ -5,7 +5,8 @@
  * Exact restore, fixing Smart Combat V2's unconditional re-enables: behaviour goes back to the value
  * recorded at first contact only if the pass changed it and the group is still in COMBAT; speed goes
  * back only if the pass changed it. Pass waypoints are removed so the group resumes its own
- * waypoints, the search team rejoins formation, and infantry dismounted by the pass remount their
+ * waypoints, the search or investigation team and soldiers holding ground from a drill rejoin
+ * formation, stances the pass set go back to AUTO, and infantry dismounted by the pass remount their
  * vehicle. Morale is kept and recovers slowly.
  * Locality and authority: call where the group is local.
  *
@@ -29,7 +30,13 @@ private _leader = leader _group;
 [_group] call Waldo_fnc_AIPassGroupMoveClear;
 {
     if (alive _x && {local _x}) then {_x doFollow _leader};
-} forEach (_state getOrDefault ["searchTeam", []]);
+} forEach ((_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []]));
+{
+    if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet", false]}) then {
+        _x setUnitPos "AUTO";
+        _x setVariable ["Waldo_AIPass_StanceSet", nil];
+    };
+} forEach units _group;
 if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader == "COMBAT"}) then {
     _group setBehaviour (_state getOrDefault ["baseBehaviour", "AWARE"]);
 };
@@ -45,7 +52,8 @@ if (_state getOrDefault ["speedChanged", false]) then {
 } forEach (_state getOrDefault ["dismounted", []]);
 {_state deleteAt _x} forEach [
     "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "reinforceRequested",
-    "withdrawn", "contactLeader", "lastSeen"
+    "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
+    "armourRequested", "coordinated", "reserveCommitted", "arrivedAt", "assaulting"
 ];
 _state set ["phase", "CALM"];
 _state set ["phaseStart", time];

@@ -12,6 +12,10 @@
  *   jumpers), Gunship, Transport Services (including a crew that has dismounted), Paradrop drop
  *   zones, Dynamic AA systems, pinned helicopters, or a dialogue speaker;
  * - a member uses a UAV or UGV (for example Virtual Vehicle Depot drone crews);
+ * - Zeus has priority: the group is held after a curator selected, edited or gave it waypoints
+ *   (Waldo_fnc_AIPassZeusHeld), a member is remote-controlled (vanilla and ZEN both set
+ *   bis_fnc_moduleRemoteControl_owner), or a member is under a ZEN AI order (ZEN garrison or ZEN
+ *   suppressive fire);
  * - a member fails the shared AI filters: Waldo_AI_IncludedFactions, Waldo_AI_ExcludedFactions or
  *   Waldo_AI_ExcludedClasses.
  * Dynamic AO groups are deliberately eligible. Waldo_Headless_ExcludeGroup only pins locality and
@@ -34,6 +38,8 @@
 
 params [["_group", grpNull, [grpNull]]];
 if (isNull _group) exitWith {false};
+// Zeus always has priority: a group Zeus is commanding is left alone (Waldo_fnc_AIPassZeusHeld).
+if ([_group] call Waldo_fnc_AIPassZeusHeld) exitWith {false};
 if (_group getVariable ["Waldo_AI_Exclude", false]
     || {_group getVariable ["Waldo_AIPass_Exclude", false]}
     || {_group getVariable ["Waldo_ServerOwnedFeature", false]}) exitWith {false};
@@ -70,6 +76,9 @@ private _isFeatureOwned = {
     || {_unit getVariable ["Waldo_AIPass_Exclude", false]}
     || {_unit getVariable ["Waldo_Dialogue_Available", false]}
     || {_unit getVariable ["Waldo_Dialogue_Occupied", false]}
+    || {!isNull (_unit getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])}
+    || {_unit getVariable ["zen_ai_garrisoned", false]}
+    || {_unit getVariable ["zen_ai_isSuppressing", false]}
     || {[_unit] call _isFeatureOwned}
     || {count _includedFactions > 0 && {!(faction _unit in _includedFactions)}}
     || {faction _unit in _excludedFactions}

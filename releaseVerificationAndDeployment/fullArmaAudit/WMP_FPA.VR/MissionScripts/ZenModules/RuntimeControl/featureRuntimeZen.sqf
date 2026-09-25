@@ -548,6 +548,15 @@ switch (toUpperANSI _feature) do {
                 ["CHECKBOX", ["Airborne reinforcement", "Allow paradropped AI reinforcements (triggers, scripts and AI Orders)."], missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false]],
                 ["CHECKBOX", ["Automatic airborne", "Call a paradrop automatically when no ground squad can reinforce."], missionNamespace getVariable ["Waldo_AIPass_Airborne_Auto", false]],
                 ["CHECKBOX", ["Aircraft flares", "WMP gunships and Dynamic AA fighters fire flares at incoming missiles."], missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]],
+                ["CHECKBOX", ["Investigation", "Squads send two riflemen to check enemies they know about but have not seen."], missionNamespace getVariable ["Waldo_AIPass_Investigate_Enable", true]],
+                ["CHECKBOX", ["Final assault", "A flank can finish with a grenade and a rush on the enemy position."], missionNamespace getVariable ["Waldo_AIPass_Assault_Enable", true]],
+                ["CHECKBOX", ["Bounding advance", "Squads in a long firefight push a fire team towards their waypoint in covered bounds."], missionNamespace getVariable ["Waldo_AIPass_Advance_Enable", true]],
+                ["CHECKBOX", ["Coordinated assault", "Reinforcing squads assault from both sides while the squad in contact fires."], missionNamespace getVariable ["Waldo_AIPass_CoordinatedAssault_Enable", true]],
+                ["CHECKBOX", ["Stance from cover", "Soldiers stand, kneel or go prone to match the cover in front of them."], missionNamespace getVariable ["Waldo_AIPass_Stance_Enable", true]],
+                ["CHECKBOX", ["Ammo sharing", "Soldiers down to their last magazine get one from a nearby squad-mate."], missionNamespace getVariable ["Waldo_AIPass_AmmoShare_Enable", true]],
+                ["CHECKBOX", ["Vehicle gunnery", "Gunners engage AT soldiers first, then armour; armour backs away from AT teams."], missionNamespace getVariable ["Waldo_AIPass_VehicleGunnery_Enable", true]],
+                ["CHECKBOX", ["Artillery smoke", "A retreating squad gets an artillery smoke screen (needs Artillery support)."], missionNamespace getVariable ["Waldo_AIPass_ArtillerySmoke_Enable", true]],
+                ["CHECKBOX", ["Aircraft break-away", "WMP gunships and Dynamic AA fighters jink away from missile launches. Test first."], missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]],
                 ["COMBO", ["With LAMBS loaded", "Split: LAMBS keeps in-contact unit tactics, WMP the rest. WMP only: LAMBS group AI is turned off for managed squads."], [["SPLIT", "WMP"], ["Split by feature", "WMP only"], (["SPLIT", "WMP"] find toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"])) max 0]]
             ],
             {
@@ -576,21 +585,24 @@ switch (toUpperANSI _feature) do {
         [
             "AI Orders",
             [
-                ["COMBO", ["Order", "Garrison and clear use the selected group. Airborne drops a new squad at this position."], [["GARRISON", "RELEASE", "CLEAR", "AIRBORNE"], ["Garrison buildings here", "Release garrison", "Clear the building here", "Airborne reinforcement here"], 0]],
+                ["COMBO", ["Order", "Most orders use the selected group. Airborne drops a new squad at this position. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
+                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "EXCLUDE", "RETURN"],
+                    ["Garrison buildings here", "Defend a line here", "Release garrison or defence", "Clear the building here", "Airborne reinforcement here", "Keep for Zeus (exclude from the pass)", "Return to the Smart AI Pass"], 0]],
                 ["COMBO", ["Group", "Nearby AI groups, nearest first; a unit under the module is listed first."], [_groupIndices, _groupLabels, 0]],
-                ["SLIDER", ["Garrison radius", "Metres around the module searched for building positions."], [15, 150, 50, 0]],
+                ["SLIDER", ["Garrison radius / line width", "Garrison: metres searched for building positions. Defend: width of the line."], [15, 150, 50, 0]],
+                ["SLIDER", ["Defence facing", "Compass direction the defence line faces."], [0, 359, round (getDir curatorCamera), 0]],
                 ["COMBO", ["Airborne side", "Side that receives the airborne reinforcement."], [[0, 1, 2], ["BLUFOR", "OPFOR", "Independent"], 1]],
                 ["SLIDER", ["Airborne jumpers", "Paratroopers generated for the drop (limited by the aircraft's seats)."], [2, 16, missionNamespace getVariable ["Waldo_AIPass_Airborne_JumperCount", 8], 0]]
             ],
             {
                 params ["_values", "_arguments"];
-                _values params ["_order", "_groupIndex", "_radius", "_sideIndex", "_jumpers"];
+                _values params ["_order", "_groupIndex", "_radius", "_facing", "_sideIndex", "_jumpers"];
                 _arguments params ["_groups", "_modulePos", "_building"];
                 private _group = _groups param [_groupIndex, grpNull];
                 if (_order != "AIRBORNE" && {isNull _group}) exitWith {
                     ["AI ORDERS", "Select an AI group for this order.", "ERROR", "AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal;
                 };
-                ["AI_ORDER", [_order, _group, _modulePos, round _radius, [west, east, independent] select _sideIndex, round _jumpers, _building]] call Waldo_fnc_FeatureRuntimeApply;
+                ["AI_ORDER", [_order, _group, _modulePos, round _radius, [west, east, independent] select _sideIndex, round _jumpers, _building, round _facing]] call Waldo_fnc_FeatureRuntimeApply;
             },
             {}, [_groups, _modulePos, _building]
         ] call zen_dialog_fnc_create;

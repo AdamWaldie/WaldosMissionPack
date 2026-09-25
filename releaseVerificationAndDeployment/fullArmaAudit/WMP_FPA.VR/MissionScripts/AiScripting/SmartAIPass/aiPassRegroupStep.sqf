@@ -102,6 +102,11 @@ if (_phase == "EVALUATE") exitWith {
 };
 
 // MOVE
+// Zeus has priority over the merge: stop walking and follow the remnant's own leader again.
+if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {
+    {_x doFollow (leader _group)} forEach _movers;
+    call _finish
+};
 private _host = _state getOrDefault ["host", grpNull];
 private _hostLeader = leader _host;
 if (isNull _host || {!local _host} || {!alive _hostLeader} || {!([_host] call Waldo_fnc_AIPassIsEligible)}) exitWith {

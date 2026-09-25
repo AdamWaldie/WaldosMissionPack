@@ -69,7 +69,8 @@ _group setBehaviour "COMBAT";
         diag_log format ["[WMP AI PASS] %1 clear building finished (%2 of %3 positions)", _group, count (_job get "cleared"), count (_job get "positions")];
         -1
     };
-    if (isNull _group || {!local _group} || {!(_group getVariable ["Waldo_AIPass_ClearBuilding", false])}) exitWith {call _finish};
+    if (isNull _group || {!local _group} || {!(_group getVariable ["Waldo_AIPass_ClearBuilding", false])}
+        || {_group getVariable ["Waldo_AIPass_ZeusWaypoints", false]}) exitWith {call _finish};
     private _positions = _job get "positions";
     private _cleared = _job get "cleared";
     // One entry per team member, in team order: [] or [positionIndex, assignedAt].

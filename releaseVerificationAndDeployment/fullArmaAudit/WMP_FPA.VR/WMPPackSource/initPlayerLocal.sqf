@@ -67,6 +67,10 @@ if (hasInterface) then {
     // handler never consumes END and does not require ZEN.
     [] call Waldo_fnc_KillHotkeyInit;
 
+    // Smart AI Pass: any Zeus command to an AI group (selection, waypoints, target designation, moves,
+    // ZEN AI actions) holds that group so the pass never fights the curator for control.
+    [] call Waldo_fnc_AIPassZeusWatchLocal;
+
     // Pure-data configuration is local and synchronous; activation and JIP waits remain below.
     ["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;
 

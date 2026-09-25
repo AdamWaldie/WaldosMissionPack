@@ -1,19 +1,29 @@
 /*
  * Author: WaldoTheWarfighter
- * Advances a running flank drill by one step: issue a bound, wait for arrival, pause and overwatch,
- * cross streets under smoke, and finish with a hold on the enemy's flank.
+ * Advances a running drill (flank or bounding advance) by one step: issue a bound, wait for arrival,
+ * pause and overwatch, cross streets under smoke, and finish by holding the ground won or assaulting.
  *
- * Each bound gives every element member his own spot, spread 5 m apart across the direction of
- * travel. Ordinary bounds and the final position are snapped to cover facing the enemy
- * (Waldo_fnc_AIPassFindCover); street crossings are not. While moving, members have TARGET and
- * AUTOTARGET switched off so they do not stop to trade fire mid-bound. Only features that were on
- * are switched off, and they are switched back on at every halt, so mission-maker disableAI settings
- * survive (Smart Combat V2 re-enabled them unconditionally). A bound ends when every member is within
- * 7 m of his spot or after Waldo_AIPass_Flank_BoundTimeout. Halts last Waldo_AIPass_Flank_BoundPause
- * seconds, 3 s at a street edge, and 20 s at the final position.
- * The drill aborts when the group leaves CONTACT, loses half the element, or an enemy is believed
- * within 30 m of the element (fire control takes over). Only element members receive move orders;
- * the leader never does, which avoids the leader-freeze fault the audit traced in Smart Combat V2.
+ * Bounds: each member gets his own spot, spread 5 m apart across the direction of travel. Ordinary
+ * bounds, the final position and the assault position are snapped to cover facing the enemy
+ * (Waldo_fnc_AIPassFindCover); street crossings and the clearing rush are not. While moving, members
+ * have TARGET and AUTOTARGET switched off so they do not stop to trade fire mid-bound. Only features
+ * that were on are switched off, and they are switched back on at every halt, so mission-maker
+ * disableAI settings survive (Smart Combat V2 re-enabled them unconditionally). A bound ends when
+ * every member is within 7 m of his spot or after Waldo_AIPass_Flank_BoundTimeout. Halts last
+ * Waldo_AIPass_Flank_BoundPause seconds, 3 s at a street edge, and 20 s (flank) or 10 s (advance) at
+ * the final position.
+ * Final assault (Smart Combat V2's phased assault; Waldo_AIPass_Assault_Enable): after a flank's hold,
+ * if the enemy is believed within Waldo_AIPass_Assault_Range of the element, morale is STEADY and the
+ * behaviour profile's assaultChance roll succeeds, one member throws a fragmentation grenade
+ * (Waldo_fnc_AIPassThrowGrenade, never near friendlies). The element then bounds to a covered spot
+ * 12 m short of the enemy and rushes the position, while the base of fire keeps suppressing.
+ * Ending: a completed drill leaves the element holding the ground it took. Members rejoin formation
+ * when the leader comes within 30 m, when the squad returns to CALM, or when it retreats (Digii's
+ * flank without the audited faults: the element no longer runs straight back to the leader, which
+ * undid the manoeuvre). The drill aborts, with members following the leader again, when the group
+ * leaves CONTACT, Zeus takes the group (Waldo_fnc_AIPassZeusHeld), or half the element is lost. It
+ * also ends, holding ground, when an enemy is believed within 30 m before the assault. Only element
+ * members receive move orders; the leader never does.
  * Locality and authority: scheduler job on the group owner.
  *
  * Arguments:
@@ -24,9 +34,9 @@
  *
  * Example:
  * [Waldo_fnc_AIPassFlankStep, createHashMapFromArray [["group", _group]], 0] call Waldo_fnc_AIPassQueueJob;
- * Result: the element moves one stage further round the flank.
+ * Result: the element moves one stage further.
  *
- * Current caller: Waldo_fnc_AIPassFlankStart.
+ * Current callers: Waldo_fnc_AIPassFlankStart and Waldo_fnc_AIPassAdvanceStart.
  */
 
 params [["_job", createHashMap, [createHashMap]]];
@@ -39,7 +49,8 @@ private _end = {
     [_group, _state, _this] call Waldo_fnc_AIPassFlankEnd;
     -1
 };
-if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false]) || {(_state getOrDefault ["phase", ""]) != "CONTACT"}) exitWith {"ABORT" call _end};
+if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false]) || {(_state getOrDefault ["phase", ""]) != "CONTACT"}
+    || {[_group] call Waldo_fnc_AIPassZeusHeld}) exitWith {"ABORT" call _end};
 private _allUnits = _drill get "units";
 private _units = _allUnits select {alive _x && {local _x} && {vehicle _x == _x} && {group _x == _group}};
 if (count _units < ((count _allUnits / 2) max 1)) exitWith {"LOSSES" call _end};
@@ -47,7 +58,8 @@ private _centroid = [0, 0, 0];
 {_centroid = _centroid vectorAdd getPosATL _x} forEach _units;
 _centroid = _centroid vectorMultiply (1 / count _units);
 private _enemyPos = _state getOrDefault ["enemyPos", _drill get "enemyPos"];
-if (_centroid distance2D _enemyPos < 30) exitWith {"CLOSE" call _end};
+private _assaulting = _drill getOrDefault ["assaulting", false];
+if (!_assaulting && {_centroid distance2D _enemyPos < 30}) exitWith {"CLOSE" call _end};
 
 private _points = _drill get "points";
 private _now = time;
@@ -65,9 +77,9 @@ private _issue = {
     private _disabled = [];
     {
         private _unit = _x;
-        private _spot = _point getPos [(_forEachIndex - (count _units - 1) / 2) * 5, _direction + 90];
-        if (_kind in ["BOUND", "FINAL"]) then {
-            _spot = ([_spot, _enemyPos, 10, _spots] call Waldo_fnc_AIPassFindCover) select 0;
+        private _spot = _point getPos [(_forEachIndex - (count _units - 1) / 2) * ([5, 3] select (_kind == "CLEAR")), _direction + 90];
+        if (_kind in ["BOUND", "FINAL", "ASSAULT"]) then {
+            _spot = ([_spot, _enemyPos, [10, 6] select (_kind == "ASSAULT"), _spots] call Waldo_fnc_AIPassFindCover) select 0;
         };
         _spots pushBack _spot;
         {
@@ -97,16 +109,19 @@ switch (_drill get "stage") do {
         } forEach _movers;
         if (_arrived || {_now - (_drill get "boundStart") > (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout", 25])}) then {
             call _restoreFeatures;
-            private _kind = (_points select (_drill get "index")) select 1;
-            switch (_kind) do {
+            switch ((_points select (_drill get "index")) select 1) do {
                 case "CROSS_NEAR": {
                     _drill set ["stage", "PAUSE"];
                     _drill set ["pauseUntil", _now + 3];
-                    [selectRandom _units, _enemyPos] call Waldo_fnc_AIPassThrowSmoke;
+                    [selectRandom _units, _enemyPos, "SMOKE"] call Waldo_fnc_AIPassThrowGrenade;
                 };
                 case "FINAL": {
                     _drill set ["stage", "HOLD"];
-                    _drill set ["pauseUntil", _now + 20];
+                    _drill set ["pauseUntil", _now + ([10, 20] select ((_drill getOrDefault ["type", "FLANK"]) == "FLANK"))];
+                };
+                case "CLEAR": {
+                    _drill set ["stage", "HOLD"];
+                    _drill set ["pauseUntil", _now + 10];
                 };
                 default {
                     _drill set ["stage", "PAUSE"];
@@ -122,7 +137,26 @@ switch (_drill get "stage") do {
         };
     };
     case "HOLD": {
-        if (_now >= (_drill get "pauseUntil")) then {_result = "COMPLETE" call _end};
+        if (_now >= (_drill get "pauseUntil")) then {
+            private _assault = !_assaulting
+                && {(_drill getOrDefault ["type", "FLANK"]) == "FLANK"}
+                && {missionNamespace getVariable ["Waldo_AIPass_Assault_Enable", true]}
+                && {(_state getOrDefault ["moraleState", "STEADY"]) == "STEADY"}
+                && {_centroid distance2D _enemyPos <= (missionNamespace getVariable ["Waldo_AIPass_Assault_Range", 80])}
+                && {random 1 < ([_group, "assaultChance"] call Waldo_fnc_AIPassProfile)};
+            if (_assault) then {
+                _drill set ["assaulting", true];
+                _points pushBack [_enemyPos getPos [12, _enemyPos getDir _centroid], "ASSAULT"];
+                _points pushBack [_enemyPos, "CLEAR"];
+                private _thrower = _units select {_x distance2D _enemyPos <= 40};
+                if (_thrower isNotEqualTo []) then {[selectRandom _thrower, _enemyPos, "FRAG"] call Waldo_fnc_AIPassThrowGrenade};
+                missionNamespace setVariable ["Waldo_AIPass_Assaults", (missionNamespace getVariable ["Waldo_AIPass_Assaults", 0]) + 1];
+                _drill set ["stage", "PAUSE"];
+                _drill set ["pauseUntil", _now + 3];
+            } else {
+                _result = "COMPLETE" call _end;
+            };
+        };
     };
 };
 _result

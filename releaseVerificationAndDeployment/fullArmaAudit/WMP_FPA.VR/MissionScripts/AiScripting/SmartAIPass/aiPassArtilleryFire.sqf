@@ -3,8 +3,9 @@
  * Fires one artillery mission from a local battery, with range-scaled dispersion, and optionally
  * moves the battery afterwards (shoot and scoot).
  *
- * The magazine is the battery's most destructive artillery ammunition (highest CfgAmmo hit), so
- * smoke and illumination are not used by accident. The aim point is displaced by the target's
+ * HE mode uses the battery's most destructive non-smoke artillery ammunition (highest CfgAmmo hit),
+ * so smoke is not used by accident; SMOKE mode uses a smoke magazine (smoke simulation, or "smoke" in
+ * the ammo or magazine name) and fires two rounds, or does nothing if the battery has none. The aim point is displaced by the target's
  * position error plus 1% of the range (capped at 150 m), from Digii. A mission that the engine
  * reports as unreachable (getArtilleryETA below 0) is not fired. The battery is busy until its rounds
  * have landed. With Waldo_AIPass_Artillery_ShootAndScoot, a mobile battery drives 200-350 m to a new
@@ -15,6 +16,7 @@
  * 0: battery <OBJECT> - artillery vehicle or static weapon
  * 1: target <ARRAY> - ATL position
  * 2: error <NUMBER> - estimated position error in metres (optional, default: 0)
+ * 3: mode <STRING> - "HE" or "SMOKE" (optional, default: "HE")
  *
  * Return Value:
  * Boolean - true when the mission was fired
@@ -26,13 +28,17 @@
  * Current callers: Waldo_fnc_AIPassArtilleryRequest and the counter-battery handler.
  */
 
-params [["_battery", objNull, [objNull]], ["_target", [], [[]]], ["_error", 0, [0]]];
+params [["_battery", objNull, [objNull]], ["_target", [], [[]]], ["_error", 0, [0]], ["_mode", "HE", [""]]];
 if (isNull _battery || {!alive _battery} || {!local _battery} || {!alive gunner _battery} || {count _target < 2}) exitWith {false};
+private _smoke = toUpperANSI _mode == "SMOKE";
 private _best = "";
 private _bestHit = -1;
 {
-    private _hit = getNumber (configFile >> "CfgAmmo" >> getText (configFile >> "CfgMagazines" >> _x >> "ammo") >> "hit");
-    if (_hit > _bestHit) then {_best = _x; _bestHit = _hit};
+    private _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
+    private _isSmoke = getText (configFile >> "CfgAmmo" >> _ammo >> "simulation") in ["shotSmoke", "shotSmokeX"]
+        || {(toLowerANSI _ammo) find "smoke" >= 0} || {(toLowerANSI _x) find "smoke" >= 0};
+    private _hit = getNumber (configFile >> "CfgAmmo" >> _ammo >> "hit");
+    if (_isSmoke == _smoke && {_smoke || {_hit > _bestHit}}) then {_best = _x; _bestHit = _hit};
 } forEach (getArtilleryAmmo [_battery]);
 if (_best == "") exitWith {false};
 private _dispersion = _error + (((_battery distance2D _target) * 0.01) min 150);
@@ -40,7 +46,7 @@ private _aim = _target getPos [random _dispersion, random 360];
 if !(_aim inRangeOfArtillery [[_battery], _best]) exitWith {false};
 private _eta = _battery getArtilleryETA [_aim, _best];
 if (_eta < 0) exitWith {false};
-private _rounds = (missionNamespace getVariable ["Waldo_AIPass_Artillery_Rounds", 3]) max 1;
+private _rounds = [(missionNamespace getVariable ["Waldo_AIPass_Artillery_Rounds", 3]) max 1, 2] select _smoke;
 _battery doArtilleryFire [_aim, _best, _rounds];
 _battery setVariable ["Waldo_AIPass_BusyUntil", time + _eta + _rounds * 6 + 20];
 missionNamespace setVariable ["Waldo_AIPass_ArtilleryMissions", (missionNamespace getVariable ["Waldo_AIPass_ArtilleryMissions", 0]) + 1];

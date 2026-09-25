@@ -89,6 +89,7 @@ private _names = [
         "Waldo_AIPass_ContactReports_Enable", "Waldo_AIPass_Reinforce_Enable", "Waldo_AIPass_Artillery_Enable",
         "Waldo_AIPass_CounterBattery_Enable", "Waldo_AIPass_Airborne_Enable", "Waldo_AIPass_Airborne_Auto",
         "Waldo_AIPass_AircraftFlares_Enable", "Waldo_AIPass_LambsMode",
+        "Waldo_AIPass_Investigate_Enable", "Waldo_AIPass_Assault_Enable", "Waldo_AIPass_Advance_Enable", "Waldo_AIPass_CoordinatedAssault_Enable", "Waldo_AIPass_Stance_Enable", "Waldo_AIPass_AmmoShare_Enable", "Waldo_AIPass_VehicleGunnery_Enable", "Waldo_AIPass_ArtillerySmoke_Enable", "Waldo_AIPass_AircraftBreak_Enable",
         "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
         "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",
         "Waldo_ImprovedHelicopterLanding_TransitAltitude", "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio",
