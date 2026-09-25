@@ -14,6 +14,15 @@ The server checks the player's request and sends the operation to the machine th
 
 This action does not repair damage or replace the [Vehicle Recovery](Vehicle-Recovery) workshop system.
 
+## If the action is missing
+
+Check that the target is a land vehicle, the player is on foot and within six metres, and the vehicle has stopped and tilted enough to qualify. This action does not appear on a normally upright vehicle. A blocked landing spot or nearby vehicle can still make the result unsafe; clear the area before using it.
+
+## See also
+
+- [Emergency Dismount](Optional-Feature-Systems#emergency-dismount)
+- [Vehicle Recovery](Vehicle-Recovery)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

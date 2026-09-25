@@ -8,7 +8,7 @@
 
 The pack's cover image — `Pictures/loading.jpg`, used as the in-game `loadScreen` / `overviewPicture` and as the README banner — is **generated**, not hand-edited. The "WALDO'S MISSION PACK" title and the version number are rendered onto a text-free background image so the displayed version can never fall out of sync with the pack.
 
-The version comes from a single source of truth: the `onLoadName` field in `description.ext` (e.g. `onLoadName = "Mission Pack v4.8.0";`). Bump the version there and the cover image follows automatically.
+The version comes from the `onLoadName` field in `description.ext`. When you change that title for a release, regenerate the cover image so the two match.
 
 ## How it stays in sync
 
@@ -28,14 +28,14 @@ pip install -r releaseVerificationAndDeployment/requirements.txt   # installs Pi
 # Render using the version in description.ext:
 python3 releaseVerificationAndDeployment/generateLoadingScreen.py
 # Or render an explicit version:
-python3 releaseVerificationAndDeployment/generateLoadingScreen.py 4.8.0
+python3 releaseVerificationAndDeployment/generateLoadingScreen.py 4.9.2
 ```
 
 Options:
 
 | Argument | Purpose |
 |---|---|
-| `version` (positional) | Version to render, e.g. `4.8.0` or `v4.8.0`. Omit to parse it from `description.ext`. |
+| `version` (positional) | Version to render, such as `4.9.2` or `v4.9.2`. Omit it to read `description.ext`. |
 | `--base PATH` | Text-free background image (default `loadingAssets/loading_base.jpg`). |
 | `--out PATH` | Output path (default `Pictures/loading.jpg`). |
 | `--desc PATH` | `description.ext` to read when no version is passed. |
@@ -51,6 +51,10 @@ The visual layout constants are grouped at the top of `generateLoadingScreen.py`
 - `JPEG_QUALITY` — output quality.
 
 To use your own background, replace `loadingAssets/loading_base.jpg` with a 1920x1080 image that has **no** title/version text in it (the script draws the text on top). To change the typeface, drop a new `.ttf` in `loadingAssets/`, update its licence file, and point `--font` (or `DEFAULT_FONT`) at it.
+
+## If the cover shows the wrong version
+
+Check the version in `description.ext`, regenerate `Pictures/loading.jpg`, then package that new image with the mission. Rendering an explicit version number overrides the value read from `description.ext` for that run only.
 
 ## See also
 

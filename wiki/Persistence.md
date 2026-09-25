@@ -79,6 +79,10 @@ Registered objects can persist an allow-list of custom variables in addition to 
 
 Dynamic objects are not recreated automatically. Register stable editor objects with unique keys; use mission-specific recreation logic for objects that do not exist when a save is loaded.
 
+## If nothing is restored
+
+Check that INIDBI2 is available on the server, persistence is enabled, and the object has a stable registration key. A dynamically spawned object must be recreated by your mission before its saved state can be applied; registration alone does not respawn it. Test a save and a fresh server start before relying on it in an event.
+
 ## See also
 
 - [Optional Feature Systems](Optional-Feature-Systems)

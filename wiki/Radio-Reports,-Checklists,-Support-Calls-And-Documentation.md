@@ -91,6 +91,15 @@ Keep each entry easy to scan:
 - Reserve colour for headings, examples and warnings; the instructions must still be understandable without colour.
 - Test the map diary at the supported aspect ratios and UI scales before release.
 
+## If a document is absent
+
+Check that `Waldo_fnc_AddDocs` still runs and that the wanted entry's call remains active in `AddDocs.sqf`. Diary records are player-local; a server-only call cannot write them directly into every player's map. Test with a fresh joiner as well as the mission host.
+
+## See also
+
+- [Mission Configuration Reference](Mission-Configuration-Reference)
+- [Automated CEOI](ACRE2-Automated-CEOI-Document)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

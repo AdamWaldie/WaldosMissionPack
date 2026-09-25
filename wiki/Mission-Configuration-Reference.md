@@ -44,7 +44,7 @@ Located in the mission root. Sets mission metadata, respawn rules, and includes 
 
 ```sqf
 author      = "YOURNAMEHERE";       // Your name, shown on the loading screen
-onLoadName  = "Mission Pack v4.8.0"; // Mission title — also used by Waldo_fnc_InfoText
+onLoadName  = "YOUR MISSION TITLE";  // Mission title, also used by Waldo_fnc_InfoText
 onLoadMission = "YOURTEXTHERE";     // Mission subtitle
 onLoadIntro   = "YOURTEXTHERE";     // Additional intro subtitle
 loadScreen    = "Pictures\loading.jpg"; // Replace with your own image
@@ -110,7 +110,7 @@ Runs **on the server only**. Its server defaults are loaded synchronously from t
 
 ### Server-Owned Optional Feature Settings
 
-`MissionConfig\logisticsConfig.sqf` defines object-scaling limits and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
+`MissionConfig\missionSystemsConfig.sqf` defines object-scaling limits, and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
@@ -118,38 +118,11 @@ Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf
 
 ### Logistics Crate Classnames
 
-**Do not paste the following resulting runtime values into initServer.sqf.** Edit their entries in
-`MissionConfig\logisticsConfig.sqf`; the loader publishes them. They are consumed defaults and do
-not create crates by themselves.
-
-```sqf
-// The crate spawned for supply/ammo requests (Quartermaster and Zeus module)
-missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F", true];
-
-// The crate spawned for medical requests
-// Defaults to ACE advanced crate if ACE Medical is loaded, IDAP crate otherwise
-missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true];
-```
-
-Replace the classname string with any crate classname from your mod set.
+Open `MissionConfig\logisticsConfig.sqf` to choose crate classes. The general supply spawner reads the server row `Logi_SupplyBoxClass`, which defaults to `B_supplyCrate_F`. Medical crates use the conditional `Logi_MedicalBoxClass` choice: an ACE crate when ACE Medical is loaded, or an IDAP crate otherwise. The [Quartermaster](Quartermaster) has separate `Waldo_QM_*_CrateClass` settings for each issue type. Use those when only one Quartermaster choice needs a different box. All classnames must exist in the mission's loaded addons.
 
 ### Paradrop Thresholds
 
-**Do not paste these resulting runtime values into initServer.sqf.** Edit the SERVER entries in
-`MissionConfig\airOperationsConfig.sqf`. A drop zone is still created separately by script/ZEN.
-
-```sqf
-// Static Line — jump available between these altitudes and below this speed
-missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180,  true]; // metres AGL minimum
-missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350,  true]; // metres AGL maximum
-missionNamespace setVariable ["WALDO_STATIC_MAXSPEED",    310,  true]; // km/h maximum
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]; // chute class (vanilla default)
-
-// HALO — jump available above this altitude
-missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000,  true]; // metres AGL minimum
-missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true]; // chute class
-missionNamespace setVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false, true]; // default off
-```
+Edit the existing server rows in `MissionConfig\airOperationsConfig.sqf`. Static-line jumps use a default 180–350 m AGL window and a 310 km/h maximum speed. HALO begins at 1000 m AGL by default. A drop zone still needs its own script or ZEN setup; changing these thresholds does not place one. [Paradrop](Paradrop) gives the working setup and each setting's effect.
 
 For missions running RHS, replace `"NonSteerable_Parachute_F"` with `"rhs_d6_Parachute"` for a steerable static-line chute.
 
@@ -174,18 +147,12 @@ for every setting and unit.
 
 ### Safestart
 
-Edit the `Waldo_SafeStart_*` SERVER entries in `MissionConfig\missionSystemsConfig.sqf`. The
-snippet below describes resulting runtime state; WMP already starts/publishes it.
+Edit the `Waldo_SafeStart_*` server rows in `MissionConfig\missionSystemsConfig.sqf`. WMP starts and publishes them.
 
 When active, freezes all players until you go live. It starts inactive by default, while the Zeus
 activate, lift and countdown controls remain available throughout the mission.
 
-```sqf
-missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
-missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
-missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true]; // true = begin under protection
-```
+`Waldo_SafeStart_Confine` controls the safe zone and defaults to `false`. `Waldo_SafeStart_Radius` defaults to 150 m, and `Waldo_SafeStart_ZoneMarker` can name a shared marker. Set `Waldo_SafeStart_AutoStart` to `true` in that config file to begin the mission under protection.
 
 See [Safestart](Safestart) for the go-live API and Zeus modules.
 
@@ -196,9 +163,7 @@ do not add another diagnostics startup to initServer.sqf.
 
 Runs a read-only server-side configuration sanity check at mission start and reports common WMP misconfigurations to the RPT log (prefixed `[WMP DIAG]`).
 
-```sqf
-missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];  // false = silence it for a shipping mission
-```
+The `Waldo_RunDiagnostics` row defaults to `true`. Change it to `false` in `MissionConfig\missionSystemsConfig.sqf` only when you intentionally want to suppress the startup report.
 
 See [Mission Diagnostics](Mission-Diagnostics).
 
@@ -242,15 +207,7 @@ There is no automatic table-class discovery or global seated-game startup. The s
 
 ### ACE Corpse Traps (disabled by default)
 
-Edit `Waldo_CorpseTraps_Enable` in `MissionConfig\missionSystemsConfig.sqf`. The lifecycle block
-below is already installed by WMP when enabled.
-
-```sqf
-Waldo_CorpseTraps_Enable = false;
-if (Waldo_CorpseTraps_Enable) then {
-    [] call Waldo_fnc_CorpseTrapInit;
-};
-```
+Edit `Waldo_CorpseTraps_Enable` in `MissionConfig\missionSystemsConfig.sqf`. WMP already owns its init call. Leave the shipped `init.sqf` alone.
 
 Set the flag to `true` to let players consume carried throwables and conceal them on corpses. The
 trap activates when somebody opens the corpse's inventory. See [ACE Corpse Traps](ACE-Corpse-Traps).
@@ -272,11 +229,7 @@ Tune these so players can drag and carry logistics crates in-game.
 Edit the enable/profile/mode/filter entries in `MissionConfig\aiConfig.sqf`. WMP starts and follows
 AI locality automatically; do not repeat the initialization in init.sqf.
 
-```sqf
-Waldo_AIRebalance_Enable = true;
-Waldo_AIRebalance_Mode = "DAY";       // DAY | NIGHT
-Waldo_AIRebalance_Profile = "LINE";   // LINE default | MILITIA | VETERAN | ELITE | LEGACY compatibility
-```
+`Waldo_AIRebalance_Enable` defaults to `true`, `Waldo_AIRebalance_Mode` to `"DAY"`, and `Waldo_AIRebalance_Profile` to `"LINE"`. Change those existing rows in `MissionConfig\aiConfig.sqf`; do not create assignments in `init.sqf`.
 
 Only one profile should be active at a time. AI rebalance initialises wherever AI can be local, including headless clients, and reapplies after locality migration. See [Waldos AI Rebalance](Waldos-AI-Tweak) for filters, variance, and restoration.
 
@@ -333,34 +286,11 @@ Variable Name. Override rows are first-match-wins. See [ACRE2 Babel Configuratio
 
 ### Radio Jamming (ACRE2 / TFAR)
 
-Edit these settings in `MissionConfig\electronicWarfareConfig.sqf`. The block below documents the
-published runtime values and must not be copied into init.sqf/initServer.sqf. Enablement starts the
-service but creates no jammer; register an object, call a creation script, or use ZEN. The current
-disable result values are `DISABLE` (repairable/reactivatable) and `DEACTIVATE` (ordinary off).
-
-```sqf
-Waldo_Jamming_Enable = true;                                           // false = feature off entirely
-missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];     // on-screen jamming HUD + chat feedback
-missionNamespace setVariable ["Waldo_Jamming_LOS", true, true];        // terrain blocks the field
-missionNamespace setVariable ["Waldo_Jamming_BurnThrough", true, true];// stronger radios resist jamming
-missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
-missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];  // or "INVSQ"
-missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destroy the object = remove jammer
-missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in to curator jammer markers
-missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF hard cap; source must also actively affect the operator
-missionNamespace setVariable ["Waldo_Jamming_ScanBearingArc", 30, true]; // quantised bearing-sector width (deg)
-missionNamespace setVariable ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600], true]; // metre thresholds: very close / nearby / distant
-missionNamespace setVariable ["Waldo_Jamming_AllowPlayerToggle", true, true]; // legacy direct toggle on non-challenge jammers
-missionNamespace setVariable ["Waldo_Jamming_DisableChallenge", true, true]; // active jammers require the disable procedure
-missionNamespace setVariable ["Waldo_Jamming_DisableChallengeId", "circuit", true];
-missionNamespace setVariable ["Waldo_Jamming_DisableDifficulty", "standard", true];
-missionNamespace setVariable ["Waldo_Jamming_DisableEngineerOnly", false, true]; // set true to require ACE engineers
-missionNamespace setVariable ["Waldo_Jamming_DisableResult", "DISABLE", true]; // or DEACTIVATE
-```
+Edit these settings in `MissionConfig\electronicWarfareConfig.sqf`. Enablement starts the service but creates no jammer. Register an object, call a creation script or use ZEN. `Waldo_Jamming_DisableResult` accepts `DISABLE` (leave the field reactivatable) or `DESTROY` (destroy and deregister the emitter). The [Radio Jamming guide](Radio-Jamming) lists the other settings and shows a copyable object Init call.
 
 On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. The optional disable challenge connects the jammer to the shared field-procedure framework while keeping completion and radio state server-authoritative. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
 
-The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers).
+The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand. See [EMP Burst](EMP-Burst) and [Signal Trackers](Signal-Trackers) for their separate setup paths.
 
 ### Briefing Documents
 
@@ -399,13 +329,7 @@ clients consume them. Do not copy these settings into initPlayerLocal.sqf.
 
 Player-local feature activation waits for an ordered server runtime snapshot. This ensures a mid-mission ZEN change is applied before a joining player installs actions, displays or event handlers.
 
-```sqf
-// The listed UID always qualifies; other players require configured campaign equipment.
-Waldo_WmpHud_Enable = true;
-Waldo_WmpHud_AccessibilityUIDs = ["76561198094931408"];
-Waldo_WmpHud_Facewear = ["G_Goggles_VR"];
-Waldo_WmpHud_Font = "PuristaBold";
-```
+For WMP HUD access, change the existing `Waldo_WmpHud_*` rows in `MissionConfig\interfaceConfig.sqf`. The shipped accessibility UID always qualifies; other players need the configured campaign equipment. [WMP HUD](WMP-HUD) explains the access rule before you alter it.
 
 Colour-vision presentation is selected personally through **ACE Self Interact > WMP Options > Accessibility Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. The same screen owns the cross-interface reduced-motion preference. Do not publish either from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local colour selection is available when building another accessibility UI:
 

@@ -63,6 +63,10 @@ When the state becomes `SUCCEEDED`, `FAILED` or `CANCELED`, the helper-created m
 * The map marker is named `Waldo_obj_<taskId>` internally — it is created only if a destination position is given and **Create marker** is left on.
 * These helpers are a convenience layer, not a replacement: for click-and-drag objectives use the Eden **Create Task** modules or the Zeus task tools.
 
+## If a task is missing
+
+Check that the creation call ran and used a stable task ID. A client call forwards to the server automatically. Resolve the same ID that was created; changing only the visible title does not identify another task. WMP publishes the task state for joining players.
+
 ## See also
 
 * [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the After-Action Report reads the objective ledger these helpers maintain

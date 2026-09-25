@@ -16,7 +16,7 @@ Use it for EW objectives ("destroy the jammer to restore comms"), no-comms inser
 * **TFAR:** inside a jammer field, receive and transmit ranges fall toward zero. Full-strength jamming disables the radio. TFAR jamming is **broadband**.
 * **Both:** jamming is strongest inside the **radius**, then falls to zero across the **falloff** distance. A field can target chosen sides, operate inside a cone, or pulse.
 
-The feature is **on by default** but does nothing until you actually place a jammer, so leaving it enabled costs you nothing.
+The feature is **on by default** but does nothing until you place or register a jammer. Change the shared rules in `MissionConfig/electronicWarfareConfig.sqf`; put object-specific settings in the object's Init call or the ZEN dialog.
 
 > **ACRE2 requirement:** your ACRE2 **signal model** must be **LOS Multipath** (the default) or **Arcade**. ACRE2 does not expose the hook this uses under *LOS Simple*, so jamming will silently do nothing on that model.
 
@@ -97,7 +97,7 @@ Set the **jamUAV** flag (param 10, or the "Also Jam UAVs / Drones" checkbox in t
 
 The operator sees a persistent **UAV LINK DEGRADED** panel with signal-loss guidance. Near-total jamming shows a separate datalink-loss notice and disconnects the terminal. The same Toggle/Disable ACE actions, Zeus controls, and RDF scan apply to UAV-enabled jammers.
 
-## The jamming model (global toggles in `init.sqf`)
+## Mission-wide jamming settings
 
 These let you tune how realistic/gamey the jamming feels. All are on by default.
 
@@ -105,7 +105,7 @@ These let you tune how realistic/gamey the jamming feels. All are on by default.
 |---|---|---|
 | `Waldo_Jamming_LOS` | `true` | **Terrain line-of-sight.** A hill or ridge between the jammer and a radio blocks the field. High ground extends practical coverage. |
 | `Waldo_Jamming_BurnThrough` | `true` | **Power burn-through.** Higher-power radios, such as a PRC-117F, resist jamming and reduce the effective radius. |
-| `Waldo_Jamming_BurnThroughRef` | `500` | Reference radio power in mW. A radio at this power receives full effect; more powerful radios burn through. |
+| `Waldo_Jamming_BurnThroughRef` | `500` | Reference distance in metres for the burn-through calculation. |
 | `Waldo_Jamming_Curve` | `"LINEAR"` | Falloff shape at the edge: `"LINEAR"` or `"INVSQ"` for a sharper inverse-square response near the centre. |
 | `Waldo_Jamming_Destructible` | `true` | Destroying the emitter automatically removes its jammer entry and restores affected links. |
 | `Waldo_Jamming_GmOverlay` | `false` | Opt-in curator-only floating marker (and facing line for cones) over every jammer. Ordinary players never see it. |
@@ -161,17 +161,27 @@ Three modules live under **Modules > WMP Electronic Warfare** (Zeus Enhanced req
 
 When the module is placed on empty ground, the selected displayed emitter class is sent directly to the server and that exact object is spawned, simulation-enabled, added to every curator, and transferred to the requesting curator for smooth movement. Place the module directly on any existing object to expose **Use object under module** instead: that object becomes the emitter without changing its class, transform, damage, cargo, or simulation state. This supports mission and mod objects without asking Zeus for a raw classname. In both modes the field and interactions remain attached to the live object after it is moved. The dialog also selects whether field disablement is public or engineer-only and whether success disables the field or destroys the prop. Enable **Show Curator 3D Marker** for only that emitter. `Waldo_Jamming_GmOverlay = true` remains the global mission-maker override that displays every registered jammer.
 
-## Global options (`init.sqf`)
+## Change the mission-wide options
+
+Open `MissionConfig/electronicWarfareConfig.sqf` and change the existing setting rows. For example, these values keep jamming on and hide its player feedback:
 
 ```sqf
-Waldo_Jamming_Enable = true;                                        // false = feature off entirely
-missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];  // on-screen jamming HUD + timed hints
-// plus the model toggles in the table above
+["Waldo_Jamming_Enable", true, true],
+["Waldo_Jamming_Notify", false, true],
 ```
+
+Do not paste those rows into `init.sqf`; they replace existing rows in the config file. The third value publishes the server setting for current players and joiners.
 
 ## How it works (for the curious)
 
 The server owns and broadcasts the jammer list, so late-joining players receive every current emitter. Each player runs the engine for the loaded radio mod through an ACRE2 custom signal function, a TFAR loop, or both. `Waldo_fnc_JammingFactor` applies duty cycle, sides, band, cone, terrain LOS, burn-through, and falloff. A link degrades when either endpoint is inside a matching active field.
+
+## If radios are not affected
+
+- Check `Waldo_Jamming_Enable` in `MissionConfig/electronicWarfareConfig.sqf` and confirm the emitter's Init call or ZEN placement succeeded.
+- With ACRE2, use its **LOS Multipath** or **Arcade** signal model. **LOS Simple** does not provide the hook this feature needs.
+- Confirm that the player is inside the active radius and belongs to an affected side. A directional field, pulse, terrain block or frequency-band choice can also exclude a radio.
+- Check the server RPT and [Mission Diagnostics](Mission-Diagnostics) for a disabled service or missing radio addon.
 
 ## See also
 

@@ -108,10 +108,10 @@ Every generated object is added to current curator editable objects. Whole-AO cl
 Open terrain legitimately produces fewer garrisons, parked cars and roadblocks because those features require suitable buildings, open positions or roads. The generator caps them rather than fabricating unsuitable locations. `BIS_fnc_findSafePos` reduces overlap risk but cannot guarantee a perfect placement in extremely dense custom terrain; use cleanup and regenerate at a clearer centre if required.
 
 
-## Related pages
+## See also
 
-- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 - [Dynamic Anti-Air](Dynamic-Anti-Air)
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 - [Waldo's AI Tuning](Waldos-AI-Tweak)
 - [Mission Diagnostics](Mission-Diagnostics)
 

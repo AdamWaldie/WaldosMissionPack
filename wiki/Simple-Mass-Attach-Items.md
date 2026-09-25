@@ -35,6 +35,10 @@ The script finds the nearest Logic to the parent, reads everything synced to it,
 * Attachment uses `BIS_fnc_attachToRelative`, so objects keep the exact offset/rotation you placed them at.
 * For a single **mannable** weapon with get-in actions, use [Weapon Mounting With Custom Name](Weapon-Mounting-With-Custom-Name) instead — this function is for static/decorative attachments.
 
+## If an item attaches in the wrong place
+
+Check the parent object's Init call, the synchronised children and their starting positions in Eden. This helper keeps the authored relative placement; it does not find a vehicle mount point. Test moving the parent after mission start to confirm the layout before putting it on a live vehicle.
+
 ## See also
 
 * [Weapon Mounting With Custom Name](Weapon-Mounting-With-Custom-Name)

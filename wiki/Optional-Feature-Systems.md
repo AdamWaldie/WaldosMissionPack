@@ -79,6 +79,8 @@ Call `Waldo_fnc_PersistenceStop` to save registered objects and stop the system 
 
 ## Patient treatment feedback
 
+For a first setup, use the dedicated [Treatment Feedback](Treatment-Feedback) guide.
+
 Requires ACE Medical. Quickest working setup:
 
 1. Open `MissionConfig\interfaceConfig.sqf` and set `Waldo_TreatmentFeedback_Enable` to `true`.
@@ -143,6 +145,8 @@ populated only when a death is actually pronounced, a distinct, later count from
 KIA/friendly-fire tallies.
 
 ## Hazardous environments
+
+For the first radiation zone, use [Hazardous Environments](Hazardous-Environments). The material below is the extended profile reference.
 
 Repeatable exposure zones (radiation is the shipped preset family) with real damage, protection and a HUD. Quickest working setup, using a shipped preset — no profile authoring needed:
 
@@ -226,6 +230,8 @@ _profile set ["markerEnabled", true];
 
 ## Tree felling
 
+For tool requirements and the first setup, use [Tree Felling](Tree-Felling).
+
 Arma 3 does not include a vanilla hand-held axe. You need an axe or hatchet weapon from a mod or
 your own mission content. Tree Felling always ships disabled: no action, IMS processing, target work
 or strike traffic is installed until a mission explicitly enables it. The quickest working setup is:
@@ -259,9 +265,11 @@ Tree felling intentionally has no dedicated ZEN module.
 
 ## Emergency dismount
 
+For enablement and the safety settings, use [Emergency Dismount](Emergency-Dismount).
+
 Automatically extracts a player from an overturned or destroyed land vehicle/boat. Quickest working setup:
 
-1. Open `MissionConfig\environmentConfig.sqf` and set `Waldo_EmergencyDismount_Enable` to `true`.
+1. Open `MissionConfig\interfaceConfig.sqf` and set `Waldo_EmergencyDismount_Enable` to `true`.
 2. Play, roll a land vehicle onto its roof (or destroy it) with a player inside.
 3. The occupant is automatically extracted to a clear nearby position, with a short configurable damage-protection window.
 
@@ -293,6 +301,8 @@ Eligible players can rapidly enable or disable it through **ACE Self Interact > 
 Colour-vision profiles are personal rather than mission-authoritative. Standard, red-green-aware, protan-aware, blue-yellow-aware and high-contrast monochrome palettes remap semantic/focus colours while retaining words, icons, shapes and patterns. The choice persists in the player's Arma profile and does not alter other players or the mission's era theme.
 
 ## Explosive wall breaching
+
+For the first wall and profile, use [Explosive Breaching](Explosive-Breaching).
 
 Breaching requires ACE Explosives. WMP ships a disabled, ready-to-test profile for the vanilla
 `Land_City2_8m_F` 8 m City Wall. To test it:
@@ -355,6 +365,8 @@ cut a new hole into arbitrary model collision geometry. Breaching intentionally 
 
 ## Object scaling
 
+For the conversion warning and setup, use [Object Scaling](Object-Scaling).
+
 Resizes a placed object at runtime — for a giant/miniature prop, or an intentionally undersized/oversized decoration. Two ways to use it:
 
 1. **Zeus (no scripting):** place **Scale Object** on the target, choose the scale, and explicitly permit decorative conversion if the target isn't already a Simple Object.
@@ -366,7 +378,7 @@ Resizes a placed object at runtime — for a giant/miniature prop, or an intenti
 
 **Always keep the returned object** — the third argument (`true`) converts an ordinary empty grounded decorative target into a Simple Object so scaling is actually supported; that conversion removes simulation, damage, inventory, crew, object-bound `addAction` entries and the original object reference, so the object your script/Eden variable name pointed at is gone and replaced.
 
-Arma officially supports runtime scaling for Simple Objects and attached objects only — merely disabling simulation on an ordinary object does not make scaling supported. Direction/orientation commands reset scale and must run first. Limits default to `0.1`–`10` and are server-owned in `initServer.sqf`. Remote requests are curator-only unless explicitly relaxed. For batches, tag objects with `Waldo_ObjectScale` and call `Waldo_fnc_ObjectScaleTagged`.
+Arma officially supports runtime scaling for Simple Objects and attached objects only. Merely disabling simulation on an ordinary object does not make scaling supported. Direction/orientation commands reset scale and must run first. Limits default to `0.1`–`10` in `MissionConfig/logisticsConfig.sqf`. Remote requests are curator-only unless explicitly relaxed. For batches, tag objects with `Waldo_ObjectScale` and call `Waldo_fnc_ObjectScaleTagged`.
 
 ## See also
 

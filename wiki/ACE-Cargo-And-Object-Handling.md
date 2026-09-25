@@ -34,6 +34,18 @@ The call runs on the server's copy of the object. WMP waits for ACE's setters if
 
 The arguments are `[object, cargo space, cargo size, can drag, can carry, ignore drag weight, ignore carry weight]`. Use `nil` for space or size to leave that value unchanged. Specify all four handling Booleans when changing the weight-limit choices:
 
+| Position | Type | Default | Meaning |
+|---|---|---|---|
+| 0 | Object | Required | Existing crate, prop or vehicle. |
+| 1 | Number or `nil` | `nil` | ACE cargo space it provides; `nil` keeps its current value. |
+| 2 | Number or `nil` | `nil` | ACE cargo size it uses; `-1` prevents loading. |
+| 3 | Boolean | Portable-object default | Allow ACE Drag. |
+| 4 | Boolean | Portable-object default | Allow ACE Carry. |
+| 5 | Boolean | `false` | Ignore ACE's drag weight limit for this object. |
+| 6 | Boolean | `false` | Ignore ACE's carry weight limit for this object. |
+
+The server call returns `true` when it submits valid settings to ACE, or `false` if the object or required ACE addons are unavailable. Eden Init fields, WMP crate issuers, the MHQ and the ZEN module use this helper. ACE replays global settings to joining players. Repeating an unchanged choice sends no further update.
+
 ```sqf
 [supplyCrate, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
 ```
@@ -64,9 +76,17 @@ That sets a five-second ACE loading delay for that object. Changing a crate's ca
 
 ACE handling alone does not register an object for [Supply Transfers](Supply-Transfers) or enable [Physical Cargo](Physical-Cargo). Follow each feature's setup if you need those actions.
 
+## If a setting does not stick
+
+- **ZEN rejects the object:** Place the module directly on the object, confirm it still exists, and check that ACE Cargo and ACE Dragging are loaded.
+- **A newly issued crate shows its old ACE size:** Reopen the module on that specific object. The dialog reads its current values. A different crate may have different settings.
+- **Cargo time still feels long:** ACE calculates loading time separately from WMP's size setting. Set `ace_cargo_delay` on the object being loaded if your mission needs a shorter delay.
+- **No physical mount or transfer menu:** Those are separate features. Follow their linked setup guides.
+
 ## See also
 
-- [Logistics, Starter Crates and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Quartermaster](Quartermaster)
+- [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 - [Supply Transfers](Supply-Transfers)
 - [Physical Cargo](Physical-Cargo)
 - [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)

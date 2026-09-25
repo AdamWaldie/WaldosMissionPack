@@ -85,6 +85,10 @@ expected ACE or vanilla actions. Every registration and PACK/LOAD/UNLOAD request
 
 Living vehicles are retained hidden while packaged and restored as the same object, preserving object identity, event handlers, actions, applied scripts and external references. A destroyed vehicle cannot be resurrected reliably, so that path creates a replacement, restores its Eden variable name, copies the configured custom-variable allowlist and invokes `Waldo_Recovery_OnRestored` for mission-specific rebinding. Crew and attached objects are not recreated. Use persistence separately for long-term mission saves.
 
+## If recovery is unavailable
+
+Check that the vehicle, carrier and workshop each completed registration and still exist. The vehicle must meet the configured damage gate, and the carrier must have space for the package. A workshop can restore only a package whose key and vehicle class it supports. Run [Mission Diagnostics](Mission-Diagnostics) and check the `[WMP RECOVERY]` RPT entry to find the rejected step.
+
 ## See also
 
 - [Eden Compositions](Eden-Compositions)

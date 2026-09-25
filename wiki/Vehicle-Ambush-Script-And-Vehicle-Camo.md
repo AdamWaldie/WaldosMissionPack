@@ -45,8 +45,11 @@ The camo objects themselves **remain in place** until the vehicle moves, or the 
 
 The synced objects start hidden and are revealed (and attached) when the crew deploys the camo via the ACE action.
 
-Below is an example of a camo system set up in the Eden editor — the tank is the interaction object:
-![Camo script example in the editor](https://i.imgur.com/dlyoKsk.png)
+The vehicle is the interaction object; the Game Logic holds the synchronised camo objects.
+
+## If concealment does not deploy
+
+Check ACE, the vehicle's Init call and the Game Logic synchronisations. The camo pieces must already exist as placed objects for the script to reveal and attach them. A player who fires, takes damage, moves out of range or is spotted can break their disguise without immediately removing the camo pieces.
 
 ## See also
 

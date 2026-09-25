@@ -149,6 +149,15 @@ Wiki pages are the mission-maker-facing guides; optimise them for usability. A f
 
 Large features get a **hub page** plus one sub-page per sub-system (see *Waldos Economy Systems*). Write in plain language; assume the reader is a mission maker, not a scripter.
 
+Keep test-station procedures and audit notes under `releaseVerificationAndDeployment`, not in a
+feature's first-time setup path. A screenshot belongs on a guide only while it shows the current
+interface or placement. Remove an old screenshot when the interface changes; do not keep it to
+decorate the page. Store reviewed images with the wiki so the asset check can verify them.
+
+Each feature page needs a direct route from [Feature Index](Feature-Tutorials), a relevant **See
+also** route to another guide, and the standard footer. A hub may introduce several systems, but
+it does not replace their individual setup pages.
+
 ## Adding a Feature - documentation checklist
 - [ ] Header block on every script file
 - [ ] Function(s) registered in `WaldosFunctions.sqf`
@@ -162,6 +171,19 @@ Run the blocking documentation contract check with:
 ```text
 python releaseVerificationAndDeployment/documentation_contract_checker.py
 ```
+
+Run the wiki structure and image checks as well:
+
+```text
+python releaseVerificationAndDeployment/wiki_style_checker.py
+python releaseVerificationAndDeployment/check_wiki_assets.py
+```
+
+The structure check follows the feature index, requires a separate page for the registered
+standalone features, checks their setup/reference/troubleshooting sections, and catches known
+obsolete instructions. It also refuses external screenshots except the repository cover image.
+These checks catch omissions, not factual errors. Compare setup examples and defaults with the
+current `MissionConfig` and the function called before publishing a page.
 
 When remediating an existing branch, provide its Git base to audit every changed script against the
 complete header contract:

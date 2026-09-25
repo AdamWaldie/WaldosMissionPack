@@ -30,6 +30,15 @@ Cross-interface colour-vision and reduced-motion controls live at **ACE Self Int
 
 Script APIs are local: `Waldo_fnc_WmpHudInit`, `Waldo_fnc_WmpHudToggle`, `Waldo_fnc_WmpHudStop`, `Waldo_fnc_WmpHudEligible`, `Waldo_fnc_WmpHudPreferences` and `Waldo_fnc_WmpHudSettingsApplyLocal`.
 
+## If no labels appear
+
+Check the mission enable flag and the player's eligibility route: allowed UID, configured equipment or explicit allow-everyone setting. The display remains friendly-only and line-of-sight aware. A hidden enemy or an ally behind a wall is not a failed HUD draw.
+
+## See also
+
+- [UI Visual Themes](UI-Visual-Themes)
+- [Custom UI Notifications](Custom-UI-Notifications)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

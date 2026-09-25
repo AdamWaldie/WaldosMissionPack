@@ -82,6 +82,15 @@ private _roleName = call Waldo_fnc_GetPlayerRole;
 
 Both functions return an empty string (or `"Infantry"` for `GetPlayerRole`) in singleplayer.
 
+## If a colour is wrong
+
+Check the unit's Eden Role Description first. Matching ignores case and takes the first matching keyword, so a description containing two team words may select an earlier rule than intended. Use an unambiguous role label and test it with ACE team colours loaded.
+
+## See also
+
+- [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
+- [Mission Configuration Reference](Mission-Configuration-Reference)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

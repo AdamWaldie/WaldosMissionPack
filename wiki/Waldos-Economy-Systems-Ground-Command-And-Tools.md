@@ -51,6 +51,10 @@ Three bundled presets give you a ready-made economy at increasing complexity —
 
 `call Waldo_fnc_EcoCore_isActive` returns whether the suite is currently running, so you can gate dependent scripts, e.g. `waitUntil { call Waldo_fnc_EcoCore_isActive };`. Failed player actions (not enough resources, unmet requirements, no drop point in range) use a branded timed notice instead of silently failing or burying the reason in game chat.
 
+## If a commander cannot order
+
+Assign Ground Command to the player's current connection in Zeus, then check the side and target catalogue. An editor-placed unit name cannot pre-grant this live permission. After **Purge**, restart the mission before expecting any economy operation to work again.
+
 ## See also
 
 * [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)

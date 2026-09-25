@@ -5,14 +5,15 @@
 Corpse traps let players conceal one of their carried throwables on a dead body. The next player
 to open that body's inventory releases the stored projectile at the corpse.
 
-The feature is disabled by default. Enable it in `init.sqf`:
+## Enable corpse traps
+
+The feature is off by default. Set `Waldo_CorpseTraps_Enable` to `true` in `MissionConfig/missionSystemsConfig.sqf`:
 
 ```sqf
-Waldo_CorpseTraps_Enable = true;
-if (Waldo_CorpseTraps_Enable) then {
-    [] call Waldo_fnc_CorpseTrapInit;
-};
+["Waldo_CorpseTraps_Enable", true],
 ```
+
+Edit the existing row in that file; do not add a second row. WMP starts the client listener from its shipped init files. ACE Interact is required for placing a trap. Joiners and respawning players receive the listener when the setting is on.
 
 ## Using a Trap
 
@@ -53,6 +54,15 @@ items are not shown.
   trap.
 - Deleted or cleaned-up corpses also delete their traps.
 - The system intentionally does not restrict corpses by faction or distinguish AI from players.
+
+## If the action is missing
+
+Check that ACE Interact is loaded, the corpse is dead, you carry a supported throwable, and `Waldo_CorpseTraps_Enable` is on. Planting requires you to stay within three metres until the action completes.
+
+## See also
+
+- [Feature Configuration Files](Feature-Configuration-Files)
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 
 <!-- WMP-WIKI-NAV -->
 ---

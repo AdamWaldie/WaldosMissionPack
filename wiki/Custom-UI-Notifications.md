@@ -337,6 +337,15 @@ The screenshots on this page were captured from the real Arma 3 client at 2560x1
 
 The capture cases live in `releaseVerificationAndDeployment/documentationCaptureQA` and are excluded from normal release packages.
 
+## If a notification is not visible
+
+Check its audience and channel first. A card may wait behind earlier cards in the same queue, while a replacement card can intentionally supersede one with the same key. Also check the player's notification placement preference before assuming the card never arrived.
+
+## See also
+
+- [Mission UI Text Overlays](Mission-UI-Text-Overlays)
+- [UI Visual Themes](UI-Visual-Themes)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

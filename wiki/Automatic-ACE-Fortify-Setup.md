@@ -46,6 +46,15 @@ Add or remove budget mid-mission with ACE's own function directly - WMP does not
 A curator can do the same thing from Zeus without scripting - see the **Fortify Budget Manager**
 module on the [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) page.
 
+## If fortify objects are missing
+
+Check that ACE Fortify is loaded, the chosen side has a catalogue and budget, and every configured object classname exists in the loaded mods. A live Zeus budget change does not create missing class definitions. Start with one vanilla object to separate a setup error from a mod dependency.
+
+## See also
+
+- [Construction Objects](Construction-Objects)
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

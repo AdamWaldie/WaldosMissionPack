@@ -7,12 +7,12 @@ _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\safeStart.
 
 ![SafeStart countdown](images/mission-flow/safestart-countdown.png)
 
-Safestart can freeze every player so people can load in, sort kit and get organised before anyone can shoot. Missions start live by default, but Zeus can activate Safestart at any point. It is the reversible mirror of the [ENDEX](ENDEX-Script-&-Custom-End-Screen) script — turn it on to hold the mission, lift it to go live.
+Safestart protects players while they load in and sort their kit. Missions start live by default, but Zeus can activate Safestart at any point. Unlike [ENDEX](ENDEX-Script-&-Custom-End-Screen), Safestart can be lifted when play begins.
 
 While Safestart is active:
 * All weapons are placed on safe (ACE), and **every** shot, thrown grenade, launcher round, underbarrel round and crewed vehicle weapon round is deleted — firing just shows a red **"Hold Fire!"** prompt.
 * Players take and deal **no damage**.
-* Players are **confined to a safe zone** (they are pulled back if they try to leave).
+* If the mission maker enables confinement, players are pulled back when they leave the safe zone.
 * An on-screen **banner** is shown, with a live go-live countdown when a timer is running.
 * **JIP and respawning players are re-frozen automatically**, so latecomers can't skip it.
 
@@ -20,22 +20,22 @@ The freeze runs on its own variables, so it never clashes with ENDEX.
 
 ## Starting state
 
-Safestart is available automatically but starts **inactive**. Its server-owned defaults are exposed in `MissionConfig\missionSystemsConfig.sqf`:
+Safestart is available automatically but starts **inactive**. To begin a mission under protection, open `MissionConfig\missionSystemsConfig.sqf` and change the existing `Waldo_SafeStart_AutoStart` row from `false` to `true`. To use confinement, change the existing `Waldo_SafeStart_Confine` row too. Do not add a second copy of either setting to an init file.
 
 ```sqf
-missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
-missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
-missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true]; // false = start live; Zeus can activate it later
+["Waldo_SafeStart_Confine", true, true],
+["Waldo_SafeStart_Radius", 150, false],
+["Waldo_SafeStart_ZoneMarker", "", false],
+["Waldo_SafeStart_AutoStart", true, true]
 ```
 
 | Variable | Default | Purpose |
 |---|---|---|
 | `Waldo_SafeStart_AutoStart` | `false` | `false` starts live while retaining all Zeus controls; `true` begins protected. |
-| `Waldo_SafeStart_Confine` | `true` | `false` = freeze weapons/damage but let players move freely. |
-| `Waldo_SafeStart_Radius` | `75` | Confinement radius in metres around each player's start position. |
+| `Waldo_SafeStart_Confine` | `false` | Set `true` to pull players back into the configured area while protection is active. |
+| `Waldo_SafeStart_Radius` | `150` | Confinement radius in metres around each player's start position when no zone marker is set. |
 | `Waldo_SafeStart_ZoneMarker` | `""` | Set to a marker name to confine everyone to **one shared zone** (the marker's position and size) instead of a per-player radius. |
-| `Waldo_SafeStart_GoLiveHintDuration` | `12` | Seconds the manual/timed go-live explanation remains visible. |
+| `Waldo_SafeStart_GoLiveHintDuration` | `12` (script fallback) | Seconds the go-live explanation remains visible. This is not a shipped config row; advanced missions can set it on the server before the notice. |
 
 ## Going live & the scripting API
 
@@ -95,17 +95,16 @@ though Safestart starts inactive:
 // Hold the mission, then auto go-live 5 minutes later from a trigger:
 [300] call Waldo_fnc_SafeStartTimer;
 
-// Confine everyone to one shared zone called "startzone" instead of per-player radii (initServer.sqf):
-missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "startzone", true];
-
-// Make one mission begin protected instead of using the shipped live default:
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true];
+// To start protected or use a shared area, edit the existing rows in
+// MissionConfig/missionSystemsConfig.sqf before the mission starts.
+// For a shared area, place an Eden marker named startzone and set
+// Waldo_SafeStart_Confine to true and Waldo_SafeStart_ZoneMarker to "startzone".
 ```
 
 ## See also
 
 * [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the matching mission-end freeze
-* [Mission Configuration Reference](Mission-Configuration-Reference) — all `initServer.sqf` fields
+* [Mission Configuration Reference](Mission-Configuration-Reference) - where the mission settings are loaded
 * [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 * [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — additive selected-object fallback for the normal Zeus END action
 

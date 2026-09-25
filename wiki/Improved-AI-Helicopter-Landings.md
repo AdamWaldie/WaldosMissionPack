@@ -4,6 +4,10 @@
 
 Vanilla AI helicopters often land poorly on their own: overshooting the marked point, bouncing on a slope, or clipping a tree canopy on the way down. This system takes over final approach for an AI-piloted helicopter given a landing-type waypoint, and lands it precisely at the intended point instead.
 
+## Start with a landing waypoint
+
+Place an AI-piloted helicopter and give it a MOVE waypoint followed by an Eden Land, UNLOAD, TRANSPORT UNLOAD or GET OUT waypoint. Preview the route with an open landing area. The feature is on by default and needs no object Init call or ZEN module. Adjust `MissionConfig/aiConfig.sqf` only when the default flight profile does not suit your aircraft or landing zone.
+
 The improved landing system applies only to AI-piloted helicopters. It recognises LAND, UNLOAD, TRANSPORT UNLOAD and GET OUT waypoints, including scripted landing waypoints whose waypoint script identifies a landing task. Arma represents Eden's Land waypoint as a `SCRIPTED` waypoint using `A3\functions_f\waypoints\fn_wpLand.sqf`; a literal engine waypoint type named `LAND` is invalid and is not used. It never modifies a player pilot's helicopter. A waypoint must be more than 50 metres from the helicopter when acquired; this deliberately avoids taking control of the frequently self-completing landing waypoint used during take-off.
 
 During final approach, the owning machine applies a bounded terrain-following velocity and orientation solution. On short legs, vanilla AI retains departure control until the helicopter has reached the configured minimum approach speed or entered the real descent envelope; the scripted controller therefore cannot turn a low-speed lift-off into the pace for the entire trip. Horizontal speed then reduces into a flare, upward and downward rates are capped, and the aircraft blends toward the landing surface normal near touchdown. Touchdown requires the aircraft to be inside the configured radius, at no more than 1 metre ATL and moving at no more than 2 m/s horizontally or 1.5 m/s vertically; this accommodates helicopter model contact offsets without accepting a fly-by. Nearby tree canopies raise the approach/hover height. If the helicopter reaches the final area far too high or genuinely overshoots after entering the final 80 metres, it opens distance and turns back for at most the configured number of go-arounds.
@@ -27,7 +31,7 @@ Improved Landing has unconditional priority over the optional [AI Helicopter Dec
 
 ## Configuration
 
-The feature is enabled by default. Set `Waldo_ImprovedHelicopterLanding_Enable = false` before its guarded default in `init.sqf` to disable it.
+The feature is on by default. To disable it, change the `Waldo_ImprovedHelicopterLanding_Enable` row to `false` in `MissionConfig/aiConfig.sqf`. Keep the shipped init files; they load the setting and install the locality-aware controller.
 
 Important global settings include:
 
@@ -56,11 +60,16 @@ this setVariable ["Waldo_ImprovedHelicopterLanding_Profile", createHashMapFromAr
 ]];
 ```
 
-The feature intentionally has no ZEN module. Configure guarded mission defaults in `init.sqf`, use a per-aircraft `Waldo_ImprovedHelicopterLanding_Profile` override, or call `Waldo_fnc_ImprovedHelicopterLandingConfigureServer` from an authorised mission script when a live global change is genuinely required.
+The feature has no ZEN module. Change mission defaults in `MissionConfig/aiConfig.sqf`, use a per-aircraft `Waldo_ImprovedHelicopterLanding_Profile` override, or call `Waldo_fnc_ImprovedHelicopterLandingConfigureServer` from an authorised mission script for a live global change.
 
 ## Engine boundaries
 
 The controller cannot make an obstructed landing point safe. Tree detection changes the flight profile; it does not remove vegetation. Rotor geometry, very steep terrain, damaged flight models and modded helicopters with unusual simulation can still prevent touchdown. Test critical airframes and landing zones, and use a normal MOVE waypoint near—but not immediately beside—the helicopter before a take-off-to-landing route.
+
+## See also
+
+- [AI Helicopter Deceleration](AI-Helicopter-Deceleration)
+- [Feature Configuration Files](Feature-Configuration-Files)
 
 <!-- WMP-WIKI-NAV -->
 ---

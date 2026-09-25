@@ -45,6 +45,10 @@ In Zeus: **Research → Configure Research**. From script (entry shape — trail
 
 Build-system structures can grant **research-speed boosts**, shortening research time while they stand.
 
+## If research cannot start
+
+Check that a Research Center exists for the side, the side can afford every named resource, and all required research or buildings are complete. An entry in `exclusiveWithList` can block an otherwise affordable choice. The progress timer begins only after the server accepts the request.
+
 ## See also
 
 * [Build System](Waldos-Economy-Systems-Build-System) — buildings that require research and boost research speed.

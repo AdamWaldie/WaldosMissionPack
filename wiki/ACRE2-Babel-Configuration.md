@@ -45,6 +45,15 @@ their configured languages before pressing Continue. Runtime application later v
 values through ACRE and replaces the record rather than adding a duplicate. The supported wrapper is
 `Waldo_fnc_BabelActivation`; the obsolete argument-based implementation has been removed.
 
+## If a language override does not apply
+
+Check that Babel is enabled, the language ID exists in the `languages` list, and the initial speaking language appears in the unit's understood list. `VARIABLENAME` matches the Eden unit Variable Name, which a respawn replacement must preserve. Use `UID` when the override should follow the account instead of a slot.
+
+## See also
+
+- [Automated CEOI](ACRE2-Automated-CEOI-Document)
+- [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

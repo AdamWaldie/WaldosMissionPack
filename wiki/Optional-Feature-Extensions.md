@@ -4,7 +4,7 @@
 
 _Associated Files: `init.sqf`; feature implementations under their matching `MissionScripts/` domains_
 
-**First time setting up one of these systems?** This page assumes it's already enabled and running — for the first-time "turn it on" walkthrough, go to [Optional Feature Systems](Optional-Feature-Systems) (hazardous environments, tree felling, emergency dismount, WMP HUD, explosive breaching, object scaling), [Persistence](Persistence), or [Waldo's AI Tuning](Waldos-AI-Tweak) (AI rebalance) instead. This page covers the extra options layered on top: deeper customisation and less-common configuration, plus field resupply and tactical display, which don't have their own dedicated page yet.
+**First time setting up one of these systems?** Use [Optional Feature Systems](Optional-Feature-Systems) for hazards, tree felling, emergency dismount, breaching and scaling. Use the dedicated [Field Resupply](Field-Resupply), [Tactical Display](Tactical-Display), [Persistence](Persistence) and [Waldo's AI Tuning](Waldos-AI-Tweak) guides for those systems. This page covers advanced choices and engine boundaries after basic setup.
 
 These extensions remain disabled by default, independently configurable and safe to initialise more than once. They use feature-specific settings rather than a mandatory common profile layer.
 
@@ -59,7 +59,7 @@ The system does not automatically alter difficulty in response to server perform
 
 ## Field resupply
 
-This finite-stock ammunition feature lets a hub refill carrier crate allowances, carriers deploy a real populated crate for others, players draw from it through ordinary ACE Cargo/Gear interaction, and unused crates be salvaged. There is no per-crate charge counter and no WMP-brokered "take" action — a deployed crate is populated exactly like a standard supply crate (`Waldo_fnc_SupplyCratePopulate`), scoped to the servicing hub's own side. Quickest working setup — both calls are server-owned, safe to leave in each object's own Eden init field:
+For the first-time setup and shipped defaults, see [Field Resupply](Field-Resupply). This finite-stock ammunition feature lets a hub refill carrier crate allowances, carriers deploy a real populated crate for others, players draw from it through ordinary ACE Cargo/Gear interaction, and unused crates be salvaged. There is no per-crate charge counter and no WMP-brokered "take" action. A deployed crate uses `Waldo_fnc_SupplyCratePopulate`, scoped to the servicing hub's side. Both setup calls are server-owned and safe in each object's Eden Init field:
 
 1. Place an object to act as the refill hub (e.g. an ammo point). In its init field:
    ```sqf
@@ -87,7 +87,7 @@ Crate class, carry capacity, respawn retention and the populate-path's own size 
 
 ## Tactical display
 
-A registered world object provides a proximity- and line-of-sight-gated tactical map. It draws friendly units and only enemies already known to the player's group, within the configured radius. It closes when the display object is destroyed or the player leaves range. Quickest working setup:
+A registered world object provides a proximity- and line-of-sight-gated tactical map. Start with the [Tactical Display](Tactical-Display) guide for setup and shipped settings. It draws friendly units and only enemies already known to the player's group, within the configured radius. It closes when the display object is destroyed or the player leaves range. Basic setup:
 
 1. Place a map board or whiteboard-style object in Eden (e.g. `Land_MapBoard_F`) — Arma can't reliably project an interactive map onto arbitrary object materials, so a generic infostand or data terminal is not supported.
 2. In the object's init field (no `isServer` wrapper needed — the call forwards itself):

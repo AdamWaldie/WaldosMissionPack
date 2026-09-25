@@ -137,6 +137,10 @@ Per-game rules constants live in `MissionScripts\MiniGames\engine\config.sqf` as
 * Movement, animation, invulnerability, camera and presentation execute on the player owner. Table-local commands execute where the table is local, including after headless-client or curator locality changes.
 * No `description.ext` changes are required — every screen is built at runtime from vanilla controls.
 
+## If a game will not start
+
+Check that the table registration ran and that players use the correct seated interaction. These games are separate from the field-equipment challenge flag. A player leaving a seat, disconnecting or becoming a spectator changes the active table state; check the table again before treating it as stuck.
+
 ## See also
 
 * [Waldos Mini Games (hub)](Waldos-Mini-Games)

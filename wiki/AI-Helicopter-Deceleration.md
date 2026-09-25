@@ -73,6 +73,11 @@ no object or station to place. Check it with a crewed AI helicopter on a represe
 The helper cannot make a bad route safe or correct a damaged/unusual flight model. It is a narrow
 fix for cruise braking behaviour, not a replacement autopilot.
 
+## See also
+
+- [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings)
+- [Transport Services](Transport-Services)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

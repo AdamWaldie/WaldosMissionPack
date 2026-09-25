@@ -25,6 +25,8 @@ join later.
 The object must hold an Arma inventory. A decorative crate with no inventory cannot receive
 supplies.
 
+The register call returns `true` when the server accepts the object, already knows it, or queues it until settings load. It returns `false` when the feature is off, the object is unsupported, or a client calls it directly. The server publishes registered objects to current players and joiners; repeating the call does not duplicate ACE actions.
+
 Quartermaster crates and WMP supply or medical crates register automatically when the feature is
 on. This includes crates issued through WMP's Zeus modules, loadout-save fallback, field resupply
 and crate compositions. Starter crates keep their existing setup.
@@ -94,11 +96,31 @@ WMP installs each client's ACE actions once and broadcasts registry changes. Tra
 For modded containers, check that the destination retains attachments, partial magazines and nested
 backpack contents. If the server rejects a transfer, both inventories should stay unchanged.
 
+## Settings and script call
+
+`[container] call Waldo_fnc_SupplyTransfersRegister;` takes one existing inventory box or cargo-capable vehicle. Use `this` in that object's Eden Init field, or its Eden variable name in `initServer.sqf`. WMP-issued crates call the same registration path automatically, except starter crates.
+
+| Setting in `MissionConfig/logisticsConfig.sqf` | Default | Result |
+|---|---:|---|
+| `Waldo_SupplyTransfers_Enable` | `false` | Enables registration and ACE logistics actions. |
+| `Waldo_SupplyTransfers_Range` | `20` m | Maximum source-to-destination separation; WMP accepts 2–50 m. |
+| `Waldo_SupplyTransfers_SourceTimeout` | `120` s | Clears a selected merge source; WMP accepts 15–600 s. |
+| `Waldo_SupplyTransfers_IgnoreCapacity` | `false` | Allows overloads only when WMP can still rebuild the exact inventory. |
+| `Waldo_SupplyTransfers_EmptyCrateCapacity` | `400` | Inventory capacity for a supported standard box that reports zero. |
+
+## If transfer or merge fails
+
+- **No logistics actions:** Check the enable setting, registration call, ACE Interact and whether the object has inventory capacity.
+- **No receiving object in the window:** Move within the configured source-to-destination range. Register a vehicle if you need to take supplies out of it later.
+- **Merge choice absent:** Select a source first. The selection can expire or be cleared at the source.
+- **Server rejects the request:** Check the receiving inventory's capacity and the player's distance to the object. The source should retain its contents after a rejected request.
+
 ## See also
 
 - [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 - [Physical Cargo](Physical-Cargo)
-- [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Quartermaster](Quartermaster)
+- [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 
 <!-- WMP-WIKI-NAV -->
 ---

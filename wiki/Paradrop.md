@@ -286,7 +286,7 @@ then the curator selection:
 - with a player selected, choose that player or all active players in that player's group and move them directly into free cargo seats;
 - with no player target, choose a physical boarding object and label, then create it at the module with a blue **Board Paradrop Aircraft** addAction.
 
-The default object is a flagpole carrying a blue flag. The standard selector also offers info stands, a map board, laptop, camping table and portable light. Created points have simulation disabled, remain editable/movable in Zeus and retain their boarding action after repositioning. Extend `Waldo_Paradrop_BoardingPointClasses` in `init.sqf` for mission-specific objects.
+The default object is a flagpole carrying a blue flag. The standard selector also offers info stands, a map board, laptop, camping table and portable light. Created points have simulation disabled, remain editable/movable in Zeus and retain their boarding action after repositioning. Extend the existing `Waldo_Paradrop_BoardingPointClasses` row in `MissionConfig/airOperationsConfig.sqf` for mission-specific objects. Do not add another assignment to `init.sqf`.
 
 Only players are transferred, pilot/turret seats are never claimed, and full or stale aircraft are
 reported through WMP notifications.
@@ -399,6 +399,11 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 | Old map markers remain | Use **Paradrop - Remove Operation**. Automatic cleanup retains static markers only when `keepMarkersOnCleanup` was explicitly enabled. |
 
 ---
+
+## See also
+
+- [Aircraft Boarding Action](Aircraft-Boarding-Actions)
+- [Transport Services](Transport-Services)
 
 <!-- WMP-WIKI-NAV -->
 ---

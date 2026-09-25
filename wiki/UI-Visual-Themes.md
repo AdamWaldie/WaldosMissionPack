@@ -17,11 +17,15 @@ themes use violet for danger and non-red accent/trim colours. The resolver appli
 after custom themes, mission overrides and personal colour-vision overlays; a red input is replaced
 with the token's safe blue, green, amber or violet fallback before any WMP control is drawn.
 
-Set the mission style near the top of `init.sqf`, before the guarded WMP default:
+## Set a mission theme
+
+Open `MissionConfig/interfaceConfig.sqf` and change the existing `Waldo_UI_Theme` row. For example:
 
 ```sqf
-Waldo_UI_Theme = "VIETNAM";
+["Waldo_UI_Theme", "VIETNAM"],
 ```
+
+Keep the row inside its existing settings array. The default is `DEFAULT`. WMP applies the selected theme to current players and to players who join later.
 
 Built-in values are:
 
@@ -119,19 +123,31 @@ SafeStart, electronic warfare and hazardous environments are current consumers o
 
 Opening ACE interaction temporarily hides notification cards and the persistent SafeStart/electronic-warfare cards. Their state is retained, still-valid queued messages remain bounded, and the complete layout is reflowed when ACE interaction closes. This makes ACE the deliberate input and draw-priority owner rather than allowing a Rally notification or jammer status to cover its radial menu.
 
-The module is a visual QA and mission-authoring tool. Ordinary missions normally set one style in `init.sqf`.
+The module is a visual QA and mission-authoring tool. For an ordinary mission, change the `Waldo_UI_Theme` row in `MissionConfig/interfaceConfig.sqf`.
 
 ## Mission extensions
 
 `Waldo_UI_CustomThemes` may provide additional named theme HashMaps and `Waldo_UI_ThemeOverrides` may replace known tokens in the selected theme. Override values must retain the built-in token's type. Red hues are reserved and are normalised to safe token-specific fallbacks; hexadecimal text colours are rebuilt from the accepted array colours. This prevents a malformed or hostile-looking palette from changing UI behavior or bypassing the no-red rule. Optional `chromeMode` values select only renderer-owned procedural layouts; custom themes cannot inject scripts or external texture paths through the theme schema. Procedural chrome is limited to structural edges, headers, footers and reserved semantic zones. The renderer does not generate decorative fake gauges or data marks.
 
 ```sqf
-Waldo_UI_Theme = "WW2";
-Waldo_UI_ThemeOverrides = createHashMapFromArray [
+["Waldo_UI_Theme", "WW2"],
+["Waldo_UI_ThemeOverrides", createHashMapFromArray [
     ["accent", [0.62, 0.42, 0.14, 1]],
     ["accentHex", "#B88942"]
-];
+]]
 ```
+
+These are replacement rows for `MissionConfig/interfaceConfig.sqf`, not code to append after its settings array.
+
+## If the theme does not appear
+
+Check that the ID in `MissionConfig/interfaceConfig.sqf` matches a built-in value in the table above. Edit the existing row and start a fresh mission. Personal notification-theme and colour-vision settings can change one player's presentation without changing the mission-wide theme.
+
+## See also
+
+- [Feature Configuration Files](Feature-Configuration-Files)
+- [Custom UI Notifications](Custom-UI-Notifications)
+- [Mission UI Text Overlays](Mission-UI-Text-Overlays)
 
 <!-- WMP-WIKI-NAV -->
 ---

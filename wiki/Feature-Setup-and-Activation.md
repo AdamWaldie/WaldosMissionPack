@@ -233,7 +233,7 @@ For a standalone quartermaster, place an object and put this in its Eden **Init*
 
 All ten Quartermaster issue types are on by default. Disable a `Waldo_QM_*_Enable` row if your
 mission does not use that issue. Issue classes and quantities are
-separate settings. [Quartermaster setup](Logistics-System,-Starter-Crates-And-Quartermaster#logistics-quartermaster)
+separate settings. [Quartermaster setup](Quartermaster)
 explains the spawn direction, distance and ZEN choices.
 
 For transfers between placed boxes or vehicles, set `Waldo_SupplyTransfers_Enable` to `true`.
