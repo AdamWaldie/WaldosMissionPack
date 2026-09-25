@@ -40,6 +40,15 @@ Recommended resolution: 512×512 or 256×256. The texture is applied as an insig
 
 The [Virtual Vehicle Depot](Virtual-Vehicle-Depot) garage interface also supports applying unit insignias to spawned vehicles where the vehicle model supports it.
 
+## If an insignia is missing
+
+Check that the separate insignia download is installed and that the selected class exists in its config. A texture path or classname from another mod will not become available merely because the WMP mission scripts are present. For a VVD-spawned vehicle, check the depot's selected insignia after it creates the vehicle.
+
+## See also
+
+- [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
+- [Feature Configuration Files](Feature-Configuration-Files)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

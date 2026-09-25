@@ -87,7 +87,7 @@ Recommended review by file:
 - ACRE PRC-343 assignment: `[block, channel]`; both are 1–16 under the default `FULL_RANGE` policy. `SIDE_ISOLATED` reduces WEST/EAST/GUER blocks to 1–5. `[]` requests deterministic allocation.
 - ACRE explicit radio: `[base class, same-type occurrence, target, ear]`; ears are `LEFT`, `RIGHT`, `BOTH` or `CENTER`.
 - ACRE profile modes: `BLOCK_CHANNEL`, `CHANNEL`, `FREQUENCY`. WMP deliberately leaves alternate PTT defaults alone.
-- Jammer disable result: `DISABLE` for the repairable/reactivatable disabled state or `DEACTIVATE` for an ordinary off state.
+- Jammer disable result: `DISABLE` leaves a reactivatable field; `DESTROY` destroys and deregisters the emitter.
 - Interaction difficulty: `easy`, `standard`, `hard`, `expert`.
 - Distances/altitudes are metres and durations are seconds unless a row states otherwise. Damage, fuel and ammunition fractions are `0` through `1`.
 
@@ -450,8 +450,8 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_QM_Rearm_Enable` | Adds one empty ACE Rearm Box for vehicles and static weapons; on by default. ACE's mission-wide supply mode controls whether it is limited or unlimited. |
 | `Waldo_QM_VehicleRearm_Enable` | Legacy alias for the single Rearm Box action; off by default. |
 | `Waldo_QM_StaticRearm_Enable` | Legacy alias for the single Rearm Box action; off by default. |
-| `Waldo_QM_FuelBarrel_Enable` | Adds ACE fuel-barrel issues; off by default. |
-| `Waldo_QM_FuelJerrycan_Enable` | Adds ACE jerrycan issues; off by default. |
+| `Waldo_QM_FuelBarrel_Enable` | Adds ACE fuel-barrel issues; on by default. |
+| `Waldo_QM_FuelJerrycan_Enable` | Adds ACE jerrycan issues; on by default. |
 | `Waldo_QM_Grenades_CountPerType` | Number of each eligible grenade type in one issue. |
 | `Waldo_QM_Explosives_CountPerType` | Number of each eligible explosive type in one issue. |
 | `Waldo_QM_Rearm_Supply` | ACE supply points per box in Limited Supply mode; default 1200. Unlimited mode ignores the value. Specific Magazines mode does not offer the empty issue. |

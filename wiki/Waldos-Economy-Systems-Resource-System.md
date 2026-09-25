@@ -48,6 +48,10 @@ Zones get a map marker showing owner and contents; ownership and remaining depos
 
 Every resource can have a per-side storage cap. Income that would exceed the cap is discarded, so storage buildings (see the [Build System](Waldos-Economy-Systems-Build-System)) become meaningful — they raise a side's cap for a resource.
 
+## If resources do not increase
+
+Confirm the resource name matches the configured catalogue exactly. A crate can only credit the collecting side up to its storage cap. A contested zone does not generate for either side, and a finite deposit stops when empty. Check its owner, tick interval and remaining deposit before increasing the payout.
+
 ## See also
 
 * [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration) — defining all of this from the editor.

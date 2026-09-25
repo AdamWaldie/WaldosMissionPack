@@ -14,6 +14,10 @@ The player goes into a cargo seat, including when the aircraft is already airbor
 
 The call installs the action on each player's interface. Eden object Init fields run on clients. If you create the boarding object later by script, run this call for each interface client, including players who join later. WMP's [dynamic paradrop boarding point](Paradrop#dynamic-drop-zone-operations) handles that replay for its own objects.
 
+## If boarding does not appear
+
+Check that the aircraft variable name resolves to a live object and that it has a free cargo seat. This helper does not place players in pilot or turret seats. For a boarding object created during play, confirm that joining clients also receive its setup call.
+
 ## See also
 
 - [Paradrop](Paradrop)

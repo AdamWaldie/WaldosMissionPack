@@ -89,6 +89,10 @@ machines and JIP players; AI remains stopped until `Waldo_fnc_AIRebalanceInit` o
 explicitly enables it again. A locality handler reapplies the selected profile when ownership moves
 between server and headless clients.
 
+## If an AI unit keeps its old behaviour
+
+Check that AI tuning is enabled and that the unit's side, faction and class pass the profile filters. A unit with `Waldo_AI_Exclude` keeps its existing skills. Arma difficulty also changes final values through `CfgAISkill`; compare `skillFinal` rather than expecting an exact match to the profile input.
+
 ## See also
 
 - [Optional Feature Systems](Optional-Feature-Systems)

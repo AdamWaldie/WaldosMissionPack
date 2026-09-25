@@ -17,6 +17,15 @@ this setVariable ["ace_medical_isMedicalVehicle", true, true];
 
 Check the ACE Medical settings for your mission before relying on medical-vehicle treatment bonuses.
 
+## If a vehicle is not recognised
+
+Compare its exact `CfgVehicles` classname with the table. A similar-looking variant from another mod does not inherit WMP's explicit detection. For that variant, use the Eden Init example above and confirm ACE Medical's own vehicle settings are enabled.
+
+## See also
+
+- [Base Services](Base-Services)
+- [Vehicle Recovery](Vehicle-Recovery)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

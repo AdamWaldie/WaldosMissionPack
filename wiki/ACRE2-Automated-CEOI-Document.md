@@ -27,6 +27,15 @@ reference only and never retune radios.
 
 Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation.
 
+## If a radio line is missing
+
+Check the group name and radio assignment in `MissionConfig/acreConfig.sqf`. The CEOI omits groups without a valid PRC-343 assignment instead of displaying blank rows. A planned line can appear before ACRE starts; read the later live status before assuming the radio was physically tuned.
+
+## See also
+
+- [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting)
+- [Babel Configuration](ACRE2-Babel-Configuration)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

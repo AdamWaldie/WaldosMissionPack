@@ -45,6 +45,10 @@ The action label is customisable, so the scroll-wheel option can read **"Get In 
 
 Players see **"Get In DShK"** on both the gun and the truck, and **"Return To Main Vehicle"** while manning it.
 
+## If the named action is missing
+
+Check that the weapon and interaction object are the ones passed to the setup call, and that the player has access to the object. This helper names an existing weapon interaction. It is not the retired working-static-weapon branch of [Physical Cargo](Physical-Cargo).
+
 ## See also
 
 * [Simple Mass Attach Items](Simple-Mass-Attach-Items) — attach decorative/cargo objects to a vehicle

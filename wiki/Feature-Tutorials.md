@@ -2,7 +2,7 @@
 
 > **Use this page when:** you know the capability you need and want the correct setup or reference page.
 
-Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Complete Feature Catalogue](Feature-Catalogue) for the fastest full inventory, [Feature Setup and Activation](Feature-Setup-and-Activation) to turn a feature into a working mission setup, or the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
+Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Complete Feature Catalogue](Feature-Catalogue) lists the pack's capabilities. [Feature Setup and Activation](Feature-Setup-and-Activation) covers the route from settings to a working mission. Use the [Mission Configuration Reference](Mission-Configuration-Reference) to find a known file or setting.
 
 ## Mission flow and UI
 
@@ -10,12 +10,15 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 |---|---|
 | [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) | Animated operation titles during load-in |
 | [Mission UI Text Overlays](Mission-UI-Text-Overlays) | Dynamic text, timed notices, and respawn text |
+| [Dialogue and Conversations](Dialogue-And-Conversations) | Simple NPC lines and authored branching conversations |
 | [Custom UI Notifications](Custom-UI-Notifications) | Accessible mission cards, placement, stacking, and FIFO delivery |
-| [UI Visual Themes](UI-Visual-Themes) | Twelve global visual-only styles for modern, historical and specialist mission presentation |
+| [UI Visual Themes](UI-Visual-Themes) | Built-in visual-only styles for modern, historical and specialist mission presentation |
 | [Safestart](Safestart) | Preparation protection and timed go-live |
 | [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) | End-of-operation protection, AAR, and mission end |
 | [Tasks and Objectives](Tasks-And-Objectives) | JIP-safe objective creation and resolution |
 | [Custom 3D World Markers](Custom-3D-World-Markers) | World-space labels and icons |
+| [WMP HUD](WMP-HUD) | Optional friendly-only icon and name aid |
+| [Tactical Display](Tactical-Display) | Registered map boards with friendly and known-contact views |
 | [Radio Reports and Checklists](Radio-Reports,-Checklists,-Support-Calls-And-Documentation) | Optional briefing reference documents |
 | [Team Colour Setup](Team-Colour-Setup) | Role-driven fireteam colour assignment |
 
@@ -32,9 +35,11 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 
 | Feature | Use it for |
 |---|---|
-| [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
+| [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster) | Starter, supply and medical crates built from playable loadouts |
+| [Quartermaster](Quartermaster) | Player-requested supplies, spares, ACE rearm and fuel issues |
 | [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) | Set an object's Drag, Carry, ACE loading size and storage space by ZEN or script |
 | [Supply Transfers](Supply-Transfers) | Selective moves, crate consolidation and per-crate ACE loading choice |
+| [Field Resupply](Field-Resupply) | Carrier-held supply allowances and refill hubs |
 | [Physical Cargo](Physical-Cargo) | Visible non-weapon vehicle cargo; static weapons use native ACE cargo only |
 | [Vehicle Recovery](Vehicle-Recovery) | Package damaged vehicles and restore them at a workshop |
 | [Helicopter, Ground and Boat Transport](Transport-Services) | Reusable AI-crewed transport services for land, air, and open water |
@@ -77,7 +82,8 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | Feature | Use it for |
 |---|---|
 | [Radio Jamming](Radio-Jamming) | ACRE2/TFAR radio and UAV interference |
-| [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) | One-shot EMP and side-private tracking |
+| [EMP Burst](EMP-Burst) | One-shot electrical disruption |
+| [Signal Trackers](Signal-Trackers) | Side-private tracking of units and vehicles |
 | [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting) | Mission-defined ACRE2 channels and cross-side joint radio nets |
 | [Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup) | Tuning/swapping vehicle rack radios, quickstart through full reference |
 | [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup) | Squad-level radio assignment |
@@ -106,6 +112,12 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 |---|---|
 | [Persistence](Persistence) | Database-backed player state and registered-object save/restore via INIDBI2 |
 | [Obituary and Confirmed Deaths](Obituary-and-Confirmed-Deaths) | Medic confirmation of deaths, readable diary records, and ENDEX reporting |
+| [Treatment Feedback](Treatment-Feedback) | Patient-facing ACE treatment result cards |
+| [Hazardous Environments](Hazardous-Environments) | Radiation presets and custom exposure zones |
+| [Tree Felling](Tree-Felling) | Axe-driven tree clearing and optional yields |
+| [Emergency Dismount](Emergency-Dismount) | Extract occupants from overturned or destroyed vehicles |
+| [Explosive Breaching](Explosive-Breaching) | Profiled ACE demolition of chosen walls |
+| [Object Scaling](Object-Scaling) | Scale decorative Simple Objects safely |
 | [Optional Feature Systems](Optional-Feature-Systems) | Treatment feedback, obituary and confirmed-death reporting, hazards, tree felling, emergency dismount, WMP HUD, breaching, and object transforms |
 | [Optional Feature Extensions](Optional-Feature-Extensions) | Field resupply, tactical displays, advanced controls, and engine boundaries |
 | [Dynamic Anti-Air](Dynamic-Anti-Air) | Scripted or Zeus-authored radar-controlled air-defence zones |

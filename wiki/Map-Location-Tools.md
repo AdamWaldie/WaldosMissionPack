@@ -86,6 +86,15 @@ Only types defined in `CfgLocationTypes` will display correctly. Commonly used t
 
 > The full list of available location types is documented inside both `.sqf` files as a commented reference block.
 
+## If a name does not change
+
+Check whether you are creating a new location or renaming an existing one. The target's map location type and position must match the call you chose. A locally created label may not be visible to other players; use the documented shared setup path when everyone should see it.
+
+## See also
+
+- [Custom 3D World Markers](Custom-3D-World-Markers)
+- [Teleport Action](Teleport-Actions)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

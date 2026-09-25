@@ -108,6 +108,15 @@ Respawn callbacks on each local unit. WMP finds only the callback which calls AC
 replaces it with the same unchanged ACE function receiving only the new unit. All other ACE/CBA
 callbacks remain untouched, and WMP does not replace ACE code or assign a different player name.
 
+## If a loadout does not return
+
+Check which save path the player actually used: mission-start baseline, manual save point, arsenal save or optional save-on-death. A later save can replace an earlier snapshot. For a side switch, read `Waldo_Respawn_SideSwitchMode` in `MissionConfig/logisticsConfig.sqf` before assuming the old side's kit should return.
+
+## See also
+
+- [Base Services](Base-Services)
+- [Squad Rally Points](Squad-Rally-Points)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

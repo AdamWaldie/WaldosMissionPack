@@ -659,6 +659,10 @@ Bomb defusal uses the same interface, accessibility, state, and authority contra
 
 See [Bomb Defusal](Bomb-Defusal) for setup, procedure choices, explosive behavior, shared and legacy variables, ACE and vanilla use, and mission examples.
 
+## If a procedure does not respond
+
+Confirm the object has its equipment setup call, that the player meets its range and access rules, and that another user has not reserved the active session. Check the procedure's enabled controls and difficulty before changing its completion callback. A clean static check cannot establish whether a control is readable or clickable at the player's UI scale.
+
 ## See also
 
 * [Waldos Mini Games](Waldos-Mini-Games)

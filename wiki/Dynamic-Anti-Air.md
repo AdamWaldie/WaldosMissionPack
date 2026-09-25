@@ -218,6 +218,10 @@ Waldo_DynamicAA_FactionAssetPools set ["my_opfor_faction", createHashMapFromArra
 
 Unavailable pool entries are discarded during resolution, with the selected side's vanilla assets used if an entire profile category becomes empty. Exact overrides remain strict and reject invalid classnames. `Land_Radar_F` and similar buildings remain uncrewed; radar vehicles and static radar weapons receive AI crew belonging to the operational side.
 
+## If the system does not activate
+
+Check the server notification or RPT for rejected classes and placement, then compare the logged centre, radii and altitude settings with the ZEN dialog. The target must be a hostile, crewed aircraft inside the horizontal detection and engagement areas and between the selected altitude limits. A destroyed or disabled required radar keeps the system offline. Use **Dynamic AA - Remove Nearest** to clean up a test system before placing another at the same site.
+
 ## See also
 
 - [Optional Feature Systems](Optional-Feature-Systems)

@@ -93,6 +93,15 @@ If you need to trigger the respawn text outside of the respawn flow:
 - Grid position reflects where the player actually spawned
 - The animated display uses `BIS_fnc_typeText` for the typewriter effect
 
+## If text is missing
+
+Check that the chosen call runs on the player who should see it. These displays belong to the local interface, so a server-only call cannot draw directly on every player's screen. For shared announcements, use [Custom UI Notifications](Custom-UI-Notifications) and its audience routing.
+
+## See also
+
+- [Mission Intro and Title Text](Mission-Intro-Or-Title-Text)
+- [Custom UI Notifications](Custom-UI-Notifications)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

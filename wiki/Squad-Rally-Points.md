@@ -27,6 +27,15 @@ Direct regroup is off by default. When enabled, only a living member of the owni
 
 The server publishes runtime ZEN changes before client actions start. Joining players request the latest server state. Disabling the feature removes its actions and active rallies.
 
+## If deployment is refused
+
+Check that the requester leads the group, is alive and on foot, and has enough living group members. The server also checks dry, level ground, nearby hostiles and the group's cooldown. Move to a clear area or adjust the corresponding existing setting in `MissionConfig/missionSystemsConfig.sqf`.
+
+## See also
+
+- [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

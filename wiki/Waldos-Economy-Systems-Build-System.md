@@ -83,6 +83,10 @@ Buildings can be **upgraded** into a higher tier, and you can cap how many of a 
 
 A building flagged as a RADAR periodically reveals enemy units on the map for its side — a powerful, upkeep-worthy structure for map awareness.
 
+## If a building is unavailable
+
+Check its catalogue entry, required research, side access, resource cost and build limit. A valid object class still needs a clear placement area. The [Economy Setup](Waldos-Economy-Systems-Setup-And-Configuration) guide explains how to preserve a Zeus-authored definition for the next mission run.
+
 ## See also
 
 * [Resource System](Waldos-Economy-Systems-Resource-System) — production and storage feed the Build System.

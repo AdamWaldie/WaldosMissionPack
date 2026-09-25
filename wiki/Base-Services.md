@@ -2,7 +2,11 @@
 
 > **Use this page when:** placing save, heal, spectator or travel points in a named base network.
 
-Base services put save, heal, spectator and travel actions on objects you place in Eden. The feature is off by default and requires ACE and CBA.
+Base services put save, heal, spectator and travel actions on objects you place in Eden.
+
+## Before you start
+
+ACE and CBA are required. The feature is off by default. Change `Waldo_BaseServices_Enable` to `true` in `MissionConfig/missionSystemsConfig.sqf`, then place the objects that will host services. The server owns each network. Current players and joiners receive local actions and 3D markers.
 
 ## Place two service points
 
@@ -83,11 +87,34 @@ Moving it to another network removes its old membership.
 The module needs an active curator and
 the base-services flag. It edits existing objects only. Set up quartermasters and arsenals separately.
 
+## Script call and settings
+
+`[object, network ID, label, services, icon, transition, marker offset] call Waldo_fnc_BaseServicesRegisterNode;`
+
+| Position | Type | Default | Meaning |
+|---|---|---|---|
+| 0 | Object | Required | The service stand. Use `this` in its Eden Init field. |
+| 1 | String | Required | Objects with the same ID share travel destinations. |
+| 2 | String | Required | Name players see on the stand and in travel choices. |
+| 3 | Array of strings | `[]` | Choose `SAVE`, `HEAL`, `SPECTATE` and `TELEPORT` for this object. |
+| 4 | String | WMP icon | Optional `.paa` icon path. |
+| 5 | String or array | Network preset | Destination transition, such as `NIGHT` or custom `[key, value]` pairs. |
+| 6 | `[x,y,z]` array | Object surface | Marker point in the object's model coordinates. |
+
+The call returns `true` when the server accepts or queues the node. Eden Init fields, compositions and ZEN use it. To replace or remove a whole network, use `Waldo_fnc_BaseServicesRegister` as shown above. That server call also returns a Boolean. `Waldo_BaseServices_Enable` defaults to `false` and is the only mission-wide activation switch.
+
+## If a service is missing
+
+- **No ACE menu:** Check ACE and CBA, the feature flag, and the object's Init call. Start a fresh mission after editing the config.
+- **A destination is absent:** Only nodes with `TELEPORT` in their service list appear as travel destinations. Network IDs must match exactly.
+- **Travel fails:** Leave clear ground near the destination. WMP searches near the object rather than placing a player inside its model.
+- **Marker sits badly on a modded object:** Give that node a measured model-space offset in the seventh argument.
+
 ## See also
 
 - [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
 - [Custom 3D World Markers](Custom-3D-World-Markers)
-- [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Quartermaster](Quartermaster)
 
 <!-- WMP-WIKI-NAV -->
 ---

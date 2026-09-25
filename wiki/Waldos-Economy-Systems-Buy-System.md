@@ -47,6 +47,10 @@ In Zeus: **Buy → Configure Purchases**. From script:
 * `costRows` — `[["Resource", amount], ...]`
 * `requirementList` — completed research or built structures that gate the purchase
 
+## If a purchase is refused
+
+Check that the purchase belongs to the active catalogue, the side meets its resource and research requirements, and a matching drop point exists. A ground purchase cannot use an air-only drop point. The player-facing failure notice and [Mission Diagnostics](Mission-Diagnostics) help separate an unaffordable order from a placement problem.
+
 ## See also
 
 * [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)

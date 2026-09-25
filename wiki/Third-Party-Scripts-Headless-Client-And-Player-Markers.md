@@ -52,6 +52,10 @@ You can combine options, e.g. `["players", "ais"] execVM "...player_markers.sqf"
 
 ---
 
+## If player markers do not appear
+
+Check that the optional loader line is active in `init.sqf` and that the third-party marker script is present. Headless-client support is a separate WMP feature and does not enable player markers. Test a fresh joining player as well as the host before assuming the loader ran for everyone.
+
 ## See also
 
 * [Headless Client Support](Headless-Client-Support) — the native, opt-in replacement for the legacy headless-client script

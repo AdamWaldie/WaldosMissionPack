@@ -23,7 +23,7 @@
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enablement, player feedback, LOS/burn-through/destruction rules, player toggle,
  * disable challenge, engineer restriction and success result are intended scenario choices.
- * DisableResult is DISABLE (repairable/reactivatable disabled state) or DEACTIVATE (ordinary off).
+ * DisableResult is DISABLE (reactivatable disabled state) or DESTROY (destroy and deregister).
  * ChallengeDifficulty is easy, standard, hard or expert and ChallengeId must be a registered WMP
  * interaction-equipment procedure such as circuit.
  * ADVANCED TUNING - BurnThroughRef, Curve, ScanRange, ScanBearingArc and ScanDistanceBands define
@@ -54,7 +54,7 @@
  * - Waldo_Jamming_DisableChallengeId (MISSION MAKER): registered interaction-equipment ID, for example "circuit".
  * - Waldo_Jamming_DisableDifficulty (MISSION MAKER): easy, standard, hard or expert.
  * - Waldo_Jamming_DisableEngineerOnly (MISSION MAKER): false lets anyone try; true requires ACE engineer status.
- * - Waldo_Jamming_DisableResult (MISSION MAKER): DISABLE creates a repairable state; DEACTIVATE is an ordinary off state.
+ * - Waldo_Jamming_DisableResult (MISSION MAKER): DISABLE leaves a reactivatable field; DESTROY removes the emitter.
  *
  * BEGINNER EXAMPLE:
  * Keep the defaults below, place a suitable object in Eden, and put `[this] call Waldo_fnc_Jammer;`
@@ -82,6 +82,6 @@ createHashMapFromArray [
         ["Waldo_Jamming_DisableChallengeId", "circuit", true], // STRING: registered interaction-equipment ID.
         ["Waldo_Jamming_DisableDifficulty", "standard", true], // STRING: easy, standard, hard or expert.
         ["Waldo_Jamming_DisableEngineerOnly", false, true], // false: anyone may try; true: only ACE engineers may try.
-        ["Waldo_Jamming_DisableResult", "DISABLE", true] // DISABLE or DEACTIVATE.
+        ["Waldo_Jamming_DisableResult", "DISABLE", true] // DISABLE or DESTROY.
     ]]
 ]

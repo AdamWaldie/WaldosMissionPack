@@ -37,19 +37,15 @@ Use them to:
 - apply [ENDEX](ENDEX-Script-&-Custom-End-Screen) protection;
 - finish the mission with a configured WMP end screen.
 
-![Image of the Zeus Modules and where they can be located](https://i.imgur.com/kdR1q9Z.png)
-
 ## Supply & Medical Crate Spawner
 
 Zeus-spawned crates use the same class names and generated contents as the standard [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster). Changes to the mission's logistics configuration therefore carry over to Zeus-created crates.
 
 ## Supply crate interface
-![Zeus Interface of supply crate spawner](https://i.imgur.com/iuiulsL.jpg)
 
 The interface lets Zeus select the resupply size, the side whose playable loadouts supply the contents, and whether to include equipment, weapons, attachments, items, launchers and launcher ammunition, or ammunition only.
 
 ## Medical supply crate interface
-![Zeus Interface of Medical Crate Spawner](https://i.imgur.com/7aZPysV.png)
 
 The medical-crate interface selects the resupply size and whether the crate becomes an ACE field hospital for nearby medical personnel.
 
@@ -59,7 +55,7 @@ The medical-crate interface selects the resupply size and whether the crate beco
 
 The following modules are under **WMP Logistics**:
 
-- **Quartermaster - Set Up Object** configures an existing quartermaster point, its spawn position and the issues it offers. Mission-wide issue flags still apply. See [Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster#logistics-quartermaster).
+- **Quartermaster - Set Up Object** configures an existing quartermaster point, its spawn position and the issues it offers. Mission-wide issue flags still apply. See [Quartermaster](Quartermaster).
 - **Supply Transfers - Register or Inspect** registers an inventory crate or cargo-capable vehicle and reports why an object is rejected. The Supply Transfers flag must be on. See [Supply Transfers](Supply-Transfers).
 - **Physical Cargo - Eligibility** allows, blocks or inspects visible mounting for a carryable object. It does not change ACE Drag, Carry or cargo capacity. See [Physical Cargo](Physical-Cargo).
 - **ACE Cargo - Set Object Handling** sets ACE Drag, Carry, loading size and storage space on the selected object. It does not register the object for the other logistics features. See [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling).
@@ -67,8 +63,6 @@ The following modules are under **WMP Logistics**:
 ## Fortify Budget Module
 
 This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup), or ACE Fortify being active. It allows for the alteration of the fortify budget in zeus, without the need for manual scripting.
-
-![Fortify Budget Module GUI](https://i.imgur.com/GYunnuf.jpg)
 
 ## AI Convoy Module
 
@@ -94,17 +88,11 @@ Flow**, Zeus can use **SafeStart: Enable Protection** to freeze firing and damag
 server-authoritative API as scripts, publish the current state for JIP players and remain available
 for the whole mission. See [Safestart](Safestart) for confinement and mission-start overrides.
 
-An example of it in use can be seen below:
-![Zeus Endex execution example](https://i.imgur.com/PBpewY8.png)
-
 ## Mission End
 
 Similar to the vanilla mission end script, this mission will end the scenario.
 
 However, this variation allows the zeus to end the mission utilising a custom end screen and debriefing message which can be customised in the description.ext. Check out the [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) tutorial for more information.
-
-Below is an example of the custom mission end screen:
-![Mission End Screen Example](https://i.imgur.com/xmK9I1e.png)
 
 ## Mission Flow: Send Notification
 
@@ -122,7 +110,7 @@ The Place dialog also offers a directional **cone**, **pulsing**, and an **also 
 
 ## EMP & Signal Tracker Modules
 
-Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) page):
+Two more electronic-warfare modules have separate guides for [EMP Burst](EMP-Burst) and [Signal Trackers](Signal-Trackers):
 
 * **EMP Detonation**: a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
 * **Plant Signal Tracker**: must be placed directly on an object or unit, then tags that exact target so a chosen side follows it live on the map. Empty-ground placement is rejected; it never guesses from nearby entities.

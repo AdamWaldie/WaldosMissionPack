@@ -6,6 +6,8 @@ Physical cargo lets a player carry a crate with ACE and leave it visibly attache
 ACE and CBA are required. The feature is on by default through `Waldo_PhysicalCargo_Enable` in
 `MissionConfig/logisticsConfig.sqf`.
 
+The server owns eligibility and mount records. Each object's owner applies its attachment, while the vehicle owner applies seat locks. Players who join later receive the current mounts. `Waldo_PhysicalCargo_BlockSeats` is on by default; set it to `false` in the same config file if the mission should never block seats.
+
 ## Try it in a mission
 
 1. Place an inventory crate and a vehicle in Eden. You do not need an Init call on the vehicle.
@@ -30,6 +32,8 @@ For another non-weapon prop, put this in the prop's Eden **Init** field:
 
 The same call works in `initServer.sqf` with a named object in place of `this`. WMP also asks ACE to
 make that prop carryable.
+
+`[object] call Waldo_fnc_PhysicalCargoRegister;` takes one existing non-weapon prop or crate. It returns `true` when the server accepts the object or queues it until settings load. It returns `false` if the feature is off, the object is unsupported or a client calls it directly. Repeating the call does not add another ACE event. WMP-issued crates already qualify; use this call for a prop you placed yourself.
 
 WMP rejects visible mounts for static weapons after an HMG flipped a test vehicle. Players can
 still use ACE Carry, ground drop and ACE Cargo for static weapons. WMP has no working weapon mount
@@ -113,11 +117,18 @@ Check the behaviour on every crate and vehicle class your mission uses. A first 
 may briefly hitch. The cause has not been confirmed. Do not assume a static-weapon
 mount is safe: WMP deliberately does not offer one.
 
+## If a mount or seat fails
+
+- **No ACE Carry:** Check ACE, the object's handling values and whether WMP has marked the object eligible. [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) can set Drag and Carry independently.
+- **Object drops instead of mounting:** Aim at a usable part of the vehicle while close to it, and stop the vehicle. WMP leaves rejected cargo recoverable.
+- **Covered seat stays usable:** Some modded models do not expose a trustworthy seat position. WMP leaves those seats unchanged and logs the reason instead of guessing.
+- **Seat remains locked after removal:** Carry or ACE-load the object, then test again. If it persists, record the vehicle class, crate class and server RPT; WMP also checks active mounts for missed deletion events.
+
 ## See also
 
 - [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 - [Supply Transfers](Supply-Transfers)
-- [Logistics System, Starter Crates and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Quartermaster](Quartermaster)
 - [Vehicle Recovery](Vehicle-Recovery)
 - [Mission Configuration Reference](Mission-Configuration-Reference)
 

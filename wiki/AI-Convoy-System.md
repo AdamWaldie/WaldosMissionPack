@@ -62,6 +62,15 @@ Terminate each handle independently at their respective final waypoints.
 - Works with any mix of vehicle types in the group
 - The script handles one group per call — for multiple convoys, call it once per group
 
+## If the convoy stops or splits
+
+Check that the group has a living AI driver in a simulation-enabled land vehicle and that its route remains valid. The push-through-contact choice changes whether the group stops to fight. Tune speed and separation for the road and vehicle mix before blaming the server or adding another movement loop.
+
+## See also
+
+- [Transport Services](Transport-Services)
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

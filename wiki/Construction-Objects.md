@@ -42,8 +42,11 @@ The synced objects start hidden and are revealed (with sound + progress bar) whe
 [this, true] call Waldo_fnc_ConstructionObjects;  // modern construction audio
 ```
 
-Below is an example of the construction script correctly set up. The ammo box is the object the player interacts with:
-![Picture of the construction script in the editor](https://i.imgur.com/gYf9HQq.png)
+The ammo box is the object players interact with; the Game Logic holds the synchronised build objects.
+
+## If nothing appears after building
+
+Check ACE, the interaction object's Init call and the Game Logic synchronisations. The objects to reveal must already exist in Eden and be synchronised to that logic. Moving only the interaction box does not change where the pre-placed finished objects will appear.
 
 ## See also
 

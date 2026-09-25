@@ -99,6 +99,15 @@ If you are writing a guard for a mod whose patch name you do not know, run this 
 2. Open the debug console, paste the script, and click **Local Execute**.
 3. Open your Arma 3 log file (typically `%LOCALAPPDATA%\Arma 3\` or the game directory) and search for the mod name.
 
+## If a resource script does not work
+
+Check that you copied the example for the named script, not just its filename. Replace placeholder object or group names before running it. For the config patch logger, run it with the relevant mod loaded and read the current session's `.rpt`; it does not change WMP settings.
+
+## See also
+
+- [Mission Configuration Reference](Mission-Configuration-Reference)
+- [Feature Index](Feature-Tutorials)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

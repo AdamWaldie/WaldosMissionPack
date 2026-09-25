@@ -28,8 +28,6 @@ The VVD (Virtual Vehicle Depot) provides an in-mission vehicle spawner with a gr
 2. Place a **helipad** (or any flat object) where the vehicle will spawn. Give it a variable name (e.g. `Circle_Helipad`). Vehicles spawn on top of it.
 3. In the interaction object's init, call `Waldo_fnc_VVDInit` (see parameters below).
 
-![Example of mission pack setup](https://i.imgur.com/0DkSWJl.png)
-
 A pre-built composition with this setup is included in the WMP Compositions download.
 
 ---
@@ -118,6 +116,11 @@ The delay is randomised within a configured min/max range. If `min == max`, the 
 | Side vehicle limiting (`limitToSideVehicles`) | Works ~50% of the time — recommend leaving `false` |
 | UI appearance | Functional but not polished — this is explicitly WIP |
 | Pylon/weapon config | Only works for vehicles whose mod exposes pylon config to the garage system |
+
+## See also
+
+- [Vehicle Recovery](Vehicle-Recovery)
+- [Vehicle Appearance](Vehicle-Appearance)
 
 <!-- WMP-WIKI-NAV -->
 ---

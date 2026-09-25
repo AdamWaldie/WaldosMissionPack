@@ -188,6 +188,15 @@ Global defaults live in `MissionConfig\logisticsConfig.sqf`. `Waldo_TransportSer
 
 All Transport feedback uses the master WMP notification system. Each named vehicle owns an independent replacement channel, so simultaneous services use global stacking and overflow while repeated state from one vehicle coalesces. Theme, colour-vision presentation, queue limits and ACE-interaction suppression are inherited automatically.
 
+## If a transport will not depart
+
+Check the service state and whether another request still reserves the vehicle. At a destination, the service waits for every human to leave and for the vehicle to settle on the ground before automatic return. A crew member, turret passenger or FFV occupant still counts as aboard. Do not diagnose this as a route failure until the cabin and ground-contact conditions are met.
+
+## See also
+
+- [Aircraft Boarding Action](Aircraft-Boarding-Actions)
+- [Paradrop](Paradrop)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

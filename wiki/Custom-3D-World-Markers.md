@@ -128,6 +128,10 @@ Use stable, mission-specific IDs. Always pair colour with meaningful text and
 an appropriate icon so the marker remains understandable for colourblind
 players.
 
+## If a marker is missing
+
+Check the marker ID, visible sides, maximum distance and anchor object. A deleted anchor cannot keep an object-following marker in place. When replacing a marker, reuse its ID so WMP updates the existing entry instead of leaving two labels.
+
 ## See also
 
 - [Eden Compositions](Eden-Compositions) — the `[WMP]Custom_3D_Marker_Example` Minimal/Full pair

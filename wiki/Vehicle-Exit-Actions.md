@@ -33,6 +33,15 @@ Pass `false` as the second argument if you want plain action labels instead of c
 
 The setup call does nothing if the actions are already present. Test the chosen class in play: the action only appears to a passenger in a cargo seat.
 
+## If an exit choice is absent
+
+Check that the target is a supported vehicle and the player is in the passenger role for which the action is installed. The custom call adds exits to another vehicle but does not create a safe door on a model that lacks usable geometry. Test both sides of each modded aircraft before release.
+
+## See also
+
+- [Aircraft Boarding Action](Aircraft-Boarding-Actions)
+- [Emergency Dismount](Optional-Feature-Systems#emergency-dismount)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

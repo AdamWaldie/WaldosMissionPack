@@ -14,21 +14,21 @@ This is the complete top-level index of mission systems currently supplied by Wa
 | [Base Services](Base-Services) | Named save, heal, spectator and travel points | Enable in `MissionConfig\missionSystemsConfig.sqf`; register each service object in Eden or use ZEN |
 | [Simple Dialogue and Advanced Conversations](Dialogue-And-Conversations) | Beginner one-line NPC chatter plus a separate named, voiced and branching conversation component with authoritative completion hooks | NPC Eden init field, trigger/script, or focused ZEN assignment and live authoring modules with Eden-ready code export; optional pacing in `MissionConfig\dialogueConfig.sqf` |
 | [INIDBI2 Persistence](Persistence) | Optional player and registered-object persistence with a server-runtime dependency gate | `MissionConfig\persistenceConfig.sqf`; database authority in `initServer.sqf`; **Persistence - Control**, **Register Object**, and **Save Now** in ZEN |
-| [Patient Treatment Feedback](Optional-Feature-Systems#patient-treatment-feedback) | Local ACE treatment start, completion and failure notifications using the pack notification UI | `MissionConfig\interfaceConfig.sqf` and scripted start/stop calls |
+| [Patient Treatment Feedback](Treatment-Feedback) | Local ACE treatment start, completion and failure notifications using the pack notification UI | `MissionConfig\interfaceConfig.sqf` and scripted start/stop calls |
 | [Obituary and Confirmed-Death Reporting](Obituary-and-Confirmed-Deaths) | "Pronounce Dead" ACE self-interaction for qualified medics, readable per-player reports, and ENDEX confirmed-death totals. Enabled by default | `MissionConfig\interfaceConfig.sqf`; automatic player-local setup; intentionally no composition or ZEN module |
-| [Hazardous Environments](Optional-Feature-Systems#hazardous-environments) | Repeatable contamination, toxic, temperature, vacuum/no-oxygen and callback-driven zones | `MissionConfig\environmentConfig.sqf`; scripted registration or ZEN create/remove modules |
-| [Tree Felling](Optional-Feature-Systems#tree-felling) | Axe/hatchet-driven tree replacement, brush clearing, yields, protected areas and optional regrowth | Shared settings and scripted calls |
-| [Emergency Dismount](Optional-Feature-Systems#emergency-dismount) | Local extraction from overturned or destroyed vehicles with configurable safety rules | `MissionConfig\interfaceConfig.sqf` or scripted start/stop calls; intentionally no ZEN module |
+| [Hazardous Environments](Hazardous-Environments) | Radiation presets and custom exposure zones with damage, awareness and callback options | `MissionConfig\environmentConfig.sqf`; scripted registration or ZEN create/remove modules |
+| [Tree Felling](Tree-Felling) | Axe/hatchet-driven tree replacement, brush clearing, yields, protected areas and optional regrowth | `MissionConfig\environmentConfig.sqf`; intentionally no ZEN module |
+| [Emergency Dismount](Emergency-Dismount) | Local extraction from overturned or destroyed vehicles with configurable safety rules | `MissionConfig\interfaceConfig.sqf` or scripted start/stop calls; intentionally no ZEN module |
 | [WMP HUD](WMP-HUD) | Friendly-only 3D identification with high-tech equipment eligibility and independent UID accessibility access | `MissionConfig\interfaceConfig.sqf`; WMP Interface self-interaction toggle; intentionally no ZEN module |
 | [Colour-vision accessibility](UI-Visual-Themes#personal-colour-vision-profiles) | Personal semantic palettes retain state words, symbols, patterns and contrast under every era theme | Local persistent selector under ACE Self Interact > WMP Interface > Accessibility |
-| [Explosive Wall Breaching](Optional-Feature-Systems#explosive-wall-breaching) | Server-validated class profiles, explosive strengths, replacement sections and reset support | `MissionConfig\environmentConfig.sqf` and scripted calls |
-| [Object Scaling and Transforms](Optional-Feature-Systems#object-scaling) | Validated scaling, reset/copy/multiply, coordinate placement and tagged batches | Server limits in `MissionConfig\logisticsConfig.sqf`; scripted helpers or **Scale Object** in ZEN |
+| [Explosive Wall Breaching](Explosive-Breaching) | Server-validated class profiles, explosive strengths, replacement sections and reset support | `MissionConfig\environmentConfig.sqf` and scripted calls |
+| [Object Scaling and Transforms](Object-Scaling) | Validated scaling, reset/copy/multiply, coordinate placement and tagged batches | Server limits in `MissionConfig\logisticsConfig.sqf`; scripted helpers or **Scale Object** in ZEN |
 | [AI Rebalance](Waldos-AI-Tweak) | Named skill profiles, filters, variance, restoration and AI-locality migration handling | `MissionConfig\aiConfig.sqf`; **AI Rebalance - Control** in ZEN |
 | [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | Exact-point vector approaches, flare, slope alignment, tree-canopy clearance, touchdown anchoring and bounded go-arounds for AI pilots | `MissionConfig\aiConfig.sqf`, per-aircraft profiles and event-driven locality handlers; intentionally no ZEN module |
 | [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional suppression of the vanilla AI zoom-climb during ordinary cruise braking, with landing priority and terrain guards | `MissionConfig\aiConfig.sqf`; disabled by default; intentionally no ZEN module |
-| [UI Visual Themes](UI-Visual-Themes) | Twelve visual-only styles spanning modern, historical, command-centre, industrial, intelligence, emergency, fantasy and minimal presentation | Global `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf`; live **UI QA - Set Visual Theme** selector |
-| [Field Resupply](Optional-Feature-Extensions#field-resupply) | Finite hub stock, carrier allowances, deployed real-cargo crates and cargo-based salvage | `MissionConfig\logisticsConfig.sqf`; ZEN hub/carrier modules |
-| [Tactical Display](Optional-Feature-Extensions#tactical-display) | Object-authenticated local tactical map with friendly and known-enemy filtering | `MissionConfig\interfaceConfig.sqf`; scripted or ZEN registration |
+| [UI Visual Themes](UI-Visual-Themes) | Built-in visual-only styles spanning modern, historical, command-centre, industrial, intelligence, emergency, fantasy and minimal presentation | Global `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf`; live **UI QA - Set Visual Theme** selector |
+| [Field Resupply](Field-Resupply) | Finite hub stock, carrier allowances, deployed real-cargo crates and cargo-based salvage | `MissionConfig\logisticsConfig.sqf`; ZEN hub/carrier modules |
+| [Tactical Display](Tactical-Display) | Object-authenticated local tactical map with friendly and known-enemy filtering | `MissionConfig\interfaceConfig.sqf`; scripted or ZEN registration |
 | [Dynamic Anti-Air](Dynamic-Anti-Air) | Named radar-controlled AA zones, altitude rules, dormant defences and fighter scrambling | Server side/faction pools in `MissionConfig\airOperationsConfig.sqf`; scripted creation or guided ZEN placement |
 | [Dynamic AO Generation](Dynamic-AO-Generation) | Runtime faction discovery and complete randomized patrol, garrison, vehicle, air, civilian, minefield and roadblock areas | Server HashMap API or **Dynamic AO - Create/Remove** under WMP AI & Combat |
 | [Airborne Gunship Support](Airborne-Gunship-Support) | Named gunship lifecycles, controller assignment, turret control, orbits and service cycles | `MissionConfig\airOperationsConfig.sqf`; server registration or focused ZEN operations |
@@ -68,7 +68,8 @@ Runtime configuration is server-authoritative. Current settings are published fo
 
 ## Logistics, deployment and vehicles
 
-- [Logistics, Starter Crates and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Quartermaster](Quartermaster)
 - [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 - [Supply Transfers](Supply-Transfers)
 - [Physical Cargo](Physical-Cargo)

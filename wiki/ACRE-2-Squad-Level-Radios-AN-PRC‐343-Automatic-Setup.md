@@ -48,6 +48,10 @@ The client converts the pair to ACRE's flat channel only when it applies a uniqu
 The CEOI shows each configured group name as written (for example, `VIKING 2-3`). WMP ignores
 spaces and punctuation only when matching it to an editor group, not when printing it.
 
+## If a squad gets the wrong channel
+
+Compare the Eden group ID with the group key in `MissionConfig/acreConfig.sqf`. Check the chosen PRC-343 block and channel as separate values. A display name in the CEOI does not by itself prove the live radio has finished tuning; inspect the post-ACRE read-back.
+
 ## See also
 
 - [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting)

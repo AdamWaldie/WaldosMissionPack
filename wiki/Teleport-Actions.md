@@ -14,6 +14,10 @@ The arguments are `[interaction object, action label, destination]`. If you omit
 
 The helper adds a green vanilla scroll-wheel action. It moves the player about three metres east and north of the destination and shows the built-in “A few minutes later...” fade. It does not search for clear ground. Test the arrival point, especially inside buildings or near obstacles.
 
+## If the action or arrival is wrong
+
+Check the destination's Eden variable name or marker name and confirm it exists when the action runs. The basic helper uses a fixed offset, so move the destination or use [Base Services](Base-Services) if that offset lands inside scenery. Base Services searches for a clear arrival point and offers destination-specific transitions.
+
 For several named destinations with per-object save, heal or spectator actions, use [Base Services](Base-Services). That system checks for a safe arrival position and lets you set a transition per destination.
 
 ## See also

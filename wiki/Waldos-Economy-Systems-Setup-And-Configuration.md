@@ -91,6 +91,15 @@ Arma can only add true Eden "Systems" modules from a **loaded addon**, and WMP i
 
 `Waldo_fnc_EcoInit` → `Waldo_fnc_EcoCore_applyMakerConfig` runs, in order: a config string (if set) **or** a preset, then commitment mode, then `MissionConfig\economyConfig.sqf`. So you can build on a preset or define everything from scratch. It only runs on the server authority, exactly once.
 
+## If the economy does not start
+
+Check the suite's enable setting and whether you selected a preset or supplied a valid authored configuration. Use [Mission Diagnostics](Mission-Diagnostics) to inspect server initialization and catalogue errors. A Zeus authoring session changes the live mission only until you export and paste its setup into the mission configuration.
+
+## See also
+
+- [Economy Systems](Waldos-Economy-Systems)
+- [Feature Configuration Files](Feature-Configuration-Files)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

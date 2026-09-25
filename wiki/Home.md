@@ -35,7 +35,8 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 
 ### Logistics and deployment
 
-- [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Quartermaster](Quartermaster)
 - [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling): set Drag, Carry, ACE loading size and storage space on an object.
 - [Supply Transfers](Supply-Transfers): move inventory between crates and vehicles.
 - [Physical Cargo](Physical-Cargo): attach carried objects visibly to vehicles.
@@ -66,7 +67,7 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 ### Electronic warfare and radio
 
 - [Radio Jamming](Radio-Jamming): ACRE2/TFAR interference, UAV effects, and Zeus controls.
-- [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers)
+- [EMP Burst](EMP-Burst) and [Signal Trackers](Signal-Trackers)
 - [ACRE2 Radio Setup](ACRE-2-Long-Range-Radio-Presetting)
 - [ACRE2 Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup): vehicle rack radio configuration, from quickstart to full reference.
 - [ACRE2 Babel](ACRE2-Babel-Configuration)

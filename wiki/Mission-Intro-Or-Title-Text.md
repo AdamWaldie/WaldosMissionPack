@@ -106,6 +106,15 @@ Every stage is measured per client. [Mission Diagnostics](Mission-Diagnostics)'s
 
 For runtime text overlays elsewhere in the mission, see [Mission UI Text Overlays](Mission-UI-Text-Overlays).
 
+## If the intro does not appear
+
+Confirm the mission has reached play rather than stopping at the briefing screen. WMP waits for the local loading event before showing title text. If you replace the pack's player startup code, keep its `initPlayerLocal.sqf` path intact.
+
+## See also
+
+- [Mission UI Text Overlays](Mission-UI-Text-Overlays)
+- [Cover and Loading Screen Generation](Cover-Loading-Screen-Generation)
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

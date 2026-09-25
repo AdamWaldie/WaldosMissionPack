@@ -134,6 +134,10 @@ Arguments are `[object, reenableAction, forceRunningReset]`. A normal reset refu
 
 For a detonating live device, the original object is deleted on failure. Create or rearm a replacement object instead of trying to reset the deleted reference.
 
+## If defusal cannot begin
+
+Check the object's procedure registration, ACE interaction availability and whether another player already owns the active attempt. A successful visual interaction is not enough by itself: the result callback must still point to the intended explosive consequence. Use the reset path only for a training device that should be repeatable.
+
 ## See also
 
 - [Interaction Procedures](Waldos-Mini-Games-Interaction-Challenges)
