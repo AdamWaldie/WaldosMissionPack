@@ -1,4 +1,15 @@
-/* Author: WaldoTheWarfighter. Returns normalized ENDEX/AAR diagnostics. */
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: report the current ENDEX authority, AAR ledger, and local interface protection.
+ * Locality/authority: read-only on the calling machine. Client protection is reported only
+ * on interface clients; the server's own AAR counters remain server-local.
+ * Repeat/JIP: repeat-safe and does not install handlers. A JIP client reads its current
+ * ENDEX state after WMP's ordered state replay.
+ * Arguments: none.
+ * Return Value: HASHMAP - normalized diagnostic feature report.
+ * Current callers: Waldo_fnc_RunDiagnostics and mission-maker diagnostic scripts.
+ * Example: private _report = [] call Waldo_fnc_ENDEXGetDiagnostics;
+ */
 private _active = missionNamespace getVariable ["Waldo_ENDEX_Active", false];
 private _aar = missionNamespace getVariable ["Waldo_AAR_Initialised", false];
 private _checks = [

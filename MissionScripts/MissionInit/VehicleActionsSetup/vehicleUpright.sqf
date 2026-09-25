@@ -1,6 +1,17 @@
 /*
- * Safely places one tipped land vehicle upright on the machine that owns it.
- * Player requests are validated by the server before locality forwarding.
+ * Author: WaldoTheWarfighter
+ * Purpose: Right one tipped land vehicle using its current owner for locality-sensitive movement.
+ * Locality/authority: a server request validates remote player identity/distance and forwards
+ * to the vehicle owner when required. Only the server or its forwarded owner request may act.
+ * Repeat/JIP: each accepted call is a one-shot orientation change; normal vehicle state syncs
+ * to current and joining clients. No persistent action or replay is created here.
+ * Arguments:
+ * 0: vehicle <OBJECT> (default objNull, rejected) - existing land vehicle.
+ * 1: actor <OBJECT> (default objNull) - requesting player for a remote player action; server
+ *    mission scripts may omit it.
+ * Return value: BOOL - true after local movement or a server forward; false if rejected.
+ * Current callers: the local Set Vehicle Upright action and server mission scripts.
+ * Example: [_vehicle] call Waldo_fnc_VehicleUpright; // in initServer.sqf or server script
  */
 params [
     ["_vehicle", objNull, [objNull]],

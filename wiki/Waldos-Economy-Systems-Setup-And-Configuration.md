@@ -26,6 +26,20 @@ It is **off by default**, so missions that don't use it pay no performance cost.
 
 Place only one Economy Systems object per mission.
 
+| Mission setup value | Type | Shipped default | Where to change it |
+| --- | --- | --- | --- |
+| `Waldo_Economy_Enable` | Boolean | `false` | `MissionConfig/missionSystemsConfig.sqf`; enables the runtime, not a resource catalogue. |
+| `Waldo_Economy_Preset` | String | Unset | Optional server value in `initServer.sqf`: `LOW`, `MEDIUM` or `HIGH`. |
+| `Waldo_Economy_PresetSides` | Array of `[side ID, faction key]` rows | Unset | Optional server value in `initServer.sqf`; for example `[["WEST", "NATO"]]`. |
+| `Waldo_Economy_ConfigString` | String | Unset | Optional server value in `initServer.sqf` containing an exported configuration. |
+| `Waldo_Economy_CommitmentMode` | Boolean | Unset | Optional server value in `initServer.sqf`; freezes catalogue refreshes after setup. |
+| `_useExample` | Boolean | `false` | `MissionConfig/economyConfig.sqf`; use `true` only to load the shipped example catalogue. |
+
+The optional `initServer.sqf` rows are commented out in the shipped mission. “Unset” means
+WMP does not apply that choice for you; it is not a fourth preset. A composition can make
+the enable/preset choice instead. Do not use a composition and a competing hand-written
+preset unless you intend one to override the other.
+
 ## 2. Quick configuration (`initServer.sqf`)
 
 A commented block in `initServer.sqf` exposes the quick options:
@@ -49,6 +63,20 @@ Preset complexities: **LOW** (a single resource + research) → **HIGH** (a full
 For complete control, edit **`MissionConfig\economyConfig.sqf`** — the dedicated authoring file (registered as `Waldo_fnc_EcoMakerSetup`, run once on the server after any preset/config string). It ships with a complete worked example you can switch on (`_useExample = true;`) and copy.
 
 Define catalogs and place world objects with the server-side helpers:
+
+| Public call | Argument types, in order | Return / effect |
+| --- | --- | --- |
+| `Waldo_fnc_EcoResource_addResourceType` | Resource name String, hex colour String, icon path String, storage cap Number (`-1` for unlimited) | Adds a resource type to the server-owned catalogue; no documented ID/object return. |
+| `Waldo_fnc_EcoResearch_setResearchCatalog` | One Array containing research rows `[name String, description String, costs Array, requirements Array, timeSeconds Number]` | Replaces the research catalogue; no return value. |
+| `Waldo_fnc_EcoBuild_setBuildCatalog` | One Array containing building rows; see the complete row example below and [Build System](Waldos-Economy-Systems-Build-System) | Replaces the building catalogue; no return value. |
+| `Waldo_fnc_EcoBuy_setPurchaseCatalog` | One Array containing purchase rows; see the complete row example below and [Buy System](Waldos-Economy-Systems-Buy-System) | Replaces the purchase catalogue; no return value. |
+| `Waldo_fnc_EcoResource_createResourceZone` | Position Array, name String, radius Number, resource deposits Array, side ID String, interval seconds Number | Creates a resource zone; returns its ID String on the server. A client call forwards the request and has no immediate ID. |
+| `Waldo_fnc_EcoResearch_spawnResearchCenter` | Position Array | Returns the spawned Object on the server. A forwarded client call returns `objNull`. |
+
+These are server-side setup calls, not object Init snippets. Their exact row shapes are
+shown in `MissionConfig/economyConfig.sqf`; the subsystem pages explain the gameplay
+rules. The resulting state is published to joining players. The catalogue helpers do
+not provide an object or ID for later use; check the published catalogue instead.
 
 ```sqf
 // Resources: [name, "#hexColour", "iconPath", storageCap]  (-1 = unlimited)

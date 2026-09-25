@@ -27,6 +27,17 @@ The notification uses its own `ENDEX` channel. Repeated activation replaces the 
 
 The API is server-authoritative. Calls made on a client are forwarded to the server.
 
+| Call or setting | Type and default | Where to use it | Return value |
+| --- | --- | --- | --- |
+| `[] call Waldo_fnc_AARTrack` | No public arguments | Server, at mission start, if you want a whole-mission AAR | Nothing |
+| `[] call Waldo_fnc_ENDEX` | No public arguments | Mission trigger or Zeus module at debrief | Nothing |
+| `[] call Waldo_fnc_ENDEXReset` | No public arguments | Rehearsal or recovery trigger | Nothing |
+| `[] call Waldo_fnc_ENDEXGetDiagnostics` | No arguments | Where you need to inspect current ENDEX state | Diagnostics HashMap for the machine that called it |
+| `Waldo_ENDEX_ReportDuration` | Number of seconds; fallback `45` | Set on the server before ENDEX; publish to clients | Not a function |
+
+None of these calls takes an object, group, map marker or classname. WMP handles ENDEX
+activation and reset for clients already present and for players who join later.
+
 ```sqf
 [] call Waldo_fnc_ENDEX;
 ```

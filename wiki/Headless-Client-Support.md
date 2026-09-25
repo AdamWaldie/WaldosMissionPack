@@ -32,6 +32,20 @@ to do anything while it's false, so there is no partial/accidental activation pa
 ["Waldo_Headless_MigrationPaceSeconds", 3]     // ADVANCED: pause between each queued migration.
 ```
 
+| Setting | Type | Default | What it controls |
+|---|---|---:|---|
+| `Waldo_Headless_Enable` | Boolean | `false` | Enables WMP headless-client registration and AI distribution. |
+| `Waldo_Headless_StartDelaySeconds` | Number (seconds) | `30` | Grace period before migration begins. |
+| `Waldo_Headless_MinGroupAgeSeconds` | Number (seconds) | `10` | A new AI group must exist this long before it is eligible. |
+| `Waldo_Headless_MigrationPaceSeconds` | Number (seconds) | `3` | Minimum gap between queued WMP group transfers. |
+| `Waldo_Headless_Debug` | Boolean | `false` | Extra ownership and migration logging. |
+
+Edit the existing entries in `headlessConfig.sqf`; do not paste the example as a second settings
+block. WMP starts detection from its shipped init files. Mission makers do not call
+`Waldo_fnc_HeadlessDetectLocal` or register a headless client manually. The server owns the
+registry and migration queue, while a connected headless client runs the AI it owns. A joining
+curator receives the current ownership/debug state through the runtime snapshot.
+
 ## Eden setup - one required step, Arma-level not WMP-specific
 
 A headless client connects into a mission slot the same way a player does, so the mission needs

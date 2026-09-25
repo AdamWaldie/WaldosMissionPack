@@ -44,12 +44,16 @@ assessed it.
 Edit these rows in `MissionConfig\interfaceConfig.sqf`. They are player-local presentation and
 interaction settings; WMP loads them automatically.
 
-| Setting | Default | Beginner meaning |
-|---|---:|---|
-| `Waldo_Obituary_Enable` | `true` | Enables death capture and the medic self-interaction. Set this to `false` to disable the complete feature. |
-| `Waldo_Obituary_ChatAnnounce` | `true` | Also shows a short confirmation line in system chat. The full report remains in the diary. |
-| `Waldo_Obituary_Radius` | `15` | Maximum distance in metres between the medic and a body listed by **Pronounce Dead**. |
-| `Waldo_Obituary_DiaryPollInterval` | `3` | Advanced: seconds between local diary refresh checks. Leave this alone for normal missions. |
+| Setting | Type | Default | Beginner meaning |
+|---|---|---:|---|
+| `Waldo_Obituary_Enable` | Boolean | `true` | Enables death capture and the medic self-interaction. Set `false` to disable the complete feature. |
+| `Waldo_Obituary_ChatAnnounce` | Boolean | `true` | Also shows a short confirmation line in system chat. The full report remains in the diary. |
+| `Waldo_Obituary_Radius` | Number (metres) | `15` | Maximum distance between the medic and a body listed by **Pronounce Dead**. |
+| `Waldo_Obituary_DiaryPollInterval` | Number (seconds) | `3` | Advanced interval between local diary refresh checks. Leave it unchanged for normal missions. |
+
+There is no public registration call or object-init argument for this feature. The server owns
+confirmed-death records, while each player's client installs the ACE action and rebuilds its diary
+from current state after joining. Change the existing config rows and test with a playable medic.
 
 Example with a shorter working distance and no chat line:
 

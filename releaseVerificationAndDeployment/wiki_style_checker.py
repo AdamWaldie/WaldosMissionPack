@@ -49,6 +49,12 @@ TYPED_GUIDES = {
     "Dynamic-Anti-Air", "Dynamic-AO-Generation", "Paradrop", "Custom-3D-World-Markers",
     "Custom-UI-Notifications", "Vehicle-Appearance", "Vehicle-Weapon-Loadout",
     "Dialogue-And-Conversations", "Mission-UI-Text-Overlays", "Mission-Intro-Or-Title-Text",
+    "Vehicle-Uprighting", "Team-Colour-Setup", "Squad-Rally-Points",
+    "AI-Helicopter-Deceleration", "Headless-Client-Support", "ACE-Corpse-Traps",
+    "UI-Visual-Themes", "Obituary-and-Confirmed-Deaths",
+    "ACRE2-Automated-CEOI-Document", "ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup",
+    "ENDEX-Script-&-Custom-End-Screen",
+    "Waldos-Economy-Systems-Setup-And-Configuration",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -68,6 +74,11 @@ SETTING_CONTRACTS = {
     "Loadout-Saving-and-Respawn": ("logisticsConfig.sqf", ("Waldo_Respawn_",)),
     "Safestart": ("missionSystemsConfig.sqf", ("Waldo_SafeStart_",)),
     "Improved-AI-Helicopter-Landings": ("aiConfig.sqf", ("Waldo_ImprovedHelicopterLanding_",)),
+    "Squad-Rally-Points": ("missionSystemsConfig.sqf", ("Waldo_Rally_",)),
+    "AI-Helicopter-Deceleration": ("aiConfig.sqf", ("Waldo_HelicopterDeceleration_",)),
+    "ACE-Corpse-Traps": ("missionSystemsConfig.sqf", ("Waldo_CorpseTraps_",)),
+    "Headless-Client-Support": ("headlessConfig.sqf", ("Waldo_Headless_",)),
+    "Obituary-and-Confirmed-Deaths": ("interfaceConfig.sqf", ("Waldo_Obituary_",)),
 }
 
 # These are player-facing feature guides with independent setup paths. Add a new

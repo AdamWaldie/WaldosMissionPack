@@ -40,14 +40,27 @@ this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 
 ### What you should edit
 
-| Setting | Default | Beginner guidance |
-|---|---:|---|
-| `Waldo_HelicopterDeceleration_Enable` | `false` | The only setting most missions should change. Enable it after testing the airframes used. |
-| `Waldo_HelicopterDeceleration_IncludeVTOL` | `false` | Leave off unless you specifically tested VTOL aeroplane/hover transitions. |
-| `Waldo_HelicopterDeceleration_Debug` | `false` | Turn on temporarily when diagnosing why a correction started or stopped. |
+| Setting | Type | Default | What it controls |
+|---|---|---:|---|
+| `Waldo_HelicopterDeceleration_Enable` | Boolean | `false` | Master switch. Enable only after testing the mission's airframes. |
+| `Waldo_HelicopterDeceleration_IncludeVTOL` | Boolean | `false` | Include VTOL aircraft; leave off unless their flight-mode transitions have been tested. |
+| `Waldo_HelicopterDeceleration_MinimumSpeed` | Number (km/h) | `80` | Ignore slower aircraft. |
+| `Waldo_HelicopterDeceleration_MinimumAltitude` | Number (metres AGL) | `25` | Never correct below this height. |
+| `Waldo_HelicopterDeceleration_MinimumSpeedLoss` | Number (km/h per sample) | `4` | Braking threshold. |
+| `Waldo_HelicopterDeceleration_MinimumAltitudeGain` | Number (metres per sample) | `0.5` | Unwanted climb threshold. |
+| `Waldo_HelicopterDeceleration_MinimumNoseUp` | Number (vector direction Z) | `0.02` | Minimum nose-up attitude; zero is level. |
+| `Waldo_HelicopterDeceleration_TerrainClearance` | Number (metres) | `25` | Required clearance over terrain ahead. |
+| `Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration` | Number (m/s²) | `2.5` | Downward acceleration cap. |
+| `Waldo_HelicopterDeceleration_MaximumClimbRate` | Number (m/s) | `0.5` | Stop correcting when the climb falls to this rate. |
+| `Waldo_HelicopterDeceleration_SampleInterval` | Number (seconds) | `0.5` | Cadence of the owner-local detection check. |
+| `Waldo_HelicopterDeceleration_ControlInterval` | Number (seconds) | `0.02` | Cadence while a correction is active. |
+| `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Number (seconds) | `4` | Hard duration limit for one correction. |
+| `Waldo_HelicopterDeceleration_Debug` | Boolean | `false` | Log acquire/release reasons and owner IDs during diagnosis. |
 
-The remaining `Waldo_HelicopterDeceleration_*` rows are advanced safety thresholds. Leave them at
-their shipped values unless a repeatable test with one aircraft demonstrates a specific problem.
+The numeric rows are advanced safety thresholds. Leave them at their shipped values until a
+repeatable test identifies a specific airframe problem. This feature has no mission-maker function
+call: it starts from the flag, evaluates eligible AI aircraft on their current owner, and follows
+locality changes. It does not replay a past correction to joining players.
 
 ## What success looks like
 

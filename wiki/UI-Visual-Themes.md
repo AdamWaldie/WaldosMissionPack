@@ -27,6 +27,17 @@ Open `MissionConfig/interfaceConfig.sqf` and change the existing `Waldo_UI_Theme
 
 Keep the row inside its existing settings array. The default is `DEFAULT`. WMP applies the selected theme to current players and to players who join later.
 
+| Setting | Type | Default | What it changes |
+|---|---|---|---|
+| `Waldo_UI_Theme` | String theme ID | `"DEFAULT"` | Mission-wide style. Use an ID from the table below or a name in `Waldo_UI_CustomThemes`. |
+| `Waldo_UI_CustomThemes` | HashMap of theme-name Strings to token HashMaps | Empty HashMap | Optional complete named themes for advanced mission authors. |
+| `Waldo_UI_ThemeOverrides` | HashMap of token-name Strings to values of the same type as the built-in token | Empty HashMap | Replace selected presentation tokens in the active theme. |
+
+Edit existing rows in `MissionConfig/interfaceConfig.sqf`. Theme values affect presentation only.
+The server publishes the current mission theme to joining players. Players may choose their own
+notification-only theme and colour-vision profile locally; those choices do not change the
+mission-wide value.
+
 Built-in values are:
 
 | ID | Presentation |

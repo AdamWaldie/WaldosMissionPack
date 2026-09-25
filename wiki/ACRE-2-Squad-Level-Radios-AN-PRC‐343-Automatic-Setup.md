@@ -12,7 +12,21 @@ PRC-343 assignments come from `MissionConfig\acreConfig.sqf`. The server sends t
 to players, while each player's own computer configures the radio they carry. Side and group ID are
 both used, so identical callsigns on opposing sides do not overwrite one another.
 
+## Set a squad's channel
+
+In `MissionConfig\acreConfig.sqf`, find the appropriate side under `sides`, then add or edit a
+row in that side's groups array. Use the group's Eden ID, not a unit name or map marker.
+WMP runs this setup automatically; there is no object Init call.
+
 Every carried radio uses `[class, "ALL" or occurrence number, target, ear]`. For one PRC-343:
+
+| Parameter | Type | What to supply |
+| --- | --- | --- |
+| Group ID | String | The group's Eden ID, such as `VIKING 2-3`. |
+| Radio class | String | `ACRE_PRC343` for this radio. |
+| Occurrence | String or Number | `"ALL"` or the one-based number of a carried PRC-343. |
+| Target | Array of two Numbers, or empty Array | `[block, channel]`, each 1–16, or `[]` for callsign inference. |
+| Ear | String | `LEFT`, `RIGHT`, `BOTH` or `CENTER`. |
 
 ```sqf
 [

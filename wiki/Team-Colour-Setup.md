@@ -17,11 +17,14 @@ On mission start, each player's Role Description (or unit class display name as 
 | Team Colour | Matching Keywords |
 |---|---|
 | **Yellow** | Squad Leader, SL, Platoon Leader, PL, Platoon Sergeant, PSG, Company Commander, CC, Commanding Officer, CO, LT, Lieutenant, Major, Captain, Colonel, 1st Sergeant, 1SG, Delta, Yellow |
-| **Red** | Assistant Squad Leader, ASL, Alpha, Red |
+| **Red** | Alpha, Red |
 | **Blue** | Bravo, Blue |
 | **Green** | Medic, Charlie, Green |
 
 Players whose role description matches none of the keywords are not assigned to any team.
+`Assistant Squad Leader` and `ASL` also appear in the script's Red rules, but the earlier Yellow
+`SQUAD LEADER` and `SL` checks match those names first. They currently resolve to Yellow. Use an
+unambiguous `Alpha` role label when that assistant should be Red.
 
 ## Recommended Role Description Format
 
@@ -34,7 +37,7 @@ For best results, use the following convention in each unit's **Role Description
 Examples:
 - `Alpha Rifleman@Viking-1-1` → assigned **Red**
 - `Bravo Automatic Rifleman@Viking-1-2` → assigned **Blue**
-- `ASL@Viking-1` → assigned **Red**
+- `Alpha Deputy@Viking-1` → assigned **Red**
 - `SL@Odin` → assigned **Yellow**
 - `Medic@Foxhound-2` → assigned **Green**
 
@@ -64,7 +67,10 @@ Two additional functions parse the same role description format. Both are useful
 
 ### `Waldo_fnc_GetPlayerGroup`
 
-Returns the group callsign — the part of the role description **after** the `@`. Falls back to the Eden group ID if no `@` is present.
+Returns the group callsign from the **group leader's** Role Description after `@`. It falls back
+to the Eden group ID only when the leader's Role Description is empty. If a nonempty description
+has no `@`, the current helper has no valid callsign part to read. Give the leader a complete
+`Role@Callsign` description before using this helper.
 
 ```sqf
 // Returns "VIKING-1" from role description "Alpha Rifleman@Viking-1"
@@ -82,17 +88,20 @@ private _roleName = call Waldo_fnc_GetPlayerRole;
 
 Both functions return an empty string (or `"Infantry"` for `GetPlayerRole`) in singleplayer.
 
-| Function | Arguments | Return | Where it runs |
+| Function | Argument type and default | Return type and result | Where it runs |
 |---|---|---|---|
 | `Waldo_fnc_SetTeamColour` | None | No useful value | Current player's interface during mission startup. |
-| `Waldo_fnc_GetPlayerGroup` | `[unit <OBJECT>]`; defaults to `player` | Callsign string after `@`, or uppercase Eden group ID. Empty in singleplayer. | Where the unit and its leader's role description are available. |
-| `Waldo_fnc_GetPlayerRole` | None; always reads the local `player` | Role string before `@`, or the unit class display name. `"Infantry"` in singleplayer. | Player interface. |
+| `Waldo_fnc_GetPlayerGroup` | Position 0: unit Object, default local `player` | String after `@` in the group leader's role, or uppercase Eden group ID when that role is empty. Empty in singleplayer. | Where the unit and leader's role description are available. |
+| `Waldo_fnc_GetPlayerRole` | None; always reads local `player` | String before `@` in that player's role, or the unit class display name. `"Infantry"` in singleplayer. | Player interface. |
 
 For example, `[player] call Waldo_fnc_GetPlayerGroup` returns a string you can show in a briefing. It does not alter the player's Arma group. The colour helper runs locally and does not set a mission-wide colour for AI.
 
 ## If a colour is wrong
 
-Check the unit's Eden Role Description first. Matching ignores case and takes the first matching keyword, so a description containing two team words may select an earlier rule than intended. Use an unambiguous role label and test it with ACE team colours loaded.
+Check the unit's Eden Role Description first. Matching ignores case and takes the first keyword in
+the script's search order. For example, `ASL` contains `SL`, and the Yellow `SL` check currently
+runs first. Use an unambiguous label such as `Alpha Deputy` for a Red assistant and test with ACE
+team colours loaded.
 
 ## See also
 
