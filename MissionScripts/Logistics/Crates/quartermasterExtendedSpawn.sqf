@@ -136,7 +136,9 @@ if (_kind == "FuelJerrycan") then {
     [_object, (missionNamespace getVariable ["Waldo_QM_FuelJerrycan_Litres", 20]) max 1]
         remoteExecCall ["Waldo_fnc_QuartermasterMakeJerrycanLocal", 0, _object];
 };
-[_object, if (_isRearm) then {"REARM"} else {_kind}] spawn Waldo_fnc_LogisticsRegisterSpawned;
+// A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+// cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+[{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_object, if (_isRearm) then {"REARM"} else {_kind}]] call CBA_fnc_execNextFrame;
 diag_log format ["[WMP QM] Extended issue kind=%1 name=%2 class=%3 player=%4",
     _kind, _issueName, _class, name _player];
 [format ["%1 ready for collection.", _issueName], _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;

@@ -97,5 +97,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 
 if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
-    [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+    // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+    // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+    [{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_crate, "SUPPLY"]] call CBA_fnc_execNextFrame;
 };

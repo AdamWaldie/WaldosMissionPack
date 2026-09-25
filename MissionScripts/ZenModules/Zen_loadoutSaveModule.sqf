@@ -47,8 +47,12 @@ if (!isNull _objectPos) then {
     clearMagazineCargoGlobal _target;
     clearItemCargoGlobal _target;
     clearBackpackCargoGlobal _target;
-    [_target, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
-    [_target, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+    // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+    // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+    [{
+        [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+        _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+    }, [_target, "CARGO"]] call CBA_fnc_execNextFrame;
 
     [_target, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
 };

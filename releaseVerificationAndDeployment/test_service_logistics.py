@@ -218,7 +218,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         transfer = source('MissionScripts/Logistics/SupplyTransfers/supplyTransfersRegister.sqf')
         self.assertIn('[_container] call Waldo_fnc_CargoAttributesPrepareObject', transfer)
         purchase = source('MissionScripts/EconomySystems/Buy/executePurchase.sqf')
-        self.assertIn('[_spawned, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned', purchase)
+        self.assertIn('[{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_spawned, "CARGO"]] call CBA_fnc_execNextFrame', purchase)
         resource = source('MissionScripts/EconomySystems/Resource/spawnResourceCrate.sqf')
         self.assertIn('[_crate] call Waldo_fnc_CargoAttributesPrepareObject', resource)
 
@@ -285,14 +285,40 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             ('MissionScripts/ZenModules/Zen_loadoutSaveModule.sqf', '_target'),
             ('MissionScripts/ZenModules/RuntimeControl/featureRuntimeApply.sqf', '_hub'),
         ):
-            self.assertIn(f'[{object_name}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'
+            # Remote-executed callers finish cargo setup from CBA's next frame, where the
+            # object is passed as _this select 0 (see test_registration_leaves_remote_context).
+            deferred = path.endswith(('LogiBoxes.sqf', 'ZenSpawnCrateServer.sqf',
+                                      'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
+            target = '_this select 0' if deferred else object_name
+            self.assertIn(f'[{target}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'
                           if path.endswith(('ZenSpawnCrateServer.sqf',
                                             'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
-                          else f'[{object_name}, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes',
+                          else f'[{target}, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes',
                           source(path), path)
         starter = source('MissionScripts/Logistics/Crates/doStarterCrate.sqf')
         self.assertLess(starter.index('[_target, nil, -1, false, false] call Waldo_fnc_SetCargoAttributes'),
                         starter.index('waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE"'))
+
+    def test_registration_leaves_remote_context(self):
+        # A child spawned from a client's remoteExec request keeps isRemoteExecuted, which
+        # LogisticsRegisterSpawned and SetCargoAttributes reject. Every caller must hand off
+        # through CBA's server-local next frame, otherwise non-crate QM issues (wheels, tracks)
+        # never become physical-cargo eligible on a dedicated server.
+        import pathlib, re
+        root = pathlib.Path(__file__).resolve().parent.parent / 'MissionScripts'
+        callers = []
+        for path in root.rglob('*.sqf'):
+            text = path.read_text(encoding='utf-8', errors='replace')
+            if 'Waldo_fnc_LogisticsRegisterSpawned' not in text or path.name == 'logisticsRegisterSpawned.sqf':
+                continue
+            callers.append(path.name)
+            self.assertIsNone(re.search(r'\]\s*spawn\s+Waldo_fnc_LogisticsRegisterSpawned', text), path.name)
+            self.assertIn('_this spawn Waldo_fnc_LogisticsRegisterSpawned', text, path.name)
+            self.assertIn('call CBA_fnc_execNextFrame', text, path.name)
+        self.assertIn('LogiBoxes.sqf', callers)
+        logi = source('MissionScripts/Logistics/Crates/LogiBoxes.sqf')
+        self.assertLess(logi.index('call Waldo_fnc_SetCargoAttributes'),
+                        logi.index('_this spawn Waldo_fnc_LogisticsRegisterSpawned'))
 
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")

@@ -58,7 +58,9 @@
         _spawned setDir _dir;
         _spawned setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
         if (_spawned isKindOf "ReammoBox_F") then {
-            [_spawned, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+            // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+            // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+            [{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_spawned, "CARGO"]] call CBA_fnc_execNextFrame;
         };
 
         [[_spawned], true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;

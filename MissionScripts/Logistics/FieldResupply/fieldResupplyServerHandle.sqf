@@ -134,7 +134,9 @@ switch (toUpperANSI _operation) do {
         private _includeGear = missionNamespace getVariable ["Waldo_FieldResupply_IncludeWeaponsAttachments", false];
         private _includeLaunchers = missionNamespace getVariable ["Waldo_FieldResupply_IncludeLaunchers", false];
         [_crate, _sizeScalar, _carrierSide, _includeGear, _includeLaunchers] call Waldo_fnc_SupplyCratePopulate;
-        [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+        // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+        // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+        [{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_crate, "SUPPLY"]] call CBA_fnc_execNextFrame;
         _crate setVariable ["Waldo_FieldResupply_Deployed", true, true];
         // Server-only - only this same handler's own SALVAGE case ever reads it back, so it does not
         // need to be broadcast.
