@@ -121,6 +121,8 @@ FEATURE_GUIDES = {
     "UI-Visual-Themes",
     "Aircraft-Boarding-Actions",
     "Teleport-Actions",
+    "AI-Convoy-System",
+    "Automatic-ACE-Fortify-Setup",
 }
 
 GUIDE_SECTIONS = {

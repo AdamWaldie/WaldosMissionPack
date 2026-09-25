@@ -4,44 +4,49 @@
 
 _Associated Files: MissionScripts\AiScripting\simpleAiConvoy.sqf_
 
-A convoy controller for AI vehicle groups. It keeps vehicles in column formation, enforces convoy spacing, and forces stalled vehicles to follow the convoy leader. Optionally prevents AI from dismounting on contact, keeping the convoy moving through enemy fire.
+This helper runs a five-second control loop for one AI vehicle group. It puts the group in column formation, sets speed and spacing, and tells a stalled follower to follow the leader again. The optional push-through mode stops the group unloading on contact.
 
 ## Features
 
 - Maintains column formation with configurable vehicle spacing
 - Caps convoy speed so all vehicles move together
-- Detects stalled vehicles every 5 seconds and orders them back into formation
-- Optional `pushThrough` mode prevents AI from halting and dismounting on contact — units return fire while continuing to move
+- Checks stalled followers every 5 seconds and orders them back into formation
+- Optional `pushThrough` mode stops the group unloading on contact
 
 ## Setup
 
-Call the function from a trigger, script, or a waypoint **On Activation** field. Store the return handle so you can terminate the script at the end of the route.
+Run this once on the server. Give `convoyGroup` an Eden variable name, and create a route for the group. In a trigger or waypoint **On Activation** field, guard the call so each machine does not start its own control loop. Store the script handle for cleanup at the end of the route.
 
 ```sqf
-// Basic call — 30 km/h, 15 m spacing, pushThrough enabled
-convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
+if (isServer) then {
+    convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
+};
 
-// Full parameters
-convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
+// Server script with explicit values
+convoyScript = [convoyGroup, 30, 15, true] spawn Waldo_fnc_SimpleAiConvoy;
 ```
 
 ## Parameters
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `convoyGroup` | GROUP | — | The group to run as a convoy (required) |
-| `convoySpeed` | NUMBER | 30 | Maximum convoy speed in km/h |
-| `convoySeparation` | NUMBER | 15 | Target separation between vehicles in metres |
-| `pushThrough` | BOOL | true | When true, AI push through contact without dismounting |
+| `convoyGroup` | Group | Required | The AI vehicle group to run as a convoy. |
+| `convoySpeed` | Number | `30` | Leader speed cap in km/h; follower cap is 15% higher. |
+| `convoySeparation` | Number | `15` | Target spacing between vehicles in metres. |
+| `pushThrough` | Boolean | `true` | Disables group attack orders and unloading in combat while the worker runs. |
+
+`spawn` returns a Script handle. The helper does not register a persistent WMP service or replay a worker for joining players. It pins crew groups against automatic headless reassignment, but the control loop still needs to run on the server while it owns the group.
 
 ## Ending the Script
 
-In the group's **final waypoint On Activation** field, paste the following to terminate the convoy script and restore normal AI behaviour:
+In the group's **final waypoint On Activation** field, terminate the same handle and restore the AI settings that push-through mode changed:
 
 ```sqf
-terminate convoyScript;
-{ (vehicle _x) limitSpeed 5000; (vehicle _x) setUnloadInCombat [true, false] } forEach (units convoyGroup);
-convoyGroup enableAttack true;
+if (isServer) then {
+    terminate convoyScript;
+    { (vehicle _x) limitSpeed 5000; (vehicle _x) setUnloadInCombat [true, false] } forEach (units convoyGroup);
+    convoyGroup enableAttack true;
+};
 ```
 
 ## Multiple Convoys
@@ -57,10 +62,9 @@ Terminate each handle independently at their respective final waypoints.
 
 ## Notes
 
-- Must be called with `spawn` — the script loops continuously and will block execution if called with `call`
-- `pushThrough` disables `enableAttack` on the group and prevents unloading in combat; always restore this via the termination block above
-- Works with any mix of vehicle types in the group
-- The script handles one group per call — for multiple convoys, call it once per group
+- Use `spawn` because the loop sleeps. A direct `call` in unscheduled code cannot run it correctly.
+- The helper has no duplicate guard. Start one worker per group and terminate it when the route ends.
+- The cleanup example uses `limitSpeed 5000` and `[true, false]` for unloading. If your mission had different values before convoy setup, restore those values instead.
 
 ## If the convoy stops or splits
 
