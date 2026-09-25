@@ -9,6 +9,7 @@
  * Return value: BOOL - true when installed/already present, false for no interface or bad vehicle.
  * Current caller: Waldo_fnc_AddVehicleFunctions during client vehicle setup.
  * Example: [_vehicle] call Waldo_fnc_SetupVehicleUprightLocal;
+ * Result: this interface shows Set Vehicle Upright on the valid tipped vehicle.
  */
 params [["_vehicle", objNull, [objNull]]];
 if (!hasInterface || {isNull _vehicle} || {!(_vehicle isKindOf "LandVehicle")}) exitWith {false};

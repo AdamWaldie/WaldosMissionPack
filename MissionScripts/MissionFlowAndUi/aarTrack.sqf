@@ -23,6 +23,7 @@
  *
  * Example:
  * [] call Waldo_fnc_AARTrack;
+ * Result: the server begins a single AAR ledger and includes its counters in later ENDEX payloads.
  * Current callers: mission-maker server setup, the full-pack audit, and ENDEX's AAR workflow.
  */
 

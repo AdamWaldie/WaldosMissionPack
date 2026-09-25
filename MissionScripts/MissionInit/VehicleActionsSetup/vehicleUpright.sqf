@@ -12,6 +12,7 @@
  * Return value: BOOL - true after local movement or a server forward; false if rejected.
  * Current callers: the local Set Vehicle Upright action and server mission scripts.
  * Example: [_vehicle] call Waldo_fnc_VehicleUpright; // in initServer.sqf or server script
+ * Result: a validated land vehicle is set upright by its current owner.
  */
 params [
     ["_vehicle", objNull, [objNull]],

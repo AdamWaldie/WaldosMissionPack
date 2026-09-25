@@ -9,6 +9,7 @@
  * Return Value: HASHMAP - normalized diagnostic feature report.
  * Current callers: Waldo_fnc_RunDiagnostics and mission-maker diagnostic scripts.
  * Example: private _report = [] call Waldo_fnc_ENDEXGetDiagnostics;
+ * Result: _report contains the current ENDEX and AAR diagnostic checks on this machine.
  */
 private _active = missionNamespace getVariable ["Waldo_ENDEX_Active", false];
 private _aar = missionNamespace getVariable ["Waldo_AAR_Initialised", false];

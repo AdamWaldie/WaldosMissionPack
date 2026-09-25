@@ -13,6 +13,7 @@
  * Return value: Nothing useful; the script completes after the timer.
  * Current callers: EMP/tracker compatibility feedback and mission-maker scripts.
  * Example: ["Rendezvous respawn activated", 10] spawn Waldo_fnc_TimedHint;
+ * Result: the local hint appears for up to 10 seconds, then clears unless replaced earlier.
  */
 params ["_hintContents", ["_hintTimer", 10], ["_owner", "", [""]]];
 

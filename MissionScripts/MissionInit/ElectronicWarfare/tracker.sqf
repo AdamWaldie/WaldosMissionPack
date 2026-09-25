@@ -8,6 +8,8 @@
  * Repeat/JIP behaviour: registry publication remains JIP-persistent. One guarded prune worker runs
  * only while at least one tracker exists, stops after publishing the final removal, and is lazily
  * restarted by the next Tracker call.
+ * Locality/authority: the server owns tracker IDs and registry changes. Client calls forward to it;
+ * interface clients draw only the markers visible to their side.
  *
  * Arguments:
  * 0: Target <OBJECT> - the unit or vehicle to track

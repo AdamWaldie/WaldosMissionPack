@@ -57,6 +57,8 @@ Displays a live hint showing the damage percentage of every hit-point on a targe
 3. Open the debug console, paste the script, and click **Local Execute**.
 4. A continuously updating hint appears until the vehicle is destroyed.
 
+As shipped, this helper calls `terminate real_vicwatch` before creating its next watcher. On the first run, `real_vicwatch` may be undefined and produce a script error. It is a debugging aid, not a dependable mission feature. Check the local `.rpt` if it does not start.
+
 ## Example Unhiding Script
 
 **File:** `ExampleUnhidingScript.sqf`

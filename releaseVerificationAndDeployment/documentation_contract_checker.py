@@ -12,13 +12,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_REQUIRED = (
     "Author:",
-    "Locality and authority:",
     "Arguments:",
     "Return Value:",
     "Example:",
     "Result:",
-    "Current caller",
 )
+SCRIPT_LOCALITY = re.compile(r"\bLocality\s*(?:and\s+authority|/\s*authority)(?:\s+and\s+repeat/JIP)?\s*:", re.I)
+SCRIPT_CALLERS = re.compile(r"\b(?:Current\s+callers?|Called\s+by)\s*:", re.I)
 CONFIG_REQUIRED = (
     "Author:",
     "Arguments:",
@@ -66,6 +66,11 @@ def changed_sqf(base: str) -> list[Path]:
 def audit_file(path: Path, required: tuple[str, ...]) -> list[str]:
     text = path.read_text(encoding="utf-8", errors="replace")
     findings = [f"missing `{field}`" for field in required if field.lower() not in text.lower()]
+    if required is SCRIPT_REQUIRED:
+        if not SCRIPT_LOCALITY.search(text):
+            findings.append("missing locality/authority")
+        if not SCRIPT_CALLERS.search(text):
+            findings.append("missing current callers")
     author = re.search(r"^\s*\*\s*Author:\s*(.+?)\s*$", text, re.I | re.M)
     if author is None or not author.group(1).strip():
         findings.append("missing a named human author")
