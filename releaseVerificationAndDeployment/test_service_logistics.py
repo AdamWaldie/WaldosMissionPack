@@ -327,6 +327,17 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertLess(logi.index('call Waldo_fnc_SetCargoAttributes'),
                         logi.index('_this spawn Waldo_fnc_LogisticsRegisterSpawned'))
 
+    def test_3d_marker_joiner_forwards_do_not_rebroadcast_or_restore(self):
+        # Eden Init fields run again on every JIP client and forward the same create call.
+        create = source('MissionScripts/MissionFlowAndUi/create3DMarker.sqf')
+        remove = source('MissionScripts/MissionFlowAndUi/remove3DMarker.sqf')
+        self.assertIn('[_id, _anchor, _options, true] remoteExecCall ["Waldo_fnc_Create3DMarker", 2];', create)
+        self.assertIn('if (_forwarded && {_id in _removed}) exitWith', create)
+        self.assertIn('if (_index >= 0 && {(_registry select _index) isEqualTo _row}) exitWith {_id};', create)
+        self.assertLess(create.index('isEqualTo _row}) exitWith'),
+                        create.index('remoteExecCall ["Waldo_fnc_Marker3DApplyDeltaLocal", -2]'))
+        self.assertIn('{_tombstones set [_x, true]} forEach _removedIds;', remove)
+
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
         load = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetAceLoadServer.sqf")

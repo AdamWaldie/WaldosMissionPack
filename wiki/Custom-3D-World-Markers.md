@@ -39,6 +39,13 @@ The anchor can be an object or an ATL position. Calling the function again with
 the same ID updates the existing marker in place. Calls made on clients are forwarded to
 the server automatically.
 
+The call is safe in an object's Eden Init field without an `isServer` wrapper. Arma runs that
+field again on every player who joins, and each joiner forwards the same call. The server ignores
+a forwarded call that would not change the marker, so joiners cause no extra network traffic. It
+also ignores a forwarded call for a marker that was removed with **Remove Custom 3D Marker** or
+`Waldo_fnc_Remove3DMarker`, so a deleted marker stays deleted when players join. To bring a removed
+marker back, call `Waldo_fnc_Create3DMarker` again on the server.
+
 ## Network and JIP behaviour
 
 The server keeps the authoritative registry and a monotonically increasing revision. It sends only

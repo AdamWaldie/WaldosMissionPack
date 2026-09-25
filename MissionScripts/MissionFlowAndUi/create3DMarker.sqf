@@ -10,6 +10,10 @@
  * registry, sends one-row revisioned deltas to current clients, and answers an explicit full-state
  * request from each joining client. Reusing an ID updates its existing marker instead of
  * duplicating it; missed or out-of-order deltas trigger a fresh snapshot request.
+ * An Eden Init field runs again on every joining client and forwards the same call. The server
+ * therefore ignores a forwarded call that would not change an existing marker, and one for an ID
+ * already removed with Waldo_fnc_Remove3DMarker, so joiners neither rebroadcast nor restore
+ * markers. A server-side call (Eden Init on the server, scripts, ZEN) always applies.
  *
  * Arguments:
  * 0: stable marker ID <STRING> (default auto-generated)
@@ -17,6 +21,8 @@
  * 2: named options <HASHMAP or ARRAY of [key,value]> (default [])
  *    Common keys: text, icon, colour RGBA, offset, width, height, angle, shadow, textSize,
  *    font, align, sideArrows, distance, sides and enabled.
+ * 3: forwarded from a client <BOOL> (default false) - set only by this function's own client
+ *    forward; callers never pass it.
  *
  * Return Value: String - marker ID, or an empty string when rejected.
  * Current callers: scripts/compositions and the Create Custom 3D Marker ZEN server bridge.
@@ -31,11 +37,12 @@
 params [
     ["_id", "", [""]],
     ["_anchor", [0, 0, 0], [objNull, []]],
-    ["_options", [], [[], createHashMap]]
+    ["_options", [], [[], createHashMap]],
+    ["_forwarded", false, [false]]
 ];
 if (_id isEqualTo "") then {_id = format ["WMP3D_%1_%2", clientOwner, floor (diag_tickTime * 1000)];};
 if (!isServer) exitWith {
-    [_id, _anchor, _options] remoteExecCall ["Waldo_fnc_Create3DMarker", 2];
+    [_id, _anchor, _options, true] remoteExecCall ["Waldo_fnc_Create3DMarker", 2];
     _id
 };
 if (_anchor isEqualType objNull && {isNull _anchor}) exitWith {""};
@@ -73,6 +80,13 @@ private _row = [
 ];
 private _registry = +(missionNamespace getVariable ["Waldo_3DMarker_Registry", []]);
 private _index = _registry findIf {(_x param [0, ""]) isEqualTo _id};
+private _removed = missionNamespace getVariable ["Waldo_3DMarker_RemovedIds", createHashMap];
+if (_forwarded && {_id in _removed}) exitWith {
+    diag_log format ["[WMP 3D MARKER] Ignored forwarded create for removed id=%1 owner=%2.", _id, remoteExecutedOwner];
+    ""
+};
+if (_index >= 0 && {(_registry select _index) isEqualTo _row}) exitWith {_id};
+_removed deleteAt _id;
 if (_index < 0) then {_registry pushBack _row;} else {_registry set [_index, _row];};
 missionNamespace setVariable ["Waldo_3DMarker_Registry", _registry];
 private _revision = (missionNamespace getVariable ["Waldo_3DMarker_Revision", 0]) + 1;
