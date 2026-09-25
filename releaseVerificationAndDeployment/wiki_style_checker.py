@@ -46,6 +46,7 @@ TYPED_GUIDES = {
     "EMP-Burst", "Signal-Trackers", "Vehicle-Recovery", "WMP-HUD",
     "Loadout-Saving-and-Respawn",
     "Safestart", "Transport-Services", "Improved-AI-Helicopter-Landings",
+    "Dynamic-Anti-Air", "Dynamic-AO-Generation", "Paradrop", "Custom-3D-World-Markers",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),

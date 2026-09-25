@@ -11,15 +11,25 @@
  * replaces the old AO safely.
  *
  * Locality and authority:
- * Server-owned creation, AI/marker registry and cleanup. Curator client requests route to the server;
+ * Server-owned creation, AI/marker registry and cleanup. An explicit curator requester routes a
+ * client call to the server; an Eden object-init call without one does no client-side work.
  * AI commands run where their groups are local and compact published state supplies JIP clients.
+ * Reusing an id replaces its old AO. JIP receives the published AO summary, not a rerun of creation.
  *
  * Arguments:
- * 0: config <HASHMAP> - see Wiki/Dynamic-AO-Generation.md for every supported key
- * 1: requester <OBJECT> - optional curator player used for authorization and feedback
+ * 0: config <HASHMAP> (default empty) - required: id <STRING>, center/centre <POSITION ARRAY>,
+ *    faction <STRING>; optional: side <SIDE, east>, radius <NUMBER, 500>, patrolGroups <NUMBER, 3>,
+ *    garrisonGroups <NUMBER, 3>, staticTurrets/vehiclePatrols/airPatrols <NUMBER, 0>,
+ *    vehicleMix <ARRAY OF 3 NUMBERS, [34,33,33]>, airMix <ARRAY OF 4 NUMBERS, [25,25,25,25]>,
+ *    heliPatrolRange <NUMBER, 1000>, planePatrolRange <NUMBER, 2000>, simplePathing <BOOLEAN, false>,
+ *    civilianFaction <STRING, empty>, civilianPatrols/civilianGarrisons/civilianCars <NUMBER, 0>,
+ *    minefields/roadblocks <NUMBER, 0>, showMineMarkers <BOOLEAN, false>,
+ *    displayName <STRING, id>, showMarker <BOOLEAN, true>. See wiki for limits and meaning.
+ * 1: requester <OBJECT> (default objNull) - curator player for authorization and feedback
  *
  * Return Value:
- * Boolean - true when the AO was accepted and registered
+ * Boolean - on server, true when accepted and registered; false on validation failure. On a client,
+ * true means the request was forwarded, or that an init-field copy was skipped, not AO creation.
  *
  * Current callers: server mission scripts, Waldo_fnc_DynamicAOZen and the full-pack audit station.
  * Eden init fields run on every machine: a non-server copy without an explicit curator requester

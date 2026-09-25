@@ -18,7 +18,7 @@ The modules are registered only when Zeus Enhanced is available. The script API 
 
 ## Scripted creation
 
-Call the generator on the server. A non-server call is forwarded to the server, but remote player requests are accepted only from an assigned curator.
+Call the generator on the server. An ordinary Eden Init field runs on several machines; only its server copy creates the AO. A client script must supply the requesting curator player as the second argument to forward a live request. A client call without that player quietly returns without creating an AO.
 
 Unlike most other keys, **`faction` has no default and is genuinely required** alongside `id` and
 `center` — omitting it makes the whole call silently do nothing (no error, no spawned assets). The
@@ -54,34 +54,44 @@ Cleanup is repeat-safe:
 ["AO_NORTH", 0] call Waldo_fnc_DynamicAODestroyMinefield;
 ```
 
+| Public call | Position | Type | Default | Result |
+| --- | --- | --- | --- | --- |
+| `Waldo_fnc_DynamicAOCreate` | `0: config` | HashMap | Empty HashMap, rejected | Requires the `id`, `center` and `faction` entries below. Server returns `true` after accepting and registering the AO, `false` after rejection. |
+| `Waldo_fnc_DynamicAOCreate` | `1: requester` | Player Object | `objNull` | Leave out for a server script or Eden Init. A remote curator supplies their player object so the server can verify authority and send feedback. |
+| `Waldo_fnc_DynamicAODestroy` | `0: AO ID` | String | `""`, rejected | Server returns `true` when it removes a registered AO, `false` if absent. |
+| `Waldo_fnc_DynamicAODestroyMinefield` | `0: AO ID` | String | `""`, rejected | Identifies the AO whose one minefield should be removed. |
+| `Waldo_fnc_DynamicAODestroyMinefield` | `1: field index` | Number, zero-based whole index | `-1`, rejected | Server returns `true` for a live field removed, `false` if absent or already removed. Index 0 is the first generated field. |
+
+Both destroy calls forward client requests and immediately return `true` there; that is a sent request, not a server success result. Their current callers are mission scripts, ZEN removal and generated deletion anchors. For creation, a non-server call also returns `true` before server work, so check the server RPT or published AO state when confirmation matters. The server validates the faction, side and bounds before it changes the world.
+
 ## Configuration reference
 
-| Key | Default | Bounds or meaning |
-|---|---:|---|
-| `id` | required | Stable letters/numbers/underscore/hyphen key; recreating the same id safely replaces the old AO |
-| `center` | required | ATL centre position |
-| `side` | `east` | `west`, `east`, `independent` or `civilian`; must match the faction configuration |
-| `faction` | required | Runtime `CfgFactionClasses` classname containing public assets |
-| `radius` | `500` | 100–2000 m |
-| `patrolGroups` | `3` | 0–12; four to eight infantry per group |
-| `garrisonGroups` | `3` | 0–30; two to four infantry per building, capped by usable buildings |
-| `staticTurrets` | `0` | 0–20 manned faction static weapons |
-| `vehiclePatrols` | `0` | 0–10 |
-| `vehicleMix` | `[34,33,33]` | Car/APC/tank relative weights |
-| `airPatrols` | `0` | 0–8 |
-| `airMix` | `[25,25,25,25]` | Helicopter/jet/drone/plane relative weights |
-| `heliPatrolRange` | `1000` | 200–3000 m |
-| `planePatrolRange` | `2000` | 200–4000 m |
-| `simplePathing` | `false` | Two movement points plus cycle instead of four randomized points |
-| `civilianFaction` | empty | Civilian faction classname; empty disables civilian generation |
-| `civilianPatrols` | `0` | 0–50 individual wandering civilians |
-| `civilianGarrisons` | `0` | 0–50 individual building civilians |
-| `civilianCars` | `0` | 0–30 empty parked cars |
-| `minefields` | `0` | 0–15 outer-ring mine clusters |
-| `showMineMarkers` | `false` | Global red border around each field |
-| `roadblocks` | `0` | 0–12 manned checkpoints on roads inside the AO |
-| `displayName` | `id` | Human-readable AO name used by the centre marker and ZEN removal list |
-| `showMarker` | script default `true`; Zeus default off | Global side-coloured border and the configured `displayName` centre marker. Enable **Show AO marker** in Zeus when the AO should be public. |
+| Key | Type | Default | Bounds or meaning |
+|---|---|---:|---|
+| `id` | String | required | Stable letters/numbers/underscore/hyphen key; recreating the same id safely replaces the old AO |
+| `center` | Position array `[x, y, z]` | required | ATL centre position in metres; `centre` is also accepted |
+| `side` | Side | `east` | `west`, `east`, `independent` or `civilian`; must match the faction configuration |
+| `faction` | String (`CfgFactionClasses` classname) | required | Runtime faction containing public assets |
+| `radius` | Number (metres) | `500` | 100–2000 m |
+| `patrolGroups` | Number (whole) | `3` | 0–12; four to eight infantry per group |
+| `garrisonGroups` | Number (whole) | `3` | 0–30; two to four infantry per building, capped by usable buildings |
+| `staticTurrets` | Number (whole) | `0` | 0–20 manned faction static weapons |
+| `vehiclePatrols` | Number (whole) | `0` | 0–10 |
+| `vehicleMix` | Array of 3 numbers | `[34,33,33]` | Car/APC/tank relative weights |
+| `airPatrols` | Number (whole) | `0` | 0–8 |
+| `airMix` | Array of 4 numbers | `[25,25,25,25]` | Helicopter/jet/drone/plane relative weights |
+| `heliPatrolRange` | Number (metres) | `1000` | 200–3000 m |
+| `planePatrolRange` | Number (metres) | `2000` | 200–4000 m |
+| `simplePathing` | Boolean | `false` | Two movement points plus cycle instead of four randomized points |
+| `civilianFaction` | String (`CfgFactionClasses` classname) | empty | Empty disables civilian generation |
+| `civilianPatrols` | Number (whole) | `0` | 0–50 individual wandering civilians |
+| `civilianGarrisons` | Number (whole) | `0` | 0–50 individual building civilians |
+| `civilianCars` | Number (whole) | `0` | 0–30 empty parked cars |
+| `minefields` | Number (whole) | `0` | 0–15 outer-ring mine clusters |
+| `showMineMarkers` | Boolean | `false` | Global red border around each field |
+| `roadblocks` | Number (whole) | `0` | 0–12 manned checkpoints on roads inside the AO |
+| `displayName` | String | `id` | Human-readable AO name used by the centre marker and ZEN removal list |
+| `showMarker` | Boolean | script default `true`; Zeus default off | Global side-coloured border and the configured `displayName` centre marker. Enable **Show AO marker** in Zeus when the AO should be public. |
 
 ## Runtime discovery and classification
 

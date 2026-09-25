@@ -92,62 +92,66 @@ private _aa = createHashMapFromArray [
 [_aa] call Waldo_fnc_DynamicAACreate;
 ```
 
-Run scripted creation on the server. Reusing an ID safely replaces that system. Remove it with:
+Run scripted creation on the server. `Waldo_fnc_DynamicAACreate` takes one required **HashMap** at position 0. The table below gives each key's type and default. The `id` is a stable WMP registry string, and `centre` is a position array such as `getMarkerPos "aa_zone_north"`. A marker's name alone is a String and cannot serve as the centre. Reusing an ID replaces that system after validation. The server returns `true` when creation is accepted or queued until mission initialization, and `false` when validation fails. Eden object Init fields run on multiple machines, so their non-server calls return `true` without creating a duplicate; check the server result or RPT for acceptance. ZEN creation reaches the same server path and checks curator authority.
+
+Remove it with:
 
 ```sqf
 ["north_sector", true] call Waldo_fnc_DynamicAADestroy;
 ```
 
+`Waldo_fnc_DynamicAADestroy` takes position 0, the system ID **String** (required), and position 1, a **Boolean** `deleteAssets` (default `true`). `true` removes the registry and spawned assets. `false` leaves the assets visibly disabled and unable to fire. The optional third Object is an internal radar-procedure proof; mission scripts should omit it. The server returns `true` if the ID existed and `false` otherwise. A client forwards the request and immediately returns `true`, before server authorization or lookup has finished. The ZEN removal module and the radar shutdown procedure also call this function.
+
 ## Configuration keys
 
-| Key | Default | Purpose |
-|---|---:|---|
-| `id` | required | Unique stable system ID |
-| `displayName` | system ID | Human-readable marker and Zeus-removal name. It may contain spaces and common punctuation without changing the internal ID. |
-| `centre` | required | Detection centre |
-| `radarPosition` / `radarPositions` | generated | Optional authored radar position(s). When omitted, `radarCount` creates a server-generated layout around the centre. |
-| `radarCount` | `1` | Number of server-placed radar objects when authored radar positions are omitted |
-| `side` | `east` | `west`, `east`, or `independent` |
-| `faction` | `""` | Optional content-profile key in `Waldo_DynamicAA_FactionAssetPools`; independent of `side` |
-| `radius` | `2000` | Horizontal detection radius in metres; altitude does not shrink this map circle |
-| `minimumAltitude` | `60` | Inclusive detection/engagement altitude floor in metres |
-| `maximumAltitude` | configured pack maximum | Inclusive detection/engagement altitude ceiling in metres |
-| `altitudeMode` | `AUTO` | `AUTO`, `ATL`, or `ASL` |
-| `engagementRadius` | detection radius | Horizontal firing radius. It is clamped to the detection radius and may be smaller. |
-| `detectionDwell` | `0` | Continuous detection time before activation |
-| `clearDelay` | `5` | Seconds of detection-state grace. The firing gate still closes immediately when no aircraft remains engagement-eligible. |
-| `requiredOperationalRadars` | `1` | Number of surviving radars required to remain online |
-| `maximumOperationalRadarDamage` | `0.8` | Radar damage at or above this fraction takes the whole system offline |
-| `radarOperationalCondition` | `{}` | Optional server callback receiving `[radar, state, config]`; return false to model power, repairs or objective-specific disable states |
-| `radarClasses` | side/faction pool | Candidate central-radar classes; one is selected per radar position |
-| `staticSitePools` | side/faction pool | Candidate site templates; one template is selected independently for each static position |
-| `mobileClasses` | side/faction pool | Candidate mobile-AA classes; one is selected per position |
-| `fighterClasses` | side/faction pool | Candidate fighter classes; one is selected per scrambled aircraft |
-| `radarAssignments`, `staticAssignments`, `mobileAssignments`, `fighterAssignments` | unset | Exact per-slot arrays used by ZEN. Lengths must match radar positions, static positions, mobile positions and fighter count. Entries may repeat or mix freely. |
-| `radarClass`, `staticClass`, `mobileClass`, `fighterClass` | unset | Convenient scripted whole-system overrides; `staticClass` creates one selected weapon at each static position |
-| `staticClasses` | unset | Exact integrated-site template override when one static position should create several components |
-| `assetPool` | unset | Per-system Dynamic AA pool overrides |
-| `staticSiteSpacing` | `30` | Requested minimum metres between a static-site anchor and each component. Generated layouts automatically increase it when the selected classes need more physical clearance. |
-| `staticPositions` | generated | Optional authored static-site positions; when omitted, `staticCount` positions are generated on the server |
-| `staticCount` | `0` | Number of automatically placed static sites when authored positions are omitted |
-| `mobilePositions` | generated | Optional authored mobile-AA positions; when omitted, `mobileCount` positions are generated on the server |
-| `mobileCount` | `0` | Number of automatically placed mobile systems when authored positions are omitted |
-| `fighterCount` | `0` | Fighters per scramble wave |
-| `fighterMaximumWaves` | `1` | Maximum waves per system; use a negative value for unlimited |
-| `fighterCooldown` | `300` | Minimum seconds between fighter waves |
-| `fighterSpawnRangeMultiplier` | `2` | Spawn distance as a radius multiplier |
-| `initialAmmoFraction` | `1` | Starting ammunition fraction for spawned defence systems |
-| `rearmOnActivation` | `false` | Restore configured ammunition when a dormant system activates |
-| `detectionInterval` | `1` | Detector interval, minimum `0.25` seconds |
-| `detectionFilter` | `{true}` | Optional server callback returning a Boolean for whether a candidate aircraft is detectable |
-| `onStateChanged` | `{}` | Optional server callback for detected/engaged transitions |
-| `createMarkers` | `true` | Create the area and centre markers. This is independent of the label-detail setting below. |
-| `showMarkerDetails` | `true` | When markers exist, include detection range, floor and ceiling in the centre-marker label. Turn this off to leave only the system name without hiding the markers. |
-| `cleanupOnRadarLoss` | `false` | Delete assets instead of leaving them disabled |
-| `announce` | `true` | Send WMP detection/clear notifications to connected players on the operational AA side. No empty-audience remote call is made. |
-| `shutdownInteraction` | `false` | Attach an optional player procedure to the central radar. Existing systems retain ordinary destroy-to-disable behaviour by default. |
-| `shutdownChallenge` | `"circuit"` | Shared interaction procedure used for radar shutdown. Zeus offers every built-in WMP procedure plus registered custom procedures. |
-| `shutdownDifficulty` | `"standard"` | Shared `easy`, `standard`, `hard` or `expert` difficulty profile. |
+| Key | Type | Default | Purpose |
+|---|---|---:|---|
+| `id` | String | required | Unique stable system ID |
+| `displayName` | String | system ID | Human-readable marker and Zeus-removal name. It may contain spaces and common punctuation without changing the internal ID. |
+| `centre` | Position array `[x, y, z]`, metres | required | Detection centre |
+| `radarPosition` / `radarPositions` | Position array or array of position arrays | generated | Optional authored radar position(s). When omitted, `radarCount` creates a server-generated layout around the centre. |
+| `radarCount` | Number, whole objects | `1` | Number of server-placed radar objects when authored radar positions are omitted |
+| `side` | Side | `east` | `west`, `east`, or `independent` |
+| `faction` | String | `""` | Optional content-profile key in `Waldo_DynamicAA_FactionAssetPools`; independent of `side` |
+| `radius` | Number, metres | `2000` | Horizontal detection radius in metres; altitude does not shrink this map circle |
+| `minimumAltitude` | Number, metres | `60` | Inclusive detection/engagement altitude floor in metres |
+| `maximumAltitude` | Number, metres | configured pack maximum | Inclusive detection/engagement altitude ceiling in metres |
+| `altitudeMode` | String: `AUTO`, `ATL` or `ASL` | `AUTO` | `AUTO`, `ATL`, or `ASL` |
+| `engagementRadius` | Number, metres | detection radius | Horizontal firing radius. It is clamped to the detection radius and may be smaller. |
+| `detectionDwell` | Number, seconds | `0` | Continuous detection time before activation |
+| `clearDelay` | Number, seconds | `5` | Seconds of detection-state grace. The firing gate still closes immediately when no aircraft remains engagement-eligible. |
+| `requiredOperationalRadars` | Number, whole objects | `1` | Number of surviving radars required to remain online |
+| `maximumOperationalRadarDamage` | Number, fraction 0–1 | `0.8` | Radar damage at or above this fraction takes the whole system offline |
+| `radarOperationalCondition` | Code callback | `{}` | Optional server callback receiving `[radar, state, config]`; return false to model power, repairs or objective-specific disable states |
+| `radarClasses` | Array of CfgVehicles classname strings | side/faction pool | Candidate central-radar classes; one is selected per radar position |
+| `staticSitePools` | Array of site-template definitions | side/faction pool | Candidate site templates; one template is selected independently for each static position |
+| `mobileClasses` | Array of CfgVehicles classname strings | side/faction pool | Candidate mobile-AA classes; one is selected per position |
+| `fighterClasses` | Array of CfgVehicles classname strings | side/faction pool | Candidate fighter classes; one is selected per scrambled aircraft |
+| `radarAssignments`, `staticAssignments`, `mobileAssignments`, `fighterAssignments` | Four arrays of CfgVehicles classname strings | unset | Exact per-slot arrays used by ZEN. Lengths must match radar positions, static positions, mobile positions and fighter count. Entries may repeat or mix freely. |
+| `radarClass`, `staticClass`, `mobileClass`, `fighterClass` | Four CfgVehicles classname strings | unset | Convenient scripted whole-system overrides; `staticClass` creates one selected weapon at each static position |
+| `staticClasses` | Array of CfgVehicles classname strings | unset | Exact integrated-site template override when one static position should create several components |
+| `assetPool` | HashMap of asset categories | unset | Per-system Dynamic AA pool overrides |
+| `staticSiteSpacing` | Number, metres | `30` | Requested minimum metres between a static-site anchor and each component. Generated layouts automatically increase it when the selected classes need more physical clearance. |
+| `staticPositions` | Array of position arrays | generated | Optional authored static-site positions; when omitted, `staticCount` positions are generated on the server |
+| `staticCount` | Number, whole sites | `0` | Number of automatically placed static sites when authored positions are omitted |
+| `mobilePositions` | Array of position arrays | generated | Optional authored mobile-AA positions; when omitted, `mobileCount` positions are generated on the server |
+| `mobileCount` | Number, whole vehicles | `0` | Number of automatically placed mobile systems when authored positions are omitted |
+| `fighterCount` | Number, whole aircraft | `0` | Fighters per scramble wave |
+| `fighterMaximumWaves` | Number, whole waves | `1` | Maximum waves per system; use a negative value for unlimited |
+| `fighterCooldown` | Number, seconds | `300` | Minimum seconds between fighter waves |
+| `fighterSpawnRangeMultiplier` | Number, radius multiplier | `2` | Spawn distance as a radius multiplier |
+| `initialAmmoFraction` | Number, fraction 0–1 | `1` | Starting ammunition fraction for spawned defence systems |
+| `rearmOnActivation` | Boolean | `false` | Restore configured ammunition when a dormant system activates |
+| `detectionInterval` | Number, seconds | `1` | Detector interval, minimum `0.25` seconds |
+| `detectionFilter` | Code callback returning Boolean | `{true}` | Optional server callback returning a Boolean for whether a candidate aircraft is detectable |
+| `onStateChanged` | Code callback | `{}` | Optional server callback for detected/engaged transitions |
+| `createMarkers` | Boolean | `true` | Create the area and centre markers. This is independent of the label-detail setting below. |
+| `showMarkerDetails` | Boolean | `true` | When markers exist, include detection range, floor and ceiling in the centre-marker label. Turn this off to leave only the system name without hiding the markers. |
+| `cleanupOnRadarLoss` | Boolean | `false` | Delete assets instead of leaving them disabled |
+| `announce` | Boolean | `true` | Send WMP detection/clear notifications to connected players on the operational AA side. No empty-audience remote call is made. |
+| `shutdownInteraction` | Boolean | `false` | Attach an optional player procedure to the central radar. Existing systems retain ordinary destroy-to-disable behaviour by default. |
+| `shutdownChallenge` | String procedure ID | `"circuit"` | Shared interaction procedure used for radar shutdown. Zeus offers every built-in WMP procedure plus registered custom procedures. |
+| `shutdownDifficulty` | String: `easy`, `standard`, `hard` or `expert` | `"standard"` | Shared `easy`, `standard`, `hard` or `expert` difficulty profile. |
 
 When the optional procedure succeeds, the server disables the named system through
 `Waldo_fnc_DynamicAADestroy` without deleting its assets. Detection stops, defence groups stand down,
