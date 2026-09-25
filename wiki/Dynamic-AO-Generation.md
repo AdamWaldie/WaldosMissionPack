@@ -87,7 +87,7 @@ Cleanup is repeat-safe:
 
 `Waldo_fnc_DynamicAOGetFactions` scans `CfgFactionClasses` and public `CfgVehicles`, then caches friendly faction choices. `Waldo_fnc_DynamicAOResolvePools` classifies the selected faction through engine inheritance:
 
-- infantry: `CAManBase`;
+- infantry: `CAManBase` whose config loadout carries a primary weapon or launcher, so unarmed soldiers, survivors, officers, pilots and similar role units are never generated as combat infantry (a faction with no such class falls back to handgun-armed classes; civilian pools are not filtered);
 - cars: `Car`;
 - APCs and tanks: `Tank`, split using transport capacity;
 - statics: `StaticWeapon`;

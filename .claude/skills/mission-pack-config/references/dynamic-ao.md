@@ -60,7 +60,9 @@ same anchor object.
 ## Runtime classification (engine inheritance, not a hand-authored pool)
 
 `Waldo_fnc_DynamicAOResolvePools` classifies the selected faction's public
-assets automatically: infantry `CAManBase`, cars `Car`, APCs/tanks `Tank`
+assets automatically: infantry `CAManBase` carrying a primary weapon or
+launcher (unarmed/role units are skipped; handgun-only classes are a
+fallback; civilian pools are unfiltered), cars `Car`, APCs/tanks `Tank`
 (split by transport capacity), statics `StaticWeapon`, helicopters/planes
 `Helicopter`/`Plane`, drones any air asset with `isUav = 1`, jets fixed-wing
 ≥600km/h max speed. This means Dynamic AO needs **no per-faction content

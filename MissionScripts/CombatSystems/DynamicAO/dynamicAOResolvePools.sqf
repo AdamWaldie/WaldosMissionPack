@@ -4,7 +4,12 @@
  *
  * The resolver uses inheritance and engine configuration properties instead of hard-coded mod
  * classnames. Fixed-wing aircraft are split at 600 km/h and UAVs are removed from crewed air
- * buckets. Called by DynamicAOCreate and available to mission makers for validation or overrides.
+ * buckets. For every side except civilian, infantry is restricted to classes whose config loadout
+ * carries a primary weapon or launcher, so unarmed soldiers, survivors, officers, pilots and
+ * similar role/story units are never generated as combat infantry. If a faction has no such class,
+ * handgun-armed classes are used instead; a faction with no armed infantry at all returns an empty
+ * infantry pool. Civilian pools are left unfiltered because civilians are expected to be unarmed.
+ * Called by DynamicAOCreate and available to mission makers for validation or overrides.
  *
  * Arguments:
  * 0: faction classname <STRING>
@@ -24,6 +29,30 @@ private _cacheKey = format ["%1|%2", _sideKey, _faction];
 private _cache = missionNamespace getVariable ["Waldo_DynamicAO_PoolCache", createHashMap];
 if (_cacheKey in keys _cache) exitWith {_cache get _cacheKey};
 
+// Weapon-type bitmask from CfgWeapons: 1 primary, 2 handgun, 4 launcher. Throw/Put/binoculars and
+// items use other values and never count as an armament. Returns 2 (rifle/launcher), 1 (handgun
+// only) or 0 (unarmed).
+private _weaponTypeCache = createHashMap;
+private _armament = {
+    params ["_unitConfig"];
+    private _flags = 0;
+    {
+        private _weapon = toLowerANSI _x;
+        private _type = _weaponTypeCache getOrDefault [_weapon, -1];
+        if (_type < 0) then {
+            _type = getNumber (configFile >> "CfgWeapons" >> _x >> "type");
+            if (_type >= 8) then {_type = 0};
+            _weaponTypeCache set [_weapon, _type];
+        };
+        private _primaryOrLauncher = (_type mod 2) == 1 || {(floor (_type / 4)) mod 2 == 1};
+        private _handgun = (floor (_type / 2)) mod 2 == 1;
+        _flags = _flags max (if (_primaryOrLauncher) then {2} else {if (_handgun) then {1} else {0}});
+    } forEach getArray (_unitConfig >> "weapons");
+    _flags
+};
+private _filterInfantry = _side != civilian;
+private _handgunInfantry = [];
+
 private _pools = createHashMapFromArray [
     ["infantry", []], ["car", []], ["apc", []], ["tank", []], ["static", []],
     ["heli", []], ["jet", []], ["drone", []], ["plane", []]
@@ -32,7 +61,15 @@ private _pools = createHashMapFromArray [
     if (getNumber (_x >> "scope") >= 2 && {getText (_x >> "faction") == _faction}) then {
         private _class = configName _x;
         if (_class isKindOf "CAManBase") then {
-            (_pools get "infantry") pushBack _class;
+            if (_filterInfantry) then {
+                switch ([_x] call _armament) do {
+                    case 2: {(_pools get "infantry") pushBack _class};
+                    case 1: {_handgunInfantry pushBack _class};
+                    default {};
+                };
+            } else {
+                (_pools get "infantry") pushBack _class;
+            };
         } else {
             if (_class isKindOf "StaticWeapon") then {
                 (_pools get "static") pushBack _class;
@@ -58,6 +95,13 @@ private _pools = createHashMapFromArray [
         };
     };
 } forEach ("true" configClasses (configFile >> "CfgVehicles"));
+
+if (_filterInfantry && {count (_pools get "infantry") == 0}) then {
+    _pools set ["infantry", _handgunInfantry];
+    if (count _handgunInfantry > 0) then {
+        diag_log format ["[WMP DYNAMIC AO] Faction %1 has no rifle/launcher infantry; using %2 handgun-armed classes.", _faction, count _handgunInfantry];
+    };
+};
 
 _cache set [_cacheKey, _pools];
 missionNamespace setVariable ["Waldo_DynamicAO_PoolCache", _cache];

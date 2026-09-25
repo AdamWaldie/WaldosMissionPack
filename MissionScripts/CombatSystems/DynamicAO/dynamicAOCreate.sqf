@@ -97,7 +97,7 @@ if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
 
 private _pools = [_faction, _side] call Waldo_fnc_DynamicAOResolvePools;
 private _infantry = _pools get "infantry";
-if (count _infantry == 0) exitWith {["The selected faction has no public infantry classes.", "ERROR"] call _notify; false};
+if (count _infantry == 0) exitWith {["The selected faction has no public armed infantry classes.", "ERROR"] call _notify; false};
 private _civilianFaction = _config getOrDefault ["civilianFaction", ""];
 private _civilianPools = if (_civilianFaction == "") then {createHashMapFromArray [["infantry", []], ["car", []]]} else {[_civilianFaction, civilian] call Waldo_fnc_DynamicAOResolvePools};
 
