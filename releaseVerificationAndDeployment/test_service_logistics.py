@@ -316,6 +316,13 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             self.assertIn('_this spawn Waldo_fnc_LogisticsRegisterSpawned', text, path.name)
             self.assertIn('call CBA_fnc_execNextFrame', text, path.name)
         self.assertIn('LogiBoxes.sqf', callers)
+        zen = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
+        physical = zen[zen.index('case "PHYSICAL_ENABLE"'):zen.index('case "PHYSICAL_DISABLE"')]
+        self.assertIn('[{_this spawn {', physical)
+        self.assertIn('}}, [_target, _replyOwner]] call CBA_fnc_execNextFrame;', physical)
+        # BASE_UPSERT, BASE_REMOVE, SUPPLY_REGISTER and PHYSICAL_ENABLE call guarded registrars.
+        self.assertIsNone(re.search(r'\]\s*spawn\s*\{', zen))
+        self.assertEqual(zen.count('[{_this spawn {'), 4)
         logi = source('MissionScripts/Logistics/Crates/LogiBoxes.sqf')
         self.assertLess(logi.index('call Waldo_fnc_SetCargoAttributes'),
                         logi.index('_this spawn Waldo_fnc_LogisticsRegisterSpawned'))

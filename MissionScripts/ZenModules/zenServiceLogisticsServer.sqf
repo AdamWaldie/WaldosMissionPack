@@ -3,7 +3,8 @@
  * Purpose: Authenticates and applies ZEN base, quartermaster and cargo setup to selected objects.
  * Locality / Authority: Server only; owner-bound active curator is required for remote calls.
  * Repeat / JIP: Uses repeat-safe registries; quartermaster setup is JIP-replayed by object key.
- *   ACE Cargo edits run on the server's next frame outside the authenticated remote-call context;
+ *   ACE Cargo edits and base/supply/physical registrations run on the server's next frame outside
+ *   the authenticated remote-call context, whose isRemoteExecuted state their registrars reject;
  *   ACE's global setters replay the object state to joining clients.
  * Arguments: operation <STRING>; selected object <OBJECT>; named pairs <ARRAY>; requester <OBJECT>.
  * Return Value: <BOOL> request accepted. Current caller: Waldo_fnc_ZenServiceLogisticsModule.
@@ -28,7 +29,9 @@ switch (toUpperANSI _operation) do {
             && {_label isEqualType ""} && {_label isNotEqualTo ""} && {count _label <= 48}
             && {_services isEqualType []} && {(_services findIf {!(_x in ["SAVE", "HEAL", "SPECTATE", "TELEPORT"])}) < 0}
             && {_transition in ["", "STANDARD", "QUICK", "TRAVEL", "NIGHT", "DAYLIGHT", "NONE"]}) then {
-            [_target, _group, _label, _services, _transition, _replyOwner] spawn {
+            // Registration rejects remote-executed contexts and a spawned child keeps this
+            // curator request's context, so start every such worker from CBA's next frame.
+            [{_this spawn {
                 params ["_target", "_group", "_label", "_services", "_transition", "_replyOwner"];
                 private _applied = [_target, _group, _label, _services, "", _transition]
                     call Waldo_fnc_BaseServicesRegisterNode;
@@ -39,7 +42,7 @@ switch (toUpperANSI _operation) do {
                         if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_BASE_NODE", 7]
                         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                 };
-            };
+            }}, [_target, _group, _label, _services, _transition, _replyOwner]] call CBA_fnc_execNextFrame;
             _deferred = true;
             _ok = true;
         };
@@ -51,7 +54,7 @@ switch (toUpperANSI _operation) do {
         if (_index >= 0) then {
             private _rows = ((_registry select _index) select 1) select {(_x select 0) isNotEqualTo _target};
             if (count _rows < count ((_registry select _index) select 1)) then {
-                [_group, _rows, (_registry select _index) select 2, _replyOwner] spawn {
+                [{_this spawn {
                     params ["_group", "_rows", "_transition", "_replyOwner"];
                     private _applied = [_group, _rows, _transition] call Waldo_fnc_BaseServicesRegister;
                     if (_replyOwner > 2) then {
@@ -60,7 +63,7 @@ switch (toUpperANSI _operation) do {
                             if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_BASE_NODE", 7]
                             remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                     };
-                };
+                }}, [_group, _rows, (_registry select _index) select 2, _replyOwner]] call CBA_fnc_execNextFrame;
                 _deferred = true;
                 _ok = true;
             };
@@ -103,7 +106,7 @@ switch (toUpperANSI _operation) do {
         if !(missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false]) then {
             _message = "Supply transfers are disabled in MissionConfig/logisticsConfig.sqf.";
         } else {
-            [_target, _replyOwner] spawn {
+            [{_this spawn {
                 params ["_target", "_replyOwner"];
                 private _applied = [_target] call Waldo_fnc_SupplyTransfersRegister;
                 diag_log format ["[WMP ZEN] SUPPLY_REGISTER applied=%1 target=%2 class=%3 maxLoad=%4",
@@ -118,7 +121,7 @@ switch (toUpperANSI _operation) do {
                         if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_SUPPLY_REGISTER", 7]
                         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                 };
-            };
+            }}, [_target, _replyOwner]] call CBA_fnc_execNextFrame;
             _deferred = true;
             _ok = true;
         };
@@ -135,7 +138,7 @@ switch (toUpperANSI _operation) do {
         if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]
             && {!(_target isKindOf "StaticWeapon" || {_target isKindOf "LandVehicle"}
                 || {_target isKindOf "Air"} || {_target isKindOf "Ship"})}) then {
-            [_target, _replyOwner] spawn {
+            [{_this spawn {
                 params ["_target", "_replyOwner"];
                 private _applied = [_target] call Waldo_fnc_PhysicalCargoRegister;
                 diag_log format ["[WMP ZEN] PHYSICAL_ENABLE applied=%1 target=%2", _applied, netId _target];
@@ -145,7 +148,7 @@ switch (toUpperANSI _operation) do {
                         if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_PHYSICAL_CARGO", 7]
                         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                 };
-            };
+            }}, [_target, _replyOwner]] call CBA_fnc_execNextFrame;
             _deferred = true;
             _ok = true;
         } else {
