@@ -36,8 +36,14 @@ ground position.
 
 ## What is eligible
 
-- Placed `ReammoBox_F` crates register at startup; WMP-issued crates
-  register when they spawn (quartermaster wheels/tracks too).
+- **Any ACE-carryable prop is eligible by default** (`Waldo_fnc_PhysicalCargoIsEligible`):
+  crates, quartermaster wheels/tracks, fuel barrels, jerrycans, mission props.
+  People, static weapons, vehicles, aircraft and boats never are. ZEN
+  **Disallow physical mounting** sets `Waldo_PhysicalCargo_Eligible = false` to opt one out.
+- Placed `ReammoBox_F` crates register at startup; every WMP-issued store
+  registers when it spawns, which also sets ACE Drag/Carry regardless of weight.
+- A mounted object keeps ACE's near-zero carried mass; the real mass returns
+  on pickup or once it is set down clear, so it can't throw the vehicle.
 - **Starter crates are excluded** from automatic drag/carry and
   physical-cargo registration.
 - Another non-weapon prop: `[this] call Waldo_fnc_PhysicalCargoRegister;` in

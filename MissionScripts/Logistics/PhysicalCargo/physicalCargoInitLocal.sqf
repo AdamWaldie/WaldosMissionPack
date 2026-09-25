@@ -32,8 +32,9 @@ private _id = ["ace_dragging_startedCarry", {
             netId _cargo, owner _unit, netId (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])];
         [_cargo, _unit] remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer", 2];
     };
-    if (_cargo isKindOf "StaticWeapon") exitWith {};
-    if !(_cargo getVariable ["Waldo_PhysicalCargo_Eligible", _cargo isKindOf "ReammoBox_F"]) exitWith {};
+    if !([_cargo] call Waldo_fnc_PhysicalCargoIsEligible) exitWith {
+        diag_log format ["[WMP PHYSICAL CARGO] %1 is not eligible; native ACE release remains.", typeOf _cargo];
+    };
 
     private _aceID = _unit getVariable ["ace_dragging_releaseActionID", -1];
     if (_aceID < 0) exitWith {

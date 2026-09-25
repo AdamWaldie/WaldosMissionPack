@@ -169,7 +169,7 @@ switch (toUpperANSI _operation) do {
     case "PHYSICAL_INSPECT": {
         _ok = true;
         _message = format ["Eligible: %1. Mounted: %2.",
-            _target getVariable ["Waldo_PhysicalCargo_Eligible", _target isKindOf "ReammoBox_F"],
+            [_target] call Waldo_fnc_PhysicalCargoIsEligible,
             !isNull (_target getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])];
     };
     case "ACE_CARGO_SET": {

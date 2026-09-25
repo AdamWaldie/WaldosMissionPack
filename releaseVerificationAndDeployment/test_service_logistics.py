@@ -220,7 +220,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         purchase = source('MissionScripts/EconomySystems/Buy/executePurchase.sqf')
         self.assertIn('[{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_spawned, "CARGO"]] call CBA_fnc_execNextFrame', purchase)
         resource = source('MissionScripts/EconomySystems/Resource/spawnResourceCrate.sqf')
-        self.assertIn('[_crate] call Waldo_fnc_CargoAttributesPrepareObject', resource)
+        self.assertIn('[{[_this select 0] call Waldo_fnc_CargoAttributesPrepareObject}, [_crate]] call CBA_fnc_execNextFrame', resource)
 
     def test_node_registration_is_additive_and_zen_is_curator_gated(self):
         node = source('MissionScripts/MissionFlowAndUi/BaseServices/baseServicesRegisterNode.sqf')
@@ -287,7 +287,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         ):
             # Remote-executed callers finish cargo setup from CBA's next frame, where the
             # object is passed as _this select 0 (see test_registration_leaves_remote_context).
-            deferred = path.endswith(('LogiBoxes.sqf', 'ZenSpawnCrateServer.sqf',
+            deferred = path.endswith(('LogiBoxes.sqf', 'quartermasterExtendedSpawn.sqf', 'ZenSpawnCrateServer.sqf',
                                       'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
             target = '_this select 0' if deferred else object_name
             self.assertIn(f'[{target}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'

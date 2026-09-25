@@ -20,7 +20,11 @@ Release the crate away from a vehicle for an ordinary ground drop. ACE's menu ca
 inside ACE Cargo. [Crate options](Supply-Transfers) can change that loading choice for a registered
 crate. WMP reports a failed physical mount after it releases the object, leaving the crate available.
 
-WMP registers placed `ReammoBox_F` crates at startup and its own issued crates when they spawn.
+Any object a player can ACE Carry is eligible by default: crates, Quartermaster spare wheels and
+tracks, fuel barrels, jerrycans and your own props. People, static weapons, vehicles, aircraft and
+boats never are. To keep one object on plain ACE Carry and Cargo, use **Disallow physical mounting**
+in the Zeus module below. WMP registers placed `ReammoBox_F` crates at startup and its own issued
+stores when they spawn, which also gives them ACE Drag and Carry regardless of weight.
 The feature flag controls mounting and seat effects. [ACE Cargo and object handling](ACE-Cargo-And-Object-Handling)
 controls Drag, Carry, loading size and storage space independently.
 
@@ -30,8 +34,8 @@ For another non-weapon prop, put this in the prop's Eden **Init** field:
 [this] call Waldo_fnc_PhysicalCargoRegister;
 ```
 
-The same call works in `initServer.sqf` with a named object in place of `this`. WMP also asks ACE to
-make that prop carryable.
+The same call works in `initServer.sqf` with a named object in place of `this`. It marks the prop
+eligible and asks ACE to make it carryable; you need it only for a prop ACE cannot already carry.
 
 `[object] call Waldo_fnc_PhysicalCargoRegister;` takes one existing non-weapon prop or crate. It returns `true` when the server accepts the object or queues it until settings load. It returns `false` if the feature is off, the object is unsupported or a client calls it directly. Repeating the call does not add another ACE event. WMP-issued crates already qualify; use this call for a prop you placed yourself.
 
@@ -44,7 +48,12 @@ mounts, disallow them or inspect the current state. The module rejects static we
 aircraft and boats. It cannot change eligibility while the object has a mount. ACE Carry and Cargo
 remain available.
 
-WMP also registers Quartermaster wheels and tracks for the physical carry-release path.
+WMP also registers every Quartermaster issue, including wheels, tracks, fuel barrels and jerrycans,
+for the physical carry-release path.
+
+While mounted, an object keeps the near-zero physics mass ACE gives it during a carry. It gets its
+real mass back when a player picks it up again or when it is set down clear of the vehicle. This
+stops a heavy crate from throwing or destroying the vehicle it is released onto.
 
 WMP accepts a valid contact hit on land, air or sea vehicles. Test each crate and vehicle combination
 in Arma before using it in a mission.

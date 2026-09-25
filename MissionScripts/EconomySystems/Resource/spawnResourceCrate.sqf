@@ -41,7 +41,9 @@
 
     private _crate = createVehicle ["Land_PlasticCase_01_medium_F", _pos, [], 0, "CAN_COLLIDE"];
     _crate setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
-    [_crate] call Waldo_fnc_CargoAttributesPrepareObject;
+    // A client/curator request is forwarded here by remoteExec, and the ACE setters reject that
+    // remote context, so apply drag/carry from CBA's server-local next frame.
+    [{[_this select 0] call Waldo_fnc_CargoAttributesPrepareObject}, [_crate]] call CBA_fnc_execNextFrame;
 
     [_crate, true] call Waldo_fnc_EcoResource_registerCuratorEditableObject;
 

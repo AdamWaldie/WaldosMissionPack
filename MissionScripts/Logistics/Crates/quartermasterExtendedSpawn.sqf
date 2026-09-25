@@ -94,8 +94,6 @@ private _issueName = switch (_kind) do {
 // Keep the quartermaster issue identity visible after the object is spawned.
 _object setVariable ["ace_cargo_customName", _issueName, true];
 _object setVariable ["Waldo_QM_IssueName", _issueName, true];
-// QM issues are one ACE cargo slot each; fuel and rearm behaviour is separate.
-[_object, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
 if (_kind in ["Grenades", "Explosives"] || {_isRearm}) then {
     clearWeaponCargoGlobal _object;
     clearMagazineCargoGlobal _object;
@@ -138,7 +136,12 @@ if (_kind == "FuelJerrycan") then {
 };
 // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
 // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
-[{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_object, if (_isRearm) then {"REARM"} else {_kind}]] call CBA_fnc_execNextFrame;
+// QM issues are one ACE cargo slot each, always drag/carryable regardless of mass; fuel and
+// rearm behaviour is separate. Both calls reject this request's remote context, so they run here.
+[{
+    [_this select 0, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+    _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+}, [_object, if (_isRearm) then {"REARM"} else {_kind}]] call CBA_fnc_execNextFrame;
 diag_log format ["[WMP QM] Extended issue kind=%1 name=%2 class=%3 player=%4",
     _kind, _issueName, _class, name _player];
 [format ["%1 ready for collection.", _issueName], _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;

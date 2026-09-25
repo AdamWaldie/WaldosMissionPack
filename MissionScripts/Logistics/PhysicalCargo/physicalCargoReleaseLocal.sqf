@@ -55,11 +55,26 @@ if (_validVehicle) then {
     _relativeUp = _vehicle vectorWorldToModel (vectorUp _cargo);
 };
 
+// ACE zeroes a carried object's mass and restores it globally on drop. Restoring it while the
+// object still overlaps the vehicle lets PhysX throw or destroy the vehicle, so a mounted object
+// keeps the carried near-zero mass; WMP restores it once the object is set down clear again.
+if (_validVehicle) then {
+    private _mass = _cargo getVariable ["ace_dragging_originalMass", 0];
+    if (_mass > 0) then {
+        _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", _mass, true];
+        _cargo setVariable ["ace_dragging_originalMass", 0, true];
+    };
+};
+
 // This is ACE's own full cleanup path. The false argument prevents its automatic cargo-load
 // attempt; physical mounting is requested only for the vehicle captured before release.
 [_carrier, _cargo, false] call ace_dragging_fnc_dropObject_carry;
 
 if (_validVehicle) then {
+    // ACE has just detached the object. Attach it to the vehicle in the same frame so it never
+    // falls or simulates inside the vehicle while the server validates the mount; the server
+    // detaches and sets it down clear again if it rejects the request.
+    _cargo attachTo [_vehicle, _offset];
     [_carrier, _cargo, _vehicle, _offset, _relativeDir, _relativeUp]
         remoteExecCall ["Waldo_fnc_PhysicalCargoAttachServer", 2];
 };
