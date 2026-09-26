@@ -18,11 +18,9 @@ The modules are registered only when Zeus Enhanced is available. The script API 
 
 ## Scripted creation
 
-Call the generator on the server. A non-server call is forwarded to the server, but remote player requests are accepted only from an assigned curator.
+Call the generator on the server. An intentional client call must supply the curator player as the second argument; a client call without a requester exits without creating anything. The server accepts remote requests only when the requester belongs to the sending client and has an assigned curator.
 
-Unlike most other keys, **`faction` has no default and is genuinely required** alongside `id` and
-`center` — omitting it makes the whole call silently do nothing (no error, no spawned assets). The
-smallest working call is:
+`faction`, `id` and `center` are required. An incomplete request returns `false` on the server and sends an error notification when a requester was supplied. The smallest working call is:
 
 ```sqf
 [createHashMapFromArray [
@@ -87,7 +85,7 @@ Cleanup is repeat-safe:
 
 `Waldo_fnc_DynamicAOGetFactions` scans `CfgFactionClasses` and public `CfgVehicles`, then caches friendly faction choices. `Waldo_fnc_DynamicAOResolvePools` classifies the selected faction through engine inheritance:
 
-- infantry: `CAManBase` whose config loadout carries a primary weapon or launcher, so unarmed soldiers, survivors, officers, pilots and similar role units are never generated as combat infantry (a faction with no such class falls back to handgun-armed classes; civilian pools are not filtered);
+- infantry: public `CAManBase` classes whose config `weapons[]` includes a primary weapon or launcher. If none qualify, handgun-armed classes are used and the fallback is logged. Classification uses equipment, so armed officers and pilots remain eligible. Civilian pools are unfiltered;
 - cars: `Car`;
 - APCs and tanks: `Tank`, split using transport capacity;
 - statics: `StaticWeapon`;
@@ -95,7 +93,9 @@ Cleanup is repeat-safe:
 - drones: any supported air asset with `isUav = 1`;
 - jets: fixed-wing maximum speed at or above 600 km/h; slower assets are planes.
 
-As a runtime safety net, a generated combat soldier that still spawns without a primary weapon or launcher (for example a missing weapon dependency) is replaced with another class, that class is removed from the cached pool, and an `[WMP DYNAMIC AO]` RPT line names it. The pool cache is local to each machine's immutable runtime configuration. Creation validates the faction and pools again on the server before mutating the world.
+The pool cache is local to each machine and describes its loaded configuration. Creation resolves pools on the server. Patrol, garrison or roadblock requests require an eligible infantry pool; an empty pool rejects the request before an existing AO with the same id is removed. Set all three infantry counts to zero for vehicle, static, air, minefield or civilian-only requests that do not need enemy infantry.
+
+Each selected class is spawned once. Dynamic AO preserves its initialization lifecycle and applies the active WMP AI profile. It does not delete units or change the cached class pool based on an immediate inventory check. Static, vehicle and air crews still use `createVehicleCrew` and keep their configured crew classes.
 
 ## Authority, JIP and cleanup
 
@@ -104,6 +104,10 @@ Only the server owns the full registry of objects, groups, mines and markers. Cl
 Every generated object is added to current curator editable objects. Whole-AO cleanup removes the registry entry first, then deletes tracked mines, field anchors, objects, units, groups and markers. This order makes deletion-event cleanup repeat-safe. Patrol generation is server-local, enables movement/pathing, leaves Arma's engine-created waypoint lifecycle intact and appends the MOVE/CYCLE route without a competing direct movement order. Infantry in a new patrol receive placement clearance around the group start instead of sharing one exact position; this prevents collision-locked squads on dedicated servers. Generated AI are passed through `Waldo_fnc_AIApplyProfile` after their final group assignment and remain eligible for the handler's new-unit and locality-change paths. The active WMP profile is therefore authoritative. A legacy scripted config may still contain `skill`; it is accepted for compatibility but ignored.
 
 ## Engine and terrain boundaries
+
+The infantry filter checks config weapon slots only. It does not guarantee ammunition, a vest, a backpack or the final inventory after mod scripts run. A combat class with no config weapon and equipment supplied exclusively by a later script is excluded. A class with a config weapon can still become unarmed after spawning; that requires investigation of the selected class and its initialization.
+
+The reported case is Spearhead 1944 US infantry with no additional AI loadout mods. The config filter and WMP integration have static coverage; verification of that faction in Arma remains pending. For a live retest, record the selected faction and unit classnames, their config weapons and inventories after initialization, and check repeat creation, cleanup, civilian generation and headless-client transfer. Include the ZEN request and JIP removal-list state.
 
 Open terrain legitimately produces fewer garrisons, parked cars and roadblocks because those features require suitable buildings, open positions or roads. The generator caps them rather than fabricating unsuitable locations. `BIS_fnc_findSafePos` reduces overlap risk but cannot guarantee a perfect placement in extremely dense custom terrain; use cleanup and regenerate at a clearer centre if required.
 

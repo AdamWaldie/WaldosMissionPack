@@ -5,15 +5,22 @@
  * The resolver uses inheritance and engine configuration properties instead of hard-coded mod
  * classnames. Fixed-wing aircraft are split at 600 km/h and UAVs are removed from crewed air
  * buckets. For every side except civilian, infantry is restricted to classes whose config loadout
- * carries a primary weapon or launcher, so unarmed soldiers, survivors, officers, pilots and
- * similar role/story units are never generated as combat infantry. If a faction has no such class,
+ * carries a primary weapon or launcher. Classification is by equipment, not role name: an armed
+ * officer or pilot can still be selected. If a faction has no such class,
  * handgun-armed classes are used instead; a faction with no armed infantry at all returns an empty
  * infantry pool. Civilian pools are left unfiltered because civilians are expected to be unarmed.
  * Called by DynamicAOCreate and available to mission makers for validation or overrides.
  *
+ * Locality/authority and repeat/JIP behaviour:
+ * Runs on the calling machine and caches its config-derived pools by faction and requested side.
+ * Creation resolves again on the server; this cache is not public state and requires no JIP replay.
+ * Repeated calls return the cached HashMap. Callers must not prune its arrays based on spawned
+ * inventories: mod loadout initialization can be deferred. No units are spawned by this function.
+ * Config-only filtering does not support combat classes armed exclusively by later scripts.
+ *
  * Arguments:
- * 0: faction classname <STRING>
- * 1: side <SIDE>
+ * 0: faction classname <STRING> - default "" (no matching assets)
+ * 1: side <SIDE> - default east; civilian disables the infantry armament filter
  *
  * Return Value:
  * HashMap with infantry, car, apc, tank, static, heli, jet, drone and plane arrays
