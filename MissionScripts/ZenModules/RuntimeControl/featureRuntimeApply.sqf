@@ -411,41 +411,14 @@ switch (toUpperANSI _action) do {
                 _group setVariable ["Waldo_AIPass_ZeusWaypoints", false, true];
                 _group setVariable ["Waldo_AIPass_ZeusHold", [random 1e6, 0], true];
             };
-            private _accepted = switch (_order) do {
-                case "GARRISON": {[_group, _position, (_radius max 15) min 150] call Waldo_fnc_AIPassGarrison};
-                case "DEFEND": {[_group, _position, _facing, (_radius max 15) min 150] call Waldo_fnc_AIPassDefend};
-                case "RELEASE": {
-                    private _released = false;
-                    if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {_released = [_group] call Waldo_fnc_AIPassGarrisonRelease};
-                    if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {_released = [_group] call Waldo_fnc_AIPassDefendRelease};
-                    _released
-                };
-                case "EXCLUDE": {
-                    if (isNull _group) exitWith {false};
-                    _group setVariable ["Waldo_AIPass_Exclude", true, true];
-                    true
-                };
-                case "RETURN": {
-                    if (isNull _group) exitWith {false};
-                    _group setVariable ["Waldo_AIPass_Exclude", nil, true];
-                    _group setVariable ["Waldo_AIPass_ZeusWaypoints", false, true];
-                    // A zero-length token cancels any remaining Zeus hold on every machine.
-                    _group setVariable ["Waldo_AIPass_ZeusHold", [random 1e6, 0], true];
-                    true
-                };
-                case "CLEAR": {[_group, [_building, _position] select isNull _building] call Waldo_fnc_AIPassClearBuilding};
-                case "AIRBORNE": {[_group] call Waldo_fnc_AIPassAirborneDrop};
-                case "ARTY_SUPPORT": {[_group, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole};
-                case "ARTY_COUNTER": {[_group, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole};
-                case "ARTY_BOTH": {[_group, "BOTH"] call Waldo_fnc_AIPassSetArtilleryRole};
-                default {false};
-            };
-            private _message = if (_accepted) then {format ["The %1 order was accepted.", toLowerANSI _order]} else {
-                format ["The %1 order was refused. Check that the Smart AI Pass is enabled and the group is valid; an airborne drop also needs the squad riding an AI-flown aircraft at least 120 m over land, and an artillery order needs a group crewing artillery.", toLowerANSI _order]
-            };
-            diag_log format ["[WMP ZEN SERVER] action=AI_ORDER owner=%1 order=%2 accepted=%3", _requestOwner, _order, _accepted];
-            if (_requestOwner > 2) then {
-                ["AI ORDERS", _message, ["ERROR", "SUCCESS"] select _accepted, "AI_ORDERS", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+            // Owner-sensitive orders for a group on another machine run on that owner, which reports the
+            // real result to the curator; answering "accepted" here would only mean "sent".
+            private _arguments = [_order, _group, _position, _radius, _building, _facing, _requestOwner];
+            if (!isNull _group && {!local _group} && {_order in ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE"]}) then {
+                diag_log format ["[WMP ZEN SERVER] action=AI_ORDER owner=%1 order=%2 sent to group owner %3", _requestOwner, _order, groupOwner _group];
+                _arguments remoteExecCall ["Waldo_fnc_AIPassOrderLocal", groupOwner _group];
+            } else {
+                _arguments call Waldo_fnc_AIPassOrderLocal;
             };
         }, [_order, _group, _position, _radius, _building, _facing, _requestOwner]] call CBA_fnc_execNextFrame;
     };

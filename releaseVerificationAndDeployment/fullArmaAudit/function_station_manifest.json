@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1181,
+  "registeredFunctionCount": 1184,
   "runtimeFunctionCount": 383,
-  "functionCount": 1564,
+  "functionCount": 1567,
   "stations": [
     {
       "id": "control",
@@ -953,6 +953,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_AIPassOrderLocal",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_AIPassTuningSpec",
       "file": "MissionScripts/AiScripting/SmartAIPass/aiPassTuningSpec.sqf",
       "station": "ai",
@@ -1153,6 +1159,18 @@
     {
       "name": "Waldo_fnc_AIPassRestoreCalm",
       "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRestoreCalm.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassPublishRestore",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassPublishRestore.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassAdoptRestore",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAdoptRestore.sqf",
       "station": "ai",
       "activation": "manual"
     },

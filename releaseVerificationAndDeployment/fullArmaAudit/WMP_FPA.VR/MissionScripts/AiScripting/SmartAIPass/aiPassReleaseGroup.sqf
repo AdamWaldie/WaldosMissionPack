@@ -37,4 +37,6 @@ if (local _group && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", fal
     _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
 };
 _group setVariable ["Waldo_AIPass_State", nil];
+// Nothing is left changed once released; clear any record a new owner would otherwise act on.
+[_group, createHashMap] call Waldo_fnc_AIPassPublishRestore;
 if (_forget) then {_group setVariable ["Waldo_AIPass_Managed", nil]};

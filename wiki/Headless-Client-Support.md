@@ -291,6 +291,11 @@ needs to stay server-side anyway, call `[_object] call Waldo_fnc_HeadlessPinCrew
 [_vehicle] call Waldo_fnc_HeadlessPinCrew;
 ```
 
+The first pin on a crew group or soldier saves the values it overwrites in
+`Waldo_HeadlessPin_Prior`. When the [Smart AI Pass](Smart-AI-Pass) takes over landed paratroopers or a
+written-off transport's crew, it puts back exactly those values. An exclusion you set yourself before
+the pin therefore survives the hand-over.
+
 ## Third-party AI mod compatibility (VCOM AI, LAMBS, ASR AI3, ...)
 
 An important migration failure mode is AI going unresponsive after a locality change. This most

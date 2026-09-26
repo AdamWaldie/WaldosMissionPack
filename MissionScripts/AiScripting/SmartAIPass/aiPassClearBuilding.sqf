@@ -14,12 +14,19 @@
  * Locality and authority: call where the group is local, or on the server, which forwards to the
  * owner. Non-server, non-owner copies do nothing.
  *
- * Review contract: Local job generations prevent replaced jobs from issuing orders. Eligibility is checked before dispatch and on each step. Clear-building replay across headless handover is not yet implemented.
+ * The WMP clear is published as Waldo_AIPass_ClearOrder ([building, deadline, previous behaviour],
+ * deadline on the shared mission clock). When the group changes owner, Waldo_fnc_AIPassDiscover on
+ * the new owner resumes it with the "resume" option: the clear restarts on the same building with
+ * the time left and the original behaviour to restore. An order that ran out while the group was
+ * changing owner, or whose group is no longer eligible, is dropped and the behaviour restored. Local
+ * job generations stop a replaced or abandoned job from issuing orders. Eligibility is checked before
+ * dispatch and on each step.
  *
  * Arguments:
  * 0: group <GROUP or OBJECT> - the group, or a unit in it
  * 1: target <OBJECT or ARRAY> - the building, or a position (the nearest building is used)
- * 2: options <HASHMAP> (optional) - useLambs (default true), radius for LAMBS (default 50)
+ * 2: options <HASHMAP> (optional) - useLambs (default true), radius for LAMBS (default 50); resume
+ *    (internal, default false) continues the group's published order after a change of owner
  *
  * Return Value:
  * Boolean - true when the order was applied or forwarded
@@ -38,10 +45,25 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!local _group) exitWith {
     if (isServer) then {[_group, _target, _options] remoteExecCall ["Waldo_fnc_AIPassClearBuilding", groupOwner _group]; true} else {false};
 };
-if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {false};
+// The mission clock every machine shares; plain time differs between the server and a headless client.
+private _clock = [time, serverTime] select isMultiplayer;
+private _resume = _options getOrDefault ["resume", false];
+private _published = _group getVariable ["Waldo_AIPass_ClearOrder", []];
+if (_resume) then {
+    // Resumes only the group's own published order, never a caller-supplied target.
+    _target = _published param [0, objNull];
+};
+private _drop = {
+    // Abandon a published order this machine cannot continue, putting the squad's behaviour back.
+    if (_published isNotEqualTo [] && {behaviour leader _group == "COMBAT"}) then {_group setBehaviour (_published param [2, "AWARE"])};
+    _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
+    false
+};
+if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {if (_resume) then {call _drop} else {false}};
 private _building = if (_target isEqualType objNull) then {_target} else {nearestBuilding _target};
-if (isNull _building) exitWith {false};
-if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
+if (isNull _building) exitWith {if (_resume) then {call _drop} else {false}};
+if (_resume && {_clock >= (_published param [1, 0])}) exitWith {call _drop};
+if (!_resume && {_options getOrDefault ["useLambs", true]} && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
     && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "SPLIT"}) exitWith {
     [_group, getPosATL _building, _options getOrDefault ["radius", 50]] spawn lambs_wp_fnc_taskCQB;
     diag_log format ["[WMP AI PASS] %1 clear building handed to LAMBS (%2)", _group, typeOf _building];
@@ -52,14 +74,20 @@ if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
     false
 };
 private _positions = _building buildingPos -1;
-if (_positions isEqualTo []) exitWith {false};
+if (_positions isEqualTo []) exitWith {if (_resume) then {call _drop} else {false}};
 private _leader = leader _group;
 private _team = (units _group) select {alive _x && {local _x} && {vehicle _x == _x} && {_x != _leader}};
-if (_team isEqualTo []) exitWith {false};
+if (_team isEqualTo []) exitWith {if (_resume) then {call _drop} else {false}};
 private _generation = (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1;
 _group setVariable ["Waldo_AIPass_ClearGeneration", _generation];
 _group setVariable ["Waldo_AIPass_ClearBuilding", true];
-private _baseBehaviour = behaviour _leader;
+private _baseBehaviour = if (_resume) then {_published param [2, "AWARE"]} else {
+    // A new order on a squad already clearing keeps the behaviour it had before the first clear.
+    if (_published isNotEqualTo []) then {_published param [2, behaviour _leader]} else {behaviour _leader}
+};
+private _deadline = if (_resume) then {_published param [1, _clock + 240]} else {_clock + 240};
+// Published once per order, so a new owner can resume it (Waldo_fnc_AIPassDiscover).
+_group setVariable ["Waldo_AIPass_ClearOrder", [_building, _deadline, _baseBehaviour], true];
 _group setBehaviour "COMBAT";
 [{
     params ["_job"];
@@ -72,6 +100,7 @@ _group setBehaviour "COMBAT";
             {if (alive _x && {local _x}) then {_x doFollow _leader}} forEach (_job get "team");
             if (behaviour _leader == "COMBAT") then {_group setBehaviour (_job get "baseBehaviour")};
             _group setVariable ["Waldo_AIPass_ClearBuilding", nil];
+            _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
         };
         diag_log format ["[WMP AI PASS] %1 clear building finished (%2 of %3 positions)", _group, count (_job get "cleared"), count (_job get "positions")];
         -1
@@ -83,6 +112,7 @@ _group setBehaviour "COMBAT";
     // One entry per team member, in team order: [] or [positionIndex, assignedAt].
     private _assigned = _job get "assigned";
     private _now = time;
+    private _clock = [time, serverTime] select isMultiplayer;
     {
         private _unit = _x;
         private _member = _forEachIndex;
@@ -114,11 +144,11 @@ _group setBehaviour "COMBAT";
             };
         };
     } forEach (_job get "team");
-    if (count _cleared >= count _positions || {_now > (_job get "deadline")} || {(_job get "team") findIf {alive _x} < 0}) exitWith {call _finish};
+    if (count _cleared >= count _positions || {_clock > (_job get "deadline")} || {(_job get "team") findIf {alive _x} < 0}) exitWith {call _finish};
     1.5
 }, createHashMapFromArray [
     ["group", _group], ["team", _team], ["positions", _positions], ["cleared", []], ["assigned", _team apply {[]}],
-    ["deadline", time + 240], ["baseBehaviour", _baseBehaviour], ["generation", _generation]
+    ["deadline", _deadline], ["baseBehaviour", _baseBehaviour], ["generation", _generation]
 ], 0] call Waldo_fnc_AIPassQueueJob;
-diag_log format ["[WMP AI PASS] %1 clearing %2 (%3 positions, %4 soldiers)", _group, typeOf _building, count _positions, count _team];
+diag_log format ["[WMP AI PASS] %1 %5 %2 (%3 positions, %4 soldiers)", _group, typeOf _building, count _positions, count _team, ["clearing", "resumed clearing"] select _resume];
 true

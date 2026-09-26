@@ -89,5 +89,48 @@ class SmartAIPassContracts(unittest.TestCase):
         for name in names:
             self.assertIn(f'["{name}",', config)
 
+    def test_transient_changes_survive_owner_change(self):
+        publish = source('aiPassPublishRestore')
+        self.assertIn('["Waldo_AIPass_Restore", _record, true]', publish)
+        self.assertIn('isEqualTo (_group getVariable ["Waldo_AIPass_RestorePublished", []])', publish)
+        for name in ['aiPassGroupTick', 'aiPassFlankStep', 'aiPassFlankEnd', 'aiPassRestoreCalm', 'aiPassReleaseGroup']:
+            with self.subTest(name=name):
+                self.assertIn('call Waldo_fnc_AIPassPublishRestore', source(name))
+        adopt = source('aiPassAdoptRestore')
+        for marker in ['enableAI _feature', 'setUnitPos "AUTO"', 'call Waldo_fnc_AIPassGroupMoveClear',
+                       '["Waldo_AIPass_Restore", nil, true]', 'Waldo_AIPass_GarrisonPos', 'Waldo_AIPass_DefendPos']:
+            self.assertIn(marker, adopt)
+        discover = source('aiPassDiscover')
+        self.assertLess(discover.index('call Waldo_fnc_AIPassAdoptRestore'), discover.index('call Waldo_fnc_AIPassGarrisonApplyLocal'))
+        self.assertIn('_group setVariable ["Waldo_AIPass_State", nil];', discover)
+        self.assertIn('_group setVariable ["Waldo_AIPass_State", nil];', source('aiPassGroupTick'))
+
+    def test_clear_building_is_replayed_by_new_owner(self):
+        clear = source('aiPassClearBuilding')
+        self.assertIn('["Waldo_AIPass_ClearOrder", [_building, _deadline, _baseBehaviour], true]', clear)
+        self.assertIn('serverTime] select isMultiplayer', clear)
+        self.assertIn('_group setVariable ["Waldo_AIPass_ClearOrder", nil, true];', clear)
+        self.assertLess(clear.index('call Waldo_fnc_AIPassIsEligible'), clear.index('spawn lambs_wp_fnc_taskCQB'))
+        discover = source('aiPassDiscover')
+        self.assertIn('[["resume", true]]] call Waldo_fnc_AIPassClearBuilding', discover)
+        self.assertIn('["Waldo_AIPass_ClearOrder", nil, true]', source('aiPassGroupTick'))
+
+    def test_feature_release_restores_only_its_own_pin(self):
+        pin = (ROOT / 'MissionScripts' / 'Headless' / 'headlessPinCrew.sqf').read_text(encoding='utf-8-sig')
+        self.assertIn('if (!isNil {_target getVariable "Waldo_HeadlessPin_Prior"}) exitWith {};', pin)
+        self.assertLess(pin.index('call _recordPrior'), pin.index('_x setVariable ["Waldo_Headless_ExcludeGroup", true, true];'))
+        release = source('aiPassReleaseFeatureCrew')
+        self.assertIn('Waldo_HeadlessPin_Prior', release)
+        self.assertNotIn('setVariable [_x, false, true]', release)
+        self.assertNotIn('"Waldo_ServerOwnedFeature", false', release)
+
+    def test_orders_report_the_owner_result(self):
+        apply = (ROOT / 'MissionScripts' / 'ZenModules' / 'RuntimeControl' / 'featureRuntimeApply.sqf').read_text()
+        self.assertIn('remoteExecCall ["Waldo_fnc_AIPassOrderLocal", groupOwner _group]', apply)
+        self.assertNotIn('The %1 order was accepted.', apply)
+        order = source('aiPassOrderLocal')
+        self.assertIn('if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};', order)
+        self.assertIn('remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner]', order)
+
 if __name__ == '__main__':
     unittest.main()

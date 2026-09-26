@@ -51,8 +51,24 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
     if (!local _group) then {
         _group setVariable ["Waldo_AIPass_GarrisonApplied", nil];
         _group setVariable ["Waldo_AIPass_DefendApplied", nil];
+        // Pass records are machine-local too. Drop them while the group is away so a return starts
+        // clean instead of reusing an out-of-date state, drill or clearing job.
+        if (!isNil {_group getVariable "Waldo_AIPass_State"} || {!isNil {_group getVariable "Waldo_AIPass_ClearBuilding"}}) then {
+            _group setVariable ["Waldo_AIPass_State", nil];
+            _group setVariable ["Waldo_AIPass_RestorePublished", nil];
+            _group setVariable ["Waldo_AIPass_ClearBuilding", nil];
+            _group setVariable ["Waldo_AIPass_ClearGeneration", (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1];
+        };
     };
     if (local _group && {(units _group) findIf {alive _x} >= 0}) then {
+        // Undo what a previous owner changed and could not restore (handover or disconnect).
+        if (!isNil {_group getVariable "Waldo_AIPass_Restore"} && {count (_group getVariable ["Waldo_AIPass_State", createHashMap]) == 0}) then {
+            [_group] call Waldo_fnc_AIPassAdoptRestore;
+        };
+        // A clear-building order started by a previous owner continues here with the time it has left.
+        if (!isNil {_group getVariable "Waldo_AIPass_ClearOrder"} && {!(_group getVariable ["Waldo_AIPass_ClearBuilding", false])}) then {
+            [_group, objNull, createHashMapFromArray [["resume", true]]] call Waldo_fnc_AIPassClearBuilding;
+        };
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_GarrisonApplied", false])}) then {
             [_group] call Waldo_fnc_AIPassGarrisonApplyLocal;
         };

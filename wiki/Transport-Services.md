@@ -183,7 +183,8 @@ Registration locks the driver seat to players and disables fleeing/panic on the 
 
 The AI service crew belongs to the transport while it is in service. When the transport is written off
 and its crew are on foot, the [Smart AI Pass](Smart-AI-Pass) (when enabled) takes them over as an
-ordinary squad instead of leaving them standing beside the wreck.
+ordinary squad instead of leaving them standing beside the wreck. Only the transport's own server pin
+is removed: a headless exclusion you set on the crew yourself stays.
 
 RTB always targets the service's exact registered base position. The generic safe-position search is
 used for player-selected stops, not for returning a service to its own prepared parking point.

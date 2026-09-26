@@ -61,6 +61,12 @@ private _group = _job getOrDefault ["group", grpNull];
 if (isNull _group) exitWith {-1};
 if (!local _group || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {
     _group setVariable ["Waldo_AIPass_Managed", nil];
+    // Another machine owns the group now. This machine's records are stale: the new owner restores
+    // from the published record (Waldo_fnc_AIPassAdoptRestore), and a later return starts clean.
+    if (!local _group) then {
+        _group setVariable ["Waldo_AIPass_State", nil];
+        _group setVariable ["Waldo_AIPass_RestorePublished", nil];
+    };
     -1
 };
 private _alive = (units _group) select {alive _x};
@@ -75,6 +81,7 @@ if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassGarrisonRelease};
         if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassDefendRelease};
         if (_group getVariable ["Waldo_AIPass_ClearBuilding", false]) then {_group setVariable ["Waldo_AIPass_ClearBuilding", nil]};
+        if (!isNil {_group getVariable "Waldo_AIPass_ClearOrder"}) then {_group setVariable ["Waldo_AIPass_ClearOrder", nil, true]};
     };
     [20, 5] select ([_group] call Waldo_fnc_AIPassZeusHeld)
 };
@@ -363,5 +370,7 @@ switch (_state get "phase") do {
         };
     };
 };
+// Publish anything this step changed that a new owner would have to undo (sent only on change).
+[_group, _state] call Waldo_fnc_AIPassPublishRestore;
 // Reaction speed (AI Tuning): above 1 squads re-assess more often, below 1 less often.
 (_delay / ((missionNamespace getVariable ["Waldo_AIPass_ReactionSpeed", 1]) max 0.25)) max 0.5

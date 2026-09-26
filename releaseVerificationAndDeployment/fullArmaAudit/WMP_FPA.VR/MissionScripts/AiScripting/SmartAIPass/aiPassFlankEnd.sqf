@@ -48,3 +48,4 @@ if (_reason == "COMPLETE") then {
     missionNamespace setVariable [_counter, (missionNamespace getVariable [_counter, 0]) + 1];
 };
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP AI PASS] %1 %2 end reason=%3", _group, _type, _reason]};
+[_group, _state] call Waldo_fnc_AIPassPublishRestore;

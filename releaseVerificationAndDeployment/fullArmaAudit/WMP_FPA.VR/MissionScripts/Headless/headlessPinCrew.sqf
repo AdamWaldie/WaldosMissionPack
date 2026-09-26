@@ -45,6 +45,13 @@
  * exclude the group. A current HC-owned crew is returned through Waldo_fnc_HeadlessMigrateGroup;
  * this is authoritative live state and is not independently replayed for JIP clients.
  *
+ * Provenance:
+ * Before the first pin changes a crew group or soldier, the values it is about to overwrite are
+ * recorded in Waldo_HeadlessPin_Prior (broadcast; a list of [variable] for "was unset" or
+ * [variable, value]). A later pin never overwrites that record, so it always holds what the mission
+ * maker had set. Waldo_fnc_AIPassReleaseFeatureCrew restores exactly those values when a feature is
+ * finished with its crew, and leaves any exclusion that did not come from this pin in place.
+ *
  * Example:
  * [_aircraft] call Waldo_fnc_HeadlessPinCrew;
  * Result: _aircraft and every current crew group are excluded from both WMP's native headless
@@ -62,11 +69,23 @@ _vehicle setVariable ["Waldo_ServerOwnedFeature", true, true];
 _vehicle setVariable ["acex_headless_blacklist", true, true];
 private _groups = [];
 {_groups pushBackUnique group _x} forEach (crew _vehicle);
+private _recordPrior = {
+    params ["_target", "_variables"];
+    if (!isNil {_target getVariable "Waldo_HeadlessPin_Prior"}) exitWith {};
+    _target setVariable ["Waldo_HeadlessPin_Prior", _variables apply {
+        private _value = _target getVariable _x;
+        if (isNil "_value") then {[_x]} else {[_x, _value]}
+    }, true];
+};
 {
+    [_x, ["Waldo_ServerOwnedFeature", "Waldo_Headless_ExcludeGroup", "acex_headless_blacklist"]] call _recordPrior;
     _x setVariable ["Waldo_ServerOwnedFeature", true, true];
     _x setVariable ["Waldo_Headless_ExcludeGroup", true, true];
     _x setVariable ["acex_headless_blacklist", true, true];
-    {_x setVariable ["acex_headless_blacklist", true, true]} forEach units _x;
+    {
+        [_x, ["acex_headless_blacklist"]] call _recordPrior;
+        _x setVariable ["acex_headless_blacklist", true, true];
+    } forEach units _x;
     private _currentOwner = groupOwner _x;
     // Eden groups can briefly report owner 0 while the mission is still constructing network
     // entities. That is not a remote owner and setGroupOwner 2 is rejected during this window.

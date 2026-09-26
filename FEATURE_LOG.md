@@ -39,6 +39,16 @@ with CBA, ACE, ZEN and ACRE2 (and once more with LAMBS Danger and Waypoints) and
   artillery), and a radio-less soldier does not;
 - flanking elements engage on the final approach and assault, and cover spots face away from the
   enemy rather than all being accepted;
+- handover recovery: move a squad mid-flank (TARGET/AUTOTARGET off, COMBAT, FULL speed, pass stances)
+  from server to headless client, back again, and through a headless-client disconnect. Each time
+  the new owner restores behaviour, speed, features and stances, removes the "WMP AI PASS" waypoint
+  and resumes patrol waypoints;
+- a clear-building order resumes on the new owner with the time left, and is dropped with behaviour
+  restored if the deadline passed or Zeus took the squad;
+- a paratrooper or transport crew group excluded by the mission maker before the pin keeps that
+  exclusion after release;
+- AI Orders on a headless-client squad report the headless client's real result, including a
+  refusal;
 - zero SQF errors in server, client and headless-client RPTs.
 
 ### Paradrop deployment-direction preview
@@ -60,4 +70,4 @@ Required direction:
 
 ## PR 151 review follow-up (2026-09-26)
 
-Smart AI source corrections, static validation results and outstanding integration blockers are recorded in [the PR 151 review](releaseVerificationAndDeployment/pr151_review.md). The PR remains draft. All 310 repository tests and ten static gates passed; no Arma runtime verification was performed. Headless restoration, clear-building replay and feature-owned exclusion provenance must be resolved before engine acceptance.
+Smart AI source corrections, static validation results and the resolution of the review's integration blockers are recorded in [the PR 151 review](releaseVerificationAndDeployment/pr151_review.md). The PR remains draft. No Arma runtime verification was performed. Before engine acceptance, check these in the audit mission: headless restoration, clear-building replay, feature-owned exclusion provenance and AI Orders owner feedback.

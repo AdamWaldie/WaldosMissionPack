@@ -167,4 +167,6 @@ switch (_drill get "stage") do {
         };
     };
 };
+// Publish AI features this bound turned off, so a new owner can turn them back on.
+[_group, _state] call Waldo_fnc_AIPassPublishRestore;
 _result

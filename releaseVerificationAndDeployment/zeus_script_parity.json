@@ -426,9 +426,9 @@
     "module": "AI Orders",
     "handler": "Waldo_fnc_FeatureRuntimeZen",
     "via": "Waldo_fnc_FeatureRuntimeApply",
-    "script_api": "Waldo_fnc_AIPassGarrison",
+    "script_api": "Waldo_fnc_AIPassOrderLocal",
     "parity": "adapter",
-    "notes": "One dialog routes the orders to their script APIs: garrison (Waldo_fnc_AIPassGarrison), defend (Waldo_fnc_AIPassDefend), release (Waldo_fnc_AIPassGarrisonRelease / Waldo_fnc_AIPassDefendRelease), clear building (Waldo_fnc_AIPassClearBuilding) parachute out now (Waldo_fnc_AIPassAirborneDrop) and artillery roles (Waldo_fnc_AIPassSetArtilleryRole); exclude and return set Waldo_AIPass_Exclude and clear Zeus holds. The curator picks a nearby group instead of passing one."
+    "notes": "One dialog sends each order to Waldo_fnc_AIPassOrderLocal on the machine that owns the group, which calls the script API there and reports the owner's real result to the curator: garrison (Waldo_fnc_AIPassGarrison), defend (Waldo_fnc_AIPassDefend), release (Waldo_fnc_AIPassGarrisonRelease / Waldo_fnc_AIPassDefendRelease), clear building (Waldo_fnc_AIPassClearBuilding) parachute out now (Waldo_fnc_AIPassAirborneDrop) and artillery roles (Waldo_fnc_AIPassSetArtilleryRole); exclude and return set Waldo_AIPass_Exclude and clear Zeus holds. The curator picks a nearby group instead of passing one."
   },
   {
     "category": "core",

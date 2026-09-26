@@ -64,3 +64,4 @@ if (_state getOrDefault ["speedChanged", false]) then {
 _state set ["phase", "CALM"];
 _state set ["phaseStart", time];
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP AI PASS] %1 CALM restored", _group]};
+[_group, _state] call Waldo_fnc_AIPassPublishRestore;

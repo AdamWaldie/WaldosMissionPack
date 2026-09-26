@@ -171,6 +171,7 @@ class CfgFunctions
             class AIPassAirborneDrop {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAirborneDrop.sqf";};
             class AIPassParachuteJump {file = "MissionScripts\AiScripting\SmartAIPass\aiPassParachuteJump.sqf";};
             class AIPassTuning {file = "MissionScripts\AiScripting\SmartAIPass\aiPassTuning.sqf";};
+            class AIPassOrderLocal {file = "MissionScripts\AiScripting\SmartAIPass\aiPassOrderLocal.sqf";};
             class AIPassTuningSpec {file = "MissionScripts\AiScripting\SmartAIPass\aiPassTuningSpec.sqf";};
             class AIPassArtilleryRole {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryRole.sqf";};
             class AIPassSetArtilleryRole {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSetArtilleryRole.sqf";};
@@ -205,6 +206,8 @@ class CfgFunctions
             class AIPassReinforce {file = "MissionScripts\AiScripting\SmartAIPass\aiPassReinforce.sqf";};
             class AIPassReleaseGroup {file = "MissionScripts\AiScripting\SmartAIPass\aiPassReleaseGroup.sqf";};
             class AIPassRestoreCalm {file = "MissionScripts\AiScripting\SmartAIPass\aiPassRestoreCalm.sqf";};
+            class AIPassPublishRestore {file = "MissionScripts\AiScripting\SmartAIPass\aiPassPublishRestore.sqf";};
+            class AIPassAdoptRestore {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAdoptRestore.sqf";};
             class AIPassRetreat {file = "MissionScripts\AiScripting\SmartAIPass\aiPassRetreat.sqf";};
             class AIPassSurrender {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSurrender.sqf";};
             class AIPassThrowGrenade {file = "MissionScripts\AiScripting\SmartAIPass\aiPassThrowGrenade.sqf";};

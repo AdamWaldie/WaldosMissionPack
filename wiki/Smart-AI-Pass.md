@@ -347,11 +347,35 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
   (the server, or one headless client).
 - LAMBS can override move orders while its own danger logic is active. Stuck-move fallbacks and
   time limits keep every behaviour finite.
-- Headless handover remains a merge blocker: transient restoration data is machine-local. A new
-  owner can adopt a group without its previous stance, behaviour or disabled-feature records.
-  Clear-building jobs also lack a durable replay payload. Do not rely on mid-order migration yet.
 - A garrison needs the pass running to be re-applied after a headless-client handover; the LAMBS
   hand-over does not.
+- A clear-building order resumes on a new owner from the start of the building, with the time it
+  had left. A clear handed to LAMBS is not resumed by the pass.
+- Handover recovery has static test coverage only; it has not been run in the engine.
+
+## Headless-client handover
+
+A squad can change owner mid-fight: ACE or WMP Headless moves it to a headless client, it comes back
+to the server, or its headless client disconnects. The pass copes in three ways:
+- **Temporary changes are undone by the new owner.** Whatever the pass changed on a squad and must
+  put back is published as one group variable, `Waldo_AIPass_Restore`:
+  - combat behaviour and speed;
+  - AI features a flanking bound turned off;
+  - stances it set from cover.
+
+  It is sent only when it changes and cleared when the squad is back to normal. When a squad
+  arrives on a machine that is not already managing it, `Waldo_fnc_AIPassAdoptRestore` puts those
+  back, removes any "WMP AI PASS" move waypoint and calls drill soldiers back to the leader.
+  Soldiers posted by a garrison or defence order stay put. The squad then starts again from CALM.
+- **The old owner forgets the squad.** Its records are dropped when the squad leaves, so a squad
+  that comes back later starts clean.
+- **Orders follow the squad:**
+  - garrison and defence orders are re-applied from their published positions;
+  - a clear-building order is published as `Waldo_AIPass_ClearOrder` (building, deadline on the
+    shared mission clock, behaviour to restore) and resumed by the new owner with the time left.
+
+  An order that ran out during the move, or whose squad Zeus has taken, is dropped and the squad's
+  behaviour restored.
 
 ## Review corrections
 
@@ -365,6 +389,11 @@ Artillery rechecks the live battery role, feature switch, eligibility and nearby
 civilians at the dispersed aim point before firing. This check includes mounted occupants. A queued
 counter-battery mission can therefore be cancelled by Zeus, exclusion or a live role/switch change.
 The check does not predict where units will move while shells are in flight.
+
+AI Orders sent for a squad on a headless client run on that headless client
+(`Waldo_fnc_AIPassOrderLocal`). The curator is told the order function's real answer from there,
+not just that the order was sent. Released paratroopers and transport crews get back exactly the
+headless settings they had before their feature pinned them (see Paradrop and Transport Services).
 
 Stopping the pass clears pending startup, airborne and clear-building work and removes tracked
 aircraft handlers. Parachute exit protection restores the soldier's prior damage setting on its
