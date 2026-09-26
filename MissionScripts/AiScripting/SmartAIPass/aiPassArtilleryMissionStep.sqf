@@ -30,7 +30,7 @@ private _blocked = !alive _battery || {!alive gunner _battery} || {time > (_miss
     || {side group gunner _battery != (_mission get "side")}
     || {!([group gunner _battery] call Waldo_fnc_AIPassIsEligible)}
     || {!([_battery, _mission get "purpose"] call Waldo_fnc_AIPassArtilleryRole)}
-    || {!(missionNamespace getVariable [["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select ((_mission get "purpose") == "COUNTER"), false])};
+    || {!([group gunner _battery, ["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select ((_mission get "purpose") == "COUNTER"), false] call Waldo_fnc_AIPassFeatureEnabled)};
 if (_blocked) exitWith {
     if (alive _battery && {(_mission get "phase") in ["PENDING", "UNCERTAIN"]}) then {
         _mission set ["remaining", 0];

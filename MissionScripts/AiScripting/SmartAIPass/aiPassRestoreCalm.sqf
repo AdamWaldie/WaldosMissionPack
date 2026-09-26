@@ -17,6 +17,8 @@
  * 0: group <GROUP>
  * 1: state <HASHMAP> - from Waldo_fnc_AIPassGroupState
  *
+ * 2: allow remount <BOOL>, true; false during stop, ownership restoration or external takeover.
+ * Repeat/JIP: removes only WMP transient orders and restores recorded values.
  * Return Value:
  * Nothing
  *
@@ -27,7 +29,7 @@
  * Current callers: Waldo_fnc_AIPassGroupTick and Waldo_fnc_AIPassReleaseGroup.
  */
 
-params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]]];
+params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]]];
 if (isNull _group || {!local _group}) exitWith {};
 private _leader = leader _group;
 [_group] call Waldo_fnc_AIPassGroupMoveClear;
@@ -38,6 +40,12 @@ private _leader = leader _group;
     if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet", false]}) then {
         _x setUnitPos "AUTO";
         _x setVariable ["Waldo_AIPass_StanceSet", nil, true];
+    };
+    if (local _x) then {
+        private _target = _x getVariable ["Waldo_AIPass_VehicleTarget",objNull];
+        if (!isNull _target && {assignedTarget _x == _target}) then {_x doTarget objNull};
+        _x setVariable ["Waldo_AIPass_VehicleTarget",nil,true];
+        _x setVariable ["Waldo_AIPass_TargetHold",nil];
     };
 } forEach units _group;
 if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader in ["COMBAT", "AWARE"]}) then {
@@ -51,13 +59,13 @@ if (_state getOrDefault ["speedChanged", false]) then {
 };
 {
     _x params ["_unit", "_vehicle"];
-    if (alive _unit && {local _unit} && {alive _vehicle} && {canMove _vehicle} && {vehicle _unit == _unit} && {group _unit == _group}) then {
+    if (_allowRemount && {[_group,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_AIPassFeatureEnabled} && {group _unit == _group} && {[_group, "Waldo_AIPass_VehicleRemount_Enable", true] call Waldo_fnc_AIPassFeatureEnabled} && {[_unit, _vehicle, true] call Waldo_fnc_AIPassPassengerReady}) then {
         _unit assignAsCargo _vehicle;
         [_unit] orderGetIn true;
     };
 } forEach (_state getOrDefault ["dismounted", []]);
 {_state deleteAt _x} forEach [
-    "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "reinforceRequested",
+    "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
     "armourRequested", "coordinated", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];

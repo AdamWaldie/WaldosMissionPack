@@ -15,10 +15,11 @@ _configuration params ["_revision", "_speed", "_separation", "_pushThrough", "_r
 if (time < (_group getVariable ["Waldo_Convoy_NextTick", -1])) exitWith {};
 _group setVariable ["Waldo_Convoy_NextTick", time + 1];
 private _state = _group getVariable ["Waldo_Convoy_LocalState", createHashMap];
-private _paused = [] call Waldo_fnc_AIPassIsPaused;
+private _paused = [] call Waldo_fnc_AIPassIsPaused || {_group getVariable ["Waldo_AI_ExternalControl",false]} || {"ALL" in (_group getVariable ["Waldo_AIPass_DisabledFeatures",[]])};
 private _playerCrew = _registered findIf {(crew _x) findIf {isPlayer _x || {!isNull (_x getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])}} >= 0} >= 0;
 private _zeus = [_group] call Waldo_fnc_AIPassZeusHeld;
 if (_paused || {_playerCrew} || {_zeus}) exitWith {
+    [_group,_configuration,true] call Waldo_fnc_ConvoyDismountLocal;
     if (!(_group getVariable ["Waldo_Convoy_Suspended", false])) then {
         [_group, false, _restore] call Waldo_fnc_ConvoyReleaseLocal;
         _group setVariable ["Waldo_Convoy_Suspended", true];
@@ -94,7 +95,7 @@ if (time >= (_state getOrDefault ["checkpointDue", -1])) then {
     if (_checkpoint isNotEqualTo (_group getVariable ["Waldo_Convoy_ContactProgress", []])) then {_group setVariable ["Waldo_Convoy_ContactProgress", _checkpoint, true]};
     _state set ["checkpointDue", time + 5];
 };
-if (_contact && {!_pushThrough || {_pinned}}) exitWith {
+if (_contact && {!_pushThrough || {_pinned}} && {[_group,"Waldo_Convoy_ContactHalt_Enable",true] call Waldo_fnc_AIPassFeatureEnabled}) exitWith {
     if (time >= (_state getOrDefault ["haltRequest", -1])) then {
         [_group, _revision, "AMBUSH", _state getOrDefault ["threat", []]] remoteExecCall ["Waldo_fnc_ConvoyHaltServer", 2];
         _state set ["haltRequest", time + 5];
@@ -147,6 +148,7 @@ for "_i" from 1 to (count _vehicles - 1) do {
 private _leadLimit = (_maximum - ((_stretch - 1) max 0) * 5 - (_turn min 60) * 0.4) max 5;
 if (!_contact && {_stretch > 3}) then {_leadLimit = 0};
 if (_routeDone) then {_leadLimit = 0};
+_leadLimit = [_lead,_leadLimit,_group] call Waldo_fnc_AIPassInfantrySpeed;
 _lead forceSpeed (_leadLimit / 3.6);
 private _followers = _state get "followers";
 for "_i" from 1 to (count _vehicles - 1) do {
@@ -156,7 +158,7 @@ for "_i" from 1 to (count _vehicles - 1) do {
     private _desiredGap = _gaps select _i;
     private _native = _vehicle isKindOf "Tank" || {!isAISteeringComponentEnabled _vehicle};
     private _limit = ((abs speed _front) + (_gap - _desiredGap) * 0.65 - ((abs speed _vehicle) - (abs speed _front)) * 0.25) max 0;
-    _vehicle forceSpeed ((_limit min _maximum) / 3.6);
+    _vehicle forceSpeed (([_vehicle,_limit min _maximum,_group] call Waldo_fnc_AIPassInfantrySpeed) / 3.6);
     private _key = netId _vehicle;
     private _progress = _followers getOrDefault [_key, [getPosATL _vehicle, time, -1, _trailBase]];
     if (_vehicle distance2D (_progress select 0) > 3) then {_progress = [getPosATL _vehicle, time, _progress select 2, _progress select 3]};

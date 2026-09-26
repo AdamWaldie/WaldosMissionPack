@@ -12,6 +12,7 @@
  *
  * Review contract: A blocked backblast causes only a relocation request. A later group step must recheck clearance before ordering the shot.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -37,7 +38,7 @@ if (_armourIndex < 0) exitWith {false};
 private _armour = vehicle _enemyUnit;
 private _now = time;
 private _gunners = (units _group) select {
-    alive _x && {local _x} && {vehicle _x == _x} && {([_x] call Waldo_fnc_AIPassUnitRole) == "AT"}
+    alive _x && {local _x} && {vehicle _x == _x} && {"AT" in ([_x] call Waldo_fnc_AIPassCapabilities)}
 };
 if (_gunners findIf {assignedTarget _x == _armour && {(_x getVariable ["Waldo_AIPass_TargetHold", -1]) > _now}} >= 0) exitWith {false};
 private _ranked = [];
@@ -54,7 +55,7 @@ private _blocked = (lineIntersectsSurfaces [_eye, _behind, _gunner, objNull, tru
         (_offset vectorDotProduct ((ATLToASL _enemyPos) vectorDiff (getPosASL _gunner))) < 0
     } >= 0};
 if (_blocked) exitWith {
-    private _spot = ([(getPosATL _gunner) getPos [6, (_enemyPos getDir _gunner) + selectRandom [-70, 70]], _enemyPos, 8] call Waldo_fnc_AIPassFindCover) select 0;
+    private _spot = ([(getPosATL _gunner) getPos [6, (_enemyPos getDir _gunner) + selectRandom [-70, 70]], _enemyPos, 8, [], _group] call Waldo_fnc_AIPassFindCover) select 0;
     _gunner doMove _spot;
     false
 };

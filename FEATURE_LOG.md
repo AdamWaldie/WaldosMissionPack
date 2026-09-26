@@ -63,3 +63,9 @@ Required direction:
 ## PR 151 review follow-up (2026-09-26)
 
 Smart AI source corrections and outstanding runtime acceptance are recorded in [the PR 151 review](releaseVerificationAndDeployment/pr151_review.md). The PR remains draft. Add live coverage for opening ranging exclusion, explicit spotter loss/recovery and jamming, cross-owner shot accounting, ownership restoration, clear-building replay, pin provenance, owner-confirmed Zeus results, and convoy route/recovery/stop behaviour under WMP and ACE headless migration. Static results do not satisfy these checks.
+
+The modular follow-up adds live launcher capability, passenger safety, expiring cross-owner reports,
+server-reserved reinforcement/assault, cover validation and independently disabled vehicle/convoy
+behaviours. Hearing and friendly-infantry convoy avoidance default off. Add runtime acceptance for
+reservation races, group opt-outs, live disable/cleanup, bridge unloading and mixed-owner passengers.
+Mechanized overwatch and casualty/prisoner assignment remain deferred pending engine validation.

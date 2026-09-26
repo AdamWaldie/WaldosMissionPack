@@ -15,6 +15,8 @@
  * 1: legs <ARRAY> - ATL leg end points, in order
  * 2: final kind <STRING> - kind for the last point (optional, default: "FINAL")
  *
+ * 3: group <GROUP> - optional group feature exclusions, default grpNull.
+ * Repeat/JIP: pure bounded calculation, no persistent state.
  * Return Value:
  * Array - [[positionATL, kind], ...] with kind BOUND, CROSS_NEAR, CROSS_FAR or the final kind
  *
@@ -25,9 +27,9 @@
  * Current callers: Waldo_fnc_AIPassFlankStart and Waldo_fnc_AIPassAdvanceStart.
  */
 
-params [["_start", [], [[]]], ["_legs", [], [[]]], ["_finalKind", "FINAL", [""]]];
+params [["_start", [], [[]]], ["_legs", [], [[]]], ["_finalKind", "FINAL", [""]], ["_group",grpNull,[grpNull]]];
 private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
-private _streets = missionNamespace getVariable ["Waldo_AIPass_StreetCrossing_Enable", true];
+private _streets = [_group,"Waldo_AIPass_StreetCrossing_Enable",true] call Waldo_fnc_AIPassFeatureEnabled;
 private _points = [];
 private _from = _start;
 {

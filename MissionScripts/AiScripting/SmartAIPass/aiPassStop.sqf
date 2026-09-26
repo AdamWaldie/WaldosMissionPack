@@ -28,6 +28,8 @@
 
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 if (isServer) then {
+    {private _job = _y; {(_x select 0) setVariable ["Waldo_AIPass_SupportLease",nil,true]} forEach (_job get "leases")} forEach (missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap]);
+    missionNamespace setVariable ["Waldo_AIPass_SupportRequests",createHashMap];
     missionNamespace setVariable ["Waldo_AIPass_CounterGeneration", (missionNamespace getVariable ["Waldo_AIPass_CounterGeneration", 0]) + 1];
     missionNamespace setVariable ["Waldo_AIPass_Enable", false, true];
     {
@@ -71,6 +73,8 @@ if (!isNil "_handle") then {
     ["Waldo_AIPass_ArtilleryHandler", "ArtilleryShellFired"]
 ];
 {
+    [_x,true] call Waldo_fnc_AIPassHearingLocal;
+    if (local _x) then {_x setVariable ["Waldo_AIPass_AreaReport",nil,true]};
     if (local _x && {count (_x getVariable ["Waldo_AIPass_State", createHashMap]) > 0 || {_x getVariable ["Waldo_AIPass_Managed", false]}}) then {
         [_x] call Waldo_fnc_AIPassReleaseGroup;
     };

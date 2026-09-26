@@ -18,6 +18,7 @@
  * Morale inputs come from state the pass already holds; there are no allUnits scans.
  * Locality and authority: call where the group is local.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -53,7 +54,7 @@ private _contactLeader = _state getOrDefault ["contactLeader", leader _group];
 private _leaderLost = [0, 1] select (!alive _contactLeader && {leader _group != _contactLeader});
 private _recent = {(_x select 2) <= 30} count _enemies;
 private _outnumbered = (((_recent / _count) - 1) max 0) min 2;
-private _hasAT = _alive findIf {([_x] call Waldo_fnc_AIPassUnitRole) == "AT"} >= 0;
+private _hasAT = _alive findIf {"AT" in ([_x] call Waldo_fnc_AIPassCapabilities)} >= 0;
 private _armour = [0, 1] select (!_hasAT && {_enemies findIf {
     private _enemy = vehicle (_x select 0);
     (_enemy isKindOf "Tank" || {_enemy isKindOf "Wheeled_APC_F"}) && {(_x select 3) <= 400} && {(_x select 2) <= 30}
@@ -80,12 +81,12 @@ if (_current != _previous && {missionNamespace getVariable ["Waldo_AIPass_Debug"
 };
 if (_current != "BROKEN") exitWith {""};
 
-if (missionNamespace getVariable ["Waldo_AIPass_Surrender_Enable", false] && {_count <= (_profile get "surrenderSurvivors")}
+if ([_group,"Waldo_AIPass_Surrender_Enable", false] call Waldo_fnc_AIPassFeatureEnabled && {_count <= (_profile get "surrenderSurvivors")}
     && {_enemies findIf {(_x select 3) < 60} >= 0}) then {
     private _leaderPos = getPosATL leader _group;
     private _side = side _group;
     private _friendsNear = allGroups findIf {
-        _x != _group && {side _x == _side} && {(units _x) findIf {alive _x} >= 0} && {(leader _x) distance2D _leaderPos < 300}
+        _x != _group && {side _x == _side} && {(units _x) findIf {[_x] call Waldo_fnc_AIPassCombatEffective && {!fleeing _x}} >= 0} && {(leader _x) distance2D _leaderPos < 300}
     } >= 0;
     if (!_friendsNear) exitWith {"SURRENDER"};
     ["", "RETREAT"] select ((_state getOrDefault ["phase", ""]) == "CONTACT")

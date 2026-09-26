@@ -23,9 +23,9 @@ private _reserved = [];
         private _job = _unit getVariable ["Waldo_Convoy_Dismount", []];
         private _ours = count _job == 4 && {(_job select 0) == _group} && {(_job select 1) == _revision};
         private _capable = alive _unit && {!(_unit getVariable ["ACE_isUnconscious", false])} && {lifeState _unit != "INCAPACITATED"};
-        private _operator = isPlayer leader group _unit || {[group _unit] call Waldo_fnc_AIPassZeusHeld}
+        private _operator = (group _unit) getVariable ["Waldo_AI_ExternalControl",false] || {"ALL" in ((group _unit) getVariable ["Waldo_AIPass_DisabledFeatures",[]])} || isPlayer leader group _unit || {[group _unit] call Waldo_fnc_AIPassZeusHeld}
             || {!isNull (_unit getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])};
-        private _end = _cleanup || {_phase != "HALT"} || {_reason != "AMBUSH"} || {serverTime >= _deadline}
+        private _end = _cleanup || {!([group _unit,"Waldo_Convoy_Cover_Enable",true] call Waldo_fnc_AIPassFeatureEnabled)} || {!([_group,"Waldo_Convoy_Cover_Enable",true] call Waldo_fnc_AIPassFeatureEnabled)} || {_phase != "HALT"} || {_reason != "AMBUSH"} || {serverTime >= _deadline}
             || {_operator} || {!_capable} || {vehicle _unit != _unit && {vehicle _unit != _vehicle || {_ours && {(_job select 3) isNotEqualTo []}}}};
         if (_end) then {
             if (_ours) then {
@@ -45,7 +45,7 @@ private _reserved = [];
                     if (_threat isNotEqualTo []) then {
                         private _away = _threat getDir _anchor;
                         private _search = _anchor getPos [8, _away + ((_forEachIndex mod 5) - 2) * 20];
-                        ([_search, _threat, 12, _reserved] call Waldo_fnc_AIPassFindCover) params ["_cover", "_found"];
+                        ([_search, _threat, 12, _reserved, _group] call Waldo_fnc_AIPassFindCover) params ["_cover", "_found"];
                         if (_found && {_unit distance2D _cover <= 25} && {_vehicle distance2D _cover >= 6}) then {_destination = _cover};
                     };
                     // Without verified cover, disperse a short distance. Do not claim the fallback is protected.

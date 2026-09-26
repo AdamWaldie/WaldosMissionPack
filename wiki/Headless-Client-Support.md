@@ -429,6 +429,11 @@ AI convoys now use server registration and owner-local driving workers instead o
 Their ordered registry replays to joining headless clients, and a new owner rebuilds the local
 route trail. Smart AI restoration checkpoints and clear-building progress also survive as public
 state. These new handover paths still need in-engine WMP and ACE headless verification.
+Smart AI reports now relay expiring positions across owners. Reinforcement slots are reserved on the
+server; current owners acknowledge the exact assignment and revalidate it after migration. Group
+feature exclusions and the external-control flag are public so WMP and ACE handovers see the same
+policy. These additions also await live transfer, disconnect and simultaneous-request testing.
+
 Feature-crew release restores recorded pre-pin exclusions; unknown exclusions are preserved.
 
 ## See also

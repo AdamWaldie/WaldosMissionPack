@@ -351,10 +351,10 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   armour keeps a standoff distance from known AT teams.
 - **Grenade evasion** (`Waldo_fnc_AIPassGrenadeCheck`, from a `ProjectileCreated` handler installed
   only while enabled).
-- **Contact reports** (`Waldo_fnc_AIPassContactReport`): `reveal`, same machine only, delayed by
-  distance.
+- **Modularity**: independent vehicle/convoy child switches, per-group `Waldo_AIPass_DisabledFeatures` and `Waldo_AI_ExternalControl`. Hearing and convoy infantry avoidance default off. Capability reads live compatible ammunition; passenger checks are shared. Reinforcement uses server reservations and matching owner acknowledgements. See the Smart AI wiki for bounds and handover limits.
+- **Contact reports** (`Waldo_fnc_AIPassContactReport`): server-batched expiring position reports to current owners; no target reveal.
 - **Reinforcement** (`Waldo_fnc_AIPassReinforce`): responder cap; responders move to a rally point
-  behind the squad in contact. Squads with AT are preferred, and an extra AT-only request is made
+  behind the squad in contact. Candidates are considered by distance, and an extra AT-only request is made
   against armour. Garrison, defence-line and clear-building squads, aircrews, static-gun crews and
   artillery never respond.
 - **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): explicit equipped spotters, reported positions, displaced opening HE and observed corrections. Server mission tokens coordinate different owners. Finite bursts share an aim point, with corrections after estimated flight time and a warning pause. Each round requires an actual firing event; unknown results are quarantined. AI radio inventory is not required. A SMOKE mode screens retreats.

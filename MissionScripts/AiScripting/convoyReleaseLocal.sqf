@@ -28,7 +28,7 @@ if (_restore isNotEqualTo []) then {
             private _target = _unit getVariable ["Waldo_Convoy_Target", objNull];
             if (local _unit && {!isPlayer _unit} && {!isNull _target}) then {
                 if (assignedTarget _unit == _target) then {_unit doTarget objNull};
-                _unit setVariable ["Waldo_Convoy_Target", nil];
+                _unit setVariable ["Waldo_Convoy_Target", nil, true];
             };
         } forEach crew _vehicle;
         if !(_vehicle in _keepCrew) then {

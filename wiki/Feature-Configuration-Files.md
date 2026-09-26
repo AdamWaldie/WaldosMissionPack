@@ -412,6 +412,16 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Surrender_Enable` | The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded). Default `false`. |
 | `Waldo_AIPass_GrenadeEvasion_Enable` | AI move away from a live grenade they can see; off until tested in your setup. Default `false`. |
 | `Waldo_AIPass_AntiArmour_Enable` | The best anti-tank gunner engages known armour, clear of backblast. Default `true`. |
+| `Waldo_AIPass_VehicleDismount_Enable` | Routine passenger dismounting during vehicle contact drills. Default `true`. |
+| `Waldo_AIPass_VehicleRemount_Enable` | Reboard recorded passengers on a normal return to CALM. Default `true`. |
+| `Waldo_AIPass_VehicleWithdraw_Enable` | Damaged vehicle smoke and withdrawal. Default `true`. |
+| `Waldo_AIPass_CoverValidation_Enable` | Bounded footprint, slope and geometry validation for cover candidates. Default `true`. |
+| `Waldo_AIPass_Hearing_Enable` | Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default `false`. |
+| `Waldo_Convoy_MountedFire_Enable` | Mounted crew targeting under existing ROE. Default `true`. |
+| `Waldo_Convoy_Cover_Enable` | Initial passenger cover movement after an ambush halt. Default `true`. |
+| `Waldo_Convoy_ContactHalt_Enable` | Contact halt requests under the configured push-through rule. Default `true`. |
+| `Waldo_Convoy_Unload_Enable` | Routine cargo unloading at arrival, manual stop and ambush halt. Default `true`. |
+| `Waldo_Convoy_AvoidInfantry_Enable` | Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default `false`. |
 | `Waldo_AIPass_Vehicles_Enable` | Infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw. Default `true`. |
 | `Waldo_AIPass_ContactReports_Enable` | Squads share sighted enemies by radio (blocked by jamming) or by voice. Default `true`. |
 | `Waldo_AIPass_ContactReports_Radius` | Radio report range in metres. Default `500`. |

@@ -19,14 +19,14 @@ if (!local _battery || {!alive _battery} || {!alive gunner _battery}
     || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])} || {[] call Waldo_fnc_AIPassIsPaused}
     || {!([group gunner _battery] call Waldo_fnc_AIPassIsEligible)}
     || {!([_battery, _purpose] call Waldo_fnc_AIPassArtilleryRole)}
-    || {!(missionNamespace getVariable [["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select (_purpose == "COUNTER"), false])}) exitWith {call _reject};
+    || {!([group gunner _battery, ["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select (_purpose == "COUNTER"), false] call Waldo_fnc_AIPassFeatureEnabled)}) exitWith {call _reject};
 private _minimum = if (_mode == "SMOKE") then {50} else {missionNamespace getVariable [["Waldo_AIPass_Artillery_MinFriendlyDistance", "Waldo_AIPass_CounterBattery_MinFriendlyDistance"] select (_purpose == "COUNTER"), 200]};
 private _side = side group gunner _battery;
 if ((_aim nearEntities [["CAManBase", "LandVehicle", "Air", "Ship"], _minimum]) findIf {
     private _entity = _x;
     alive _entity && {([_entity] + crew _entity) findIf {alive _x && {side _x == civilian || {_side getFriend (side _x) >= 0.6}}} >= 0}
 } >= 0) exitWith {call _reject};
-if (!(_magazine in getArtilleryAmmo [_battery]) || {!(_aim inRangeOfArtillery [[_battery], _magazine])}
+if (!(_magazine in getArtilleryAmmo [_battery]) || {(magazinesAllTurrets [_battery,true]) findIf {(_x select 0) == _magazine && {(_x select 2) > 0}} < 0} || {!(_aim inRangeOfArtillery [[_battery], _magazine])}
     || {_battery getArtilleryETA [_aim, _magazine] < 0}) exitWith {call _reject};
 _battery doArtilleryFire [_aim, _magazine, 1];
 true

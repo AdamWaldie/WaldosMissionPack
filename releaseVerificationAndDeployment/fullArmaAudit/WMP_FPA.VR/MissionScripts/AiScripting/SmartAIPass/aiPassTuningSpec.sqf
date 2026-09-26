@@ -8,6 +8,7 @@
  * MissionConfig\aiConfig.sqf values.
  * Locality and authority: read-only; callable anywhere.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * None
  *
@@ -32,6 +33,16 @@ private _profileLabels = ["Follow the AI Rebalance profile", "Militia", "Line", 
 } forEach keys (missionNamespace getVariable ["Waldo_AIPass_ProfileBehaviour", createHashMap]);
 
 [
+    ["Waldo_AIPass_VehicleDismount_Enable", "Vehicle contact dismount", "Unloads capable passengers only when safely stopped on dry ground.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleRemount_Enable", "Vehicle remount", "Allows safe conscious passengers to reboard after Smart AI contact. Convoy resume stays explicit.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleWithdraw_Enable", "Vehicle withdrawal", "Allows damaged vehicles to withdraw and use existing smoke.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_CoverValidation_Enable", "Additional cover checks", "Adds bounded slope and body clearance checks to shared cover selection.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_MountedFire_Enable", "Convoy mounted targeting", "WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_Cover_Enable", "Convoy passenger cover", "Issues the finite cover move after an ambush dismount.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_AvoidInfantry_Enable", "Convoy infantry avoidance", "Optional short-range friendly infantry corridor checks before driving.", "CHECKBOX", [], false],
+    ["Waldo_Convoy_ContactHalt_Enable", "Convoy contact halts", "Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_Unload_Enable", "Convoy cargo unloading", "Allows WMP passenger unloading on halt. Operating crews remain aboard.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Hearing_Enable", "Nearby gunfire investigation", "Optional FiredNear awareness within the engine event range. Records an uncertain area, never a target reveal. Disabled by default.", "CHECKBOX", [], false],
     // Squad behaviour
     ["Waldo_AIPass_BehaviourProfile", "Behaviour profile", "Tactics profile for every squad without a group or faction profile of its own. Skill values are not changed.", "COMBO", [_profiles, _profileLabels], ""],
     ["Waldo_AIPass_Aggression", "Aggression", "Scales how often squads flank, assault, advance, investigate and join coordinated assaults. 1 is the profile's own value, 0 never, 2 twice as often.", "SLIDER", [0, 2, 2], 1],

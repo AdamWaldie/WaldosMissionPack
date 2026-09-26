@@ -82,8 +82,8 @@ touched.
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
 | Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Infantry riding in the squad's vehicle get out under fire and get back in afterwards. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
 | Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
-| Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass sighted enemies to nearby friendly squads. The range is 500 m through abstracted AI communications, or 35 m by voice. Radio jamming blocks the radio report. |
-| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help must pass WMP jamming checks. |
+| Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass recent believed positions to nearby friendly squads for investigation, including squads on other owners. The range is 500 m through abstracted AI communications, or 35 m by voice. Radio jamming blocks the radio report. |
+| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Candidates are considered by distance; when armour appears, one additional slot requires a soldier with usable AT ammunition. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help must pass WMP jamming checks. |
 | Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | Explicitly assigned spotters request finite HE ranging bursts from friendly artillery, including guns on another owner. Support corrections require observation and an unjammed report. Opening aim points avoid players; every shot checks friendlies and civilians. Mobile guns may relocate afterwards. |
 | Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
 | Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Acquires enemy firing locations, then fires finite ranging bursts. Radar reduces acquisition delay. |
@@ -373,6 +373,92 @@ and artillery in **AI Control**. Tune warning/safety settings in **AI Tuning**. 
 Order success is reported after the current owner accepts it. Missing responses are reported as
 uncertain, rather than presented as successful execution.
 
+## Independent behaviour controls
+
+The Smart AI master switch remains off by default. Child switches only apply while their parent
+feature is running. **WMP AI Control > AI Tuning** uses the same named settings as mission scripts;
+the server validates changes and includes them in ordered settings replay for HCs and joining clients.
+Convoy controls apply to explicitly configured convoys independently of the Smart AI master switch.
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| `Waldo_AIPass_VehicleDismount_Enable` | `true` | Routine unloading during vehicle contact drills. |
+| `Waldo_AIPass_VehicleRemount_Enable` | `true` | Reboard recorded passengers on a normal return to CALM. Stop and locality cleanup never board them. |
+| `Waldo_AIPass_VehicleWithdraw_Enable` | `true` | Damaged vehicle smoke and withdrawal. |
+| `Waldo_AIPass_CoverValidation_Enable` | `true` | Validate cover footprint, slope and blocked line of sight. |
+| `Waldo_AIPass_Hearing_Enable` | `false` | Investigate nearby hostile gunfire reported by the engine to the squad leader. Also requires investigation. |
+| `Waldo_Convoy_MountedFire_Enable` | `true` | Direct operating weapon crews at known threats under their existing ROE. |
+| `Waldo_Convoy_Cover_Enable` | `true` | Initial passenger cover movement after an ambush halt. |
+| `Waldo_Convoy_ContactHalt_Enable` | `true` | Contact-driven halt requests under the existing push-through rule. |
+| `Waldo_Convoy_Unload_Enable` | `true` | Routine passenger unloading at arrival, manual stop and ambush halt. |
+| `Waldo_Convoy_AvoidInfantry_Enable` | `false` | Slow or stop for friendly infantry in the vehicle's immediate travel corridor. |
+
+The existing vehicle gunnery switch also controls standoff manoeuvres. Other existing switches still
+separate reinforcement, coordinated assault, contact reports, artillery, counter-battery, movement
+drills, grenade evasion and aircraft reactions. These switches do not disable engine emergency bailouts.
+
+Groups can veto automatic behaviours using full setting names. Set these variables publicly from the
+server so every owner sees the same exclusions:
+
+```sqf
+_patrol setVariable ["Waldo_AIPass_DisabledFeatures", [
+    "Waldo_AIPass_Flank_Enable",
+    "Waldo_AIPass_VehicleGunnery_Enable",
+    "Waldo_AIPass_ContactReports_Enable"
+], true];
+// Yield automatic Smart AI and convoy commands to another controller.
+_patrol setVariable ["Waldo_AI_ExternalControl", true, true];
+// Restore eligibility after the other controller has released the group.
+_patrol setVariable ["Waldo_AI_ExternalControl", false, true];
+```
+
+`["ALL"]` excludes a group from automatic Smart AI and convoy commands. An exclusion can only remove
+permission; it cannot turn on a globally disabled feature. Separate convoy passenger and weapon-crew
+groups also apply their own unloading, cover and mounted-fire exclusions. Explicit garrison/defence
+orders retain their existing release workflow. Release an existing WMP order before handing that group
+to another controller. Cleanup may restore WMP-owned settings on the next worker step; give the new
+controller its orders after that handover. Already fired shells and completed engine actions cannot
+be undone by changing a switch.
+
+## Shared capabilities and cooperation
+
+Launcher capability is separate from a soldier's tactical role. A leader can provide AT capability,
+and AA-only or empty launchers do not count as ready AT weapons. Config classification is cached;
+compatible loaded and carried ammunition counts are read live. For unusual ammunition configs,
+`Waldo_AIPass_AmmoCapabilityOverrides` is a mission-config HashMap from magazine classname to
+`["AT"]`, `["AA"]`, both, or an empty array. It is included in settings replay.
+
+Routine unloading requires a capable local AI passenger, a vehicle moving below 1 km/h, and dry ground
+or a detected bridge deck. Driver, commander and operating weapon turrets remain aboard. Unconscious,
+captive, surrendering, player-controlled and externally controlled soldiers do not receive these
+orders. Remounting also requires a movable vehicle and a free cargo seat. Effective nearby allies for
+surrender exclude unconscious, surrendered, captive and fleeing soldiers. ACE remains responsible for
+medical treatment and prisoner interactions.
+
+A contact report carries up to three recent believed positions through the server. Delivery processes
+at most eight receiving groups every 0.5 seconds, expires after 15 seconds and rechecks eligibility,
+range, jamming and feature gates. A receiver retains the first position for at most 30 seconds and
+may investigate it. It gains no enemy-object reveal or artillery targeting from that report.
+
+Reinforcement requests reserve helpers on the server before their owners receive movement orders.
+There are at most 32 active requests, six responders per request and eight candidate checks per
+request step. Each step runs no sooner than two seconds apart. A reservation lasts at most 300 seconds;
+owner acknowledgement has a 15-second deadline. Owners wait up to five seconds for the matching state,
+then recheck current eligibility, capability, explicit orders and feature switches. Ownership changes
+redeliver the current reservation. Coordinated assault uses those same accepted reservations, avoiding
+another owner-local search that could double-book helpers.
+
+Optional hearing uses one tracked `FiredNear` handler on an eligible AI leader. It records a position
+rounded to a 50 m grid, at most once per ten seconds, with a 20-second expiry. Suppressed shots beyond
+20 m are ignored. Its reach is limited by the engine event; it does not scan the battlefield for shots.
+The handler is removed on disable, leader change, release of locality or stop. Investigation remains
+subject to WMP eligibility and the selected LAMBS compatibility mode.
+
+Cover selection examines at most ten nearby objects, uses a search radius capped at 25 m and checks
+candidate ground and geometry. This does not prove that a position is reachable or safe. Optional
+convoy infantry avoidance inspects a corridor capped at 30 m and at most 32 nearby soldiers; a more
+crowded corridor requests a stop. It changes the existing speed request without adding a driving loop.
+
 ## Performance and network
 
 - AI workers run on the server and headless clients; interface clients provide Zeus controls.
@@ -382,10 +468,10 @@ uncertain, rather than presented as successful execution.
 - How often a squad is stepped depends on its distance to the nearest player: every 2 s in contact
   nearby, up to every 20 s far away. Squads more than 2.5 km from every player only update their
   state and morale.
-- Uses only what the engine already knows about enemies, and adds no detection of its own.
+- Uses engine knowledge and expiring reported positions. Optional nearby-gunfire investigation adds a coarse sound report without revealing the shooter.
 - Restoration checkpoints broadcast only when their contents change. Clear-building progress and orders have durable replay state.
 - Artillery uses cached guns/spotters, one observer request per burst and at most eight opening aim candidates. Counter-battery uses firing-event snapshots; its legacy observer helper is not needed for automatic acquisition.
-- Contact reports and reinforcement remain owner-local; artillery has a server coordinator and owner-local execution.
+- Contact reports, reinforcement reservations and artillery have server coordination with current-owner execution. Reports contain positions; they do not reveal enemy objects.
 
 ## Limitations
 
@@ -396,7 +482,7 @@ uncertain, rather than presented as successful execution.
   - grenade evasion depends on where the engine raises the `ProjectileCreated` event in multiplayer;
     if it is not raised where the AI live, the feature silently does nothing;
   - many aircraft already fire flares under AI control.
-- Contact reports and reinforcement only work between squads owned by the same machine.
+- Cross-owner reports and reinforcement are implemented but still require live WMP/ACE HC migration tests. A report can be dropped during ownership transfer; it never replays an old command to a new owner.
 - LAMBS can override move orders while its own danger logic is active. Stuck-move fallbacks and
   time limits keep every behaviour finite.
 - Ownership epochs retire stale jobs; changed restoration checkpoints and clear-building progress are public. The new owner restores and adopts the group. WMP and ACE headless transfers, including abrupt disconnects, still need in-engine verification.

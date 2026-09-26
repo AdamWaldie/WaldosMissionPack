@@ -142,6 +142,23 @@ plan a bypass around a blocked road, or coordinate an infantry assault. Live acc
 also test visible enemies without fire, hostile hits, cover expiry, deliberate reboarding and
 HC transfers while passengers are leaving or moving to cover.
 
+## Optional convoy behaviours
+
+AI Tuning exposes independent switches for mounted targeting, passenger cover, contact halts and
+routine unloading. They default on. Friendly-infantry avoidance is separately available and defaults
+off. The [Smart AI control reference](Smart-AI-Pass#independent-behaviour-controls) lists the exact
+setting names and per-group exclusions. Convoys do not require the Smart AI master switch.
+
+The optional infantry check limits the existing speed request to walking pace or zero when friendly
+soldiers occupy the immediate travel corridor. It checks at most 32 nearby soldiers within a corridor
+capped at 30 m. It does not steer around them or guarantee collision avoidance.
+
+Routine passenger unloading waits for a speed below 1 km/h and suitable ground or a detected bridge
+deck. It skips unconscious, captive, surrendered and externally controlled passengers. Separate cargo
+and turret groups can veto their own unloading, cover and mounted-fire behaviour. Setting
+`Waldo_AI_ExternalControl` on the convoy group suspends its commands; release the convoy first for a
+complete handover of restored vehicle settings.
+
 ## Limitations and acceptance checks
 
 The full-pack audit console includes an opt-in mixed convoy at [600,500]: an armed MRAP, tracked APC

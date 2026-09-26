@@ -19,6 +19,8 @@ if (remoteExecutedOwner > 2) then {
 if (!(_purpose in ["SUPPORT", "COUNTER"]) || {!(_mode in ["HE", "SMOKE"])} || {count _target < 2} || {_target findIf {!(_x isEqualType 0)} >= 0}
     || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])} || {[] call Waldo_fnc_AIPassIsPaused}) exitWith {false};
 private _counter = _purpose == "COUNTER";
+private _feature = ["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select _counter;
+if (!isNull _spotter && {!([group _spotter,_feature,false] call Waldo_fnc_AIPassFeatureEnabled)}) exitWith {false};
 if !(missionNamespace getVariable [["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select _counter, false]) exitWith {false};
 if (!isNull _spotter && {!alive _spotter || {!(_spotter getVariable ["Waldo_AIPass_Spotter", false])}}) exitWith {false};
 if (!isNull _spotter && {time < (_spotter getVariable ["Waldo_AIPass_NextFireRequest_" + _purpose, -1])}) exitWith {false};
@@ -34,6 +36,7 @@ if (isNull _battery) then {
         alive _x && {alive gunner _x} && {side group gunner _x == side group _spotter}
         && {!((netId _x) in _missions)} && {[_x, _purpose] call Waldo_fnc_AIPassArtilleryRole}
         && {[group gunner _x] call Waldo_fnc_AIPassIsEligible}
+        && {[group gunner _x,_feature,false] call Waldo_fnc_AIPassFeatureEnabled}
         && {_target inRangeOfArtillery [[_x], [_x, _mode == "SMOKE"] call Waldo_fnc_AIPassArtilleryAmmo]}
     };
     if (_index >= 0) then {_battery = _candidates select _index};
@@ -41,6 +44,7 @@ if (isNull _battery) then {
 if (isNull _battery || {!alive gunner _battery} || {(netId _battery) in _missions}
     || {!([_battery, _purpose] call Waldo_fnc_AIPassArtilleryRole)}
     || {!([group gunner _battery] call Waldo_fnc_AIPassIsEligible)}
+    || {!([group gunner _battery,_feature,false] call Waldo_fnc_AIPassFeatureEnabled)}
     || {!isNull _spotter && {side group _spotter != side group gunner _battery}}) exitWith {false};
 private _magazine = [_battery, _mode == "SMOKE"] call Waldo_fnc_AIPassArtilleryAmmo;
 if (_magazine == "") exitWith {false};

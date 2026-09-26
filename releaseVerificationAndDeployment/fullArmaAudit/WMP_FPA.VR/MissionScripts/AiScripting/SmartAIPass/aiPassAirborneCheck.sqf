@@ -22,6 +22,7 @@
  * altitude afterwards; give it a new flyInHeight in a later waypoint if it should fly lower.
  * Locality and authority: call where the group is local.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP> - from Waldo_fnc_AIPassGroupState
@@ -40,7 +41,7 @@
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_force", false, [false]]];
-if (!_force && {!(missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false])}) exitWith {-1};
+if (!_force && {!([_group,"Waldo_AIPass_Airborne_Enable",false] call Waldo_fnc_AIPassFeatureEnabled)}) exitWith {-1};
 // Passengers: cargo seats and the person-turret (FFV) seats many helicopters use for troops. Crew
 // (pilots, gunners, commanders) never counts.
 private _passengersOf = {
@@ -93,7 +94,7 @@ _aircraft setVariable ["Waldo_AIPass_DropUntil", time + 30 + count _cargo * 3];
 _group setVariable ["Waldo_AIPass_Dropping", true];
 [Waldo_fnc_AIPassAirborneDropStep, createHashMapFromArray [
     ["group", _group], ["aircraft", _aircraft], ["jumpers", _cargo], ["index", 0], ["phase", "DROP"],
-    ["target", _target], ["deadline", time + 180]
+    ["target", _target], ["deadline", time + 180], ["forced", _force]
 ], 0] call Waldo_fnc_AIPassQueueJob;
 diag_log format ["[WMP AI PASS] %1 airborne insertion from %2 (%3 jumpers, %4 m from target, forced=%5).",
     _group, typeOf _aircraft, count _cargo, round _distance, _force];

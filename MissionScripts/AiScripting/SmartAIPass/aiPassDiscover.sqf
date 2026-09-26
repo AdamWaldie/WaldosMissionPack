@@ -21,6 +21,7 @@
  *
  * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: job <HASHMAP> - unused
  *
@@ -46,6 +47,7 @@ private _spotters = [];
 private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_DynamicAO", false];
 {
     private _group = _x;
+    [_group] call Waldo_fnc_AIPassHearingLocal;
     if (isNil {_group getVariable "Waldo_AIPass_LocalHandler"}) then {
         _group setVariable ["Waldo_AIPass_LocalHandler", _group addEventHandler ["Local", {
             _this call Waldo_fnc_AIPassLocality;
@@ -125,11 +127,11 @@ if (_wantArtillery || _wantFlares) then {
                     if (!local _vehicle || {isPlayer driver _vehicle} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {};
                     if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
                     _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
-                    if (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]) then {
+                    if ([group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_AIPassFeatureEnabled) then {
                         for "_burst" from 0 to 2 do {
                             [{
                                 if (local _this && {missionNamespace getVariable ["Waldo_AIPass_Active", false]}
-                                    && {missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]}
+                                    && {[group driver _this,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_AIPassFeatureEnabled}
                                     && {!([] call Waldo_fnc_AIPassIsPaused)} && {!isPlayer driver _this}) then {
                                     [_this] call Waldo_fnc_AIPassFireCountermeasure;
                                 };
@@ -138,7 +140,7 @@ if (_wantArtillery || _wantFlares) then {
                     };
                     // Break-away: one sideways jink away from the shooter, without touching
                     // the aircraft's waypoints or orbit (Waldo_AIPass_AircraftBreak_Enable, off by default).
-                    if ((missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]) && {!isNull _shooter}) then {
+                    if (([group driver _vehicle,"Waldo_AIPass_AircraftBreak_Enable",false] call Waldo_fnc_AIPassFeatureEnabled) && {!isNull _shooter}) then {
                         private _velocity = velocityModelSpace _vehicle;
                         private _side = [18, -18] select ((_vehicle getRelDir _shooter) < 180);
                         _vehicle setVelocityModelSpace [(_velocity select 0) + _side, _velocity select 1, (_velocity select 2) - 4];

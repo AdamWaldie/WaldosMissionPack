@@ -20,6 +20,7 @@
  * Locality and authority: runs on the group owner's scheduler. doMove and joinSilent are issued for
  * local units only. Nothing is broadcast by WMP.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: state <HASHMAP> - job state: group, phase and progress fields
  *
@@ -43,7 +44,7 @@ private _finish = {
     -1
 };
 if (isNull _group || {!local _group}) exitWith {call _finish};
-if !(missionNamespace getVariable ["Waldo_AIPass_Regroup_Enable", true]) exitWith {call _finish};
+if !([_group,"Waldo_AIPass_Regroup_Enable",true] call Waldo_fnc_AIPassFeatureEnabled) exitWith {call _finish};
 
 private _movers = (units _group) select {
     alive _x && {local _x} && {!(_x getVariable ["ACE_isUnconscious", false])} && {lifeState _x != "INCAPACITATED"}

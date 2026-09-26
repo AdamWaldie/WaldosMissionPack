@@ -27,3 +27,11 @@ if (count _drill > 0) then {
 if (_saved isNotEqualTo (_group getVariable ["Waldo_AIPass_Checkpoint", []])) then {
     _group setVariable ["Waldo_AIPass_Checkpoint", _saved, true];
 };
+
+private _phase = _state getOrDefault ["phase","CALM"];
+if (_phase != (_group getVariable ["Waldo_AIPass_PublicPhase",""])) then {_group setVariable ["Waldo_AIPass_PublicPhase",_phase,true]};
+
+private _token = _state getOrDefault ["supportToken",""];
+private _arrived = _state getOrDefault ["arrivedAt",-1];
+private _status = if (_token == "") then {[]} else {[_token,if (_arrived < 0) then {-1} else {round (serverTime-(time-_arrived))},_state getOrDefault ["responding",false],_state getOrDefault ["assaulting",false]]};
+if (_status isNotEqualTo (_group getVariable ["Waldo_AIPass_SupportStatus",[]])) then {_group setVariable ["Waldo_AIPass_SupportStatus",_status,true]};

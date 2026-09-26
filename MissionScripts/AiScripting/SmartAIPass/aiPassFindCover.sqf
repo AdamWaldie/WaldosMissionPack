@@ -15,6 +15,8 @@
  * 2: radius <NUMBER> - search radius in metres (optional, default: 12)
  * 3: reserved <ARRAY> - ATL positions already taken by squad-mates (optional, default: [])
  *
+ * 4: group <GROUP> - optional grpNull, supplies per-group feature exclusions.
+ * Repeat/JIP: read-only; candidates are recalculated only when a caller requests a search.
  * Return Value:
  * Array - [coverPosATL, found <BOOL>]; the original position when no cover qualifies
  *
@@ -25,8 +27,10 @@
  * Current callers: Waldo_fnc_AIPassFlankStep, Waldo_fnc_AIPassGrenadeCheck and Waldo_fnc_AIPassAntiArmour.
  */
 
-params [["_position", [], [[]]], ["_threat", [], [[]]], ["_radius", 12, [0]], ["_reserved", [], [[]]]];
+params [["_position", [], [[]]], ["_threat", [], [[]]], ["_radius", 12, [0]], ["_reserved", [], [[]]], ["_group",grpNull,[grpNull]]];
 if (count _position < 2 || {count _threat < 2}) exitWith {[_position, false]};
+_radius = (_radius max 1) min 25;
+private _validate = [_group,"Waldo_AIPass_CoverValidation_Enable",true] call Waldo_fnc_AIPassFeatureEnabled;
 private _objects = nearestTerrainObjects [_position, ["TREE", "SMALL TREE", "ROCK", "ROCKS", "WALL", "FENCE", "HIDE", "BUILDING", "HOUSE"], _radius, true, true];
 {_objects pushBackUnique _x} forEach (nearestObjects [_position, ["House", "Wall", "Strategic"], _radius, true]);
 if (count _objects > 10) then {_objects resize 10};
@@ -45,6 +49,14 @@ private _result = [];
     private _free = !surfaceIsWater _candidate
         && {_reserved findIf {_x distance2D _candidate < 2} < 0}
         && {(lineIntersectsSurfaces [_candidateASL vectorAdd [0, 0, 0.5], _candidateASL vectorAdd [0, 0, 20], objNull, objNull, true, 1]) findIf {(_x select 2) == _object || {(_x select 3) == _object}} < 0};
+    if (_free && {_validate}) then {
+        _free = (surfaceNormal _candidate select 2) >= 0.65
+            && {(_candidate nearEntities ["CAManBase",1.2]) isEqualTo []}
+            && {(lineIntersectsSurfaces [_candidateASL vectorAdd [0,0,0.15],_candidateASL vectorAdd [0,0,1.8],objNull,objNull,true,1,"GEOM","NONE"]) isEqualTo []};
+        if (_free) then {
+            {if ((lineIntersectsSurfaces [_candidateASL vectorAdd [0,0,0.8],(_candidateASL vectorAdd [0,0,0.8]) vectorAdd _x,objNull,objNull,true,1,"GEOM","NONE"]) isNotEqualTo []) exitWith {_free = false}} forEach [[0.45,0,0],[-0.45,0,0],[0,0.45,0],[0,-0.45,0]];
+        };
+    };
     if (_free) then {
         private _endASL = _candidateASL vectorAdd [0, 0, 1];
         // Start the object ray 2 m out from the threat: starting at the believed enemy position

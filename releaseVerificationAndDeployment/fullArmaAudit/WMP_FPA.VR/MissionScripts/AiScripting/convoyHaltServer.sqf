@@ -11,6 +11,7 @@
 params [["_group", grpNull, [grpNull]], ["_expected", -1, [0]], ["_reason", "ARRIVED", [""]], ["_threat", [], [[]]]];
 if (!isServer || {isNull _group} || {!(_reason in ["ARRIVED", "AMBUSH", "IMMOBILE"])}) exitWith {false};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2} && {remoteExecutedOwner != groupOwner _group}) exitWith {false};
+if (_reason == "AMBUSH" && {!([_group,"Waldo_Convoy_ContactHalt_Enable",true] call Waldo_fnc_AIPassFeatureEnabled)}) exitWith {false};
 private _registry = missionNamespace getVariable ["Waldo_Convoy_Registry", []];
 private _index = _registry findIf {(_x select 0) == _group};
 if (_index < 0) exitWith {false};

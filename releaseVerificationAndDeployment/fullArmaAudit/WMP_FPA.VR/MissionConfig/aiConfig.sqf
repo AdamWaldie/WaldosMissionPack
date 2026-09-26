@@ -91,9 +91,21 @@
  * Per-aircraft opt-out example: this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
  * - Waldo_AI_ProfileDisplayNames (INFRASTRUCTURE): labels for diagnostics/UI; keys must match implementation IDs.
  *
+ * SETTING-BY-SETTING GUIDE - MODULAR AI BEHAVIOURS:
+ * - Waldo_AIPass_VehicleDismount_Enable (MISSION MAKER): Routine passenger dismounting during vehicle contact drills. Default true.
+ * - Waldo_AIPass_VehicleRemount_Enable (MISSION MAKER): Reboard recorded passengers on a normal return to CALM. Default true.
+ * - Waldo_AIPass_VehicleWithdraw_Enable (MISSION MAKER): Damaged vehicle smoke and withdrawal. Default true.
+ * - Waldo_AIPass_CoverValidation_Enable (MISSION MAKER): Bounded footprint, slope and geometry validation for cover candidates. Default true.
+ * - Waldo_AIPass_Hearing_Enable (MISSION MAKER): Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default false.
+ * - Waldo_Convoy_MountedFire_Enable (MISSION MAKER): Mounted crew targeting under existing ROE. Default true.
+ * - Waldo_Convoy_Cover_Enable (MISSION MAKER): Initial passenger cover movement after an ambush halt. Default true.
+ * - Waldo_Convoy_ContactHalt_Enable (MISSION MAKER): Contact halt requests under the configured push-through rule. Default true.
+ * - Waldo_Convoy_Unload_Enable (MISSION MAKER): Routine cargo unloading at arrival, manual stop and ambush halt. Default true.
+ * - Waldo_Convoy_AvoidInfantry_Enable (MISSION MAKER): Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default false.
+ *
  * SETTING-BY-SETTING GUIDE - SMART AI PASS:
  * Behaviour improvements for all non-player AI groups. It runs only on the server and headless
- * clients, inside a fixed per-tick time budget, and adds no network traffic of its own. Player-led
+ * clients, inside a soft per-tick time budget, with bounded reports and changed-state broadcasts. Player-led
  * groups and units owned by other WMP features (Gunship, Transport Services, Paradrop, Dynamic AA,
  * AI Convoy, dialogue speakers, drones) are always excluded. Dynamic AO groups are included.
  * Per-unit or per-group opt-out: _group setVariable ["Waldo_AIPass_Exclude", true, true];
@@ -317,6 +329,16 @@ createHashMapFromArray [
         ["Waldo_AIPass_Surrender_Enable", false], // BOOL: last survivors of a broken, isolated squad surrender.
         ["Waldo_AIPass_GrenadeEvasion_Enable", false], // BOOL: move away from seen grenades; test in your setup first.
         ["Waldo_AIPass_AntiArmour_Enable", true], // BOOL: best AT gunner engages known armour, clear of backblast.
+        ["Waldo_AIPass_VehicleDismount_Enable", true], // Unloads capable passengers only when safely stopped on dry ground.
+        ["Waldo_AIPass_VehicleRemount_Enable", true], // Allows safe conscious passengers to reboard after Smart AI contact. Convoy resume stays explicit.
+        ["Waldo_AIPass_VehicleWithdraw_Enable", true], // Allows damaged vehicles to withdraw and use existing smoke.
+        ["Waldo_AIPass_CoverValidation_Enable", true], // Adds bounded slope and body clearance checks to shared cover selection.
+        ["Waldo_Convoy_MountedFire_Enable", true], // WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.
+        ["Waldo_Convoy_Cover_Enable", true], // Issues the finite cover move after an ambush dismount.
+        ["Waldo_Convoy_AvoidInfantry_Enable", false], // Optional short-range friendly infantry corridor checks before driving.
+        ["Waldo_Convoy_ContactHalt_Enable", true], // Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.
+        ["Waldo_Convoy_Unload_Enable", true], // Allows WMP passenger unloading on halt. Operating crews remain aboard.
+        ["Waldo_AIPass_Hearing_Enable", false], // Optional nearby gunfire area reports, never target reveals.
         ["Waldo_AIPass_Vehicles_Enable", true], // BOOL: dismount under fire; damaged vehicles smoke and withdraw.
         ["Waldo_AIPass_ContactReports_Enable", true], // BOOL: share sightings by radio (jammable) or voice.
         ["Waldo_AIPass_ContactReports_Radius", 500], // METRES: radio report range.
@@ -387,3 +409,5 @@ createHashMapFromArray [
         ]]
     ]]
 ]
+
+if (isNil "Waldo_AIPass_AmmoCapabilityOverrides") then {Waldo_AIPass_AmmoCapabilityOverrides = createHashMap};

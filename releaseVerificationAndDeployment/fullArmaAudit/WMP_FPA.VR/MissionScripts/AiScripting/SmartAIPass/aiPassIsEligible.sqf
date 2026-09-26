@@ -41,6 +41,7 @@
 
 params [["_group", grpNull, [grpNull]]];
 if (isNull _group) exitWith {false};
+if (_group getVariable ["Waldo_AI_ExternalControl", false] || {"ALL" in (_group getVariable ["Waldo_AIPass_DisabledFeatures", []])}) exitWith {false};
 // Zeus always has priority: a group Zeus is commanding is left alone (Waldo_fnc_AIPassZeusHeld).
 if ([_group] call Waldo_fnc_AIPassZeusHeld) exitWith {false};
 if (_group getVariable ["Waldo_AI_Exclude", false]

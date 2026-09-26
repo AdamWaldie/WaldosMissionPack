@@ -14,6 +14,7 @@
  * Locality and authority: scheduler job on the machine that received the event; orders go only to
  * local units.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: job <HASHMAP> - contains "projectile"
  *
@@ -42,7 +43,7 @@ private _reacted = 0;
     if (_groupIndex < 0) then {
         _groupIndex = count _checkedGroups;
         _checkedGroups pushBack _group;
-        _checkedResults pushBack ([_group] call Waldo_fnc_AIPassIsEligible);
+        _checkedResults pushBack ([_group] call Waldo_fnc_AIPassIsEligible && {[_group,"Waldo_AIPass_GrenadeEvasion_Enable",false] call Waldo_fnc_AIPassFeatureEnabled});
     };
     private _drillUnits = ((_group getVariable ["Waldo_AIPass_State", createHashMap]) getOrDefault ["drill", createHashMap]) getOrDefault ["units", []];
     if (local _unit && {!isPlayer _unit} && {alive _unit} && {vehicle _unit == _unit} && {_unit checkAIFeature "PATH"}
@@ -51,12 +52,12 @@ private _reacted = 0;
         private _chance = (0.5 + 0.5 * (_unit skill "general")) * (1 - 0.5 * getSuppression _unit);
         if (_sees && {random 1 < _chance}) then {
             private _direction = (_grenadePos getDir _unit) + ((_reacted mod 3) - 1) * 35;
-            private _spot = ([(getPosATL _unit) getPos [9, _direction], _grenadePos, 6] call Waldo_fnc_AIPassFindCover) select 0;
+            private _spot = ([(getPosATL _unit) getPos [9, _direction], _grenadePos, 6, [], _group] call Waldo_fnc_AIPassFindCover) select 0;
             _unit doMove _spot;
             _reacted = _reacted + 1;
             [{
                 params ["_unit"];
-                if (alive _unit && {local _unit}) then {_unit doFollow (leader group _unit)};
+                if (alive _unit && {local _unit} && {[group _unit] call Waldo_fnc_AIPassIsEligible}) then {_unit doFollow (leader group _unit)};
             }, [_unit], 6] call CBA_fnc_waitAndExecute;
         };
     };

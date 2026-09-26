@@ -52,7 +52,7 @@ private _end = {
 };
 if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false]) || {(_state getOrDefault ["phase", ""]) != "CONTACT"}
     || {!([_group] call Waldo_fnc_AIPassIsEligible)}
-    || {!(missionNamespace getVariable [["Waldo_AIPass_Flank_Enable", "Waldo_AIPass_Advance_Enable"] select ((_drill getOrDefault ["type", "FLANK"]) == "ADVANCE"), true])}) exitWith {"ABORT" call _end};
+    || {!([_group, ["Waldo_AIPass_Flank_Enable", "Waldo_AIPass_Advance_Enable"] select ((_drill getOrDefault ["type", "FLANK"]) == "ADVANCE"), true] call Waldo_fnc_AIPassFeatureEnabled)}) exitWith {"ABORT" call _end};
 private _allUnits = _drill get "units";
 private _units = _allUnits select {alive _x && {local _x} && {vehicle _x == _x} && {group _x == _group}};
 if (count _units < ((count _allUnits / 2) max 1)) exitWith {"LOSSES" call _end};
@@ -81,7 +81,7 @@ private _issue = {
         private _unit = _x;
         private _spot = _point getPos [(_forEachIndex - (count _units - 1) / 2) * ([5, 3] select (_kind == "CLEAR")), _direction + 90];
         if (_kind in ["BOUND", "FINAL", "ASSAULT"]) then {
-            _spot = ([_spot, _enemyPos, [10, 6] select (_kind == "ASSAULT"), _spots] call Waldo_fnc_AIPassFindCover) select 0;
+            _spot = ([_spot, _enemyPos, [10, 6] select (_kind == "ASSAULT"), _spots, _group] call Waldo_fnc_AIPassFindCover) select 0;
         };
         _spots pushBack _spot;
         // Only movement bounds suppress target switching; the final approach, assault and clear
@@ -146,7 +146,7 @@ switch (_drill get "stage") do {
         if (_now >= (_drill get "pauseUntil")) then {
             private _assault = !_assaulting
                 && {(_drill getOrDefault ["type", "FLANK"]) == "FLANK"}
-                && {missionNamespace getVariable ["Waldo_AIPass_Assault_Enable", true]}
+                && {[_group,"Waldo_AIPass_Assault_Enable", true] call Waldo_fnc_AIPassFeatureEnabled}
                 && {(_state getOrDefault ["moraleState", "STEADY"]) == "STEADY"}
                 && {_centroid distance2D _enemyPos <= (missionNamespace getVariable ["Waldo_AIPass_Assault_Range", 80])}
                 && {random 1 < ([_group, "assaultChance"] call Waldo_fnc_AIPassProfile)};

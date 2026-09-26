@@ -74,7 +74,7 @@ if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_AIPassCoo
 private _start = [0, 0, 0];
 {_start = _start vectorAdd getPosATL _x} forEach _element;
 _start = _start vectorMultiply (1 / count _element);
-private _points = [_start, _legs] call Waldo_fnc_AIPassPlanRoute;
+private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_AIPassPlanRoute;
 
 _state set ["drill", createHashMapFromArray [
     ["type", "FLANK"], ["units", _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],

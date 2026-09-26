@@ -19,6 +19,7 @@
  * Vehicles owned by other WMP features never reach this function (Waldo_fnc_AIPassIsEligible).
  * Locality and authority: call where the group is local.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -47,9 +48,9 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
 {
     private _vehicle = _x;
     private _distance = _vehicle distance2D _enemyPos;
-    if (_vehicle isKindOf "LandVehicle" && {!(_vehicle isKindOf "StaticWeapon")} && {_distance < 400}) then {
+    if (_vehicle isKindOf "LandVehicle" && {!(_vehicle isKindOf "StaticWeapon")} && {_distance < 400} && {[_group, "Waldo_AIPass_VehicleDismount_Enable", true] call Waldo_fnc_AIPassFeatureEnabled}) then {
         private _cargo = (crew _vehicle) select {
-            alive _x && {local _x} && {group _x == _group} && {toLowerANSI ((assignedVehicleRole _x) param [0, ""]) == "cargo"}
+            group _x == _group && {[_x, _vehicle] call Waldo_fnc_AIPassPassengerReady}
         };
         if (_cargo isNotEqualTo []) then {
             private _dismounted = _state getOrDefault ["dismounted", []];
@@ -75,7 +76,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             } >= 0
         } >= 0
     };
-    if (alive _vehicle && {canMove _vehicle} && {!(_vehicle in _withdrawn)} && {_distance < 800}
+    if ([_group, "Waldo_AIPass_VehicleWithdraw_Enable", true] call Waldo_fnc_AIPassFeatureEnabled && {local _vehicle} && {alive _vehicle} && {canMove _vehicle} && {!(_vehicle in _withdrawn)} && {_distance < 800}
         && {damage _vehicle >= 0.5 || {!canFire _vehicle && {call _hasRealWeapon}}}) then {
         _withdrawn pushBack _vehicle;
         _state set ["withdrawn", _withdrawn];
@@ -91,7 +92,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
     };
     // Gunner priorities and standoff (Waldo_AIPass_VehicleGunnery_Enable): anti-tank infantry
     // first, then armour, then everything else; armour keeps its distance from known AT teams.
-    if (alive _vehicle && {missionNamespace getVariable ["Waldo_AIPass_VehicleGunnery_Enable", true]}) then {
+    if (alive _vehicle && {[_group, "Waldo_AIPass_VehicleGunnery_Enable", true] call Waldo_fnc_AIPassFeatureEnabled}) then {
         private _gunner = gunner _vehicle;
         private _ranked = [];
         {
@@ -99,7 +100,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             private _distance = _vehicle distance2D _position;
             if (_age <= 15 && {_distance <= 600} && {alive _enemy}) then {
                 private _priority = switch (true) do {
-                    case (_enemy isKindOf "CAManBase" && {([_enemy] call Waldo_fnc_AIPassUnitRole) == "AT"}): {0};
+                    case (_enemy isKindOf "CAManBase" && {"AT" in ([_enemy] call Waldo_fnc_AIPassCapabilities)}): {0};
                     case (_enemy isKindOf "Tank" || {_enemy isKindOf "Wheeled_APC_F"}): {1};
                     default {2};
                 };
@@ -108,18 +109,20 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
         } forEach _enemies;
         _ranked sort true;
         if (_ranked isNotEqualTo [] && {alive _gunner} && {local _gunner} && {!isPlayer _gunner}
+            && {combatMode _group in ["YELLOW", "RED"]} && {unitCombatMode _gunner in ["YELLOW", "RED"]}
             && {(_gunner getVariable ["Waldo_AIPass_TargetHold", -1]) < time}) then {
             private _target = (_enemies select ((_ranked select 0) select 2)) select 0;
             if (assignedTarget _gunner != _target) then {
                 _gunner doTarget _target;
                 _gunner doFire _target;
                 _gunner setVariable ["Waldo_AIPass_TargetHold", time + 8];
+                _gunner setVariable ["Waldo_AIPass_VehicleTarget", _target, true];
             };
         };
         private _standoff = missionNamespace getVariable ["Waldo_AIPass_Vehicles_StandoffDistance", 250];
         private _atIndex = _enemies findIf {
             (_x select 0) isKindOf "CAManBase" && {(_x select 2) <= 30} && {(_vehicle distance2D (_x select 1)) < _standoff * 0.6}
-            && {([_x select 0] call Waldo_fnc_AIPassUnitRole) == "AT"}
+            && {"AT" in ([_x select 0] call Waldo_fnc_AIPassCapabilities)}
         };
         if (_atIndex >= 0 && {_vehicle isKindOf "Tank" || {_vehicle isKindOf "Wheeled_APC_F"}} && {canMove _vehicle}
             && {(units _group) findIf {alive _x && {vehicle _x == _x}} < 0} && {!([_state, "standoff"] call Waldo_fnc_AIPassCooldown)}) then {

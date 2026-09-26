@@ -13,7 +13,7 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 _configuration params ["_revision", "", "", "", "_vehicles", "_phase", "_cargo", "_restore", ["_reason", "MANUAL"], ["_threat", []], ["_deadline", 0]];
 if (time < (_group getVariable ["Waldo_Convoy_CrewDue", -1])) exitWith {};
 _group setVariable ["Waldo_Convoy_CrewDue", time + 5];
-if ([] call Waldo_fnc_AIPassIsPaused || {[_group] call Waldo_fnc_AIPassZeusHeld}
+if (_group getVariable ["Waldo_AI_ExternalControl",false] || {"ALL" in (_group getVariable ["Waldo_AIPass_DisabledFeatures",[]])} || {[] call Waldo_fnc_AIPassIsPaused} || {[_group] call Waldo_fnc_AIPassZeusHeld}
     || {_vehicles findIf {(crew _x) findIf {isPlayer _x || {!isNull (_x getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])}} >= 0} >= 0}) exitWith {[_group, _configuration, true] call Waldo_fnc_ConvoyDismountLocal};
 private _seats = createHashMap;
 {
@@ -41,12 +41,13 @@ private _seats = createHashMap;
         {
             _x params ["_unit", "_role", "", "", "_personTurret"];
             _seats set [netId _unit, [_vehicle, _role, _personTurret]];
-            if (local _unit && {!isPlayer _unit} && {!(combatMode group _unit in ["YELLOW", "RED"] && {unitCombatMode _unit in ["YELLOW", "RED"]})}) then {
+            private _fireEnabled = [_group,"Waldo_Convoy_MountedFire_Enable",true] call Waldo_fnc_AIPassFeatureEnabled && {[group _unit,"Waldo_Convoy_MountedFire_Enable",true] call Waldo_fnc_AIPassFeatureEnabled};
+            if (local _unit && {!isPlayer _unit} && {!_fireEnabled || {!(combatMode group _unit in ["YELLOW", "RED"] && {unitCombatMode _unit in ["YELLOW", "RED"]})}}) then {
                 private _previous = _unit getVariable ["Waldo_Convoy_Target", objNull];
-                if (!isNull _previous && {assignedTarget _unit == _previous}) then {_unit doWatch objNull};
-                _unit setVariable ["Waldo_Convoy_Target", nil];
+                if (!isNull _previous && {assignedTarget _unit == _previous}) then {_unit doTarget objNull};
+                _unit setVariable ["Waldo_Convoy_Target", nil, true];
             };
-            if (local _unit && {alive _unit} && {!isPlayer _unit} && {!_personTurret} && {_role in ["gunner", "commander", "turret"]}
+            if (_fireEnabled && {local _unit} && {alive _unit} && {!isPlayer _unit} && {!_personTurret} && {_role in ["gunner", "commander", "turret"]}
                 && {!(_unit getVariable ["ACE_isUnconscious", false])} && {lifeState _unit != "INCAPACITATED"}
                 && {combatMode group _unit in ["YELLOW", "RED"]} && {unitCombatMode _unit in ["YELLOW", "RED"]}) then {
                 private _report = [_unit] call Waldo_fnc_ConvoyThreat;
@@ -56,12 +57,12 @@ private _seats = createHashMap;
                     if (assignedTarget _unit != _enemy) then {
                         _unit doTarget _enemy;
                         _unit doFire _enemy;
-                        _unit setVariable ["Waldo_Convoy_Target", _enemy];
+                        _unit setVariable ["Waldo_Convoy_Target", _enemy, true];
                     };
                 } else {
                     private _previous = _unit getVariable ["Waldo_Convoy_Target", objNull];
-                    if (!isNull _previous && {assignedTarget _unit == _previous}) then {_unit doWatch objNull};
-                    _unit setVariable ["Waldo_Convoy_Target", nil];
+                    if (!isNull _previous && {assignedTarget _unit == _previous}) then {_unit doTarget objNull};
+                    _unit setVariable ["Waldo_Convoy_Target", nil, true];
                 };
             };
         } forEach fullCrew [_vehicle, "", false];
@@ -71,13 +72,14 @@ if (_phase != "HALT") exitWith {};
 {
     _x params ["_unit", "_vehicle"];
     if (local _unit && {vehicle _unit == _unit} && {(_unit getVariable ["Waldo_Convoy_Unloaded", []]) isNotEqualTo [_group, _revision]}) then {_unit setVariable ["Waldo_Convoy_Unloaded", [_group, _revision], true]};
-    if (local _unit && {alive _unit} && {!isPlayer _unit} && {vehicle _unit == _vehicle}
+    if ([_group,"Waldo_Convoy_Unload_Enable",true] call Waldo_fnc_AIPassFeatureEnabled && {[group _unit,"Waldo_Convoy_Unload_Enable",true] call Waldo_fnc_AIPassFeatureEnabled} && {[_unit,_vehicle] call Waldo_fnc_AIPassPassengerReady}
+        && {local _unit} && {alive _unit} && {!isPlayer _unit} && {vehicle _unit == _vehicle}
         && {(_unit getVariable ["Waldo_Convoy_Unloaded", []]) isNotEqualTo [_group, _revision]}
         && {abs speed _vehicle < 1} && {!(_unit getVariable ["ACE_isUnconscious", false])} && {lifeState _unit != "INCAPACITATED"}
         && {!isPlayer leader group _unit} && {!([group _unit] call Waldo_fnc_AIPassZeusHeld)} && {isNull (_unit getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])}) then {
         private _seat = _seats getOrDefault [netId _unit, []];
         if (_seat isNotEqualTo [] && {(_seat select 0) == _vehicle} && {(_seat select 1) == "cargo" || {_seat select 2}}) then {
-            if (_reason == "AMBUSH" && {serverTime < _deadline} && {isNil {_unit getVariable "Waldo_Convoy_Dismount"}}) then {
+            if ([_group,"Waldo_Convoy_Cover_Enable",true] call Waldo_fnc_AIPassFeatureEnabled && {[group _unit,"Waldo_Convoy_Cover_Enable",true] call Waldo_fnc_AIPassFeatureEnabled} && {_reason == "AMBUSH"} && {serverTime < _deadline} && {isNil {_unit getVariable "Waldo_Convoy_Dismount"}}) then {
                 _unit setVariable ["Waldo_Convoy_Dismount", [_group, _revision, _deadline, []], true];
             };
             unassignVehicle _unit;

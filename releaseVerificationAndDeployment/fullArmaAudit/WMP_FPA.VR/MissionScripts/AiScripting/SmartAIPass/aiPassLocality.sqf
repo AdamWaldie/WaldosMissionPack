@@ -10,6 +10,7 @@
  */
 params [["_group", grpNull, [grpNull]], ["_gained", false, [true]]];
 if (isNull _group) exitWith {};
+[_group,true] call Waldo_fnc_AIPassHearingLocal;
 {
         private _unit = _x;
         {_unit removeEventHandler _x} forEach (_unit getVariable ["Waldo_AIPass_GarrisonHandlerIds", []]);
@@ -31,7 +32,7 @@ private _restore = createHashMapFromArray (_group getVariable ["Waldo_AIPass_Che
 {
     if (alive _x && {local _x} && {group _x == _group}) then {_x doFollow leader _group};
 } forEach (_restore getOrDefault ["restoreMovers", []]);
-[_group, _restore] call Waldo_fnc_AIPassRestoreCalm;
+[_group, _restore, false] call Waldo_fnc_AIPassRestoreCalm;
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 // Clear stale remnant reservations and airborne jobs; the normal discovery path reassesses them.
 _group setVariable ["Waldo_AIPass_RegroupQueued", nil];

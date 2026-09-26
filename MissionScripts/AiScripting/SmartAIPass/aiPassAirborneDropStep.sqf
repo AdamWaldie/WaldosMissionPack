@@ -15,6 +15,7 @@
  *
  * Review contract: Both DROP and LAND recheck eligibility. A landing timeout ends tracking without assigning a ground attack to soldiers still airborne.
  *
+ * Repeat/JIP: current-owner eligibility and automatic feature gates are rechecked before each jump.
  * Arguments:
  * 0: job state <HASHMAP> - group, aircraft, jumpers, index, phase, target, deadline
  *
@@ -37,7 +38,8 @@ private _finish = {
     -1
 };
 if (isNull _group || {!local _group} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}
-    || {!([_group] call Waldo_fnc_AIPassIsEligible)}) exitWith {call _finish};
+    || {!([_group] call Waldo_fnc_AIPassIsEligible)}
+    || {!(_job getOrDefault ["forced",false]) && {!([_group,"Waldo_AIPass_Airborne_Enable",false] call Waldo_fnc_AIPassFeatureEnabled)}}) exitWith {call _finish};
 
 if ((_job get "phase") == "DROP") exitWith {
     private _jumpers = (_job get "jumpers") select {alive _x && {local _x} && {vehicle _x == _aircraft}};

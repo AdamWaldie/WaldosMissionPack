@@ -43,6 +43,7 @@
  *
  * Review contract: Waypoint completion compares tagged indices with currentWaypoint; completed waypoints may remain in the engine list. This allows rally arrival and retreat completion to be detected.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: job <HASHMAP> - contains "group"
  *
@@ -63,6 +64,19 @@ if (!local _group || {!(missionNamespace getVariable ["Waldo_AIPass_Active", fal
     _group setVariable ["Waldo_AIPass_Managed", nil];
     -1
 };
+
+{
+    if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet",false]} && {!([_group,"Waldo_AIPass_Stance_Enable",true] call Waldo_fnc_AIPassFeatureEnabled)}) then {
+        _x setUnitPos "AUTO";
+        _x setVariable ["Waldo_AIPass_StanceSet",nil,true];
+    };
+    private _target = _x getVariable ["Waldo_AIPass_VehicleTarget",objNull];
+    if (local _x && {!isNull _target} && {!([_group,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_AIPassFeatureEnabled) || {!([_group,"Waldo_AIPass_VehicleGunnery_Enable",true] call Waldo_fnc_AIPassFeatureEnabled)} || {!(combatMode _group in ["YELLOW","RED"] && {unitCombatMode _x in ["YELLOW","RED"]})}}) then {
+        if (assignedTarget _x == _target) then {_x doTarget objNull};
+        _x setVariable ["Waldo_AIPass_VehicleTarget",nil,true];
+        _x setVariable ["Waldo_AIPass_TargetHold",nil];
+    };
+} forEach units _group;
 private _alive = (units _group) select {alive _x};
 if (_alive isEqualTo []) exitWith {
     _group setVariable ["Waldo_AIPass_Managed", nil];
@@ -88,8 +102,12 @@ private _airborneDelay = [_group, [_group] call Waldo_fnc_AIPassGroupState] call
 if (_airborneDelay >= 0) exitWith {_airborneDelay};
 
 private _state = [_group] call Waldo_fnc_AIPassGroupState;
+[_group,_state] call Waldo_fnc_AIPassSupportMaintain;
 private _now = time;
-private _get = {missionNamespace getVariable _this};
+private _get = {
+    _this params ["_name", "_fallback"];
+    if (_fallback isEqualType true) then {[_group, _name, _fallback] call Waldo_fnc_AIPassFeatureEnabled} else {missionNamespace getVariable _this}
+};
 
 private _nearest = 1e6;
 {_nearest = _nearest min (_leader distance2D _x)} forEach (missionNamespace getVariable ["Waldo_AIPass_PlayerPositions", []]);
@@ -100,7 +118,7 @@ private _delay = switch (true) do {
     case (_nearTier): {["Waldo_AIPass_TickMid", 8] call _get};
     default {["Waldo_AIPass_TickFar", 20] call _get};
 };
-if !(["Waldo_AIPass_Contact_Enable", true] call _get) exitWith {_delay};
+if !(["Waldo_AIPass_Contact_Enable", true] call _get) exitWith {[_group,false] call Waldo_fnc_AIPassReleaseGroup; _delay};
 
 ([_group] call Waldo_fnc_AIPassKnowledge) params ["_enemies", "_seenCount"];
 private _visible = _enemies select {(_x select 2) <= 10};
@@ -112,6 +130,13 @@ private _lambsCombat = (missionNamespace getVariable ["Waldo_AIPass_LambsDangerL
     && {!(_group getVariable ["lambs_danger_disableGroupAI", false])};
 private _contactDelay = if (_nearTier) then {["Waldo_AIPass_TickContact", 2] call _get} else {_delay};
 
+private _areaMode = _state getOrDefault ["areaInvestigation",""];
+if (_areaMode != "" && {(!([_group,"Waldo_AIPass_Investigate_Enable",true] call Waldo_fnc_AIPassFeatureEnabled))
+    || {!([_group,["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_areaMode == "SOUND"),false] call Waldo_fnc_AIPassFeatureEnabled)}}) then {
+    [_group,_state] call Waldo_fnc_AIPassRestoreCalm;
+    _state deleteAt "areaInvestigation";
+};
+
 // Soldiers holding ground from a finished drill rejoin once the leader has caught up with them.
 private _holders = (_state getOrDefault ["holders", []]) select {alive _x && {local _x} && {group _x == _group}};
 if (_holders isNotEqualTo []) then {
@@ -121,6 +146,7 @@ if (_holders isNotEqualTo []) then {
 };
 
 private _enterContact = {
+    _state deleteAt "areaInvestigation";
     _state set ["phase", "CONTACT"];
     _state set ["phaseStart", _now];
     _state set ["lastSeen", _now];
@@ -166,7 +192,7 @@ switch (_state get "phase") do {
             private _requester = _state getOrDefault ["respondingTo", grpNull];
             // Read only: never create pass state on the requester's group from here.
             private _requesterPhase = if (isNull _requester) then {"CALM"} else {
-                (_requester getVariable ["Waldo_AIPass_State", createHashMap]) getOrDefault ["phase", "CALM"]
+                _requester getVariable ["Waldo_AIPass_PublicPhase", "CALM"]
             };
             if (isNull _requester || {({alive _x} count units _requester) == 0} || {_requesterPhase == "CALM"}
                 || {_now > (_state getOrDefault ["respondUntil", 0])}) then {
@@ -180,6 +206,22 @@ switch (_state get "phase") do {
             };
         };
         if (_visible isNotEqualTo []) exitWith {call _beginContact};
+        private _area = _group getVariable ["Waldo_AIPass_AreaReport",[]];
+        if (_area isNotEqualTo [] && {serverTime >= (_area select 2)}) then {_group setVariable ["Waldo_AIPass_AreaReport",nil,true]; _area = []};
+        if (!_ordered && {!_lambsCombat} && {!(_state getOrDefault ["responding",false])} && {_enemies isEqualTo []} && {_area isNotEqualTo []}
+            && {["Waldo_AIPass_Investigate_Enable",true] call _get} && {!([_state,"investigate"] call Waldo_fnc_AIPassCooldown)}
+            && {leader _group distance2D (_area select 0) <= (["Waldo_AIPass_Investigate_Range",300] call _get)}
+            && {[_group, ["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select ((_area select 3) == "SOUND"),false] call Waldo_fnc_AIPassFeatureEnabled}) then {
+            [_state,"investigate",120] call Waldo_fnc_AIPassCooldown;
+            private _target = _area select 0;
+            [_group,_target getPos [30,_target getDir leader _group],25] call Waldo_fnc_AIPassGroupMove;
+            _state set ["phase","INVESTIGATE"];
+            _state set ["phaseStart",_now];
+            _state set ["enemyPos",_target];
+            _state set ["areaInvestigation",_area select 3];
+            _group setVariable ["Waldo_AIPass_AreaReport",nil,true];
+        };
+
         if (!_ordered && {!(_state getOrDefault ["responding", false])} && {_enemies isNotEqualTo []}
             && {["Waldo_AIPass_Investigate_Enable", true] call _get}
             && {((_enemies select 0) select 3) <= (["Waldo_AIPass_Investigate_Range", 300] call _get)}

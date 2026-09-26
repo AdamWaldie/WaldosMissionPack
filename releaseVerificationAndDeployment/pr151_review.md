@@ -164,3 +164,22 @@ does not trigger repeated get-out orders. Hit handlers are tracked and broadcast
 
 The implementation does not choose vehicle exit doors, guarantee protected cover, plan road bypasses
 or coordinate an assault. Contact classification, cover selection and migration remain unverified in engine.
+
+## Modular AI integration
+
+The follow-up adds live ammunition capability checks, shared passenger safety, effective-ally morale
+checks, bounded cover validation and actual artillery ammunition checks. Contact reports now carry
+expiring positions across owners. Reinforcement and coordinated assault use server reservations with
+owner acknowledgements and matching-state checks. Optional nearby-gunfire investigation and convoy
+infantry avoidance default off. Existing vehicle and convoy behaviours have independent child switches.
+
+Per-group exclusions can disable automatic behaviours, and an external-control flag yields automatic
+Smart AI and convoy commands. Separate convoy cargo and turret groups retain their own exclusions.
+Settings use the existing named tuning contract and HC/JIP replay. No addon config classes, FSM
+replacement, medical override or projectile steering is included.
+
+Required live cases: simultaneous requests competing for one helper; delayed or reordered reservation
+and acknowledgement messages; ownership transfer before and after acceptance; disable during travel,
+assault and cover movement; independent cargo-group exclusions; empty, AA and dual-purpose launchers;
+wet ground and bridges; suppressed gunfire; narrow cover; and crowded mixed-vehicle convoys. Check WMP
+and ACE headless migration separately. Static validation does not establish these engine behaviours.

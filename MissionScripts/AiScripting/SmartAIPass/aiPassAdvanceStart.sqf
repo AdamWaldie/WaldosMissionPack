@@ -60,7 +60,7 @@ _start = _start vectorMultiply (1 / count _element);
 private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
 private _goal = _start getPos [((_start distance2D _objective) - 20) min (_bound * 3), _start getDir _objective];
 if (surfaceIsWater _goal) exitWith {[_state, "advance", 30] call Waldo_fnc_AIPassCooldown; false};
-private _points = [_start, [_goal]] call Waldo_fnc_AIPassPlanRoute;
+private _points = [_start, [_goal], "FINAL", _group] call Waldo_fnc_AIPassPlanRoute;
 _state set ["drill", createHashMapFromArray [
     ["type", "ADVANCE"], ["units", _element], ["points", _points], ["index", 0], ["stage", "START"],
     ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time],

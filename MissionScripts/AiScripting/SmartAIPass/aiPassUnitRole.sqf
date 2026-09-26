@@ -2,11 +2,12 @@
  * Author: WaldoTheWarfighter
  * Classifies a soldier's combat role from what he carries.
  *
- * MG: primary magazine holds 75 rounds or more. AT: carries a launcher with ammunition. MEDIC: ACE
+ * MG: primary magazine holds 75 rounds or more. AT: has usable anti-armour ammunition. Leaders retain their tactical role; capability is queried separately. MEDIC: ACE
  * or vanilla medic trait. LEADER: group leader. Otherwise RIFLE. Magazine sizes are cached per class
  * in a machine-local map, so repeated calls cost a lookup.
  * Locality and authority: read-only; callable anywhere.
  *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: unit <OBJECT>
  *
@@ -23,7 +24,7 @@
 params [["_unit", objNull, [objNull]]];
 if (isNull _unit) exitWith {"RIFLE"};
 if (leader group _unit == _unit) exitWith {"LEADER"};
-if (secondaryWeapon _unit != "" && {(secondaryWeaponMagazine _unit) isNotEqualTo [] || {({_x in (compatibleMagazines (secondaryWeapon _unit))} count magazines _unit) > 0}}) exitWith {"AT"};
+if ("AT" in ([_unit] call Waldo_fnc_AIPassCapabilities)) exitWith {"AT"};
 private _cache = missionNamespace getVariable ["Waldo_AIPass_MagazineSizes", createHashMap];
 private _magazine = (primaryWeaponMagazine _unit) param [0, ""];
 private _size = _cache getOrDefault [_magazine, -1];

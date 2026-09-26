@@ -49,7 +49,7 @@ _state set ["holders", []];
 private _smokers = (units _group) select {alive _x && {local _x} && {vehicle _x == _x}};
 if (_smokers isNotEqualTo []) then {[selectRandom _smokers, _enemyPos, "SMOKE"] call Waldo_fnc_AIPassThrowGrenade};
 // A retreating squad with a radio asks friendly artillery for a smoke screen between it and the enemy.
-if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]) && {missionNamespace getVariable ["Waldo_AIPass_ArtillerySmoke_Enable", true]}
+if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]) && {[_group,"Waldo_AIPass_ArtillerySmoke_Enable", true] call Waldo_fnc_AIPassFeatureEnabled}
     && {[_leader] call Waldo_fnc_AIPassCanTransmit}) then {
     private _screen = _enemyPos getPos [((_enemyPos distance2D _leader) * 0.4) min 80, _enemyPos getDir _leader];
     private _side = side _group;
