@@ -69,6 +69,7 @@ TYPED_GUIDES = {
     "Waldos-Mini-Games-Table-Games",
     "Waldos-Economy-Systems-Ground-Command-And-Tools",
     "Tasks-And-Objectives", "Persistence",
+    "Virtual-Vehicle-Depot",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -131,6 +132,7 @@ FEATURE_GUIDES = {
     "Vehicle-Ambush-Script-And-Vehicle-Camo",
     "Tasks-And-Objectives",
     "Persistence",
+    "Virtual-Vehicle-Depot",
 }
 
 GUIDE_SECTIONS = {
