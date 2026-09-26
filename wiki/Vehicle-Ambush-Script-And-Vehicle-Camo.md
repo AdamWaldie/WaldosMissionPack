@@ -4,58 +4,48 @@
 
 _Associated Files: `MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf`, `Waldo_fnc_VehicleCamoSetup`_
 
-## Vehicle Ambush / Vehicle Camo
+The vehicle gets ACE actions to show and hide synchronized camo objects. Deploying also moves the activating player's current group into a civilian group. This legacy script changes group membership and removes several event-handler types during reveal, so check its interaction with the rest of your mission.
 
-Lets a crew **conceal a vehicle for an ambush** by deploying a set of "camo" objects (foliage, netting, scenery) over it on demand, via an ACE action. While concealed, the crew may dismount and move a short distance around the vehicle disguised as civilians — until something blows the ambush.
+## Set it up in Eden
 
-## How the concealment breaks
-
-The player is automatically returned to their own side (with a potential engine-imposed delay of up to ~30 seconds) if they:
-
-* Are **spotted** by the enemy
-* **Fire the vehicle's weapons**
-* Move **more than 40 m** from the vehicle
-* Take **damage** (player or vehicle)
-
-The camo objects themselves **remain in place** until the vehicle moves, or the crew removes them with the provided ACE action — so breaking concealment doesn't instantly un-hide the vehicle.
-
-## Requirements
-
-* **ACE3** — the deploy/remove actions use the ACE interaction menu. The function silently exits if ACE is not loaded.
-* Designed for **vehicles**.
-
-## Parameters
-
-| # | Parameter | Type | Purpose |
-|---|---|---|---|
-| 0 | Target | Object | The vehicle (or object) the camo is deployed from. |
-
-## Setup in Eden
-
-1. Place the **vehicle** and give it a variable name.
-2. Place a **Game Logic** as close as possible to it (near the Modules menu).
-3. Place every object you want to appear when the camo is deployed.
-4. If a camo object should rest on the ground, raise it ~1 ft to allow for the vehicle's suspension settling once the mission loads.
-5. Select all the camo objects, right-click → **Synchronise** them to the Game Logic.
-6. In the vehicle's **init field**, call the function:
+1. Place the vehicle and give it an Eden variable name.
+2. Place one Game Logic near it. The script uses the nearest Logic, so keep unrelated Logics farther away.
+3. Place the camo objects where they should appear. Synchronize each one to the Game Logic.
+4. Put this call in the vehicle's **Init** field:
 
 ```sqf
 [this] call Waldo_fnc_VehicleCamoSetup;
 ```
 
-The synced objects start hidden and are revealed (and attached) when the crew deploys the camo via the ACE action.
+The server attaches and hides the synchronized props at startup. Players need ACE3 for the actions and progress bars. The vehicle must have more than five nearby trees or bushes within 20 m before the deploy action appears. It must also be on the ground, moving below 2 km/h, with the player within 7 m.
 
-The vehicle is the interaction object; the Game Logic holds the synchronised camo objects.
+## Parameters and result
+
+| Position | Type | Default | What to supply |
+| --- | --- | --- | --- |
+| 0 | Object | Required | Existing vehicle carrying the nearest Game Logic's synchronized camo objects. |
+
+The setup call has no documented return value. Eden Init runs on server and clients. The server prepares the props and publishes the initial deployed state. Each interface installs ACE actions.
+
+There is no duplicate-action guard, so call it once per object. Eden Init runs for joining clients. A vehicle created during play needs its own client/JIP setup.
+
+## During play
+
+**Deploy Vehicle Camouflage** takes ten seconds. It reveals the props and shifts the activating player's group to civilian. The script then checks for a group member more than 40 m from the vehicle and for an enemy unit within 150 m of it. It does not query Arma's `knowsAbout` value. Vehicle fire or a vehicle/player hit also attempts to return the group to its original side. Arma may delay the visible side change.
+
+**Remove Vehicle Camouflage** also takes ten seconds and hides the props. Starting the engine hides them as well. Fire, damage or enemy proximity can end the side disguise while leaving the props visible until removal or engine start.
 
 ## If concealment does not deploy
 
-Check ACE, the vehicle's Init call and the Game Logic synchronisations. The camo pieces must already exist as placed objects for the script to reveal and attach them. A player who fires, takes damage, moves out of range or is spotted can break their disguise without immediately removing the camo pieces.
+Check that ACE3 is loaded, the Init call runs, and the nearest Game Logic has the intended synchronized objects. At the deploy point, the script requires more than five nearby trees or bushes. The action also requires a stationary grounded vehicle and a player within 7 m.
+
+This legacy script removes all **GetIn**, **GetOut**, **Hit**, **Fired** and **Engine** event handlers on some reveal or removal paths. It can disrupt other features using those handlers. It also does not track a worker ID for the recurring concealment check. Test repeated deployment, group-side restoration and interaction with other vehicle scripts in a disposable mission before using it in live play.
 
 ## See also
 
-* [Simple Mass Attach Items](Simple-Mass-Attach-Items) — attach static objects to a vehicle permanently
+* [Simple Mass Attach Items](Simple-Mass-Attach-Items): attach static objects to a vehicle manually
 * [Construction Objects](Construction-Objects)
-* [Waldos AI Tweak](Waldos-AI-Tweak) — tune how easily AI spot your ambush
+* [Waldos AI Tweak](Waldos-AI-Tweak): configure AI skill settings
 
 <!-- WMP-WIKI-NAV -->
 ---

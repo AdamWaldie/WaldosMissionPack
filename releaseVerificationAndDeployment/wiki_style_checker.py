@@ -125,6 +125,8 @@ FEATURE_GUIDES = {
     "Automatic-ACE-Fortify-Setup",
     "Weapon-Mounting-With-Custom-Name",
     "Simple-Mass-Attach-Items",
+    "Construction-Objects",
+    "Vehicle-Ambush-Script-And-Vehicle-Camo",
 }
 
 GUIDE_SECTIONS = {
