@@ -7,6 +7,10 @@
  * the dedicated server's UAV authority loop; the jammer registry is owned/broadcast by the server.
  * The authority call comes from initServer.sqf
  * and each interface call comes from initPlayerLocal.sqf after server config readiness. Idempotent.
+ * Locality and authority: The server starts UAV authority; each interface client installs its
+ * own radio hooks, RDF action, HUD watcher and curator overlay.
+ * Repeat/JIP: Child installers guard duplicate handlers. Joining clients run the same local
+ * setup after receiving server settings and registry state.
  *
  * Arguments:
  * None
@@ -16,6 +20,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammingInit;   // called on the appropriate server/client entry point
+ * Current callers: initServer.sqf for UAV authority and initPlayerLocal.sqf for interface setup.
+ * Result: Available radio engines and local EW feedback react to the server-owned jammer registry.
  */
 
 // Server authority for UAV/UGV jamming (freezes autonomous drones in a UAV-jamming field).

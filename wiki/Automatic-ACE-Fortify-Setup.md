@@ -28,11 +28,13 @@ catalogue is built, so re-running the same Game Logic's init does nothing on a s
 
 ## Parameters
 
-| # | Name | Type | Meaning |
-|---|---|---|---|
-| 0 | `_target` | OBJECT | The Game Logic carrying the synced objects. |
-| 1 | `_side` | SIDE | Which side's Fortify menu receives the catalogue: `west`, `east`, `independent`, or `civilian`. |
-| 2 | `_budget` | NUMBER | That side's starting Fortify budget. |
+| # | Name | Type | Default | Meaning |
+|---|---|---|---|---|
+| 0 | `_target` | Object | Required | The Game Logic carrying the synced objects. |
+| 1 | `_side` | Side | `west` | The side whose Fortify menu receives the catalogue. |
+| 2 | `_budget` | Number | `1000` | Starting budget passed to ACE Fortify. |
+
+Call this on the server or in the Game Logic's Eden Init field. Non-server copies exit. The function has no useful return value. It deletes the synced source objects and the Game Logic after registering their classes, so the same setup cannot be rerun. WMP does not replay this registration to joining clients itself. Check ACE Fortify in a late-join test for your mod set.
 
 ## Changing a side's budget later
 

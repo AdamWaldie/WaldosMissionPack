@@ -4,13 +4,32 @@
 
 _Associated Files: `MissionScripts\MiniGames\miniGamesRegisterTable.sqf`, `MissionScripts\MiniGames\miniGamesUnregisterTable.sqf`, `MissionScripts\MiniGames\miniGamesEnsureRuntime.sqf`, `MissionScripts\MiniGames\engine\`, `Waldo_fnc_MiniGamesRegisterTable`_
 
-## Waldos Mini Games — Table Games
+## Waldos Mini Games: Table Games
 
 Table games are the **multiplayer**, sit-down party games. A table becomes active only when its Eden init explicitly registers it. Everything runs with the server as authority and each player's screen as a thin client. Missions with no registered tables do not compile or run the seated-game engine.
 
 This is the [Waldos Mini Games](Waldos-Mini-Games) sub-page for the seated games. For solo challenges that gate an interaction, see [Interaction Challenges](Waldos-Mini-Games-Interaction-Challenges).
 
 ## Setup
+
+`Waldo_fnc_MiniGamesRegisterTable` takes an existing Object and an optional
+HashMap. It returns a Boolean for registration acceptance on the calling
+machine. A `true` response does not mean a match has started. The server
+owns table state; each interface client installs its own actions, including
+after joining late.
+
+| HashMap key | Type | Shipped default | Rule |
+| --- | --- | --- | --- |
+| `displayName` | Nonempty String | `"Party Table"` | Shown in the interaction. |
+| `games` | Array of game-ID Strings | `[]`, meaning all twelve | IDs are `battleship`, `whoswho`, `shotgun`, `blackjack`, `poker`, `drawpoker`, `liarsdice`, `chess`, `checkers`, `connectfour`, `rps`, `uno`. |
+| `seatOffsets` | Array of four `[x,y,z]` Number Arrays | Four positions around the table | Model-space positions for seated players. |
+| `seatExitOffsets` | Array of four `[x,y,z]` Number Arrays | Four exit positions | Places players clear of the table on leaving. |
+| `seatDirections` | Array of four Numbers, degrees | `[0,180,90,270]` | Direction for each seat. |
+| `actionRange` | Number, metres | `4.5` | Must be greater than zero and no more than `25`. |
+
+Unknown keys, repeated/unknown games and invalid geometry are rejected. To remove
+a table, `Waldo_fnc_MiniGamesUnregisterTable` takes its Object and returns a
+Boolean. It is repeat-safe; deleting the table also releases its seats.
 
 1. Place the **`[WMP] Party Table Example`** composition, or put this in a table object's init:
 
@@ -63,10 +82,10 @@ Games that need more than the players currently seated stay locked in the vote l
 
 ## Using a table (player's view)
 
-* **Take a Seat / Leave Seat** — sit down at (or stand up from) the table.
-* **Open Lobby** — the shared screen: the seated players, the game vote list, table status and a details panel for the highlighted game.
+* **Take a Seat / Leave Seat**: sit down at (or stand up from) the table.
+* **Open Lobby**: the shared screen for seated players, game votes, table status and details of the highlighted game.
 * **Vote** for a game and mark yourself **ready**. When the seated players agree and are ready, the game launches for everyone at the table.
-* **Spectate** — players near the table who aren't seated can watch an in-progress game safely.
+* **Spectate**: nearby players who are not seated can watch an in-progress game.
 * Press **Escape** to leave a game screen / lobby (you stay seated). Finishing or resetting a match returns the table to its lobby.
 
 Seated players are made invulnerable and posed in a sitting animation while they play, and are restored when they get up.
@@ -107,21 +126,21 @@ All action requests carry a unique token plus the table game ID and current hand
 
 Late joiners receive compact registered-table metadata and phase summary. Choosing **Spectate Game** subscribes that player, applies one targeted current public-state snapshot, opens the display only after the snapshot is present, and then keeps every live transition flowing at the existing cadence. Closing the spectator view unsubscribes it. No executable script or complete game state is sent through JIP. Seating remains locked to the table roster during a game. If a player departs one of the fixed-roster games, the server safely clears that match and returns the remaining seats to the lobby. Table deletion and reset clear private payloads and game state.
 
-## New-game tuning constants
+## Settings: new-game tuning constants
 
-| Constant | Default | Purpose |
-|---|---:|---|
-| `Waldo_MG_CFG_DRAWPOKER_STARTING_CHIPS` | 100 | Initial and rematch stack. |
-| `Waldo_MG_CFG_DRAWPOKER_ANTE` | 1 | Compulsory contribution per hand. |
-| `Waldo_MG_CFG_DRAWPOKER_MAX_DISCARDS` | 3 | Maximum cards exchanged. |
-| `Waldo_MG_CFG_DRAWPOKER_UI_TICK` | 0.15 | Local display refresh interval. |
-| `Waldo_MG_CFG_LIARSDICE_STARTING_DICE` | 5 | Dice per player at match start. |
-| `Waldo_MG_CFG_LIARSDICE_REVEAL_SECONDS` | 2.5 | Public challenge reveal duration. |
-| `Waldo_MG_CFG_LIARSDICE_UI_TICK` | 0.15 | Local display refresh interval. |
-| `Waldo_MG_CFG_CONNECTFOUR_COLUMNS` | 7 | Board width. |
-| `Waldo_MG_CFG_CONNECTFOUR_ROWS` | 6 | Board height. |
-| `Waldo_MG_CFG_CONNECTFOUR_WINS_REQUIRED` | 2 | Boards needed to win the match. |
-| `Waldo_MG_CFG_CONNECTFOUR_UI_TICK` | 0.10 | Local display refresh interval. |
+| Constant | Type | Default | Purpose |
+|---|---|---:|---|
+| `Waldo_MG_CFG_DRAWPOKER_STARTING_CHIPS` | Number | 100 | Initial and rematch stack. |
+| `Waldo_MG_CFG_DRAWPOKER_ANTE` | Number | 1 | Compulsory contribution per hand. |
+| `Waldo_MG_CFG_DRAWPOKER_MAX_DISCARDS` | Number | 3 | Maximum cards exchanged. |
+| `Waldo_MG_CFG_DRAWPOKER_UI_TICK` | Number, seconds | 0.15 | Local display refresh interval. |
+| `Waldo_MG_CFG_LIARSDICE_STARTING_DICE` | Number | 5 | Dice per player at match start. |
+| `Waldo_MG_CFG_LIARSDICE_REVEAL_SECONDS` | Number, seconds | 2.5 | Public challenge reveal duration. |
+| `Waldo_MG_CFG_LIARSDICE_UI_TICK` | Number, seconds | 0.15 | Local display refresh interval. |
+| `Waldo_MG_CFG_CONNECTFOUR_COLUMNS` | Number | 7 | Board width. |
+| `Waldo_MG_CFG_CONNECTFOUR_ROWS` | Number | 6 | Board height. |
+| `Waldo_MG_CFG_CONNECTFOUR_WINS_REQUIRED` | Number | 2 | Boards needed to win the match. |
+| `Waldo_MG_CFG_CONNECTFOUR_UI_TICK` | Number, seconds | 0.10 | Local display refresh interval. |
 
 Screenshots are intentionally not embedded until the final in-engine capture pass; the interfaces are procedural runtime controls rather than static texture mock-ups.
 
@@ -135,7 +154,7 @@ Per-game rules constants live in `MissionScripts\MiniGames\engine\config.sqf` as
 * The **server** validates direct, tokenised requests and drains a per-table queue only while work exists. Idle tables have no authority poller or recurring discovery.
 * Public game-state changes use Arma's native recipient arrays for seated owners and explicitly subscribed spectator owners. The globally persistent state is limited to table discovery, lobby and phase summary values.
 * Movement, animation, invulnerability, camera and presentation execute on the player owner. Table-local commands execute where the table is local, including after headless-client or curator locality changes.
-* No `description.ext` changes are required — every screen is built at runtime from vanilla controls.
+* No `description.ext` changes are required. Every screen is built at runtime from vanilla controls.
 
 ## If a game will not start
 

@@ -18,6 +18,7 @@
  *     remoteExecCall ["Waldo_fnc_FeatureRuntimeApply", 2];
  *
  * Current caller: Waldo_fnc_FeatureRuntimeZen forwards validated ZEN runtime-control dialogs.
+ * Result: Accepted settings are applied on the server and published for joining clients.
  */
 
 params [

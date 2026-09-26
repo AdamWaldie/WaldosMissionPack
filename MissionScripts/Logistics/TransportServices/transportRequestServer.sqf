@@ -30,6 +30,9 @@
  * ["REQUEST_PICKUP", "GROUND", objNull, getPosATL player, player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
  * Result: reserves the nearest eligible available ground transport and dispatches its local AI group.
  * Current caller: Waldo_fnc_TransportOpenMapLocal and the RTB self-action.
+ * Locality and authority: Server validates the actor, requested operation and service state;
+ * owner-local dispatch drives the AI group. Repeated requests are checked against current
+ * availability, and published state informs joining clients.
  */
 
 params ["_action", "_type", "_vehicle", ["_position", [], [[]]], "_requester", ["_suppressRequesterNotification", false, [false]]];

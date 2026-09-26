@@ -14,6 +14,10 @@
  * verification Waldo_fnc_ACRE2ApplyPresetNames already uses for ordinary named nets - so a joint net
  * can visibly read as "COALITION" (or similar) on the radio itself, rather than only appearing as a
  * plain channel number.
+ * Locality and authority: Each ACRE-enabled machine writes its local preset fields; mission
+ * configuration defines the shared frequencies and per-side channels.
+ * Repeat/JIP: Rewrites and verifies the same configured preset fields on pre-init or lazy retry.
+ * Joining clients use their own ACRE preset application rather than a copied radio instance.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -24,6 +28,8 @@
  * Example: [_config] call Waldo_fnc_ACRE2ApplyJointNets;
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2SchedulePlayerRefresh's lazy gate.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting
+ * Result: Each configured joint net has matching TX/RX frequency on the listed sides, with a
+ * verified channel label where requested.
  */
 params [["_config", missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap], [createHashMap]]];
 if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {missionNamespace setVariable ["Waldo_ACRE2_JointNetsReady", true]; true};

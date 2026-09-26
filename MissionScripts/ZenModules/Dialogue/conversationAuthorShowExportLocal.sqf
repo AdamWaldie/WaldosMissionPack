@@ -9,6 +9,7 @@
  * Return Value: ARRAY of created controls, or an empty ARRAY when the display is unavailable.
  * Current caller: Waldo_fnc_ConversationAuthorExportLocal.
  * Example: [_display, "CONFIG", str _definition] call Waldo_fnc_ConversationAuthorShowExportLocal;
+ * Result: A code-preview overlay appears with the generated text ready for copying.
  */
 params [
     ["_display", displayNull, [displayNull]],

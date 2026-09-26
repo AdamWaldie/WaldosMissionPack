@@ -8,6 +8,7 @@
  * Arguments: definition ARRAY [id, nodes, startNode]. Return Value: BOOL.
  * Current callers: configured conversation loader and ZEN author server.
  * Example: [["GREETING", [["START", [["Hello.", "", -1, -1, ""]], [], ""]], "START"]] call Waldo_fnc_ConversationCreateData;
+ * Result: A valid data definition is registered; invalid data is rejected.
  */
 params [["_definition", [], [[]]]];
 if (!isServer) exitWith {false};

@@ -13,6 +13,9 @@
  *
  * Example: ["repair", [["preset", "fieldGenerator"]]] call Waldo_fnc_MiniGameEquipmentProfile;
  * Current callers: interaction challenge launcher, picker, briefing and QA mission.
+ * Locality and authority: Builds a local presentation profile from loaded challenge and
+ * WMP theme data. Repeated calls do not mutate server or JIP gameplay state.
+ * Result: Returns a complete challenge-specific equipment profile for the display.
  */
 params [
     ["_challengeId", "wirecut", [""]],

@@ -5,6 +5,9 @@
  * The authority token prevents clients or obsolete expiry tasks from removing a newer rally. The
  * BIS respawn handle is validated and removed before the world object is deleted. Cleanup also runs
  * when the public active flag is already false so interrupted deployments cannot leak a respawn.
+ * Locality and authority: Server-only; requires the current private server authority token.
+ * Repeat/JIP: Repeating cleanup for an already-cleared group is safe. Public state is cleared
+ * for joiners; the cleanup call itself is not replayed.
  *
  * Arguments:
  * 0: group <GROUP>; 1: reason <STRING>; 2: notification state <STRING>;
@@ -16,6 +19,7 @@
  * [_group, "Rally packed.", "INFO", _authority] call Waldo_fnc_RallyPointRemoveServer;
  *
  * Current callers: RallyPointRequestServer, expiry watcher and RallyPointRemoveAllServer.
+ * Result: The group's rally object and respawn handle are removed, and its active state is false.
  */
 params [
     ["_group", grpNull, [grpNull]],

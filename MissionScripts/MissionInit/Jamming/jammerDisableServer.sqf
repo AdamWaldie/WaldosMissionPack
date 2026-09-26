@@ -4,6 +4,10 @@
  * actor, range, engineer requirement, registry membership and current disabled state before it
  * mutates the authoritative registry. DISABLE preserves the emitter for curator reactivation;
  * DESTROY destroys and deregisters it. Feedback is sent only to the requesting player.
+ * Locality and authority: Server-only; checks the remote owner, player, range and current
+ * registry state before changing the field.
+ * Repeat/JIP: A disabled/destroyed field rejects another player attempt. The resulting current
+ * registry state, not the historical request, is visible to joiners.
  *
  * Arguments:
  * 0: jammer emitter <OBJECT>
@@ -19,6 +23,7 @@
  *
  * Example:
  * [myJammer, player, "DISABLE"] remoteExecCall ["Waldo_fnc_JammerDisableServer", 2];
+ * Result: The field is disabled or its emitter destroyed, with a response to the actor.
  */
 
 params [

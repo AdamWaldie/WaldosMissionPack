@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Zeus "Waldos Medical Crate" module - spawns a medical supply crate (optionally a field hospital)
  * via a ZEN dialog. Registered as Waldo_fnc_ZenMedicalSpawner.
+ * Locality and authority: Opens on the curator's interface; the submitted settings go to the
+ * authenticated server crate spawner.
+ * Repeat/JIP: Each accepted submission creates a new crate. The server registers its cargo and
+ * enabled handling for joining players.
  *
  * Arguments:
  * 0: _modulePos <POSITION> - where to spawn the crate
@@ -12,6 +16,8 @@
  *
  * Example:
  * [getPos _logic, _logic] call Waldo_fnc_ZenMedicalSpawner;
+ * Current caller: ZEN "Waldos Medical Crate" module registration.
+ * Result: The curator chooses crate size and optional field-hospital role before server spawn.
  */
 
 params ["_modulePos", "_objectPos"];

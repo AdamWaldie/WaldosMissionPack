@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Refresh purchase config type.
+ * Redraws the purchase editor's selected asset category label.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigType;
+ * Locality/Authority: Curator interface client; presentation only.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP state.
+ * Current Callers: Purchase editor load-row and category selector controls.
+ * Result: The label matches the selected category index.
  */
 
         params [["_disp", displayNull]];

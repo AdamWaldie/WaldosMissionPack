@@ -3,8 +3,9 @@
  * Applies or removes WMP paradrop-aircraft invincibility on the machine that currently owns the
  * aircraft, and reapplies it whenever the aircraft changes locality.
  *
- * Locality and repeat/JIP behaviour:
- * The server publishes the requested state as part of the aircraft-object-keyed combined setup
+ * Locality and authority: Every machine may receive the request, but only the current aircraft
+ * owner executes allowDamage. The server publishes the requested state.
+ * Repeat/JIP: The server publishes the state as part of the aircraft-object-keyed combined setup
  * replay. Each machine installs at most one local Local event handler. Only the current aircraft
  * owner executes allowDamage; when ownership moves to a server, headless client or player client,
  * the new owner immediately reapplies the stored state. Passing false removes WMP's handler and
@@ -24,6 +25,7 @@
  *
  * Example:
  * [netId _aircraft, true] call Waldo_fnc_ParadropSetAircraftInvincibilityLocal;
+ * Result: The current aircraft owner enforces the requested damage state after object resolution.
  */
 params [["_netId", "", [""]], ["_invincible", false, [false]]];
 if (_netId == "") exitWith {false};

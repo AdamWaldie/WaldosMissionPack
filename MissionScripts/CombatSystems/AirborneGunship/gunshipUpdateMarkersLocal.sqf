@@ -15,6 +15,9 @@
  * Return Value: Nothing
  * Example: [] call Waldo_fnc_GunshipUpdateMarkersLocal;
  * Current callers: the gunship marker CBA per-frame handler.
+ * Repeat/JIP: Reuses local marker names created by GunshipSetupLocal; joiners reconcile
+ * published systems before the per-second update begins.
+ * Result: Own-side aircraft and orbit markers follow the current published gunship position.
  */
 
 if !(hasInterface) exitWith {};

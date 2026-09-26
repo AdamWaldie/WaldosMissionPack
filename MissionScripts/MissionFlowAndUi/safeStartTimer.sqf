@@ -5,6 +5,8 @@
  * waits server-side until the timer expires and calls go-live automatically. An admin
  * can overrule at any point with [false] call Waldo_fnc_SafeStart, which clears the
  * end time and makes this loop stand down. Calling again restarts/extends the timer.
+ * Locality and authority: request on any machine; the server owns the deadline and timer loop.
+ * Current clients and JIP receive the published end time and protection state.
  *
  * Arguments:
  * 0: Seconds <NUMBER> (Optional, default: 300) - countdown length before auto go-live
@@ -14,6 +16,8 @@
  *
  * Example:
  * [300] call Waldo_fnc_SafeStartTimer;  // go live in 5 minutes
+ * Result: the server starts one countdown and clients display the time left.
+ * Current callers: SafeStart ZEN timer module and mission-maker triggers/scripts.
  */
 
 params [["_seconds", 300]];

@@ -11,6 +11,10 @@
  * Return Value: BOOL - true when active Safestart was acknowledged; false when it was not active.
  * Current caller: WMP Interface > Acknowledge SafeStart self-interaction.
  * Example: [] call Waldo_fnc_SafeStartAcknowledgeLocal;
+ * Locality and authority: Dismisses only this player's local SafeStart notice; the server's
+ * protection state is unchanged. Repeating acknowledgement is harmless, and a joining client
+ * receives the current protection state separately.
+ * Result: The local notice is acknowledged while protection remains active.
  */
 if (!hasInterface || {!(missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false])}) exitWith {false};
 

@@ -5,7 +5,8 @@
  * Repeat / JIP: Each request creates one world object; ACE source state and crate cargo replicate.
  * Arguments: target <OBJECT>, player <OBJECT>, type <STRING>, bearing <NUMBER> (90), distance <NUMBER> (2).
  * Return Value: <BOOL> spawned. Current caller: Waldo_fnc_LogisticsSpawner.
- * Example: [quartermaster, player, "Rearm", 90, 3] remoteExecCall ["Waldo_fnc_LogisticsSpawner", 2];
+ * Example: [quartermaster, player, "Rearm", 90, 3] remoteExecCall ["Waldo_fnc_QuartermasterExtendedSpawn", 2];
+ * Result: A permitted grenade, explosive, rearm or fuel issue is created beside the QM.
  */
 params [["_target", objNull, [objNull]], ["_player", objNull, [objNull]], ["_kind", "", [""]],
     ["_bearing", 90, [0]], ["_distance", 2, [0]]];

@@ -7,6 +7,7 @@
  * Arguments: editor DISPLAY, notify BOOL default false. Return Value: validation ARRAY.
  * Current callers: Conversation Author Validate, submit and export controls.
  * Example: private _result = [_display,true] call Waldo_fnc_ConversationAuthorValidateLocal;
+ * Result: The editor shows errors or warnings before submission; no NPC state is changed.
  */
 params [["_display", displayNull, [displayNull]], ["_notify", false, [true]]];
 if (isNull _display) exitWith {[false, ["editor display is unavailable"], []]};

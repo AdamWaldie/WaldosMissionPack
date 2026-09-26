@@ -8,6 +8,8 @@
  * Arguments: operation <STRING>; selected object <OBJECT>; named pairs <ARRAY>; requester <OBJECT>.
  * Return Value: <BOOL> request accepted. Current caller: Waldo_fnc_ZenServiceLogisticsModule.
  * Example: ["SUPPLY_REGISTER", crate1, [], player] remoteExecCall ["Waldo_fnc_ZenServiceLogisticsServer", 2];
+ * Result: Accepted object configuration is applied immediately or queued for the next server
+ * frame, with success or failure reported to the requesting curator.
  */
 params [["_operation", "", [""]], ["_target", objNull, [objNull]], ["_pairs", [], [[]]], ["_requester", objNull, [objNull]]];
 if (!isServer || {isNull _target}) exitWith {false};

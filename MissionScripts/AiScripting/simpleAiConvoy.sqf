@@ -1,42 +1,23 @@
 /*
-Purpose: Simple AI Convoy script for mission makers
-Called From: sqf file, trigger, init field or whatever you fancy
-Scope: Groups of units referanced
-Execution time: from handle call.
-Author: Tova, modified by WaldoTheWarfighter
-License: unlimited distribution and editing as per Tova's original.
-
-Call it with:
-
-convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
-
-
-Optional parameters are also available :
-
-convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
-
-if there are multiple, simply change the "handle":
-
-
-convoyScript_2 = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
-
-
-With :
-
-convoyGroup : the group you want to move as a convoy
-convoySpeed : Maximum speed of the convoy in km/h (default 50 km/h)
-convoySeparation : distance between each vehicle of the convoy (default 50m)
-pushThrough : true/false, force the AI to push through contact, only returning fire on the move (default true)
-
-
-
-To end the script, in its final waypoint place the below in on activation:
-
-terminate convoyScript;
-{(vehicle _x) limitSpeed 5000;(vehicle _x) setUnloadInCombat [true, false]} forEach (units convoyGroup);
-convoyGroup enableAttack true;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Purpose: Keep one AI vehicle group in column formation with a speed cap and spacing. Based on
+ * Tova's original convoy script, with WMP headless-crew pinning and mission-maker controls.
+ * License: unlimited distribution and editing as per Tova's original.
+ * Locality/authority: run once in scheduled execution on the server while it owns the group.
+ * The worker calls locality-sensitive AI commands; client calls can produce conflicting loops.
+ * Repeat/JIP: every spawn creates another five-second worker. Store and terminate its Script
+ * handle when the route ends; do not start a duplicate for joining players.
+ * Arguments:
+ * 0: convoy group <GROUP> (required) - AI drivers and vehicles to control.
+ * 1: speed <NUMBER> (default 30) - leader speed cap in km/h.
+ * 2: separation <NUMBER> (default 15) - convoy spacing in metres.
+ * 3: push through <BOOL> (default true) - prevent AI unloading on contact.
+ * Return Value: SCRIPT handle from `spawn`; the function's own loop has no useful return.
+ * Current callers: mission-maker server scripts, triggers and waypoint activation fields.
+ * Example: convoyScript = [convoyGroup, 30, 15, true] spawn Waldo_fnc_SimpleAiConvoy;
+ * Result: the server limits that convoy to the configured speed and spacing until terminated.
+ * Cleanup: terminate convoyScript; restore the group's speed/unload/attack settings if changed.
+ */
 params ["_convoyGroup",["_convoySpeed",30],["_convoySeparation",15],["_pushThrough", true]];
 // This script's own while loop below continuously drives the convoy every 5s and depends on the
 // group staying local to wherever it's running - an external headless rebalance (WMP's own, or

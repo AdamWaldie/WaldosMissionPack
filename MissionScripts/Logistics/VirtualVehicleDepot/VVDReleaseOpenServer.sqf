@@ -1,4 +1,17 @@
-/* Releases a VVD lock only when actor and opaque token still match. */
+/*
+ * Author: WaldoTheWarfighter
+ * Releases a depot's single-user GUI lock when its actor and opaque token still match.
+ * Locality and authority: Client calls forward to the server; the server checks token,
+ * actor and remote owner before clearing published lock state. Repeated or stale releases
+ * are rejected, and JIP observes the current lock state rather than an old request.
+ * Arguments: 0: spawn point <OBJECT>; 1: actor <OBJECT>; 2: lock token <STRING>;
+ *   3: reason <STRING> ("CLOSED").
+ * Return Value: <BOOL> true when the matching server lock was released; false otherwise.
+ * Current callers: Waldo_fnc_VVDOpen on close/failure and VVDRequestOpenServer timeout.
+ * Example: [depotPad, player, _token, "CLOSED"]
+ *   remoteExecCall ["Waldo_fnc_VVDReleaseOpenServer", 2];
+ * Result: The depot becomes available to the next player after a valid release.
+ */
 params [
     ["_spawnPoint", objNull, [objNull]],
     ["_actor", objNull, [objNull]],

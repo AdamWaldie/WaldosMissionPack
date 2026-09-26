@@ -1,14 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
- * Progress upgrade jobs.
+ * Advance building-upgrade timers and apply completed upgrades.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; called by the server Economy tick.
+ * Repeat/JIP: Each tick advances stored progress and drops completed jobs;
+ * resulting building state is published separately to joining clients.
+ * Current Callers: EconomySystems/economyInit.sqf.
  *
  * Arguments:
  * None
  *
  * Return Value:
- * Any - see function body
+ * Nothing.
+ * Result: Finishes eligible upgrades and stores remaining runtime records.
  *
  * Example:
  * [] call Waldo_fnc_EcoBuild_progressUpgradeJobs;

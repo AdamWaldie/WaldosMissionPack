@@ -5,6 +5,10 @@
  * of battle in the world. Visible only to local curators (Zeus) - ordinary players never see it,
  * so it never leaks jammer positions. Registers a single Draw3D mission event handler that reads
  * the live registry each frame. Controlled by Waldo_Jamming_GmOverlay. Client-only, single instance.
+ * Locality and authority: Interface-client only; reads server-published jammer entries and draws
+ * only for a player with assigned curator logic.
+ * Repeat/JIP: One local running flag prevents duplicate Draw3D handlers. Joining curators install
+ * their own handler during local jamming setup.
  *
  * Arguments:
  * None
@@ -14,6 +18,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammerMapDraw;
+ * Current caller: Waldo_fnc_JammingInit on interface clients.
+ * Result: Eligible curators see enabled emitter icons and directional facing lines in 3D.
  */
 
 if !(hasInterface) exitWith {};

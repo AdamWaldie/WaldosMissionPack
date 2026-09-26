@@ -1,45 +1,21 @@
 /*
-This script is designed to dynamically grab all objects syncronised to a game logic, add them to a sides foritfy menu, and price them dynamically based on their volume & mass. 
-This isnt perfect, but the log scalars help keep the extreemes (mostly) in step with everything else.
-
-How to use:
- - Make sure your player(s) have a fortify tool in their inventory.
- - Place a game logic down and paste into its init the function call as noted below - alter it to fit your requirements
- - syncronise to the game logic any objecs tor static weapons that you wish to be constructable in fortify. (Vehicles other than static weapons are not supported due to *concerning* beahavour)
- - If you require more than one side to use fortify, repeat the above steps in entirety and ensure the function call has the correct side in each.
- - Run the game.
-
-parameters:
-_target - the object variable name you want this to apply to (The game logic)
-_side - the side that the crate will populate the fortify list to. Each setup is single use as the objects and logic are destroyed afterward. Options: West,East,Independent,Civilian
-_budget - user defined starting budget for the side, this can then be added to later on using the ACE_Fortify budget script.
-
-[_target,west,6000] call Waldo_fnc_AutoFortifySetup;
-
-e.g.
-
-[this,west,6000] call Waldo_fnc_AutoFortifySetup;
-
-==================================================================
-
-ACE Fortify Budget Function (use this if you want to add or remove budget to a side during your mission: 
-
-Updates the given sides budget.
-
- Arguments:
-  0: Side <SIDE>
-  1: Change <NUMBER> (default: 0)
-  2: Display hint <BOOL> (default: true)
-
- Return Value:
-  None
-
- Example:
-  [west, -250, false] call ace_fortify_fnc_updateBudget
-
-I have also created a ZEN module which allows you to do this via zeus during the mission if desired.
-
-*/
+ * Author: WaldoTheWarfighter
+ * Purpose: Price the objects synchronized to a Game Logic by mass and size, then register
+ * their classes and a starting budget with ACE Fortify for one side. The source objects and
+ * Game Logic are deleted after registration.
+ * Locality/authority: server only. Eden Init runs on each machine, but clients exit immediately.
+ * ACE Fortify must be loaded before this call; the server owns the class list and budget.
+ * Repeat/JIP: one-shot and destructive. Do not call again on the consumed Game Logic. This
+ * helper has no WMP JIP replay; test ACE Fortify visibility for players who join later.
+ * Arguments:
+ * 0: synchronized Game Logic <OBJECT> (required) - catalogue source.
+ * 1: side <SIDE> (default west) - Fortify menu owner.
+ * 2: starting budget <NUMBER> (default 1000) - side budget passed to ACE.
+ * Return Value: Nothing useful; a client call exits without registration.
+ * Current callers: mission-maker Game Logic Init fields and scripted server setup.
+ * Example: [this, west, 6000] call Waldo_fnc_AutoFortifySetup;
+ * Result: supported synced classes enter WEST's ACE Fortify menu, then source objects vanish.
+ */
 if (!isServer) exitwith {}; // server only (per ace requrements)
 
 params ["_targetLogic",["_side",west],["_budget",1000]];

@@ -20,6 +20,9 @@
  * [] call Waldo_fnc_FieldResupplyInit;
  *
  * Current callers: initPlayerLocal.sqf, FieldResupplyAssignCarrier and the local respawn handler.
+ * Locality and authority: Runs on each interface client and installs its own actions. Repeated
+ * setup avoids duplicate controls; a joining or respawned player applies current public state.
+ * Result: An assigned carrier sees the Field Resupply controls available to that player.
  */
 
 params [["_retriesRemaining", 20, [0]]];

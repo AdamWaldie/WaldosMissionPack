@@ -10,6 +10,10 @@
  * Return Value: BOOL - true when the current player has ACE or fallback WMP Options actions.
  * Current callers: initPlayerLocal.sqf, WMP HUD initialization and player respawn handling.
  * Example: [] call Waldo_fnc_AccessibilitySelfInteractionInit;
+ * Locality and authority: Installs options on the current player's interface client.
+ * Repeated setup replaces or reuses local actions; a joining or respawned client installs
+ * its own menu without changing server state.
+ * Result: The player can open WMP accessibility and presentation settings.
  */
 
 if (!hasInterface || {isNull player}) exitWith {false};

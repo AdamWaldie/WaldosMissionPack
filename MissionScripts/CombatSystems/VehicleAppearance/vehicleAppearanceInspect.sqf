@@ -32,6 +32,9 @@
  * hint ((cursorObject call Waldo_fnc_VehicleAppearanceInspect) select 2);
  *
  * Current caller: the ZEN "Vehicle Appearance - Inspect" module.
+ * Locality and authority: Read-only on the requesting curator's client. Repeated inspection
+ * reads current vehicle state; no authoritative change or JIP replay is needed.
+ * Result: Returns a readable report and paste-ready selection names for the inspected vehicle.
  */
 
 params [["_vehicle", objNull, [objNull]]];

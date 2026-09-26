@@ -1,5 +1,18 @@
 /*
-Purpose: Mission Production Tool to generate a limited ACE arsenal based off of the loadout of all playable units from a given side.
+ * Author: WaldoTheWarfighter
+ * Purpose: Copy distinct class strings from current BLUFOR unit loadouts for a hand-curated ACE Arsenal.
+ * Locality and authority: Local mission-maker debug script. Reads local unit loadouts and writes
+ * only to the executing client's clipboard. It does not publish state or set up an arsenal.
+ * Repeat/JIP: Each execution replaces the local clipboard text. There is no JIP replay.
+ * Arguments: None. The executable code uses `units blufor`; change that expression in the
+ * file if another side is required.
+ * Return Value: No useful SQF value. `execVM` returns its own Script handle immediately.
+ * Current callers: Manual mission-maker debug console only.
+ * Example: [] execVM "MissionScripts\MissionMakerResourceScripts\ToolkitAceLimitedArsenal.sqf";
+ * Result: The executing machine's clipboard contains an Array of distinct class-name Strings.
+ */
+/*
+Purpose: Mission Production Tool to generate a limited ACE arsenal based off of the loadout of BLUFOR units.
 This is not designed to create a limited ace arsenal, but will output a readymade string to you to paste into inits.
 Called From: Mission Maker debug
 Execution time: NOT DURING MISSIONS

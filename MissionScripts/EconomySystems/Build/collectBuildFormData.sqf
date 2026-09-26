@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Collect build form data.
+ * Reads and normalizes a build definition from the curator editor.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - Construction editor display
  *
  * Return Value:
- * Nothing
+ * <ARRAY> normalized build row, or [] for a null display.
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuild_collectBuildFormData;
+ * Locality/Authority: Curator interface client; server validates submitted definitions separately.
+ * Repeat/JIP Behaviour: Repeat-safe form read; no JIP state until submission.
+ * Current Callers: Construction editor Save/Add controls.
+ * Result: Returns form values without publishing a catalog change.
  */
 
         params ["_disp"];

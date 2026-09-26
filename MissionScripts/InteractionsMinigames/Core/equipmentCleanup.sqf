@@ -1,4 +1,14 @@
-/* Cancels active input and removes every shared display handler, per-frame handler and worker. */
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Cancels active drag input and removes handlers and workers owned by one equipment display.
+ * Locality/Authority: Interface client only; cleans the supplied local UI.
+ * Repeat/JIP Behaviour: Stored lists are cleared, so repeat cleanup is safe; nothing persists for JIP.
+ * Arguments: 0: display <DISPLAY>, default displayNull; 1: drag phase <STRING>, default "CANCEL".
+ * Return Value: <BOOL> true for a valid display, false for displayNull.
+ * Current Callers: MiniGameChallengeUI completion/abort paths.
+ * Example: [_display, "CANCEL"] call Waldo_fnc_MiniGameEquipmentCleanup;
+ * Result: Active input, display events, workers and per-frame handlers are stopped.
+ */
 disableSerialization;
 params [["_display", displayNull, [displayNull]], ["_phase", "CANCEL", [""]]];
 if (isNull _display) exitWith {false};

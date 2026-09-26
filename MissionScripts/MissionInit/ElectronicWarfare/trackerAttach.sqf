@@ -10,12 +10,15 @@
  * 1: Tracking side <SIDE or STRING> - who sees it (optional, default: the caller's side)
  * 2: Label <STRING> - marker label (optional, default: auto "TRK-<id>")
  *
- * Return Value:
- * Nothing
+ * Locality/authority and repeat/JIP: this helper uses the calling player's local target and side.
+ * Tracker then forwards creation to the server, which publishes the registry for JIP.
+ * Return Value: No useful value.
+ * Current callers: ACE Plant Signal Tracker action and mission-maker scripts.
  *
  * Example:
  * [cursorTarget] call Waldo_fnc_TrackerAttach;
  * [enemyTruck, west, "Convoy Lead"] call Waldo_fnc_TrackerAttach;
+ * Result: WEST receives a side-private marker for the truck.
  */
 
 params [["_target", cursorTarget], ["_side", side player], ["_label", ""]];

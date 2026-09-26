@@ -19,6 +19,7 @@
  *     call Waldo_fnc_DiagnosticFoldHint;
  * Current callers: Waldo_fnc_RunDiagnostics' _status helper, Waldo_fnc_RunDiagnosticsClient's _add
  * helper, and every *GetDiagnostics.sqf feature report that builds its own check rows directly.
+ * Result: Combines concise status detail with a clear corrective hint for the report row.
  */
 
 params [["_detail", "", [""]], ["_hint", "", [""]]];

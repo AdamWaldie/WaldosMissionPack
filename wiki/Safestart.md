@@ -10,7 +10,7 @@ _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\safeStart.
 Safestart protects players while they load in and sort their kit. Missions start live by default, but Zeus can activate Safestart at any point. Unlike [ENDEX](ENDEX-Script-&-Custom-End-Screen), Safestart can be lifted when play begins.
 
 While Safestart is active:
-* All weapons are placed on safe (ACE), and **every** shot, thrown grenade, launcher round, underbarrel round and crewed vehicle weapon round is deleted — firing just shows a red **"Hold Fire!"** prompt.
+* ACE places weapons on safe. Shots, thrown grenades, launcher rounds, underbarrel rounds and crewed vehicle weapon rounds are deleted. Firing shows a red **"Hold Fire!"** prompt.
 * Players take and deal **no damage**.
 * If the mission maker enables confinement, players are pulled back when they leave the safe zone.
 * An on-screen **banner** is shown, with a live go-live countdown when a timer is running.
@@ -18,7 +18,7 @@ While Safestart is active:
 
 The freeze runs on its own variables, so it never clashes with ENDEX.
 
-## Starting state
+## Quick setup: starting state
 
 Safestart is available automatically but starts **inactive**. To begin a mission under protection, open `MissionConfig\missionSystemsConfig.sqf` and change the existing `Waldo_SafeStart_AutoStart` row from `false` to `true`. To use confinement, change the existing `Waldo_SafeStart_Confine` row too. Do not add a second copy of either setting to an init file.
 
@@ -29,23 +29,31 @@ Safestart is available automatically but starts **inactive**. To begin a mission
 ["Waldo_SafeStart_AutoStart", true, true]
 ```
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `Waldo_SafeStart_AutoStart` | `false` | `false` starts live while retaining all Zeus controls; `true` begins protected. |
-| `Waldo_SafeStart_Confine` | `false` | Set `true` to pull players back into the configured area while protection is active. |
-| `Waldo_SafeStart_Radius` | `150` | Confinement radius in metres around each player's start position when no zone marker is set. |
-| `Waldo_SafeStart_ZoneMarker` | `""` | Set to a marker name to confine everyone to **one shared zone** (the marker's position and size) instead of a per-player radius. |
-| `Waldo_SafeStart_GoLiveHintDuration` | `12` (script fallback) | Seconds the go-live explanation remains visible. This is not a shipped config row; advanced missions can set it on the server before the notice. |
+| Variable | Type | Shipped default | Purpose |
+|---|---|---|---|
+| `Waldo_SafeStart_AutoStart` | Boolean | `false` | `false` starts live while retaining all Zeus controls; `true` begins protected. |
+| `Waldo_SafeStart_Confine` | Boolean | `false` | Set `true` to pull players back into the configured area while protection is active. |
+| `Waldo_SafeStart_Radius` | Number, metres | `150` | Confinement radius around each player's start position when no zone marker is set. |
+| `Waldo_SafeStart_ZoneMarker` | Marker-name string | `""` | Blank uses the per-player radius; an existing Eden area marker name uses one shared zone, including that marker's size. This is a **string**, not an Object. |
+| `Waldo_SafeStart_GoLiveHintDuration` | Number, seconds | `12` (script fallback) | Time the go-live explanation stays visible. This is not a shipped config row; advanced missions can set it on the server before the notice. |
 
-## Going live & the scripting API
+## Script calls: going live
 
-The API is **server-authoritative** — it is safe to call from a client, it forwards to the server for you.
+The API is **server-authoritative**. A client call forwards to the server.
 
 ```sqf
 [true]  call Waldo_fnc_SafeStart;        // activate the freeze
 [false] call Waldo_fnc_SafeStart;        // go live (admin overrule; also cancels any countdown)
 [300]   call Waldo_fnc_SafeStartTimer;   // go live automatically in 300 seconds (banner shows the clock)
 ```
+
+| Call | Position | Type | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `Waldo_fnc_SafeStart` | `0: enable` | Boolean | `true` | `true` starts protection; `false` ends it and cancels the countdown. |
+| `Waldo_fnc_SafeStart` | `1: reason` | String | `"MANUAL"` | Reason recorded with the state change. Normal mission calls can omit it. |
+| `Waldo_fnc_SafeStartTimer` | `0: seconds` | Number, seconds | `300` | Delay until go-live. Zero or less goes live now. A new timer replaces an earlier deadline. |
+
+Both calls return nothing. A client call only forwards the request; read the published state if a later step depends on completion. `initServer.sqf` calls SafeStart only when `AutoStart` is on. The SafeStart ZEN controls and timer use the same authority path. Players joining during protection receive the current state and countdown.
 
 `Waldo_fnc_SafeStartTimer` makes sure Safestart is active, then publishes the go-live time so every player's banner shows a live countdown, and lifts the freeze automatically when it expires. Calling it again restarts/extends the timer. An admin can overrule a running countdown at any time with `[false] call Waldo_fnc_SafeStart`.
 
@@ -68,7 +76,7 @@ player sees that go-live is approaching. They may acknowledge it a second time t
 go-live. The acknowledgement is cleared when SafeStart ends and never carries into a later
 activation.
 
-## Diagnostics
+## If safe start does not end: diagnostics
 
 ```sqf
 private _report = [] call Waldo_fnc_SafeStartGetDiagnostics;
@@ -103,10 +111,10 @@ though Safestart starts inactive:
 
 ## See also
 
-* [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the matching mission-end freeze
+* [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen): the matching mission-end freeze
 * [Mission Configuration Reference](Mission-Configuration-Reference) - where the mission settings are loaded
 * [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
-* [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — additive selected-object fallback for the normal Zeus END action
+* [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore): additive selected-object fallback for the normal Zeus END action
 
 <!-- WMP-WIKI-NAV -->
 ---

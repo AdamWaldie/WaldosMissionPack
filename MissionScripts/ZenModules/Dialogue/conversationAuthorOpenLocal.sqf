@@ -10,6 +10,7 @@
  * Arguments: optional target OBJECT. Return Value: DISPLAY or displayNull.
  * Current caller: ZEN Conversation: Author module.
  * Example: [cursorObject] call Waldo_fnc_ConversationAuthorOpenLocal;
+ * Result: The curator sees the authoring display, with any mission-session draft restored.
  */
 params [["_target", objNull, [objNull]]];
 if (!hasInterface) exitWith {displayNull};

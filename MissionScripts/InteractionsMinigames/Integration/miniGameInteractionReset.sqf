@@ -1,9 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Server-only reset for interaction lifecycle state.
+ * Resets interaction state and optionally makes the object's action available again.
+ * Locality and authority: server-only. The state and result variables are published for clients
+ * and JIP; repeating the reset leaves the device idle. A forced reset invalidates an active attempt.
+ * Current callers: mission-maker server scripts and the Bomb Defusal training-device workflow.
  *
- * Arguments: [object, reenableAction, forceRunningReset]
- * Return: Boolean - false when called off-server, invalid, or refusing an active attempt
+ * Arguments:
+ * 0: object <OBJECT> - device to reset (default: objNull; invalid)
+ * 1: reenableAction <BOOL> - expose its action again (default: true)
+ * 2: forceRunningReset <BOOL> - interrupt an active attempt (default: false)
+ *
+ * Return Value:
+ * BOOL true after reset; false off-server, for a null object, or for an active attempt without
+ * forceRunningReset.
+ *
+ * Example:
+ * [_bomb, true, false] call Waldo_fnc_MiniGameInteractionReset;
+ * Result: an idle training device can be used again; a running attempt is refused.
  */
 
 params [

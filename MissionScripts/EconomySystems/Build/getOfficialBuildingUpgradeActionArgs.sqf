@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official building upgrade action args.
+ * Build the upgrade action and its local selection dialog.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  * Locality / Authority: Built and invoked on each interface client; upgrade requests route unchanged
@@ -12,9 +12,11 @@
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - arguments for the shared object-action installer.
+ * Result: Opens upgrade choices for an eligible owned building; confirmation
+ * sends the request to Economy authority rather than upgrading locally.
  *
- * Current Callers: Economy building action reconciliation.
+ * Current Callers: EcoBuild_attachBuildingActions.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingUpgradeActionArgs;

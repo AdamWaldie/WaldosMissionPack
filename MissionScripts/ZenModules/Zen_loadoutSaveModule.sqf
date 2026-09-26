@@ -16,6 +16,8 @@
  * [getPos logic, cursorObject] call Waldo_fnc_ZenLoadoutSaveModule;
  *
  * Current caller: the ZEN "Respawn: Create Loadout Save Point" module under WMP Logistics.
+ * Result: The selected object gains the JIP-safe save-loadout action, or a new fallback crate
+ * is spawned with that action when no object was selected.
  */
 
 params ["_modulePos", "_objectPos", ["_actor", objNull]];

@@ -6,6 +6,7 @@
  * Arguments: None. Return Value: <BOOL> setup attempted.
  * Current callers: initPlayerLocal.sqf and Waldo_fnc_BaseServicesRegister broadcast.
  * Example: [] call Waldo_fnc_BaseServicesSetupLocal;
+ * Result: This client reconciles service actions and object-following markers.
  */
 params [["_snapshot", [], [[]]]];
 if (!hasInterface || {!(missionNamespace getVariable ["Waldo_BaseServices_Enable", false])}) exitWith {false};

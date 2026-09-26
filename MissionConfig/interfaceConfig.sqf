@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines global visual-theme defaults and interface-local notification, treatment, tactical,
  * emergency-dismount, WMP HUD and accessibility presentation settings. It never opens displays or actions.
+ * Locality / Authority: SHARED rows load everywhere. PLAYER_LOCAL rows load only where
+ * hasInterface is true. Each player's UI functions own their local displays and actions.
+ * Repeat/JIP: Guarded defaults preserve existing values. A joining player loads both relevant
+ * scopes. This file does not install UI handlers or replay notifications.
  *
  * Schema: SHARED entries run on every machine; PLAYER_LOCAL entries run only for hasInterface.
  * Each entry is [missionNamespace variable name, guarded default value].

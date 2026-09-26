@@ -10,7 +10,7 @@ positions. Markers are server-owned and immediately available to JIP players. Cu
 receive one-row create/update/remove deltas; a joining client requests one complete revisioned
 snapshot. All markers share one local `Draw3D` handler, avoiding one permanent loop per marker.
 
-## Fastest setup in Zeus
+## Quick setup in Zeus
 
 Place **WMP Mission Tools > Create Custom 3D Marker**. Drop it directly on an object when the marker
 should follow that object, or place it on empty ground for a fixed marker. The dialog provides named
@@ -29,7 +29,7 @@ object's model origin rather than a guessed bounding-box height.
 
 ## Create or update a marker
 
-Smallest working call — a stable ID and an anchor, everything else takes its default:
+Smallest working call: provide a stable ID and an anchor. Everything else takes its default.
 
 ```sqf
 ["generator_alpha", generator_1] call Waldo_fnc_Create3DMarker;
@@ -39,10 +39,20 @@ The anchor can be an object or an ATL position. Calling the function again with
 the same ID updates the existing marker in place. Calls made on clients are forwarded to
 the server automatically.
 
-## Network and JIP behaviour
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `id` | String | Auto-generated | Stable ID for later updates or removal; choose your own when another script needs to find the marker. |
+| 1 `anchor` | Object or ATL position Array `[x, y, z]` | `[0,0,0]` | Object to follow or fixed position. Supply this explicitly for normal use. |
+| 2 `options` | HashMap or Array of `[key, value]` pairs | Empty | Presentation settings below. |
+
+The return value is the marker ID String, or an empty String if the server rejects an invalid
+anchor. A client receives the generated/chosen ID as soon as it forwards the request; that is not
+confirmation the server accepted it. Reusing an ID replaces that marker without creating another.
+
+## Script options, network and JIP behaviour
 
 The server keeps the authoritative registry and a monotonically increasing revision. It sends only
-the changed marker row—or the removed marker IDs—to clients already in the mission. A client that
+the changed marker row or the removed marker IDs to clients already in the mission. A client that
 joins later requests one `[revision, registry]` snapshot after installing its renderer. If a client
 ever observes a revision gap, it requests the same snapshot again instead of applying uncertain
 state. Consequently, creating 35 markers transmits 35 individual rows to current clients rather
@@ -65,22 +75,22 @@ Add an options HashMap as the third argument to override any default:
 ] call Waldo_fnc_Create3DMarker;
 ```
 
-| Option | Default | Purpose |
-|---|---|---|
-| `text` | `""` | Accessible label drawn with the icon. |
-| `icon` | Vanilla dot icon | Vanilla or mission-local PAA path. |
-| `colour` | WMP blue | RGBA icon/text tint; do not rely on colour alone. |
-| `offset` | `[0,0,0]` | Exact `[sideways, forwards, vertical]` metre offset from the object origin or ATL position. The script never guesses an above-object height. |
-| `width`, `height` | `0.8` | Icon dimensions. |
-| `angle` | `0` | Icon rotation in degrees. |
-| `shadow` | `2` | Arma `drawIcon3D` shadow mode. |
-| `textSize` | `0.032` | Label size. |
-| `font` | `RobotoCondensedBold` | Arma font name. |
-| `align` | `"center"` | Text alignment. |
-| `sideArrows` | `true` | Show off-screen direction arrows. |
-| `distance` | `75` | Maximum render distance in metres. |
-| `sides` | `["ALL"]` | Visible sides, such as `["WEST","GUER"]`. |
-| `enabled` | `true` | Temporarily hide without deleting. |
+| Option | Type | Default | Purpose |
+|---|---|---|---|
+| `text` | String | `""` | Accessible label drawn with the icon. |
+| `icon` | String (PAA texture path) | Vanilla dot icon | Vanilla or mission-local PAA path. |
+| `colour` | Array of 4 numbers (RGBA, 0–1) | `[0.49,0.78,1,0.95]` | Icon/text tint; do not rely on colour alone. |
+| `offset` | Array of 3 numbers (metres) | `[0,0,0]` | Exact `[sideways, forwards, vertical]` offset from an object, or `[east, north, up]` from an ATL position. |
+| `width`, `height` | Number | `0.8` | Icon dimensions. |
+| `angle` | Number (degrees) | `0` | Icon rotation. |
+| `shadow` | Number | `2` | Arma `drawIcon3D` shadow mode. |
+| `textSize` | Number | `0.032` | Label size. |
+| `font` | String | `"RobotoCondensedBold"` | Arma font name. |
+| `align` | String | `"center"` | Text alignment. |
+| `sideArrows` | Boolean | `true` | Show off-screen direction arrows. |
+| `distance` | Number (metres) | `75` | Maximum render distance. |
+| `sides` | Array of side-name Strings | `["ALL"]` | Visible audiences, such as `["WEST","GUER"]`. |
+| `enabled` | Boolean | `true` | Temporarily hide without deleting. |
 
 For vanilla icon paths, use Bohemia's official
 [Arma 3 CfgMarkers reference](https://community.bohemia.net/wiki/Arma_3%3A_CfgMarkers). Its **Icon
@@ -124,6 +134,13 @@ Or remove the nearest WMP 3D marker within 50 metres of a position:
 [[1200, 800, 0], 50] call Waldo_fnc_Remove3DMarker;
 ```
 
+`Waldo_fnc_Remove3DMarker` accepts a marker ID String, anchor Object or ATL position Array at
+position 0 (required; an empty String is rejected). Position 1 is a Number radius in metres,
+default `25`, used only for a position search and clamped to 0–10000 m. On the server it returns
+`true` if it removed at least one marker and `false` if nothing matched. A valid client call returns
+`true` when forwarded, before the server has searched. Removing by object removes all WMP markers
+on that exact object; removing by position removes only the nearest match within the radius.
+
 Use stable, mission-specific IDs. Always pair colour with meaningful text and
 an appropriate icon so the marker remains understandable for colourblind
 players.
@@ -134,7 +151,7 @@ Check the marker ID, visible sides, maximum distance and anchor object. A delete
 
 ## See also
 
-- [Eden Compositions](Eden-Compositions) — the `[WMP]Custom_3D_Marker_Example` Minimal/Full pair
+- [Eden Compositions](Eden-Compositions): the `[WMP]Custom_3D_Marker_Example` Minimal/Full pair
 - [Optional Feature Systems](Optional-Feature-Systems)
 - [Mission Configuration Reference](Mission-Configuration-Reference)
 

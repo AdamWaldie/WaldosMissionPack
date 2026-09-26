@@ -1,6 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Saves one registered object's selected state fields to INIDBI2.
+ * Locality and authority: Server-only database write. Direct remote requests are rejected.
+ * Repeat/JIP: Another call overwrites that key's stored fields with current object state.
+ * It creates no interface action or JIP notification.
  *
  * Arguments:
  * 0: object <OBJECT>
@@ -12,6 +15,8 @@
  *
  * Example:
  * [_crate, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceSaveObject;
+ * Result: Returns true after writing the selected fields, false when inactive or invalid.
+ * Current callers: server auto-save loop, Waldo_fnc_PersistenceSaveNow and PersistenceStop.
  */
 
 params ["_object", "_key", "_options"];

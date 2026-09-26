@@ -3,6 +3,14 @@
  * Releases one WMP ACE-safety claim. The exact weapon and muzzle captured when
  * the claim was created are used, and ACE is called only while that exact entry
  * still exists. This prevents stale-current-weapon errors in ACE safemode.
+ * Locality and authority: Runs on the player's interface client. It releases only the
+ * matching source claim and unlocks ACE safety only when no other WMP source still claims
+ * the same weapon/muzzle. Repeat release is harmless; no server JIP state is involved.
+ * Arguments: 0: protection source ID <STRING> (required, matching acquire).
+ * Return Value: <BOOL> true after a valid claim is released; false if none existed.
+ * Current callers: SafeStart and ENDEX protection exit paths.
+ * Example: ["SAFESTART"] call Waldo_fnc_ProtectionReleaseSafety;
+ * Result: WMP releases its claim without clearing another system's ACE safety.
  */
 params [["_source", "", [""]]];
 

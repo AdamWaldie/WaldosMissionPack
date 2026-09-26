@@ -1,101 +1,73 @@
 # Mission UI Text Overlays
 
-> **Use this page when:** you need dynamic text, timed notifications, or respawn text outside a full dialog.
+> **Use this page when:** you need a short on-demand message or the automatic text shown after respawn.
 
-_Associated Files:_
-- _MissionScripts\MissionFlowAndUi\dynamicText.sqf_
-- _MissionScripts\MissionFlowAndUi\timeBasedhint.sqf_
-- _MissionScripts\MissionFlowAndUi\respawnText.sqf_
+WMP has three older text helpers. `Waldo_fnc_DynamicText` now sends a standard WMP notification
+at the top right. `Waldo_fnc_TimedHint` still uses Arma's local hint display. Respawn text runs
+automatically. For new mission messages, use [Custom UI Notifications](Custom-UI-Notifications):
+it has explicit audiences, channels, states and queue handling.
 
-Three functions for displaying runtime text to players during a mission. They complement the mission intro (`Waldo_fnc_InfoText`) by providing on-demand overlays for events such as objective updates, respawn notifications, and timed callouts.
-
----
-
-## Dynamic Text — `Waldo_fnc_DynamicText`
-
-Displays a short centred line of text across the screen, then fades it out. Delivered to a specific target via `remoteExec`, so it can be pushed to one player or all clients.
-
-### Parameters
-
-| # | Type | Description |
-|---|---|---|
-| 0 | STRING | The text to display |
-| 1 | OBJECT / NUMBER | Target: a player object, a machine number, or `-2` for all clients |
-
-### Examples
+## Quick setup: send a short WMP message
 
 ```sqf
-// Display to a specific player
-["Objective Alpha secured", player] call Waldo_fnc_DynamicText;
-
-// Display to all clients
-["Reinforcements inbound — grid 041 122", -2] call Waldo_fnc_DynamicText;
+["Supplies ready", _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
 ```
 
-### Notes
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `message` | String | required | Short text for the card. |
+| 1 `target` | Player Object, Array of player Objects or remote-execution target Number | required | Recipient. Use a player object for a private message; use `-2` only for a deliberate all-client notice. |
+| 2 `title` | String | `"MISSION UPDATE"` | Heading. Use the name of the calling feature, such as `"QUARTERMASTER"`. |
 
-- Text displays for approximately 3 seconds at size 0.8, with a short fade
-- Best for brief, mission-critical messages — not suited to long text
-- Can be called from a trigger, script, or Zeus module
+This is a compatibility helper for older calls. It returns `true` after sending a request and does
+not wait for the recipient's display. The card uses `INFO`, four seconds, the `TOP_RIGHT` region
+and a replacement channel based on the title. It is transient, so it is not replayed to JIP.
+The function can run on the server or a client; the target client's interface draws the card.
 
----
-
-## Timed Hint — `Waldo_fnc_TimedHint`
-
-Pushes a hint to the local client's screen for a configurable duration, then clears it automatically.
-
-### Parameters
-
-| # | Type | Default | Description |
-|---|---|---|---|
-| 0 | STRING | — | Text to display in the hint |
-| 1 | NUMBER | 10 | Duration in seconds before the hint clears |
-
-### Examples
+## Script calls: local timed hint
 
 ```sqf
-// 10-second hint (default duration)
-["Rendezvous respawn activated"] spawn Waldo_fnc_TimedHint;
-
-// Custom duration
-["Resupply point active — 45 seconds remaining", 45] spawn Waldo_fnc_TimedHint;
+["Rendezvous respawn activated", 10] spawn Waldo_fnc_TimedHint;
 ```
 
-### Notes
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `message` | String | required | Hint text. |
+| 1 `duration` | Number (seconds) | `10` | Time before this hint clears. |
+| 2 `owner` | String | `""` | Internal owner label used by older WMP callers; mission scripts can omit it. |
 
-- Must be called with `spawn` — the function sleeps internally and will block if called with `call`
-- Clears the hint automatically on expiry (no leftover hint text)
-- Runs locally on the machine it is called on — use `remoteExec` to push to other machines:
+This legacy helper calls Arma `hint` on the machine where it runs and sleeps before clearing that
+hint. Use `spawn`, because the wait needs a scheduled script. A new call replaces the old hint's
+clear token, so an earlier timer cannot clear the newer hint. The function returns no useful value.
+To send it to one player from the server, use a scheduled remote call:
 
 ```sqf
-[["Convoy inbound — stand by", 15], "Waldo_fnc_TimedHint", -2] remoteExec ["spawn"];
+["Convoy inbound", 15] remoteExec ["Waldo_fnc_TimedHint", owner _player];
 ```
 
----
+For ordinary feature feedback, prefer `Waldo_fnc_SendNotification`. It uses WMP's accessible card
+and chooses its recipients explicitly. A timed hint is local and is not replayed to JIP.
 
-## Respawn Text — `Waldo_fnc_RespawnText`
+## Respawn text
 
-Displays one compact location block each time a player respawns. Runs automatically via `initPlayerLocal.sqf` and requires no manual setup.
-
-The block contains only the current in-game time, date, and the player's new grid reference. Mission title, player name, rank, and group are deliberately omitted so respawning does not replay introduction-style text.
-
-### Manual Call
-
-If you need to trigger the respawn text outside of the respawn flow:
+`Waldo_fnc_RespawnText` runs from `initPlayerLocal.sqf` after a player respawns. It shows the
+current in-game time, date and the player's new grid reference. There is no mission-maker setup
+or positional argument. To show it again on one client:
 
 ```sqf
 [] spawn Waldo_fnc_RespawnText;
 ```
 
-### Notes
+The display waits for that client's player object and mission clock. Run a manual call where the
+player has an interface; a server-only call cannot draw it on every screen. It does not change
+mission state or replay a past display to JIP.
 
-- Waits until the player object exists and the mission clock is running before displaying, avoiding errors on initial load
-- Grid position reflects where the player actually spawned
-- The animated display uses `BIS_fnc_typeText` for the typewriter effect
+## If no text appears
 
-## If text is missing
-
-Check that the chosen call runs on the player who should see it. These displays belong to the local interface, so a server-only call cannot draw directly on every player's screen. For shared announcements, use [Custom UI Notifications](Custom-UI-Notifications) and its audience routing.
+Check that the target is a player with an interface. For `DynamicText`, pass the player Object or a
+valid remote-execution target. For `TimedHint` and `RespawnText`, run the function on the player's
+client. If several systems need to show cards at once, use a separate channel per system in
+[Custom UI Notifications](Custom-UI-Notifications).
 
 ## See also
 

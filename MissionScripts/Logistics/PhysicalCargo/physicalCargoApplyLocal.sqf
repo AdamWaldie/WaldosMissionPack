@@ -10,6 +10,7 @@
  * Return Value: BOOLEAN - true if applied on the crate owner.
  * Current caller: Waldo_fnc_PhysicalCargoAttachServer via object-owner remote execution.
  * Example: [crate, truck, [0,-1,1], [0,1,0], [0,0,1], 4] remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
+ * Result: The cargo owner attaches and orients the crate at the accepted vehicle-relative pose.
  */
 params [
     ["_cargo", objNull, [objNull]],

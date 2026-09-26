@@ -16,6 +16,7 @@
  * Return Value: Nothing; long-running server monitor.
  * Example: [] spawn Waldo_fnc_TransportMonitorServer;
  * Current caller: Waldo_fnc_TransportInitServer once per mission.
+ * Result: The server tracks vehicle loss, availability and ownership changes until stopped.
  */
 if (!isServer) exitWith {};
 private _stateLabels = createHashMapFromArray [

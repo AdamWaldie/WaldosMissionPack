@@ -2,19 +2,19 @@
 
 > **Use this page when:** you need to configure or operate WMP's virtual garage and deployment point.
 
-_Associated Files: MissionScripts\Logistics\VirtualVehicleDepot_
+_Associated files: `MissionScripts\Logistics\VirtualVehicleDepot\VVDInit.sqf`, `VVDRequestOpenServer.sqf`, `VVDOpen.sqf` and `description.ext`_
 
-> **This feature is Work In Progress.** It is functional for general use but has known limitations documented below. Test thoroughly with your mod set before using in a live mission.
+> **Work in progress:** test the garage with the vehicle mods and spawn area you intend to use.
 
-The VVD (Virtual Vehicle Depot) provides an in-mission vehicle spawner with a graphical garage interface. Players interact with a placed object to browse, configure, and spawn vehicles onto a designated spawn pad.
+The Virtual Vehicle Depot puts a garage on a placed object. Players use it to choose a vehicle, configure supported options, and spawn it at a separate pad. The terminal and pad are both required.
 
 ---
 
 ## Features
 
 - Browse all vehicles of the configured type(s) available in loaded mods
-- Configure **damage** per hitpoint — set a vehicle to spawn already damaged (e.g. battle-worn trucks)
-- Configure a **damage delay** — vehicle spawns undamaged and takes the set damage after a specified time
+- Configure **damage** per hitpoint to spawn a vehicle with damage
+- Configure a **damage delay** to apply that damage after spawn
 - Modify **weapon loadouts and pylons** where the vehicle's mod config supports it
 - Adjust **cosmetics** (textures, camo)
 - Toggle **AI crew** per seat
@@ -22,42 +22,50 @@ The VVD (Virtual Vehicle Depot) provides an in-mission vehicle spawner with a gr
 
 ---
 
-## Eden Setup
+## Quick start in Eden
 
-1. Place the **interaction object** (e.g. a laptop) and give it a variable name. This is what players click on.
-2. Place a **helipad** (or any flat object) where the vehicle will spawn. Give it a variable name (e.g. `Circle_Helipad`). Vehicles spawn on top of it.
-3. In the interaction object's init, call `Waldo_fnc_VVDInit` (see parameters below).
+1. Place a **terminal** such as a laptop. This is what players interact with.
+2. Place a **spawn-point object** on open, flat ground. Give it a variable name such as `depotPad`. Leave at least 20 metres clear around it because the garage rejects a pad occupied by another vehicle.
+3. Put the call below in the terminal's Eden init field. Change `depotPad` to your spawn-point object's variable name.
 
-A pre-built composition with this setup is included in the WMP Compositions download.
+```sqf
+[this, depotPad] call Waldo_fnc_VVDInit;
+```
+
+The call runs on each machine from an Eden init field. The server publishes the terminal and pad state. Current clients and JIP clients receive the local interaction. There is no mission-wide enable flag for this placed-object setup.
+
+A `[WMP]` composition also provides a placed example. Check its terminal and pad positions before use.
 
 ---
 
-## Parameters
+## Call: `Waldo_fnc_VVDInit`
 
 ```sqf
 [spawnerObject, spawnPad, types, allowedSides, enforcePlayerSide, limitToSideVehicles, removeUavs, range, script]
     call Waldo_fnc_VVDInit;
 ```
 
-| Parameter | Type | Description |
-|---|---|---|
-| `spawnerObject` | OBJECT | The object players interact with to open the garage |
-| `spawnPad` | OBJECT | Helipad or flat surface where vehicles spawn |
-| `types` | ARRAY of STRING | Vehicle categories to show — see table below |
-| `allowedSides` | ARRAY of STRING | Sides allowed to use the spawner |
-| `enforcePlayerSide` | BOOL | If true, player's side must match `allowedSides` |
-| `limitToSideVehicles` | BOOL | Limit spawnable (not viewable) vehicles to player's side. Unreliable — recommend `false` |
-| `removeUavs` | BOOL | Attempt to hide UAVs from the list. Works ~80% of the time depending on mod config |
-| `range` | NUMBER | Distance in metres from which the interactions are visible |
-| `script` | STRING | SQF code string to execute on the spawned vehicle. Bypasses garage if non-empty |
+| # | Parameter | Type | Default | Use |
+|---|---|---|---|---|
+| 0 | `spawnerObject` | Object | Required | Terminal the player uses. A null object rejects setup |
+| 1 | `spawnPad` | Object | Required | Object that marks the spawn point. A null object rejects setup |
+| 2 | `types` | Array of Strings | `["Auto"]` | Vehicle categories to list; see below |
+| 3 | `allowedSides` | Array of Strings | `["ALL"]` | Side labels used by the terminal's access check |
+| 4 | `enforcePlayerSide` | Boolean | `false` | Check the player's group side against `allowedSides` before requesting the garage |
+| 5 | `limitToSideVehicles` | Boolean | `false` | Pass a side filter to the garage list. Check results with your vehicle mods |
+| 6 | `removeUavs` | Boolean | `false` | Pass the UAV filter to the garage list. Check results with your vehicle mods |
+| 7 | `range` | Number (metres) | `10` | Terminal use range. The server enforces at least 1 metre |
+| 8 | `script` | String of SQF code | `""` | Extra code compiled and run after a vehicle spawns. Leave empty unless you need it |
+
+**Return:** Boolean. `false` means the terminal or pad is null. A valid setup returns `true`, including repeat calls where local actions are already installed. One client's result does not prove that another client has finished installing ACE actions. The server publishes setup for JIP.
 
 ### Vehicle Type Options (`types`)
 
 | Value | Shows |
 |---|---|
-| `"Auto"` | Detects surface — ground vehicles on land, ships on water |
+| `"Auto"` | Uses the pad's surface: cars, tanks, helicopters, planes and static weapons on land; ships on water |
 | `"All"` | All vehicle types |
-| `"Ground"` | Cars, tanks, static weapons |
+| `"Ground"` | Cars, tanks, helicopters, planes and static weapons; this is the current source behaviour |
 | `"Car"` | Wheeled vehicles |
 | `"Tank"` | Tracked armour |
 | `"Helicopter"` | Rotary wing |
@@ -69,53 +77,56 @@ Multiple types can be combined: `["Car", "Tank"]`
 
 ### Side Options (`allowedSides`)
 
-`["BLUFOR"]`, `["OPFOR"]`, `["INDEP"]`, `["CIV"]`, `["ALL"]`
+Use labels such as `["BLUFOR"]`, `["OPFOR"]`, `["INDEP"]`, `["CIV"]` or the default `["ALL"]`. The local terminal action checks the player's side. Scripts that call the server request function directly do not pass through that check.
 
 ---
 
 ## Example Calls
 
 ```sqf
-// Fully unrestricted — all vehicles, all sides, 10 m range
+// All vehicles, all sides, 10 m range
 [this, Circle_Helipad, ["All"], ["ALL"], false, false, false, 10, ""] call Waldo_fnc_VVDInit;
 
-// BLUFOR only, ground vehicles, enforce side check
+// BLUFOR players, ground vehicles, enforce the terminal's side check
 [this, Circle_Helipad, ["Ground"], ["BLUFOR"], true, false, false, 15, ""] call Waldo_fnc_VVDInit;
 
-// Air only, auto-run a script on each spawned vehicle
-[this, Helipad_1, ["Helicopter","Plane"], ["ALL"], false, false, false, 10, "[this] call someFunction;"] call Waldo_fnc_VVDInit;
+// Air vehicles with an extra script. This script runs after spawn with _veh in scope.
+[this, Helipad_1, ["Helicopter","Plane"], ["ALL"], false, false, false, 10, "[_veh] call myMission_fnc_prepareAircraft;"] call Waldo_fnc_VVDInit;
 ```
 
 ---
 
-## Spawner Interactions
+## During play
 
-Three ACE scroll-wheel actions are added to the spawner object:
+With ACE loaded, the terminal has an ACE **Virtual Vehicle Depot** menu. Without ACE, it has two vanilla actions. The server owns a lock so only one player opens a given pad at a time.
 
 | Action | Description |
 |---|---|
-| **Open Garage [name]** | Opens the garage GUI to browse and configure vehicles |
-| **Delete Vehicles [name]** | Deletes all non-default vehicles within 10 m of the spawn pad |
-| **Reset Garage Flag** | Clears a stuck "garage open" state if the garage UI was closed incorrectly |
+| **Open Vehicle Garage** | Requests the garage GUI. The server checks the player, terminal, range, pad occupancy and current lock |
+| **Clear Depot Spawn Area** | Removes nearby vehicles not marked as default vehicles. This can delete a vehicle and its crew; use it carefully |
 
 ---
 
 ## Damage Configuration (VVDVehicleDamage)
 
-When configuring damage in the garage, vehicles can be set to spawn with pre-applied damage to specific hitpoints. An optional **damage delay** allows the vehicle to spawn in its full state and degrade after a set time window — useful for simulating vehicles that have been running for hours.
+The garage can apply damage to selected hitpoints after spawn. A delay range lets that damage appear later. Keep both delay values at zero to apply it immediately.
 
 The delay is randomised within a configured min/max range. If `min == max`, the delay is exact.
 
 ---
 
-## Known Limitations
+## Limitations and troubleshooting
 
 | Issue | Notes |
 |---|---|
-| UAV removal | Works ~80% of the time — mod config dependent |
-| Side vehicle limiting (`limitToSideVehicles`) | Works ~50% of the time — recommend leaving `false` |
-| UI appearance | Functional but not polished — this is explicitly WIP |
+| UAV removal | The filter depends on the vehicle's mod configuration. Confirm the list in play |
+| Side vehicle limiting (`limitToSideVehicles`) | The garage list uses mod vehicle metadata. Confirm the list in play |
+| Spawn area | A non-man vehicle within 20 m prevents the garage opening. Keep the area clear |
+| Extra script | Runs compiled SQF after spawn. Use `_veh` for the spawned vehicle; the `this` keyword is not supplied as a vehicle variable |
+| UI appearance | Work in progress |
 | Pylon/weapon config | Only works for vehicles whose mod exposes pylon config to the garage system |
+
+If the menu does not appear, check that both Eden object references exist and that ACE has loaded. If the garage refuses to open, clear the 20 m spawn area and check that another player is not using this pad. The display also requires the garage include in WMP's `description.ext`.
 
 ## See also
 

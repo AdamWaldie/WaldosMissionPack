@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup research config prompt.
+ * Clears Research editor controls and closes its dedicated curator prompt.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoResearch_cleanupResearchConfigPrompt;
+ * Locality/Authority: Curator interface client only; does not change the catalog.
+ * Repeat/JIP Behaviour: Safe for null/already-cleaned displays; no JIP UI replay.
+ * Current Callers: Research configuration prompt and unified Economy UI cleanup.
+ * Result: Removes the prompt's temporary controls and variables.
  */
 
         params [["_disp", displayNull]];

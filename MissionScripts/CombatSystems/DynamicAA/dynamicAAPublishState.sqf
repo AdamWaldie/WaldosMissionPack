@@ -11,6 +11,10 @@
  *
  * Example:
  * [] call Waldo_fnc_DynamicAAPublishState;
+ * Locality and authority: Server publishes a complete network-safe AA summary. Repeating
+ * publication replaces the current snapshot; joining clients receive the latest state.
+ * Current callers: DynamicAACreate, DynamicAADestroy and detector state changes.
+ * Result: Current and JIP clients can inspect the active AA systems.
  */
 
 if !(isServer) exitWith {[]};

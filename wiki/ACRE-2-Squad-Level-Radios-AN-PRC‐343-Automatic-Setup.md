@@ -5,14 +5,30 @@
 _Associated Files: `MissionConfig\acreConfig.sqf`; `MissionScripts\MissionInit\ACRE2\`_
 
 This is the PRC-343-specific detail for one part of the group assignment row described in full on
-[ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting) — start there for the
+[ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting). Start there for the
 overall nets/groups model if this is your first time configuring ACRE2 radios.
 
 PRC-343 assignments come from `MissionConfig\acreConfig.sqf`. The server sends the completed setup
 to players, while each player's own computer configures the radio they carry. Side and group ID are
 both used, so identical callsigns on opposing sides do not overwrite one another.
 
+## Quick setup: set a squad's channel
+
+In `MissionConfig\acreConfig.sqf`, find the appropriate side under `sides`, then add or edit a
+row in that side's groups array. Use the group's Eden ID, not a unit name or map marker.
+WMP runs this setup automatically; there is no object Init call.
+
+## Configuration reference
+
 Every carried radio uses `[class, "ALL" or occurrence number, target, ear]`. For one PRC-343:
+
+| Parameter | Type | What to supply |
+| --- | --- | --- |
+| Group ID | String | The group's Eden ID, such as `VIKING 2-3`. |
+| Radio class | String | `ACRE_PRC343` for this radio. |
+| Occurrence | String or Number | `"ALL"` or the one-based number of a carried PRC-343. |
+| Target | Array of two Numbers, or empty Array | `[block, channel]`, each 1–16, or `[]` for callsign inference. |
+| Ear | String | `LEFT`, `RIGHT`, `BOTH` or `CENTER`. |
 
 ```sqf
 [

@@ -25,6 +25,9 @@
  *
  * Example:
  * [] call Waldo_fnc_DynamicAAResolveEquipmentCatalog;
+ * Locality and authority: Read-only configuration scan on the requesting curator's client.
+ * Repeated calls use current loaded-mod data; no JIP replay is required.
+ * Result: Returns labelled equipment choices for the ZEN dialog.
  */
 private _cache = missionNamespace getVariable ["Waldo_DynamicAA_EquipmentCatalogCache", createHashMap];
 if (count _cache > 0) exitWith {_cache};

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Validate research import payload.
+ * Checks the outer structure of a serialized RESEARCH_V1 import payload.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -8,10 +8,14 @@
  * 0: _payload <ANY> - payload
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true for a supported version with expected field types.
  *
  * Example:
  * [_payload] call Waldo_fnc_EcoResearch_validateResearchImportPayload;
+ * Locality/Authority: Any machine; pure structure validation before authoritative import.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Economy Research import handler.
+ * Result: Rejects malformed or unsupported payloads before catalog replacement.
  */
 
         params ["_payload"];

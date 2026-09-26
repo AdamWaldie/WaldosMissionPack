@@ -1,5 +1,17 @@
 /*
- * Atomically consumes an armed trap and creates its configured projectile.
+ * Author: WaldoTheWarfighter
+ * Consumes an armed corpse trap and creates its configured projectile when inventory is opened.
+ * Locality and authority: Server-only; verifies the opener's network owner, distance, target
+ * state and ammo class before changing state or creating the projectile.
+ * Repeat/JIP: Sets FIRED before projectile creation so competing requests cannot trigger twice.
+ * Joining clients see the public FIRED state; trigger requests are never JIP replayed.
+ * Arguments:
+ * 0: trapped corpse <OBJECT> (default objNull)
+ * 1: player opening inventory <OBJECT> (default objNull)
+ * Return Value: <BOOL> - true when a projectile was created; false on a rejected request.
+ * Current caller: Waldo_fnc_CorpseTrapInstallInventoryHandler on inventory opening.
+ * Example: [_corpse, player] remoteExecCall ["Waldo_fnc_CorpseTrapTriggerServer", 2];
+ * Result: The trap fires once and cannot be triggered again.
  */
 params [
     ["_corpse", objNull, [objNull]],

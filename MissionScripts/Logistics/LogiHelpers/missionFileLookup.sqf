@@ -21,6 +21,10 @@
  *
  * Example:
  * private _westPool = ["West"] call Waldo_fnc_MissionSQMLookup;
+ * Locality and authority: Read-only mission.sqm scan used by server loadout setup. It does
+ * not change world state; the caller publishes its result for current and JIP clients.
+ * Current caller: Waldo_fnc_SideBaseLoadoutSetup in initServer.sqf.
+ * Result: Returns eight deduplicated equipment categories from playable units on that side.
  */
 
 params [["_sideChosen", "West"]];

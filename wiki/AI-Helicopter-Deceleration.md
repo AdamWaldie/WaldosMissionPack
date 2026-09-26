@@ -3,7 +3,7 @@
 > **Use this page when:** AI helicopters climb sharply while slowing down during ordinary cruise flight.
 
 Arma AI can trade forward speed for an unwanted zoom-climb while braking. This optional helper
-detects that specific trend—speed falling, altitude rising and the nose pitching up—and applies a
+detects falling speed, rising altitude and nose-up pitch. It applies a
 short downward world-space impulse on the machine that currently owns the aircraft. It does not
 replace waypoints, set velocity, change AI features or prescribe a route.
 
@@ -16,7 +16,7 @@ remote-controlled and UAV aircraft are never changed.
 
 [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) always wins. As soon as a LAND,
 UNLOAD, TRANSPORT UNLOAD, GET OUT, scripted landing, or WMP transport-destination order is active,
-the cruise helper stands down—even before Improved Landing enters its final control range. If the
+the cruise helper stands down. This happens before Improved Landing enters its final control range. If the
 landing controller becomes active during the same frame, correction releases before another
 impulse. The landing system remains solely responsible for approach, flare, go-around and touchdown.
 
@@ -24,7 +24,7 @@ This separation is deliberate. Cruise detection has no knowledge of landing slop
 touchdown commitment or go-around state, so using its force calculation inside an approach would
 make the two controllers fight rather than improve the landing.
 
-## Beginner setup
+## Quick setup
 
 1. Open `MissionConfig\aiConfig.sqf`.
 2. Change `Waldo_HelicopterDeceleration_Enable` from `false` to `true`.
@@ -38,16 +38,29 @@ No init call or ZEN module is required. To exclude one unusual airframe, put thi
 this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 ```
 
-### What you should edit
+## Settings reference
 
-| Setting | Default | Beginner guidance |
-|---|---:|---|
-| `Waldo_HelicopterDeceleration_Enable` | `false` | The only setting most missions should change. Enable it after testing the airframes used. |
-| `Waldo_HelicopterDeceleration_IncludeVTOL` | `false` | Leave off unless you specifically tested VTOL aeroplane/hover transitions. |
-| `Waldo_HelicopterDeceleration_Debug` | `false` | Turn on temporarily when diagnosing why a correction started or stopped. |
+| Setting | Type | Default | What it controls |
+|---|---|---:|---|
+| `Waldo_HelicopterDeceleration_Enable` | Boolean | `false` | Master switch. Enable only after testing the mission's airframes. |
+| `Waldo_HelicopterDeceleration_IncludeVTOL` | Boolean | `false` | Include VTOL aircraft; leave off unless their flight-mode transitions have been tested. |
+| `Waldo_HelicopterDeceleration_MinimumSpeed` | Number (km/h) | `80` | Ignore slower aircraft. |
+| `Waldo_HelicopterDeceleration_MinimumAltitude` | Number (metres AGL) | `25` | Never correct below this height. |
+| `Waldo_HelicopterDeceleration_MinimumSpeedLoss` | Number (km/h per sample) | `4` | Braking threshold. |
+| `Waldo_HelicopterDeceleration_MinimumAltitudeGain` | Number (metres per sample) | `0.5` | Unwanted climb threshold. |
+| `Waldo_HelicopterDeceleration_MinimumNoseUp` | Number (vector direction Z) | `0.02` | Minimum nose-up attitude; zero is level. |
+| `Waldo_HelicopterDeceleration_TerrainClearance` | Number (metres) | `25` | Required clearance over terrain ahead. |
+| `Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration` | Number (m/s²) | `2.5` | Downward acceleration cap. |
+| `Waldo_HelicopterDeceleration_MaximumClimbRate` | Number (m/s) | `0.5` | Stop correcting when the climb falls to this rate. |
+| `Waldo_HelicopterDeceleration_SampleInterval` | Number (seconds) | `0.5` | Cadence of the owner-local detection check. |
+| `Waldo_HelicopterDeceleration_ControlInterval` | Number (seconds) | `0.02` | Cadence while a correction is active. |
+| `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Number (seconds) | `4` | Hard duration limit for one correction. |
+| `Waldo_HelicopterDeceleration_Debug` | Boolean | `false` | Log acquire/release reasons and owner IDs during diagnosis. |
 
-The remaining `Waldo_HelicopterDeceleration_*` rows are advanced safety thresholds. Leave them at
-their shipped values unless a repeatable test with one aircraft demonstrates a specific problem.
+The numeric rows are advanced safety thresholds. Leave them at their shipped values until a
+repeatable test identifies a specific airframe problem. This feature has no mission-maker function
+call: it starts from the flag, evaluates eligible AI aircraft on their current owner, and follows
+locality changes. It does not replay a past correction to joining players.
 
 ## What success looks like
 
@@ -61,7 +74,7 @@ their shipped values unless a repeatable test with one aircraft demonstrates a s
 There is intentionally no composition: the feature reacts to ordinary AI helicopter flight and has
 no object or station to place. Check it with a crewed AI helicopter on a representative route.
 
-## Safety model
+## Limitations and safety
 
 - correction runs only on the aircraft's current owner and follows locality migration;
 - terrain clearance is checked beneath the aircraft and 100, 300 and 500 metres ahead;

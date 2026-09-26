@@ -29,6 +29,7 @@
  * Return Value: Boolean - true when dispatched on the owning machine.
  * Example: [_heli,"RAVEN_1",12,"PICKUP",_lz,_config] call Waldo_fnc_TransportDispatchLocal;
  * Current caller: Waldo_fnc_TransportRequestServer owner-targeted remote execution.
+ * Result: The transport group receives the requested route on its current owner.
  */
 params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", ["_landingPad", objNull, [objNull]], ["_retriesRemaining", 20, [0]]];
 if (isNull _vehicle || {isNull driver _vehicle}) exitWith {false};

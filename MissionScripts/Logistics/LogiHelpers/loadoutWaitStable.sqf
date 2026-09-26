@@ -18,6 +18,10 @@
  * Example: private _result = [player] call Waldo_fnc_LoadoutWaitStable;
  * Current callers: initPlayerLocal.sqf's mission-start baseline capture, persistenceClientApply.sqf's
  * post-persistence-restore capture.
+ * Locality and authority: Scheduled wait on the player's interface client, where the unit's
+ * loadout is being restored. Repeated waits sample current state; no JIP data is published.
+ * Result: Returns [true, elapsed seconds] after stability, or [false, elapsed seconds]
+ * when the unit vanishes or the bounded wait expires; the caller reads current gear itself.
  */
 params [["_unit", objNull, [objNull]], ["_timeoutSeconds", 10, [0]]];
 if (isNull _unit) exitWith {[false, 0]};

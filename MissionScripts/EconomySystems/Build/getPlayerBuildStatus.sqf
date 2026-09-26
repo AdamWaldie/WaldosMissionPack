@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get player build status.
+ * Classifies whether the local player can begin one Construction entry.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,15 @@
  * 1: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <STRING> status code; "build" when all gates pass.
  *
  * Example:
  * [_sideKey, _entry] call Waldo_fnc_EcoBuild_getPlayerBuildStatus;
+ * Locality/Authority: Interface/authority read of published Economy state; server checks again
+ * before committing the construction request.
+ * Repeat/JIP Behaviour: Repeat-safe status read; JIP receives current registries.
+ * Current Callers: Construction catalog action availability and feedback.
+ * Result: Returns the first block, such as requirements, limit or cost.
  */
 
         params [["_sideKey", "NONE"], ["_entry", []]];

@@ -11,6 +11,7 @@
  * Return Value: BOOLEAN - true when the crate was mounted.
  * Current caller: Waldo_fnc_PhysicalCargoReleaseLocal by server remote execution.
  * Example: [player, crate, truck, [0,-1,1], [0,1,0], [0,0,1]] remoteExecCall ["Waldo_fnc_PhysicalCargoAttachServer", 2];
+ * Result: The server records a valid mount and orders owner-local attachment and seat updates.
  */
 params [
     ["_carrier", objNull, [objNull]],

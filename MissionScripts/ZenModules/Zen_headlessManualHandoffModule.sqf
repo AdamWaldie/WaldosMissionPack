@@ -9,6 +9,10 @@
  * The actual move is applied server-side by Waldo_fnc_HeadlessManualHandoff, which still refuses any
  * group with a human player leader/member and still routes through the single
  * Waldo_fnc_HeadlessMigrateGroup funnel.
+ * Locality and authority: Curator interface builds choices from current AI groups and connected
+ * headless clients; the server validates and owns the actual group migration.
+ * Repeat/JIP: The dialog is rebuilt per placement. Group locality state is current engine state;
+ * no module dialog is replayed to joining players.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module; also the search origin for nearby
@@ -20,6 +24,8 @@
  *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessManualHandoff;
+ * Current caller: ZEN Headless Client Manual Handoff module registration.
+ * Result: The curator can request one eligible AI group's move to server, auto, or a selected HC.
  *
  * Public: No
  */

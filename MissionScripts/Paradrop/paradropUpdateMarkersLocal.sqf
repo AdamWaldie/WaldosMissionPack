@@ -8,6 +8,10 @@
  * marker normally created by Waldo_fnc_ParadropSetupLocal. Network state and the remote setup call
  * can arrive in either order, so this updater also creates any missing marker once the broadcast
  * aircraft entry becomes visible. That self-healing path is required for dedicated/JIP clients.
+ * Locality and authority: Interface-client only; it reads the server-published aircraft registry
+ * but creates and moves local map markers for the player's own side.
+ * Repeat/JIP: Runs on the active one-second client marker handler. A missing marker is recreated
+ * when its aircraft appears after JIP; this function does not install another handler.
  *
  * Arguments:
  * None
@@ -18,6 +22,7 @@
  * Example:
  * [] call Waldo_fnc_ParadropUpdateMarkersLocal;
  * Current caller: the per-frame handler installed once by Waldo_fnc_ParadropSetupLocal.
+ * Result: Each visible aircraft marker follows its current position and heading.
  */
 
 if !(hasInterface) exitWith {};

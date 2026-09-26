@@ -1,6 +1,13 @@
 /*
- * Performs runtime layout checks against the actual Arma-created controls.
- * Returns arrays: [severity, code, semanticLabel, details].
+ * Author: WaldoTheWarfighter
+ * Purpose: Checks actual Arma controls for invalid size, off-screen placement and protected overlap.
+ * Locality/Authority: Interface client only; reads and annotates a local display.
+ * Repeat/JIP Behaviour: Each call refreshes findings; no JIP state is broadcast.
+ * Arguments: 0: display <DISPLAY>, default displayNull; 1: log findings <BOOL>, default false.
+ * Return Value: <ARRAY of [severity, code, semanticLabel, details]> findings.
+ * Current Callers: MiniGameChallengeUI, help-card construction and interaction UI QA.
+ * Example: [_display, true] call Waldo_fnc_MiniGameEquipmentValidateDisplay;
+ * Result: Findings are stored on the display and optionally written to the RPT.
  */
 disableSerialization;
 params [["_display", displayNull, [displayNull]], ["_log", false, [false]]];

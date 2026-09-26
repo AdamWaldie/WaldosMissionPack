@@ -12,8 +12,10 @@
  * every setGroupOwner call this rework performs, so Waldo_Headless_ManagedGroups and diagnostics never
  * drift from the truth regardless of whether a move was automatic or manual.
  *
- * Server-authoritative; self-forwards to the server when called from a client, matching
+ * Locality and authority: Server-authoritative; self-forwards to the server when called from a client, matching
  * Waldo_fnc_Jammer and the other public registration-style APIs.
+ * Repeat/JIP: Each accepted request applies one ownership transfer through the shared migration
+ * path. Current group ownership is engine state visible after JIP; no client action is installed.
  *
  * Arguments:
  * 0: group <GROUP> - the AI group to hand off.
@@ -28,6 +30,8 @@
  * [cursorObject call {group (cursorObject)}, "AUTO"] call Waldo_fnc_HeadlessManualHandoff;
  * [_group, "SERVER"] call Waldo_fnc_HeadlessManualHandoff;
  * [_group, "HC:4"] call Waldo_fnc_HeadlessManualHandoff; // only succeeds while HC owner 4 is live.
+ * Result: The server returns true for an accepted transfer and false for a rejected one. A
+ * client call returns false immediately after forwarding, before server processing.
  *
  * Current callers: Waldo_fnc_ZenHeadlessControl (the "Headless Client - Manual Handoff" module),
  * mission scripts.

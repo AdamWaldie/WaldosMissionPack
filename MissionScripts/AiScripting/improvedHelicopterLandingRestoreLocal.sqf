@@ -7,6 +7,10 @@
  * release height. This prevents moved waypoints and newly grouped formations being driven down to
  * the old 30 metre landing-transit value. Cleanup is safe after landing, cancellation, locality
  * migration, pilot takeover or feature stop.
+ * Locality and authority: Runs on the current helicopter owner and restores only WMP's
+ * local approach changes. It rejects a null or non-local aircraft.
+ * Repeat/JIP: Safe to call after the controller stops; cleanup of the published active/anchor
+ * flags is visible to JIP clients without replaying a past flight action.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -18,6 +22,7 @@
  * Return Value: BOOL - true when a local living helicopter was restored.
  *
  * Example: [_helicopter, true, "GETOUT"] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+ * Result: Returns true when a living local helicopter is restored, otherwise false.
  * Current callers: the landing controller and local tracker cleanup.
  */
 

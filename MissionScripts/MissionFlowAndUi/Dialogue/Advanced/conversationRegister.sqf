@@ -4,6 +4,7 @@
  * Locality/authority: server-only. Repeat/JIP behaviour: repeat-safe replacement for future sessions.
  * Arguments: 0 definition HASHMAP. Return Value: BOOL. Current callers: ConversationCreate and power-user scripts.
  * Example: [_definition] call Waldo_fnc_ConversationRegister;
+ * Result: The server replaces or adds a validated definition for future sessions.
  */
 params [["_definition", createHashMap, [createHashMap]]];
 if (!isServer) exitWith {false};

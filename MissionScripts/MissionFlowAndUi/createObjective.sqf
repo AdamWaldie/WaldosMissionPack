@@ -1,26 +1,27 @@
 /*
  * Author: WaldoTheWarfighter
- * Scripting convenience wrapper around the BIS task framework for mission makers
- * who drive objectives from SQF / triggers (not a replacement for the Eden or
- * Zeus task modules). Creates a JIP-safe task, optionally with a persistent map
- * marker at the destination. Runs server-authoritatively so joining players see
- * the task correctly; if called on a client it forwards itself to the server.
+ * Creates a BIS task from a mission script or trigger and records it in the AAR ledger.
+ * Locality and authority: the server creates the task and optional map marker. Client calls forward to the
+ * server; BIS task state is JIP-safe and the AAR ledger is public. Reusing a task ID updates its
+ * ledger row. A separate WMP marker is made only for an array destination with two coordinates.
+ * Current callers: mission-maker scripts/triggers; the full-pack audit checks this public API.
  *
  * Arguments:
- * 0: Task ID       <STRING>                       - unique id, used to update the task later
- * 1: Owner         <SIDE/GROUP/OBJECT/ARRAY>      - who receives the task (default: west)
- * 2: Title         <STRING>                       - short task title
+ * 0: Task ID       <STRING>                       - non-empty id, used to update the task later
+ * 1: Owner         <SIDE/GROUP/OBJECT/ARRAY>      - task recipients (default: west)
+ * 2: Title         <STRING>                       - short task title (default: "New Task")
  * 3: Description   <STRING>                       - longer description (default: "")
- * 4: Destination   <ARRAY/OBJECT/STRING>          - map position/object (default: [] = none)
+ * 4: Destination   <ARRAY/OBJECT/STRING>          - BIS task position/object/marker (default: [])
  * 5: State         <STRING>                       - CREATED/ASSIGNED/SUCCEEDED/... (default: "ASSIGNED")
- * 6: Create marker <BOOL>                         - drop a persistent map marker at destination (default: true)
+ * 6: Create marker <BOOL>                         - extra marker for array position only (default: true)
  * 7: Task type     <STRING>                       - task icon type (default: "" = default icon)
  *
  * Return Value:
- * Nothing
+ * Nothing usable. Empty task IDs are logged and ignored; a client call only queues server work.
  *
  * Example:
  * ["secure_lz", west, "Secure the LZ", "Clear and hold the landing zone.", getMarkerPos "lz1"] call Waldo_fnc_CreateObjective;
+ * Result: west receives the assigned task; the server also places its WMP objective marker.
  */
 
 params [

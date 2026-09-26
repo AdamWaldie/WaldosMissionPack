@@ -6,6 +6,7 @@
  * Repeat/JIP behaviour: guarded on every machine; each JIP client receives one ordered snapshot.
  * Arguments: None. Return Value: BOOL. Current caller: CfgFunctions postInit.
  * Example: automatic; mission makers do not call this function.
+ * Result: Dialogue functions and initial state exchange are ready once on each machine.
  */
 if (isServer) then {
     if (isNil {missionNamespace getVariable "Waldo_Dialogue_Registry"}) then {

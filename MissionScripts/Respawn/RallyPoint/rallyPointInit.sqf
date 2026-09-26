@@ -6,11 +6,16 @@
  * group's active rally is recognised by proximity to its stored spawn position; the client resolves
  * a fresh open point and moves locally only when necessary, preventing placement inside the rally
  * object or a newly introduced obstruction. Other respawn selections are not moved.
+ * Locality and authority: Interface-client only; server-owned public rally state determines
+ * whether an active rally exists, while each player's respawn movement runs on that player.
+ * Repeat/JIP: Installs one local respawn handler and reconciles actions for the current player
+ * again after respawn or a late join.
  *
  * Arguments: None.
  * Return Value: Boolean - true when initialized/already installed; otherwise false.
  * Example: [] call Waldo_fnc_RallyPointInit;
  * Current callers: initPlayerLocal.sqf and Rally ZEN runtime activation/JIP replay.
+ * Result: The local player has rally actions and a respawn handler that checks safe placement.
  */
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!hasInterface || {!(missionNamespace getVariable ["Waldo_Rally_Enable", false])}) exitWith {false};

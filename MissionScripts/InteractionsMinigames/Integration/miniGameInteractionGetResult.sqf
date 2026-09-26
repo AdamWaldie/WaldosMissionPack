@@ -2,6 +2,14 @@
  * Author: WaldoTheWarfighter
  * Returns named fields derived from Waldo_MG_InteractionResult. The broadcast source remains a
  * stable eight-element array so JIP and condition consumers do not depend on hashmap transport.
+ * Locality/Authority: Any machine; reads the object's broadcast result without mutating it.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP clients receive the published source array.
+ * Arguments: 0: interaction object <OBJECT>, default objNull.
+ * Return Value: <HASHMAP> with state, outcomeCode, reason, challengeId, actor, attemptId,
+ * startedAt, finishedAt and raw keys; null objects yield idle/default values.
+ * Current Callers: Mission scripts and interaction state diagnostics.
+ * Example: [_terminal] call Waldo_fnc_MiniGameInteractionGetResult;
+ * Result: Returns the latest authoritative outcome in named fields.
  */
 
 params [["_object", objNull, [objNull]]];

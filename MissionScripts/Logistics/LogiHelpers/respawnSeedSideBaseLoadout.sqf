@@ -15,6 +15,10 @@
  *
  * Example: ["EAST"] call Waldo_fnc_RespawnSeedSideBaseLoadout;
  * Current callers: Waldo_fnc_RespawnSeedSideSwitch (SIDE_BASE_LOADOUT mode).
+ * Locality and authority: Builds and stores the next respawn seed on the player's interface
+ * client from the published side pool. Repeating the call refreshes that local seed;
+ * other players and JIP clients do not receive it.
+ * Result: The player has a coherent base loadout for the selected side, or a fallback.
  */
 params [["_newSideKey", "", [""]]];
 if !(hasInterface) exitWith {false};

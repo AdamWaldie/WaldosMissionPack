@@ -14,6 +14,9 @@
  *
  * Example:
  * [] call Waldo_fnc_PersistenceSavePlayerLocal;
+ * Result: Returns true after submitting one owner-local payload to the server, or false while
+ * the load handshake is unresolved or persistence is inactive.
+ * Current callers: PersistenceInit's client loop and Waldo_fnc_PersistenceSaveNow's player request.
  */
 
 if !(

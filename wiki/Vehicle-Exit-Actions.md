@@ -4,20 +4,20 @@
 
 WMP adds **Get out Left Side** and **Get out Right Side** to cargo-seat passengers. The action moves the passenger to the chosen side. It does not set up a paradrop or change ACE Cargo settings.
 
-## Automatic setup
+## Quick setup: supported aircraft
 
 These helicopter families receive the actions when the mission starts or Zeus spawns one:
 
 | Base class | Vehicle family |
 |---|---|
-| `Heli_Transport_01_base_F` | Vanilla CH-47 |
+| `Heli_Transport_01_base_F` | Vanilla transport helicopter with this base class |
 | `rhs_uh1h_base` | RHS UH-1H |
 | `RHS_UH1_Base` | RHS UH-1Y/N |
 | `RHS_Mi24_base` | RHS Mi-24 |
 
 The Mi-24 also receives a static-line jump action. [Paradrop](Paradrop) covers that separate feature.
 
-## Add the actions to another vehicle
+## Call: add the actions to another vehicle
 
 Put this line in the vehicle's Eden Init field:
 
@@ -30,6 +30,13 @@ Pass `false` as the second argument if you want plain action labels instead of c
 ```sqf
 [this, false] call Waldo_fnc_AddExitActions;
 ```
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Existing helicopter or other vehicle whose cargo passengers need an exit choice. |
+| 1 | Boolean | `true` | `true` colours the left/right labels; `false` uses plain text. |
+
+The function returns no useful value. It records setup on the object so a repeated call does not add duplicate actions. Put it in the vehicle's Eden Init field for placed vehicles. A vehicle created during play needs the same client-facing action setup for players who join later.
 
 The setup call does nothing if the actions are already present. Test the chosen class in play: the action only appears to a passenger in a cargo seat.
 

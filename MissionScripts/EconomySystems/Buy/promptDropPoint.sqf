@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Prompt drop point.
+ * Opens the curator's delivery-point placement/configuration prompt.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
  * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
- * 1: _dir <SCALAR> - dir (optional, default: 0)
+ * 1: _dir <NUMBER> - bearing in degrees (optional, default: 0)
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
  * [_pos, _dir] call Waldo_fnc_EcoBuy_promptDropPoint;
+ * Locality/Authority: Curator interface client; placement submits to server authority.
+ * Repeat/JIP Behaviour: Opens a fresh local prompt; no unfinished UI is replayed to JIP.
+ * Current Callers: Delivery-point ZEN module.
+ * Result: Shows side/type choices for the proposed point.
  */
 
         params [["_pos", [0, 0, 0]], ["_dir", 0]];

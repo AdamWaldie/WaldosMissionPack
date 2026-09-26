@@ -1,4 +1,17 @@
-/* Server-authoritative deploy/tear-down request for Waldo_fnc_MHQSetup. */
+/*
+ * Author: WaldoTheWarfighter
+ * Deploys or tears down a configured mobile command post.
+ * Locality and authority: Client requests forward to the server; the server validates actor,
+ * range, stopped vehicle and current state before changing respawn, marker and vehicle state.
+ * Repeat/JIP: A transition in progress or a duplicate operation is refused. The vehicle's
+ * published status, marker and respawn point describe the resulting state to later joiners.
+ * Arguments: 0: MHQ <OBJECT>; 1: requesting player <OBJECT>;
+ *   2: operation <STRING> ("DEPLOY" or "TEARDOWN").
+ * Return Value: <BOOL> true after an accepted server transition; false if forwarded/rejected.
+ * Current callers: ACE and fallback MHQ actions installed by Waldo_fnc_MHQSetupLocal.
+ * Example: [myMHQ, player, "DEPLOY"] remoteExecCall ["Waldo_fnc_MHQRequestServer", 2];
+ * Result: The stopped MHQ becomes a locked command post with a respawn point and marker.
+ */
 params [
     ["_target", objNull, [objNull]],
     ["_actor", objNull, [objNull]],
