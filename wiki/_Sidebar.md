@@ -67,6 +67,7 @@
 
 * [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 * [Quartermaster](Quartermaster)
+* [ACE Vehicle Services](ACE-Vehicle-Services)
 * [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 * [Supply Transfers](Supply-Transfers)
 * [Field Resupply](Field-Resupply)

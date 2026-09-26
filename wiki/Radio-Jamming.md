@@ -142,6 +142,15 @@ Activation uses the same server-authoritative call as the Zeus/script control. I
 [myTower, true]  call Waldo_fnc_JammerRemove;    // remove the jammer AND delete the object
 ```
 
+A removed jammer stays removed for players who join later. A kept emitter object loses its jammer
+actions for everyone, and a jammer placed from an Eden Init field is not re-registered when a
+player joins: the server already ran that Init line, so joining clients do not forward it again.
+Jammer interactions use their own named JIP entry, bound to the emitter lifetime. Removing a
+jammer leaves other WMP features on the same object intact. A delayed Zeus setup checks that the
+emitter is still registered before replaying its interactions.
+The same Init replay protection applies to trackers, objectives, notification triggers and 3D markers set up from Init
+fields.
+
 A destructible jammer can drive an EW objective without a separate trigger:
 
 ```sqf

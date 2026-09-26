@@ -80,9 +80,72 @@ class PhysicalCargoSourceTests(unittest.TestCase):
     def test_quartermaster_spares_enter_physical_carry_path(self):
         register = (ROOT / "MissionScripts" / "Logistics" / "Crates"
                     / "logisticsRegisterSpawned.sqf").read_text(encoding="utf-8")
-        self.assertIn('"TRACK", "WHEEL", "SPARE"', register)
-        self.assertIn('"FUEL", "TRACK", "WHEEL", "SPARE", "STARTER"', register)
+        self.assertIn('"FUELBARREL", "FUELJERRYCAN", "TRACK", "WHEEL", "SPARE", "STARTER"', register)
         self.assertIn('[_object] call Waldo_fnc_PhysicalCargoRegister', register)
+        # Every issued role is mountable: no role allow-list gates physical cargo any more.
+        physical = register[register.index('Waldo_PhysicalCargo_Enable'):register.index('Waldo_SupplyTransfers_Enable')]
+        self.assertNotIn('_role in', physical)
+
+    def test_single_eligibility_rule_is_broad_and_shared(self):
+        rule = self.read("physicalCargoIsEligible.sqf")
+        for kind in ('"CAManBase"', '"StaticWeapon"', '"LandVehicle"', '"Air"', '"Ship"'):
+            self.assertIn(f'isKindOf {kind}', rule)
+        self.assertIn('_object getVariable ["Waldo_PhysicalCargo_Eligible", true]', rule)
+        self.assertNotIn('ReammoBox_F', rule)
+        self.assertIn('Waldo_Logistics_StarterCrate', rule)
+        for source in (self.read("physicalCargoInitLocal.sqf"), self.read("physicalCargoAttachServer.sqf"),
+                       (ROOT / "MissionScripts" / "ZenModules" / "zenServiceLogisticsModule.sqf").read_text(encoding="utf-8"),
+                       (ROOT / "MissionScripts" / "ZenModules" / "zenServiceLogisticsServer.sqf").read_text(encoding="utf-8")):
+            self.assertIn('call Waldo_fnc_PhysicalCargoIsEligible', source)
+            self.assertNotIn('_isKindOf "ReammoBox_F"]', source)
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        self.assertIn('class PhysicalCargoIsEligible', functions)
+
+    def test_mount_mass_recovery_uses_owner_acknowledgement(self):
+        release = self.read("physicalCargoReleaseLocal.sqf")
+        attach = self.read("physicalCargoAttachServer.sqf")
+        clear = self.read("physicalCargoClearServer.sqf")
+        ack = self.read("physicalCargoRestoreAckServer.sqf")
+        drop = release.index('call ace_dragging_fnc_dropObject_carry')
+        # ACE's mass restore is suppressed before its drop, and the object is attached right after.
+        self.assertLess(release.index('_cargo setVariable ["ace_dragging_originalMass", 0, true]'), drop)
+        self.assertLess(drop, release.index('_cargo attachTo [_vehicle, _offset]'))
+        self.assertLess(release.index('_cargo attachTo [_vehicle, _offset]'),
+                        release.index('Waldo_fnc_PhysicalCargoAttachServer'))
+        # A rejected mount is detached and moved clear before its mass returns.
+        reject = attach[attach.index('private _reject'):attach.index('private _bounds')]
+        self.assertNotIn('ace_common_setMass', reject)
+        self.assertIn('if (_clear isEqualTo []) exitWith', reject)
+        self.assertIn('Waldo_PhysicalCargo_RestorePending', reject)
+        self.assertIn('Waldo_fnc_PhysicalCargoRestoreLocal', reject)
+        self.assertIn('CBA_fnc_execNextFrame', attach)
+        recovery = attach[attach.index('// The recovery worker'):]
+        self.assertNotIn('call Waldo_fnc_PhysicalCargoClearServer', recovery)
+        self.assertIn('private _released =', recovery)
+        self.assertIn('Waldo_fnc_PhysicalCargoUnmountServer', attach)
+        # Mass returns to ACE on pickup, or after the safe set-down is acknowledged.
+        self.assertIn('_cargo setVariable ["ace_dragging_originalMass", _mass, true]', clear)
+        self.assertIn('Waldo_PhysicalCargo_RestoreMass', clear)
+        self.assertLess(ack.index('_cargo enableSimulationGlobal _priorSimulation'), ack.index('ace_common_setMass'))
+
+    def test_provisional_attachment_is_not_an_owner_acknowledgement(self):
+        apply = self.read("physicalCargoApplyLocal.sqf")
+        attach = self.read("physicalCargoAttachServer.sqf")
+        owner = apply.split('if (local _cargo) then {', 1)[1]
+        self.assertLess(owner.index('setVectorDirAndUp'), owner.index('"Waldo_PhysicalCargo_OwnerAppliedRevision"'))
+        self.assertEqual(attach.count('"Waldo_PhysicalCargo_OwnerAppliedRevision", -1'), 3)
+
+    def test_old_mount_worker_cannot_recover_a_later_mount(self):
+        attach = self.read("physicalCargoAttachServer.sqf")
+        clear = self.read("physicalCargoClearServer.sqf")
+        self.assertIn('"Waldo_PhysicalCargo_ServerMountRevision", _revision', attach)
+        self.assertEqual(attach.count('"Waldo_PhysicalCargo_ServerMountRevision", -1'), 2)
+        self.assertIn('"Waldo_PhysicalCargo_ServerMountRevision", nil', clear)
+
+    def test_pickup_recovers_mass_before_server_clear_request(self):
+        pickup = self.read("physicalCargoInitLocal.sqf")
+        self.assertLess(pickup.index('"ace_dragging_originalMass", _savedMass'),
+                        pickup.index('remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer"'))
 
     def test_unload_restores_physics_after_owner_placement(self):
         clear = self.read("physicalCargoClearServer.sqf")
@@ -114,11 +177,13 @@ class PhysicalCargoSourceTests(unittest.TestCase):
 
     def test_static_weapons_never_enter_wmp_mount_path(self):
         register = self.read("physicalCargoRegister.sqf")
-        local = self.read("physicalCargoInitLocal.sqf")
+        rule = self.read("physicalCargoIsEligible.sqf")
         release = self.read("physicalCargoReleaseLocal.sqf")
-        server = self.read("physicalCargoAttachServer.sqf")
-        for source in (register, local, release, server):
+        for source in (register, rule, release):
             self.assertIn('isKindOf "StaticWeapon"', source)
+        # The carry hook and server mount check both go through the shared rule.
+        for name in ("physicalCargoInitLocal.sqf", "physicalCargoAttachServer.sqf"):
+            self.assertIn('call Waldo_fnc_PhysicalCargoIsEligible', self.read(name))
         self.assertIn('"Waldo_PhysicalCargo_Eligible", false, true', register)
 
     def test_verified_ffv_seats_use_separate_owned_turret_locks(self):

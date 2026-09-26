@@ -24,6 +24,12 @@ _cargo setVariable ["Waldo_PhysicalCargo_PreviousCollision", nil];
 [_cargo, _vehicle, _priorCollision, [], _token, true]
     remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreLocal", 0];
 _cargo enableSimulationGlobal _priorSimulation;
+// The object is now clear of the vehicle, so the mass held back while mounted can return.
+private _mass = _cargo getVariable ["Waldo_PhysicalCargo_RestoreMass", 0];
+if (_mass > 0) then {
+    _cargo setVariable ["Waldo_PhysicalCargo_RestoreMass", nil];
+    ["ace_common_setMass", [_cargo, _mass]] call CBA_fnc_globalEvent;
+};
 diag_log format ["[WMP PHYSICAL CARGO] Safe unload restored %1, simulation=%2 collision=%3.",
     typeOf _cargo, _priorSimulation, _priorCollision];
 true

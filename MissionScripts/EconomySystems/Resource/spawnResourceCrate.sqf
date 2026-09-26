@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Purpose: Spawn a collectible economy resource case with its resource rows,
  * marker and ACE Drag/Carry. This case is not an inventory crate and does not
- * join Supply Transfers or Physical Cargo automatically.
+ * join Supply Transfers. Its ACE-carryable prop can use Physical Cargo when enabled.
  * Locality / Authority: Economy authority creates and tags the case. ACE
  * portability is published globally from the server.
  * Repeat / JIP: Each call creates one new case. Resource and ACE state replay
@@ -41,7 +41,9 @@
 
     private _crate = createVehicle ["Land_PlasticCase_01_medium_F", _pos, [], 0, "CAN_COLLIDE"];
     _crate setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
-    [_crate] call Waldo_fnc_CargoAttributesPrepareObject;
+    // A client/curator request is forwarded here by remoteExec, and the ACE setters reject that
+    // remote context, so apply drag/carry from CBA's server-local next frame.
+    [{[_this select 0] call Waldo_fnc_CargoAttributesPrepareObject}, [_crate]] call CBA_fnc_execNextFrame;
 
     [_crate, true] call Waldo_fnc_EcoResource_registerCuratorEditableObject;
 

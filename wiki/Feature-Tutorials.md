@@ -37,6 +37,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Comp
 |---|---|
 | [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster) | Starter, supply and medical crates built from playable loadouts |
 | [Quartermaster](Quartermaster) | Player-requested supplies, spares, ACE rearm and fuel issues |
+| [ACE Vehicle Services](ACE-Vehicle-Services) | Give a vehicle independent ACE rearm, fuel, repair and medical roles |
 | [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) | Set an object's Drag, Carry, ACE loading size and storage space by ZEN or script |
 | [Supply Transfers](Supply-Transfers) | Selective moves, crate consolidation and per-crate ACE loading choice |
 | [Field Resupply](Field-Resupply) | Carrier-held supply allowances and refill hubs |

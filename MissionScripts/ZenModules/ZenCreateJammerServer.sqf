@@ -7,8 +7,8 @@
  * supported without block-local params shadowing their parsed values.
  * Locality and authority: Server validates the requesting curator, creates or reuses the emitter
  * and registers the jammer; the requesting curator may own the movable object afterward.
- * Repeat/JIP: Each accepted spawn is a separate object. Registration and interaction state are
- * published by the jammer service for joining clients.
+ * Repeat/JIP: Existing emitters update in place; a spawn request creates a separate object.
+ * Delayed interaction replay uses the jammer-owned entry and checks the emitter is still registered.
  *
  * Arguments:
  * 0: placement position <ARRAY>
@@ -194,8 +194,9 @@ private _interactionOptions = createHashMapFromArray [
 [_object, [_allowPlayerToggle, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode]] spawn {
     params ["_object", "_interactionSettings"];
     sleep 0.35;
-    if (!isNull _object) then {
-        [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _object];
+    if (!isNull _object && {(_object getVariable ["Waldo_Jamming_Id", -1]) >= 0}) then {
+        [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0,
+            format ["Waldo_JammerInteraction_%1", netId _object]];
     };
 };
 diag_log format ["[WMP ZEN] jammer configured object=%1 class=%2 source=%3 requestedClass=%4 actor=%5 owner=%6 simulation=%7 challenge=%8 engineerOnly=%9 result=%10", netId _object, typeOf _object, ["EXISTING", "SPAWN"] select _created, _className, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner, simulationEnabled _object, _disableChallenge, _engineerOnly, _resultMode];

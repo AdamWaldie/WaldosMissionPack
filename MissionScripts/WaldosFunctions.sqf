@@ -45,6 +45,10 @@ class CfgFunctions
             class JipRemoveBoundServer {
                 file = "MissionScripts\Networking\jipRemoveBoundServer.sqf";
             };
+            class ClientInitPhaseEnd {
+                file = "MissionScripts\Networking\clientInitPhaseEnd.sqf";
+                postInit = 1;
+            };
         };
         class BriefDocs 
         {
@@ -550,6 +554,10 @@ class CfgFunctions
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
             };
+            class VehicleServicesConfigure {file = "MissionScripts\Logistics\VehicleServices\vehicleServicesConfigure.sqf";};
+            class VehicleServicesApplyServer {file = "MissionScripts\Logistics\VehicleServices\vehicleServicesApplyServer.sqf";};
+            class ZenVehicleServicesModule {file = "MissionScripts\ZenModules\zenVehicleServicesModule.sqf";};
+            class ZenVehicleServicesServer {file = "MissionScripts\ZenModules\zenVehicleServicesServer.sqf";};
             class LogisticsSpawner {
                 file = "MissionScripts\Logistics\Crates\LogiBoxes.sqf";
             };
@@ -605,6 +613,7 @@ class CfgFunctions
             class PhysicalCargoApplyLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoApplyLocal.sqf";};
             class PhysicalCargoClearServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoClearServer.sqf";};
             class PhysicalCargoRegister {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRegister.sqf";};
+            class PhysicalCargoIsEligible {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoIsEligible.sqf";};
             class PhysicalCargoSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatsServer.sqf";};
             class PhysicalCargoSeatLockLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatLockLocal.sqf";};
             class PhysicalCargoDiscoverSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoDiscoverSeatsServer.sqf";};
@@ -889,6 +898,9 @@ class CfgFunctions
             };
             class CargoAttributesPrepareObject {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\cargoAttributesPrepareObject.sqf";
+            };
+            class LogisticsApplyAceHandling {
+                file = "MissionScripts\Logistics\Crates\logisticsApplyAceHandling.sqf";
             };
             class InitVehicles {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\VehicleInit.sqf";

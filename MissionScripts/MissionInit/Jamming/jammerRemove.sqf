@@ -3,10 +3,10 @@
  * Permanently removes a jammer from the registry (and its map marker), optionally deleting the
  * emitter object too. Server-authoritative - calling on a client forwards to the server, which
  * re-broadcasts the updated registry so the jammer stops affecting every machine.
- * Locality and authority: Client calls forward to the server; only the server removes registry
- * and marker state and optionally deletes the emitter.
- * Repeat/JIP: A second removal finds no matching entry. Joining clients receive the updated
- * registry without the removed jammer.
+ * Locality and authority: Client calls forward to the server, which removes registry and marker
+ * state and optionally deletes the emitter.
+ * Repeat/JIP: Missing entries return false. Removal clears only the named jammer replay;
+ * other features on a kept emitter retain their state. Joiners receive the updated registry.
  *
  * Arguments:
  * 0: Reference <OBJECT or NUMBER> - the jammer object, or its jammer id (from Waldo_fnc_Jammer)
@@ -53,9 +53,15 @@ if (_markerName != "" && {getMarkerType _markerName != ""}) then { deleteMarker 
 _registry deleteAt _idx;
 missionNamespace setVariable ["Waldo_Jamming_Registry", _registry, true];
 
+// A kept (or destroyed but not deleted) emitter must stop offering jammer actions to current and
+// joining players: its interactions check this id. Remove only the jammer-owned JIP entry;
+// an object may also host a quartermaster, tracker or another independent feature.
+if (!isNull _obj) then {
+    _obj setVariable ["Waldo_Jamming_Id", nil, true];
+    [_obj, format ["Waldo_JammerInteraction_%1", netId _obj]] call Waldo_fnc_JipRemoveBoundServer;
+};
 // Optionally remove the emitter object.
 if (_deleteObject && {!isNull _obj}) then {
-    _obj setVariable ["Waldo_Jamming_Id", nil, true];
     deleteVehicle _obj;
 };
 

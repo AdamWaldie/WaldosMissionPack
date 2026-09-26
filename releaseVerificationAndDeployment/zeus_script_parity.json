@@ -1,6 +1,14 @@
 [
   {
     "category": "core",
+    "module": "ACE Vehicle Services - Configure",
+    "handler": "Waldo_fnc_ZenVehicleServicesModule",
+    "via": "Waldo_fnc_ZenVehicleServicesServer",
+    "script_api": "Waldo_fnc_VehicleServicesConfigure",
+    "parity": "full"
+  },
+  {
+    "category": "core",
     "module": "Base Services - Configure Node",
     "handler": "Waldo_fnc_ZenServiceLogisticsModule",
     "via": "Waldo_fnc_ZenServiceLogisticsServer",

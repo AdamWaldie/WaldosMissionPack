@@ -95,6 +95,9 @@ To travel:
 4. While aboard, return to the same self-interaction menu and choose **Select Destination**.
 5. Click the destination on the map and disembark after arrival. **Return This Transport to Base** cancels that named transport's current journey.
 
+The **WMP Transport** menu appears only while at least one registered transport is alive, and each
+type menu appears only while that type has one. A mission with no transports shows no empty menu.
+
 Every registered transport also exposes **Send to Destination** and **Return This Transport to
 Base** directly on the vehicle through ACE interaction. These two controls are available to every
 player currently inside that exact transport, regardless of who requested it or which seat they

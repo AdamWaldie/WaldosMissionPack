@@ -29,7 +29,7 @@ INDEX_HUBS = {
 }
 
 REQUIRED_STANDALONE = {
-    "ACE-Cargo-And-Object-Handling", "Quartermaster", "Base-Services",
+    "ACE-Vehicle-Services", "ACE-Cargo-And-Object-Handling", "Quartermaster", "Base-Services",
     "Supply-Transfers", "Physical-Cargo", "Field-Resupply", "Tactical-Display",
     "Treatment-Feedback", "Hazardous-Environments", "Tree-Felling",
     "Emergency-Dismount", "Explosive-Breaching", "Object-Scaling", "WMP-HUD",
@@ -39,6 +39,7 @@ REQUIRED_STANDALONE = {
 # Public, maker-facing guides must show the actual argument and setting types.
 # The setting check reads MissionConfig rather than duplicating its key list here.
 TYPED_GUIDES = {
+    "ACE-Vehicle-Services",
     "ACE-Cargo-And-Object-Handling", "Base-Services", "Quartermaster",
     "Supply-Transfers", "Physical-Cargo", "Field-Resupply", "Tactical-Display",
     "Treatment-Feedback", "Hazardous-Environments", "Tree-Felling",

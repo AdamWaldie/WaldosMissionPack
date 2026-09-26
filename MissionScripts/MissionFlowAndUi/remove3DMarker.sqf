@@ -10,6 +10,8 @@
  *
  * Repeat/JIP behaviour:
  * Repeat-safe. Missing selectors return false and the broadcast registry remains unchanged.
+ * Removed IDs are remembered on the server so an Eden Init create re-forwarded by a joining client
+ * cannot restore them; a later server-side Waldo_fnc_Create3DMarker call for the ID still does.
  * Removing an object anchor removes every WMP 3D marker attached to that exact object.
  *
  * Arguments:
@@ -72,6 +74,9 @@ if (_selector isEqualType []) then {
 
 if (_indices isEqualTo []) exitWith {false};
 private _removedIds = _indices apply {(_registry select _x) param [0, ""]};
+private _tombstones = missionNamespace getVariable ["Waldo_3DMarker_RemovedIds", createHashMap];
+{_tombstones set [_x, true]} forEach _removedIds;
+missionNamespace setVariable ["Waldo_3DMarker_RemovedIds", _tombstones];
 _indices sort false;
 {_registry deleteAt _x} forEach _indices;
 missionNamespace setVariable ["Waldo_3DMarker_Registry", _registry];

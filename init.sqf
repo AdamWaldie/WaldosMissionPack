@@ -16,6 +16,10 @@
  * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
 
+// Every object Init field has run by now, so later client calls to Init-safe WMP creators forward
+// to the server again (see Waldo_fnc_ClientInitPhaseEnd; set here too in case postInit runs later).
+missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
+
 /* BEGINNER START HERE
  * - A setting needed everywhere belongs in MissionConfig and is loaded here as SHARED data.
  * - A server-owned system starts in initServer.sqf.

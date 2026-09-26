@@ -16,6 +16,10 @@
  * 6: Create marker <BOOL>                         - extra marker for array position only (default: true)
  * 7: Task type     <STRING>                       - task icon type (default: "" = default icon)
  *
+ * Repeat / JIP: Server calls update the task; client Eden Init replays are ignored.
+ * Later client calls forward to the server. BIS task state and the AAR ledger synchronize to JIP.
+ * Current callers: mission-maker Eden Init fields, scripts and triggers.
+ *
  * Return Value:
  * Nothing usable. Empty task IDs are logged and ignored; a client call only queues server work.
  *
@@ -41,6 +45,11 @@ if (_taskId isEqualTo "") exitWith {
 
 // Keep task creation server-authoritative for correct JIP behaviour.
 if (!isServer) exitWith {
+    // Init-field replay on a joining client: the server already ran this Init line, and forwarding
+    // it again would recreate state removed since. Later script/action calls still forward.
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {
+        diag_log format ["[WMP JIP] Skipped Init-field replay of %1 on client %2.", "Waldo_fnc_CreateObjective", clientOwner];
+    };
     _this remoteExec ["Waldo_fnc_CreateObjective", 2];
 };
 
