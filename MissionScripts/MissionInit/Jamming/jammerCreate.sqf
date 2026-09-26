@@ -72,7 +72,10 @@ if (isNull _object) exitWith {
 if (!isServer) exitWith {
     // Init-field replay on a joining client: the server already ran this Init line, and forwarding
     // it again would recreate state removed since. Later script/action calls still forward.
-    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {-1};
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {
+        diag_log format ["[WMP JIP] Skipped Init-field replay of %1 on client %2.", "Waldo_fnc_Jammer", clientOwner];
+        -1
+    };
     private _interactionForward = _interactionOptions;
     if (typeName _interactionForward == "HASHMAP") then {
         private _pairs = [];

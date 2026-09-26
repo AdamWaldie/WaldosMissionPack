@@ -18,6 +18,10 @@
  * Example: Leave this file in the mission root; Arma calls it for each joining player.
  */
 
+// Every object Init field has run by now, so later client calls to Init-safe WMP creators forward
+// to the server again (see Waldo_fnc_ClientInitPhaseEnd; set here too in case postInit runs later).
+missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
+
 /*
 PLAYER-LOCAL STARTUP
 These settings and activations exist only on machines with a player interface. Guarded defaults do

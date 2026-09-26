@@ -55,7 +55,10 @@ if (isNull _anchor || {_message isEqualTo ""}) exitWith {false};
 if (!isServer) exitWith {
     // Init-field replay on a joining client: the server already ran this Init line, and forwarding
     // it again would recreate state removed since. Later script/action calls still forward.
-    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {true};
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {
+        diag_log format ["[WMP JIP] Skipped Init-field replay of %1 on client %2.", "Waldo_fnc_NotificationTrigger", clientOwner];
+        true
+    };
     [_anchor, _radius, _title, _message, _state, _recipients, _duration, _repeatable, _placement, _channel, _source]
         remoteExecCall ["Waldo_fnc_NotificationTrigger", 2];
     true

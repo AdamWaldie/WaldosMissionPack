@@ -395,6 +395,12 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('postInit = 1;', block)
         self.assertIn('missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];',
                       source('MissionScripts/Networking/clientInitPhaseEnd.sqf'))
+        # The event scripts also set the flag first, so mission-maker calls there are never
+        # suppressed even if postInit happens to run after them.
+        for script in ('init.sqf', 'initPlayerLocal.sqf'):
+            text = source(script)
+            flag = text.index('missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];')
+            self.assertLess(flag, text.index('/*', text.index('*/')), script)
         for path, fn in (('MissionScripts/MissionInit/Jamming/jammerCreate.sqf', 'Waldo_fnc_Jammer'),
                          ('MissionScripts/MissionInit/ElectronicWarfare/tracker.sqf', 'Waldo_fnc_Tracker'),
                          ('MissionScripts/MissionFlowAndUi/createObjective.sqf', 'Waldo_fnc_CreateObjective'),
@@ -403,6 +409,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             text = source(path)
             branch = text[text.index('if (!isServer) exitWith {'):]
             self.assertLess(branch.index('Waldo_ClientInitPhaseDone'), branch.index(f'"{fn}", 2]'), path)
+            self.assertIn('Skipped Init-field replay', branch[:branch.index(f'"{fn}", 2]')], path)
         remove = source('MissionScripts/MissionInit/Jamming/jammerRemove.sqf')
         kept = remove[remove.index('if (!isNull _obj) then {'):remove.index('if (_deleteObject')]
         self.assertIn('_obj setVariable ["Waldo_Jamming_Id", nil, true];', kept)

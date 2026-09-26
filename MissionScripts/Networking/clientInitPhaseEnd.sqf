@@ -6,12 +6,15 @@
  * is unset, the client call is an Init-field replay the server already ran itself, so forwarding it
  * again would recreate something since deleted (a removed jammer, tracker, 3D marker, completed
  * objective or used notification trigger). Calls made later by scripts and actions still forward.
+ * init.sqf and initPlayerLocal.sqf also set the flag on their first line. Both run after every
+ * Init field, so the flag is set before mission-maker code there, whichever of these runs first.
+ * A skipped call is written to RPT as "[WMP JIP] Skipped Init-field replay".
  * Locality / Authority: Local to each machine; never broadcast.
  * Repeat / JIP: Runs once per machine as a CfgFunctions postInit function.
  *
  * Arguments: None.
  * Return Value: Nothing.
- * Current caller: CfgFunctions postInit.
+ * Current caller: CfgFunctions postInit (init.sqf and initPlayerLocal.sqf set the same flag).
  * Example: missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]
  */
 missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
