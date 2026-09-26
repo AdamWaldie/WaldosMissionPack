@@ -31,6 +31,11 @@ if (_restore isNotEqualTo []) then {
                 _unit setVariable ["Waldo_Convoy_Target", nil];
             };
         } forEach crew _vehicle;
+        if !(_vehicle in _keepCrew) then {
+            private _hitEH = _vehicle getVariable ["Waldo_Convoy_HitEH", -1];
+            if (_hitEH >= 0) then {_vehicle removeEventHandler ["Hit", _hitEH]};
+            _vehicle setVariable ["Waldo_Convoy_HitEH", nil];
+        };
         if (local _vehicle) then {
             _vehicle forceSpeed _speed;
             if !(_vehicle in _keepCrew) then {_vehicle setUnloadInCombat _unload;};

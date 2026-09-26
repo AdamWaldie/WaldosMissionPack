@@ -44,9 +44,9 @@ weapons engage known attackers within the permitted rules of engagement. Gunners
 knowledge; the script does not reveal attackers or change hold-fire orders. Crew retain their seats,
 and armed vehicles stay with the column while cargo vehicles manoeuvre.
 
-Contact uses recent known threats within 800 m or suppressed group members. A known threat is
-recent for 30 seconds. These checks run at most once every five seconds. COMBAT mode alone does
-not trigger a dismount. During contact, the leader does not stop solely to close a stretched gap.
+Contact uses danger reported within the last 15 seconds from known threats within 800 m,
+suppressed group members, or hostile vehicle hits within 15 seconds. Sightings alone and COMBAT
+mode do not trigger a dismount. These checks run at most once every five seconds. During contact, the leader does not stop solely to close a stretched gap.
 
 If a surviving vehicle makes less than 3 m of progress for 15 seconds during contact and moves
 below 3 km/h, the group requests a halt. The server validates the current owner and registration
@@ -108,12 +108,39 @@ route trail; a shared-server-time contact checkpoint preserves pinned-contact pr
 SafeStart, ENDEX, player entry and Zeus intervention suspend convoy commands. Resuming after a hold
 requires explicit configuration. Release removes the registry entry and restores formation, attack
 permission, forced speed and combat unloading. The group and vehicle ownership flags protect drivers and separate mounted cargo groups from
-competing Smart AI orders. Separate cargo groups become ordinary AI after dismounting and unassignment.
+competing Smart AI orders. Separate cargo groups return to ordinary AI after their short ambush cover movement expires.
 
 One round-robin worker runs per AI-owning machine. A convoy moves at most once per second, keeps at
 most 128 local trail samples and sends at most ten points per wheeled path. Crew checks and changed
 contact checkpoints run at most once every five seconds. Vehicle dimensions are cached on adoption.
 More convoys reduce update frequency; delays are minimums and can grow under load.
+
+## Contact response and passenger cover
+
+Seeing an enemy alone does not trigger an ambush halt. Recent danger in AI knowledge,
+suppression or a hostile hit on a registered vehicle provides contact evidence. Mounted weapon
+crews prefer recently threatening known enemies while keeping their existing firing permissions.
+The convoy keeps moving under the existing push-through setting; 15 seconds pinned in contact
+requests a server-authorized halt. Disabling push-through retains immediate contact halts.
+
+An ambush halt gives AI passengers one initial move towards nearby cover using the reported
+threat position. When no suitable cover is found, a short dispersal position is attempted;
+this fallback is not guaranteed protection. At most two passengers receive a new cover search
+per convoy and owning machine every five seconds. The shared movement window expires 45 seconds
+after the halt, and Smart AI yields during that window. Resume, release or operator intervention
+clears these orders. Arrival and manual stops unload passengers without this cover movement.
+A passenger observed outside the vehicle is not repeatedly unloaded after deliberately reboarding.
+
+The server snapshot carries the halt reason, reported threat and expiry. Passenger destinations
+are public for HC transfer; movement commands execute only on the passenger owner. Hit handlers
+are tracked, installed on vehicle owners and removed on release. Hit broadcasts are limited to
+one per vehicle every five seconds. Engine hit events can miss some damage, so they complement
+knowledge and suppression rather than serving as a perfect attack sensor.
+
+This remains an initial contact response. It does not select exit doors, guarantee safe cover,
+plan a bypass around a blocked road, or coordinate an infantry assault. Live acceptance must
+also test visible enemies without fire, hostile hits, cover expiry, deliberate reboarding and
+HC transfers while passengers are leaving or moving to cover.
 
 ## Limitations and acceptance checks
 

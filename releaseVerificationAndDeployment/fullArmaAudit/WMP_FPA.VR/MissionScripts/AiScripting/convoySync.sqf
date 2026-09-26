@@ -9,7 +9,7 @@
  * Example: [_revision, _registry] remoteExecCall ["Waldo_fnc_ConvoySync", 0, "Waldo_Convoy_RegistrySync"];
  */
 params ["_revision", "_registry"];
-if (remoteExecutedOwner != 2 || {hasInterface && {!isServer}}) exitWith {};
+if (remoteExecutedOwner != 2) exitWith {};
 if (_revision <= (missionNamespace getVariable ["Waldo_Convoy_ReceivedRevision", -1])) exitWith {};
 missionNamespace setVariable ["Waldo_Convoy_ReceivedRevision", _revision];
 private _previous = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", []];
@@ -17,6 +17,7 @@ private _previous = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", 
     _x params ["_group", "_configuration"];
     private _next = _registry findIf {(_x select 0) == _group};
     if (_next < 0 || {(((_registry select _next) select 1) select 0) != (_configuration select 0)}) then {
+        [_group, _configuration, true] call Waldo_fnc_ConvoyDismountLocal;
         private _keepCrew = if (_next < 0) then {[]} else {((_registry select _next) select 1) select 4};
         [_group, true, _configuration select 7, _keepCrew] call Waldo_fnc_ConvoyReleaseLocal;
         private _handler = _group getVariable ["Waldo_Convoy_LocalHandler", -1];
@@ -27,6 +28,7 @@ private _previous = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", 
     };
 } forEach _previous;
 missionNamespace setVariable ["Waldo_Convoy_LocalRegistry", _registry];
+if (hasInterface && {!isServer}) exitWith {};
 {
     _x params ["_group", "_configuration"];
     _group setVariable ["Waldo_Convoy_Restore", _configuration select 7];

@@ -4,12 +4,13 @@
  * Locality/authority: server validates requests and owns registry/baselines; each owner applies local effects.
  * Repeat/JIP: versioned snapshots include halt cargo and restoration data; reconfigure explicitly resumes travel.
  * Arguments: 0: group <GROUP>, grpNull; 1: maximum km/h <NUMBER>, 30; 2: separation metres <NUMBER>, 15;
- * 3: push through <BOOL>, true; 4: release controller without unloading <BOOL>, false.
+ * 3: push through <BOOL>, true; 4: release controller without unloading <BOOL>, false;
+ * 5: halt context <ARRAY>, [] of named reason/threat pairs, used by ConvoyHaltServer.
  * Return Value: Boolean server acceptance; forwarded calls return dispatch acceptance.
  * Current callers: mission scripts, ConvoyHaltServer and authenticated convoy Zeus control.
  * Example: [convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy; // hold and unload cargo, keep operating crew
  */
-params [["_group", grpNull, [grpNull]], ["_speed", 30, [0]], ["_separation", 15, [0]], ["_pushThrough", true, [true]], ["_release", false, [true]]];
+params [["_group", grpNull, [grpNull]], ["_speed", 30, [0]], ["_separation", 15, [0]], ["_pushThrough", true, [true]], ["_release", false, [true]], ["_haltContext", [], [[]]]];
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_SimpleAiConvoy", 2]; true};
 if (isNull _group) exitWith {false};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) then {
@@ -20,6 +21,12 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) then {
     if (_authorized < 0) then {_group = grpNull};
 };
 if (isNull _group) exitWith {false};
+if (_haltContext findIf {!(_x isEqualType []) || {count _x != 2} || {!((_x select 0) isEqualType "")}} >= 0) exitWith {false};
+private _context = createHashMapFromArray _haltContext;
+private _reason = _context getOrDefault ["reason", "MANUAL"];
+private _threat = _context getOrDefault ["threat", []];
+if (!(_reason in ["MANUAL", "ARRIVED", "AMBUSH", "IMMOBILE"]) || {!(_threat isEqualType [])}
+    || {!(count _threat in [0, 3])} || {_threat findIf {!(_x isEqualType 0)} >= 0}) exitWith {false};
 private _registry = +(missionNamespace getVariable ["Waldo_Convoy_Registry", []]);
 private _oldIndex = _registry findIf {(_x select 0) == _group};
 private _old = if (_oldIndex >= 0) then {(_registry select _oldIndex) select 1} else {[]};
@@ -46,7 +53,7 @@ if (!_release) then {
                 if (alive _unit && {!isPlayer _unit} && {_role == "cargo" || {_personTurret}}) then {_cargo pushBack [_unit, _vehicle]};
             } forEach fullCrew [_vehicle, "", false];
         } forEach _vehicles;
-        _configuration = [_revision, _old select 1, _old select 2, _old select 3, _vehicles, "HALT", _cargo, _old select 7];
+        _configuration = [_revision, _old select 1, _old select 2, _old select 3, _vehicles, "HALT", _cargo, _old select 7, _reason, +_threat, serverTime + 45];
     } else {
         private _lead = vehicle leader _group;
         if (_lead in _vehicles) then {_vehicles = [_lead] + (_vehicles - [_lead])};
@@ -57,7 +64,7 @@ if (!_release) then {
             if (_saved findIf {(_x select 0) == _vehicle} < 0) then {_saved pushBack [_vehicle, getForcedSpeed _vehicle, getUnloadInCombat _vehicle]};
         } forEach _vehicles;
         _restore set [2, _saved];
-        _configuration = [_revision, (_speed max 5) min 120, (_separation max 10) min 100, _pushThrough, _vehicles, "TRAVEL", [], _restore];
+        _configuration = [_revision, (_speed max 5) min 120, (_separation max 10) min 100, _pushThrough, _vehicles, "TRAVEL", [], _restore, "NONE", [], 0];
     };
 };
 _registry = _registry select {!isNull (_x select 0) && {(_x select 0) != _group}};

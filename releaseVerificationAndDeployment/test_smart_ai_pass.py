@@ -139,12 +139,40 @@ class SmartAIPassContracts(unittest.TestCase):
     def test_mounted_convoy_response_uses_local_known_targets_and_existing_roe(self):
         crew = (ROOT / 'MissionScripts/AiScripting/convoyCrewLocal.sqf').read_text(encoding='utf-8')
         for gate in ['local _unit', '!_personTurret', 'unitCombatMode _unit',
-                     'findNearestEnemy', 'targetKnowledge', 'knowsAbout _enemy >= 1.5']:
+                     'call Waldo_fnc_ConvoyThreat']:
             self.assertLess(crew.index(gate), crew.index('_unit doFire'))
         self.assertNotIn(' reveal ', crew)
         self.assertNotIn('setCombatMode', crew)
         tick = (ROOT / 'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
         self.assertLess(tick.index('call Waldo_fnc_ConvoyCrewLocal'), tick.index('!local _group'))
+
+    def test_convoy_contact_requires_danger_and_bounded_local_hit_evidence(self):
+        base = ROOT / 'MissionScripts/AiScripting'
+        tick = (base / 'convoyTick.sqf').read_text(encoding='utf-8')
+        crew = (base / 'convoyCrewLocal.sqf').read_text(encoding='utf-8')
+        threat = (base / 'convoyThreat.sqf').read_text(encoding='utf-8')
+        release = (base / 'convoyReleaseLocal.sqf').read_text(encoding='utf-8')
+        self.assertIn('_report select 2', tick)
+        self.assertIn('getSuppression', tick)
+        self.assertIn('!local _vehicle', crew)
+        self.assertIn('>= 5', crew)
+        self.assertIn('removeEventHandler ["Hit", _hitEH]', release)
+        self.assertIn('_targets resize 16', threat)
+        self.assertIn('_endangered > 0', threat)
+        self.assertNotIn('getPos', threat)
+        self.assertNotIn(' reveal ', threat)
+
+    def test_convoy_cover_is_finite_owner_local_and_reboarding_is_respected(self):
+        base = ROOT / 'MissionScripts/AiScripting'
+        crew = (base / 'convoyCrewLocal.sqf').read_text(encoding='utf-8')
+        cover = (base / 'convoyDismountLocal.sqf').read_text(encoding='utf-8')
+        sync = (base / 'convoySync.sqf').read_text(encoding='utf-8')
+        self.assertLess(crew.index('setVariable ["Waldo_Convoy_Dismount"'), crew.index('unassignVehicle _unit'))
+        self.assertIn('Waldo_Convoy_Unloaded', crew)
+        for guard in ['local _unit', 'serverTime >= _deadline', 'private _budget = 2', '_budget = _budget - 1', 'expectedDestination', 'Waldo_Convoy_DismountApplied']:
+            self.assertIn(guard, cover)
+        self.assertIn('[_group, _configuration, true] call Waldo_fnc_ConvoyDismountLocal', sync)
+        self.assertIn('serverTime < (_job select 2)', source('aiPassIsEligible'))
 
     def test_mixed_convoy_live_fixture_has_weapons_cargo_and_real_route(self):
         audit = ROOT / 'releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR'

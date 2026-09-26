@@ -88,7 +88,7 @@ existing ownership requirements.
 ## Verification
 
 The integrated branch includes main `b7ca3fe` and remote PR commit `036942e`. The full repository
-suite passed **328 tests**, including **28 Smart AI contract tests**. All ten static gates passed:
+suite passed **330 tests**, including **30 Smart AI contract tests**. All ten static gates passed:
 SQF (1,227 files), configuration, interaction UI, drawn UI, Zeus/script parity (81 modules), wiki
 assets/style, documentation contracts, skill validation and performance regression. The performance
 scanner reports 95 findings (10 high, 85 medium), with no new high recurring patterns. Wiki checks
@@ -149,3 +149,18 @@ and cargo state together; a five-second changed checkpoint preserves contact pro
 Live tests must cover mixed orderings, mounted ROE, pinned/mobile contact, final-route arrival, cargo
 seat changes, unconscious passengers, separate cargo owners, explicit resume/release and stale owner
 requests. These additions have no live acceptance result.
+
+## Contact-drill follow-up
+
+Contact now requires recent danger, suppression or a hostile vehicle hit; sighting alone does not
+halt the convoy. Mounted crews prefer known active threats under their existing ROE. The existing
+push-through and 15-second pinned rules remain in force.
+
+Ambush passengers receive one bounded initial cover/dispersal order. Searches are limited to two
+passengers per convoy/owner/five-second step, with a server-issued 45-second expiry. Public destinations
+support HC transfer; Smart AI yields while the order is active. Resume/release/operator intervention
+cleans it up. Arrival/manual stops only unload. Completed unloading is recorded so intentional reboarding
+does not trigger repeated get-out orders. Hit handlers are tracked and broadcasts are throttled.
+
+The implementation does not choose vehicle exit doors, guarantee protected cover, plan road bypasses
+or coordinate an assault. Contact classification, cover selection and migration remain unverified in engine.

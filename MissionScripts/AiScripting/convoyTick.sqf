@@ -3,7 +3,7 @@
  * Drives mixed convoys, detects finite-route arrival and requests a persistent halt after pinned contact.
  * Locality/authority: server owns phase; group owner drives and reports, each cargo/turret owner applies crew work.
  * Repeat/JIP: ordered snapshots carry phase/cargo/baselines; a five-second contact checkpoint survives HC migration.
- * Arguments: 0: group <GROUP>; 1: configuration <ARRAY> [revision, km/h, gap, pushThrough, vehicles, phase, cargo, restore].
+ * Arguments: 0: group <GROUP>; 1: configuration <ARRAY> [revision, km/h, gap, pushThrough, vehicles, phase, cargo, restore, halt reason, believed threat ATL, expiry].
  * Return Value: Nothing.
  * Current callers: single round-robin ConvoySync worker on server/headless clients.
  * Example: [_group, _configuration] call Waldo_fnc_ConvoyTick;
@@ -65,14 +65,12 @@ if ((_state getOrDefault ["revision", -1]) != _revision || {(_state getOrDefault
 };
 // Query existing group knowledge at most every five seconds; never reveal hidden attackers.
 if (time >= (_state getOrDefault ["contactDue", -1])) then {
-    private _observer = leader _group;
-    private _enemy = _observer findNearestEnemy _observer;
-    private _knowledge = _observer targetKnowledge _enemy;
-    private _contact = !isNull _enemy && {alive _enemy} && {_observer knowsAbout _enemy >= 1.5}
-        && {_observer distance2D (_observer getHideFrom _enemy) <= 800}
-        && {time - ((_knowledge select 2) max (_knowledge select 3)) <= 30};
-    _contact = _contact || {(units _group) findIf {alive _x && {getSuppression _x > 0.2}} >= 0};
+    private _report = [leader _group] call Waldo_fnc_ConvoyThreat;
+    private _contact = _report isNotEqualTo [] && {_report select 2};
+    _contact = _contact || {_registered findIf {serverTime - (_x getVariable ["Waldo_Convoy_HitAt", -1e9]) <= 15} >= 0}
+        || {(units _group) findIf {alive _x && {getSuppression _x > 0.2}} >= 0};
     _state set ["contact", _contact];
+    _state set ["threat", if (_report isEqualTo []) then {[]} else {+(_report select 1)}];
     _state set ["contactDue", time + 5];
 };
 private _contact = _state getOrDefault ["contact", false];
@@ -98,7 +96,7 @@ if (time >= (_state getOrDefault ["checkpointDue", -1])) then {
 };
 if (_contact && {!_pushThrough || {_pinned}}) exitWith {
     if (time >= (_state getOrDefault ["haltRequest", -1])) then {
-        [_group, _revision, "AMBUSH"] remoteExecCall ["Waldo_fnc_ConvoyHaltServer", 2];
+        [_group, _revision, "AMBUSH", _state getOrDefault ["threat", []]] remoteExecCall ["Waldo_fnc_ConvoyHaltServer", 2];
         _state set ["haltRequest", time + 5];
     };
 };

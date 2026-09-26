@@ -50,6 +50,10 @@ if (_group getVariable ["Waldo_AI_Exclude", false]
 private _alive = (units _group) select {alive _x};
 if (_alive isEqualTo [] || {_alive findIf {isPlayer _x} >= 0}) exitWith {false};
 
+if (_alive findIf {
+    private _job = _x getVariable ["Waldo_Convoy_Dismount", []];
+    count _job == 4 && {serverTime < (_job select 2)}
+} >= 0) exitWith {false};
 private _sideKey = switch (side _group) do {
     case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; case civilian: {"CIV"}; default {""};
 };
