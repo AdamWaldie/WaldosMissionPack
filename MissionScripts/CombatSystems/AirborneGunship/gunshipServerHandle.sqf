@@ -12,6 +12,11 @@
  * 3: requester <OBJECT>
  * Return Value: Boolean
  * Example: ["spectre_1", "SET_ORBIT_PARAMS", [2000, 900], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2];
+ * Repeat/JIP: Each operation rechecks live controller and curator rights. Published gunship
+ * state supplies joiners with the latest result, not a replay of the request.
+ * Current callers: GunshipSetupLocal actions, ZEN gunship controls and monitor state changes.
+ * Result: An authorised operation changes controller, orbit, service or lifecycle state and
+ * republishes the system summary.
  */
 
 params ["_id", "_operation", ["_arguments", [], [[]]], ["_requester", objNull, [objNull]]];
