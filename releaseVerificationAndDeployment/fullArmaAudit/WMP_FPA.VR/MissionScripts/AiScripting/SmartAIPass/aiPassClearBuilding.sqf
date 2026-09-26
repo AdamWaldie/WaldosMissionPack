@@ -14,6 +14,8 @@
  * Locality and authority: call where the group is local, or on the server, which forwards to the
  * owner. Non-server, non-owner copies do nothing.
  *
+ * Review contract: Local job generations prevent replaced jobs from issuing orders. Eligibility is checked before dispatch and on each step. Clear-building replay across headless handover is not yet implemented.
+ *
  * Arguments:
  * 0: group <GROUP or OBJECT> - the group, or a unit in it
  * 1: target <OBJECT or ARRAY> - the building, or a position (the nearest building is used)
@@ -36,6 +38,7 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!local _group) exitWith {
     if (isServer) then {[_group, _target, _options] remoteExecCall ["Waldo_fnc_AIPassClearBuilding", groupOwner _group]; true} else {false};
 };
+if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {false};
 private _building = if (_target isEqualType objNull) then {_target} else {nearestBuilding _target};
 if (isNull _building) exitWith {false};
 if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
@@ -53,12 +56,16 @@ if (_positions isEqualTo []) exitWith {false};
 private _leader = leader _group;
 private _team = (units _group) select {alive _x && {local _x} && {vehicle _x == _x} && {_x != _leader}};
 if (_team isEqualTo []) exitWith {false};
+private _generation = (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1;
+_group setVariable ["Waldo_AIPass_ClearGeneration", _generation];
 _group setVariable ["Waldo_AIPass_ClearBuilding", true];
 private _baseBehaviour = behaviour _leader;
 _group setBehaviour "COMBAT";
 [{
     params ["_job"];
     private _group = _job get "group";
+    if (isNull _group || {!local _group}) exitWith {-1};
+    if ((_group getVariable ["Waldo_AIPass_ClearGeneration", -1]) != (_job get "generation")) exitWith {-1};
     private _finish = {
         if (!isNull _group) then {
             private _leader = leader _group;
@@ -70,7 +77,7 @@ _group setBehaviour "COMBAT";
         -1
     };
     if (isNull _group || {!local _group} || {!(_group getVariable ["Waldo_AIPass_ClearBuilding", false])}
-        || {_group getVariable ["Waldo_AIPass_ZeusWaypoints", false]}) exitWith {call _finish};
+        || {!([_group] call Waldo_fnc_AIPassIsEligible)}) exitWith {call _finish};
     private _positions = _job get "positions";
     private _cleared = _job get "cleared";
     // One entry per team member, in team order: [] or [positionIndex, assignedAt].
@@ -111,7 +118,7 @@ _group setBehaviour "COMBAT";
     1.5
 }, createHashMapFromArray [
     ["group", _group], ["team", _team], ["positions", _positions], ["cleared", []], ["assigned", _team apply {[]}],
-    ["deadline", time + 240], ["baseBehaviour", _baseBehaviour]
+    ["deadline", time + 240], ["baseBehaviour", _baseBehaviour], ["generation", _generation]
 ], 0] call Waldo_fnc_AIPassQueueJob;
 diag_log format ["[WMP AI PASS] %1 clearing %2 (%3 positions, %4 soldiers)", _group, typeOf _building, count _positions, count _team];
 true

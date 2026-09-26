@@ -324,8 +324,9 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
 ## Performance and network
 
 - Runs only on the server and headless clients; player machines never run pass code.
-- One scheduler per machine with a strict per-tick time budget. At least one job runs each tick, and
-  the rest wait their turn in rotation. Steps are slowed when FPS is low.
+- One scheduler per machine with a soft budget checked between jobs. At least one due job runs
+  each tick. A running job can exceed the budget, and scanning the queue costs more as it grows.
+  The remaining jobs wait their turn in rotation. Steps are slowed when FPS is low.
 - How often a squad is stepped depends on its distance to the nearest player: every 2 s in contact
   nearby, up to every 20 s far away. Squads more than 2.5 km from every player only update their
   state and morale.
@@ -346,10 +347,28 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
   (the server, or one headless client).
 - LAMBS can override move orders while its own danger logic is active. Stuck-move fallbacks and
   time limits keep every behaviour finite.
-- If a squad moves to another machine mid-drill, the drill stops. The new owner starts afresh from
-  what the engine knows.
+- Headless handover remains a merge blocker: transient restoration data is machine-local. A new
+  owner can adopt a group without its previous stance, behaviour or disabled-feature records.
+  Clear-building jobs also lack a durable replay payload. Do not rely on mid-order migration yet.
 - A garrison needs the pass running to be re-applied after a headless-client handover; the LAMBS
   hand-over does not.
+
+## Review corrections
+
+Zeus waypoint edits use the engine group/index event payload; waypoint deletion and selection use
+the waypoint-array payload. Garrison, defence and clear-building orders now reject groups that fail
+the shared eligibility gate, including player squads and crews owned by other WMP features. Repeated
+garrison and defence placement invalidates older arrival jobs. Garrison release only restores PATH
+when the pass disabled it.
+
+Artillery rechecks the live battery role, feature switch, eligibility and nearby friendlies or
+civilians at the dispersed aim point before firing. This check includes mounted occupants. A queued
+counter-battery mission can therefore be cancelled by Zeus, exclusion or a live role/switch change.
+The check does not predict where units will move while shells are in flight.
+
+Stopping the pass clears pending startup, airborne and clear-building work and removes tracked
+aircraft handlers. Parachute exit protection restores the soldier's prior damage setting on its
+current owner. These changes have static regression coverage; their engine behaviour is unverified.
 
 ## Remove or diagnose
 

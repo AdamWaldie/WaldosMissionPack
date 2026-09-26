@@ -16,6 +16,8 @@
  * Locality and authority: call where the group is local, or on the server, which forwards to the
  * owner. Non-server, non-owner copies do nothing. Needs the Smart AI Pass running.
  *
+ * Review contract: Repeated placement releases the previous defence first. The shared eligibility gate protects player squads and other features before any orders are issued.
+ *
  * Arguments:
  * 0: group <GROUP or OBJECT> - the group, or a unit in it
  * 1: centre <ARRAY or OBJECT> - ATL position or object at the middle of the line
@@ -39,6 +41,7 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!local _group) exitWith {
     if (isServer) then {[_group, _centre, _facing, _width] remoteExecCall ["Waldo_fnc_AIPassDefend", groupOwner _group]; true} else {false};
 };
+if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
     diag_log format ["[WMP AI PASS] %1 defend refused: the Smart AI Pass is not running on this machine.", _group];
     false
@@ -51,6 +54,7 @@ if !(_facing isEqualType 0) then {
 };
 private _units = (units _group) select {alive _x && {vehicle _x == _x}};
 if (_units isEqualTo []) exitWith {false};
+if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassDefendRelease};
 private _reserveCount = if (count _units >= 4) then {floor (count _units / 3)} else {0};
 private _line = _units select [0, count _units - _reserveCount];
 private _reserve = _units select [count _line, _reserveCount];

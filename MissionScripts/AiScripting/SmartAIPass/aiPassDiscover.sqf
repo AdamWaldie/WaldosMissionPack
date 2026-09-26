@@ -20,6 +20,8 @@
  * Locality and authority: machine-local; nothing is broadcast except the documented LAMBS and
  * garrison group variables.
  *
+ * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
+ *
  * Arguments:
  * 0: job <HASHMAP> - unused
  *
@@ -62,6 +64,15 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
             || {!isNil {_group getVariable "Waldo_TransportService_Vehicle"}}) then {
             [_group] call Waldo_fnc_AIPassReleaseFeatureCrew;
         };
+        private _eligible = [_group] call Waldo_fnc_AIPassIsEligible;
+        if ((!_lambsWmpMode || {!_eligible}) && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
+            _group setVariable ["lambs_danger_disableGroupAI", false, true];
+            _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
+        };
+        if (_lambsWmpMode && {_eligible} && {!(_group getVariable ["lambs_danger_disableGroupAI", false])}) then {
+            _group setVariable ["lambs_danger_disableGroupAI", true, true];
+            _group setVariable ["Waldo_AIPass_LambsDisabledByPass", true, true];
+        };
         if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_AIPassIsEligible}) then {
             _group setVariable ["Waldo_AIPass_Managed", true];
             _group setVariable ["Waldo_AIPass_PeakSize", (_group getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _group)];
@@ -72,10 +83,7 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
                 private _centre = if (isNull _building) then {getPosATL leader _group} else {getPosATL _building};
                 [_group, _centre, 25, createHashMapFromArray [["inPlace", true], ["useLambs", false]]] call Waldo_fnc_AIPassGarrison;
             };
-            if (_lambsWmpMode && {!(_group getVariable ["lambs_danger_disableGroupAI", false])}) then {
-                _group setVariable ["lambs_danger_disableGroupAI", true, true];
-                _group setVariable ["Waldo_AIPass_LambsDisabledByPass", true];
-            };
+
         };
     };
 } forEach allGroups;
@@ -96,14 +104,20 @@ if (_wantArtillery || _wantFlares) then {
             if (_wantFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_AIPass_FlaresInstalled", false])}
                 && {!isNil {_vehicle getVariable "Waldo_Gunship_Id"} || {!isNil {_vehicle getVariable "Waldo_DynamicAA_SystemId"}}}) then {
                 _vehicle setVariable ["Waldo_AIPass_FlaresInstalled", true];
-                _vehicle addEventHandler ["IncomingMissile", {
+                private _handler = _vehicle addEventHandler ["IncomingMissile", {
                     params ["_vehicle", "", "_shooter"];
                     if (!local _vehicle || {isPlayer driver _vehicle} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {};
                     if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
                     _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
                     if (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]) then {
                         for "_burst" from 0 to 2 do {
-                            [{[_this] call Waldo_fnc_AIPassFireCountermeasure}, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
+                            [{
+                                if (local _this && {missionNamespace getVariable ["Waldo_AIPass_Active", false]}
+                                    && {missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]}
+                                    && {!([] call Waldo_fnc_AIPassIsPaused)} && {!isPlayer driver _this}) then {
+                                    [_this] call Waldo_fnc_AIPassFireCountermeasure;
+                                };
+                            }, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
                         };
                     };
                     // Smart Aircraft's break: one sideways jink away from the shooter, without touching
@@ -114,6 +128,10 @@ if (_wantArtillery || _wantFlares) then {
                         _vehicle setVelocityModelSpace [(_velocity select 0) + _side, _velocity select 1, (_velocity select 2) - 4];
                     };
                 }];
+                _vehicle setVariable ["Waldo_AIPass_FlaresHandler", _handler];
+                private _tracked = missionNamespace getVariable ["Waldo_AIPass_FlareVehicles", []];
+                _tracked pushBackUnique _vehicle;
+                missionNamespace setVariable ["Waldo_AIPass_FlareVehicles", _tracked];
             };
         };
     } forEach vehicles;

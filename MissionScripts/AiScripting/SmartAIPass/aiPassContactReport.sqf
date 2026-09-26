@@ -13,6 +13,8 @@
  * mechanisms. Player-led groups are never given information.
  * Locality and authority: call where the reporting group is local.
  *
+ * Review contract: Delayed delivery rechecks receiver locality and eligibility; it cannot reveal targets to a migrated or newly excluded squad.
+ *
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -50,7 +52,7 @@ private _informed = 0;
         [{
             params ["_job"];
             private _receiver = _job get "receiver";
-            if (alive _receiver) then {
+            if (alive _receiver && {local _receiver} && {[group _receiver] call Waldo_fnc_AIPassIsEligible}) then {
                 {
                     _x params ["_enemy", "_knowledge"];
                     if (alive _enemy && {_receiver knowsAbout _enemy < _knowledge}) then {_receiver reveal [_enemy, _knowledge]};

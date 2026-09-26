@@ -8,6 +8,8 @@
  * points him at his sector.
  * Locality and authority: call where the group is local.
  *
+ * Review contract: Each application resets local holding state and versions its arrival job. Old generations retire; ineligible groups receive no new movement commands.
+ *
  * Arguments:
  * 0: group <GROUP>
  *
@@ -22,9 +24,12 @@
  */
 
 params [["_group", grpNull, [grpNull]]];
-if (isNull _group || {!local _group}) exitWith {};
+if (isNull _group || {!local _group} || {!([_group] call Waldo_fnc_AIPassIsEligible)}) exitWith {};
+private _generation = (_group getVariable ["Waldo_AIPass_DefendGeneration", 0]) + 1;
+_group setVariable ["Waldo_AIPass_DefendGeneration", _generation];
 _group setVariable ["Waldo_AIPass_DefendApplied", true];
 {
+    _x setVariable ["Waldo_AIPass_DefendHolding", nil];
     private _assignment = _x getVariable ["Waldo_AIPass_DefendPos", []];
     if (alive _x && {local _x} && {_assignment isNotEqualTo []} && {_x distance2D (_assignment select 0) > 2}) then {
         _x doMove (_assignment select 0);
@@ -34,6 +39,8 @@ _group setVariable ["Waldo_AIPass_DefendApplied", true];
     params ["_job"];
     private _group = _job get "group";
     if (isNull _group || {!local _group} || {(_group getVariable ["Waldo_AIPass_Defend", []]) isEqualTo []}) exitWith {-1};
+    if ((_group getVariable ["Waldo_AIPass_DefendGeneration", -1]) != (_job get "generation")) exitWith {-1};
+    if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {2};
     private _pending = 0;
     {
         private _assignment = _x getVariable ["Waldo_AIPass_DefendPos", []];
@@ -48,4 +55,4 @@ _group setVariable ["Waldo_AIPass_DefendApplied", true];
         };
     } forEach units _group;
     [2, -1] select (_pending == 0)
-}, createHashMapFromArray [["group", _group], ["deadline", time + 90]], 1] call Waldo_fnc_AIPassQueueJob;
+}, createHashMapFromArray [["group", _group], ["deadline", time + 90], ["generation", _generation]], 1] call Waldo_fnc_AIPassQueueJob;

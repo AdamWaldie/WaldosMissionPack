@@ -19,6 +19,8 @@
  * These settings are separate from squads' artillery support, which has its own switch and settings.
  * Locality and authority: runs on every AI-owning machine; each uses only its own batteries.
  *
+ * Review contract: Delayed fire keeps the original responding side and uses COUNTER policy at execution. Live role, exclusion and safety changes can cancel a queued mission.
+ *
  * Arguments:
  * 0: vehicle <OBJECT> - enemy artillery that fired
  * 1: gunner <OBJECT> - its gunner
@@ -74,9 +76,9 @@ _vehicle setVariable ["Waldo_AIPass_CounterBatteryAt", time + (missionNamespace 
     {
         if ([_x, _job get "target", _job get "error", "HE",
             missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Rounds", 4],
-            missionNamespace getVariable ["Waldo_AIPass_CounterBattery_ShootAndScoot", true]] call Waldo_fnc_AIPassArtilleryFire) exitWith {};
-    } forEach ((_job get "batteries") select {alive _x && {local _x} && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}});
+            missionNamespace getVariable ["Waldo_AIPass_CounterBattery_ShootAndScoot", true], "COUNTER"] call Waldo_fnc_AIPassArtilleryFire) exitWith {};
+    } forEach ((_job get "batteries") select {alive _x && {local _x} && {side group gunner _x == (_job get "side")} && {(_x getVariable ["Waldo_AIPass_BusyUntil", -1]) < time}});
     -1
-}, createHashMapFromArray [["target", _fix select 0], ["error", _fix select 1], ["batteries", _batteries]],
+}, createHashMapFromArray [["target", _fix select 0], ["error", _fix select 1], ["batteries", _batteries select {side group gunner _x == _ourSide}], ["side", _ourSide]],
     missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Delay", 20]] call Waldo_fnc_AIPassQueueJob;
 true

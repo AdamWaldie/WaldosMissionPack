@@ -18,6 +18,8 @@
  * headless clients through the JIP key Waldo_AIPass_RuntimeInit. Remote calls from anything other
  * than the server are refused. A headless client waits for the feature-runtime snapshot first.
  *
+ * Review contract: Repeated pre-snapshot calls share one waiter. Stop cancels it; a headless client starts only if the completed authoritative snapshot still enables the pass.
+ *
  * Arguments: None.
  *
  * Return Value:
@@ -33,16 +35,23 @@
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (hasInterface && {!isServer}) exitWith {false};
 if (!isServer && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {
+    if (missionNamespace getVariable ["Waldo_AIPass_InitPending", false]) exitWith {true};
+    missionNamespace setVariable ["Waldo_AIPass_InitPending", true];
     [] spawn {
         waitUntil {
             missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
             || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+            || {!(missionNamespace getVariable ["Waldo_AIPass_InitPending", false])}
         };
-        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {[] call Waldo_fnc_AIPassInit};
+        private _requested = missionNamespace getVariable ["Waldo_AIPass_InitPending", false];
+        missionNamespace setVariable ["Waldo_AIPass_InitPending", false];
+        if (_requested && {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]}
+            && {missionNamespace getVariable ["Waldo_AIPass_Enable", false]}) then {[] call Waldo_fnc_AIPassInit};
     };
     true
 };
 
+if (!isServer && {!(missionNamespace getVariable ["Waldo_AIPass_Enable", false])}) exitWith {false};
 missionNamespace setVariable ["Waldo_AIPass_Active", true];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_AIPass_Enable", true, true];

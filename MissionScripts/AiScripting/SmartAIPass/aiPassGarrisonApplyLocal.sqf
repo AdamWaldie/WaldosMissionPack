@@ -10,6 +10,8 @@
  * he held when the order was applied. Handlers do nothing once the order is released.
  * Locality and authority: call where the group is local.
  *
+ * Review contract: Arrival jobs carry a local generation token, so replacing an order retires older work. PATH restoration is recorded publicly only when this pass disables it.
+ *
  * Arguments:
  * 0: group <GROUP>
  *
@@ -24,7 +26,9 @@
  */
 
 params [["_group", grpNull, [grpNull]]];
-if (isNull _group || {!local _group}) exitWith {};
+if (isNull _group || {!local _group} || {!([_group] call Waldo_fnc_AIPassIsEligible)}) exitWith {};
+private _generation = (_group getVariable ["Waldo_AIPass_GarrisonGeneration", 0]) + 1;
+_group setVariable ["Waldo_AIPass_GarrisonGeneration", _generation];
 _group setVariable ["Waldo_AIPass_GarrisonApplied", true];
 {
     private _unit = _x;
@@ -58,12 +62,15 @@ _group setVariable ["Waldo_AIPass_GarrisonApplied", true];
     params ["_job"];
     private _group = _job get "group";
     if (isNull _group || {!local _group} || {(_group getVariable ["Waldo_AIPass_Garrison", []]) isEqualTo []}) exitWith {-1};
+    if ((_group getVariable ["Waldo_AIPass_GarrisonGeneration", -1]) != (_job get "generation")) exitWith {-1};
+    if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {2};
     private _pending = 0;
     {
         private _assignment = _x getVariable ["Waldo_AIPass_GarrisonPos", []];
         if (alive _x && {local _x} && {_assignment isNotEqualTo []} && {_x checkAIFeature "PATH"}) then {
             if (_x distance2D (_assignment select 0) <= 2 || {time > (_job get "deadline")}) then {
                 doStop _x;
+                _x setVariable ["Waldo_AIPass_GarrisonDisabledPath", true, true];
                 _x disableAI "PATH";
                 _x doWatch ((_assignment select 0) getPos [50, _assignment select 1]);
             } else {
@@ -72,4 +79,4 @@ _group setVariable ["Waldo_AIPass_GarrisonApplied", true];
         };
     } forEach units _group;
     [2, -1] select (_pending == 0)
-}, createHashMapFromArray [["group", _group], ["deadline", time + 90]], 1] call Waldo_fnc_AIPassQueueJob;
+}, createHashMapFromArray [["group", _group], ["deadline", time + 90], ["generation", _generation]], 1] call Waldo_fnc_AIPassQueueJob;

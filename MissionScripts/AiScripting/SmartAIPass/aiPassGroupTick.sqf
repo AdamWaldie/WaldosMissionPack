@@ -41,6 +41,8 @@
  * Locality and authority: runs as a scheduler job on the group owner. When the group stops being
  * local the job retires and the new owner's discovery sweep starts a fresh one.
  *
+ * Review contract: Waypoint completion compares tagged indices with currentWaypoint; completed waypoints may remain in the engine list. This allows rally arrival and retreat completion to be detected.
+ *
  * Arguments:
  * 0: job <HASHMAP> - contains "group"
  *
@@ -172,7 +174,7 @@ switch (_state get "phase") do {
                 {_state deleteAt _x} forEach ["responding", "respondingTo", "arrivedAt", "assaulting"];
             } else {
                 // Arrived at the rally point once the inserted waypoint has been completed.
-                if ((_state getOrDefault ["arrivedAt", -1]) < 0 && {(waypoints _group) findIf {waypointDescription _x == "WMP AI PASS"} < 0}) then {
+                if ((_state getOrDefault ["arrivedAt", -1]) < 0 && {(waypoints _group) findIf {(_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}} < 0}) then {
                     _state set ["arrivedAt", _now];
                 };
             };
@@ -221,7 +223,7 @@ switch (_state get "phase") do {
         };
         private _team = (_state getOrDefault ["searchTeam", []]) select {alive _x && {local _x}};
         private _target = _state getOrDefault ["enemyPos", getPosATL _leader];
-        private _moving = (waypoints _group) findIf {waypointDescription _x == "WMP AI PASS"} >= 0;
+        private _moving = (waypoints _group) findIf {(_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}} >= 0;
         private _done = (_team isNotEqualTo [] && {_team findIf {_x distance2D _target > 15} < 0})
             || {_team isEqualTo [] && {!_moving}}
             || {_now - (_state get "phaseStart") > (["Waldo_AIPass_Investigate_Seconds", 60] call _get)};
@@ -353,7 +355,7 @@ switch (_state get "phase") do {
         _delay = 3;
         if ((["Waldo_AIPass_Morale_Enable", true] call _get)
             && {([_group, _state, _enemies] call Waldo_fnc_AIPassMorale) == "SURRENDER"}) exitWith {[_group] call Waldo_fnc_AIPassSurrender};
-        private _moving = (waypoints _group) findIf {waypointDescription _x == "WMP AI PASS"} >= 0;
+        private _moving = (waypoints _group) findIf {(_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}} >= 0;
         if (!_moving || {_now - (_state get "phaseStart") > 120}) then {
             [_group] call Waldo_fnc_AIPassGroupMoveClear;
             _state set ["phase", "REGROUP"];

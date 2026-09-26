@@ -1,15 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
- * Runs due Smart AI Pass jobs on this machine within a strict per-tick time budget.
+ * Runs due Smart AI Pass jobs on this machine with a soft time budget between jobs.
  *
  * Called by one CBA per-frame handler every 0.25 seconds on each AI-owning machine (server and
  * headless clients only). At least one due job runs on each tick; the rest run only while
  * Waldo_AIPass_TickBudgetMs remains. Jobs that do not fit wait for the next tick, which keeps
- * frame-time cost bounded however many groups are busy. Jobs that ran move to the back of the
+ * new jobs from starting after the budget is spent. A running job cannot be pre-empted and can
+ * exceed the budget; queue traversal also scales with queue length. Jobs move to the back of the
  * queue, so no group is starved when the budget is always spent. When the machine's FPS is below
  * Waldo_AIPass_LowFpsThreshold, rescheduling delays are doubled. While ENDEX or SafeStart is
  * active, due jobs are postponed by five seconds and never run.
  * Locality and authority: machine-local. It performs no world scans and no network traffic.
+ *
+ * Review contract: The scheduler is machine-local and repeat-driven by CBA. Its budget is soft: it cannot interrupt a running SQF job and still traverses the full queue.
  *
  * Arguments: None.
  *

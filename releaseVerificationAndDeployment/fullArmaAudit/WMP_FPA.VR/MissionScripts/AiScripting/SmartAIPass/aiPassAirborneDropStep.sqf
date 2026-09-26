@@ -13,6 +13,8 @@
  * landed.
  * Locality and authority: runs where the group is local; only local soldiers jump.
  *
+ * Review contract: Both DROP and LAND recheck eligibility. A landing timeout ends tracking without assigning a ground attack to soldiers still airborne.
+ *
  * Arguments:
  * 0: job state <HASHMAP> - group, aircraft, jumpers, index, phase, target, deadline
  *
@@ -34,7 +36,8 @@ private _finish = {
     if (!isNull _aircraft) then {_aircraft setVariable ["Waldo_AIPass_DropUntil", nil]};
     -1
 };
-if (isNull _group || {!local _group}) exitWith {call _finish};
+if (isNull _group || {!local _group} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}
+    || {!([_group] call Waldo_fnc_AIPassIsEligible)}) exitWith {call _finish};
 
 if ((_job get "phase") == "DROP") exitWith {
     private _jumpers = (_job get "jumpers") select {alive _x && {local _x} && {vehicle _x == _aircraft}};
@@ -55,7 +58,7 @@ if ((_job get "phase") == "DROP") exitWith {
 private _alive = (units _group) select {alive _x};
 private _landed = _alive findIf {vehicle _x != _x || {!isTouchingGround _x && {((getPosATL _x) select 2) > 2}}} < 0;
 if (!_landed && {time < (_job get "deadline")}) exitWith {3};
-if (_alive isNotEqualTo [] && {currentWaypoint _group >= count waypoints _group}) then {
+if (_landed && {_alive isNotEqualTo []} && {currentWaypoint _group >= count waypoints _group}) then {
     private _waypoint = _group addWaypoint [_job get "target", 30];
     _waypoint setWaypointType "SAD";
     _group setCurrentWaypoint _waypoint;

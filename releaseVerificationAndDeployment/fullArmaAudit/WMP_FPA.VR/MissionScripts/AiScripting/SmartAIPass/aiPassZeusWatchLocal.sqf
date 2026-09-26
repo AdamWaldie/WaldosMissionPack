@@ -15,6 +15,8 @@
  * acts, and send nothing while the pass is disabled.
  * Locality and authority: interface clients only; repeat-safe, JIP-safe.
  *
+ * Review contract: Edited/placed events carry a group; deleted/selected events carry a waypoint array. Installation is repeat-safe per curator and local to each joining interface client.
+ *
  * Arguments: None.
  *
  * Return Value:
@@ -48,13 +50,15 @@ private _install = {
             [[_entity] call (missionNamespace getVariable ["Waldo_AIPass_ZeusObjectGroup", {grpNull}])] call Waldo_fnc_AIPassZeusMark;
         }];
     } forEach ["CuratorObjectSelectionChanged", "CuratorObjectDoubleClicked", "CuratorObjectEdited"];
-    _curator addEventHandler ["CuratorWaypointPlaced", {params ["", "_group"]; [_group, true] call Waldo_fnc_AIPassZeusMark}];
+    {
+        _curator addEventHandler [_x, {params ["", "_group"]; [_group, true] call Waldo_fnc_AIPassZeusMark}];
+    } forEach ["CuratorWaypointPlaced", "CuratorWaypointEdited"];
     {
         _curator addEventHandler [_x, {
             params ["", "_waypoint"];
             if (_waypoint isEqualType [] && {count _waypoint >= 1}) then {[_waypoint select 0, true] call Waldo_fnc_AIPassZeusMark};
         }];
-    } forEach ["CuratorWaypointEdited", "CuratorWaypointDeleted"];
+    } forEach ["CuratorWaypointDeleted", "CuratorWaypointDoubleClicked", "CuratorWaypointSelectionChanged"];
 };
 ["zen_curatorDisplayLoaded", _install] call CBA_fnc_addEventHandler;
 call _install;

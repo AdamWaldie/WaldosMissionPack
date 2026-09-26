@@ -9,6 +9,8 @@
  * AI leave a parachute on their own when they land. For players, use the Paradrop feature instead.
  * Locality and authority: call where the soldier is local (moveOut and moveInDriver are local-argument).
  *
+ * Review contract: Exit callbacks retain the original isDamageAllowed value and restore it on the current unit owner. Existing invulnerability is preserved; already-started exits finish even if the pass stops.
+ *
  * Arguments:
  * 0: soldier <OBJECT>
  * 1: aircraft <OBJECT>
@@ -30,18 +32,22 @@ if !(isClass (configFile >> "CfgVehicles" >> _chuteClass)) then {_chuteClass = "
 private _velocity = velocity _aircraft;
 // Just behind and below the airframe, clear of rotors and tail ramp.
 private _exit = _aircraft modelToWorld [0, ((((boundingBoxReal _aircraft) select 0) select 1) min -6) - 2, -3];
+private _damageAllowed = isDamageAllowed _unit;
 _unit allowDamage false;
 unassignVehicle _unit;
 moveOut _unit;
 _unit setPosATL _exit;
 _unit setVelocity _velocity;
 [{
-    params ["_unit", "_chuteClass", "_velocity"];
-    if (!alive _unit || {!local _unit} || {vehicle _unit != _unit}) exitWith {_unit allowDamage true};
+    params ["_unit", "_chuteClass", "_velocity", "_damageAllowed"];
+    if (!alive _unit || {!local _unit} || {vehicle _unit != _unit}) exitWith {if (!isNull _unit) then {[_unit, _damageAllowed] remoteExecCall ["allowDamage", _unit]}};
     private _chute = createVehicle [_chuteClass, getPosATL _unit, [], 0, "CAN_COLLIDE"];
     _chute setDir getDir _unit;
     _unit moveInDriver _chute;
     _chute setVelocity (_velocity vectorMultiply 0.5);
-    [{_this allowDamage true}, _unit, 3] call CBA_fnc_waitAndExecute;
-}, [_unit, _chuteClass, _velocity], 0.8] call CBA_fnc_waitAndExecute;
+    [{
+        params ["_unit", "_damageAllowed"];
+        if (!isNull _unit) then {[_unit, _damageAllowed] remoteExecCall ["allowDamage", _unit]};
+    }, [_unit, _damageAllowed], 3] call CBA_fnc_waitAndExecute;
+}, [_unit, _chuteClass, _velocity, _damageAllowed], 0.8] call CBA_fnc_waitAndExecute;
 true

@@ -20,6 +20,8 @@
  * Locality and authority: call where the group is local, or on the server, which forwards to the
  * owner. Non-server, non-owner copies (for example an Eden init field on a client) do nothing.
  *
+ * Review contract: Repeated placement releases previous WMP garrison/defence assignments first. The shared eligibility gate rejects player and feature-owned groups before side effects.
+ *
  * Arguments:
  * 0: group <GROUP or OBJECT> - the group, or a unit in it
  * 1: centre <ARRAY or OBJECT> - ATL position or object (optional, default: leader position)
@@ -43,6 +45,7 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!local _group) exitWith {
     if (isServer) then {[_group, _centre, _radius, _options] remoteExecCall ["Waldo_fnc_AIPassGarrison", groupOwner _group]; true} else {false};
 };
+if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {false};
 if (_centre isEqualType objNull) then {_centre = getPosATL _centre};
 if (count _centre < 2) then {_centre = getPosATL leader _group};
 private _units = (units _group) select {alive _x && {vehicle _x == _x}};
@@ -59,6 +62,8 @@ if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
     false
 };
 
+if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassGarrisonRelease};
+if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassDefendRelease};
 if (_options getOrDefault ["inPlace", false]) then {
     {
         _x setVariable ["Waldo_AIPass_GarrisonPos", [getPosATL _x, _centre getDir _x], true];

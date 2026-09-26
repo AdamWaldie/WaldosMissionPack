@@ -8,6 +8,8 @@
  * from its own turret.
  * Locality and authority: call where the vehicle is local.
  *
+ * Review contract: A nonlocal vehicle is rejected. This helper has no persistent side effects or JIP installation; callers own repetition and cooldown.
+ *
  * Arguments:
  * 0: vehicle <OBJECT>
  *
@@ -22,7 +24,7 @@
  */
 
 params [["_vehicle", objNull, [objNull]]];
-if (isNull _vehicle || {!alive _vehicle}) exitWith {false};
+if (isNull _vehicle || {!alive _vehicle} || {!local _vehicle}) exitWith {false};
 private _cache = missionNamespace getVariable ["Waldo_AIPass_CountermeasureCache", createHashMap];
 private _entry = _cache getOrDefault [typeOf _vehicle, []];
 if (_entry isEqualTo []) then {

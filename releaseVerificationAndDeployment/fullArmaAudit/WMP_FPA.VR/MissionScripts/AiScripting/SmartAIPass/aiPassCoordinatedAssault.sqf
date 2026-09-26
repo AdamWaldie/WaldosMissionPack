@@ -13,6 +13,8 @@
  * owned by the same machine, like reinforcement itself.
  * Locality and authority: call where the requesting group is local.
  *
+ * Review contract: Responder selection rechecks eligibility immediately before issuing assault orders, including any Zeus hold received since reinforcement was requested.
+ *
  * Arguments:
  * 0: group <GROUP> - the squad in contact
  * 1: state <HASHMAP>
@@ -37,7 +39,7 @@ private _responders = [];
 private _arrivals = [];
 {
     private _responderState = _x getVariable ["Waldo_AIPass_State", createHashMap];
-    if (local _x && {(_responderState getOrDefault ["respondingTo", grpNull]) == _group} && {_responderState getOrDefault ["responding", false]}) then {
+    if (local _x && {[_x] call Waldo_fnc_AIPassIsEligible} && {(_responderState getOrDefault ["respondingTo", grpNull]) == _group} && {_responderState getOrDefault ["responding", false]}) then {
         _responders pushBack _x;
         private _arrived = _responderState getOrDefault ["arrivedAt", -1];
         if (_arrived >= 0) then {_arrivals pushBack _arrived};

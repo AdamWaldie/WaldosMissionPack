@@ -24,6 +24,8 @@
  *
  * Locality and authority: read-only and callable anywhere; it changes and broadcasts nothing.
  *
+ * Review contract: Feature markers are checked on the group as well as members and vehicles. Zeus-held checks maintain the documented local timing cache and may clear an expired waypoint flag.
+ *
  * Arguments:
  * 0: group <GROUP>
  *
@@ -69,6 +71,8 @@ private _isFeatureOwned = {
         !isNil "_value" && {!(_value isEqualTo false)}
     } >= 0
 };
+
+if ([_group] call _isFeatureOwned) exitWith {false};
 
 (_alive findIf {
     private _unit = _x;

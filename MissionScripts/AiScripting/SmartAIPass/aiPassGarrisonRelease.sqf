@@ -8,6 +8,8 @@
  * Locality and authority: call where the group is local, or on the server, which forwards to the
  * owner.
  *
+ * Review contract: Repeated release restores PATH only for soldiers marked as disabled by this garrison. Mission-maker PATH restrictions remain in place; public assignments are cleared for JIP.
+ *
  * Arguments:
  * 0: group <GROUP or OBJECT>
  *
@@ -31,13 +33,14 @@ if (!local _group) exitWith {
 private _leader = leader _group;
 {
     if (local _x) then {
-        _x enableAI "PATH";
+        if (_x getVariable ["Waldo_AIPass_GarrisonDisabledPath", false]) then {_x enableAI "PATH"};
         if (alive _x) then {
             _x setUnitPos (_x getVariable ["Waldo_AIPass_GarrisonStance", "AUTO"]);
             _x doWatch objNull;
             _x doFollow _leader;
         };
     };
+    _x setVariable ["Waldo_AIPass_GarrisonDisabledPath", nil, true];
     _x setVariable ["Waldo_AIPass_GarrisonPos", nil, true];
 } forEach units _group;
 _group setVariable ["Waldo_AIPass_Garrison", nil, true];

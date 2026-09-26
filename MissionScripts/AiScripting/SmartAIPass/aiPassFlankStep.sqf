@@ -27,6 +27,8 @@
  * members receive move orders; the leader never does.
  * Locality and authority: scheduler job on the group owner.
  *
+ * Review contract: Every step rechecks full group eligibility and its behaviour switch. Existing jobs stop after exclusion, remote control or a live disable.
+ *
  * Arguments:
  * 0: job <HASHMAP> - contains "group"
  *
@@ -51,7 +53,8 @@ private _end = {
     -1
 };
 if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false]) || {(_state getOrDefault ["phase", ""]) != "CONTACT"}
-    || {[_group] call Waldo_fnc_AIPassZeusHeld}) exitWith {"ABORT" call _end};
+    || {!([_group] call Waldo_fnc_AIPassIsEligible)}
+    || {!(missionNamespace getVariable [["Waldo_AIPass_Flank_Enable", "Waldo_AIPass_Advance_Enable"] select ((_drill getOrDefault ["type", "FLANK"]) == "ADVANCE"), true])}) exitWith {"ABORT" call _end};
 private _allUnits = _drill get "units";
 private _units = _allUnits select {alive _x && {local _x} && {vehicle _x == _x} && {group _x == _group}};
 if (count _units < ((count _allUnits / 2) max 1)) exitWith {"LOSSES" call _end};

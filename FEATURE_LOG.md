@@ -57,3 +57,7 @@ Required direction:
 - cancel without leaving markers, handlers or a partly registered operation;
 - keep preview UI local to the curator and final creation server-authoritative;
 - document and test the workflow in the Paradrop audit station and Zeus/script parity checks.
+
+## PR 151 review follow-up (2026-09-26)
+
+Smart AI source corrections, static validation results and outstanding integration blockers are recorded in [the PR 151 review](releaseVerificationAndDeployment/pr151_review.md). The PR remains draft. All 310 repository tests and ten static gates passed; no Arma runtime verification was performed. Headless restoration, clear-building replay and feature-owned exclusion provenance must be resolved before engine acceptance.

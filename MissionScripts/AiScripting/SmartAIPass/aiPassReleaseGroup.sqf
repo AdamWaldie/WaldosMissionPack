@@ -8,6 +8,8 @@
  * clear building) are left in place; use their own release functions.
  * Locality and authority: call where the group is local; state and flags are machine-local.
  *
+ * Review contract: Only the current group owner restores the public LAMBS flag. Other transient restoration records remain local and still require handover work.
+ *
  * Arguments:
  * 0: group <GROUP>
  * 1: forget <BOOL> - also clear the managed flag so discovery may pick the group up again
@@ -30,9 +32,9 @@ if (local _group && {count _state > 0}) then {
     if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, "RELEASE"] call Waldo_fnc_AIPassFlankEnd};
     [_group, _state] call Waldo_fnc_AIPassRestoreCalm;
 };
-if (_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]) then {
+if (local _group && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
     _group setVariable ["lambs_danger_disableGroupAI", false, true];
-    _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil];
+    _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
 };
 _group setVariable ["Waldo_AIPass_State", nil];
 if (_forget) then {_group setVariable ["Waldo_AIPass_Managed", nil]};

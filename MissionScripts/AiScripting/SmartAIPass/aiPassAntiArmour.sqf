@@ -10,6 +10,8 @@
  * morale (Waldo_fnc_AIPassMorale), which can make it withdraw.
  * Locality and authority: call where the group is local.
  *
+ * Review contract: A blocked backblast causes only a relocation request. A later group step must recheck clearance before ordering the shot.
+ *
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -51,9 +53,10 @@ private _blocked = (lineIntersectsSurfaces [_eye, _behind, _gunner, objNull, tru
         private _offset = (getPosASL _x) vectorDiff (getPosASL _gunner);
         (_offset vectorDotProduct ((ATLToASL _enemyPos) vectorDiff (getPosASL _gunner))) < 0
     } >= 0};
-if (_blocked) then {
+if (_blocked) exitWith {
     private _spot = ([(getPosATL _gunner) getPos [6, (_enemyPos getDir _gunner) + selectRandom [-70, 70]], _enemyPos, 8] call Waldo_fnc_AIPassFindCover) select 0;
     _gunner doMove _spot;
+    false
 };
 _gunner doTarget _armour;
 _gunner doFire _armour;

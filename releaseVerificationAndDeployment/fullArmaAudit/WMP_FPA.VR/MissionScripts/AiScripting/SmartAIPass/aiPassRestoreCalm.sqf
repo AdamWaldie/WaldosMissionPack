@@ -11,6 +11,8 @@
  * vehicle. Morale is kept and recovers slowly.
  * Locality and authority: call where the group is local.
  *
+ * Review contract: Investigation can change SAFE to AWARE; cleanup restores that recorded behaviour as well as a COMBAT change. Only the local group owner performs restoration.
+ *
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP> - from Waldo_fnc_AIPassGroupState
@@ -38,7 +40,7 @@ private _leader = leader _group;
         _x setVariable ["Waldo_AIPass_StanceSet", nil];
     };
 } forEach units _group;
-if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader == "COMBAT"}) then {
+if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader in ["COMBAT", "AWARE"]}) then {
     private _base = _state getOrDefault ["baseBehaviour", "AWARE"];
     // After a real firefight a squad stays alert rather than slinging weapons, as the engine does.
     if (_base == "SAFE" && {_state getOrDefault ["hadContact", false]}) then {_base = "AWARE"};
