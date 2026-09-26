@@ -27,14 +27,81 @@ class SmartAIPassContracts(unittest.TestCase):
         self.assertIn('[_group] call _isFeatureOwned', source('aiPassIsEligible'))
 
     def test_fire_revalidates_after_queue_and_dispersion(self):
-        text = source('aiPassArtilleryFire')
+        text = source('aiPassArtilleryShot')
         shot = text.index('_battery doArtilleryFire')
         for gate in ['call Waldo_fnc_AIPassIsEligible', 'call Waldo_fnc_AIPassArtilleryRole',
                      'Waldo_AIPass_CounterBattery_Enable', '_aim nearEntities', 'crew _entity']:
             self.assertLess(text.index(gate), shot)
-        self.assertLess(text.index('private _aim ='), text.index('_aim nearEntities'))
-        self.assertIn('true], "COUNTER"]', source('aiPassCounterBattery'))
-        self.assertIn('(_job get "side")', source('aiPassCounterBattery'))
+        self.assertIn('_battery doArtilleryFire [_aim, _magazine, 1]', text)
+        self.assertIn('"COUNTER", objNull, _vehicle', source('aiPassCounterBattery'))
+        self.assertIn('(_mission get "side")', source('aiPassArtilleryMissionStep'))
+
+    def test_opening_aim_is_bounded_and_player_positions_are_rejection_only(self):
+        text = source('aiPassArtilleryAim')
+        self.assertEqual(1, text.count('allPlayers'))
+        self.assertIn('from 0 to 7', text)
+        self.assertIn('_radius max (_safe + _buffer)', text)
+        self.assertIn('_players findIf', text)
+        self.assertNotIn('set ["fix"', text)
+        self.assertIn('if (_aim isEqualTo []) exitWith', source('aiPassArtilleryMissionStep'))
+
+    def test_corrections_require_owner_observation_and_real_shots(self):
+        report = source('aiPassArtilleryReport')
+        self.assertIn('remoteExecutedOwner != owner _spotter', report)
+        self.assertIn('Waldo_AIPass_Spotter', source('aiPassSpotterFix'))
+        self.assertIn('checkVisibility', source('aiPassSpotterFix'))
+        self.assertIn('Waldo_fnc_AIPassCanTransmit', source('aiPassSpotterFix'))
+        fired = source('aiPassArtilleryFired')
+        self.assertIn('time + _eta +', fired)
+        self.assertIn('UNCERTAIN', fired)
+        self.assertNotIn('doArtilleryFire', source('aiPassArtilleryMissionStep'))
+
+    def test_locality_retires_old_jobs_and_replays_clearing_progress(self):
+        self.assertIn('ownerEpoch', source('aiPassQueueJob'))
+        self.assertIn('private _stale', source('aiPassSchedulerTick'))
+        self.assertIn('"Waldo_AIPass_Checkpoint", _saved, true', source('aiPassCheckpoint'))
+        self.assertIn('"restoreDisabled"', source('aiPassLocality'))
+        self.assertIn('Waldo_AIPass_ClearOrder', source('aiPassDiscover'))
+        self.assertIn('if (_resume)', source('aiPassClearBuilding'))
+
+    def test_release_does_not_erase_unrecorded_headless_exclusions(self):
+        text = source('aiPassReleaseFeatureCrew')
+        self.assertIn('Waldo_Headless_PinBefore', text)
+        self.assertIn('if (_existed)', text)
+        self.assertNotIn('setVariable ["acex_headless_blacklist", false', text)
+
+    def test_orders_use_actual_owner_result_and_named_settings(self):
+        self.assertIn('remoteExecutedOwner != _expectedOwner', source('aiPassOrderResult'))
+        self.assertIn('Waldo_fnc_AIPassOrderResult', source('aiPassOrderLocal'))
+        zen = (ROOT / 'MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf').read_text()
+        for key in ['order', 'group', 'position', 'radius', 'building', 'facing', 'unit']:
+            self.assertIn(f'["{key}",', zen)
+            self.assertIn(f'getOrDefault ["{key}"', source('aiPassOrderDispatch') + source('aiPassOrderLocal'))
+
+    def test_convoy_has_bounded_storage_and_no_server_pin(self):
+        convoy = (ROOT / 'MissionScripts/AiScripting/convoyTick.sqf').read_text()
+        self.assertIn('count _trail > 128', convoy)
+        self.assertIn('_nearest + 10', convoy)
+        self.assertIn('!local _group', convoy)
+        registration = (ROOT / 'MissionScripts/AiScripting/simpleAiConvoy.sqf').read_text()
+        self.assertNotIn('HeadlessPinCrew', registration)
+        self.assertIn('Waldo_fnc_ConvoySync', registration)
+        self.assertNotIn('execFSM', convoy)
+
+    def test_known_shot_rejection_releases_without_retry(self):
+        self.assertIn('Waldo_fnc_AIPassArtilleryRejected', source('aiPassArtilleryShot'))
+        rejected = source('aiPassArtilleryRejected')
+        self.assertIn('gunOwner', rejected)
+        self.assertIn('["remaining", 0]', rejected)
+        self.assertNotIn('doArtilleryFire', rejected)
+
+    def test_garrison_handlers_are_removed_on_release_and_migration(self):
+        for name in ['aiPassGarrisonRelease', 'aiPassLocality', 'aiPassStop']:
+            text = source(name)
+            self.assertIn('Waldo_AIPass_GarrisonHandlerIds', text)
+            self.assertIn('removeEventHandler', text)
+        for name in ['aiPassGarrison', 'aiPassDefend']:
+            self.assertIn('call Waldo_fnc_AIPassClearRelease', source(name))
 
     def test_repeat_orders_invalidate_old_jobs(self):
         for kind in ['Garrison', 'Defend']:

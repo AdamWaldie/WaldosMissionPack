@@ -61,7 +61,7 @@ private _excludedFactions = missionNamespace getVariable ["Waldo_AI_ExcludedFact
 private _excludedClasses = missionNamespace getVariable ["Waldo_AI_ExcludedClasses", []];
 // Presence of any of these values means another WMP feature owns the object's behaviour.
 private _featureMarkers = [
-    "Waldo_ServerOwnedFeature", "Waldo_Gunship_Id", "Waldo_TransportService_Registered",
+    "Waldo_Convoy_Active", "Waldo_ServerOwnedFeature", "Waldo_Gunship_Id", "Waldo_TransportService_Registered",
     "Waldo_Paradrop_DropZoneId", "Waldo_DynamicAA_SystemId", "Waldo_Headless_HelicopterPinned"
 ];
 private _isFeatureOwned = {

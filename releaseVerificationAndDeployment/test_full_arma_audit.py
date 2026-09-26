@@ -2989,7 +2989,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("private _groundPosition", crate_server)
         for variable in ("Logi_MedicalBoxClass", "Logi_SupplyBoxClass"):
             self.assertIn(f'missionNamespace getVariable ["{variable}"', crate_server)
-        self.assertIn('remoteExec ["Waldo_fnc_SimpleAiConvoy", _owner]', convoy)
+        self.assertIn('call Waldo_fnc_FeatureRuntimeApply', convoy)
+        self.assertIn('["AI_CONVOY",', convoy)
+        self.assertNotIn('nearestObjects', convoy)
 
     def test_jamming_uses_one_combined_panel_and_server_zen_mutation(self):
         hud = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammingHud.sqf").read_text(encoding="utf-8")

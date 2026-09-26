@@ -29,6 +29,12 @@
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 if (isServer) then {
     missionNamespace setVariable ["Waldo_AIPass_Enable", false, true];
+    {
+        private _battery = _y get "battery";
+        _battery setVariable ["Waldo_AIPass_FireToken", nil, true];
+        _battery setVariable ["Waldo_AIPass_BusyUntil", nil, true];
+    } forEach (missionNamespace getVariable ["Waldo_AIPass_FireMissions", createHashMap]);
+    missionNamespace setVariable ["Waldo_AIPass_FireMissions", createHashMap];
     [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
     if (remoteExecutedOwner == 0) then {
         [] remoteExecCall ["Waldo_fnc_AIPassStop", -2];
@@ -67,6 +73,19 @@ if (!isNil "_handle") then {
     if (local _x && {count (_x getVariable ["Waldo_AIPass_State", createHashMap]) > 0 || {_x getVariable ["Waldo_AIPass_Managed", false]}}) then {
         [_x] call Waldo_fnc_AIPassReleaseGroup;
     };
+    if (local _x) then {[_x] call Waldo_fnc_AIPassClearRelease};
+    {
+        private _unit = _x;
+        {_unit removeEventHandler _x} forEach (_unit getVariable ["Waldo_AIPass_GarrisonHandlerIds", []]);
+        _unit setVariable ["Waldo_AIPass_GarrisonHandlerIds", nil];
+        _unit setVariable ["Waldo_AIPass_GarrisonHandlers", nil];
+        _unit setVariable ["Waldo_AIPass_DuckUntil", nil];
+    } forEach units _x;
+    private _localHandler = _x getVariable ["Waldo_AIPass_LocalHandler", -1];
+    if (_localHandler >= 0) then {_x removeEventHandler ["Local", _localHandler]};
+    _x setVariable ["Waldo_AIPass_LocalHandler", nil];
+    _x setVariable ["Waldo_AIPass_Adopted", nil];
+    _x setVariable ["Waldo_AIPass_Epoch", (_x getVariable ["Waldo_AIPass_Epoch", 0]) + 1];
 } forEach allGroups;
 
 private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []]);
@@ -85,7 +104,9 @@ private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (miss
             if ("baseBehaviour" in _clearJob && {behaviour leader _group == "COMBAT"}) then {
                 _group setBehaviour (_clearJob get "baseBehaviour");
             };
-            _group setVariable ["Waldo_AIPass_ClearBuilding", nil];
+            _group setVariable ["Waldo_AIPass_ClearBuilding", nil, true];
+            _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
+            _group setVariable ["Waldo_AIPass_ClearApplied", nil];
         };
         _group setVariable ["Waldo_AIPass_GarrisonApplied", nil];
         _group setVariable ["Waldo_AIPass_DefendApplied", nil];

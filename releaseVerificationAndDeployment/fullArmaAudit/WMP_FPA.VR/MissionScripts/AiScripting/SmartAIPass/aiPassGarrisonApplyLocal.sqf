@@ -34,7 +34,8 @@ _group setVariable ["Waldo_AIPass_GarrisonApplied", true];
     private _unit = _x;
     private _assignment = _unit getVariable ["Waldo_AIPass_GarrisonPos", []];
     if (alive _unit && {local _unit} && {_assignment isNotEqualTo []}) then {
-        _unit setVariable ["Waldo_AIPass_GarrisonStance", unitPos _unit];
+        if (isNil {_unit getVariable "Waldo_AIPass_GarrisonStance"}) then {_unit setVariable ["Waldo_AIPass_GarrisonStance", unitPos _unit, true]};
+        if (_unit getVariable ["Waldo_AIPass_GarrisonDisabledPath", false]) then {_unit enableAI "PATH"};
         if !(_unit getVariable ["Waldo_AIPass_GarrisonHandlers", false]) then {
             _unit setVariable ["Waldo_AIPass_GarrisonHandlers", true];
             private _duck = {
@@ -52,8 +53,10 @@ _group setVariable ["Waldo_AIPass_GarrisonApplied", true];
                     };
                 }, [_unit, _until], _until - time] call CBA_fnc_waitAndExecute;
             };
-            _unit addEventHandler ["Suppressed", _duck];
-            _unit addEventHandler ["Hit", _duck];
+            _unit setVariable ["Waldo_AIPass_GarrisonHandlerIds", [
+                ["Suppressed", _unit addEventHandler ["Suppressed", _duck]],
+                ["Hit", _unit addEventHandler ["Hit", _duck]]
+            ]];
         };
         if (_unit distance2D (_assignment select 0) > 2) then {_unit doMove (_assignment select 0)};
     };

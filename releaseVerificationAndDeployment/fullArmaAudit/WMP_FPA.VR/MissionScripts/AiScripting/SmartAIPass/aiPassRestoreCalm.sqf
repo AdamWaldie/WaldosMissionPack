@@ -37,7 +37,7 @@ private _leader = leader _group;
 {
     if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet", false]}) then {
         _x setUnitPos "AUTO";
-        _x setVariable ["Waldo_AIPass_StanceSet", nil];
+        _x setVariable ["Waldo_AIPass_StanceSet", nil, true];
     };
 } forEach units _group;
 if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader in ["COMBAT", "AWARE"]}) then {
@@ -61,6 +61,7 @@ if (_state getOrDefault ["speedChanged", false]) then {
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
     "armourRequested", "coordinated", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
+_group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 _state set ["phase", "CALM"];
 _state set ["phaseStart", time];
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP AI PASS] %1 CALM restored", _group]};

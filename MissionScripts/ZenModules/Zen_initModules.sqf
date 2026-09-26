@@ -248,7 +248,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     {
         diag_log format ["[WMP ZEN] invoked module=Spawn AI Convoy curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
-        [_modulePos] call Waldo_fnc_ZenConvoyModule;
+        [_modulePos, _objectPos] call Waldo_fnc_ZenConvoyModule;
     },
     "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"
 ] call zen_custom_modules_fnc_register;

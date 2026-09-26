@@ -10,7 +10,7 @@
  * queue, so no group is starved when the budget is always spent. When the machine's FPS is below
  * Waldo_AIPass_LowFpsThreshold, rescheduling delays are doubled. While ENDEX or SafeStart is
  * active, due jobs are postponed by five seconds and never run.
- * Locality and authority: machine-local. It performs no world scans and no network traffic.
+ * Locality and authority: machine-local. It performs no world scans. Changed restoration checkpoints are published after group jobs.
  *
  * Review contract: The scheduler is machine-local and repeat-driven by CBA. Its budget is soft: it cannot interrupt a running SQF job and still traverses the full queue.
  *
@@ -49,7 +49,10 @@ private _rescheduled = [];
         _next pushBack _x;
     } else {
         _processed = _processed + 1;
-        private _delay = if (_paused) then {5} else {[_state] call _job};
+        private _group = _state getOrDefault ["group", grpNull];
+        private _stale = !isNull _group && {!local _group || {(_state getOrDefault ["ownerEpoch", -1]) != (_group getVariable ["Waldo_AIPass_Epoch", 0])}};
+        private _delay = if (_stale) then {-1} else {if (_paused) then {5} else {[_state] call _job}};
+        if (!_stale && {!_paused} && {!isNull _group}) then {[_group] call Waldo_fnc_AIPassCheckpoint};
         if (!isNil "_delay" && {_delay isEqualType 0} && {_delay >= 0}) then {
             if (_slow && {!_paused}) then {_delay = _delay * 2};
             _rescheduled pushBack [_now + _delay, _job, _state];

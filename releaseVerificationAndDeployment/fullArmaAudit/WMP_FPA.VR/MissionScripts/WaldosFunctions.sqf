@@ -137,6 +137,9 @@ class CfgFunctions
         };
         class AI 
         {
+            class ConvoySync {file = "MissionScripts\AiScripting\convoySync.sqf";};
+            class ConvoyReleaseLocal {file = "MissionScripts\AiScripting\convoyReleaseLocal.sqf";};
+            class ConvoyTick {file = "MissionScripts\AiScripting\convoyTick.sqf";};
             class SimpleAiConvoy {
                 file =  "MissionScripts\AiScripting\simpleAiConvoy.sqf";
             };
@@ -176,6 +179,24 @@ class CfgFunctions
             class AIPassSetArtilleryRole {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSetArtilleryRole.sqf";};
             class AIPassReleaseFeatureCrew {file = "MissionScripts\AiScripting\SmartAIPass\aiPassReleaseFeatureCrew.sqf";};
             class AIPassAntiArmour {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAntiArmour.sqf";};
+            class AIPassCheckpoint {file = "MissionScripts\AiScripting\SmartAIPass\aiPassCheckpoint.sqf";};
+            class AIPassLocality {file = "MissionScripts\AiScripting\SmartAIPass\aiPassLocality.sqf";};
+            class AIPassSetSpotter {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSetSpotter.sqf";};
+            class AIPassSpotterFix {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSpotterFix.sqf";};
+            class AIPassArtilleryObserve {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryObserve.sqf";};
+            class AIPassArtilleryReport {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryReport.sqf";};
+            class AIPassArtilleryAim {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryAim.sqf";};
+            class AIPassArtilleryAmmo {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryAmmo.sqf";};
+            class AIPassArtilleryMissionStep {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryMissionStep.sqf";};
+            class AIPassArtilleryShot {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryShot.sqf";};
+            class AIPassArtilleryScoot {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryScoot.sqf";};
+            class AIPassClearRelease {file = "MissionScripts\AiScripting\SmartAIPass\aiPassClearRelease.sqf";};
+            class AIPassOrderDispatch {file = "MissionScripts\AiScripting\SmartAIPass\aiPassOrderDispatch.sqf";};
+            class AIPassOrderLocal {file = "MissionScripts\AiScripting\SmartAIPass\aiPassOrderLocal.sqf";};
+            class AIPassOrderResult {file = "MissionScripts\AiScripting\SmartAIPass\aiPassOrderResult.sqf";};
+            class AIPassCounterObserve {file = "MissionScripts\AiScripting\SmartAIPass\aiPassCounterObserve.sqf";};
+            class AIPassArtilleryFired {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryFired.sqf";};
+            class AIPassArtilleryRejected {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryRejected.sqf";};
             class AIPassArtilleryFire {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryFire.sqf";};
             class AIPassArtilleryRequest {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryRequest.sqf";};
             class AIPassCanTransmit {file = "MissionScripts\AiScripting\SmartAIPass\aiPassCanTransmit.sqf";};
@@ -244,6 +265,7 @@ class CfgFunctions
             class HeadlessAdoptGroupLocal {file = "MissionScripts\Headless\headlessAdoptGroupLocal.sqf";};
             class HeadlessReassignOnDisconnect {file = "MissionScripts\Headless\headlessReassignOnDisconnect.sqf";};
             class HeadlessGetDiagnostics {file = "MissionScripts\Headless\headlessGetDiagnostics.sqf";};
+            class HeadlessRememberPin {file = "MissionScripts\Headless\headlessRememberPin.sqf";};
             class HeadlessPinCrew {file = "MissionScripts\Headless\headlessPinCrew.sqf";};
             class HeadlessDebugLog {file = "MissionScripts\Headless\headlessDebugLog.sqf";};
             class HeadlessDebugToggle {file = "MissionScripts\Headless\headlessDebugToggle.sqf";};

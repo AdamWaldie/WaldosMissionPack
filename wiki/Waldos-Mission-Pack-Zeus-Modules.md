@@ -66,7 +66,7 @@ This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup),
 
 ## AI Convoy Module
 
-Under **WMP AI & Combat**, **Convoy - Create Moving Group** turns the nearest crewed AI land-vehicle group within 150 m of the module into a managed convoy. Place the module on or near the lead vehicle. The dialog sets max speed, target separation and whether the convoy pushes through contact (keeps moving and only returns fire on the move) instead of stopping to engage. It calls the same [AI Convoy System](AI-Convoy-System) behaviour (`Waldo_fnc_SimpleAiConvoy`) available to scripts, dispatched to whichever machine currently owns the selected group. See [AI Convoy System](AI-Convoy-System) for the full parameter reference and the manual-stop script pattern.
+Under **WMP AI & Combat**, **Convoy - Create Moving Group** requires an explicitly selected crewed AI land vehicle. The dialog configures or stops its group convoy, with labelled speed, spacing and push-through choices. It sends named settings through the server-authorised runtime route to the [AI Convoy System](AI-Convoy-System). Driving runs on the current group owner, including headless clients. There is no nearest-vehicle fallback.
 
 ## ENDEX Module
 

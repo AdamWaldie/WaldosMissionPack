@@ -1,64 +1,43 @@
 /*
-Purpose: Simple AI Convoy script for mission makers
-Called From: sqf file, trigger, init field or whatever you fancy
-Scope: Groups of units referanced
-Execution time: from handle call.
-Author: Tova, modified by WaldoTheWarfighter
-License: unlimited distribution and editing as per Tova's original.
-
-Call it with:
-
-convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
-
-
-Optional parameters are also available :
-
-convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
-
-if there are multiple, simply change the "handle":
-
-
-convoyScript_2 = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
-
-
-With :
-
-convoyGroup : the group you want to move as a convoy
-convoySpeed : Maximum speed of the convoy in km/h (default 50 km/h)
-convoySeparation : distance between each vehicle of the convoy (default 50m)
-pushThrough : true/false, force the AI to push through contact, only returning fire on the move (default true)
-
-
-
-To end the script, in its final waypoint place the below in on activation:
-
-terminate convoyScript;
-{(vehicle _x) limitSpeed 5000;(vehicle _x) setUnloadInCombat [true, false]} forEach (units convoyGroup);
-convoyGroup enableAttack true;
-
-*/
-params ["_convoyGroup",["_convoySpeed",30],["_convoySeparation",15],["_pushThrough", true]];
-// This script's own while loop below continuously drives the convoy every 5s and depends on the
-// group staying local to wherever it's running - an external headless rebalance (WMP's own, or
-// ACE's separate, uncoordinated ace_headless module) moving it mid-convoy would desynchronise that
-// loop. Pin server-side by default; a no-op if called from a non-server machine, since headless
-// migration is inherently server-only anyway. See headlessPinCrew.sqf for detail.
-{[vehicle _x] call Waldo_fnc_HeadlessPinCrew;} forEach (units _convoyGroup);
-if (_pushThrough) then {
-    _convoyGroup enableAttack !(_pushThrough);
-    {(vehicle _x) setUnloadInCombat [false, false];} forEach (units _convoyGroup);
+ * Author: WaldoTheWarfighter
+ * Registers or updates a bounded mission-script convoy without pinning it to the server. Speed <= 0 stops it.
+ * Locality/authority: server owns registration; driving commands execute only on current owners.
+ * Repeat/JIP: ordered registry snapshots replace old settings; owner-local paths rebuild on migration.
+ * Arguments: 0: group <GROUP>, grpNull; 1: maximum km/h <NUMBER>, 30; 2: separation metres <NUMBER>, 15; 3: push through <BOOL>, true.
+ * Return Value: Boolean, server registration accepted; a forwarded call returns dispatch acceptance.
+ * Current callers: mission scripts and authenticated convoy Zeus control.
+ * Example: [convoyGroup, 30, 20, true] call Waldo_fnc_SimpleAiConvoy;
+ */
+params [["_group", grpNull, [grpNull]], ["_speed", 30, [0]], ["_separation", 15, [0]], ["_pushThrough", true, [true]]];
+if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_SimpleAiConvoy", 2]; true};
+if (isNull _group) exitWith {false};
+if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) then {
+    private _sender = remoteExecutedOwner;
+    private _authorized = allPlayers findIf {owner _x == _sender && {
+        !isNull getAssignedCuratorLogic _x || {_x isKindOf "HeadlessClient_F" && {groupOwner _group == _sender}}
+    }};
+    if (_authorized < 0) then {_group = grpNull};
 };
-_convoyGroup setFormation "COLUMN";
-{
-    (vehicle _x) limitSpeed _convoySpeed*1.15;
-    (vehicle _x) setConvoySeparation _convoySeparation;
-} forEach (units _convoyGroup);
-(vehicle leader _convoyGroup) limitSpeed _convoySpeed;
-while {sleep 5; !isNull _convoyGroup} do {
-    {
-        if ((speed vehicle _x < 5) && (_pushThrough || (behaviour _x != "COMBAT"))) then {
-            (vehicle _x) doFollow (leader _convoyGroup);
-        };
-    } forEach (units _convoyGroup)-(crew (vehicle (leader _convoyGroup)))-allPlayers;
-    {(vehicle _x) setConvoySeparation _convoySeparation;} forEach (units _convoyGroup);
+if (isNull _group) exitWith {false};
+private _registry = missionNamespace getVariable ["Waldo_Convoy_Registry", []];
+_registry = _registry select {!isNull (_x select 0) && {(_x select 0) != _group}};
+if (_speed > 0) then {
+    if ((units _group) findIf {isPlayer _x} >= 0 || {_group getVariable ["Waldo_ServerOwnedFeature", false]}) exitWith {};
+    private _vehicles = [];
+    {private _v = vehicle _x; if (_v isKindOf "LandVehicle" && {!(_v isKindOf "StaticWeapon")} && {alive driver _v} && {group driver _v == _group}) then {_vehicles pushBackUnique _v}} forEach units _group;
+    if (count _vehicles < 2 || {count _vehicles > 20} || {_vehicles findIf {(crew _x) findIf {isPlayer _x} >= 0 || {_x getVariable ["Waldo_ServerOwnedFeature", false]}} >= 0}) exitWith {};
+    private _lead = vehicle leader _group;
+    if (_lead in _vehicles) then {_vehicles = [_lead] + (_vehicles - [_lead])};
+    private _revision = (_group getVariable ["Waldo_Convoy_Revision", 0]) + 1;
+    _group setVariable ["Waldo_Convoy_Revision", _revision, true];
+    _registry pushBack [_group, [_revision, (_speed max 5) min 120, (_separation max 10) min 100, _pushThrough, _vehicles]];
 };
+private _active = _registry findIf {(_x select 0) == _group} >= 0;
+// A failed start must not silently stop an existing registration.
+if (_speed > 0 && {!_active}) exitWith {false};
+_group setVariable ["Waldo_Convoy_Active", _active, true];
+missionNamespace setVariable ["Waldo_Convoy_Registry", _registry];
+private _revision = (missionNamespace getVariable ["Waldo_Convoy_RegistryRevision", 0]) + 1;
+missionNamespace setVariable ["Waldo_Convoy_RegistryRevision", _revision];
+[_revision, _registry] remoteExecCall ["Waldo_fnc_ConvoySync", 0, "Waldo_Convoy_RegistrySync"];
+true

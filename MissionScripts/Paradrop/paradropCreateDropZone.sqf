@@ -329,12 +329,14 @@ if (_config getOrDefault ["createJumpers", true]) then {
         _jumperClass = switch (_side) do {case east: {"O_Soldier_F"}; case independent: {"I_Soldier_F"}; default {"B_Soldier_F"}};
     };
     _jumpGroup = createGroup _side;
+    [_jumpGroup] call Waldo_fnc_HeadlessRememberPin;
     _jumpGroup setVariable ["Waldo_ServerOwnedFeature", true, true];
     _jumpGroup setVariable ["Waldo_Headless_ExcludeGroup", true, true];
     private _capacity = _aircraft emptyPositions "cargo";
     private _count = ((round (_config getOrDefault ["jumperCount", 0])) max 0) min _capacity min 60;
     for "_index" from 1 to _count do {
         private _unit = _jumpGroup createUnit [_jumperClass, _spawn, [], 0, "NONE"];
+        [_unit] call Waldo_fnc_HeadlessRememberPin;
         _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
         _unit setVariable ["acex_headless_blacklist", true, true];
         _unit moveInCargo _aircraft;

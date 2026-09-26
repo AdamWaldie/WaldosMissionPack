@@ -74,7 +74,7 @@ if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {
     if (_group getVariable ["Waldo_AIPass_ZeusWaypoints", false]) then {
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassGarrisonRelease};
         if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassDefendRelease};
-        if (_group getVariable ["Waldo_AIPass_ClearBuilding", false]) then {_group setVariable ["Waldo_AIPass_ClearBuilding", nil]};
+        if (_group getVariable ["Waldo_AIPass_ClearBuilding", false]) then {_group setVariable ["Waldo_AIPass_ClearBuilding", nil, true]; _group setVariable ["Waldo_AIPass_ClearOrder", nil, true]};
     };
     [20, 5] select ([_group] call Waldo_fnc_AIPassZeusHeld)
 };
@@ -271,7 +271,7 @@ switch (_state get "phase") do {
         } >= 0}];
         if (_nearTier) then {
             {
-                if (local _x && {binocular _x != ""} && {currentWeapon _x == binocular _x} && {primaryWeapon _x != ""}) then {
+                if (local _x && {!(_x getVariable ["Waldo_AIPass_Spotter", false])} && {binocular _x != ""} && {currentWeapon _x == binocular _x} && {primaryWeapon _x != ""}) then {
                     _x selectWeapon (primaryWeapon _x);
                 };
             } forEach _alive;

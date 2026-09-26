@@ -16,8 +16,7 @@
  *   uses to write a transport off (destroyed, no living driver, can no longer move, or damaged beyond
  *   Waldo_Transport_MaxEffectiveDamage), and every living member is on foot. A crew still riding a
  *   working transport is never touched.
- * Release clears the server pin and both headless exclusions (so headless balancing may also take
- * the group), and unassigns each soldier from the vehicle so it no longer marks him as feature-owned.
+ * Release restores recorded exclusions only (unrecorded or pre-existing exclusions are preserved), and unassigns each soldier from the vehicle so it no longer marks him as feature-owned.
  * Locality and authority: call where the group is local (the server for pinned groups).
  *
  * Arguments:
@@ -54,11 +53,20 @@ if (!_release && {!isNil {_group getVariable "Waldo_TransportService_Vehicle"}})
 };
 if (!_release) exitWith {false};
 
-{_group setVariable [_x, false, true]} forEach ["Waldo_ServerOwnedFeature", "Waldo_Headless_ExcludeGroup", "acex_headless_blacklist"];
+private _restorePin = {
+    params ["_target"];
+    {
+        _x params ["_key", "_existed", "_value"];
+        if ((_target getVariable [_key, false]) isEqualTo true) then {
+            if (_existed) then {_target setVariable [_key, _value, true]} else {_target setVariable [_key, nil, true]};
+        };
+    } forEach (_target getVariable ["Waldo_Headless_PinBefore", []]);
+    _target setVariable ["Waldo_Headless_PinBefore", nil, true];
+};
+[_group] call _restorePin;
 {_group setVariable [_x, nil, true]} forEach ["Waldo_Paradrop_Jumped", "Waldo_TransportService_Vehicle"];
 {
-    _x setVariable ["Waldo_ServerOwnedFeature", false, true];
-    _x setVariable ["acex_headless_blacklist", false, true];
+    [_x] call _restorePin;
     if (local _x) then {unassignVehicle _x};
 } forEach _alive;
 missionNamespace setVariable ["Waldo_AIPass_FeatureCrewsReleased", (missionNamespace getVariable ["Waldo_AIPass_FeatureCrewsReleased", 0]) + 1];

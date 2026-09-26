@@ -91,8 +91,9 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"} && {mi
         };
     }]];
 };
-if (isNil {missionNamespace getVariable "Waldo_AIPass_ArtilleryHandler"} && {missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]}) then {
+if (isNil {missionNamespace getVariable "Waldo_AIPass_ArtilleryHandler"}) then {
     missionNamespace setVariable ["Waldo_AIPass_ArtilleryHandler", addMissionEventHandler ["ArtilleryShellFired", {
+        _this call Waldo_fnc_AIPassArtilleryFired;
         params ["_vehicle", "", "", "_gunner"];
         if (missionNamespace getVariable ["Waldo_AIPass_Active", false]) then {[_vehicle, _gunner] call Waldo_fnc_AIPassCounterBattery};
     }]];

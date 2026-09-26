@@ -8,7 +8,7 @@
  * clear building) are left in place; use their own release functions.
  * Locality and authority: call where the group is local; state and flags are machine-local.
  *
- * Review contract: Only the current group owner restores the public LAMBS flag. Other transient restoration records remain local and still require handover work.
+ * Review contract: Only the current group owner restores the public LAMBS flag. Changed restoration checkpoints are public and consumed on ownership adoption.
  *
  * Arguments:
  * 0: group <GROUP>

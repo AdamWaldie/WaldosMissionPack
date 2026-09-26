@@ -33,6 +33,12 @@ if (!local _group) exitWith {
 private _leader = leader _group;
 {
     if (local _x) then {
+        private _unit = _x;
+        {_unit removeEventHandler _x} forEach (_unit getVariable ["Waldo_AIPass_GarrisonHandlerIds", []]);
+        _unit setVariable ["Waldo_AIPass_GarrisonHandlerIds", nil];
+        _unit setVariable ["Waldo_AIPass_GarrisonHandlers", nil];
+        _unit setVariable ["Waldo_AIPass_DuckUntil", nil];
+
         if (_x getVariable ["Waldo_AIPass_GarrisonDisabledPath", false]) then {_x enableAI "PATH"};
         if (alive _x) then {
             _x setUnitPos (_x getVariable ["Waldo_AIPass_GarrisonStance", "AUTO"]);
@@ -42,6 +48,7 @@ private _leader = leader _group;
     };
     _x setVariable ["Waldo_AIPass_GarrisonDisabledPath", nil, true];
     _x setVariable ["Waldo_AIPass_GarrisonPos", nil, true];
+    _x setVariable ["Waldo_AIPass_GarrisonStance", nil, true];
 } forEach units _group;
 _group setVariable ["Waldo_AIPass_Garrison", nil, true];
 _group setVariable ["Waldo_AIPass_GarrisonApplied", nil];

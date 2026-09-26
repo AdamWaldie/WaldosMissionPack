@@ -1,76 +1,83 @@
 # AI Convoy System
 
-> **Use this page when:** you need to create, tune, monitor, or stop a scripted AI vehicle convoy.
+> **Use this page when:** you need to create, tune or stop an AI land-vehicle convoy.
 
-_Associated Files: MissionScripts\AiScripting\simpleAiConvoy.sqf_
+_Associated Files: `MissionScripts/AiScripting/simpleAiConvoy.sqf`, `convoySync.sqf`, `convoyTick.sqf`, `convoyReleaseLocal.sqf`_
 
-A convoy controller for AI vehicle groups. It keeps vehicles in column formation, enforces convoy spacing, and forces stalled vehicles to follow the convoy leader. Optionally prevents AI from dismounting on contact, keeping the convoy moving through enemy fire.
-
-## Features
-
-- Maintains column formation with configurable vehicle spacing
-- Caps convoy speed so all vehicles move together
-- Detects stalled vehicles every 5 seconds and orders them back into formation
-- Optional `pushThrough` mode prevents AI from halting and dismounting on contact â€” units return fire while continuing to move
+The convoy follows its lead vehicle's route with sampled path points, spacing-based speed control
+and slower turns. It uses mission SQF and CBA; no addon or imported FSM is required. Registration
+belongs to the server, while driving commands run on the current AI owner.
 
 ## Setup
 
-Call the function from a trigger, script, or a waypoint **On Activation** field. Store the return handle so you can terminate the script at the end of the route.
+Use a simulation-enabled group with 2–20 AI-driven land vehicles, then give the leader normal
+waypoints. Static weapons, player crews and vehicles controlled by another WMP feature are rejected.
+Call on the server; an authorised Zeus module or current headless owner can also request changes.
 
 ```sqf
-// Basic call â€” 30 km/h, 15 m spacing, pushThrough enabled
-convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
-
-// Full parameters
-convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
+[convoyGroup] call Waldo_fnc_SimpleAiConvoy; // 30 km/h, 15 m, push through
+[convoyGroup, 25, 25, false] call Waldo_fnc_SimpleAiConvoy;
+[convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy; // stop and restore
 ```
 
-## Parameters
-
-| Parameter | Type | Default | Description |
+| Parameter | Type | Default | Meaning |
 |---|---|---|---|
-| `convoyGroup` | GROUP | â€” | The group to run as a convoy (required) |
-| `convoySpeed` | NUMBER | 30 | Maximum convoy speed in km/h |
-| `convoySeparation` | NUMBER | 15 | Target separation between vehicles in metres |
-| `pushThrough` | BOOL | true | When true, AI push through contact without dismounting |
+| Group | GROUP | required | The AI vehicle group. |
+| Speed | NUMBER | 30 | Maximum km/h, clamped to 5–120. Zero or less stops the controller. |
+| Separation | NUMBER | 15 | Target metres between vehicles, clamped to 10–100. |
+| Push through | BOOL | true | Suppress group attack/unloading while travelling; otherwise release control during combat. |
 
-## Ending the Script
+Calling again updates the existing convoy. The function returns registration success, not a
+long-running script handle. Existing `spawn` calls can dispatch registration, but terminating that
+handle no longer stops the convoy. Replace old termination blocks with `[convoyGroup, 0] call
+Waldo_fnc_SimpleAiConvoy` on the server. Multiple groups use the same API independently.
 
-In the group's **final waypoint On Activation** field, paste the following to terminate the convoy script and restore normal AI behaviour:
+## Zeus controls
 
-```sqf
-terminate convoyScript;
-{ (vehicle _x) limitSpeed 5000; (vehicle _x) setUnloadInCombat [true, false] } forEach (units convoyGroup);
-convoyGroup enableAttack true;
-```
+Place **WMP AI & Combat > Convoy - Create Moving Group** on an existing crewed AI land vehicle.
+Choose configure or stop, speed, spacing and push-through from labelled controls. A missing or
+invalid selection is rejected; the module never guesses a nearby vehicle. Feedback confirms
+registration; the owner applies driving settings on its next worker step.
 
-## Multiple Convoys
+## Movement and recovery
 
-If you need more than one convoy running simultaneously, use a different handle name for each:
+Followers use the lead vehicle's sampled route instead of continually cutting straight across bends.
+The leader slows for large gaps and turns. Follower speed uses gap and relative-speed correction,
+including zero-gap and heading-wrap cases. A follower stalled for 20 seconds falls back to normal
+formation following, with a ten-second path retry delay. Recovery does not teleport vehicles.
 
-```sqf
-convoyScript_1 = [PatrolGroup1, 30, 15, true]  spawn Waldo_fnc_SimpleAiConvoy;
-convoyScript_2 = [PatrolGroup2, 25, 20, false] spawn Waldo_fnc_SimpleAiConvoy;
-```
+The controller preserves leader waypoints. It records formation, attack permission, forced speed
+and combat unloading before changing them, then restores those values on stop. It releases driving
+control for SafeStart/ENDEX, Zeus intervention and player crews. With push-through disabled, it also
+releases during combat. A destroyed lead vehicle can be replaced by a surviving registered driver.
 
-Terminate each handle independently at their respective final waypoints.
+## Headless clients and performance
 
-## Notes
+Convoys are not pinned to the server. An ordered registry replays to server/headless owners,
+including late joiners. Ownership changes discard local driving state; the new owner reconstructs
+the trail from the leader and uses formation following until useful samples exist. Prior restoration
+values are public. Both WMP and ACE headless migration paths still require live acceptance testing.
 
-- Must be called with `spawn` â€” the script loops continuously and will block execution if called with `call`
-- `pushThrough` disables `enableAttack` on the group and prevents unloading in combat; always restore this via the termination block above
-- Works with any mix of vehicle types in the group
-- The script handles one group per call â€” for multiple convoys, call it once per group
+One CBA worker per AI-owning machine considers one convoy every 0.25 seconds. Each convoy updates
+at most once per second, so many convoys receive less frequent updates. Each holds at most 128 route
+samples, sends at most ten path points per follower, and refreshes a follower path no more often than
+every three seconds. Route samples stay local; registration changes send registry snapshots.
 
-## If the convoy stops or splits
+## Limitations and checks
 
-Check that the group has a living AI driver in a simulation-enabled land vehicle and that its route remains valid. The push-through-contact choice changes whether the group stops to fight. Tune speed and separation for the road and vehicle mix before blaming the server or adding another movement loop.
+This implementation has static regression coverage, but has not passed in-engine acceptance.
+Test bends, junctions, mixed vehicle sizes, blocked roads, lead loss, repeated configuration/stop,
+Zeus intervention, player entry and transfer between server and headless clients before live use.
+Migration reconstructs the trail; it does not preserve the complete previous route history.
+Engine driving and road geometry can still prevent progress. Push-through changes AI orders, not
+vehicle invulnerability or the engine's ability to navigate a blocked route.
 
 ## See also
 
-- [Transport Services](Transport-Services)
+- [Headless Client Support](Headless-Client-Support)
+- [Smart AI Pass](Smart-AI-Pass)
 - [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 
 <!-- WMP-WIKI-NAV -->
 ---
-[Wiki home](Home) Â· [Quickstart](Quickstart-Guide) Â· [Feature index](Feature-Tutorials)
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

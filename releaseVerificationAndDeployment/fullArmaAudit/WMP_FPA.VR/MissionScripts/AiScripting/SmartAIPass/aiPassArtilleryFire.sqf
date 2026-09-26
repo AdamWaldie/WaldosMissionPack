@@ -1,99 +1,65 @@
 /*
  * Author: WaldoTheWarfighter
- * Fires one artillery mission from a local battery, with range-scaled dispersion, and optionally
- * moves the battery afterwards (shoot and scoot).
- *
- * HE mode uses the battery's most destructive plain shell (highest CfgAmmo hit), never smoke,
- * illumination or submunition rounds such as scatterable mines and cluster; SMOKE mode uses a smoke magazine (smoke simulation, or "smoke" in
- * the ammo or magazine name) and fires two rounds, or does nothing if the battery has none. The aim point is displaced by the target's
- * position error plus 1% of the range (capped at 150 m), from Digii. A mission that the engine
- * reports as unreachable (getArtilleryETA below 0) is not fired. The battery is busy until its rounds
- * have landed. With shoot and scoot on (Waldo_AIPass_Artillery_ShootAndScoot for support,
- * Waldo_AIPass_CounterBattery_ShootAndScoot for counter-battery), a mobile battery drives 200-350 m
- * to a new position once the mission is complete, through an inserted waypoint.
- * Locality and authority: call where the artillery vehicle is local.
- *
- * Review contract: Repeated calls refuse a busy battery. Every shot request checks live role, switch, eligibility and safety at the dispersed aim point; delayed relocation rechecks eligibility.
- *
- * Arguments:
- * 0: battery <OBJECT> - artillery vehicle or static weapon
- * 1: target <ARRAY> - ATL position
- * 2: error <NUMBER> - estimated position error in metres (optional, default: 0)
- * 3: mode <STRING> - "HE" or "SMOKE" (optional, default: "HE")
- * 4: rounds <NUMBER> - HE rounds to fire (optional, default: -1 = Waldo_AIPass_Artillery_Rounds)
- * 5: shoot and scoot <BOOL, NUMBER> (optional, default: -1 = Waldo_AIPass_Artillery_ShootAndScoot)
- *
- * 6: purpose <STRING> - SUPPORT or COUNTER (optional, default: SUPPORT); selects live policy.
- *
- * Revalidates eligibility, role, enabled state and safety around the dispersed aim point before fire.
- *
- * Return Value:
- * Boolean - true when the mission was fired
- *
- * Example:
- * [_mortar, _enemyPos, 25] call Waldo_fnc_AIPassArtilleryFire;
- * Result: three rounds land around the enemy position.
- *
- * Current callers: Waldo_fnc_AIPassArtilleryRequest and the counter-battery handler.
+ * Queues spaced single rounds on the server. This is dispatch acceptance, not proof a shell fired.
+ * Locality/authority: documented guards enforce server coordination and owner-local execution.
+ * Repeat/JIP: mission tokens reject stale work; server state survives HC migration, not restart.
+ * Arguments: 0: battery <OBJECT>, objNull selects a same-side gun for the spotter; 1: reported ATL <ARRAY>; 2: error <NUMBER>, 0; 3: mode <STRING>, HE; 4: rounds <NUMBER>, -1; 5: scoot <BOOL/NUMBER>, -1; 6: purpose <STRING>, SUPPORT; 7: spotter <OBJECT>, objNull; 8: enemy <OBJECT>, objNull.
+ * Return Value: Boolean, request queued or accepted.
+ * Current callers: ArtilleryRequest, CounterBattery, Retreat and server mission scripts.
+ * Example: [_gun, _reportedPosition, 40] call Waldo_fnc_AIPassArtilleryFire;
  */
-
 params [["_battery", objNull, [objNull]], ["_target", [], [[]]], ["_error", 0, [0]], ["_mode", "HE", [""]],
-    ["_roundsWanted", -1, [0]], ["_scoot", -1, [0, true]], ["_purpose", "SUPPORT", [""]]];
-if (_roundsWanted < 1) then {_roundsWanted = missionNamespace getVariable ["Waldo_AIPass_Artillery_Rounds", 3]};
-if (_scoot isEqualType 0) then {_scoot = missionNamespace getVariable ["Waldo_AIPass_Artillery_ShootAndScoot", true]};
-if (isNull _battery || {!alive _battery} || {!local _battery} || {!alive gunner _battery} || {count _target < 2}) exitWith {false};
-if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false]) || {[] call Waldo_fnc_AIPassIsPaused}
-    || {!([group gunner _battery] call Waldo_fnc_AIPassIsEligible)}
-    || {!([_battery, _purpose] call Waldo_fnc_AIPassArtilleryRole)}
-    || {time < (_battery getVariable ["Waldo_AIPass_BusyUntil", -1])}) exitWith {false};
+    ["_rounds", -1, [0]], ["_scoot", -1, [0, true]], ["_purpose", "SUPPORT", [""]], ["_spotter", objNull, [objNull]], ["_enemy", objNull, [objNull]]];
+if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_AIPassArtilleryFire", 2]; true};
+if (remoteExecutedOwner > 2) then {
+    // Only AI owners may forward these internal requests. Player clients use authenticated Zeus APIs.
+    private _hc = allPlayers findIf {_x isKindOf "HeadlessClient_F" && {owner _x == remoteExecutedOwner}};
+    if (_hc < 0 || {if (isNull _spotter) then {remoteExecutedOwner != owner _battery} else {remoteExecutedOwner != owner _spotter}}) then {_purpose = ""};
+};
+if (!(_purpose in ["SUPPORT", "COUNTER"]) || {!(_mode in ["HE", "SMOKE"])} || {count _target < 2} || {_target findIf {!(_x isEqualType 0)} >= 0}
+    || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])} || {[] call Waldo_fnc_AIPassIsPaused}) exitWith {false};
 private _counter = _purpose == "COUNTER";
 if !(missionNamespace getVariable [["Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable"] select _counter, false]) exitWith {false};
-private _smoke = toUpperANSI _mode == "SMOKE";
-private _best = "";
-private _bestHit = -1;
-{
-    private _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
-    private _isSmoke = getText (configFile >> "CfgAmmo" >> _ammo >> "simulation") in ["shotSmoke", "shotSmokeX"]
-        || {(toLowerANSI _ammo) find "smoke" >= 0} || {(toLowerANSI _x) find "smoke" >= 0};
-    private _ammoConfig = configFile >> "CfgAmmo" >> _ammo;
-    private _hit = getNumber (_ammoConfig >> "hit");
-    // HE means a plain shell: rounds that scatter submunitions (mines, cluster) or illuminate are skipped.
-    private _special = getText (_ammoConfig >> "simulation") == "shotIlluminating"
-        || {getText (_ammoConfig >> "submunitionAmmo") != ""} || {isArray (_ammoConfig >> "submunitionAmmo")};
-    if (_isSmoke == _smoke && {_smoke || {!_special && {_hit > _bestHit}}}) then {_best = _x; _bestHit = _hit};
-} forEach (getArtilleryAmmo [_battery]);
-if (_best == "") exitWith {false};
-private _dispersion = _error + (((_battery distance2D _target) * 0.01) min 150);
-private _aim = _target getPos [random _dispersion, random 360];
-private _minimum = if (_smoke) then {50} else {
-    missionNamespace getVariable [["Waldo_AIPass_Artillery_MinFriendlyDistance", "Waldo_AIPass_CounterBattery_MinFriendlyDistance"] select _counter, 200]
+if (!isNull _spotter && {!alive _spotter || {!(_spotter getVariable ["Waldo_AIPass_Spotter", false])}}) exitWith {false};
+if (!isNull _spotter && {time < (_spotter getVariable ["Waldo_AIPass_NextFireRequest_" + _purpose, -1])}) exitWith {false};
+if (_counter && {!isNull _enemy} && {!isNull _spotter || {!isNull _battery}}) then {
+    private _sideKey = str (if (isNull _spotter) then {side group gunner _battery} else {side group _spotter});
+    if (time < (_enemy getVariable ["Waldo_AIPass_CounterUntil_" + _sideKey, -1])) then {_purpose = ""};
 };
-private _side = side group gunner _battery;
-if ((_aim nearEntities [["CAManBase", "LandVehicle", "Air", "Ship"], _minimum]) findIf {
-    private _entity = _x;
-    alive _entity && {([_entity] + crew _entity) findIf {
-        alive _x && {side _x == civilian || {_side getFriend (side _x) >= 0.6}}
-    } >= 0}
-} >= 0) exitWith {false};
-if !(_aim inRangeOfArtillery [[_battery], _best]) exitWith {false};
-private _eta = _battery getArtilleryETA [_aim, _best];
-if (_eta < 0) exitWith {false};
-private _rounds = [_roundsWanted max 1, 2] select _smoke;
-_battery doArtilleryFire [_aim, _best, _rounds];
-_battery setVariable ["Waldo_AIPass_BusyUntil", time + _eta + _rounds * 6 + 20];
-missionNamespace setVariable ["Waldo_AIPass_ArtilleryMissions", (missionNamespace getVariable ["Waldo_AIPass_ArtilleryMissions", 0]) + 1];
-diag_log format ["[WMP AI PASS] Artillery %1 fired %2 x %3 at %4 (eta %5 s)", typeOf _battery, _rounds, _best, _aim, round _eta];
-if (_scoot && {!(_battery isKindOf "StaticWeapon")}) then {
-    [{
-        params ["_job"];
-        private _battery = _job get "battery";
-        if (alive _battery && {local _battery} && {canMove _battery} && {!isNull driver _battery}
-            && {[group driver _battery] call Waldo_fnc_AIPassIsEligible}) then {
-            private _group = group driver _battery;
-            private _spot = (getPosATL _battery) getPos [200 + random 150, random 360];
-            if (!surfaceIsWater _spot && {local _group}) then {[_group, _spot, 30] call Waldo_fnc_AIPassGroupMove};
-        };
-        -1
-    }, createHashMapFromArray [["battery", _battery]], _eta + _rounds * 5 + 10] call Waldo_fnc_AIPassQueueJob;
+if (_purpose == "") exitWith {false};
+private _missions = missionNamespace getVariable ["Waldo_AIPass_FireMissions", createHashMap];
+if (isNull _battery) then {
+    private _candidates = missionNamespace getVariable ["Waldo_AIPass_AllArtillery", []];
+    private _index = _candidates findIf {
+        alive _x && {alive gunner _x} && {side group gunner _x == side group _spotter}
+        && {!((netId _x) in _missions)} && {[_x, _purpose] call Waldo_fnc_AIPassArtilleryRole}
+        && {[group gunner _x] call Waldo_fnc_AIPassIsEligible}
+        && {_target inRangeOfArtillery [[_x], [_x, _mode == "SMOKE"] call Waldo_fnc_AIPassArtilleryAmmo]}
+    };
+    if (_index >= 0) then {_battery = _candidates select _index};
 };
+if (isNull _battery || {!alive gunner _battery} || {(netId _battery) in _missions}
+    || {!([_battery, _purpose] call Waldo_fnc_AIPassArtilleryRole)}
+    || {!([group gunner _battery] call Waldo_fnc_AIPassIsEligible)}
+    || {!isNull _spotter && {side group _spotter != side group gunner _battery}}) exitWith {false};
+private _magazine = [_battery, _mode == "SMOKE"] call Waldo_fnc_AIPassArtilleryAmmo;
+if (_magazine == "") exitWith {false};
+if (_rounds < 1) then {_rounds = missionNamespace getVariable [["Waldo_AIPass_Artillery_Rounds", "Waldo_AIPass_CounterBattery_Rounds"] select _counter, 3]};
+if (_scoot isEqualType 0) then {_scoot = missionNamespace getVariable [["Waldo_AIPass_Artillery_ShootAndScoot", "Waldo_AIPass_CounterBattery_ShootAndScoot"] select _counter, true]};
+private _serial = (missionNamespace getVariable ["Waldo_AIPass_FireSerial", 0]) + 1;
+missionNamespace setVariable ["Waldo_AIPass_FireSerial", _serial];
+private _token = format ["%1:%2", netId _battery, _serial];
+private _mission = createHashMapFromArray [
+    ["battery", _battery], ["key", netId _battery], ["token", _token], ["fix", [+_target, _error max 0]], ["mode", _mode], ["purpose", _purpose],
+    ["spotter", _spotter], ["enemy", _enemy], ["remaining", (round _rounds max 1) min 10], ["fired", 0],
+    ["offset", [300, 0] select (_mode == "SMOKE")], ["bearing", random 360], ["magazine", _magazine],
+    ["phase", "WAIT"], ["due", time], ["deadline", time + 900], ["scoot", _scoot], ["side", side group gunner _battery]
+];
+if (!isNull _spotter) then {_spotter setVariable ["Waldo_AIPass_NextFireRequest_" + _purpose, time + (missionNamespace getVariable [["Waldo_AIPass_Artillery_Cooldown", "Waldo_AIPass_CounterBattery_Interval"] select _counter, 120])]};
+if (_counter && {!isNull _enemy}) then {_enemy setVariable ["Waldo_AIPass_CounterUntil_" + str (side group gunner _battery), time + (missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Interval", 60])]};
+_missions set [netId _battery, _mission];
+missionNamespace setVariable ["Waldo_AIPass_FireMissions", _missions];
+_battery setVariable ["Waldo_AIPass_FireToken", _token, true];
+_battery setVariable ["Waldo_AIPass_BusyUntil", time + 900, true];
+[Waldo_fnc_AIPassArtilleryMissionStep, _mission, 0] call Waldo_fnc_AIPassQueueJob;
 true

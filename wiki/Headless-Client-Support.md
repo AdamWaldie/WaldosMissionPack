@@ -148,11 +148,11 @@ migration queue in the RPT.
 
 ## Eligibility
 
-### WMP feature assets always remain on the server
+### WMP assets with server-local controllers
 
 Headless clients receive ordinary eligible mission AI only. WMP state-machine assets that require
 continuous server-local control are never offloaded: Paradrop aircraft and jump groups, Airborne
-Gunships, Dynamic AA, Transport Services and WMP AI convoys stay on server owner `2`. Their
+Gunships, Dynamic AA and Transport Services stay on server owner `2`. Their
 registries, waypoint controllers, cleanup and live transitions are server-authoritative, so
 splitting crew ownership would create races and broken behaviour.
 
@@ -261,7 +261,7 @@ expects to keep continuously driving.
 
 For that reason, `Waldo_fnc_GunshipRegister`, the shared paradrop flight-route builder
 (`Waldo_fnc_ParadropBuildFlightRoute`, used by both `Waldo_fnc_ParadropQuickFlightSetup` and
-`Waldo_fnc_ParadropCreateDropZone`), `Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` pin
+`Waldo_fnc_ParadropCreateDropZone`) and `Waldo_fnc_DynamicAACreate` pin
 their own managed vehicle(s) server-side by default via `Waldo_fnc_HeadlessPinCrew`. That call sets
 **both** `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) **and** ACE's own
 `acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
@@ -433,3 +433,9 @@ do not try to solve it by transferring WMP's aircraft state machines.
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
+
+AI convoys now use server registration and owner-local driving workers instead of server pins.
+Their ordered registry replays to joining headless clients, and a new owner rebuilds the local
+route trail. Smart AI restoration checkpoints and clear-building progress also survive as public
+state. These new handover paths still need in-engine WMP and ACE headless verification.
+Feature-crew release restores recorded pre-pin exclusions; unknown exclusions are preserved.

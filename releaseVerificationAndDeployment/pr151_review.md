@@ -1,41 +1,100 @@
 # PR 151 review and validation
 
-Review baseline: PR head `1f88659d1553d2dfab2f664bf9a2fd75295971ce`, compared with current remote main `7bf85065fdab2050d874fbbf504c4b99c7885761` on 26 September 2026. The review used an isolated checkout. The original working directory and its audit changes were preserved.
+PR 151 remains draft pending in-engine acceptance. The review began at `1f88659` against main
+`7bf8506`, using an isolated worktree and preserving the original dirty checkout. Review commit
+`030b211` corrected the initial defects. This follow-up implements the requested artillery and
+convoy changes and addresses the source-level integration blockers. It also reviews the newer
+remote `036942e` blocker fixes and reconciles their intent with the expanded implementation.
 
-The PR should remain a draft. The fixes below address confirmed source defects, but the headless-handover and feature-release contracts still need work. No Arma runtime result is claimed.
+## Changes and intent
 
-## Corrections made
+- **Artillery warning:** opening HE uses a deliberate 300 m offset plus report error. At most eight
+  candidates are checked against one living-player snapshot; each needs the configured 200 m
+  exclusion plus 100 m buffer. Failure cancels the mission. This is an aim safeguard, not a promise
+  that dispersion or later movement cannot hurt players.
+- **Observed corrections:** only explicitly assigned existing soldiers with binoculars and a working
+  radio request support. Zeus lists assigned names. No extra units spawn. Each confirmed round is
+  followed by estimated flight time plus a default 20 s warning pause. A fresh observed report
+  reduces offset to 55%, with a 40 m floor. Lost observation/radio freezes the report and accuracy;
+  the current mission may continue there. Radar-only fixes remain displaced.
+- **Cross-owner artillery:** the server holds the mission and shot count, asks the spotter owner for
+  a report and sends one firing command to the gun owner. Actual engine firing events confirm
+  expenditure. Unknown outcomes are quarantined without retry; explicit owner rejection ends the
+  mission. Every shot rechecks role, switches, pause, eligibility, ammunition/range and nearby
+  friendlies/civilians, including crew. No claim is made that an issued engine command is cancellable.
+- **Headless restoration:** ownership epochs invalidate old jobs. Changed restoration checkpoints
+  retain behaviour, speed, drill-disabled features and movement information; pass-set stance markers
+  are public. New owners restore interrupted transient work, then adopt eligible groups. This covers
+  the intended WMP and ACE headless paths without pinning all AI to the server.
+- **Clearing replay:** public orders retain the building, completed position indices, shared-server
+  deadline and original behaviour. New owners rebuild local assignments with time remaining.
+  Replacement orders, release and stop clear work. Expired resumes do not issue new movement.
+- **Feature pin provenance:** first-pin records preserve pre-existing WMP/ACE exclusions for crew,
+  groups and generated paradrop units. Release restores recorded values and preserves unknown pins.
+- **Zeus results:** named payloads are validated on the server and run on the current owner. Success
+  follows the owner's result; missing responses are reported as uncertain. Required building and
+  spotter targets are explicit. Legacy positional AI_ORDER input retains a documented adapter.
+- **Convoy:** server registration replaces a server-pinned infinite controller. Owner-local workers
+  follow a sampled leader route, damp spacing speed, slow turns and use bounded stuck recovery.
+  Stop restores recorded formation, attack, forced speed and unloading. No FSM, teleport or repeated
+  trail broadcast. Use `[convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy` to stop; terminating the old
+  spawn handle no longer stops the shared worker.
+- **Protected tasks and cleanup:** survivor regroup avoids unconscious soldiers, service commands
+  and posted orders, and rechecks host capacity immediately before joining. Garrison handler IDs,
+  duck callbacks and original stance have explicit release/ownership cleanup.
 
-- Corrected the Zeus waypoint-edit event payload and added waypoint selection/attribute coverage. Bohemia documents edited/placed events as curator, group and index; deleted/selected events carry a waypoint array.
-- Applied the shared eligibility gate to garrison, defence and clear-building orders before side effects. Group-level feature markers now receive the same checks as unit and vehicle markers.
-- Made repeated garrison/defence placement replace old assignments and invalidate older arrival jobs. Garrison release restores PATH only when this pass disabled it.
-- Rechecked eligibility in running drills, coordinated assaults and delayed contact delivery. Live LAMBS mode changes now affect already managed groups, and the LAMBS restoration marker survives transfer between owners.
-- Revalidated artillery role, feature switch, eligibility and friendly/civilian proximity at the actual dispersed aim point immediately before firing. Mounted occupants are included. Delayed counter-battery missions retain their responding side; delayed relocation also respects Zeus control.
-- Made blocked backblast stop the current firing request after ordering the gunner to reposition. A later step must check clearance again.
-- Cancelled pending startup on stop, cleared abandoned airborne work, removed tracked aircraft handlers and gated delayed flare bursts. Parachute exits restore the prior damage setting on the current unit owner.
-- Required actual landing before assigning the post-drop ground attack. Waypoint completion now compares indices with currentWaypoint because completed waypoints remain in the engine list.
-- Corrected the scheduler documentation: its budget is checked between jobs. A running job can exceed it, and queue traversal remains proportional to queue size.
+Earlier corrections remain: correct Zeus waypoint event payloads; shared eligibility checks;
+repeat-order generations; live LAMBS mode restoration; delayed drill gates; blocked-backblast
+repositioning without a same-step shot; stop/start cancellation; airborne damage restoration on the
+current owner; actual landing before ground orders; and correct pending waypoint index checks.
 
-## Remaining merge blockers
+## Performance limits
 
-1. **P1: transient restoration does not survive ownership changes.** `aiPassGroupTick.sqf` clears the managed flag on locality loss, and `aiPassFlankStep.sqf` retires immediately. The old machine retains the group state and drill restoration records. A new owner cannot reliably restore behaviour, stance, speed and disabled AI features from that data. Returning to a previous owner can reuse stale state. This needs an explicit ownership-transfer cleanup/replay contract, including an abrupt headless disconnect.
-2. **P1: clear-building orders have no durable replay.** `aiPassClearBuilding.sqf` stores its flag and job locally. Discovery replays garrison and defence only. A transfer drops the clearing job; a return can encounter a stale clear flag. The generation check prevents replacement jobs fighting locally but does not solve transfer.
-3. **P1: feature-crew release clears exclusions without provenance.** `aiPassReleaseFeatureCrew.sqf` clears WMP and ACE headless exclusions on groups and soldiers. It cannot distinguish a feature's own pin from a mission-maker exclusion that existed first. Release must restore recorded prior values or preserve exclusions it does not own.
+The AI scheduler has a default soft 1 ms budget checked between jobs, not a hard pre-emption limit.
+Queue traversal still scales with queue size. Discovery supplies gun and spotter caches. Counter
+observation handles at most four cached spotters per job. Opening HE checks at most eight aims once;
+there is no continuous player/projectile safety monitor. Restoration broadcasts occur on change.
 
-The AI Orders feedback also reports successful dispatch as acceptance for remote groups. An owner can subsequently reject the order. Add an authoritative owner result before presenting a success notification.
+Convoys share one worker per AI-owning machine, considering one convoy each 0.25 s. A convoy steps
+at most once per second, holds at most 128 route samples and sends at most ten path points per
+follower no more often than every three seconds. Registration permits 2–20 vehicles. Larger convoy
+counts reduce update frequency. On migration, formation following bridges reconstruction of the
+local trail; complete route history is not broadcast.
+
+## Source review
+
+The [reference matrix](pr151_ai_source_review.md) inventories 14 packages and records targeted
+mechanisms, adaptations, existing coverage and rejected/deferred ideas. The inventory includes 633
+SQF files; this is not a full line-by-line audit of every source. Upstream comments are not evidence
+of correctness. No addon FSM, medical replacement, skill takeover or broad flight controller was
+imported. WMP remains a mission-script pack.
 
 ## Verification
 
-The full repository suite passed: **310 tests**, including **11 new static Smart AI regression tests**. These inspect source contracts and do not execute SQF.
+The current pre-integration repository run passed **318 tests**, including **19 Smart AI contract
+tests**. These inspect source/tooling contracts; they do not execute SQF mechanics. Final integrated
+static gate results are recorded below when completed. The builder runs before source scanners.
 
-All ten static gates passed: SQF, configuration, interaction UI, drawn UI, Zeus/script parity, wiki assets, wiki style, documentation contracts, skill validation and performance regression. The performance scanner reports 95 existing findings, including 10 high findings; it reports no new high-severity recurring patterns. The audit builder ran before the scanners. Git whitespace validation passed.
+## Remaining merge blockers: engine acceptance
 
-The initial test run lacked PyYAML. Installing it into the isolated checkout resolved the dependency errors. The regression tests also reject the original PR source; several absence checks surface as lookup errors on that version.
+No Arma session was launched in this follow-up. Source fixes do not establish correct live behaviour.
+Use `launch_pr_review_audit.ps1`, default 3840x2160 and `-noBattlEye`, and require actual VR mission
+entry plus fresh RPT initialization evidence. Exercise:
 
-## Engine acceptance still required
+1. Explicit spotter assignment/removal, binocular/radio loss, jamming, occlusion and death. Move the
+   target after observation loss and verify the aim does not follow or tighten without a report.
+2. Opening aim rejection near players, no safe candidate, friendly occupied vehicles near later
+   aims, role/switch changes, ammunition exhaustion and gun deletion. Measure warning intervals
+   against actual impacts. No duplicate fire after owner change or an uncertain command.
+3. Server-to-HC, HC-to-server, HC-to-HC and abrupt disconnect during flanks, clearing and artillery.
+   Repeat with WMP headless and ACE headless, late joining owners, both LAMBS modes, and stopped AI.
+4. Garrison/defence/clear replacement, release and stop/restart; Zeus waypoint edits; real owner
+   rejection and response timeout. Verify pre-existing mission-maker exclusions survive crew release.
+5. Convoy bends/junctions, mixed sizes, obstruction, leader loss, reconfiguration, stop, player entry,
+   Zeus interruption and locality migration. Verify restored speed/unloading/formation and cleanup.
+6. Existing Paradrop, Transport Services, Gunship, Dynamic AA, dialogue and Dynamic AO interactions,
+   SafeStart/ENDEX, airborne cancellation and damage restoration.
 
-After the blockers are fixed, use `launch_pr_review_audit.ps1` with its default 3840x2160 resolution and `-noBattlEye`. Verify mission entry and fresh RPT initialization markers. Exercise Zeus edits during drills and delayed fire; repeat, replace and release orders; stop/restart during an airborne drop; change battery roles and move friendly occupied vehicles into the aim area; test SafeStart/ENDEX; and transfer groups server to HC, back to server and through an HC disconnect. Repeat with LAMBS SPLIT and WMP modes, and with Paradrop, Transport Services, Gunship, Dynamic AA, Convoy and dialogue exclusions present.
-
-Agent-driven Arma launch requires permission under AGENTS.md because it writes a mission into the installed game directory and opens the application. No game process was launched during this review.
-
-Engine event reference: https://community.bistudio.com/wiki/Arma_3:_Event_Handlers#CuratorWaypointEdited
+Agent-driven launch permission is required by AGENTS.md: “Agent-driven launches write a disposable
+mission into the installed Arma directory and open a desktop application, so obtain the required
+permission.” That permission request remains pending. Static work proceeds independently.

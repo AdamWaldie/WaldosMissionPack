@@ -162,6 +162,9 @@
  *   - Waldo_AIPass_ReactionSpeed: how often squads re-assess (1 = normal; higher costs more server time).
  * - Waldo_AIPass_Artillery_Enable (MISSION MAKER): squads call fire from friendly AI artillery on well-located enemies only.
  * - Waldo_AIPass_Artillery_Rounds (ADVANCED): rounds per fire mission.
+ * - Waldo_AIPass_Artillery_OpeningSafeDistance (ADVANCED): opening HE aim exclusion around living players; default 200 m.
+ * - Waldo_AIPass_Artillery_OpeningBuffer (ADVANCED): extra opening aim margin; default 100 m, not an impact guarantee.
+ * - Waldo_AIPass_Artillery_WarningInterval (ADVANCED): pause after estimated impact before next shot; default 20 s.
  * - Waldo_AIPass_Artillery_MinFriendlyDistance (ADVANCED): no mission lands within this distance of friendlies or civilians.
  * - Waldo_AIPass_Artillery_MaxError (ADVANCED): largest target position error accepted for a mission.
  * - Waldo_AIPass_Artillery_Cooldown (ADVANCED): seconds between missions called by one squad.
@@ -319,6 +322,9 @@ createHashMapFromArray [
         ["Waldo_AIPass_Reinforce_Radius", 600], // METRES: how far away responders may be.
         ["Waldo_AIPass_Reinforce_MaxResponders", 2], // COUNT: responding squads per squad in contact.
         ["Waldo_AIPass_Artillery_Enable", false], // BOOL: squads call fire from friendly AI artillery on well-located enemies.
+        ["Waldo_AIPass_Artillery_OpeningSafeDistance", 200], // Advanced artillery ranging control.
+        ["Waldo_AIPass_Artillery_OpeningBuffer", 100], // Advanced artillery ranging control.
+        ["Waldo_AIPass_Artillery_WarningInterval", 20], // Advanced artillery ranging control.
         ["Waldo_AIPass_Artillery_Rounds", 3], // COUNT: rounds per fire mission.
         ["Waldo_AIPass_Artillery_MinFriendlyDistance", 200], // METRES: no mission near friendlies or civilians.
         ["Waldo_AIPass_Artillery_MaxError", 50], // METRES: largest target position error accepted.

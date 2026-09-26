@@ -8,15 +8,11 @@ The Smart AI Pass improves how AI squads behave. [Waldo's AI Tuning](Waldos-AI-T
 well they shoot and spot; this pass changes what they do. It covers every non-player AI group,
 including Dynamic AO patrols and garrisons, and needs no mod beyond the pack's required CBA and ACE.
 
-It is written from scratch for WMP. The design comes from an audit of several community AI mods
-(Smart Combat V2, Digii AI, Scorpion's Advanced AI, PROTOCOL, Smart Merge, Smart Aircraft and Better
-Static). Their good ideas were kept and their faults fixed:
-- decisions use only what the engine already knows, with no extra detection that makes AI spot faster;
-- nothing runs on player machines, and there are no per-shot broadcasts;
-- there are no whole-world scans in fast loops;
-- the leader is never ordered to walk away from his squad;
-- squads' own waypoints always resume afterwards;
-- mission-maker AI settings are never overwritten.
+WMP implements these behaviours as mission scripts. The reference review covered Smart Combat V2,
+Digii AI, Scorpion's Advanced AI, PROTOCOL, Smart Merge, Smart Aircraft, Better Static and Better
+Convoy. It adapted selected mechanisms without importing addon controllers or FSMs. Targeting uses
+engine knowledge; owner-local workers issue AI commands. Restoration records preserve the values
+WMP needs when releasing its own changes. These contracts still require in-engine acceptance.
 
 It is **off by default**, and every behaviour has its own switch.
 
@@ -90,7 +86,7 @@ touched.
 | Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
 | Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass sighted enemies to nearby friendly squads. The range is 500 m with a working radio, or 35 m by voice. Radio jamming blocks the radio report. |
 | Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help needs a radio. |
-| Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | A squad with a good fix on the enemy calls a fire mission from friendly AI artillery, using plain high-explosive shells (never mines, cluster or illumination rounds). The target must be at least 200 m from friendlies and civilians, and mobile guns relocate after firing. Jamming blocks the call. |
+| Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | Explicitly assigned spotters request spaced HE ranging rounds from friendly artillery, including guns on another owner. Corrections require observation and radio contact. Opening aim points avoid players; every shot checks friendlies and civilians. Mobile guns may relocate afterwards. |
 | Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
 | Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Friendly AI artillery answers enemy artillery, but only if its position is known (see below). |
 | Airborne insertion | `Waldo_AIPass_Airborne_Enable` (off) | AI squads riding in AI-flown helicopters or planes climb to jump altitude as they near an enemy they know about, then parachute out one at a time about 700 m away. Each soldier keeps his backpack. Once down they fight as a normal squad. Helicopters on an unload waypoint still land, and player-flown aircraft never trigger it. |
@@ -139,6 +135,7 @@ headless clients that join later. Each squad uses them from its next step; nothi
 | `Waldo_AIPass_ContactReports_Radius` | `500` | Radio report range. |
 | `Waldo_AIPass_Reinforce_Radius`, `_MaxResponders` | `600`, `2` | How far away, and how many, squads come to help. |
 | `Waldo_AIPass_Artillery_Rounds`, `_MaxError`, `_Cooldown`, `_MinFriendlyDistance`, `_ShootAndScoot` | `3`, `50`, `120`, `200`, on | Squads' artillery support. |
+| `Waldo_AIPass_Artillery_OpeningSafeDistance`, `_OpeningBuffer`, `_WarningInterval` | `200`, `100`, `20` | Opening aim exclusion and added margin in metres; warning pause after estimated impact in seconds. |
 | `Waldo_AIPass_Artillery_DefaultRole` | `"BOTH"` | Missions a gun takes when it has no role of its own (see below). |
 | `Waldo_AIPass_CounterBattery_Mode`, `_Rounds`, `_MaxError`, `_Delay`, `_Interval`, `_MinFriendlyDistance`, `_ShootAndScoot` | `KNOWN`, `4`, `100`, `20`, `60`, `200`, on | Counter-battery, set separately from support. |
 | `Waldo_AIPass_Airborne_DeployDistance`, `_Altitude`, `_MinAltitude` | `700`, `250`, `120` | Airborne insertion. |
@@ -167,6 +164,38 @@ Guns without a role use `Waldo_AIPass_Artillery_DefaultRole`. In Zeus, **AI Orde
 three choices for a group's guns. Counter-battery never fires when friendlies or civilians are within
 `Waldo_AIPass_CounterBattery_MinFriendlyDistance` of the enemy gun.
 
+Assign existing soldiers explicitly on the server, or select the soldier and use **AI Orders >
+Assign artillery spotter**. The group selector lists assigned spotter names. Assignment persists
+until removed; it neither spawns nor equips anyone.
+
+```sqf
+[spotter1, true] call Waldo_fnc_AIPassSetSpotter;
+[spotter1, false] call Waldo_fnc_AIPassSetSpotter; // remove assignment
+```
+
+The soldier needs binoculars, a radio, a recent known enemy and a clear view. WMP radio jamming
+blocks reports. The spotter watches the enemy and uses binoculars while reporting. An ordinary
+radio-equipped squad member cannot substitute. Retreat smoke is a separate support utility.
+
+HE starts with a deliberate 300 m offset, plus report error. At most eight aim candidates are
+checked against one snapshot of living players. The first aim must be at least the configured
+200 m safety distance plus 100 m buffer from each player. If none is safe and in range, the mission
+ends. This protects aim selection, not the eventual blast: dispersion and player movement during
+flight prevent an absolute impact guarantee.
+
+The server issues one round and waits for the engine firing event, estimated flight time and a
+20 s warning pause. A fresh observed report reduces the offset to 55% of its previous value, with
+a 40 m floor. The spotter must see the target and previous aim area to correct. Losing the spotter,
+visibility or radio leaves the current mission firing at its last report and correction quality;
+it does not follow unseen movement. Radar-only missions keep their displaced aim quality unless
+an assigned observer supplies corrections through a new observed mission.
+
+Each shot rechecks role, eligibility, ammunition, range and friendly/civilian proximity on the gun
+owner. Server mission tokens and actual firing events coordinate guns and spotters on different
+owners. An unconfirmed firing command is quarantined without retry; an explicit owner rejection
+ends it. Already issued engine orders and airborne shells cannot be recalled. Stop/restart is not
+proof that an outstanding engine command has disappeared.
+
 ### Survivor regroup in detail
 
 - It only starts when someone dies; quiet missions cost nothing.
@@ -174,13 +203,14 @@ three choices for a group's guns. Counter-battery never fires when friendlies or
   on foot. It must once have had at least `Waldo_AIPass_Regroup_MinimumPeakSize` members (default 3).
 - The host is the nearest same-side infantry squad within `Waldo_AIPass_Regroup_SearchRadius`. The
   merged squad must stay within `Waldo_AIPass_Regroup_MaxGroupSize`.
+- Unconscious soldiers, protected service commands and explicit garrison/defend/clear orders prevent merging. Capacity is rechecked immediately before joining.
 - Survivors join once close to the host leader. If they get stuck or take too long, they join where
   they stand.
 
 ### Counter-battery modes
 
 `Waldo_AIPass_CounterBattery_Mode` sets how an enemy battery can be located:
-- `KNOWN` (default): only a battery a friendly squad has spotted.
+- `KNOWN` (default): only a battery an explicitly assigned spotter can observe and report.
 - `RADAR`: also any enemy battery firing within `Waldo_AIPass_CounterBattery_RadarRange` of a radar
   you register:
 
@@ -190,7 +220,7 @@ three choices for a group's guns. Counter-battery never fires when friendlies or
 
 ## Orders
 
-Two orders are given to a specific squad from a script or from Zeus (**WMP AI & Combat > AI Orders**).
+Orders are given to a specific squad from a script or from Zeus (**WMP AI & Combat > AI Orders**).
 
 **Garrison** occupies the buildings around a point:
 - roofed and upper positions are taken first;
@@ -314,16 +344,20 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
   module is listed first), and choose an order:
   - garrison buildings here;
   - defend a line here (width and facing);
-  - release a garrison or defence;
-  - clear the building here;
+  - release a garrison, defence or clear-building order;
+  - clear the explicitly selected building (a missing target is rejected);
+  - assign or remove the explicitly selected soldier as an artillery spotter;
   - parachute out now, for a squad riding as cargo in an AI-flown aircraft at least 120 m over land;
   - artillery role for the group's guns: support only, counter-battery only, or both;
   - keep the group for Zeus (exclude it from the pass);
   - return it to the pass.
 
+Order success is reported after the current owner accepts it. Missing responses are reported as
+uncertain, rather than presented as successful execution.
+
 ## Performance and network
 
-- Runs only on the server and headless clients; player machines never run pass code.
+- AI workers run on the server and headless clients; interface clients provide Zeus controls.
 - One scheduler per machine with a soft budget checked between jobs. At least one due job runs
   each tick. A running job can exceed the budget, and scanning the queue costs more as it grows.
   The remaining jobs wait their turn in rotation. Steps are slowed when FPS is low.
@@ -331,8 +365,9 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
   nearby, up to every 20 s far away. Squads more than 2.5 km from every player only update their
   state and morale.
 - Uses only what the engine already knows about enemies, and adds no detection of its own.
-- No broadcasts in loops, and no polling of living soldiers for survivor regroup. Contact reports,
-  reinforcement and artillery stay within one machine.
+- Restoration checkpoints broadcast only when their contents change. Clear-building progress and orders have durable replay state.
+- Artillery uses cached guns/spotters, one observer request per round and at most eight opening aim candidates. Counter-battery observer jobs inspect at most four cached spotters per step.
+- Contact reports and reinforcement remain owner-local; artillery has a server coordinator and owner-local execution.
 
 ## Limitations
 
@@ -343,13 +378,10 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
   - grenade evasion depends on where the engine raises the `ProjectileCreated` event in multiplayer;
     if it is not raised where the AI live, the feature silently does nothing;
   - many aircraft already fire flares under AI control.
-- Contact reports, reinforcement and artillery only work between squads owned by the same machine
-  (the server, or one headless client).
+- Contact reports and reinforcement only work between squads owned by the same machine.
 - LAMBS can override move orders while its own danger logic is active. Stuck-move fallbacks and
   time limits keep every behaviour finite.
-- Headless handover remains a merge blocker: transient restoration data is machine-local. A new
-  owner can adopt a group without its previous stance, behaviour or disabled-feature records.
-  Clear-building jobs also lack a durable replay payload. Do not rely on mid-order migration yet.
+- Ownership epochs retire stale jobs; changed restoration checkpoints and clear-building progress are public. The new owner restores and adopts the group. WMP and ACE headless transfers, including abrupt disconnects, still need in-engine verification.
 - A garrison needs the pass running to be re-applied after a headless-client handover; the LAMBS
   hand-over does not.
 

@@ -398,56 +398,32 @@ switch (toUpperANSI _action) do {
                 remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
         };
     };
-    case "AI_ORDER": {
-        _settings params [["_order", "", [""]], ["_group", grpNull, [grpNull]], ["_position", [], [[]]], ["_radius", 50, [0]],
-            ["_building", objNull, [objNull]], ["_facing", 0, [0]]];
-        // The curator was authenticated above. Run the order next frame, outside this remote-execution
-        // context, because the order APIs refuse calls whose remote sender is not the server.
+    case "AI_CONVOY": {
+        private _values = createHashMapFromArray _settings;
         [{
-            params ["_order", "_group", "_position", "_radius", "_building", "_facing", "_requestOwner"];
-            // An order from Zeus hands the group to the pass: clear the hold Zeus set just by selecting
-            // it, and any earlier Zeus waypoints, so they cannot cancel or refuse the order.
-            if (!isNull _group && {_order in ["GARRISON", "DEFEND", "CLEAR", "AIRBORNE"]}) then {
-                _group setVariable ["Waldo_AIPass_ZeusWaypoints", false, true];
-                _group setVariable ["Waldo_AIPass_ZeusHold", [random 1e6, 0], true];
+            params ["_values", "_requestOwner"];
+            private _target = _values getOrDefault ["target", objNull];
+            private _operation = _values getOrDefault ["operation", ""];
+            private _speed = _values getOrDefault ["speed", 30];
+            private _separation = _values getOrDefault ["separation", 15];
+            private _pushThrough = _values getOrDefault ["pushThrough", true];
+            private _accepted = false;
+            if (!isNull _target && {_target isKindOf "LandVehicle"} && {alive driver _target}
+                && {_operation in ["START", "STOP"]} && {_speed isEqualType 0} && {_separation isEqualType 0} && {_pushThrough isEqualType true}) then {
+                _accepted = [group driver _target, [_speed, 0] select (_operation == "STOP"), _separation, _pushThrough] call Waldo_fnc_SimpleAiConvoy;
             };
-            private _accepted = switch (_order) do {
-                case "GARRISON": {[_group, _position, (_radius max 15) min 150] call Waldo_fnc_AIPassGarrison};
-                case "DEFEND": {[_group, _position, _facing, (_radius max 15) min 150] call Waldo_fnc_AIPassDefend};
-                case "RELEASE": {
-                    private _released = false;
-                    if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {_released = [_group] call Waldo_fnc_AIPassGarrisonRelease};
-                    if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {_released = [_group] call Waldo_fnc_AIPassDefendRelease};
-                    _released
-                };
-                case "EXCLUDE": {
-                    if (isNull _group) exitWith {false};
-                    _group setVariable ["Waldo_AIPass_Exclude", true, true];
-                    true
-                };
-                case "RETURN": {
-                    if (isNull _group) exitWith {false};
-                    _group setVariable ["Waldo_AIPass_Exclude", nil, true];
-                    _group setVariable ["Waldo_AIPass_ZeusWaypoints", false, true];
-                    // A zero-length token cancels any remaining Zeus hold on every machine.
-                    _group setVariable ["Waldo_AIPass_ZeusHold", [random 1e6, 0], true];
-                    true
-                };
-                case "CLEAR": {[_group, [_building, _position] select isNull _building] call Waldo_fnc_AIPassClearBuilding};
-                case "AIRBORNE": {[_group] call Waldo_fnc_AIPassAirborneDrop};
-                case "ARTY_SUPPORT": {[_group, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole};
-                case "ARTY_COUNTER": {[_group, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole};
-                case "ARTY_BOTH": {[_group, "BOTH"] call Waldo_fnc_AIPassSetArtilleryRole};
-                default {false};
-            };
-            private _message = if (_accepted) then {format ["The %1 order was accepted.", toLowerANSI _order]} else {
-                format ["The %1 order was refused. Check that the Smart AI Pass is enabled and the group is valid; an airborne drop also needs the squad riding an AI-flown aircraft at least 120 m over land, and an artillery order needs a group crewing artillery.", toLowerANSI _order]
-            };
-            diag_log format ["[WMP ZEN SERVER] action=AI_ORDER owner=%1 order=%2 accepted=%3", _requestOwner, _order, _accepted];
-            if (_requestOwner > 2) then {
-                ["AI ORDERS", _message, ["ERROR", "SUCCESS"] select _accepted, "AI_ORDERS", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
-            };
-        }, [_order, _group, _position, _radius, _building, _facing, _requestOwner]] call CBA_fnc_execNextFrame;
+            ["CONVOY", ["Convoy registration refused. Select an AI-only group with 2-20 drivable land vehicles.", "Convoy configuration registered. Its current owner applies it on the next worker step."] select _accepted,
+                ["ERROR", "SUCCESS"] select _accepted, "CONVOY", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+        }, [_values, _requestOwner]] call CBA_fnc_execNextFrame;
+    };
+    case "AI_ORDER": {
+        private _pairs = _settings;
+        // Legacy positional adapter: order, group, position, radius, building, facing.
+        if (count _settings > 0 && {(_settings select 0) isEqualType ""}) then {
+            _settings params [["_order", ""], ["_group", grpNull], ["_position", []], ["_radius", 50], ["_building", objNull], ["_facing", 0]];
+            _pairs = [["order", _order], ["group", _group], ["position", _position], ["radius", _radius], ["building", _building], ["facing", _facing]];
+        };
+        [{_this call Waldo_fnc_AIPassOrderDispatch}, [_pairs, _requestOwner]] call CBA_fnc_execNextFrame;
     };
     case "HAZARD_SET": {
         _settings params ["_key", "_area", "_profile"];

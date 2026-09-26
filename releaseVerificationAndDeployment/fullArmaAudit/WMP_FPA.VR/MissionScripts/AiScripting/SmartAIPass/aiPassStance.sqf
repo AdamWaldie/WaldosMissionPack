@@ -56,7 +56,7 @@ private _changed = 0;
         };
         if (toUpperANSI (unitPos _unit) != _stance) then {
             _unit setUnitPos _stance;
-            _unit setVariable ["Waldo_AIPass_StanceSet", _stance != "AUTO"];
+            _unit setVariable ["Waldo_AIPass_StanceSet", _stance != "AUTO", true];
             _changed = _changed + 1;
         };
     };

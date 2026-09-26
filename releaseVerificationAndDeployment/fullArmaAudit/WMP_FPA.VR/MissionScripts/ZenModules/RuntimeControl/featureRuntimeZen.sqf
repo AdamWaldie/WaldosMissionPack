@@ -609,18 +609,23 @@ switch (toUpperANSI _feature) do {
         } forEach allGroups;
         _ranked sort true;
         private _groups = _ranked apply {_x select 3};
-        private _groupLabels = _ranked apply {format ["%1 (%2 soldiers, %3 m)", groupId (_x select 3), {alive _x} count units (_x select 3), round (_x select 1)]};
+        private _groupLabels = _ranked apply {
+            private _group = _x select 3;
+            private _spotters = (units _group) select {_x getVariable ["Waldo_AIPass_Spotter", false]};
+            format ["%1 (%2 soldiers, %3 m; spotters: %4)", groupId _group, {alive _x} count units _group,
+                round (_x select 1), if (_spotters isEqualTo []) then {"none"} else {(_spotters apply {name _x}) joinString ", "}]
+        };
         if (_groups isEqualTo []) then {_groupLabels = ["No AI group within 250 m"]};
         private _groupIndices = [];
         {_groupIndices pushBack _forEachIndex} forEach _groupLabels;
-        private _building = if (!isNull _objectPos && {_objectPos isKindOf "House"}) then {_objectPos} else {nearestBuilding _modulePos};
+        private _building = if (!isNull _objectPos && {_objectPos isKindOf "House"}) then {_objectPos} else {objNull};
         [
             "AI Orders",
             [
-                ["COMBO", ["Order", "Every order uses the selected group. Airborne makes a squad riding in an AI-flown aircraft parachute out now. The artillery orders set which fire missions the group's guns take. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
-                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "ARTY_SUPPORT", "ARTY_COUNTER", "ARTY_BOTH", "EXCLUDE", "RETURN"],
+                ["COMBO", ["Order", "Every order uses the selected group. Airborne makes a squad riding in an AI-flown aircraft parachute out now. The artillery orders set battery roles. Spotter orders require placement on the exact AI soldier: equip binoculars and a radio. No other squad members are assigned. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
+                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "ARTY_SUPPORT", "ARTY_COUNTER", "ARTY_BOTH", "SPOTTER_ON", "SPOTTER_OFF", "EXCLUDE", "RETURN"],
                     ["Garrison buildings here", "Defend a line here", "Release garrison or defence", "Clear the building here", "Parachute out now (squad in an aircraft)",
-                        "Artillery: support fire only", "Artillery: counter-battery only", "Artillery: support and counter-battery",
+                        "Artillery: support fire only", "Artillery: counter-battery only", "Artillery: support and counter-battery", "Assign selected soldier as spotter", "Remove selected soldier as spotter",
                         "Keep for Zeus (exclude from the pass)", "Return to the Smart AI Pass"], 0]],
                 ["COMBO", ["Group", "Nearby AI groups, nearest first; a unit under the module is listed first."], [_groupIndices, _groupLabels, 0]],
                 ["SLIDER", ["Garrison radius / line width", "Garrison: metres searched for building positions. Defend: width of the line."], [15, 150, 50, 0]],
@@ -629,14 +634,14 @@ switch (toUpperANSI _feature) do {
             {
                 params ["_values", "_arguments"];
                 _values params ["_order", "_groupIndex", "_radius", "_facing"];
-                _arguments params ["_groups", "_modulePos", "_building"];
+                _arguments params ["_groups", "_modulePos", "_building", "_unit"];
                 private _group = _groups param [_groupIndex, grpNull];
                 if (isNull _group) exitWith {
                     ["AI ORDERS", "Select an AI group for this order.", "ERROR", "AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal;
                 };
-                ["AI_ORDER", [_order, _group, _modulePos, round _radius, _building, round _facing]] call Waldo_fnc_FeatureRuntimeApply;
+                ["AI_ORDER", [["order", _order], ["group", _group], ["position", _modulePos], ["radius", round _radius], ["building", _building], ["facing", round _facing], ["unit", _unit]]] call Waldo_fnc_FeatureRuntimeApply;
             },
-            {}, [_groups, _modulePos, _building]
+            {}, [_groups, _modulePos, _building, _objectPos]
         ] call zen_dialog_fnc_create;
     };
     case "HAZARD_CREATE": {

@@ -24,6 +24,8 @@
  */
 
 params [["_job", {}, [{}]], ["_state", createHashMap, [createHashMap]], ["_delay", 0, [0]]];
+private _group = _state getOrDefault ["group", grpNull];
+if (!isNull _group) then {_state set ["ownerEpoch", _group getVariable ["Waldo_AIPass_Epoch", 0]]};
 private _pending = missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []];
 _pending pushBack [time + (_delay max 0), _job, _state];
 missionNamespace setVariable ["Waldo_AIPass_PendingJobs", _pending];

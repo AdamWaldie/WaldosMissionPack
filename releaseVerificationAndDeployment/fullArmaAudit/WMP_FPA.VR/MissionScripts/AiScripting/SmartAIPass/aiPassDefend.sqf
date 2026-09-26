@@ -54,6 +54,7 @@ if !(_facing isEqualType 0) then {
 };
 private _units = (units _group) select {alive _x && {vehicle _x == _x}};
 if (_units isEqualTo []) exitWith {false};
+[_group] call Waldo_fnc_AIPassClearRelease;
 if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_AIPassDefendRelease};
 private _reserveCount = if (count _units >= 4) then {floor (count _units / 3)} else {0};
 private _line = _units select [0, count _units - _reserveCount];

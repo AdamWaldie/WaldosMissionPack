@@ -49,6 +49,12 @@ private _movers = (units _group) select {
     alive _x && {local _x} && {!(_x getVariable ["ACE_isUnconscious", false])} && {lifeState _x != "INCAPACITATED"}
 };
 if (_movers isEqualTo []) exitWith {call _finish};
+if ((units _group) findIf {alive _x && {
+    _x getVariable ["ACE_isUnconscious", false] || {lifeState _x == "INCAPACITATED"}
+    || {toUpperANSI (currentCommand _x) in ["HEAL", "REPAIR", "REFUEL", "REARM", "GET IN", "GET OUT", "ACTION", "SCRIPTED", "SUPPORT"]}
+}} >= 0 || {_group getVariable ["Waldo_AIPass_ClearBuilding", false]}
+    || {(_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []}
+    || {(_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []}) exitWith {call _finish};
 
 private _timeout = missionNamespace getVariable ["Waldo_AIPass_Regroup_TimeoutSeconds", 120];
 private _joinDistance = missionNamespace getVariable ["Waldo_AIPass_Regroup_JoinDistance", 30];
@@ -115,7 +121,14 @@ if (isNull _host || {!local _host} || {!alive _hostLeader} || {!([_host] call Wa
     0
 };
 
+private _capacity = ((missionNamespace getVariable ["Waldo_AIPass_Regroup_MaxGroupSize", 12]) - ({alive _x} count units _host)) max 0;
+if (_capacity == 0) exitWith {
+    _state set ["phase", "EVALUATE"];
+    _group setVariable ["Waldo_AIPass_RegroupHost", nil];
+    3
+};
 private _joined = _movers select {_x distance2D _hostLeader <= _joinDistance};
+if (count _joined > _capacity) then {_joined resize _capacity};
 if (_joined isNotEqualTo []) then {
     _joined joinSilent _host;
     missionNamespace setVariable ["Waldo_AIPass_RegroupJoined", (missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]) + count _joined];
@@ -135,8 +148,11 @@ if (_farthest < (_state get "bestDistance") - 5) then {
 };
 if (time - (_state get "lastProgress") >= (missionNamespace getVariable ["Waldo_AIPass_Regroup_StuckSeconds", 20])
     || {time - (_state get "moveStarted") >= _timeout}) exitWith {
-    _remaining joinSilent _host;
-    missionNamespace setVariable ["Waldo_AIPass_RegroupJoined", (missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]) + count _remaining];
+    private _available = ((missionNamespace getVariable ["Waldo_AIPass_Regroup_MaxGroupSize", 12]) - ({alive _x} count units _host)) max 0;
+    private _joinNow = _remaining select [0, _available];
+    _joinNow joinSilent _host;
+    missionNamespace setVariable ["Waldo_AIPass_RegroupJoined", (missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]) + count _joinNow];
+    if (count _joinNow < count _remaining) exitWith {_state set ["phase", "EVALUATE"]; 3};
     missionNamespace setVariable ["Waldo_AIPass_RegroupsCompleted", (missionNamespace getVariable ["Waldo_AIPass_RegroupsCompleted", 0]) + 1];
     _group deleteGroupWhenEmpty true;
     call _finish

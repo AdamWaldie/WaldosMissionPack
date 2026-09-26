@@ -3,7 +3,7 @@
  * Machine-local discovery sweep for the Smart AI Pass, run as a scheduler job every
  * Waldo_AIPass_DiscoveryInterval seconds (default 10) on the server and each headless client.
  *
- * One sweep replaces the per-unit init and locality handlers the audited mods relied on:
+ * One sweep caches candidates and installs repeat-safe group ownership handlers:
  * - caches player positions for the distance tiers (one allPlayers read per sweep, not per group);
  * - starts a Waldo_fnc_AIPassGroupTick job for each newly local, eligible group and records its
  *   peak strength, which is how groups handed over by ACE Headless or WMP Headless are picked up;
@@ -17,8 +17,7 @@
  *   (Waldo_fnc_AIPassReleaseFeatureCrew);
  * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
  *   WMP gunships and Dynamic AA fighters.
- * Locality and authority: machine-local; nothing is broadcast except the documented LAMBS and
- * garrison group variables.
+ * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
  *
  * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
  *
@@ -43,9 +42,18 @@ missionNamespace setVariable ["Waldo_AIPass_PlayerPositions", (allPlayers select
 
 private _lambsWmpMode = (missionNamespace getVariable ["Waldo_AIPass_LambsDangerLoaded", false])
     && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "WMP"};
+private _spotters = [];
 private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_DynamicAO", false];
 {
     private _group = _x;
+    if (isNil {_group getVariable "Waldo_AIPass_LocalHandler"}) then {
+        _group setVariable ["Waldo_AIPass_LocalHandler", _group addEventHandler ["Local", {
+            _this call Waldo_fnc_AIPassLocality;
+        }]];
+    };
+    if (local _group && {!(_group getVariable ["Waldo_AIPass_Adopted", false])}) then {
+        [_group, true] call Waldo_fnc_AIPassLocality;
+    };
     // "Applied" flags are machine-local. Clear them while another machine owns the group, so a group
     // that comes back (for example server to headless client and back) has its order re-applied here.
     if (!local _group) then {
@@ -53,11 +61,16 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
         _group setVariable ["Waldo_AIPass_DefendApplied", nil];
     };
     if (local _group && {(units _group) findIf {alive _x} >= 0}) then {
+        _spotters append ((units _group) select {alive _x && {_x getVariable ["Waldo_AIPass_Spotter", false]}});
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_GarrisonApplied", false])}) then {
             [_group] call Waldo_fnc_AIPassGarrisonApplyLocal;
         };
         if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_DefendApplied", false])}) then {
             [_group] call Waldo_fnc_AIPassDefendApplyLocal;
+        };
+        private _clear = _group getVariable ["Waldo_AIPass_ClearOrder", []];
+        if (_clear isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_ClearApplied", false])}) then {
+            [_group, _clear select 0, createHashMapFromArray [["useLambs", false], ["resume", true]]] call Waldo_fnc_AIPassClearBuilding;
         };
         // Landed paratroopers and dismounted crews of a lost transport are released by their feature.
         if (_group getVariable ["Waldo_Paradrop_Jumped", false]
@@ -87,6 +100,7 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
         };
     };
 } forEach allGroups;
+missionNamespace setVariable ["Waldo_AIPass_LocalSpotters", _spotters];
 
 private _wantArtillery = (missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false])
     || {missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]};
@@ -94,8 +108,10 @@ private _wantFlares = (missionNamespace getVariable ["Waldo_AIPass_AircraftFlare
     || {missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]};
 if (_wantArtillery || _wantFlares) then {
     private _artillery = [];
+    private _allArtillery = [];
     {
         private _vehicle = _x;
+        if (isServer && {alive _vehicle} && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {_allArtillery pushBack _vehicle};
         if (local _vehicle && {alive _vehicle}) then {
             if (_wantArtillery && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {
                 private _gunner = gunner _vehicle;
@@ -136,5 +152,6 @@ if (_wantArtillery || _wantFlares) then {
         };
     } forEach vehicles;
     missionNamespace setVariable ["Waldo_AIPass_LocalArtillery", _artillery];
+    if (isServer) then {missionNamespace setVariable ["Waldo_AIPass_AllArtillery", _allArtillery]};
 };
 missionNamespace getVariable ["Waldo_AIPass_DiscoveryInterval", 10]

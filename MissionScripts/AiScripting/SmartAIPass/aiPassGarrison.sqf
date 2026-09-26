@@ -50,6 +50,7 @@ if (_centre isEqualType objNull) then {_centre = getPosATL _centre};
 if (count _centre < 2) then {_centre = getPosATL leader _group};
 private _units = (units _group) select {alive _x && {vehicle _x == _x}};
 if (_units isEqualTo []) exitWith {false};
+[_group] call Waldo_fnc_AIPassClearRelease;
 
 if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
     && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "SPLIT"}) exitWith {

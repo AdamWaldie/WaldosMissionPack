@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1181,
+  "registeredFunctionCount": 1203,
   "runtimeFunctionCount": 383,
-  "functionCount": 1564,
+  "functionCount": 1586,
   "stations": [
     {
       "id": "control",
@@ -833,6 +833,24 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ConvoySync",
+      "file": "MissionScripts/AiScripting/convoySync.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConvoyReleaseLocal",
+      "file": "MissionScripts/AiScripting/convoyReleaseLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConvoyTick",
+      "file": "MissionScripts/AiScripting/convoyTick.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_SimpleAiConvoy",
       "file": "MissionScripts/AiScripting/simpleAiConvoy.sqf",
       "station": "ai",
@@ -979,6 +997,114 @@
     {
       "name": "Waldo_fnc_AIPassAntiArmour",
       "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAntiArmour.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassCheckpoint",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCheckpoint.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassLocality",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassLocality.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassSetSpotter",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSetSpotter.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassSpotterFix",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSpotterFix.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryObserve",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryObserve.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryReport",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryReport.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryAim",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryAim.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryAmmo",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryAmmo.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryMissionStep",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryMissionStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryShot",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryShot.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryScoot",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryScoot.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassClearRelease",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassClearRelease.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassOrderDispatch",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderDispatch.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassOrderLocal",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassOrderResult",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderResult.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassCounterObserve",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCounterObserve.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryFired",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryFired.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassArtilleryRejected",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryRejected.sqf",
       "station": "ai",
       "activation": "manual"
     },
@@ -1369,6 +1495,12 @@
     {
       "name": "Waldo_fnc_HeadlessGetDiagnostics",
       "file": "MissionScripts/Headless/headlessGetDiagnostics.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessRememberPin",
+      "file": "MissionScripts/Headless/headlessRememberPin.sqf",
       "station": "headless",
       "activation": "manual"
     },
