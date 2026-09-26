@@ -68,6 +68,7 @@ TYPED_GUIDES = {
     "Waldos-Economy-Systems-Build-System", "Waldos-Economy-Systems-Buy-System",
     "Waldos-Mini-Games-Table-Games",
     "Waldos-Economy-Systems-Ground-Command-And-Tools",
+    "Tasks-And-Objectives", "Persistence",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -94,6 +95,7 @@ SETTING_CONTRACTS = {
     "Obituary-and-Confirmed-Deaths": ("interfaceConfig.sqf", ("Waldo_Obituary_",)),
     "Waldos-AI-Tweak": ("aiConfig.sqf", ("Waldo_AIRebalance_", "Waldo_AI_")),
     "Airborne-Gunship-Support": ("airOperationsConfig.sqf", ("Waldo_Gunship_",)),
+    "Persistence": ("persistenceConfig.sqf", ("Waldo_Persistence_",)),
 }
 
 # These are player-facing feature guides with independent setup paths. Add a new
@@ -127,6 +129,8 @@ FEATURE_GUIDES = {
     "Simple-Mass-Attach-Items",
     "Construction-Objects",
     "Vehicle-Ambush-Script-And-Vehicle-Camo",
+    "Tasks-And-Objectives",
+    "Persistence",
 }
 
 GUIDE_SECTIONS = {
