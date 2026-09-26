@@ -20,12 +20,15 @@
  * 8: Priority <NUMBER> mission metadata for arbitration/reporting (default 0)
  * 9: Allow permitted local placement override <BOOL> (default false)
  *
- * Return: STRING token, or empty string if queued while no gameplay display exists.
+ * Return Value: <STRING> token, or empty string if queued while no gameplay display exists.
  *
  * Example:
  * ["SUPPLY DELIVERED", "The forward crate is ready.", "SUCCESS", 8, "TOP", "LOGISTICS"]
  *     call Waldo_fnc_ShowUiNotification;
  * Current callers: all WMP feature notification adapters and direct mission-maker scripts.
+ * Locality and authority: Creates or queues cards on the addressed interface client.
+ * Repeated channel messages coalesce; visual cards are transient and not JIP replayed.
+ * Result: A WMP card appears in a free lane or waits in the bounded local queue.
  */
 if (!hasInterface) exitWith {""};
 
