@@ -56,7 +56,7 @@ class VehicleServicesTests(unittest.TestCase):
 
     def test_whole_request_and_dependencies_validated_before_role_writes(self):
         write = self.apply.index('setVariable ["ace_refuel_capacity"')
-        for token in ("_key in _keys", "!finite _value", "_value > 1000000", "_missing isNotEqualTo []", "ace_refuel_isConnected", "Magazine-based mode is not supported"):
+        for token in ("_key in _keys", "!finite _value", "_value != round _value", "_value > 1000000", "_missing isNotEqualTo []", "ace_refuel_isConnected", "Magazine-based mode is not supported"):
             self.assertLess(self.apply.index(token), write)
         self.assertNotIn("call ace_refuel_fnc_getCapacity", self.apply)
 

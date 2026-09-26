@@ -17,6 +17,8 @@ The module requires an existing live land vehicle, aircraft or boat. It rejects 
 | Repair vehicle | ACE repair-vehicle status for location-dependent repair work | Engineer qualification, tools, instant repair or spare parts |
 | Medical vehicle | ACE medical-vehicle status for permitted treatment | Automatic healing, medical items or medic qualification |
 
+Supply amounts must be whole numbers; the server rejects fractional values supplied through the function. The ZEN sliders display and submit whole numbers.
+
 For a newly enabled source, select its initial ammunition points or fuel litres. Fuel can also be unlimited. For an already active source, these amount fields only take effect when **Refill ammunition now** or **Refill fuel now** is checked. Refills replace the remaining amount; they do not add to it. Return an active fuel nozzle before disabling or refilling its source.
 
 Use [Quartermaster](Quartermaster) to issue crates, wheels and tracks. Use [Supply Transfers](Supply-Transfers) to move inventory, [Field Resupply](Field-Resupply) for portable resupply crates, and [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) to set storage capacity. Those features can share the vehicle and retain their own setup.

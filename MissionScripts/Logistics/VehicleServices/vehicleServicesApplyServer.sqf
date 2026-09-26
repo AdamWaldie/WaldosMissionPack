@@ -31,13 +31,13 @@ private _valid = true;
         if !(_value isEqualType true) then {_valid = false};
     } else {
         if !(_value isEqualType 0) then {_valid = false} else {
-            if (!finite _value || {_value > 1000000}
+            if (!finite _value || {_value != round _value} || {_value > 1000000}
                 || {_value < 0 && {!(_key == "fuelLitres" && {_value == -10})}}) then {_valid = false};
         };
     };
     if (!_valid) exitWith {};
 } forEach _pairs;
-if (!_valid) exitWith {[false, "Invalid service options: use unique named keys, Booleans and stock amounts from 0 to 1000000 (-10 for unlimited fuel)."]};
+if (!_valid) exitWith {[false, "Invalid service options: use unique named keys, Booleans and whole-number stock amounts from 0 to 1000000 (-10 for unlimited fuel)."]};
 private _settings = createHashMapFromArray _pairs;
 private _refillFuel = _settings getOrDefault ["refillFuel", false];
 private _refillRearm = _settings getOrDefault ["refillRearm", false];
