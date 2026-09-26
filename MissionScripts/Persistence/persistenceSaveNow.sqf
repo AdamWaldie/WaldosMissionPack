@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Requests immediate player saves and saves all registered objects without stopping persistence.
+ * Locality and authority: Client requests forward to the server. The server authenticates a
+ * remote curator, saves registered objects and asks player owners for their local state.
+ * Repeat/JIP: Each accepted call makes a fresh save request. It does not stop service or replay
+ * a past save notification to joining players.
  *
  * Arguments:
  * 0: save players <BOOLEAN>
@@ -11,6 +15,9 @@
  *
  * Example:
  * [true, true] call Waldo_fnc_PersistenceSaveNow;
+ * Result: Returns true when the server accepts the request, or when a client forwards it.
+ * Client true does not prove the later database writes succeeded.
+ * Current callers: Persistence ZEN runtime control and mission scripts using manual save.
  */
 
 params [

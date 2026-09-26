@@ -230,7 +230,7 @@ def audit() -> tuple[int, list[str]]:
         if page.stem in indexed_features or page.stem in TYPED_GUIDES:
             if not re.search(r"^\|[^\n]*\bType\b[^\n]*\|", text, re.I | re.M):
                 findings.append(f"{page.name}: add a typed argument or settings table")
-        if page.stem in TYPED_GUIDES:
+        if page.stem in indexed_features:
             if "Waldo_fnc_" in text and not re.search(r"\breturns?\b|\bReturn Value\b", text, re.I):
                 findings.append(f"{page.name}: explain what the public call returns")
         if page.stem in SETTING_CONTRACTS:
