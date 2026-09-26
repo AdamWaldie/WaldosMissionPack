@@ -99,13 +99,13 @@ The operator sees a persistent **UAV LINK DEGRADED** panel with signal-loss guid
 
 ## Mission-wide jamming settings
 
-These let you tune how realistic/gamey the jamming feels. All are on by default.
+These settings control how the jammer field behaves. The defaults are shown below.
 
 | Flag | Default | Effect |
 |---|---|---|
 | `Waldo_Jamming_LOS` | `true` | **Terrain line-of-sight.** A hill or ridge between the jammer and a radio blocks the field. High ground extends practical coverage. |
 | `Waldo_Jamming_BurnThrough` | `true` | **Power burn-through.** Higher-power radios, such as a PRC-117F, resist jamming and reduce the effective radius. |
-| `Waldo_Jamming_BurnThroughRef` | `500` | Reference distance in metres for the burn-through calculation. |
+| `Waldo_Jamming_BurnThroughRef` | `500` | Reference transmit power in mW. A radio above this power shrinks the jammer's effective radius and falloff. |
 | `Waldo_Jamming_Curve` | `"LINEAR"` | Falloff shape at the edge: `"LINEAR"` or `"INVSQ"` for a sharper inverse-square response near the centre. |
 | `Waldo_Jamming_Destructible` | `true` | Destroying the emitter automatically removes its jammer entry and restores affected links. |
 | `Waldo_Jamming_GmOverlay` | `false` | Opt-in curator-only floating marker (and facing line for cones) over every jammer. Ordinary players never see it. |

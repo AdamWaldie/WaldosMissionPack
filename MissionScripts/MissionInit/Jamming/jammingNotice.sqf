@@ -3,6 +3,10 @@
  * Shows an electronic-warfare transition notice in a dedicated control that
  * cannot be overwritten by Safestart, ENDEX or another use of Arma's hint UI.
  * Newer notices own the control and prevent older timers from hiding them.
+ * Locality and authority: Interface-client only; draws local EW feedback and never changes
+ * server jammer state.
+ * Repeat/JIP: A new notice replaces the old control's message and expiry; joining clients
+ * display only new transition feedback.
  *
  * Arguments: 0: title <STRING>; 1: message <STRING>; 2: duration <NUMBER>;
  * 3: state <STRING> - WARNING, SUCCESS or INFO.
@@ -10,6 +14,7 @@
  *
  * Example: ["ELECTRONIC WARFARE", "Signal restored", 8, "SUCCESS"] call Waldo_fnc_JammingNotice;
  * Current callers: jamming client state transitions and jammer disable feedback.
+ * Result: The latest EW notice appears in the reserved interface region for its duration.
  */
 if (!hasInterface) exitWith {false};
 params [

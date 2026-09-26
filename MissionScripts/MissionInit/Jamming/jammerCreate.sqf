@@ -6,6 +6,10 @@
  * - calling it from a client (or an object init field on a client) forwards to the server, which
  * owns the broadcast jammer registry so JIP / rejoining players inherit every jammer. Idempotent
  * per object: calling again on the same object updates that jammer in place instead of stacking.
+ * Locality and authority: Calls from an object init or client forward to the server, which owns
+ * the public registry. Each client applies the resulting local radio and interaction state.
+ * Repeat/JIP: Re-registering the same emitter updates its entry. The public registry and
+ * object-keyed interaction replay cover players who join afterward.
  *
  * Arguments:
  * 0: Object <OBJECT> - the emitter the jammer is anchored to (its position is the jam centre)
@@ -45,6 +49,9 @@
  * [this, 500, "EAST", [[30, 88]], 50, 1, true, true] call Waldo_fnc_Jammer;
  * // An 800 m cone facing 090 deg, 60 deg wide, pulsing 4s on / 2s off:
  * [this, 800, "ALL", "ALL", 50, 1, true, true, [90, 60], [4, 2]] call Waldo_fnc_Jammer;
+ * Current callers: mission-maker object init/trigger scripts and Waldo_fnc_ZenCreateJammerServer.
+ * Result: The emitter has one server-owned jammer entry; the returned ID identifies it for
+ * later toggle or removal.
  */
 
 params [

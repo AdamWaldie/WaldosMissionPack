@@ -11,6 +11,8 @@
  * of the same Eden Init request are ignored while that request is already running. An identical
  * completed request is repeat-safe. ACRE2 owns the resulting rack/radio state and supplies it to JIP
  * clients; WMP does not continually retune the rack after successful initial setup.
+ * Locality and authority: Safe from an Eden object Init on every machine; requests converge on
+ * the server, which validates and leases an ACRE-ready player client for radio-data operations.
  *
  * Configuration sources may be mixed. Pass a profile name from MissionConfig\acreConfig.sqf and
  * optional inline [key,value] overrides, or pass inline settings alone. Inline keys replace the
@@ -47,12 +49,14 @@
  * Current callers:
  * Eden init fields and the ACRE rack example compositions.
  *
- * Examples:
+ * Example:
  * // Beginner default: reuse WEST's named COY net for compatible mounted rack radios.
  * [this, [["netSide", "WEST"], ["assignments", [["ALL", "COY"]]]]] call Waldo_fnc_ACRE2RackSetup;
  *
  * // Recommended central profile, with one optional inline override.
  * [this, "COMMAND_VEHICLE", [["assignments", [[["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"]]]]] call Waldo_fnc_ACRE2RackSetup;
+ * Result: The vehicle's specified racks and channels are configured once ACRE data is ready;
+ * later identical init calls do not create duplicate racks.
  */
 params [
     ["_vehicle", objNull, [objNull]],

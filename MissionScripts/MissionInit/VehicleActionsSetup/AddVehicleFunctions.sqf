@@ -1,12 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * This function apply specific functions to classes of vehicle (limited use - primarily for auto applying "getoutside" to RHS and CUP helos
+ * Installs applicable WMP recovery and jump actions on a newly initialized non-infantry vehicle.
+ * Locality and authority: Runs from each machine's vehicle init path. Interface clients install
+ * local interactions; the vehicle's feature functions retain their own server/object authority.
+ * Repeat/JIP: A vehicle-local setup flag skips repeat calls on the same machine. Joining clients
+ * receive the vehicle init event and install their own local actions.
  *
  * Arguments:
  * 0: Vehicle <OBJECT>
  *
  * Example:
  * [_vehicle] call Waldo_fnc_AddVehicleFunctions;
+ * Return Value: Nothing useful; the function records local setup on the vehicle.
+ * Current callers: Waldo_fnc_InitVehicles CBA class init and curator object-placement handlers.
+ * Result: Applicable recovery and paradrop interactions are available on the vehicle.
  */
 params [["_vehicle", objNull, [objNull]]];
 

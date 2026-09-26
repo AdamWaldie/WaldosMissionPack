@@ -28,8 +28,9 @@
  * interaction-equipment procedure such as circuit.
  * ADVANCED TUNING - BurnThroughRef, Curve, ScanRange, ScanBearingArc and ScanDistanceBands define
  * signal/RDF maths. Curve is LINEAR unless an implementation-supported alternative is documented.
- * Distances are metres; bearing arc is total degrees; distance bands are ascending absolute metre
- * thresholds [near, medium, distant]. Keep GM overlay false outside diagnostics.
+ * BurnThroughRef is reference transmit power in mW. Distances are metres; bearing arc is total
+ * degrees; distance bands are ascending absolute metre thresholds [near, medium, distant]. Keep
+ * GM overlay false outside diagnostics.
  *
  * HOW TO READ THE DATA BELOW:
  * Every `server` row is `[variable name, default value, publish to clients/JIP]`. `true` in the
@@ -41,8 +42,8 @@
  * - Waldo_Jamming_Enable (MISSION MAKER): true runs EW support; a jammer object must still be registered/created.
  * - Waldo_Jamming_Notify (MISSION MAKER): true shows affected players continuous WMP interference feedback.
  * - Waldo_Jamming_LOS (MISSION MAKER): true lets terrain and objects reduce effective jammer signal.
- * - Waldo_Jamming_BurnThrough (MISSION MAKER): true lets radios very close to one another overcome interference.
- * - Waldo_Jamming_BurnThroughRef (ADVANCED): reference distance in metres used by burn-through calculations.
+ * - Waldo_Jamming_BurnThrough (MISSION MAKER): true lets higher-power radios reduce jammer reach.
+ * - Waldo_Jamming_BurnThroughRef (ADVANCED): reference transmit power in mW for burn-through.
  * - Waldo_Jamming_Curve (ADVANCED): LINEAR or INVSQ attenuation; retain LINEAR unless deliberately testing falloff.
  * - Waldo_Jamming_Destructible (MISSION MAKER): true stops a registered jammer when its emitter is destroyed.
  * - Waldo_Jamming_GmOverlay (ADVANCED): true draws curator diagnostics; keep false for ordinary missions.
@@ -69,8 +70,8 @@ createHashMapFromArray [
         ["Waldo_Jamming_Enable", true, true],       // BOOL: starts EW services; does not create a jammer.
         ["Waldo_Jamming_Notify", true, true],       // BOOL: show affected players WMP interference feedback.
         ["Waldo_Jamming_LOS", true, true],          // BOOL: terrain/objects reduce a jammer's effective signal.
-        ["Waldo_Jamming_BurnThrough", true, true],  // BOOL: very close radios may overcome interference.
-        ["Waldo_Jamming_BurnThroughRef", 500, true], // ADVANCED reference distance in metres.
+        ["Waldo_Jamming_BurnThrough", true, true],  // BOOL: higher-power radios shrink jammer reach.
+        ["Waldo_Jamming_BurnThroughRef", 500, true], // ADVANCED reference transmit power in mW.
         ["Waldo_Jamming_Curve", "LINEAR", true],   // ADVANCED supported attenuation curve ID.
         ["Waldo_Jamming_Destructible", true, true], // BOOL: destruction can stop registered jammer objects.
         ["Waldo_Jamming_GmOverlay", false, true],   // ADVANCED diagnostics only.
