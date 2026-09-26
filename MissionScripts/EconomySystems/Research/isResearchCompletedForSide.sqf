@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Is research completed for side.
+ * Checks whether a technology is completed for a side or globally pre-researched in the catalog.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,14 @@
  * 1: _researchName <ANY> - research name
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when completed, false otherwise.
  *
  * Example:
  * [_sideKey, _researchName] call Waldo_fnc_EcoResearch_isResearchCompletedForSide;
+ * Locality/Authority: Any machine; reads published catalog and side completion state.
+ * Repeat/JIP Behaviour: Repeat-safe query; JIP clients receive the current source state.
+ * Current Callers: Research requirements, status and completion checks.
+ * Result: Returns true for catalog-global or side-specific completion.
  */
 
         params ["_sideKey", "_researchName"];

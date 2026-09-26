@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Is research exclusive blocked.
+ * Checks whether a completed conflicting technology blocks one Research entry.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,14 @@
  * 1: _entry <ANY> - entry
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when an exclusive choice is already completed.
  *
  * Example:
  * [_sideKey, _entry] call Waldo_fnc_EcoResearch_isResearchExclusiveBlocked;
+ * Locality/Authority: Any machine; reads published completion state.
+ * Repeat/JIP Behaviour: Repeat-safe read; no state mutation.
+ * Current Callers: Research status and server start validation.
+ * Result: Returns false when no conflicting technology has been completed.
  */
 
         params ["_sideKey", "_entry"];

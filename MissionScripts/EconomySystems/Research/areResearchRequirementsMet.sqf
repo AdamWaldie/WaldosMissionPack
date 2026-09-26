@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Are research requirements met.
+ * Checks a technology's prior Research and Build prerequisites for one side.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,15 @@
  * 1: _entry <ANY> - entry
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true only when every named prerequisite is complete.
  *
  * Example:
  * [_sideKey, _entry] call Waldo_fnc_EcoResearch_areResearchRequirementsMet;
+ * Locality/Authority: Any machine can inspect published prerequisite state; the server
+ * repeats the check before starting Research.
+ * Repeat/JIP Behaviour: Pure read and repeat-safe; no JIP side effect.
+ * Current Callers: Research status and server-side start validation.
+ * Result: Returns false at the first incomplete Research or Build requirement.
  */
 
         params ["_sideKey", "_entry"];
