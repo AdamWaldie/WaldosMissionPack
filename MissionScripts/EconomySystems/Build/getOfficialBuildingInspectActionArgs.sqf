@@ -1,14 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official building inspect action args.
+ * Build the local inspect action for a constructed Economy building.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Interface client; inspection reads the published building and
+ * local catalog without mutating server state.
+ * Repeat/JIP: Returns a fresh action descriptor on each call; the shared
+ * installer handles replacement and JIP installation.
+ * Current Callers: EcoBuild_attachBuildingActions.
  *
  * Arguments:
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - arguments for the shared object-action installer.
+ * Result: Opens the building information card from current catalog and object state.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingInspectActionArgs;
