@@ -94,7 +94,8 @@ Zeus-created drop-zone aircraft do not require an open door. Their AI does not p
 AI jumpers (Dynamic Paradrop's generated jumpers, or your own AI riding a Quick Flight aircraft) are
 held on the server while they fly. When the [Smart AI Pass](Smart-AI-Pass) is enabled, it takes a jump
 group over once every living member is on the ground, so they fight instead of standing where they
-landed. Without the pass they keep their own waypoints, if you gave them any.
+landed. Only the paradrop's own server pin is removed: a headless exclusion you set on the jumpers
+yourself stays. Without the pass they keep their own waypoints, if you gave them any.
 
 ---
 

@@ -288,6 +288,12 @@ must go through this scheduler, not their own loops (the static performance audi
 
 Group state is a machine-local hashmap (`Waldo_fnc_AIPassGroupState`).
 
+**Owner changes:** changed restoration data is published as `Waldo_AIPass_Checkpoint` after group
+scheduler jobs. `Waldo_fnc_AIPassLocality` invalidates old ownership epochs, removes local handlers,
+restores transient changes and lets discovery adopt the group. Clear-building orders retain the
+building, completed positions, `serverTime` deadline and original behaviour. Owner results pass
+through the server's token registry before Zeus receives success or uncertainty feedback.
+
 **State ladder:**
 - `CALM` → `CONTACT` when an enemy was seen in the last 10 s.
 - `CONTACT` → `SECURITY` → `SEARCH` (two riflemen) → `REGROUP` → `CALM`, once contact has been lost
@@ -405,7 +411,10 @@ Services never release the AI they pin, so the pass does it. A group tagged `Wal
 (set by the static-line and HALO jump functions for AI jumpers) is released once every living member
 has landed. A group tagged `Waldo_TransportService_Vehicle` (set by `Waldo_fnc_TransportRegister`) is
 released once its transport is out of service by the transport monitor's own test and every living
-member is on foot. Release clears the server pin and headless exclusions and unassigns the vehicle.
+member is on foot. Release restores only what the feature's own pin changed and unassigns the
+vehicle. `Waldo_fnc_HeadlessPinCrew` records the values it overwrites (`Waldo_Headless_PinBefore`,
+on the group and each soldier, first pin only). Release puts those back, so a mission maker's own
+`Waldo_Headless_ExcludeGroup`, `Waldo_ServerOwnedFeature` or `acex_headless_blacklist` survives.
 
 Dynamic AO groups are deliberately eligible. `Waldo_Headless_ExcludeGroup` only pins locality and
 is not a behaviour exclusion. When a new WMP feature owns AI, mark it with one of these variables

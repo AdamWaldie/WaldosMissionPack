@@ -48,6 +48,16 @@ repeat-order generations; live LAMBS mode restoration; delayed drill gates; bloc
 repositioning without a same-step shot; stop/start cancellation; airborne damage restoration on the
 current owner; actual landing before ground orders; and correct pending waypoint index checks.
 
+## Concurrent PR integration
+
+Remote commit `036942e` independently addressed the same four blockers. Its useful shared-clock
+clear-order deadline is retained, as are the Paradrop/Transport exclusion explanations. Its separate
+publish/adopt helpers are superseded by the scheduler checkpoint and Local-event epoch contract;
+keeping both would restore twice and publish competing records. Its pin record is superseded by
+the shared first-pin helper, which also covers generated jumpers. Its positional owner notification
+worker is superseded by the named server-dispatch/result contract. Both histories remain in the PR.
+Stop explicitly cancels clearing; it does not silently replay a stopped clear order on restart.
+
 ## Performance limits
 
 The AI scheduler has a default soft 1 ms budget checked between jobs, not a hard pre-emption limit.
