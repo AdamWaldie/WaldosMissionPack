@@ -4,6 +4,12 @@
  * Repeat-safe and suitable for current clients plus JIP replay.
  * Arguments: 0: starter crate <OBJECT>
  * Return Value: Boolean
+ * Locality and authority: Installs object actions only on each interface client; the server
+ * creates the crate and publishes an object-scoped JIP setup call. Repeating local setup keeps
+ * the identifier action from duplicating.
+ * Current caller: Waldo_fnc_DoStarterCrate during initial and JIP client setup.
+ * Example: [starterCrate] call Waldo_fnc_StarterCrateSetupLocal;
+ * Result: Players can recognise the starter crate and save their loadout there.
  */
 
 params [["_target", objNull, [objNull]]];

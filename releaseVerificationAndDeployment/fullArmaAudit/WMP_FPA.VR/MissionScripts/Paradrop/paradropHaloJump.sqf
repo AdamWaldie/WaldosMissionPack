@@ -4,7 +4,12 @@
  * and contents through Waldo_fnc_ParaBackpack, equips the selected steerable parachute backpack,
  * applies the configured equipment simulation, and restores damage after the exit transition.
  * Must run where the jumping unit is local and in a scheduled environment.
+ * Locality and authority: The jumping unit's owner performs moveOut, loadout changes and damage
+ * restoration. The caller must select an eligible aircraft and unit before invoking this function.
+ * Repeat/JIP: Each call starts one jump; no persistent action is installed here. JIP players use
+ * the aircraft actions installed by paradrop setup when they join.
  *
+ * AI jumpers retain Waldo_Paradrop_Jumped so Smart AI can adopt them after landing.
  * Arguments:
  * 0: jumping unit <OBJECT>
  * 1: aircraft <OBJECT>
@@ -18,6 +23,7 @@
  *
  * Example:
  * [player, aircraft, "B_Parachute"] spawn Waldo_fnc_HaloJumpFunc;
+ * Result: The jumper exits with a chute backpack and can restore the original backpack on landing.
  */
 
 params [
@@ -34,6 +40,8 @@ private _direction = getDir _vehicle;
 private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
 _exitPosition set [2, (getPosATL _vehicle) select 2];
 moveOut _unit;
+// AI jumpers are pinned with their aircraft; the tag lets the Smart AI Pass release them once landed.
+if (!isPlayer _unit) then {(group _unit) setVariable ["Waldo_Paradrop_Jumped", true, true]};
 _unit setPosATL _exitPosition;
 _unit setDir (_direction + 170);
 sleep 1.5;

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Refresh building marker.
+ * Redraws an existing building marker from its definition and current owner side.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_building] call Waldo_fnc_EcoBuild_refreshBuildingMarker;
+ * Locality/Authority: Economy authority only; updates a global map marker.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; global marker and published tag support JIP.
+ * Current Callers: Building enable/disable, claim and marker maintenance.
+ * Result: Marker type, colour and label reflect the building's current state.
  */
 
         params [["_building", objNull]];

@@ -49,6 +49,12 @@
  * [this, "repair"] call Waldo_fnc_MiniGameInteractionSetup;
  * [this, "radiotune", [["title", "Align Antenna"], ["config", [4, 0.04, 1, 40]]]]
  *     call Waldo_fnc_MiniGameInteractionSetup;
+ * Locality/Authority: Call from an object's Eden init on all machines. Server owns callbacks
+ * and result state; interface clients own their local actions.
+ * Repeat/JIP Behaviour: The shared interaction setup replaces repeated local actions and
+ * broadcasts state for joining clients.
+ * Current Callers: Eden object init fields, ZEN field-equipment setup and mission scripts.
+ * Result: Returns true when a known preset was attached, false for an invalid target/ID.
  */
 
 params [

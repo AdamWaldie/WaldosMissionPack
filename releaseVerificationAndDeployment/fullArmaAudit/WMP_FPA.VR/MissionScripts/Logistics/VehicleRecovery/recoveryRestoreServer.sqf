@@ -17,6 +17,9 @@
  *
  * Example: [_package, _workshop] call Waldo_fnc_RecoveryRestoreServer;
  * Current caller: RecoveryMonitorServer after a grounded package enters a matching workshop.
+ * Locality and authority: Server owns package restoration and workshop validation. Repeat
+ * requests recheck live package state; the restored vehicle state replicates to JIP clients.
+ * Result: A matching workshop restores the retained or replacement vehicle at a clear position.
  */
 
 params [["_package", objNull, [objNull]], ["_workshop", objNull, [objNull]]];

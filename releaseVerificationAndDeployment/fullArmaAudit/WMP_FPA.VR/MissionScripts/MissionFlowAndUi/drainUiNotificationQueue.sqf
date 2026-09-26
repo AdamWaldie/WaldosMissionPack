@@ -1,4 +1,14 @@
-/* Starts queued cards in FIFO order whenever their channel and screen slot are free. */
+/*
+ * Author: WaldoTheWarfighter
+ * Starts queued WMP notification cards when their channel and a screen slot are free.
+ * Locality and authority: Processes only this interface client's UI queue. It is bounded
+ * per call and safe to repeat; queued visual state is not a JIP gameplay snapshot.
+ * Arguments: None.
+ * Return Value: <BOOL> true after a local pass; false without an interface or while suppressed.
+ * Current callers: Waldo_fnc_ShowUiNotification, DismissUiNotification and panel reflow.
+ * Example: [] call Waldo_fnc_DrainUiNotificationQueue;
+ * Result: Eligible queued cards enter available placements without exceeding placement caps.
+ */
 if (!hasInterface) exitWith {false};
 if (uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]) exitWith {false};
 private _queue = +(uiNamespace getVariable ["Waldo_UiPanelQueue", []]);

@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: removes this client's prior IDs before reinstalling from a snapshot.
  * Arguments: descriptor [speaker, kind, reference]. Return Value: BOOL.
  * Current caller: DialogueReceiveStateLocal. Example: server snapshot application.
+ * Result: This client displays the speaker action described by the current snapshot.
  */
 params [["_speaker", objNull, [objNull]], ["_kind", "SIMPLE", [""]], ["_reference", "", [""]]];
 if (!hasInterface || {isNull _speaker}) exitWith {false};

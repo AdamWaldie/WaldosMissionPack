@@ -4,6 +4,7 @@
  * Locality/authority: server-only. Repeat/JIP behaviour: repeat-safe full snapshot reconciliation.
  * Arguments: targets. Return Value: BOOL. Current callers: scripts and ZEN.
  * Example: [this] call Waldo_fnc_ConversationClear;
+ * Result: Target NPCs lose their advanced conversation actions for current and JIP players.
  */
 params ["_targetsInput"];
 if (!isServer) exitWith {false};

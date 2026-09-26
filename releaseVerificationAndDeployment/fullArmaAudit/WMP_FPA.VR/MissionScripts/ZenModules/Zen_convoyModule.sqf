@@ -1,57 +1,28 @@
 /*
  * Author: WaldoTheWarfighter
- * Zeus Enhanced module that turns the nearest AI land-vehicle group into a
- * managed convoy using the pack's own Waldo_fnc_SimpleAiConvoy behaviour
- * (column formation, speed limiting, separation keeping, optional push-through).
- * The Zeus places the module on or near the lead vehicle of the convoy.
- *
- * Arguments:
- * 0: modulePos <POSITION> - where the Zeus dropped the module
- *
- * Return Value:
- * Nothing
- *
- * Example:
- * [_modulePos] call Waldo_fnc_ZenConvoyModule;
- *
- * Public: No
+ * Configures, holds/unloads or releases the selected AI vehicle group's convoy. Never guesses the nearest vehicle.
+ * Locality/authority: interface dialog, authenticated FeatureRuntimeApply server request.
+ * Repeat/JIP: configuration replaces the existing registration; server registry replays to HCs.
+ * Arguments: 0: module position <ARRAY>; 1: selected vehicle <OBJECT>, default objNull.
+ * Return Value: Nothing.
+ * Current callers: Zen_initModules convoy registration.
+ * Example: [getPosATL truck1, truck1] call Waldo_fnc_ZenConvoyModule;
  */
-
-params ["_modulePos"];
-
-// Find the nearest crewed AI land vehicle to the module placement.
-private _vehicles = nearestObjects [_modulePos, ["LandVehicle"], 150];
-private _target = objNull;
-{
-    if (count (crew _x) > 0 && {!(_x isKindOf "Man")}) exitWith { _target = _x; };
-} forEach _vehicles;
-
-if (isNull _target) exitWith {
-    systemChat "[WMP] Spawn AI Convoy: no crewed land vehicle found within 150m of the module.";
+params ["_modulePos", ["_target", objNull, [objNull]]];
+if (isNull _target || {!(_target isKindOf "LandVehicle")} || {!alive driver _target}) exitWith {
+    ["CONVOY", "Place the module on a crewed AI land vehicle.", "ERROR", "CONVOY"] call Waldo_fnc_FeatureNotifyLocal;
 };
-
-private _group = group (effectiveCommander _target);
-if (isNull _group) then { _group = group (driver _target); };
-if (isNull _group) exitWith {
-    systemChat "[WMP] Spawn AI Convoy: could not resolve a group for the selected convoy vehicle.";
-};
-
 [
-    "Spawn AI Convoy",
+    "AI Convoy",
     [
-        ["SLIDER", ["Max Speed (km/h)", "Top speed of the convoy lead vehicle."], [5, 120, 30, 0], false],
-        ["SLIDER", ["Separation (m)", "Target distance between vehicles."], [5, 100, 15, 0], false],
-        ["CHECKBOX", ["Push Through Contact", "If checked, the convoy keeps moving and only returns fire on the move."], true]
+        ["COMBO", ["Operation", "Configure/resume applies travel settings. Stop holds vehicles and dismounts cargo. Release restores prior settings and removes control."], [["START", "STOP", "RELEASE"], ["Configure / resume convoy", "Stop and dismount cargo", "Release controller"], 0]],
+        ["SLIDER", ["Maximum speed (km/h)", "The lead slows for sharp bends and stretched spacing."], [5, 120, 30, 0]],
+        ["SLIDER", ["Separation (m)", "Minimum centre spacing; vehicle length can increase it. Mixed convoys pace for slower vehicles."], [10, 100, 15, 0]],
+        ["CHECKBOX", ["Push through contact", "On: move through contact; stop and dismount cargo if pinned for 15 seconds. Off: stop and dismount cargo on contact. Weapon crew remain mounted."], true]
     ],
     {
-        params ["_args", "_group"];
-        _args params ["_speed", "_separation", "_pushThrough"];
-        _speed = round _speed;
-        _separation = round _separation;
-        private _owner = groupOwner _group;
-        [_group, _speed, _separation, _pushThrough] remoteExec ["Waldo_fnc_SimpleAiConvoy", _owner];
-        diag_log format ["[WMP ZEN] Convoy controller dispatched group=%1 owner=%2 speed=%3 separation=%4 pushThrough=%5", groupId _group, _owner, _speed, _separation, _pushThrough];
-    },
-    {},
-    _group
+        params ["_values", "_target"];
+        _values params ["_operation", "_speed", "_separation", "_pushThrough"];
+        ["AI_CONVOY", [["target", _target], ["operation", _operation], ["speed", round _speed], ["separation", round _separation], ["pushThrough", _pushThrough]]] call Waldo_fnc_FeatureRuntimeApply;
+    }, {}, _target
 ] call zen_dialog_fnc_create;

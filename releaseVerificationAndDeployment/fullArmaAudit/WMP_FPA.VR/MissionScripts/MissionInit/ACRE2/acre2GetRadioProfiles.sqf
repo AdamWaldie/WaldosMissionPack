@@ -11,9 +11,14 @@
  * Frequency range is [minimum MHz, maximum MHz, step kHz, ACRE pair divisor].
  * Net family prevents a numerically valid setting from pretending incompatible radio types share
  * one communications net. PRC_LR radios share ACRE's side preset; other families are isolated.
+ * Locality and authority: Pure configuration helper; callable wherever ACRE config is available.
+ * Repeat/JIP: Rebuilds the catalogue from current configuration on every call; no persistent
+ * handler or network snapshot is installed here.
  *
  * Example: private _profiles = [] call Waldo_fnc_ACRE2GetRadioProfiles;
  * Current callers: ACRE validation, pre-init, assignment, capture and restore functions.
+ * Result: Built-in radio profiles plus mission extensions are returned, with matching classes
+ * replaced by the mission's row.
  */
 params [["_config", missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap], [createHashMap]]];
 private _profiles = [

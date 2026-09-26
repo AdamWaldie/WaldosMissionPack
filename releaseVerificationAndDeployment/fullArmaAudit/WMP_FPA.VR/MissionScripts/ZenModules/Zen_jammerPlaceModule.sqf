@@ -8,6 +8,10 @@
  * so it can be moved or deleted smoothly; alternatively, an existing object directly under the
  * module becomes the emitter without changing its simulation state. The jammer registry follows
  * the live object transform in either case.
+ * Locality and authority: Curator interface collects options; the server authenticates the
+ * request, spawns or reuses the emitter and publishes jammer state.
+ * Repeat/JIP: Each accepted placement registers a jammer on an object. The jammer service
+ * reconciles actions and field state for joining clients.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -20,6 +24,7 @@
  * [_modulePos, _objectPos] call Waldo_fnc_ZenJammerPlace;
  *
  * Current caller: the ZEN "Create Radio Jammer" module registered by Waldo_fnc_ZenInitModules.
+ * Result: The curator can choose emitter and field settings before server registration.
  */
 
 if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};

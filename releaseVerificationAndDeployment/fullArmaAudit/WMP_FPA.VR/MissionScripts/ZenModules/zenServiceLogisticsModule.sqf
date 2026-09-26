@@ -7,6 +7,8 @@
  * Return Value: <BOOL> whether a dialog or inspection was opened.
  * Current callers: WMP Logistics and Mission Flow ZEN registrations.
  * Example: ["BASE", getPosATL cursorObject, cursorObject] call Waldo_fnc_ZenServiceLogisticsModule;
+ * Result: The selected object's current service, quartermaster or ACE Cargo settings open in
+ * a labelled curator dialog; applying changes sends an authenticated server request.
  */
 params [["_feature", "", [""]], ["_modulePos", [], [[]]], ["_target", objNull, [objNull]]];
 if (!hasInterface || {isNull _target}) exitWith {
@@ -116,7 +118,7 @@ switch (toUpperANSI _feature) do {
         }, {}, [_target, _send]] call zen_dialog_fnc_create;
     };
     case "PHYSICAL": {
-        private _eligible = _target getVariable ["Waldo_PhysicalCargo_Eligible", _target isKindOf "ReammoBox_F"];
+        private _eligible = [_target] call Waldo_fnc_PhysicalCargoIsEligible;
         ["Physical Cargo Eligibility", [
             ["COMBO", ["Operation", "Allow carried non-weapon objects to mount on vehicles, disable future mounts, or inspect."],
                 [["ENABLE", "DISABLE", "INSPECT"], ["Allow physical mounting", "Disallow physical mounting", "Inspect state"],

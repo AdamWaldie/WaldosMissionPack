@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Process purchase request.
+ * Validates a player's queued purchase request before executing it on authority.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
- * Locality / Authority: Server authority only; retains existing catalogue, side, range, cost, delivery
+ * Locality/Authority: Server authority only; retains existing catalogue, side, range, cost, delivery
  * and transaction behaviour.
- * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicate purchases. Requests
+ * Repeat/JIP Behaviour: Existing bounded request-token history rejects duplicate purchases. Requests
  * are transient and not JIP state; legacy mailbox cleanup runs only if a value exists.
  *
  * Arguments:
@@ -16,6 +16,7 @@
  * Nothing
  *
  * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
+ * Result: Invalid or duplicate requests stop before the resource debit and asset spawn.
  *
  * Example:
  * [_holder, _request] call Waldo_fnc_EcoBuy_processPurchaseRequest;

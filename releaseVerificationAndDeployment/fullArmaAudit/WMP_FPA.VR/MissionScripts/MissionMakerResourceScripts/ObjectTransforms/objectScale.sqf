@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies a validated uniform render scale to one server-authoritative object.
+ * Locality and authority: The server validates and applies scale. Clients forward requests and
+ * receive their original Object immediately, before server acceptance or possible replacement.
+ * Repeat/JIP: A repeated valid call updates the same object's scale. Published scale variables
+ * and globally visible object replacement reach JIP; callers must retain the replacement Object.
  *
  * Arma officially supports runtime scaling only for Simple Objects and attached objects. Disabling
  * simulation on an ordinary object is not sufficient. When conversion is requested, the target must
@@ -23,6 +27,9 @@
  *
  * Example:
  * private _scaled = [this, 1.5, true] call Waldo_fnc_ObjectScale;
+ * Result: On the server, _scaled is the scaled Object or objNull after rejection.
+ * Current callers: ObjectScaleTagged, ObjectScaleReset, ObjectScaleMultiply, ObjectScaleCopy,
+ * ObjectScaleArea, ObjectTransformSet, ObjectScaleZen and the full-pack audit station.
  */
 
 params [

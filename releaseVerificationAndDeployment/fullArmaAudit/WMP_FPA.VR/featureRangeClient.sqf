@@ -6,6 +6,7 @@
  * Repeat guards prevent duplicate actions during JIP or local script restarts. Completion is also
  * published on the player object so the server audit cannot diagnose half-installed client fixtures.
  *
+ * Locality/authority: interface clients install controls; fixture mutations request the server.
  * Arguments: none (executed from auditInitPlayerLocal.sqf).
  * Return Value: nothing.
  *
@@ -492,6 +493,9 @@ if (!isNull _coreConsole) then {
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_StartConvoy", "START / RESET CONVOY TEST", {
         [] remoteExecCall ["Waldo_QA_fnc_startConvoyServer", 2];
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_StartMixedConvoy", "START / RESET MIXED CONVOY (600,500)", {
+        [] remoteExecCall ["Waldo_QA_fnc_startMixedConvoyServer", 2];
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_StartParadrop", "ACTIVATE PARADROP AIRCRAFT", {
         [] remoteExecCall ["Waldo_QA_fnc_activateDropAircraftServer", 2];

@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Opens the ZEN dialog for server-authoritative scaling of the object under the module.
+ * Locality and authority: The dialog opens on the curator's interface client. The selected
+ * scale is sent to Waldo_fnc_ObjectScale for server validation and application.
+ * Repeat/JIP: Replacing the module reopens a fresh dialog. This function installs no lasting
+ * client handler; resulting global object state is visible to JIP.
  *
  * Runtime scaling requires a Simple Object or attached object. The dialog therefore offers explicit
  * conversion for grounded decorative props and enables it by default; conversion removes simulation,
@@ -16,6 +20,9 @@
  *
  * Example:
  * [_modulePos] call Waldo_fnc_ObjectScaleZen;
+ * Result: An interface client sees the Scale Object dialog, or a placement warning when no
+ * usable target is found. No synchronous scaled-object value is returned.
+ * Current callers: Scale Object module registered in Zen_initModules.sqf.
  */
 
 params [["_modulePos", [], [[]]], ["_objectPos", objNull, [objNull]]];

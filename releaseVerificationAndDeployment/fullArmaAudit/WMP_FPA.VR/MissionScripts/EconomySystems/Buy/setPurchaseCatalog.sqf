@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Set purchase catalog.
+ * Normalizes and broadcasts the authoritative purchasable-asset catalog.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_catalog] call Waldo_fnc_EcoBuy_setPurchaseCatalog;
+ * Locality/Authority: Economy authority only; clients receive the published catalog.
+ * Repeat/JIP Behaviour: Repeated calls replace the catalog; JIP receives the latest value.
+ * Current Callers: Purchasing ZEN configuration and exported mission setup calls.
+ * Result: Only normalized asset rows become available for purchase.
  */
 
         params [["_catalog", []]];

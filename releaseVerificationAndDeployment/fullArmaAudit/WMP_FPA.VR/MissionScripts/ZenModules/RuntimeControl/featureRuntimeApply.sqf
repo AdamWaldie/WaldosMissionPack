@@ -18,6 +18,7 @@
  *     remoteExecCall ["Waldo_fnc_FeatureRuntimeApply", 2];
  *
  * Current caller: Waldo_fnc_FeatureRuntimeZen forwards validated ZEN runtime-control dialogs.
+ * Result: Accepted settings are applied on the server and published for joining clients.
  */
 
 params [
@@ -126,8 +127,12 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
-            [_hub, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
-            [_hub, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+            // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+            // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+            [{
+                [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+                _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+            }, [_hub, "CARGO"]] call CBA_fnc_execNextFrame;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};
@@ -347,18 +352,108 @@ switch (toUpperANSI _action) do {
         };
     };
     case "AI_CONFIG": {
-        _settings params ["_enable", "_mode", "_profile"];
-        [
+        _settings params [
+            "_enable", "_mode", "_profile",
+            ["_passEnable", missionNamespace getVariable ["Waldo_AIPass_Enable", false], [false]]
+        ];
+        // Pass behaviour switches follow the master switch in dialog order. A shorter settings array
+        // (older callers) leaves the remaining switches unchanged.
+        private _passSwitches = [
+            "Waldo_AIPass_Regroup_Enable", "Waldo_AIPass_Contact_Enable", "Waldo_AIPass_PostContact_Enable",
+            "Waldo_AIPass_Flank_Enable", "Waldo_AIPass_StreetCrossing_Enable", "Waldo_AIPass_FireControl_Enable",
+            "Waldo_AIPass_Morale_Enable", "Waldo_AIPass_Surrender_Enable", "Waldo_AIPass_GrenadeEvasion_Enable",
+            "Waldo_AIPass_AntiArmour_Enable", "Waldo_AIPass_Vehicles_Enable", "Waldo_AIPass_ContactReports_Enable",
+            "Waldo_AIPass_Reinforce_Enable", "Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable",
+            "Waldo_AIPass_Airborne_Enable", "Waldo_AIPass_AircraftFlares_Enable",
+            "Waldo_AIPass_Investigate_Enable", "Waldo_AIPass_Assault_Enable", "Waldo_AIPass_Advance_Enable", "Waldo_AIPass_CoordinatedAssault_Enable", "Waldo_AIPass_Stance_Enable", "Waldo_AIPass_AmmoShare_Enable", "Waldo_AIPass_VehicleGunnery_Enable", "Waldo_AIPass_ArtillerySmoke_Enable", "Waldo_AIPass_AircraftBreak_Enable"
+        ];
+        private _updates = [
             ["Waldo_AIRebalance_Enable", _enable],
             ["Waldo_AIRebalance_Mode", _mode],
-            ["Waldo_AIRebalance_Profile", _profile]
-        ] call _publishAll;
+            ["Waldo_AIRebalance_Profile", _profile],
+            ["Waldo_AIPass_Enable", _passEnable]
+        ];
+        {
+            private _value = _settings param [4 + _forEachIndex, missionNamespace getVariable [_x, false]];
+            if (_value isEqualType true) then {_updates pushBack [_x, _value]};
+        } forEach _passSwitches;
+        private _lambsMode = _settings param [4 + count _passSwitches, missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]];
+        if (_lambsMode in ["SPLIT", "WMP"]) then {_updates pushBack ["Waldo_AIPass_LambsMode", _lambsMode]};
+        _updates call _publishAll;
         if (_enable) then {
             [_mode, _profile] remoteExecCall ["Waldo_fnc_AIRebalanceInit", 0, "Waldo_AIRebalance_RuntimeInit"];
         } else {
             [] remoteExecCall ["Waldo_fnc_AIRebalanceStop", 0];
             [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];
         };
+        // Behaviour switches are read live by each step, so only the master switch starts or stops it.
+        if (_passEnable) then {
+            [] remoteExecCall ["Waldo_fnc_AIPassInit", 0, "Waldo_AIPass_RuntimeInit"];
+        } else {
+            [] remoteExecCall ["Waldo_fnc_AIPassStop", 0];
+            [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
+        };
+    };
+    case "AI_TUNING": {
+        // The curator was authenticated above; Waldo_fnc_AIPassTuning validates each value against the
+        // tuning list and publishes it to the server and every headless client.
+        private _applied = [createHashMapFromArray (_settings select {_x isEqualType [] && {count _x == 2}})] call Waldo_fnc_AIPassTuning;
+        if (_requestOwner > 2) then {
+            ["AI TUNING", format ["%1 settings applied. Squads use them from their next step.", _applied], ["ERROR", "SUCCESS"] select (_applied > 0), "AI_TUNING", 7]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+        };
+    };
+    case "AI_CONVOY": {
+        private _values = createHashMapFromArray _settings;
+        [{
+            params ["_values", "_requestOwner"];
+            private _target = _values getOrDefault ["target", objNull];
+            private _operation = _values getOrDefault ["operation", ""];
+            private _speed = _values getOrDefault ["speed", 30];
+            private _separation = _values getOrDefault ["separation", 15];
+            private _pushThrough = _values getOrDefault ["pushThrough", true];
+            private _accepted = false;
+            if (!isNull _target && {_target isKindOf "LandVehicle"} && {alive driver _target}
+                && {_operation in ["START", "STOP", "RELEASE"]} && {_speed isEqualType 0} && {_separation isEqualType 0} && {_pushThrough isEqualType true}) then {
+                _accepted = [group driver _target, [_speed, 0] select (_operation != "START"), _separation, _pushThrough, _operation == "RELEASE"] call Waldo_fnc_SimpleAiConvoy;
+            };
+            ["CONVOY", ["Convoy registration refused. Select an AI-only group with 2-20 drivable land vehicles.", "Convoy configuration registered. Its current owner applies it on the next worker step."] select _accepted,
+                ["ERROR", "SUCCESS"] select _accepted, "CONVOY", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+        }, [_values, _requestOwner]] call CBA_fnc_execNextFrame;
+    };
+    case "AI_BATTERY";
+    case "AI_RADAR": {
+        if (_settings findIf {!(_x isEqualType []) || {count _x != 2} || {!((_x select 0) isEqualType "")}} >= 0) exitWith {false};
+        private _values = createHashMapFromArray _settings;
+        private _target = _values getOrDefault ["target", objNull];
+        if (!(_target isEqualType objNull) || {isNull _target} || {!alive _target}) exitWith {
+            ["AI SETUP", "The selected object no longer exists or is not alive.", "ERROR", "AI_SETUP"] call _reply;
+        };
+        private _role = _values getOrDefault ["role", ""];
+        private _side = _values getOrDefault ["side", ""];
+        private _enabled = _values getOrDefault ["enabled", true];
+        private _valid = if (_action == "AI_BATTERY") then {
+            _role isEqualType "" && {_role in ["SUPPORT", "COUNTER", "BOTH"]} && {getNumber (configOf _target >> "artilleryScanner") == 1}
+        } else {_side isEqualType "" && {_side in ["WEST", "EAST", "GUER"]} && {_enabled isEqualType true} && {!(_target isKindOf "CAManBase")}};
+        if (!_valid) exitWith {["AI SETUP", "The object or selected settings are not valid for this setup.", "ERROR", "AI_SETUP"] call _reply};
+        // Run trusted server APIs outside the remote caller context after authenticating the curator.
+        [{
+            params ["_action", "_target", "_role", "_side", "_enabled", "_requestOwner"];
+            private _accepted = if (_action == "AI_BATTERY") then {[_target, _role] call Waldo_fnc_AIPassSetArtilleryRole}
+                else {[_target, _side, _enabled] call Waldo_fnc_AIPassRegisterRadar};
+            diag_log format ["[WMP ZEN SERVER] action=%1 target=%2 role=%3 side=%4 enabled=%5 accepted=%6", _action, typeOf _target, _role, _side, _enabled, _accepted];
+            ["AI SETUP", ["Setup refused; check the selected object.", "Setup applied. Feature switches remain as configured in AI Control; radar coverage reduces counter-battery acquisition delay."] select _accepted,
+                ["ERROR", "SUCCESS"] select _accepted, "AI_SETUP", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+        }, [_action, _target, _role, _side, _enabled, _requestOwner]] call CBA_fnc_execNextFrame;
+    };
+    case "AI_ORDER": {
+        private _pairs = _settings;
+        // Legacy positional adapter: order, group, position, radius, building, facing.
+        if (count _settings > 0 && {(_settings select 0) isEqualType ""}) then {
+            _settings params [["_order", ""], ["_group", grpNull], ["_position", []], ["_radius", 50], ["_building", objNull], ["_facing", 0]];
+            _pairs = [["order", _order], ["group", _group], ["position", _position], ["radius", _radius], ["building", _building], ["facing", _facing]];
+        };
+        [{_this call Waldo_fnc_AIPassOrderDispatch}, [_pairs, _requestOwner]] call CBA_fnc_execNextFrame;
     };
     case "HAZARD_SET": {
         _settings params ["_key", "_area", "_profile"];

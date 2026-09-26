@@ -16,6 +16,9 @@
  * private _theme = ["VIETNAM", "RED_GREEN"] call Waldo_fnc_UiTheme;
  * Current callers: all theme-aware WMP notifications, displays, interaction equipment, SafeStart,
  * electronic warfare, tactical-display, economy and QA presentation paths.
+ * Locality and authority: Pure theme/profile lookup on the caller. Repeated calls read
+ * current published theme and local profile; no gameplay or JIP mutation occurs.
+ * Result: Returns presentation tokens used by the requesting WMP UI consumer.
  */
 
 params [

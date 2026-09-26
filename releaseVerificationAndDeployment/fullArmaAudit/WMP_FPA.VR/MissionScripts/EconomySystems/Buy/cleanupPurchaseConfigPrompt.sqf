@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup purchase config prompt.
+ * Removes controls from the curator purchase-catalog prompt and closes its display.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_cleanupPurchaseConfigPrompt;
+ * Locality/Authority: Curator interface client only; no catalog mutation.
+ * Repeat/JIP Behaviour: Safe for a null/closed prompt; no JIP UI state.
+ * Current Callers: Purchase-catalog prompt close/cancel and Economy UI cleanup.
+ * Result: Temporary controls and prompt state are removed.
  */
 
         params [["_disp", displayNull]];

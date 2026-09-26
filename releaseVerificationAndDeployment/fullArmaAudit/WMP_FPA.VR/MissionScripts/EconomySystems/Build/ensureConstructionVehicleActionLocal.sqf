@@ -1,14 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Ensure construction vehicle action local.
+ * Install the construction-mode action on a registered vehicle for this client.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Interface client only; the shared publisher owns the local action.
+ * Repeat/JIP: The action key prevents duplicate local installs; local world
+ * action refresh calls this again for JIP or rebuilt client state.
+ * Current Callers: EcoCore_refreshLocalWorldActions,
+ * EcoBuild_spawnConstructionVehicle and EcoBuild_registerConstructionVehicle.
  *
  * Arguments:
  * 0: _vehicle <OBJECT> - vehicle (optional, default: objNull)
  *
  * Return Value:
- * Nothing
+ * NUMBER - shared action publisher's identifier, or -1 if ineligible.
+ * Result: Adds or refreshes the vehicle's construction action locally.
  *
  * Example:
  * [_vehicle] call Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal;

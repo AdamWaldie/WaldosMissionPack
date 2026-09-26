@@ -8,6 +8,7 @@
  * Return Value: BOOL - true when a request/reply was queued; false for an invalid remote owner.
  * Current callers: Waldo_fnc_Init3DMarkers and Waldo_fnc_Marker3DApplyDeltaLocal.
  * Example: [] call Waldo_fnc_Marker3DRequestStateServer;
+ * Result: The requesting client receives the current revision and complete marker registry.
  */
 if (!isServer) exitWith {
     if (missionNamespace getVariable ["Waldo_3DMarker_StateRequestPending", false]) exitWith {true};

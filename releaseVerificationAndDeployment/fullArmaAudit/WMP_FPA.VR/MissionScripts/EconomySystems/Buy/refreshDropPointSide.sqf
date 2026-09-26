@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Refresh drop point side.
+ * Redraws the delivery-point prompt's selected faction label.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_refreshDropPointSide;
+ * Locality/Authority: Curator interface client; presentation only.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP state.
+ * Current Callers: Delivery-point prompt opening and side arrow controls.
+ * Result: The label matches the selected side index.
  */
 
         params [["_disp", displayNull]];

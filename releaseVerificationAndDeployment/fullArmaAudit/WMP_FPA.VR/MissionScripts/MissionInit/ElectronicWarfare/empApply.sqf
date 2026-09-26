@@ -2,19 +2,22 @@
  * Author: WaldoTheWarfighter
  * Applies the EMP effect to one entity on the machine that owns it (so the changes replicate
  * correctly). Infantry lose their night-vision goggles and have their TFAR radio disabled for the
- * duration; if the infantryman is the local player they also get a white-out flash and a clear
- * "EMP - electronics down" message. Vehicles have their engine cut (fuel drained) for the duration
+ * duration; if the infantryman is the local player they also get a white-out flash. An extra
+ * disruption message appears only when Waldo_EMP_NotifyAffectedPlayers is enabled locally. Vehicles have their engine cut (fuel drained) for the duration
  * and restored afterwards. Driven by Waldo_fnc_EMP; not usually called directly.
  *
  * Arguments:
  * 0: Entity <OBJECT> - the unit or vehicle to disable
  * 1: Duration <NUMBER> - seconds the electronics stay down (optional, default: 30)
  *
- * Return Value:
- * Nothing
+ * Locality/authority and repeat/JIP: EMP calls this on the affected entity's owner. A repeated
+ * vehicle pulse does not start a second fuel-restore timer; the effect itself is not JIP state.
+ * Return Value: No useful value.
+ * Current caller: Waldo_fnc_EMP after a server-side radius check.
  *
  * Example:
  * [_unit, 30] call Waldo_fnc_EMPApply;
+ * Result: the owner applies supported disruption to that unit for 30 seconds.
  */
 
 params [["_entity", objNull], ["_duration", 30]];

@@ -2,9 +2,9 @@
  * Author: WaldoTheWarfighter
  * Purpose: Debits a validated economy purchase and creates it at its selected
  * drop point. A purchased supply/ammunition crate joins WMP crate logistics.
- * Locality / Authority: Runs on the economy authority; the created object and
+ * Locality/Authority: Runs on the economy authority; the created object and
  * cargo permissions are published from the server.
- * Repeat / JIP: Each accepted call is a new purchase. ACE drag/carry and
+ * Repeat/JIP Behaviour: Each accepted call is a new purchase. ACE drag/carry and
  * optional logistics registration replay to joining clients.
  *
  * Arguments:
@@ -15,6 +15,8 @@
  *
  * Return Value:
  * Nothing; the buyer receives WMP feedback on success or rejection.
+ * Current Callers: Validated Purchasing request processor.
+ * Result: Debits the side and delivers the purchased asset to a compatible drop point.
  *
  * Example:
  * ["WEST", "Supply Crate", getPosATL player, player] call Waldo_fnc_EcoBuy_executePurchase;
@@ -58,7 +60,9 @@
         _spawned setDir _dir;
         _spawned setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
         if (_spawned isKindOf "ReammoBox_F") then {
-            [_spawned, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+            // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+            // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+            [{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_spawned, "CARGO"]] call CBA_fnc_execNextFrame;
         };
 
         [[_spawned], true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;

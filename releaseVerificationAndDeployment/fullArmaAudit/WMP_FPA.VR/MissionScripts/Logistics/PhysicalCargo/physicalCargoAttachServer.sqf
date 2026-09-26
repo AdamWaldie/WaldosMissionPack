@@ -2,6 +2,9 @@
  * Author: WaldoTheWarfighter
  * Purpose: Validates the released object, then records an inert physical-cargo mount.
  * Locality / Authority: Server validates remote carrier ownership, geometry and proximity.
+ *   A rejected request detaches the carrier's provisional attachment, sets the cargo down clear
+ *   of the vehicle on its owner before restoring mass. If no clear position exists, the
+ *   provisional attachment retains its near-zero mass for recovery through ACE Carry.
  * Repeat / JIP: Repeat requests are ignored; object state and an ordered snapshot support JIP.
  *
  * Arguments: 0: carrier <OBJECT>; 1: crate <OBJECT>; 2: vehicle <OBJECT>;
@@ -11,6 +14,7 @@
  * Return Value: BOOLEAN - true when the crate was mounted.
  * Current caller: Waldo_fnc_PhysicalCargoReleaseLocal by server remote execution.
  * Example: [player, crate, truck, [0,-1,1], [0,1,0], [0,0,1]] remoteExecCall ["Waldo_fnc_PhysicalCargoAttachServer", 2];
+ * Result: The server records a valid mount and orders owner-local attachment and seat updates.
  */
 params [
     ["_carrier", objNull, [objNull]],
@@ -21,32 +25,84 @@ params [
     ["_relativeUp", [], [[]]]
 ];
 if (!isServer) exitWith {false};
-if !(missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) exitWith {false};
 if (isNull _carrier || {isNull _cargo} || {isNull _vehicle}) exitWith {false};
 if (isRemoteExecuted && {remoteExecutedOwner isNotEqualTo owner _carrier}) exitWith {false};
-if (_cargo isKindOf "StaticWeapon") exitWith {false};
-if !(_cargo getVariable ["Waldo_PhysicalCargo_Eligible", _cargo isKindOf "ReammoBox_F"]) exitWith {false};
-if !(_vehicle isKindOf "LandVehicle" || {_vehicle isKindOf "Air"} || {_vehicle isKindOf "Ship"}) exitWith {false};
-// A HEMMT's bed can be many metres from its centre. Validate against the actual
-// contact point plus the carried object, never the vehicle centre.
-if (!alive _cargo || {!alive _vehicle} || {_carrier distance _cargo > 6}
-    || {_carrier distance (_vehicle modelToWorld _offset) > 6}) exitWith {false};
-if (abs speed _vehicle >= 5) exitWith {false};
-if !(_offset isEqualTypeArray [0, 0, 0] && {_relativeDir isEqualTypeArray [0, 0, 0]} && {_relativeUp isEqualTypeArray [0, 0, 0]}) exitWith {false};
-if (_cargo in (_vehicle getVariable ["ace_cargo_loaded", []])) exitWith {false};
-if (!isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])) exitWith {false};
+
+// The carrier attaches the cargo to the vehicle at the moment of release and keeps it nearly
+// massless, so it never simulates inside the vehicle while this request is in flight. A
+// rejected request must therefore free it clear of the vehicle before its mass returns.
+private _reject = {
+    params ["_reason"];
+    diag_log format ["[WMP PHYSICAL CARGO] Mount rejected (%1): cargo=%2 vehicle=%3.",
+        _reason, typeOf _cargo, typeOf _vehicle];
+    // An existing mount keeps its own state; only a provisional release is undone here.
+    if (!isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])
+        || {(_cargo getVariable ["Waldo_PhysicalCargo_RestorePending", []]) isNotEqualTo []}) exitWith {false};
+    // Never release into the carrier when no clear position exists. Leave the provisional
+    // attachment massless so the player can recover it with ACE Carry and retry elsewhere.
+    private _back = abs (((boundingBoxReal _vehicle) select 0) select 1);
+    private _clear = (_vehicle modelToWorld [0, -(_back + 2), 0]) findEmptyPosition [0, 12, typeOf _cargo];
+    if (_clear isEqualTo []) exitWith {
+        ["PHYSICAL CARGO", "No clear ground position. Use ACE Carry to recover the cargo.",
+            "WARNING", "PHYSICAL_CARGO_MOUNT", 7]
+            remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
+        false
+    };
+    private _cargoMinimum = (boundingBoxReal _cargo) select 0;
+    _clear set [2, (_clear select 2) + ((0.1 - (_cargoMinimum select 2)) max 0.1)];
+    // Use the same owner-placement acknowledgement as an ordinary unload. setPos on the
+    // server followed by a global mass event does not establish ordering on the cargo owner.
+    private _priorSimulation = simulationEnabled _cargo;
+    private _priorCollision = (getPhysicsCollisionFlag _cargo) param [0, true];
+    _cargo enableSimulationGlobal false;
+    private _token = (_cargo getVariable ["Waldo_PhysicalCargo_RestoreSerial", 0]) + 1;
+    _cargo setVariable ["Waldo_PhysicalCargo_RestoreSerial", _token];
+    _cargo setVariable ["Waldo_PhysicalCargo_RestorePending", [_token, _vehicle, _priorSimulation, _priorCollision]];
+    private _mass = _cargo getVariable ["Waldo_PhysicalCargo_OriginalMass", 0];
+    if (_mass > 0) then {
+        _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", nil, true];
+        _cargo setVariable ["Waldo_PhysicalCargo_RestoreMass", _mass];
+    };
+    private _revision = (missionNamespace getVariable ["Waldo_PhysicalCargo_MountRevision", 0]) + 1;
+    missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
+    [_cargo, _vehicle, _priorCollision, _clear, _token, false, _revision]
+        remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreLocal", 0];
+    ["PHYSICAL CARGO", "Cargo could not be mounted here; safe set-down requested.",
+        "WARNING", "PHYSICAL_CARGO_MOUNT", 6]
+        remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
+    false
+};
 
 private _bounds = boundingBoxReal _vehicle;
 _bounds params ["_minimum", "_maximum"];
-private _withinVehicle = true;
-for "_axis" from 0 to 2 do {
-    if ((_offset select _axis) < ((_minimum select _axis) - 2.5)
-        || {(_offset select _axis) > ((_maximum select _axis) + 2.5)}) exitWith {
-        _withinVehicle = false;
+private _withinVehicle = _offset isEqualTypeArray [0, 0, 0];
+if (_withinVehicle) then {
+    for "_axis" from 0 to 2 do {
+        if ((_offset select _axis) < ((_minimum select _axis) - 2.5)
+            || {(_offset select _axis) > ((_maximum select _axis) + 2.5)}) exitWith {
+            _withinVehicle = false;
+        };
     };
 };
-if (!_withinVehicle) exitWith {false};
-if (vectorMagnitude _relativeDir < 0.5 || {vectorMagnitude _relativeUp < 0.5}) exitWith {false};
+// A HEMMT's bed can be many metres from its centre. Validate against the actual
+// contact point plus the carried object, never the vehicle centre.
+private _reason = switch (true) do {
+    case (!(missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false])): {"feature disabled"};
+    case (!([_cargo] call Waldo_fnc_PhysicalCargoIsEligible)): {"cargo not eligible"};
+    case (!(_vehicle isKindOf "LandVehicle" || {_vehicle isKindOf "Air"} || {_vehicle isKindOf "Ship"})): {"not a vehicle"};
+    case (!alive _cargo || {!alive _vehicle}): {"destroyed"};
+    case (!(_offset isEqualTypeArray [0, 0, 0] && {_relativeDir isEqualTypeArray [0, 0, 0]}
+        && {_relativeUp isEqualTypeArray [0, 0, 0]})): {"invalid pose"};
+    case (_carrier distance _cargo > 6 || {_carrier distance (_vehicle modelToWorld _offset) > 6}): {"out of reach"};
+    case ((_cargo getVariable ["Waldo_PhysicalCargo_RestorePending", []]) isNotEqualTo []): {"safe unload pending"};
+    case (abs speed _vehicle >= 5): {"vehicle moving"};
+    case (_cargo in (_vehicle getVariable ["ace_cargo_loaded", []])): {"already in ACE cargo"};
+    case (!isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])): {"already mounted"};
+    case (!_withinVehicle): {"outside vehicle bounds"};
+    case (vectorMagnitude _relativeDir < 0.5 || {vectorMagnitude _relativeUp < 0.5}): {"invalid pose"};
+    default {""};
+};
+if (_reason isNotEqualTo "") exitWith {[_reason] call _reject};
 _cargo setVariable ["Waldo_PhysicalCargo_PreviousSimulation", simulationEnabled _cargo];
 // Arma returns [BOOL] here, while setPhysicsCollisionFlag consumes BOOL.
 _cargo setVariable ["Waldo_PhysicalCargo_PreviousCollision",
@@ -60,9 +116,11 @@ _mounts pushBack [_cargo, _vehicle, _offset, _relativeDir, _relativeUp];
 missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _mounts];
 private _revision = (missionNamespace getVariable ["Waldo_PhysicalCargo_MountRevision", 0]) + 1;
 missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
+_cargo setVariable ["Waldo_PhysicalCargo_ServerMountRevision", _revision];
 [_cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision]
     remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
-[_carrier, _cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision] spawn {
+// The recovery worker calls server-only APIs, so it must leave the remote request context.
+[{_this spawn {
     params ["_carrier", "_cargo", "_vehicle", "_offset", "_relativeDir", "_relativeUp", "_revision"];
     private _notifyMounted = {
         if (!isNull _carrier && {alive _carrier}) then {
@@ -72,30 +130,39 @@ missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
         };
     };
     sleep 1.5;
-    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}) exitWith {
+    if (isNull _cargo || {(_cargo getVariable ["Waldo_PhysicalCargo_ServerMountRevision", -1]) != _revision}) exitWith {};
+    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}
+        && {(_cargo getVariable ["Waldo_PhysicalCargo_OwnerAppliedRevision", -1]) == _revision}) exitWith {
         call _notifyMounted;
     };
     if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}
-        && {attachedTo _cargo isNotEqualTo _vehicle}) then {
+        && {attachedTo _cargo isNotEqualTo _vehicle
+            || {(_cargo getVariable ["Waldo_PhysicalCargo_OwnerAppliedRevision", -1]) != _revision}}) then {
         // If object ownership migrated between the initial dispatch and execution, try its
         // current owner once more. The owner function is idempotent for this exact mount.
         [_cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision]
             remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
     };
     sleep 4;
-    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}) exitWith {
+    if (isNull _cargo || {(_cargo getVariable ["Waldo_PhysicalCargo_ServerMountRevision", -1]) != _revision}) exitWith {};
+    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}
+        && {(_cargo getVariable ["Waldo_PhysicalCargo_OwnerAppliedRevision", -1]) == _revision}) exitWith {
         call _notifyMounted;
     };
     if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}) then {
-        [_cargo] call Waldo_fnc_PhysicalCargoClearServer;
-        diag_log format ["[WMP PHYSICAL CARGO] Mount acknowledgement failed for %1; crate simulation restored.", typeOf _cargo];
+        // Move it clear of the vehicle first; freeing it in place would restore physics inside it.
+        private _released = [objNull, _cargo] call Waldo_fnc_PhysicalCargoUnmountServer;
+        // A failed clear-position search must keep the inert mount, not wake it inside the vehicle.
+        diag_log format ["[WMP PHYSICAL CARGO] Mount acknowledgement failed for %1; released=%2.", typeOf _cargo, _released];
         if (!isNull _carrier && {alive _carrier}) then {
-            ["PHYSICAL CARGO", "Cargo could not be secured; it has been released.",
+            ["PHYSICAL CARGO", if (_released) then {"Cargo could not be secured; safe release requested."}
+                else {"No safe unload position. Use ACE Carry to recover the cargo."},
                 "WARNING", "PHYSICAL_CARGO_MOUNT", 6]
                 remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
         };
     };
-};
+}}, [_carrier, _cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision]] call CBA_fnc_execNextFrame;
+
 diag_log format ["[WMP PHYSICAL CARGO] Mounted %1 on %2 at %3.", typeOf _cargo,
     typeOf _vehicle, _offset];
 true

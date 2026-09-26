@@ -1,14 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Build build export payload.
+ * Serialize the build catalog for a portable Economy configuration export.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Runs where the current catalog is held; this is a read-only helper.
+ * Repeat/JIP: Safe to repeat; it does not change the catalog or publish JIP state.
+ * Current Callers: EcoCore_buildUnifiedSaveExportPayload.
  *
  * Arguments:
- * 0: _includeBuilt <BOOL> - include built (optional, default: false)
+ * 0: _includeBuilt <BOOL> - retained compatibility argument (default: false);
+ *    the export always omits live built-object state.
  *
  * Return Value:
- * Any - see function body
+ * STRING - SQF-formatted BUILD_V3 catalog payload.
+ * Result: Returns definitions with their runtime built flags cleared, so
+ * importing a preset cannot claim that its world objects already exist.
  *
  * Example:
  * [_includeBuilt] call Waldo_fnc_EcoBuild_buildBuildExportPayload;

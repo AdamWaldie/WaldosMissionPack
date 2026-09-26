@@ -9,6 +9,7 @@
  * Return Value: Nothing; defines runtime functions.
  * Current callers: Waldo_fnc_MiniGamesEnsureRuntime.
  * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
+ * Result: Connect Four rules are available to registered tables.
  */
 
 Waldo_MG_fnc_connectFourPublishRevisionServer = {

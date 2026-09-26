@@ -5,10 +5,10 @@
  * selected human client. WMP leases the exact ACRE-ready client that ACRE's dedicated-server APIs
  * target, while the server retains validation, request state, retry and completion authority.
  *
- * Locality/repeat/JIP:
- * Server-only and spawned. ACRE's documented rack creation, mount, unmount and removal APIs remain
- * server calls. Channel state is changed and read back on the leased ACRE client. Every wait is
- * bounded. Waldo_fnc_ACRE2RackSetup owns repeat suppression, queued replacement
+ * Locality and authority: Server-only and spawned. ACRE's documented rack creation, mount,
+ * unmount and removal APIs remain server calls. Channel state is changed and read back on the
+ * leased ACRE client.
+ * Repeat/JIP: Every wait is bounded. Waldo_fnc_ACRE2RackSetup owns repeat suppression and queued replacement
  * and PlayerConnected replay. ACRE owns subsequent state synchronization and JIP delivery; WMP does
  * not continually retune a successfully configured rack.
  *
@@ -23,6 +23,8 @@
  *
  * Current caller: Waldo_fnc_ACRE2RackSetup (server).
  * Example: [_vehicle, _settings, str _settings] spawn Waldo_fnc_ACRE2RackApply;
+ * Result: Each requested rack job is verified by the leased ACRE client; the vehicle records a
+ * complete or failed diagnostic snapshot without continually retuning later player changes.
  */
 params [
     ["_vehicle", objNull, [objNull]],

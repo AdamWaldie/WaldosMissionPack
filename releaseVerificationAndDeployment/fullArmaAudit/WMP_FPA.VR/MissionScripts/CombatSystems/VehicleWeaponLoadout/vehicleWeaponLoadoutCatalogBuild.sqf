@@ -47,6 +47,10 @@
  * Example:
  * [] spawn Waldo_fnc_VehicleWeaponLoadoutCatalogBuild; // warm the cache in the background
  * private _catalogs = [] call Waldo_fnc_VehicleWeaponLoadoutCatalogBuild; // blocks until built
+ * Locality and authority: Reads immutable mod configuration on the calling machine. The first
+ * call builds a local cache; later calls reuse it. Each joining client builds its own cache when
+ * needed rather than receiving a network snapshot.
+ * Result: Returns the cached weapon and pylon catalogs for the loaded mod set.
  */
 
 if !(hasInterface) exitWith {[[], []]};

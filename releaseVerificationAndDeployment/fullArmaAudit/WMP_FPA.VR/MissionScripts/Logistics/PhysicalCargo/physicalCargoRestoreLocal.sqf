@@ -9,6 +9,7 @@
  *            physics-only acknowledgement <BOOL> (false), server revision <NUMBER> (0).
  * Return Value: <BOOL> handled. Current caller: Waldo_fnc_PhysicalCargoClearServer.
  * Example: [crate, truck, true] remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreLocal", 0];
+ * Result: The cargo owner detaches the crate and restores saved physics at a checked location.
  */
 params [["_cargo", objNull, [objNull]], ["_vehicle", objNull, [objNull]],
     ["_prior", true, [true]], ["_dropPosition", [], [[]]],

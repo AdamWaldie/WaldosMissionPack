@@ -8,6 +8,7 @@
  * Return Value: Nothing.
  * Current callers: MiniGamesRequestServer queue drain.
  * Example: [_table, 7] call Waldo_fnc_MiniGamesStateChangedLocal;
+ * Result: The local table UI refreshes from the latest published game state.
  */
 
 params [["_table", objNull, [objNull]], ["_revision", -1, [0]]];

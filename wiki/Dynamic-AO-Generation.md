@@ -72,7 +72,7 @@ Both destroy calls forward client requests and immediately return `true` there; 
 | `faction` | String (`CfgFactionClasses` classname) | required | Runtime faction containing public assets |
 | `radius` | Number (metres) | `500` | 100–2000 m |
 | `patrolGroups` | Number (whole) | `3` | 0–12; four to eight infantry per group |
-| `garrisonGroups` | Number (whole) | `3` | 0–30; two to four infantry per building, capped by usable buildings |
+| `garrisonGroups` | Number (whole) | `3` | 0–30; two to four infantry per building, capped by usable buildings. With Smart AI and `Waldo_AIPass_Garrison_DynamicAO` enabled, garrisons watch outward, duck under fire and break at heavy losses |
 | `staticTurrets` | Number (whole) | `0` | 0–20 manned faction static weapons |
 | `vehiclePatrols` | Number (whole) | `0` | 0–10 |
 | `vehicleMix` | Array of 3 numbers | `[34,33,33]` | Car/APC/tank relative weights |

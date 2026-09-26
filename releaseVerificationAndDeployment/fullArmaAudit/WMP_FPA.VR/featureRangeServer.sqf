@@ -5,6 +5,8 @@
  * follows the actual remote player owner, transfers after respawn and never selects server-owned
  * playable AI as the initial Zeus operator.
  *
+ * Locality/authority: dedicated/hosted server builds fixtures; owners execute feature commands.
+ * Repeat/JIP: manual reset actions replace their fixtures; public fixture state is available to JIP.
  * Arguments: none (executed from auditInitServer.sqf).
  * Return Value: nothing.
  *
@@ -269,6 +271,52 @@ Waldo_QA_fnc_startConvoyServer = {
     [_convoyGroup, 15, 10, false] spawn Waldo_fnc_SimpleAiConvoy;
     diag_log "[WMP QA] Manual convoy test started.";
     ["Convoy test started. Both vehicles are now live and moving north."] remoteExec ["systemChat", 0];
+};
+
+// Opt-in mixed convoy fixture, isolated from the walkable feature range.
+// Uses live vehicles, mounted operating crew, a separate cargo group and the real public API.
+Waldo_QA_fnc_startMixedConvoyServer = {
+    if (!isServer) exitWith {};
+    private _sender = remoteExecutedOwner;
+    if (_sender > 2 && {allPlayers findIf {owner _x == _sender && {!isNull getAssignedCuratorLogic _x}} < 0}) exitWith {};
+    private _old = missionNamespace getVariable ["Waldo_QA_MixedConvoyGroups", []];
+    {
+        [_x, 0, 15, true, true] call Waldo_fnc_SimpleAiConvoy;
+        {if (!isPlayer _x) then {deleteVehicle _x}} forEach units _x;
+        deleteGroup _x;
+    } forEach _old;
+    private _drivers = createGroup west;
+    private _cargo = createGroup west;
+    private _vehicles = [];
+    {
+        _x params ["_name", "_class", "_position"];
+        private _vehicle = [_name, _class, _position, 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
+        _vehicle setDamage 0;
+        _vehicle setFuel 1;
+        _vehicle setVehicleAmmo 1;
+        createVehicleCrew _vehicle;
+        (crew _vehicle) joinSilent _drivers;
+        _vehicles pushBack _vehicle;
+    } forEach [
+        ["qa_mixed_convoy_1", "B_MRAP_01_hmg_F", [600, 500, 0]],
+        ["qa_mixed_convoy_2", "B_APC_Tracked_01_rcws_F", [600, 450, 0]],
+        ["qa_mixed_convoy_3", "B_Truck_01_transport_F", [600, 400, 0]]
+    ];
+    _drivers selectLeader driver (_vehicles select 0);
+    for "_i" from 0 to 5 do {
+        private _unit = _cargo createUnit ["B_Soldier_F", [590, 400, 0], [], 0, "NONE"];
+        _unit assignAsCargo (_vehicles select 2);
+        _unit moveInCargo (_vehicles select 2);
+    };
+    {
+        private _waypoint = _drivers addWaypoint [_x, 0];
+        _waypoint setWaypointType "MOVE";
+        _waypoint setWaypointCompletionRadius 15;
+    } forEach [[600, 1000, 0], [900, 1000, 0], [900, 600, 0]];
+    missionNamespace setVariable ["Waldo_QA_MixedConvoyGroups", [_drivers, _cargo], true];
+    [_drivers, 25, 25, true] call Waldo_fnc_SimpleAiConvoy;
+    {private _curator = _x; _curator addCuratorEditableObjects [_vehicles + units _drivers + units _cargo, true]} forEach allCurators;
+    diag_log "[WMP QA] Mixed convoy started at [600,500]: HMG, tracked APC, cargo truck; route ends [900,600]. Check mounted crew, six cargo dismounts and HC transfer. Add contact/blockage through Zeus.";
 };
 
 Waldo_QA_fnc_resetEconomyFixturesServer = {

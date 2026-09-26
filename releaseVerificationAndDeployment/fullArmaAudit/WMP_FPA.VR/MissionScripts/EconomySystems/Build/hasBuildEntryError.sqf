@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Has build entry error.
+ * Validates a Construction definition's fields, class and linked requirements.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when the definition is invalid.
  *
  * Example:
  * [_entry, _catalog] call Waldo_fnc_EcoBuild_hasBuildEntryError;
+ * Locality/Authority: Any machine; read-only definition validation.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Build catalog filtering, status and authoritative start gates.
+ * Result: Missing classes or unresolved upgrade links are rejected.
  */
 
         params [["_entry", []], ["_catalog", []]];

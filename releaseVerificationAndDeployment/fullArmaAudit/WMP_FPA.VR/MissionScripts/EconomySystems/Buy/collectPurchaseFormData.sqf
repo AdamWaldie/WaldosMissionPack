@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Collect purchase form data.
+ * Reads and normalizes an asset row from the Purchase curator form.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - Purchase editor display (optional, default: displayNull)
  *
  * Return Value:
- * Nothing
+ * <ARRAY> normalized asset row, or [] for a null display.
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_collectPurchaseFormData;
+ * Locality/Authority: Curator interface client; server validates submitted rows separately.
+ * Repeat/JIP Behaviour: Repeat-safe form read; no JIP effect until submission.
+ * Current Callers: Purchase editor Save/Add button handlers.
+ * Result: Returns form values without changing the authoritative catalog.
  */
 
         params [["_disp", displayNull]];

@@ -15,7 +15,8 @@
  *      radar procedure callback (default objNull)
  *
  * Return Value:
- * Boolean - true when the system existed
+ * Boolean - server true when the system existed, false when absent or unauthorized. A client
+ * forwards the request and returns true before the server has checked it.
  *
  * Current callers:
  * Dynamic AA ZEN removal, radar-loss detector handling, shared shutdown interaction and scripts.

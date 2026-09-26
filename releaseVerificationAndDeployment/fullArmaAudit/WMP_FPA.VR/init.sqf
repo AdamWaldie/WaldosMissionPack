@@ -11,10 +11,18 @@ call compile preprocessFileLineNumbers "auditPreInit.sqf";
  *
  * Arguments: None.
  * Return Value: Nothing; initializes shared mission state and schedules feature startup.
+ * Locality and authority: Runs on server, interface clients and headless clients. Shared config
+ * loading guards server-published values so joining players do not replace newer authority.
+ * Repeat/JIP: Arma calls this once per machine join. It does not replay local UI actions.
  *
  * Example: Arma executes init.sqf automatically during mission initialization.
+ * Result: Each machine has shared WMP config data before its dependent startup proceeds.
  * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
+
+// Every object Init field has run by now, so later client calls to Init-safe WMP creators forward
+// to the server again (see Waldo_fnc_ClientInitPhaseEnd; set here too in case postInit runs later).
+missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
 
 /* BEGINNER START HERE
  * - A setting needed everywhere belongs in MissionConfig and is loaded here as SHARED data.
@@ -27,10 +35,6 @@ call compile preprocessFileLineNumbers "auditPreInit.sqf";
 
 // OPTIONAL VISUAL EXPERIMENT: uncomment only if this mission wants the post-process effect.
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
-
-// OPTIONAL THIRD-PARTY ENTRY POINT: review that file before enabling it.
-//[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
-
 
 // Pure-data shared feature configs are synchronous and repeat-safe. Runtime authority remains below.
 ["SHARED"] call Waldo_fnc_LoadFeatureConfigs;
@@ -122,7 +126,7 @@ if (Waldo_CorpseTraps_Enable) then {
 
 /*===========================================================================================================================*/
 
-/* AI REBALANCE, HELICOPTER LANDING AND DECELERATION
+/* AI REBALANCE, HELICOPTER LANDING, DECELERATION AND SMART AI PASS
  * Normal setup: MissionConfig\aiConfig.sqf.
  * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
  * Do not add another AITweak call here. This readiness-aware activation uses the settings received
@@ -142,6 +146,10 @@ if (Waldo_CorpseTraps_Enable) then {
     };
     [] call Waldo_fnc_ImprovedHelicopterLandingInit;
     [] call Waldo_fnc_HelicopterDecelerationInit;
+    // Smart AI Pass: the server starts it and replays the start to headless clients (JIP-safe).
+    if (isServer && {missionNamespace getVariable ["Waldo_AIPass_Enable", false]}) then {
+        [] call Waldo_fnc_AIPassInit;
+    };
 };
 /*===========================================================================================================================*/
 

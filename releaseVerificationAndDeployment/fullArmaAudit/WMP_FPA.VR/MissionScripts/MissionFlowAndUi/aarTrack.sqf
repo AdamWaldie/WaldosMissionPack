@@ -11,6 +11,9 @@
  * changing an unconscious crew member to Civilian cannot misattribute the later vehicle loss.
  * Temporary unconscious/WIA events are deliberately not tracked because they
  * are not mission outcomes and duplicate the more useful KIA record. No per-frame loops.
+ * Locality/authority: call on the server; other machines return without changing state.
+ * Repeat/JIP: repeat calls do not add another event handler. Counters stay server-local
+ * until an ENDEX snapshot is sent to interface clients, including late joiners.
  *
  * Arguments:
  * None
@@ -20,6 +23,8 @@
  *
  * Example:
  * [] call Waldo_fnc_AARTrack;
+ * Result: the server begins a single AAR ledger and includes its counters in later ENDEX payloads.
+ * Current callers: mission-maker server setup, the full-pack audit, and ENDEX's AAR workflow.
  */
 
 if !(isServer) exitWith {};

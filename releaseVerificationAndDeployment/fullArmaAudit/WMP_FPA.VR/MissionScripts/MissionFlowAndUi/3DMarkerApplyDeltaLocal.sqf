@@ -9,6 +9,7 @@
  * Return Value: BOOL - true when applied or already current; false when a snapshot was requested.
  * Current callers: Waldo_fnc_Create3DMarker and Waldo_fnc_Remove3DMarker via server remoteExecCall.
  * Example: [12, "REMOVE", ["generator_alpha"]] call Waldo_fnc_Marker3DApplyDeltaLocal;
+ * Result: This client's rendered marker registry advances by one revision or requests repair.
  */
 params [
     ["_revision", -1, [0]],

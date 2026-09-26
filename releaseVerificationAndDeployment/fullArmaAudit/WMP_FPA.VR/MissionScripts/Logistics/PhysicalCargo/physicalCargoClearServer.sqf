@@ -10,6 +10,7 @@
  * Return Value: BOOLEAN - true when prior physical-cargo state was cleared.
  * Current callers: Waldo_fnc_PhysicalCargoInitLocal and Waldo_fnc_PhysicalCargoInitServer.
  * Example: [crate, player] remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer", 2];
+ * Result: The mount record and its owned seat locks are removed before cargo restoration.
  */
 params [
     ["_cargo", objNull, [objNull]],
@@ -24,6 +25,7 @@ private _vehicle = _cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", ob
 private _mounts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);
 private _mountIndex = _mounts findIf {(_x select 0) isEqualTo _cargo};
 if (isNull _vehicle && {_mountIndex < 0}) exitWith {false};
+_cargo setVariable ["Waldo_PhysicalCargo_ServerMountRevision", nil];
 if (isNull _vehicle && {_mountIndex >= 0}) then {_vehicle = (_mounts select _mountIndex) select 1};
 private _safeDrop = count _dropPosition == 3;
 private _priorSimulation = _cargo getVariable ["Waldo_PhysicalCargo_PreviousSimulation", true];
@@ -40,6 +42,20 @@ if (_safeDrop) then {
         [_restoreToken, _vehicle, _priorSimulation, _priorCollision]];
 };
 _cargo setVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull, true];
+// A mount keeps the near-zero mass ACE gave the object while carried. Hand the real mass back
+// to ACE when a player picks it up (ACE restores it on that drop), after a safe set-down clear
+// of the vehicle, or immediately when ACE Cargo took it or the carrier vehicle is gone.
+private _mass = _cargo getVariable ["Waldo_PhysicalCargo_OriginalMass", 0];
+if (_mass > 0) then {
+    _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", nil, true];
+    switch (true) do {
+        case (!isNull _carrier && {(_carrier getVariable ["ace_dragging_carriedObject", objNull]) isEqualTo _cargo}): {
+            _cargo setVariable ["ace_dragging_originalMass", _mass, true];
+        };
+        case (_safeDrop): {_cargo setVariable ["Waldo_PhysicalCargo_RestoreMass", _mass]};
+        default {["ace_common_setMass", [_cargo, _mass]] call CBA_fnc_globalEvent};
+    };
+};
 [_cargo, _vehicle, false] call Waldo_fnc_PhysicalCargoSeatsServer;
 _mounts = _mounts select {(_x select 0) isNotEqualTo _cargo};
 missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _mounts];

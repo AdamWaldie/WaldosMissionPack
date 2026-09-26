@@ -22,6 +22,10 @@
  * Example:
  * [this, 0, 4] call Waldo_fnc_SetupQuarterMaster; // always-available standalone point, 4 m ahead.
  * Current callers: Eden composition/object init and Waldo_fnc_MHQSetupLocal.
+ * Locality and authority: Server owns registration and issue settings; interface clients
+ * install ACE actions for this object. Repeat setup reconciles actions, and public settings
+ * plus client setup cover JIP.
+ * Result: The object becomes a quartermaster with the configured issue interactions.
  */
 params [
     ["_target", objNull, [objNull]],

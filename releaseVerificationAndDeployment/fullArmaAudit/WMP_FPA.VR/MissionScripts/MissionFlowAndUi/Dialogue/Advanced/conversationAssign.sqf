@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: replaces the speaker entry and republishes a serialisable action snapshot.
  * Arguments: targets, conversation ID STRING, remove-after-use BOOL. Return Value: BOOL.
  * Current callers: Eden init fields, scripts and ZEN. Example: [this,"CHECKPOINT"] call Waldo_fnc_ConversationAssign;
+ * Result: Target NPCs offer the selected conversation to current and joining players.
  */
 params ["_targetsInput", ["_conversationId", "", [""]], ["_removeAfterUse", false, [true]]];
 if (!isServer) exitWith {false};

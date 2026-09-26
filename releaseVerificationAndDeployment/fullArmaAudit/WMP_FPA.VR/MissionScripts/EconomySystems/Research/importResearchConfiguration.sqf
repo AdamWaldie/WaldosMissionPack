@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Import research configuration.
+ * Imports a serialized Research catalog through the authoritative catalog setter.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _payload <ANY> - payload
+ * 0: _payload <ARRAY> - validated Research export payload
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_payload] call Waldo_fnc_EcoResearch_importResearchConfiguration;
+ * Locality/Authority: Economy authority only through EcoResearch_setResearchCatalog.
+ * Repeat/JIP Behaviour: Re-import replaces the catalog; the setter publishes it for JIP.
+ * Current Callers: Economy authoring import handler.
+ * Result: Replaces the current catalog with rows from the accepted payload.
  */
 
         params ["_payload"];

@@ -40,6 +40,10 @@
  *
  * Current callers: mission-maker vehicle init fields, scripts, and the ZEN "Vehicle Customisation -
  * Editor" module's "Copy From Nearby Vehicle" action (via Waldo_fnc_ZenVehicleCustomizationServer).
+ * Locality and authority: Server accepts the copy request and delegates loadout mutation to
+ * VehicleWeaponLoadoutApply on the relevant vehicle/turret owners. Repeating a copy reapplies the
+ * donor's current loadout; the resulting target state replicates to JIP clients.
+ * Result: Reports copied turret paths, pylon indices and each applied row's outcome.
  */
 
 params [

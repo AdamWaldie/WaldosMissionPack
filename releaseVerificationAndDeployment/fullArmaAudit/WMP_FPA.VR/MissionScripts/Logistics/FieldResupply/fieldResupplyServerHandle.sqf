@@ -134,7 +134,15 @@ switch (toUpperANSI _operation) do {
         private _includeGear = missionNamespace getVariable ["Waldo_FieldResupply_IncludeWeaponsAttachments", false];
         private _includeLaunchers = missionNamespace getVariable ["Waldo_FieldResupply_IncludeLaunchers", false];
         [_crate, _sizeScalar, _carrierSide, _includeGear, _includeLaunchers] call Waldo_fnc_SupplyCratePopulate;
-        [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+        // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+        // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+        // A deployed crate gets the same ACE handling as a quartermaster crate: drag/carry
+        // regardless of weight and one ACE cargo slot. SetCargoAttributes keeps the anchor points
+        // set below, which ACE stores on the object.
+        [{
+            [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+            _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+        }, [_crate, "SUPPLY"]] call CBA_fnc_execNextFrame;
         _crate setVariable ["Waldo_FieldResupply_Deployed", true, true];
         // Server-only - only this same handler's own SALVAGE case ever reads it back, so it does not
         // need to be broadcast.
@@ -143,8 +151,8 @@ switch (toUpperANSI _operation) do {
         // Kept exactly as-is: Waldo_fnc_SupplyCratePopulate's own Waldo_fnc_SetCargoAttributes call
         // already made this crate draggable/carryable with default offsets, so these run after it to
         // restore field-resupply's own tuned drag/carry anchor points.
-        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0, false, true] call ace_dragging_fnc_setDraggable};
-        if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0, false, true] call ace_dragging_fnc_setCarryable};
+        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0, true, true] call ace_dragging_fnc_setDraggable};
+        if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0, true, true] call ace_dragging_fnc_setCarryable};
         // Target 0 (all machines), matching FieldResupplyRegisterHub's own equivalent call - not -2
         // ("all clients", which excludes owner 2). On a listen server the host's own client shares
         // owner 2 with the server, so -2 silently skipped installing the crate's local actions on

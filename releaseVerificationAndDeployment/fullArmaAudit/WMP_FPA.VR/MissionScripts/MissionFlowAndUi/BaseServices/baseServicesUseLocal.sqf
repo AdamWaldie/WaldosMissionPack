@@ -6,6 +6,7 @@
  * Arguments: player <OBJECT>, service <STRING>. Return Value: <BOOL> executed.
  * Current caller: Waldo_fnc_BaseServicesUseServer.
  * Example: [player, "SAVE"] remoteExecCall ["Waldo_fnc_BaseServicesUseLocal", player];
+ * Result: The player's client performs the approved save, heal or spectator service.
  */
 params [["_unit", objNull, [objNull]], ["_service", "", [""]]];
 if (!hasInterface || {!local _unit} || {_unit isNotEqualTo player}) exitWith {false};

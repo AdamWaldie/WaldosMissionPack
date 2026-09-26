@@ -1,64 +1,85 @@
 /*
-Purpose: Simple AI Convoy script for mission makers
-Called From: sqf file, trigger, init field or whatever you fancy
-Scope: Groups of units referanced
-Execution time: from handle call.
-Author: Tova, modified by WaldoTheWarfighter
-License: unlimited distribution and editing as per Tova's original.
-
-Call it with:
-
-convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
-
-
-Optional parameters are also available :
-
-convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
-
-if there are multiple, simply change the "handle":
-
-
-convoyScript_2 = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
-
-
-With :
-
-convoyGroup : the group you want to move as a convoy
-convoySpeed : Maximum speed of the convoy in km/h (default 50 km/h)
-convoySeparation : distance between each vehicle of the convoy (default 50m)
-pushThrough : true/false, force the AI to push through contact, only returning fire on the move (default true)
-
-
-
-To end the script, in its final waypoint place the below in on activation:
-
-terminate convoyScript;
-{(vehicle _x) limitSpeed 5000;(vehicle _x) setUnloadInCombat [true, false]} forEach (units convoyGroup);
-convoyGroup enableAttack true;
-
-*/
-params ["_convoyGroup",["_convoySpeed",30],["_convoySeparation",15],["_pushThrough", true]];
-// This script's own while loop below continuously drives the convoy every 5s and depends on the
-// group staying local to wherever it's running - an external headless rebalance (WMP's own, or
-// ACE's separate, uncoordinated ace_headless module) moving it mid-convoy would desynchronise that
-// loop. Pin server-side by default; a no-op if called from a non-server machine, since headless
-// migration is inherently server-only anyway. See headlessPinCrew.sqf for detail.
-{[vehicle _x] call Waldo_fnc_HeadlessPinCrew;} forEach (units _convoyGroup);
-if (_pushThrough) then {
-    _convoyGroup enableAttack !(_pushThrough);
-    {(vehicle _x) setUnloadInCombat [false, false];} forEach (units _convoyGroup);
+ * Author: WaldoTheWarfighter
+ * Registers mixed land convoys; speed <= 0 holds vehicles and unloads passengers. Release removes the controller.
+ * Locality/authority: server validates requests and owns registry/baselines; each owner applies local effects.
+ * Repeat/JIP: versioned snapshots include halt cargo and restoration data; reconfigure explicitly resumes travel.
+ * Arguments: 0: group <GROUP>, grpNull; 1: maximum km/h <NUMBER>, 30; 2: separation metres <NUMBER>, 15;
+ * 3: push through <BOOL>, true; 4: release controller without unloading <BOOL>, false;
+ * 5: halt context <ARRAY>, [] of named reason/threat pairs, used by ConvoyHaltServer.
+ * Return Value: Boolean server acceptance; forwarded calls return dispatch acceptance.
+ * Current callers: mission scripts, ConvoyHaltServer and authenticated convoy Zeus control.
+ * Example: [convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy; // hold and unload cargo, keep operating crew
+ */
+params [["_group", grpNull, [grpNull]], ["_speed", 30, [0]], ["_separation", 15, [0]], ["_pushThrough", true, [true]], ["_release", false, [true]], ["_haltContext", [], [[]]]];
+if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_SimpleAiConvoy", 2]; true};
+if (isNull _group) exitWith {false};
+if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) then {
+    private _sender = remoteExecutedOwner;
+    private _authorized = allPlayers findIf {owner _x == _sender && {
+        !isNull getAssignedCuratorLogic _x || {_x isKindOf "HeadlessClient_F" && {groupOwner _group == _sender}}
+    }};
+    if (_authorized < 0) then {_group = grpNull};
 };
-_convoyGroup setFormation "COLUMN";
-{
-    (vehicle _x) limitSpeed _convoySpeed*1.15;
-    (vehicle _x) setConvoySeparation _convoySeparation;
-} forEach (units _convoyGroup);
-(vehicle leader _convoyGroup) limitSpeed _convoySpeed;
-while {sleep 5; !isNull _convoyGroup} do {
+if (isNull _group) exitWith {false};
+if (_haltContext findIf {!(_x isEqualType []) || {count _x != 2} || {!((_x select 0) isEqualType "")}} >= 0) exitWith {false};
+private _context = createHashMapFromArray _haltContext;
+private _reason = _context getOrDefault ["reason", "MANUAL"];
+private _threat = _context getOrDefault ["threat", []];
+if (!(_reason in ["MANUAL", "ARRIVED", "AMBUSH", "IMMOBILE"]) || {!(_threat isEqualType [])}
+    || {!(count _threat in [0, 3])} || {_threat findIf {!(_x isEqualType 0)} >= 0}) exitWith {false};
+private _registry = +(missionNamespace getVariable ["Waldo_Convoy_Registry", []]);
+private _oldIndex = _registry findIf {(_x select 0) == _group};
+private _old = if (_oldIndex >= 0) then {(_registry select _oldIndex) select 1} else {[]};
+if ((_release || {_speed <= 0}) && {_old isEqualTo []}) exitWith {false};
+private _vehicles = [];
+if (_speed > 0 && {!_release}) then {
+    {private _v = vehicle _x; if (_v isKindOf "LandVehicle" && {!(_v isKindOf "StaticWeapon")} && {alive driver _v} && {group driver _v == _group}) then {_vehicles pushBackUnique _v}} forEach units _group;
+};
+if (_speed > 0 && {!_release} && {count _vehicles < ([1, 2] select (_old isEqualTo [])) || {count _vehicles > 20}
+    || {_group getVariable ["Waldo_ServerOwnedFeature", false]} || {(units _group) findIf {isPlayer _x} >= 0}
+    || {_vehicles findIf {(crew _x) findIf {isPlayer _x} >= 0 || {_x getVariable ["Waldo_ServerOwnedFeature", false]}
+        || {_x getVariable ["Waldo_Convoy_Active", false] && {(_x getVariable ["Waldo_Convoy_Group", grpNull]) != _group}}} >= 0}}) exitWith {false};
+if (!_release && {_speed <= 0} && {(_old param [5, "TRAVEL"]) == "HALT"}) exitWith {true};
+private _revision = (_group getVariable ["Waldo_Convoy_Revision", 0]) + 1;
+private _configuration = [];
+if (!_release) then {
+    if (_speed <= 0) then {
+        _vehicles = _old select 4;
+        private _cargo = [];
+        {
+            private _vehicle = _x;
+            {
+                _x params ["_unit", "_role", "", "", "_personTurret"];
+                if (alive _unit && {!isPlayer _unit} && {_role == "cargo" || {_personTurret}}) then {_cargo pushBack [_unit, _vehicle]};
+            } forEach fullCrew [_vehicle, "", false];
+        } forEach _vehicles;
+        _configuration = [_revision, _old select 1, _old select 2, _old select 3, _vehicles, "HALT", _cargo, _old select 7, _reason, +_threat, serverTime + 45];
+    } else {
+        private _lead = vehicle leader _group;
+        if (_lead in _vehicles) then {_vehicles = [_lead] + (_vehicles - [_lead])};
+        private _restore = if (_old isEqualTo []) then {[formation _group, attackEnabled _group, []]} else {+(_old select 7)};
+        private _saved = +(_restore select 2);
+        {
+            private _vehicle = _x;
+            if (_saved findIf {(_x select 0) == _vehicle} < 0) then {_saved pushBack [_vehicle, getForcedSpeed _vehicle, getUnloadInCombat _vehicle]};
+        } forEach _vehicles;
+        _restore set [2, _saved];
+        _configuration = [_revision, (_speed max 5) min 120, (_separation max 10) min 100, _pushThrough, _vehicles, "TRAVEL", [], _restore, "NONE", [], 0];
+    };
+};
+_registry = _registry select {!isNull (_x select 0) && {(_x select 0) != _group}};
+if (!_release) then {
+    _registry pushBack [_group, _configuration];
     {
-        if ((speed vehicle _x < 5) && (_pushThrough || (behaviour _x != "COMBAT"))) then {
-            (vehicle _x) doFollow (leader _convoyGroup);
-        };
-    } forEach (units _convoyGroup)-(crew (vehicle (leader _convoyGroup)))-allPlayers;
-    {(vehicle _x) setConvoySeparation _convoySeparation;} forEach (units _convoyGroup);
+        _x setVariable ["Waldo_Convoy_Group", _group, true];
+        _x setVariable ["Waldo_Convoy_Active", true, true];
+    } forEach (_configuration select 4);
 };
+_group setVariable ["Waldo_Convoy_Revision", _revision, true];
+_group setVariable ["Waldo_Convoy_Active", !_release, true];
+_group setVariable ["Waldo_Convoy_ContactProgress", nil, true];
+missionNamespace setVariable ["Waldo_Convoy_Registry", _registry];
+private _registryRevision = (missionNamespace getVariable ["Waldo_Convoy_RegistryRevision", 0]) + 1;
+missionNamespace setVariable ["Waldo_Convoy_RegistryRevision", _registryRevision];
+[_registryRevision, _registry] remoteExecCall ["Waldo_fnc_ConvoySync", 0, "Waldo_Convoy_RegistrySync"];
+true

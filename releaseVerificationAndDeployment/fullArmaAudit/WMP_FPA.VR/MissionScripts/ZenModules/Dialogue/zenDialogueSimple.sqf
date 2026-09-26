@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: replaces existing assignments through the public SimpleDialogue API.
  * Arguments: module position ARRAY, selected object OBJECT. Return Value: Nothing.
  * Current caller: ZEN "Dialogue - Apply Simple Archetype". Example: place the module on an NPC.
+ * Result: The curator receives the archetype selector for the target NPC or group.
  */
 params ["_modulePos", ["_target", objNull, [objNull]]];
 if (isNull _target || {!(_target isKindOf "CAManBase")}) exitWith {["DIALOGUE", "Place this module directly on an NPC.", "WARNING", "DIALOGUE_ZEN", 6] call Waldo_fnc_FeatureNotifyLocal};

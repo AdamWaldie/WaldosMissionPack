@@ -1,6 +1,14 @@
 /*
- * Hydraulic/pneumatic manifold balancing procedure.
- * Config: [valveCount(2..4), difficulty(1..3), settleTime, timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the hydraulic manifold balancing procedure.
+ * Locality and authority: Runs in a private client display; the resolver reports final
+ * success/failure. Repeated attempts reset the controls, not server or JIP state.
+ * Arguments: 0: config <ARRAY> [valveCount 2..4, difficulty 1..3, settleTime,
+ *   timeLimit, title] ([] defaults); 1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[3, 1, 2, 45, "HYDRAULIC MANIFOLD"], {}] call Waldo_fnc_MiniGamePressure;
+ * Result: The player sees the pressure procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

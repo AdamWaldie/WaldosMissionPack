@@ -6,7 +6,7 @@
  * Place any vehicle in Eden and put this in its init field:
  *     [this] call Waldo_fnc_EcoBuild_registerConstructionVehicle;
  *
- * The economy suite must be enabled (see init.sqf / a Waldos Economy Systems composition).
+ * The economy suite must be enabled in MissionConfig (or by an Economy composition).
  * JIP-safe: the tag is broadcast and the per-machine action loop maintains the interaction
  * for joining/rejoining players. Works for any vehicle class (the loop tracks by tag).
  *
@@ -15,6 +15,13 @@
  *
  * Return Value:
  * Nothing
+ * Locality/Authority: Eden object init may run on each machine. Economy authority publishes
+ * the tag; interface clients install local actions.
+ * Repeat/JIP Behaviour: Registration and versioned action setup are repeat-safe. JIP clients
+ * discover the published vehicle tag and install their own action.
+ * Current Callers: Eden vehicle init fields and Economy composition setup.
+ * Example: [this] call Waldo_fnc_EcoBuild_registerConstructionVehicle;
+ * Result: The placed vehicle becomes a Construction Vehicle.
  */
 
 params ["_object"];

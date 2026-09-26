@@ -92,7 +92,8 @@
     "handler": "Waldo_fnc_ZenConvoyModule",
     "script_api": "Waldo_fnc_SimpleAiConvoy",
     "parity": "full",
-    "notes": "Speed, separation and push-through match the script API."
+    "notes": "Exact selected vehicle, configure/stop, speed, separation and push-through use the authenticated server script API. The owner applies registration asynchronously.",
+    "via": "Waldo_fnc_FeatureRuntimeApply"
   },
   {
     "category": "core",
@@ -422,12 +423,34 @@
   },
   {
     "category": "core",
-    "module": "AI Rebalance - Control",
+    "module": "AI Control",
     "handler": "Waldo_fnc_FeatureRuntimeZen",
     "via": "Waldo_fnc_FeatureRuntimeApply",
     "script_api": "Waldo_fnc_AIRebalanceInit",
     "parity": "adapter",
-    "notes": "Enable state, day or night mode and named profile are published before locality-aware application."
+    "notes": "Rebalance enable state, day or night mode and named profile, plus the Smart AI Pass and survivor-regroup switches, are published before locality-aware application. The pass itself starts through Waldo_fnc_AIPassInit and stops through Waldo_fnc_AIPassStop."
+  },
+  {
+    "category": "core",
+    "module": "AI Orders",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_AIPassOrderDispatch",
+      "Waldo_fnc_AIPassOrderLocal"
+    ],
+    "script_api": "Waldo_fnc_AIPassGarrison",
+    "parity": "adapter",
+    "notes": "Named settings dispatch to the actual group owner and return its acceptance. Explicit selected-soldier spotter assignment is handled on the server. The legacy positional script adapter remains. Clear-building requires a selected building in Zeus."
+  },
+  {
+    "category": "core",
+    "module": "AI Tuning",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassTuning",
+    "parity": "full",
+    "notes": "The dialog is built from Waldo_fnc_AIPassTuningSpec and applies through the same Waldo_fnc_AIPassTuning call a trigger or script uses: behaviour profile, aggression, cohesion, reaction speed, ranges, support, artillery, counter-battery and airborne values, validated and published live to the server and headless clients."
   },
   {
     "category": "core",
@@ -766,5 +789,35 @@
       "anchor object or fixed position remains untouched",
       "REMOVE_3D_MARKER"
     ]
+  },
+  {
+    "category": "core",
+    "module": "Artillery - Set Up Spotter",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_AIPassOrderDispatch"
+    ],
+    "script_api": "Waldo_fnc_AIPassSetSpotter",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Artillery - Set Battery Role",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassSetArtilleryRole",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Artillery - Set Up Radar",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassRegisterRadar",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
   }
 ]

@@ -1,0 +1,159 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Machine-local discovery sweep for the Smart AI Pass, run as a scheduler job every
+ * Waldo_AIPass_DiscoveryInterval seconds (default 10) on the server and each headless client.
+ *
+ * One sweep caches candidates and installs repeat-safe group ownership handlers:
+ * - caches player positions for the distance tiers (one allPlayers read per sweep, not per group);
+ * - starts a Waldo_fnc_AIPassGroupTick job for each newly local, eligible group and records its
+ *   peak strength, which is how groups handed over by ACE Headless or WMP Headless are picked up;
+ * - re-applies garrison orders on the new owner after a locality change, because disableAI and
+ *   event handlers are stored per machine;
+ * - optionally applies WMP garrison handling to Dynamic AO garrison groups;
+ * - in LAMBS "WMP" mode, turns LAMBS group AI off for managed groups (restored on release);
+ * - caches locally owned, eligible artillery for fire support and counter-battery;
+ * - re-applies defence-line orders after a locality change;
+ * - hands landed paratroopers and dismounted crews of a lost transport to the pass
+ *   (Waldo_fnc_AIPassReleaseFeatureCrew);
+ * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
+ *   WMP gunships and Dynamic AA fighters.
+ * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
+ *
+ * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
+ *
+ * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
+ * Arguments:
+ * 0: job <HASHMAP> - unused
+ *
+ * Return Value:
+ * Number - seconds until the next sweep, or -1 when the pass has stopped
+ *
+ * Example:
+ * [Waldo_fnc_AIPassDiscover, createHashMap, 1] call Waldo_fnc_AIPassQueueJob;
+ * Result: local AI groups are brought under the pass within one sweep.
+ *
+ * Current caller: Waldo_fnc_AIPassInit.
+ */
+
+if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
+    missionNamespace setVariable ["Waldo_AIPass_DiscoveryQueued", false];
+    -1
+};
+missionNamespace setVariable ["Waldo_AIPass_PlayerPositions", (allPlayers select {alive _x && {!(_x isKindOf "HeadlessClient_F")}}) apply {getPosATL _x}];
+
+private _lambsWmpMode = (missionNamespace getVariable ["Waldo_AIPass_LambsDangerLoaded", false])
+    && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "WMP"};
+private _spotters = [];
+private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_DynamicAO", false];
+{
+    private _group = _x;
+    [_group] call Waldo_fnc_AIPassHearingLocal;
+    if (isNil {_group getVariable "Waldo_AIPass_LocalHandler"}) then {
+        _group setVariable ["Waldo_AIPass_LocalHandler", _group addEventHandler ["Local", {
+            _this call Waldo_fnc_AIPassLocality;
+        }]];
+    };
+    if (local _group && {!(_group getVariable ["Waldo_AIPass_Adopted", false])}) then {
+        [_group, true] call Waldo_fnc_AIPassLocality;
+    };
+    // "Applied" flags are machine-local. Clear them while another machine owns the group, so a group
+    // that comes back (for example server to headless client and back) has its order re-applied here.
+    if (!local _group) then {
+        _group setVariable ["Waldo_AIPass_GarrisonApplied", nil];
+        _group setVariable ["Waldo_AIPass_DefendApplied", nil];
+    };
+    if (local _group && {(units _group) findIf {alive _x} >= 0}) then {
+        _spotters append ((units _group) select {alive _x && {_x getVariable ["Waldo_AIPass_Spotter", false]}});
+        if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_GarrisonApplied", false])}) then {
+            [_group] call Waldo_fnc_AIPassGarrisonApplyLocal;
+        };
+        if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_DefendApplied", false])}) then {
+            [_group] call Waldo_fnc_AIPassDefendApplyLocal;
+        };
+        private _clear = _group getVariable ["Waldo_AIPass_ClearOrder", []];
+        if (_clear isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_ClearApplied", false])}) then {
+            [_group, _clear select 0, createHashMapFromArray [["useLambs", false], ["resume", true]]] call Waldo_fnc_AIPassClearBuilding;
+        };
+        // Landed paratroopers and dismounted crews of a lost transport are released by their feature.
+        if (_group getVariable ["Waldo_Paradrop_Jumped", false]
+            || {!isNil {_group getVariable "Waldo_TransportService_Vehicle"}}) then {
+            [_group] call Waldo_fnc_AIPassReleaseFeatureCrew;
+        };
+        private _eligible = [_group] call Waldo_fnc_AIPassIsEligible;
+        if ((!_lambsWmpMode || {!_eligible}) && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
+            _group setVariable ["lambs_danger_disableGroupAI", false, true];
+            _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
+        };
+        if (_lambsWmpMode && {_eligible} && {!(_group getVariable ["lambs_danger_disableGroupAI", false])}) then {
+            _group setVariable ["lambs_danger_disableGroupAI", true, true];
+            _group setVariable ["Waldo_AIPass_LambsDisabledByPass", true, true];
+        };
+        if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_AIPassIsEligible}) then {
+            _group setVariable ["Waldo_AIPass_Managed", true];
+            _group setVariable ["Waldo_AIPass_PeakSize", (_group getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _group)];
+            [Waldo_fnc_AIPassGroupTick, createHashMapFromArray [["group", _group]], random 2] call Waldo_fnc_AIPassQueueJob;
+            if (_daoGarrison && {(_group getVariable ["Waldo_DynamicAO_Role", ""]) == "GARRISON"}
+                && {(_group getVariable ["Waldo_AIPass_Garrison", []]) isEqualTo []}) then {
+                private _building = _group getVariable ["Waldo_DynamicAO_Building", objNull];
+                private _centre = if (isNull _building) then {getPosATL leader _group} else {getPosATL _building};
+                [_group, _centre, 25, createHashMapFromArray [["inPlace", true], ["useLambs", false]]] call Waldo_fnc_AIPassGarrison;
+            };
+
+        };
+    };
+} forEach allGroups;
+missionNamespace setVariable ["Waldo_AIPass_LocalSpotters", _spotters];
+
+private _wantArtillery = (missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false])
+    || {missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]};
+private _wantFlares = (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false])
+    || {missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]};
+if (_wantArtillery || _wantFlares) then {
+    private _artillery = [];
+    private _allArtillery = [];
+    {
+        private _vehicle = _x;
+        if (isServer && {alive _vehicle} && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {_allArtillery pushBack _vehicle};
+        if (local _vehicle && {alive _vehicle}) then {
+            if (_wantArtillery && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {
+                private _gunner = gunner _vehicle;
+                if (alive _gunner && {!isPlayer _gunner} && {[group _gunner] call Waldo_fnc_AIPassIsEligible}) then {_artillery pushBack _vehicle};
+            };
+            if (_wantFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_AIPass_FlaresInstalled", false])}
+                && {!isNil {_vehicle getVariable "Waldo_Gunship_Id"} || {!isNil {_vehicle getVariable "Waldo_DynamicAA_SystemId"}}}) then {
+                _vehicle setVariable ["Waldo_AIPass_FlaresInstalled", true];
+                private _handler = _vehicle addEventHandler ["IncomingMissile", {
+                    params ["_vehicle", "", "_shooter"];
+                    if (!local _vehicle || {isPlayer driver _vehicle} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {};
+                    if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
+                    _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
+                    if ([group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_AIPassFeatureEnabled) then {
+                        for "_burst" from 0 to 2 do {
+                            [{
+                                if (local _this && {missionNamespace getVariable ["Waldo_AIPass_Active", false]}
+                                    && {[group driver _this,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_AIPassFeatureEnabled}
+                                    && {!([] call Waldo_fnc_AIPassIsPaused)} && {!isPlayer driver _this}) then {
+                                    [_this] call Waldo_fnc_AIPassFireCountermeasure;
+                                };
+                            }, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
+                        };
+                    };
+                    // Break-away: one sideways jink away from the shooter, without touching
+                    // the aircraft's waypoints or orbit (Waldo_AIPass_AircraftBreak_Enable, off by default).
+                    if (([group driver _vehicle,"Waldo_AIPass_AircraftBreak_Enable",false] call Waldo_fnc_AIPassFeatureEnabled) && {!isNull _shooter}) then {
+                        private _velocity = velocityModelSpace _vehicle;
+                        private _side = [18, -18] select ((_vehicle getRelDir _shooter) < 180);
+                        _vehicle setVelocityModelSpace [(_velocity select 0) + _side, _velocity select 1, (_velocity select 2) - 4];
+                    };
+                }];
+                _vehicle setVariable ["Waldo_AIPass_FlaresHandler", _handler];
+                private _tracked = missionNamespace getVariable ["Waldo_AIPass_FlareVehicles", []];
+                _tracked pushBackUnique _vehicle;
+                missionNamespace setVariable ["Waldo_AIPass_FlareVehicles", _tracked];
+            };
+        };
+    } forEach vehicles;
+    missionNamespace setVariable ["Waldo_AIPass_LocalArtillery", _artillery];
+    if (isServer) then {missionNamespace setVariable ["Waldo_AIPass_AllArtillery", _allArtillery]};
+};
+missionNamespace getVariable ["Waldo_AIPass_DiscoveryInterval", 10]

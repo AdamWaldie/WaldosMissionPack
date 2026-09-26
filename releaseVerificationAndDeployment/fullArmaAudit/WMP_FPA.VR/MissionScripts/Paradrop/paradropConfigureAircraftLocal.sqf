@@ -3,6 +3,9 @@
  * Applies one dynamic paradrop operation's selected static-line and HALO capabilities to its
  * aircraft on each interface. The single JIP-replayed call keeps both jump actions and the ACE
  * settings summary together, while the individual installers reconcile repeated configuration.
+ * Locality and authority: Runs on interface clients; the server owns the aircraft configuration.
+ * Repeat/JIP: Reconciles existing local jump actions. The server's object-keyed JIP replay
+ * installs the same actions for joining clients.
  *
  * Arguments:
  * 0: aircraft <OBJECT>
@@ -23,6 +26,7 @@
  *
  * Example:
  * [_aircraft, _config] call Waldo_fnc_ParadropConfigureAircraftLocal;
+ * Result: The aircraft has the configured local jump actions and ACE settings summary.
  */
 
 params [

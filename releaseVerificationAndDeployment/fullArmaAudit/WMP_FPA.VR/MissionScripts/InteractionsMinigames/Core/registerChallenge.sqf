@@ -19,6 +19,11 @@
  *
  * Example:
  * ["wirecut", Waldo_fnc_MiniGameWireCut, "Wire-Cut Defusal"] call Waldo_fnc_MiniGameRegisterChallenge;
+ * Locality/Authority: Interface client; registry entries are local to that machine.
+ * Repeat/JIP Behaviour: Re-registering an ID replaces it; joining clients register built-ins
+ * during their own first challenge launch, and custom types need client-local registration.
+ * Current Callers: MiniGameChallenge built-in setup and mission scripts registering custom challenges.
+ * Result: The challenge ID resolves to the supplied opener on this client.
  */
 
 params [

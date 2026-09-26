@@ -366,6 +366,124 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_HelicopterDeceleration_ControlInterval` | Seconds between impulses while correction is active. |
 | `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Hard timeout for one correction event. |
 | `Waldo_HelicopterDeceleration_Debug` | Adds acquire/release details to RPT while troubleshooting. |
+| `Waldo_AIPass_Enable` | Master switch for the [Smart AI Pass](Smart-AI-Pass). Default `false`. |
+| `Waldo_AIPass_IncludedSides` | Sides the pass may command. Default `["WEST", "EAST", "GUER"]`. |
+| `Waldo_AIPass_TickBudgetMs` | Milliseconds of pass work allowed per 0.25 s scheduler tick. |
+| `Waldo_AIPass_LowFpsThreshold` | Below this machine FPS, behaviour steps run half as often. |
+| `Waldo_AIPass_Regroup_Enable` | Survivors of a destroyed squad regroup with a nearby friendly squad. |
+| `Waldo_AIPass_Regroup_MaxRemnantSize` | Living members at or below this make a remnant. |
+| `Waldo_AIPass_Regroup_MinimumPeakSize` | Groups that never reached this size are never merged. |
+| `Waldo_AIPass_Regroup_SearchRadius` | Host squad search radius in metres. |
+| `Waldo_AIPass_Regroup_MaxGroupSize` | Host size limit after the merge. |
+| `Waldo_AIPass_Regroup_JoinDistance` | Metres from the host leader at which a survivor joins. |
+| `Waldo_AIPass_Regroup_StuckSeconds` | Seconds without progress before survivors join where they stand. |
+| `Waldo_AIPass_Regroup_TimeoutSeconds` | Limit in seconds for finding a host and for walking to it. |
+| `Waldo_AIPass_Regroup_SettleSeconds` | Delay after a kill before the remnant is assessed. |
+| `Waldo_AIPass_LambsMode` | Only matters with LAMBS Danger loaded; SPLIT lets LAMBS keep in-contact unit tactics, WMP turns LAMBS group AI off for squads the pass manages. Default `"SPLIT"`. |
+| `Waldo_AIPass_Debug` | Logs contact, flank, morale and retreat events to RPT. Default `false`. |
+| `Waldo_AIPass_EngageRange` | Range in metres within which known enemies are considered. Default `800`. |
+| `Waldo_AIPass_NearRange` | Squads this close to a player are stepped every TickNear seconds. Default `1000`. |
+| `Waldo_AIPass_FarRange` | Beyond this distance from every player only the state ladder and morale run. Default `2500`. |
+| `Waldo_AIPass_TickContact` | Seconds between steps for a squad in contact near players. Default `2`. |
+| `Waldo_AIPass_TickNear` | Seconds between steps within NearRange. Default `4`. |
+| `Waldo_AIPass_TickMid` | Seconds between steps within FarRange. Default `8`. |
+| `Waldo_AIPass_TickFar` | Seconds between steps beyond FarRange. Default `20`. |
+| `Waldo_AIPass_DiscoveryInterval` | Seconds between discovery sweeps for newly local AI groups. Default `10`. |
+| `Waldo_AIPass_Contact_Enable` | Contact handling and the state ladder; every combat behaviour below needs it. Default `true`. |
+| `Waldo_AIPass_PostContact_Enable` | After contact is lost: hold, search the last known enemy position, regroup. Default `true`. |
+| `Waldo_AIPass_PostContact_LostSeconds` | Seconds without a sighting before contact counts as lost. Default `30`. |
+| `Waldo_AIPass_PostContact_SecuritySeconds` | Seconds of security hold before the search. Default `10`. |
+| `Waldo_AIPass_PostContact_SearchSeconds` | Time limit for the two-man search. Default `45`. |
+| `Waldo_AIPass_PostContact_RegroupSeconds` | Time limit for the squad to close up before returning to CALM. Default `30`. |
+| `Waldo_AIPass_Flank_Enable` | Half the squad flanks in covered bounds while the rest suppresses. Default `true`. |
+| `Waldo_AIPass_Flank_MinGroupSize` | Soldiers on foot needed before a squad may flank. Default `6`. |
+| `Waldo_AIPass_Flank_MinRange` | Enemies nearer than this are fought, not flanked. Default `60`. |
+| `Waldo_AIPass_Flank_MaxRange` | Enemies farther than this are not flanked. Default `400`. |
+| `Waldo_AIPass_Flank_BoundDistance` | Length of one bound in metres. Default `40`. |
+| `Waldo_AIPass_Flank_BoundPause` | Seconds of overwatch between bounds. Default `4`. |
+| `Waldo_AIPass_Flank_BoundTimeout` | A bound ends after this many seconds even if not everyone arrived. Default `25`. |
+| `Waldo_AIPass_Flank_Cooldown` | Seconds before the same squad may flank again. Default `90`. |
+| `Waldo_AIPass_StreetCrossing_Enable` | Flanking elements stop at roads, throw smoke and cross in one bound. Default `true`. |
+| `Waldo_AIPass_FireControl_Enable` | Close threats first, fire spread across visible enemies, disciplined suppression. Default `true`. |
+| `Waldo_AIPass_FireControl_MaxSuppressors` | Soldiers allowed to suppress at the same time. Default `2`. |
+| `Waldo_AIPass_FireControl_MaxShootersPerTarget` | Shooters on one visible enemy before extra shooters switch targets. Default `2`. |
+| `Waldo_AIPass_Morale_Enable` | Squads under losses and fire break and fall back under smoke. Default `true`. |
+| `Waldo_AIPass_Morale_RetreatDistance` | How far a broken squad falls back. Default `200`. |
+| `Waldo_AIPass_Surrender_Enable` | The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded). Default `false`. |
+| `Waldo_AIPass_GrenadeEvasion_Enable` | AI move away from a live grenade they can see; off until tested in your setup. Default `false`. |
+| `Waldo_AIPass_AntiArmour_Enable` | The best anti-tank gunner engages known armour, clear of backblast. Default `true`. |
+| `Waldo_AIPass_VehicleDismount_Enable` | Routine passenger dismounting during vehicle contact drills. Default `true`. |
+| `Waldo_AIPass_VehicleRemount_Enable` | Reboard recorded passengers on a normal return to CALM. Default `true`. |
+| `Waldo_AIPass_VehicleWithdraw_Enable` | Damaged vehicle smoke and withdrawal. Default `true`. |
+| `Waldo_AIPass_CoverValidation_Enable` | Bounded footprint, slope and geometry validation for cover candidates. Default `true`. |
+| `Waldo_AIPass_Hearing_Enable` | Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default `false`. |
+| `Waldo_Convoy_MountedFire_Enable` | Mounted crew targeting under existing ROE. Default `true`. |
+| `Waldo_Convoy_Cover_Enable` | Initial passenger cover movement after an ambush halt. Default `true`. |
+| `Waldo_Convoy_ContactHalt_Enable` | Contact halt requests under the configured push-through rule. Default `true`. |
+| `Waldo_Convoy_Unload_Enable` | Routine cargo unloading at arrival, manual stop and ambush halt. Default `true`. |
+| `Waldo_Convoy_AvoidInfantry_Enable` | Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default `false`. |
+| `Waldo_AIPass_Vehicles_Enable` | Infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw. Default `true`. |
+| `Waldo_AIPass_ContactReports_Enable` | Squads share sighted enemies by radio (blocked by jamming) or by voice. Default `true`. |
+| `Waldo_AIPass_ContactReports_Radius` | Radio report range in metres. Default `500`. |
+| `Waldo_AIPass_ContactReports_VoiceRange` | Report range in metres without a working radio. Default `35`. |
+| `Waldo_AIPass_ContactReports_RequireRadio` | Legacy compatibility only. AI communications ignore radio inventory; jamming still applies. Default `false`. |
+| `Waldo_AIPass_Reinforce_Enable` | Idle nearby squads move up behind a squad in contact. Default `true`. |
+| `Waldo_AIPass_Reinforce_Radius` | How far away responding squads may be. Default `600`. |
+| `Waldo_AIPass_Reinforce_MaxResponders` | Responding squads per squad in contact. Default `2`. |
+| `Waldo_AIPass_BehaviourProfile` | Tactics profile for every squad without its own or its faction's; `""` follows the AI Rebalance profile. Live-tunable with the AI Tuning Zeus module, like every setting marked *(AI Tuning)* below. Default `""`. |
+| `Waldo_AIPass_Aggression` | *(AI Tuning)* Scales how often squads flank, assault, advance, investigate and coordinate. Default `1`. |
+| `Waldo_AIPass_Cohesion` | *(AI Tuning)* Above `1` squads take more before morale breaks, below `1` they break sooner. Default `1`. |
+| `Waldo_AIPass_ReactionSpeed` | *(AI Tuning)* Above `1` squads re-assess more often (more server time). Default `1`. |
+| `Waldo_AIPass_Artillery_DefaultRole` | *(AI Tuning)* Missions a gun takes without its own role: `SUPPORT`, `COUNTER` or `BOTH`. Default `"BOTH"`. |
+| `Waldo_AIPass_Artillery_Enable` | Squads call fire from friendly AI artillery on well-located enemies only. Default `false`. |
+| `Waldo_AIPass_Artillery_Bursts` | Maximum HE bursts per mission; smoke uses one burst. Default `3`; range 1-5. |
+| `Waldo_AIPass_Artillery_RoundInterval` | Minimum seconds between confirmed rounds inside one burst. Default `2`; range 1-15. |
+| `Waldo_AIPass_Artillery_LocationResetDistance` | Reported movement in metres that resets opening offset and safety checks. Default `150`; range 50-500. |
+| `Waldo_AIPass_CounterBattery_RadarDelay` | Counter-battery acquisition seconds with radar coverage; capped by the normal delay. Default `20`; range 1-120. |
+| `Waldo_AIPass_Artillery_Rounds` | Rounds per support burst. Default `3`. |
+| `Waldo_AIPass_Artillery_OpeningSafeDistance` | Opening HE aim exclusion around living players. Default `200` m; tuning range 100–500 m. |
+| `Waldo_AIPass_Artillery_OpeningBuffer` | Additional opening aim margin. Default `100` m; tuning range 50–300 m. Does not guarantee a harmless impact. |
+| `Waldo_AIPass_Artillery_WarningInterval` | Delay after estimated impact before the next shot. Default `20` s; tuning range 10–60 s. |
+| `Waldo_AIPass_Artillery_MinFriendlyDistance` | No mission lands within this distance of friendlies or civilians. Default `200`. |
+| `Waldo_AIPass_Artillery_MaxError` | Largest target position error accepted for a mission. Default `50`. |
+| `Waldo_AIPass_Artillery_Cooldown` | Seconds between missions called by one squad. Default `120`. |
+| `Waldo_AIPass_Artillery_ShootAndScoot` | Mobile batteries move 200-350 m after firing. Default `true`. |
+| `Waldo_AIPass_CounterBattery_Enable` | AI artillery answers enemy artillery whose position is known. Default `false`. |
+| `Waldo_AIPass_CounterBattery_Mode` | Legacy compatibility only. Automatic acquisition works without radar; radar shortens delay. Default `AUTO`. |
+| `Waldo_AIPass_CounterBattery_RadarRange` | Detection range of a registered counter-battery radar. Default `8000`. |
+| `Waldo_AIPass_CounterBattery_Delay` | Acquisition delay without radar. Default `60` seconds. |
+| `Waldo_AIPass_CounterBattery_Rounds` | *(AI Tuning)* Rounds per counter-battery burst. Default `4`. |
+| `Waldo_AIPass_CounterBattery_MaxError` | Retained for legacy observed counter-battery script requests. Automatic firing-event acquisition does not use this setting. Default `100` m. |
+| `Waldo_AIPass_CounterBattery_MinFriendlyDistance` | *(AI Tuning)* No counter-battery fire when friendlies or civilians are this close to the enemy gun. Default `200`. |
+| `Waldo_AIPass_CounterBattery_Interval` | *(AI Tuning)* Seconds before the same enemy gun is answered again. Default `60`. |
+| `Waldo_AIPass_CounterBattery_ShootAndScoot` | *(AI Tuning)* Mobile guns relocate after a counter-battery mission. Default `true`. |
+| `Waldo_AIPass_Airborne_Enable` | AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. Default `false`. |
+| `Waldo_AIPass_Airborne_ApproachDistance` | Within this distance (m) of a known enemy the aircraft climbs to jump altitude. Default `2000`. |
+| `Waldo_AIPass_Airborne_DeployDistance` | The squad jumps once its aircraft is this close (m) to a known enemy. Default `700`. |
+| `Waldo_AIPass_Airborne_Altitude` | Height above ground (m) the aircraft climbs to for the drop. Default `250`. |
+| `Waldo_AIPass_Airborne_MinAltitude` | Never jump below this height above ground (m), or over water. Default `120`. |
+| `Waldo_AIPass_Airborne_JumpInterval` | Seconds between jumpers. Default `1`. |
+| `Waldo_AIPass_Garrison_DynamicAO` | Dynamic AO garrisons duck under fire, watch outward and break at losses. Default `false`. |
+| `Waldo_AIPass_Garrison_BreakFraction` | A garrison or defence line breaks when down to this share of its strength at the time of the order. Default `0.5`. |
+| `Waldo_AIPass_AircraftFlares_Enable` | WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first. Default `false`. |
+| `Waldo_AIPass_ProfileBehaviour` | Behaviour per profile name, alongside AI Rebalance's skill values (which are never changed by the pass): flank, assault, advance, investigate and coordinated-assault chances (0-1), morale thresholds, retreat distance scale and the largest squad that may surrender. The group uses Waldo_AIPass_Profile on the group, then Waldo_AIPass_FactionProfiles, then the active Waldo_AIRebalance_Profile, then LINE. Default `per profile`. |
+| `Waldo_AIPass_FactionProfiles` | Optional map of faction classname to behaviour profile name, overriding the AI Rebalance profile for that faction's squads. Default `empty`. |
+| `Waldo_AIPass_ZeusHoldSeconds` | Seconds the pass leaves a group alone after Zeus selects, edits or orders it; Zeus waypoints hold it until they are finished. Default `120`. |
+| `Waldo_AIPass_Investigate_Enable` | Squads send two riflemen to check enemies they know about but have not seen (reported, or heard firing). Default `true`. |
+| `Waldo_AIPass_Investigate_Range` | How far away a known but unseen enemy may be to be investigated. Default `300`. |
+| `Waldo_AIPass_Investigate_Seconds` | Time limit for an investigation. Default `60`. |
+| `Waldo_AIPass_Assault_Enable` | A flank can finish with a grenade and a rush on the enemy position while the base of fire suppresses. Default `true`. |
+| `Waldo_AIPass_Assault_Range` | The enemy must be believed this close to the flanking element before an assault. Default `80`. |
+| `Waldo_AIPass_Advance_Enable` | Squads in a long firefight that still have a waypoint to reach push a fire team forward in covered bounds. Default `true`. |
+| `Waldo_AIPass_Advance_MinContactSeconds` | Seconds in contact before a bounding advance is considered. Default `30`. |
+| `Waldo_AIPass_CoordinatedAssault_Enable` | Squads that came to reinforce assault the enemy from both sides while the squad in contact fires. Default `true`. |
+| `Waldo_AIPass_Stance_Enable` | Soldiers stand, kneel or go prone to match the cover in front of them. Default `true`. |
+| `Waldo_AIPass_AmmoShare_Enable` | Soldiers down to their last magazine get one from a nearby squad-mate with plenty. Default `true`. |
+| `Waldo_AIPass_AmmoShare_Distance` | How close a squad-mate must be to hand over a magazine. Default `10`. |
+| `Waldo_AIPass_VehicleGunnery_Enable` | AI gunners engage anti-tank soldiers first, then armour; armour backs away from known AT teams. Default `true`. |
+| `Waldo_AIPass_Vehicles_StandoffDistance` | Distance armour tries to keep from known anti-tank soldiers. Default `250`. |
+| `Waldo_AIPass_ArtillerySmoke_Enable` | A retreating squad with a radio gets an artillery smoke screen; needs artillery support on and a battery with smoke. Default `true`. |
+| `Waldo_AIPass_AircraftBreak_Enable` | WMP gunships and Dynamic AA fighters jink sideways away from a missile launch; test your aircraft first. Default `false`. |
 
 ## `airOperationsConfig.sqf`
 

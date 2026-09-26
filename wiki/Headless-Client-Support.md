@@ -162,11 +162,11 @@ migration queue in the RPT.
 
 ## Settings and eligibility
 
-### WMP feature assets always remain on the server
+### WMP assets with server-local controllers
 
 Headless clients receive ordinary eligible mission AI only. WMP state-machine assets that require
 continuous server-local control are never offloaded: Paradrop aircraft and jump groups, Airborne
-Gunships, Dynamic AA, Transport Services and WMP AI convoys stay on server owner `2`. Their
+Gunships, Dynamic AA and Transport Services stay on server owner `2`. Their
 registries, waypoint controllers, cleanup and live transitions are server-authoritative, so
 splitting crew ownership would create races and broken behaviour.
 
@@ -275,7 +275,7 @@ expects to keep continuously driving.
 
 For that reason, `Waldo_fnc_GunshipRegister`, the shared paradrop flight-route builder
 (`Waldo_fnc_ParadropBuildFlightRoute`, used by both `Waldo_fnc_ParadropQuickFlightSetup` and
-`Waldo_fnc_ParadropCreateDropZone`), `Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` pin
+`Waldo_fnc_ParadropCreateDropZone`) and `Waldo_fnc_DynamicAACreate` pin
 their own managed vehicle(s) server-side by default via `Waldo_fnc_HeadlessPinCrew`. That call sets
 **both** `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) **and** ACE's own
 `acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
@@ -400,7 +400,7 @@ groups to a headless client would be pure clutter (and a misleading affordance) 
 of missions that never turn this system on. Registration happens in a short bounded wait for the same
 `Waldo_SharedFeatureConfigReady` sentinel `initPlayerLocal.sqf` itself waits on, since `Waldo_Headless_Enable`
 is SHARED-scope config loaded by `init.sqf` and there is no guaranteed ordering between `init.sqf` and
-`initPlayerLocal.sqf`. `Waldo_ZenModuleCount` is 47 without these three, 50 with them -
+`initPlayerLocal.sqf`. `Waldo_ZenModuleCount` is 49 without these three, 52 with them -
 `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either value as `LOADED`, since a
 diagnostics run that lands inside that short registration window would otherwise report a false error
 on a perfectly healthy headless-enabled mission.
@@ -437,6 +437,18 @@ Pay particular attention to crewed ground vehicles. Arma normally moves vehicle 
 crew group, but third-party AI scripts can still issue local commands on the old owner. If a vehicle
 becomes unresponsive after migration, exclude that group or disable the conflicting distributor;
 do not try to solve it by transferring WMP's aircraft state machines.
+
+
+AI convoys now use server registration and owner-local driving workers instead of server pins.
+Their ordered registry replays to joining headless clients, and a new owner rebuilds the local
+route trail. Smart AI restoration checkpoints and clear-building progress also survive as public
+state. These new handover paths still need in-engine WMP and ACE headless verification.
+Smart AI reports now relay expiring positions across owners. Reinforcement slots are reserved on the
+server; current owners acknowledge the exact assignment and revalidate it after migration. Group
+feature exclusions and the external-control flag are public so WMP and ACE handovers see the same
+policy. These additions also await live transfer, disconnect and simultaneous-request testing.
+
+Feature-crew release restores recorded pre-pin exclusions; unknown exclusions are preserved.
 
 ## See also
 

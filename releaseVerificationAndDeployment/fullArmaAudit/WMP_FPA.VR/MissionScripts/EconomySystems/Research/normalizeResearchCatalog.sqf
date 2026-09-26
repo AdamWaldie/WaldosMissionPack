@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize research catalog.
+ * Normalizes every technology row and removes unusable entries from a catalog.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -8,10 +8,14 @@
  * 0: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> normalized technology rows.
  *
  * Example:
  * [_catalog] call Waldo_fnc_EcoResearch_normalizeResearchCatalog;
+ * Locality/Authority: Any machine; transforms supplied data without publishing it.
+ * Repeat/JIP Behaviour: Deterministic for the same input; no JIP effect until the setter publishes.
+ * Current Callers: EcoResearch_setResearchCatalog and Research import.
+ * Result: Returns a safe catalog for the authoritative setter.
  */
 
         params [["_catalog", []]];

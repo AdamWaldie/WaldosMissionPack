@@ -8,6 +8,7 @@
  * Return Value: ARRAY from Waldo_fnc_DiagnosticFeatureReport.
  * Current caller: WMP diagnostics collection.
  * Example: [] call Waldo_fnc_SafeStartGetDiagnostics;
+ * Result: Returns SafeStart status and checks in the shared diagnostic report shape.
  */
 private _authorityActive = missionNamespace getVariable ["Waldo_SafeStart_Active", false];
 private _active = if (hasInterface) then {missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]} else {_authorityActive};

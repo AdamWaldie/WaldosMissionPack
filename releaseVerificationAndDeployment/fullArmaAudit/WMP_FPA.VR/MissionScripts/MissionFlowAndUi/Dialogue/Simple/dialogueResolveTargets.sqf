@@ -5,6 +5,7 @@
  * Arguments: 0 target <OBJECT|GROUP|ARRAY>. Return Value: ARRAY<OBJECT>.
  * Current callers: SimpleDialogue, SimpleDialogueClear, ConversationAssign and ConversationClear.
  * Example: private _speakers = [group this] call Waldo_fnc_DialogueResolveTargets;
+ * Result: Returns distinct, valid NPC objects from the supplied object, group or array.
  */
 params ["_target"];
 private _targets = switch (typeName _target) do {

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official building manage action args.
+ * Build the enable or disable action for an owned Economy building.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  * Locality / Authority: Built and invoked on each interface client; enable/disable requests are sent
@@ -13,9 +13,11 @@
  * 1: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - arguments for the shared object-action installer.
+ * Result: The action submits MANAGE_BUILDING to Economy authority; client
+ * visibility checks do not replace the server permission check.
  *
- * Current Callers: Economy building action reconciliation.
+ * Current Callers: EcoBuild_attachBuildingActions.
  *
  * Example:
  * [_operation, _entry] call Waldo_fnc_EcoBuild_getOfficialBuildingManageActionArgs;

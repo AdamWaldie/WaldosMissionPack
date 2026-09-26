@@ -10,6 +10,8 @@
  * static corridor markers created once at setup time. This is what makes a pre-placed drop zone
  * marker feel "replaced" by the live aircraft once it starts flying, rather than leaving only ever a
  * fixed target/corridor on the map with no sense of where the plane currently is.
+ * Locality and authority: Interface-client only. The server owns the public aircraft registry;
+ * each player client creates and removes only its own map markers.
  *
  * Arguments:
  * None
@@ -25,6 +27,7 @@
  * Active aircraft keep the existing one-second live marker cadence.
  * Current callers: initPlayerLocal.sqf, plus Waldo_fnc_ParadropCreateDropZone,
  * Waldo_fnc_ParadropRemoveDropZone and Waldo_fnc_ParadropQuickFlightSetup when state changes.
+ * Result: Own-side live aircraft markers match the latest published aircraft registry.
  */
 
 if !(hasInterface) exitWith {false};

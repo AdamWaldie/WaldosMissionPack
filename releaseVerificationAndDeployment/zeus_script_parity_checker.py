@@ -33,7 +33,7 @@ def audit(root: Path = ROOT) -> list[str]:
     functions_source = (root / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
     all_source = "\n".join(path.read_text(encoding="utf-8") for path in (root / "MissionScripts").rglob("*.sqf"))
     findings: list[str] = []
-    expected = {"core": 58, "economy": 19}
+    expected = {"core": 63, "economy": 19}
     for category, count in expected.items():
         actual = sum(record.get("category") == category for record in records)
         if actual != count:
@@ -64,14 +64,19 @@ def audit(root: Path = ROOT) -> list[str]:
             handler_source = (root / handler_path).read_text(encoding="utf-8")
             via = record.get("via", "")
             if via:
-                via_path = function_path(functions_source, via)
-                if via_path is None:
-                    findings.append(f"{name}: bridge {via!r} is not registered in CfgFunctions")
-                elif via not in handler_source:
-                    findings.append(f"{name}: handler does not call declared bridge {via!r}")
+                chain = via if isinstance(via, list) else [via]
+                previous_source = handler_source
+                for bridge in chain:
+                    via_path = function_path(functions_source, bridge)
+                    if via_path is None:
+                        findings.append(f"{name}: bridge {bridge!r} is not registered in CfgFunctions")
+                        break
+                    if bridge not in previous_source:
+                        findings.append(f"{name}: preceding handler does not call declared bridge {bridge!r}")
+                        break
+                    previous_source = (root / via_path).read_text(encoding="utf-8")
                 else:
-                    via_source = (root / via_path).read_text(encoding="utf-8")
-                    if script_api not in via_source:
+                    if script_api not in previous_source:
                         findings.append(f"{name}: bridge does not call declared script API {script_api!r}")
             elif handler != script_api and script_api not in handler_source:
                 findings.append(f"{name}: handler does not call declared script API {script_api!r}")

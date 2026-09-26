@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Delete building marker.
+ * Deletes a building's map marker and clears its published marker-name tag.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _building <ANY> - building
+ * 0: _building <OBJECT> - registered building
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_building] call Waldo_fnc_EcoBuild_deleteBuildingMarker;
+ * Locality/Authority: Economy authority only; removes a global marker.
+ * Repeat/JIP Behaviour: Repeat deletion is harmless; cleared tag reaches JIP.
+ * Current Callers: Building deletion, disable and marker maintenance.
+ * Result: The building no longer has a WMP marker.
  */
 
         params ["_building"];

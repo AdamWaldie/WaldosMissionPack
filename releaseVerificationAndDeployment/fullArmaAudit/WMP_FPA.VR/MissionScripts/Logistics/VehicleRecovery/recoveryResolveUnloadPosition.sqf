@@ -18,6 +18,9 @@
  * [_carrier, _package, [_carrier, _package]] call Waldo_fnc_RecoveryResolveUnloadPosition;
  *
  * Current caller: Waldo_fnc_RecoveryRequestServer for virtual package unloading.
+ * Locality and authority: Read-only footprint search on the server. Repeating the search
+ * reflects current obstructions; no JIP side effect exists until the caller unloads.
+ * Result: Returns a clear ATL position or [] if the virtual package cannot be materialised.
  */
 
 params [
