@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1203,
+  "registeredFunctionCount": 1205,
   "runtimeFunctionCount": 383,
-  "functionCount": 1586,
+  "functionCount": 1588,
   "stations": [
     {
       "id": "control",
@@ -830,6 +830,18 @@
       "name": "Waldo_fnc_ACRE2RackHardwareServer",
       "file": "MissionScripts/MissionInit/ACRE2/acre2RackHardwareServer.sqf",
       "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConvoyHaltServer",
+      "file": "MissionScripts/AiScripting/convoyHaltServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConvoyCrewLocal",
+      "file": "MissionScripts/AiScripting/convoyCrewLocal.sqf",
+      "station": "ai",
       "activation": "manual"
     },
     {

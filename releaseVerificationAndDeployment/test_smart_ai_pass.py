@@ -88,6 +88,84 @@ class SmartAIPassContracts(unittest.TestCase):
         self.assertIn('Waldo_fnc_ConvoySync', registration)
         self.assertNotIn('execFSM', convoy)
 
+    def test_convoy_halt_dismounts_passengers_not_operating_crew(self):
+        base = ROOT / 'MissionScripts/AiScripting'
+        registration = (base / 'simpleAiConvoy.sqf').read_text(encoding='utf-8')
+        crew = (base / 'convoyCrewLocal.sqf').read_text(encoding='utf-8')
+        self.assertIn('_role == "cargo" || {_personTurret}', registration)
+        dismount = crew[crew.index('if (_phase != "HALT")'):]
+        for gate in ['local _unit', '!isPlayer _unit', 'abs speed _vehicle < 1',
+                     'ACE_isUnconscious', '(_seat select 1) == "cargo" || {_seat select 2}']:
+            self.assertLess(dismount.index(gate), dismount.index('doGetOut'))
+        self.assertIn('unassignVehicle _unit', dismount)
+        self.assertNotIn('moveOut', dismount)
+        self.assertIn('"HALT", _cargo, _old select 7', registration)
+
+    def test_convoy_halt_is_revision_and_owner_checked(self):
+        base = ROOT / 'MissionScripts/AiScripting'
+        halt = (base / 'convoyHaltServer.sqf').read_text(encoding='utf-8')
+        mutation = halt.index('call Waldo_fnc_SimpleAiConvoy')
+        for gate in ['!isServer', 'remoteExecutedOwner != groupOwner _group',
+                     '(_configuration select 0) != _expected', '(_configuration select 5) != "TRAVEL"']:
+            self.assertLess(halt.index(gate), mutation)
+        sync = (base / 'convoySync.sqf').read_text(encoding='utf-8')
+        self.assertIn('_configuration select 7', sync)
+        self.assertIn('Waldo_fnc_ConvoyCrewLocal', sync)
+
+    def test_convoy_preserves_waypoints_and_does_not_treat_a_pause_as_arrival(self):
+        tick = (ROOT / 'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
+        self.assertIn('currentWaypoint _group >= count waypoints _group', tick)
+        self.assertIn('count waypoints _group > 1', tick)
+        self.assertIn('_settled', tick)
+        self.assertIn('serverTime - (_entry select 2) >= 15', tick)
+        self.assertIn('_contact && {!_pushThrough || {_pinned}}', tick)
+        self.assertNotIn('deleteWaypoint', tick)
+        self.assertNotIn('setWaypointStatements', tick)
+        self.assertIn('driver _lead doMove (waypointPosition', tick)
+        self.assertIn('if (_vehicles isEqualTo []) exitWith', tick)
+        self.assertNotIn('if (count _vehicles < 2) exitWith', tick)
+
+    def test_mixed_convoy_does_not_send_tanks_wheeled_paths(self):
+        tick = (ROOT / 'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
+        self.assertIn('_vehicle isKindOf "Tank" || {!isAISteeringComponentEnabled _vehicle}', tick)
+        self.assertIn('if (_native && {_path isNotEqualTo []}) then', tick)
+        self.assertIn('driver _vehicle doMove', tick)
+        self.assertIn('_vehicle setDriveOnPath _path', tick)
+        self.assertIn('_lengths * 0.5 + 5', tick)
+        self.assertIn('_maximum min (_topSpeed * 0.8)', tick)
+        self.assertIn('if (!_contact && {_stretch > 3})', tick)
+        self.assertIn('_frontDistance', tick)
+
+    def test_mounted_convoy_response_uses_local_known_targets_and_existing_roe(self):
+        crew = (ROOT / 'MissionScripts/AiScripting/convoyCrewLocal.sqf').read_text(encoding='utf-8')
+        for gate in ['local _unit', '!_personTurret', 'unitCombatMode _unit',
+                     'findNearestEnemy', 'targetKnowledge', 'knowsAbout _enemy >= 1.5']:
+            self.assertLess(crew.index(gate), crew.index('_unit doFire'))
+        self.assertNotIn(' reveal ', crew)
+        self.assertNotIn('setCombatMode', crew)
+        tick = (ROOT / 'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
+        self.assertLess(tick.index('call Waldo_fnc_ConvoyCrewLocal'), tick.index('!local _group'))
+
+    def test_mixed_convoy_live_fixture_has_weapons_cargo_and_real_route(self):
+        audit = ROOT / 'releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR'
+        server = (audit / 'featureRangeServer.sqf').read_text(encoding='utf-8')
+        block = server[server.index('Waldo_QA_fnc_startMixedConvoyServer ='):server.index('Waldo_QA_fnc_resetEconomyFixturesServer =')]
+        for contract in ['B_APC_Tracked_01_rcws_F', 'B_MRAP_01_hmg_F', 'B_Truck_01_transport_F',
+                         'createVehicleCrew', 'moveInCargo', 'addWaypoint', 'call Waldo_fnc_SimpleAiConvoy']:
+            self.assertIn(contract, block)
+        self.assertNotIn('setCurrentWaypoint', block)
+        self.assertIn('START / RESET MIXED CONVOY', (audit / 'featureRangeClient.sqf').read_text(encoding='utf-8'))
+
+    def test_convoy_vehicle_markers_protect_separate_passenger_groups(self):
+        base = ROOT / 'MissionScripts/AiScripting'
+        registration = (base / 'simpleAiConvoy.sqf').read_text(encoding='utf-8')
+        release = (base / 'convoyReleaseLocal.sqf').read_text(encoding='utf-8')
+        self.assertIn('_x setVariable ["Waldo_Convoy_Active", true, true]', registration)
+        self.assertIn('Waldo_Convoy_Group', registration)
+        self.assertIn('!(_vehicle in _keepCrew)', release)
+        self.assertIn('_vehicle setVariable ["Waldo_Convoy_Active", nil, true]', release)
+        self.assertIn('"Waldo_Convoy_Active"', source('aiPassIsEligible'))
+
     def test_known_shot_rejection_releases_without_retry(self):
         self.assertIn('Waldo_fnc_AIPassArtilleryRejected', source('aiPassArtilleryShot'))
         rejected = source('aiPassArtilleryRejected')

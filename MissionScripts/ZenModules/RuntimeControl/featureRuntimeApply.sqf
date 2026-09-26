@@ -409,8 +409,8 @@ switch (toUpperANSI _action) do {
             private _pushThrough = _values getOrDefault ["pushThrough", true];
             private _accepted = false;
             if (!isNull _target && {_target isKindOf "LandVehicle"} && {alive driver _target}
-                && {_operation in ["START", "STOP"]} && {_speed isEqualType 0} && {_separation isEqualType 0} && {_pushThrough isEqualType true}) then {
-                _accepted = [group driver _target, [_speed, 0] select (_operation == "STOP"), _separation, _pushThrough] call Waldo_fnc_SimpleAiConvoy;
+                && {_operation in ["START", "STOP", "RELEASE"]} && {_speed isEqualType 0} && {_separation isEqualType 0} && {_pushThrough isEqualType true}) then {
+                _accepted = [group driver _target, [_speed, 0] select (_operation != "START"), _separation, _pushThrough, _operation == "RELEASE"] call Waldo_fnc_SimpleAiConvoy;
             };
             ["CONVOY", ["Convoy registration refused. Select an AI-only group with 2-20 drivable land vehicles.", "Convoy configuration registered. Its current owner applies it on the next worker step."] select _accepted,
                 ["ERROR", "SUCCESS"] select _accepted, "CONVOY", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];

@@ -18,6 +18,7 @@ with CBA, ACE, ZEN and ACRE2 (and once more with LAMBS Danger and Waypoints) and
 - `ProjectileCreated` is raised where AI are local before grenade evasion is recommended;
 - AI pilots' own flare use, before aircraft flares are recommended;
 - artillery, counter-battery and artillery smoke end to end;
+- mixed tracked/wheeled convoys, mounted ROE, mobile/pinned contact, arrival cargo dismounts, separate cargo HC ownership, explicit resume/release and setting restoration;
 - airborne insertion from an AI helicopter and an AI plane: climb, drop distance, one jumper at a
   time clear of the airframe, parachute opens, backpack kept, SAD after landing; an unload waypoint
   lands instead; the AI Orders "parachute out now" order;

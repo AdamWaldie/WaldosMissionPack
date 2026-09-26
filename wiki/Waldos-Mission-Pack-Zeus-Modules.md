@@ -74,7 +74,7 @@ This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup),
 | Artillery - Set Up Spotter | Existing AI soldier | Assign or remove the selected soldier. Equip binoculars separately; no inventory radio is required. |
 | Artillery - Set Battery Role | Exact artillery gun or mortar | Support, counter-battery or both; empty guns can be prepared. |
 | Artillery - Set Up Radar | Existing vehicle or prop | Register/update/remove; BLUFOR, OPFOR or Independent support. |
-| Convoy - Create Moving Group | Crewed AI land vehicle | Configure or stop; speed, spacing and push-through. |
+| Convoy - Create Moving Group | Crewed AI land vehicle | Configure/resume, stop and dismount cargo, or release; speed, spacing and push-through. |
 
 Setup helpers use existing objects and preserve feature switches. Enable artillery/counter-battery
 through AI Control after setup; radar coverage shortens acquisition delay. Mutations
@@ -83,7 +83,7 @@ periodic workers. Dynamic AO and Dynamic AA remain in WMP AI & Combat.
 
 ## AI Convoy Module
 
-Under **WMP AI Control**, **Convoy - Create Moving Group** requires an explicitly selected crewed AI land vehicle. The dialog configures or stops its group convoy, with labelled speed, spacing and push-through choices. It sends named settings through the server-authorised runtime route to the [AI Convoy System](AI-Convoy-System). Driving runs on the current group owner, including headless clients. There is no nearest-vehicle fallback.
+Under **WMP AI Control**, **Convoy - Create Moving Group** requires an explicitly selected crewed AI land vehicle. The dialog configures/resumes its group convoy, stops it and dismounts cargo, or releases the controller. Existing speed, spacing and push-through choices remain. Drivers, commanders and weapon-turret crew stay aboard; push-through halts after 15 seconds pinned in contact. It sends named settings through the server-authorised runtime route to the [AI Convoy System](AI-Convoy-System). Driving runs on the current group owner, including headless clients. There is no nearest-vehicle fallback.
 
 ## ENDEX Module
 

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Configures or stops the selected AI vehicle group's convoy. Never guesses the nearest vehicle.
+ * Configures, holds/unloads or releases the selected AI vehicle group's convoy. Never guesses the nearest vehicle.
  * Locality/authority: interface dialog, authenticated FeatureRuntimeApply server request.
  * Repeat/JIP: configuration replaces the existing registration; server registry replays to HCs.
  * Arguments: 0: module position <ARRAY>; 1: selected vehicle <OBJECT>, default objNull.
@@ -15,10 +15,10 @@ if (isNull _target || {!(_target isKindOf "LandVehicle")} || {!alive driver _tar
 [
     "AI Convoy",
     [
-        ["COMBO", ["Operation", "Configure replaces this group's settings. Stop restores recorded settings and releases follower paths."], [["START", "STOP"], ["Configure convoy", "Stop convoy"], 0]],
+        ["COMBO", ["Operation", "Configure/resume applies travel settings. Stop holds vehicles and dismounts cargo. Release restores prior settings and removes control."], [["START", "STOP", "RELEASE"], ["Configure / resume convoy", "Stop and dismount cargo", "Release controller"], 0]],
         ["SLIDER", ["Maximum speed (km/h)", "The lead slows for sharp bends and stretched spacing."], [5, 120, 30, 0]],
-        ["SLIDER", ["Separation (m)", "Target spacing between vehicle centres; use larger gaps for long vehicles."], [10, 100, 15, 0]],
-        ["CHECKBOX", ["Push through contact", "Continue driving in combat. When off, normal combat behaviour takes control."], true]
+        ["SLIDER", ["Separation (m)", "Minimum centre spacing; vehicle length can increase it. Mixed convoys pace for slower vehicles."], [10, 100, 15, 0]],
+        ["CHECKBOX", ["Push through contact", "On: move through contact; stop and dismount cargo if pinned for 15 seconds. Off: stop and dismount cargo on contact. Weapon crew remain mounted."], true]
     ],
     {
         params ["_values", "_target"];

@@ -41,11 +41,11 @@ remote `036942e` blocker fixes and reconciles their intent with the expanded imp
 - **Zeus results:** named payloads are validated on the server and run on the current owner. Success
   follows the owner's result; missing responses are reported as uncertain. Required building and
   spotter targets are explicit. Legacy positional AI_ORDER input retains a documented adapter. Battery roles change on the server; JIP init calls cannot overwrite them.
-- **Convoy:** server registration replaces a server-pinned infinite controller. Owner-local workers
-  follow a sampled leader route, damp spacing speed, slow turns and use bounded stuck recovery.
-  Stop restores recorded formation, attack, forced speed and unloading. No FSM, teleport or repeated
-  trail broadcast. Use `[convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy` to stop; terminating the old
-  spawn handle no longer stops the shared worker.
+- **Convoy:** server registration coordinates owner-local travel, arrival and held contact. Wheeled
+  paths and native tracked destinations follow a bounded leader trail with size/speed-aware spacing.
+  Stop holds vehicles and dismounts cargo. Explicit release restores original settings. Mounted
+  weapons retain their crew and respond under existing ROE. No FSM, teleport or repeated trail
+  broadcast. Terminating an old spawn handle does not stop the shared worker.
 - **Protected tasks and cleanup:** survivor regroup avoids unconscious soldiers, service commands
   and posted orders, and rechecks host capacity immediately before joining. Garrison handler IDs,
   duck callbacks and original stance have explicit release/ownership cleanup.
@@ -88,8 +88,8 @@ existing ownership requirements.
 ## Verification
 
 The integrated branch includes main `b7ca3fe` and remote PR commit `036942e`. The full repository
-suite passed **321 tests**, including **21 Smart AI contract tests**. All ten static gates passed:
-SQF (1,225 files), configuration, interaction UI, drawn UI, Zeus/script parity (81 modules), wiki
+suite passed **328 tests**, including **28 Smart AI contract tests**. All ten static gates passed:
+SQF (1,227 files), configuration, interaction UI, drawn UI, Zeus/script parity (81 modules), wiki
 assets/style, documentation contracts, skill validation and performance regression. The performance
 scanner reports 95 findings (10 high, 85 medium), with no new high recurring patterns. Wiki checks
 initially caught a document encoding error; it was corrected and both checks then passed.
@@ -131,3 +131,21 @@ Feature switches and equipment are not changed implicitly. Dialog selection, ser
 state and JIP/HC behaviour remain subject to the existing live acceptance gate.
 
 The dedicated-category changes passed the full 320-test suite before the burst changes and all ten static gates. The palette contains 81 registered modules overall. No new high recurring performance patterns were reported. Live ZEN rendering and execution remain unverified.
+
+## Convoy arrival, contact and mixed vehicles
+
+The existing speed, separation and push-through controls now cover mixed tracked/wheeled convoys.
+Arrival and explicit stop enter a persistent hold and dismount captured cargo through each soldier's
+owner. Drivers, commanders and weapon-turret crews stay aboard; passenger firing seats are cargo.
+Mounted crew can engage known recent threats under existing ROE while the column moves. Push-through
+halts after 15 seconds pinned in contact; disabling it halts on contact. Explicit configuration
+resumes, while an optional fifth API boolean releases/restores the controller. Cargo is not auto-boarded.
+
+Tracked/unsupported steering uses native destinations along the leader trail. Wheeled followers retain
+bounded paths. Cached vehicle dimensions set minimum gaps; the slowest declared speed limits the
+column. The leader waits for stretched spacing outside contact. The registry transports restoration
+and cargo state together; a five-second changed checkpoint preserves contact progress across HCs.
+
+Live tests must cover mixed orderings, mounted ROE, pinned/mobile contact, final-route arrival, cargo
+seat changes, unconscious passengers, separate cargo owners, explicit resume/release and stale owner
+requests. These additions have no live acceptance result.

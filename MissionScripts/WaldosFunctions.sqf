@@ -137,6 +137,8 @@ class CfgFunctions
         };
         class AI 
         {
+            class ConvoyHaltServer {file = "MissionScripts\AiScripting\convoyHaltServer.sqf";};
+            class ConvoyCrewLocal {file = "MissionScripts\AiScripting\convoyCrewLocal.sqf";};
             class ConvoySync {file = "MissionScripts\AiScripting\convoySync.sqf";};
             class ConvoyReleaseLocal {file = "MissionScripts\AiScripting\convoyReleaseLocal.sqf";};
             class ConvoyTick {file = "MissionScripts\AiScripting\convoyTick.sqf";};

@@ -1,76 +1,131 @@
 # AI Convoy System
 
-> **Use this page when:** you need to create, tune or stop an AI land-vehicle convoy.
+> **Use this page when:** you need an AI land convoy that moves, responds to contact and unloads passengers at its destination.
 
-_Associated Files: `MissionScripts/AiScripting/simpleAiConvoy.sqf`, `convoySync.sqf`, `convoyTick.sqf`, `convoyReleaseLocal.sqf`_
+_Associated Files: `MissionScripts/AiScripting/simpleAiConvoy.sqf`, `convoySync.sqf`, `convoyTick.sqf`, `convoyCrewLocal.sqf`, `convoyHaltServer.sqf`, `convoyReleaseLocal.sqf`_
 
-The convoy follows its lead vehicle's route with sampled path points, spacing-based speed control
-and slower turns. It uses mission SQF and CBA. No addon or imported FSM is required. Registration
-belongs to the server, while driving commands run on the current AI owner.
+WMP coordinates 2–20 AI-driven land vehicles using mission SQF and CBA on Arma 3 2.18 or newer. Registration and halt
+state belong to the server. Driving, mounted fire and passenger orders execute on the owner of
+the affected vehicle or soldier, including headless clients. Smart AI Pass does not need to be enabled.
 
-## Setup
+## Setup and existing parameters
 
-Use a simulation-enabled group with 2–20 AI-driven land vehicles, then give the leader normal
-waypoints. Static weapons, player crews and vehicles controlled by another WMP feature are rejected.
-Call on the server. An authorised Zeus module or current headless owner can also request changes.
+Put the drivers in one AI group, crew the vehicles, enable simulation and give the leader normal
+waypoints. The leader's vehicle goes first. Cargo may belong to separate AI groups on other owners.
+Player crews, static weapons and vehicles marked as owned by another WMP feature are rejected.
+Use a final MOVE waypoint for automatic arrival unloading. GETOUT orders also affect operating
+crew through the engine, so they are unsuitable when drivers and gunners must stay aboard.
 
 ```sqf
 [convoyGroup] call Waldo_fnc_SimpleAiConvoy; // 30 km/h, 15 m, push through
-[convoyGroup, 25, 25, false] call Waldo_fnc_SimpleAiConvoy;
-[convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy; // stop and restore
+[convoyGroup, 25, 25, false] call Waldo_fnc_SimpleAiConvoy; // stop on contact
+[convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy; // hold vehicles and dismount cargo
+[convoyGroup, 30, 20, true] call Waldo_fnc_SimpleAiConvoy; // explicitly resume
+[convoyGroup, 0, 15, true, true] call Waldo_fnc_SimpleAiConvoy; // release controller
 ```
 
 | Parameter | Type | Default | Meaning |
 |---|---|---|---|
-| Group | GROUP | required | The AI vehicle group. |
-| Speed | NUMBER | 30 | Maximum km/h, clamped to 5–120. Zero or less stops the controller. |
-| Separation | NUMBER | 15 | Target metres between vehicles, clamped to 10–100. |
-| Push through | BOOL | true | Suppress group attack/unloading while travelling; otherwise release control during combat. |
+| Group | GROUP | required | The vehicle-driver group. |
+| Speed | NUMBER | 30 | Maximum km/h, clamped to 5–120. Zero or less holds and unloads. |
+| Separation | NUMBER | 15 | Minimum centre spacing in metres, clamped to 10–100. Vehicle length can increase it. |
+| Push through | BOOL | true | Continue through contact; halt after being pinned for 15 seconds. False halts on contact. |
+| Release controller | BOOL | false | Remove registration and restore the recorded settings, without issuing a cargo unload. |
 
-Calling again updates the existing convoy. The function returns registration success, not a
-long-running script handle. Existing `spawn` calls can dispatch registration, but terminating that
-handle no longer stops the convoy. Replace old termination blocks with `[convoyGroup, 0] call
-Waldo_fnc_SimpleAiConvoy` on the server. Multiple groups use the same API independently.
+The first four parameters remain the ordinary setup controls. The fifth provides explicit cleanup
+now that stop means a persistent hold. Calls return acceptance.
+An existing convoy can resume with one surviving vehicle. Terminating an old spawn handle does not stop the convoy. Server scripts, authorised Zeus requests
+and the group's current headless owner may change registration.
 
-## Zeus controls
+## Contact drills and armed vehicles
 
-Place **WMP AI Control > Convoy - Create Moving Group** on an existing crewed AI land vehicle.
-Choose configure or stop, speed, spacing and push-through from labelled controls. A missing or
-invalid selection is rejected. The module never guesses a nearby vehicle. Feedback confirms
-registration. The owner applies driving settings on its next worker step.
+With push-through enabled, vehicles continue along their route when they detect contact. Mounted
+weapons engage known attackers within the permitted rules of engagement. Gunners use their existing
+knowledge; the script does not reveal attackers or change hold-fire orders. Crew retain their seats,
+and armed vehicles stay with the column while cargo vehicles manoeuvre.
 
-## Movement and recovery
+Contact uses recent known threats within 800 m or suppressed group members. A known threat is
+recent for 30 seconds. These checks run at most once every five seconds. COMBAT mode alone does
+not trigger a dismount. During contact, the leader does not stop solely to close a stretched gap.
 
-Followers use the lead vehicle's sampled route instead of continually cutting straight across bends.
-The leader slows for large gaps and turns. Follower speed uses gap and relative-speed correction,
-including zero-gap and heading-wrap cases. A follower stalled for 20 seconds falls back to normal
-formation following, with a ten-second path retry delay. Recovery does not teleport vehicles.
+If a surviving vehicle makes less than 3 m of progress for 15 seconds during contact and moves
+below 3 km/h, the group requests a halt. The server validates the current owner and registration
+revision, then records the halt. With push-through disabled, contact requests this halt immediately.
+A lone mobile survivor can continue. Losing all drivable vehicles also requests a halt.
 
-The controller preserves leader waypoints. It records formation, attack permission, forced speed
-and combat unloading before changing them, then restores those values on stop. It releases driving
-control for SafeStart/ENDEX, Zeus intervention and player crews. With push-through disabled, it also
-releases during combat. A destroyed lead vehicle can be replaced by a surviving registered driver.
+A halt stops the vehicles and deploys cargo. Operating drivers, commanders and weapon-turret crew
+receive no dismount order. Passenger firing positions count as cargo. Mounted weapons can continue
+engaging while dismounted infantry use normal AI combat behaviour. WMP does not order an automatic
+assault, pursue attackers with the escorts or select a new escape route. Those remain mission-maker
+choices. Engine emergency bailouts from damaged vehicles are still possible.
 
-## Headless clients and performance
+The convoy stays held until Configure / resume is used. Cargo is not automatically re-embarked;
+reboard passengers explicitly before resuming if they are to travel further. The hold restores the
+group's original attack permission while keeping vehicle movement stopped.
 
-Convoys are not pinned to the server. An ordered registry replays to server/headless owners,
-including late joiners. Ownership changes discard local driving state; the new owner reconstructs
-the trail from the leader and uses formation following until useful samples exist. Prior restoration
-values are public. Both WMP and ACE headless migration paths still require live acceptance testing.
+## Arrival and passenger unloading
 
-One CBA worker per AI-owning machine considers one convoy every 0.25 seconds. Each convoy updates
-at most once per second, so many convoys receive less frequent updates. Each holds at most 128 route
-samples, sends at most ten path points per follower, and refreshes a follower path no more often than
-every three seconds. Route samples stay local. Registration changes send registry snapshots.
+Automatic arrival requires the finite waypoint route to be complete, the leader near its last
+waypoint, and all surviving vehicles stopped within the column's spacing tolerance for five seconds.
+A traffic pause, intermediate waypoint, unfinished HOLD or CYCLE route does not count as arrival.
+The Stop operation uses the same cargo-unloading path without waiting for route completion.
 
-## Limitations and checks
+The server captures the passengers present at the halt. Each passenger owner waits until their
+vehicle is below 1 km/h, checks that the unit still occupies a cargo or passenger firing seat, then
+unassigns the vehicle and orders a normal dismount. Players, player-led cargo groups and
+remote-controlled units are left to their operator. Unconscious passengers wait until capable;
+there is no forced ejection or teleport. Repeated stop calls retain the same passenger snapshot.
 
-This implementation has static regression coverage, but has not passed in-engine acceptance.
-Test bends, junctions, mixed vehicle sizes, blocked roads, lead loss, repeated configuration/stop,
-Zeus intervention, player entry and transfer between server and headless clients before live use.
-Migration reconstructs the trail. It does not preserve the complete previous route history.
-Engine driving and road geometry can still prevent progress. Push-through changes AI orders, not
-vehicle invulnerability or the engine's ability to navigate a blocked route.
+## Mixed tracked and wheeled movement
+
+Steering-compatible wheeled followers use bounded sections of the leader's sampled trail. Tracked
+vehicles and vehicles without an enabled AI steering component receive native movement destinations
+along that trail. They do not receive the wheeled path command. Native destinations refresh no more
+than every five seconds; wheeled paths no more than every three seconds.
+
+Column speed is capped by the configured maximum and 80% of the slowest surviving vehicle's declared
+maximum speed. Vehicle dimensions set a minimum physical gap. Away from contact, the leader waits
+when a gap exceeds three times its target spacing. Followers use gap and relative-speed corrections;
+a 20-second stall invokes formation following with a ten-second path retry delay. Leader waypoints
+remain intact. New travel orders clear the lead driver's previous hold.
+
+These changes address incompatible path control and mixed-column pacing. Terrain, vehicle config,
+engine pathfinding and damaged mobility still affect the result. Live mixed-vehicle acceptance is
+outstanding; static checks cannot establish that a particular tank/truck combination drives correctly.
+
+## Zeus, headless clients and cleanup
+
+Use **WMP AI Control > Convoy - Create Moving Group** on an existing crewed AI land vehicle.
+Its existing speed, spacing and push-through controls apply to both wheeled and tracked vehicles.
+The operation selector offers Configure / resume, Stop and dismount cargo, and Release controller.
+A missing target is rejected. Feedback confirms server acceptance; owners apply the effects.
+
+The ordered registry carries the travel/halt phase, captured passengers and restoration values.
+Server and headless workers process only locally owned objects. Passenger groups and turret crews
+can therefore execute on a different owner from the driver group. A new owner rebuilds the local
+route trail; a shared-server-time contact checkpoint preserves pinned-contact progress.
+
+SafeStart, ENDEX, player entry and Zeus intervention suspend convoy commands. Resuming after a hold
+requires explicit configuration. Release removes the registry entry and restores formation, attack
+permission, forced speed and combat unloading. The group and vehicle ownership flags protect drivers and separate mounted cargo groups from
+competing Smart AI orders. Separate cargo groups become ordinary AI after dismounting and unassignment.
+
+One round-robin worker runs per AI-owning machine. A convoy moves at most once per second, keeps at
+most 128 local trail samples and sends at most ten points per wheeled path. Crew checks and changed
+contact checkpoints run at most once every five seconds. Vehicle dimensions are cached on adoption.
+More convoys reduce update frequency; delays are minimums and can grow under load.
+
+## Limitations and acceptance checks
+
+The full-pack audit console includes an opt-in mixed convoy at [600,500]: an armed MRAP, tracked APC
+and truck with six passengers in a separate group. Its route ends at [900,600]. Add contact and
+blockages through Zeus; transfer driver/cargo groups to HCs before repeating.
+
+In-engine acceptance remains outstanding. Test tracked vehicles at the front, middle and rear of
+mixed columns; bends, narrow roads, obstacles and different vehicle sizes; mobile and pinned contact;
+hold-fire weapon crews; cargo and passenger firing seats; arrival, stop, resume and release; leader
+loss; unconscious passengers; player/Zeus intervention; and WMP/ACE HC transfers during travel,
+contact and dismount. Verify original settings after release and no duplicate or stale halt after resume.
 
 ## See also
 

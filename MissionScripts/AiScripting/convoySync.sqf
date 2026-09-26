@@ -14,9 +14,11 @@ if (_revision <= (missionNamespace getVariable ["Waldo_Convoy_ReceivedRevision",
 missionNamespace setVariable ["Waldo_Convoy_ReceivedRevision", _revision];
 private _previous = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", []];
 {
-    _x params ["_group"];
-    if (_registry findIf {(_x select 0) == _group} < 0) then {
-        if (local _group) then {[_group] call Waldo_fnc_ConvoyReleaseLocal};
+    _x params ["_group", "_configuration"];
+    private _next = _registry findIf {(_x select 0) == _group};
+    if (_next < 0 || {(((_registry select _next) select 1) select 0) != (_configuration select 0)}) then {
+        private _keepCrew = if (_next < 0) then {[]} else {((_registry select _next) select 1) select 4};
+        [_group, true, _configuration select 7, _keepCrew] call Waldo_fnc_ConvoyReleaseLocal;
         private _handler = _group getVariable ["Waldo_Convoy_LocalHandler", -1];
         if (_handler >= 0 && {(_group getVariable ["Waldo_Convoy_Restore", []]) isEqualTo []}) then {
             _group removeEventHandler ["Local", _handler];
@@ -26,7 +28,12 @@ private _previous = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", 
 } forEach _previous;
 missionNamespace setVariable ["Waldo_Convoy_LocalRegistry", _registry];
 {
-    _x params ["_group"];
+    _x params ["_group", "_configuration"];
+    _group setVariable ["Waldo_Convoy_Restore", _configuration select 7];
+    _group setVariable ["Waldo_Convoy_CrewDue", -1];
+    _group setVariable ["Waldo_Convoy_NextTick", -1];
+    _group setVariable ["Waldo_Convoy_Suspended", false];
+    [_group, _configuration] call Waldo_fnc_ConvoyCrewLocal;
     if (isNil {_group getVariable "Waldo_Convoy_LocalHandler"}) then {
         _group setVariable ["Waldo_Convoy_LocalHandler", _group addEventHandler ["Local", {
             params ["_group", "_isLocal"];
@@ -45,7 +52,15 @@ if (_registry isNotEqualTo [] && {_handler < 0}) then {
         private _registry = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", []];
         if (_registry isNotEqualTo []) then {
             private _cursor = (missionNamespace getVariable ["Waldo_Convoy_Cursor", 0]) mod count _registry;
-            (_registry select _cursor) call Waldo_fnc_ConvoyTick;
+            private _entry = _registry select _cursor;
+            if (isServer && {isNull (_entry select 0)}) then {
+                // Removed groups must still restore their surviving vehicles from the previous snapshot.
+                private _serverRegistry = (missionNamespace getVariable ["Waldo_Convoy_Registry", []]) select {!isNull (_x select 0)};
+                missionNamespace setVariable ["Waldo_Convoy_Registry", _serverRegistry];
+                private _nextRevision = (missionNamespace getVariable ["Waldo_Convoy_RegistryRevision", 0]) + 1;
+                missionNamespace setVariable ["Waldo_Convoy_RegistryRevision", _nextRevision];
+                [_nextRevision, _serverRegistry] remoteExecCall ["Waldo_fnc_ConvoySync", 0, "Waldo_Convoy_RegistrySync"];
+            } else {_entry call Waldo_fnc_ConvoyTick};
             missionNamespace setVariable ["Waldo_Convoy_Cursor", _cursor + 1];
         };
     }, 0.25] call CBA_fnc_addPerFrameHandler];
