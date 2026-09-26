@@ -2,9 +2,7 @@
  * Author: WaldoTheWarfighter
  * Moves a whole group by inserting one temporary MOVE waypoint ahead of its current waypoint.
  *
- * The audited mods used group `move` (which makes the engine ignore active waypoints) or ordered the
- * leader himself with `doMove` (a plausible cause of squads freezing). An inserted waypoint is
- * engine-native: the group moves in formation, and when it completes the waypoint it carries on with
+ * An inserted waypoint uses normal engine movement: the group moves in formation, and when it completes the waypoint it carries on with
  * its own patrol or task waypoints. Pass waypoints are tagged "WMP AI PASS" in their description, so
  * Waldo_fnc_AIPassGroupMoveClear can remove them without tracking indices. Only one pass waypoint
  * exists per group at a time.

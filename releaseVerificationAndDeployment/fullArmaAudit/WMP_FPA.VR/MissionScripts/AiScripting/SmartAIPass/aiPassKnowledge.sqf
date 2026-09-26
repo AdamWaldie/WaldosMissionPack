@@ -2,8 +2,7 @@
  * Author: WaldoTheWarfighter
  * Summarises what a group already knows about nearby enemies, using only engine knowledge.
  *
- * The pass never adds detection of its own (the audited mods that did made AI spot faster than the
- * engine and fought AI Rebalance). Enemies come from the leader's `targets` list. The believed
+ * The pass uses existing engine detection and preserves AI Rebalance settings. Enemies come from the leader's `targets` list. The believed
  * position is `getHideFrom`, which the engine extrapolates when the enemy is out of sight. Seen age
  * is the newest lastSeen/lastThreat across up to eight living members, so a leader in cover does not
  * hide a firefight the rest of the squad is in. An enemy counts only if the group knows about it
