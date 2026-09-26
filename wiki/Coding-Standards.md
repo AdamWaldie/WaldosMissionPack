@@ -211,6 +211,16 @@ python releaseVerificationAndDeployment/documentation_contract_checker.py --chan
 The strict audit deliberately reports older incomplete headers instead of inserting guessed
 locality, arguments or callers. Fix those findings by reading the implementation and real call sites.
 
+To inventory older script headers outside the current branch, run:
+
+```text
+python releaseVerificationAndDeployment/documentation_contract_checker.py --all-scripts
+```
+
+This optional audit reports the historical header backlog. The normal CI check stays focused on
+changed scripts so an unrelated old header does not block a documentation correction. A passing
+changed-file check does not mean every historical SQF header is complete.
+
 ## Code Conventions
 ## ACE Coding Guidelines
 Please adhere to the [ACE CODING GUIDELINES](https://github.com/acemod/ACE3/blob/master/docs/wiki/development/coding-guidelines.md) where possible

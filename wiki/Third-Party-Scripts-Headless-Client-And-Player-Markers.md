@@ -5,24 +5,23 @@
 _Associated Files: `MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf`, `player_markers.sqf`_
 
 WMP includes an optional player-marker script, kept separate from the pack's normal systems and
-**disabled by default**. It is loaded through a single entry point so the main `init.sqf` stays
-clean.
+**disabled by default**. Its launcher belongs in player-local startup because its map markers exist
+only on the executing player's client.
 
 Headless-client distribution is provided by WMP's native headless-client system. It needs no
-third-party script or `init.sqf` entry. See [Headless Client Support](Headless-Client-Support).
+third-party script or player-marker entry. See [Headless Client Support](Headless-Client-Support).
 
 ## Quick setup: enabling player markers
 
-Off by default. In `init.sqf`, uncomment the loader line:
+Off by default. In `initPlayerLocal.sqf`, uncomment the loader line inside the `hasInterface` block:
 
 ```sqf
 // Remove the // to enable optional third-party scripts
 [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 ```
 
-`ThirdPartyScriptInit.sqf` is a "hollow" launcher: inside it, each script's own call line is
-commented out. Open the file and uncomment the player-markers call. This keeps third-party setup in
-one place instead of cluttering `init.sqf`.
+`ThirdPartyScriptInit.sqf` is a launcher with its own call still commented out. Open it and
+uncomment the player-markers call too. Both lines must be active before markers appear.
 
 ---
 
@@ -52,19 +51,23 @@ You can combine options, e.g. `["players", "ais"] execVM "...player_markers.sqf"
 
 `execVM` returns a Script handle for the launched file, not a marker or a WMP success
 value. The marker script exits on machines without a player interface. Each joining
-player runs their own optional loader when `init.sqf` is enabled; no server marker
+player runs their own optional loader when `initPlayerLocal.sqf` is enabled; no server marker
 registry is published.
+
+The legacy script assigns `onMapSingleClick` on each client. That can replace another mission's
+map-click handler, and its `"stop"` path does not restore the previous handler. Test it alongside
+other map tools before enabling it for players. WMP's own 3D markers are a separate system.
 
 ---
 
 ## If player markers do not appear
 
-Check that the optional loader line is active in `init.sqf` and that the third-party marker script is present. Headless-client support is a separate WMP feature and does not enable player markers. Test a fresh joining player as well as the host before assuming the loader ran for everyone.
+Check both commented lines: the launcher in `initPlayerLocal.sqf` and the marker call inside `ThirdPartyScriptInit.sqf`. Headless-client support does not enable player markers. Test a joining player as well as the host.
 
 ## See also
 
 * [Headless Client Support](Headless-Client-Support): the native, opt-in replacement for the legacy headless-client script
-* [Mission Configuration Reference](Mission-Configuration-Reference): where the loader line lives in `init.sqf`
+* [Mission Configuration Reference](Mission-Configuration-Reference): player-local setup in `initPlayerLocal.sqf`
 * [Waldos AI Tweak](Waldos-AI-Tweak): AI skill tuning that works alongside headless offloading
 * [AI Convoy System](AI-Convoy-System)
 
