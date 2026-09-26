@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official building claim action args.
+ * Build the client action that requests ownership of an unclaimed building.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  * Locality / Authority: Built and invoked on each interface client; the action submits its unchanged
@@ -12,9 +12,11 @@
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - arguments for the shared object-action installer.
+ * Result: The visible action submits MANAGE_BUILDING/CLAIM to Economy authority;
+ * it does not change ownership on the client.
  *
- * Current Callers: Economy building action reconciliation.
+ * Current Callers: EcoBuild_attachBuildingActions.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingClaimActionArgs;

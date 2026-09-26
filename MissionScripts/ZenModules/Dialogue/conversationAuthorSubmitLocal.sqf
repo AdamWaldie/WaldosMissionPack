@@ -8,6 +8,7 @@
  * Arguments: editor DISPLAY, assignment mode STRING NONE/TARGET/GROUP. Return Value: BOOL.
  * Current callers: Conversation Author action buttons.
  * Example: [_display,"NONE"] call Waldo_fnc_ConversationAuthorSubmitLocal;
+ * Result: A numbered authoring request is sent to the server for validation and optional assignment.
  */
 params [["_display", displayNull, [displayNull]], ["_assignmentMode", "NONE", [""]]];
 if (isNull _display) exitWith {false};

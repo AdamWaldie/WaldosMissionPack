@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Is build available for side.
+ * Checks a build definition's side-availability list.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true for ALL entries or an included side.
  *
  * Example:
  * [_entry, _sideKey] call Waldo_fnc_EcoBuild_isBuildAvailableForSide;
+ * Locality/Authority: Any machine; pure catalog-row check.
+ * Repeat/JIP Behaviour: Stateless; JIP receives the same catalog row.
+ * Current Callers: Construction catalog filters and job-start validation.
+ * Result: A side-restricted mismatch is rejected.
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];

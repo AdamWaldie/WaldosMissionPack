@@ -18,6 +18,7 @@
  * Return Value: Nothing; defines runtime values/functions.
  * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
  * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
+ * Result: Rock Paper Scissors rules are available to registered tables.
  */
 
 Waldo_MG_fnc_rpsPublishRevisionServer = {
@@ -691,4 +692,3 @@ Waldo_MG_fnc_openRPSLocal = {
         };
     };
 };
-

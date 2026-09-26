@@ -4,42 +4,44 @@
 
 _Associated Files: `MissionConfig/persistenceConfig.sqf`, `MissionScripts/Persistence/`; `initServer.sqf` (database authority startup), `initPlayerLocal.sqf` (per-player capture/apply)_
 
-Persistence saves and restores player state — and specific, explicitly registered world objects — across a real database, backed by the [INIDBI2](https://github.com/SzwedzikPL/inidbi2) extension. It is off by default and stays off unless both the mission maker enables it **and** the server can prove a working INIDBI2 runtime is actually loaded, not just declared as a dependency. Database access is always server-only; each client only captures and applies its own state.
+Persistence saves player state and registered world objects in an [INIDBI2](https://github.com/SzwedzikPL/inidbi2) database. It is off by default. To use it, enable the WMP setting and install a working INIDBI2 runtime on the server. The server handles database access. Each client captures and applies only its own player state.
 
-## Beginner quick start
+## Quick start
 
-1. Install the INIDBI2 extension on the **server** (not required on clients) — see its own release for that step; WMP does not bundle it.
+1. Install the INIDBI2 extension on the **server**. Clients do not need it. Follow the extension's own installation instructions; WMP does not bundle it.
 2. Open `MissionConfig\persistenceConfig.sqf` and set `Waldo_Persistence_Enable` to `true`.
-3. Launch the mission on a server that has INIDBI2 installed. The server probes for a real, loaded extension (not just a declared dependency) and disables itself cleanly if the probe fails — check the RPT for `[WMP DIAG]` persistence lines if nothing is saving.
-4. Play, disconnect and reconnect (or use `Waldo_fnc_PersistenceStop` then restart the mission) to confirm loadout/medical state is restored.
+3. Launch the mission on that server. WMP checks that the extension is loaded and working. If the check fails, persistence stays off. Check the RPT for `[WMP DIAG]` persistence lines if saves do not appear.
+4. Play long enough for a save, disconnect, and reconnect to confirm your loadout or medical state returns. For a deliberate save before reconnecting, use the **Persistence - Save Now** Zeus module. Stopping persistence is not a substitute for saving every player's current state.
 
 The `[WMP]Persistence_Object_Example_Minimal` and `[WMP]Persistence_Object_Example_Full` compositions demonstrate registering a placed object (see below) without any scripting beyond the object's own init field.
 
-## What gets saved
+## Settings and saved data
 
-Player persistence can independently save loadout, ACE medical state, food/water, position and supported radio state. Loadout and medical state are enabled by default; the more mission-sensitive fields are not. The server starts the database branch from `initServer.sqf`; each player starts only capture/apply work from `initPlayerLocal.sqf`.
+Player persistence can save loadout, ACE medical state, food and water, position, and supported radio state independently. Loadout and medical state are on by default. The server starts database work from `initServer.sqf`. Each player starts local capture and restore work from `initPlayerLocal.sqf`.
 
-| Setting | Default | Purpose |
-|---|---|---|
-| `Waldo_Persistence_Enable` | `false` | Master opt-in; requires a working server INIDBI2 extension |
-| `Waldo_Persistence_SaveLoadout` | `true` | Filtered inventory (unique ACRE radio IDs stripped) |
-| `Waldo_Persistence_SaveMedical` | `true` | ACE medical state |
-| `Waldo_Persistence_SaveFoodWater` | `false` | Hunger/thirst state |
-| `Waldo_Persistence_SavePosition` | `false` | Off by default — can bypass mission flow (e.g. skip an intro area) |
-| `Waldo_Persistence_SaveRadios` | `false` | Per-player ACRE channel/spatial state |
-| `Waldo_Persistence_Scope` | `"MISSION"` | `"MISSION"` isolates records by mission+terrain; `"CAMPAIGN"` shares by database name across missions |
-| `Waldo_Persistence_DatabaseName` | `"WaldosMissionPack"` | Database identity; only matters when `Scope` is `"CAMPAIGN"` |
-| `Waldo_Persistence_PlayerSaveInterval` | `60` | ADVANCED — seconds between automatic player writes; lower increases server I/O |
-| `Waldo_Persistence_ObjectSaveInterval` | `60` | ADVANCED — seconds between registered-world-object writes |
-| `Waldo_Persistence_DefaultCustomVariables` | `[]` | Extra variable names saved alongside the built-in fields — see [Optional Feature Extensions](Optional-Feature-Extensions#persistence-interoperability) |
+| Setting | Type | Default | Purpose |
+|---|---|---|---|
+| `Waldo_Persistence_Enable` | Boolean | `false` | Enable persistence if server INIDBI2 is ready |
+| `Waldo_Persistence_SaveLoadout` | Boolean | `true` | Save filtered inventory, without unique ACRE radio IDs |
+| `Waldo_Persistence_SaveMedical` | Boolean | `true` | Save ACE medical state |
+| `Waldo_Persistence_SaveFoodWater` | Boolean | `false` | Save supported hunger and thirst state |
+| `Waldo_Persistence_SavePosition` | Boolean | `false` | Save position. This can bypass an intro or staging area |
+| `Waldo_Persistence_SaveRadios` | Boolean | `false` | Save supported per-player ACRE radio state |
+| `Waldo_Persistence_Scope` | String enum | `"MISSION"` | `"MISSION"` isolates by mission and terrain. `"CAMPAIGN"` shares records by database name |
+| `Waldo_Persistence_DatabaseName` | String | `"WaldosMissionPack"` | Save collection name. Changing it selects different records |
+| `Waldo_Persistence_PlayerSaveInterval` | Number (seconds) | `60` | Time between automatic player writes; shorter means more server I/O |
+| `Waldo_Persistence_ObjectSaveInterval` | Number (seconds) | `60` | Time between automatic writes for registered objects |
+| `Waldo_Persistence_DefaultCustomVariables` | Array of Strings | Seven WMP variable names | Default names to save for registered objects; see below |
+
+The seven default custom variables are `Waldo_ObjectScale`, `Waldo_ObjectScaleOriginal`, `Waldo_Breaching_Processed`, `Waldo_Breaching_AccumulatedStrength`, `Waldo_FieldResupply_Hub`, `Waldo_FieldResupply_Stock`, and `Waldo_FieldResupply_Deployed`. See [Optional Feature Extensions](Optional-Feature-Extensions#persistence-interoperability) before adding your own.
 
 Tune the shared `Waldo_Persistence_*` values in `MissionConfig\persistenceConfig.sqf`.
 
 Player records are separated by Steam UID and, by default, database name + mission name + terrain. Keep `Waldo_Persistence_Scope = "MISSION"` for ordinary missions. Use `"CAMPAIGN"` only when several missions using the same `Waldo_Persistence_DatabaseName` intentionally share progress. The server validates the identity stored inside a record before sending it to a client.
 
-ACRE-aware persistence filters unique `_ID_n` radio classes before storage. When `Waldo_Persistence_SaveRadios` is enabled, channel and spatial state are stored separately by base radio class and same-type ordinal. A restore creates fresh unique radios first and then reapplies persisted state; when disabled, the current side/group mission plan is applied instead. ACRE being absent leaves ordinary loadouts unchanged.
+ACRE-aware persistence filters unique `_ID_n` radio classes before storage. When `Waldo_Persistence_SaveRadios` is enabled, it saves channel and spatial state separately by base radio class and same-type ordinal. Restore creates fresh unique radios, then applies saved settings. With SaveRadios off, WMP applies the current side or group radio plan. Ordinary loadouts work without ACRE.
 
-## Registering objects — `Waldo_fnc_PersistenceRegisterObject`
+## Call: register objects with `Waldo_fnc_PersistenceRegisterObject`
 
 Register an editor object from `initServer.sqf` or its own init field:
 
@@ -51,19 +53,22 @@ Register an editor object from `initServer.sqf` or its own init field:
 | Argument | Type | Meaning |
 |---|---|---|
 | `object` | Object | The thing to persist |
-| `key` | String | Stable, unique within the mission. Letters/digits/underscore/dash only — anything else is rejected (logged) rather than silently mangled |
+| `key` | String | Stable and unique within the mission. Use letters, digits, underscores or dashes. Other characters cause rejection and an RPT entry |
 | `options[0..4]` | Bool (each) | Save cargo / damage / fuel / ammunition-pylons / position. Missing values default `true`, so a bare `[obj, "key"]` call saves everything |
-| `options[5]` | Array\<String\> | Extra serialisable variable names, beyond the five built-in fields. Defaults to `Waldo_Persistence_DefaultCustomVariables` when omitted — see [Optional Feature Extensions](Optional-Feature-Extensions#persistence-interoperability) |
+| `options[5]` | Array\<String\> | Extra serialisable variable names. Defaults to `Waldo_Persistence_DefaultCustomVariables` when omitted. See [Optional Feature Extensions](Optional-Feature-Extensions#persistence-interoperability) |
 
-Registering the **same key again** (a re-run init field, or using the ZEN module twice near the same object) **replaces** the previous entry rather than duplicating it — safe to call more than once. Registrations made while the database is still starting are queued by key and replayed once it's ready.
+The call returns a Boolean: `true` when the server registers or queues the object, `false` when persistence is off, the object or key is invalid, or the call reaches the wrong machine. Because an Eden init field also runs on clients, its client-side copies return `false`; the server's copy is the one that matters. Do not treat a client-side return value as proof that server registration failed.
 
-**Calling contract.** This function is stricter than most WMP "no `isServer` wrapper needed" calls (`Waldo_fnc_Jammer`, `Waldo_fnc_HazardRegisterPresetZone`, ...), which self-forward to the server with `remoteExecCall` when invoked from a client — this one does **not** forward itself, and a client `remoteExecCall` is rejected outright. It only works:
-- from an object's own **Eden init field** (which runs identically on every machine; only the server's own execution of that line actually registers anything — that's what "no wrapper needed" means here, not "safe to `remoteExecCall`"), or
-- from a **direct `call`/`spawn`** by code already running on the server (`initServer.sqf`, another server-only script, or a server-side handler — see how the ZEN module below reaches it).
+Registering the **same key again** replaces its previous entry. You can rerun an init field without creating duplicates. While the database starts, WMP queues registrations by key and applies them when ready.
 
-A mission-specific curator/client-triggered registration flow needs its own authenticated server-side bridge mirroring that pattern; it must not `remoteExecCall` this function directly.
+**Calling contract.** This function does not forward client calls to the server. A client `remoteExecCall` to it is rejected. Call it in one of these places:
 
-Call `Waldo_fnc_PersistenceStop` to save registered objects and stop the system without deleting its database.
+- An object's **Eden init field**. The field runs on all machines, but only its server execution registers the object. No `isServer` wrapper is needed.
+- Code already running on the server, such as `initServer.sqf` or a server-side handler. Use a direct `call` or `spawn`.
+
+A custom curator or client registration flow needs an authenticated server-side handler. Do not send `remoteExecCall` directly to this function.
+
+`[] call Waldo_fnc_PersistenceStop` takes no mission-maker arguments and returns nothing. It saves registered objects, stops the server and client loops, and keeps existing database records. It does **not** request a final fresh save of every player's state. Use **Persistence - Save Now** before stopping if that is needed.
 
 ## Zeus modules
 

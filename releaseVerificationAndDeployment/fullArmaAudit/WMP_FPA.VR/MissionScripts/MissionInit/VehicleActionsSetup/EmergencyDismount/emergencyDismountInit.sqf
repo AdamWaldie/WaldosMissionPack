@@ -17,6 +17,8 @@
  *
  * Example:
  * [] call Waldo_fnc_EmergencyDismountInit;
+ * Result: The local monitor watches eligible occupied vehicles and starts owner-local extraction
+ * when the configured damage or rollover trigger is met.
  */
 
 if !(hasInterface) exitWith {false};

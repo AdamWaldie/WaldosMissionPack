@@ -1,12 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * This function apply specific functions to classes of vehicle (limited use - primarily for auto applying "getoutside" to RHS and CUP helos
+ * Purpose: Applies class-specific WMP vehicle actions and default medical status.
+ * Locality and authority: Runs per machine for local actions. Only the server publishes medical
+ * defaults, and an existing explicit ACE medical flag always wins, including false.
+ * Repeat/JIP: Local Waldo_Vehicle_Functions_Added prevents duplicate setup. Joining clients install
+ * local actions. Public medical choices survive JIP and owner migration. Deferred jump setup
+ * respects manual overrides.
  *
  * Arguments:
  * 0: Vehicle <OBJECT>
  *
  * Example:
  * [_vehicle] call Waldo_fnc_AddVehicleFunctions;
+ * Return Value: Nothing useful; the function records local setup on the vehicle.
+ * Current callers: Waldo_fnc_InitVehicles CBA class init and curator object-placement handlers.
+ * Result: Applicable recovery and paradrop interactions are available on the vehicle.
  */
 params [["_vehicle", objNull, [objNull]]];
 
@@ -76,7 +84,11 @@ if (_vehicle iskindOf "RHS_UH60_Base") then {
         case "RHS_UH60M_MEV_d";
         case "RHS_UH60M_MEV2";
         case "RHS_UH60M_MEV";
-        case "MED": {_vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];};
+        case "MED": {
+            if (isServer && {isNil {_vehicle getVariable "ace_medical_isMedicalVehicle"}}) then {
+                _vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];
+            };
+        };
         default {};
     };
 };
@@ -123,7 +135,11 @@ if (
 if (_vehicle iskindOf "MRAP_01_base_F") then {
     [_vehicle, 4, 40, false, false] call Waldo_fnc_SetCargoAttributes;
     switch (_vehicleType) do {
-        case "MED": {_vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];};
+        case "MED": {
+            if (isServer && {isNil {_vehicle getVariable "ace_medical_isMedicalVehicle"}}) then {
+                _vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];
+            };
+        };
         default {};
     };
 };
@@ -132,14 +148,22 @@ if (_vehicle iskindOf "Truck_01_base_F") then {
     switch (_vehicleType) do {
         case "rhsusf_M1230a1_usarmy_wd";
         case "rhsusf_M1230a1_usarmy_d";
-        case "MED": {_vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];};
+        case "MED": {
+            if (isServer && {isNil {_vehicle getVariable "ace_medical_isMedicalVehicle"}}) then {
+                _vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];
+            };
+        };
         default {};
     };
 };
 
 if (_vehicle iskindOf "rhsusf_stryker_base") then {
     switch (_vehicleType) do {
-        case "MED": {_vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];};
+        case "MED": {
+            if (isServer && {isNil {_vehicle getVariable "ace_medical_isMedicalVehicle"}}) then {
+                _vehicle setVariable ["ace_medical_isMedicalVehicle", true, true];
+            };
+        };
         default {};
     };
 };

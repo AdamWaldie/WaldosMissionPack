@@ -6,6 +6,10 @@
  * distortion as the link weakens and shows the persistent UAV-link status HUD
  * banner, and at near-total jamming cuts the terminal link outright with a clear message. Everything
  * restores when the drone leaves the field or the player disconnects the terminal.
+ * Locality and authority: Interface-client only; applies visual/link effects to the local
+ * player's connected drone from current server-published jammer state.
+ * Repeat/JIP: One running flag prevents duplicate loops. A joining client starts its own loop,
+ * and stale effects clear when control or the jammer field ends.
  *
  * Arguments:
  * None
@@ -15,6 +19,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammingUavClient;
+ * Current caller: Waldo_fnc_JammingInit during player-local setup.
+ * Result: A jammed UAV feed degrades or disconnects with visible EW feedback.
  */
 
 if !(hasInterface) exitWith {};

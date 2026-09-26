@@ -7,6 +7,10 @@
  * init line is what actually registers it. When persistence is enabled but its dependency/startup
  * gate is still pending, registration is queued by key and replayed after activation. The function
  * does not enable persistence itself and returns false while the feature is off.
+ * Locality and authority: Server-only object registry mutation. Eden init fields run on every
+ * machine, but only the server's local execution is accepted; direct remote calls are rejected.
+ * Repeat/JIP: Re-registering a stable key replaces its prior row. Pending rows replay after
+ * server activation, and the server-owned registry controls later saves for JIP-visible objects.
  *
  * CALLING CONTRACT - this is stricter than most WMP "no isServer wrapper needed" functions and is
  * easy to get wrong: unlike Waldo_fnc_Jammer/Waldo_fnc_HazardRegisterPresetZone, which self-forward
@@ -45,6 +49,8 @@
  * Example:
  * // From an object's own init field in Eden - no isServer wrapper needed:
  * [this, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;
+ * Result: The server returns true for accepted or pending registration and false for an
+ * invalid, disabled or wrongly forwarded request.
  *
  * Current callers: mission-maker server setup, the Persistence Object Example composition, the
  * "Persistence - Register Object" ZEN module (via Waldo_fnc_FeatureRuntimeApply, server-side) and the

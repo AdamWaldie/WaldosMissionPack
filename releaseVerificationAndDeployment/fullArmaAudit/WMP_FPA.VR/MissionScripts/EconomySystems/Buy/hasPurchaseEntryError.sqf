@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Has purchase entry error.
+ * Validates a purchasable-asset row against class, fields and prerequisite links.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -9,10 +9,14 @@
  * 1: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when the catalog row has a validation error.
  *
  * Example:
  * [_entry, _catalog] call Waldo_fnc_EcoBuy_hasPurchaseEntryError;
+ * Locality/Authority: Any machine; pure row validation.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Purchase catalog filtering, status and server execution.
+ * Result: Invalid rows are rejected before appearing as usable purchases.
  */
 
         params [["_entry", []], ["_catalog", []]];

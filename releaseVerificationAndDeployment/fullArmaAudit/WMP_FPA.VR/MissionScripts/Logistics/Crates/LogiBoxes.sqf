@@ -20,6 +20,7 @@
  *
  * Example:
  * [quartermaster, player, "Ammo", 90, 3] call Waldo_fnc_LogisticsSpawner;
+ * Result: A validated issue creates one requested supply or support object near the QM.
  */
 
 params [
@@ -134,10 +135,16 @@ private _issueName = switch (_boxType) do {
 };
 _box setVariable ["ace_cargo_customName", _issueName, true];
 _box setVariable ["Waldo_QM_IssueName", _issueName, true];
-[_box, _boxType] spawn Waldo_fnc_LogisticsRegisterSpawned;
 // Quartermaster stores are deliberately portable regardless of config mass. The public helper
 // publishes ACE drag/carry state consistently for crates, wheels and tracks.
-[_box, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+// A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+// cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+// Without this, wheels and tracks (not ReammoBox_F) never became physical-cargo eligible on a
+// dedicated server, so ACE's own carry release loaded them into ACE cargo instead.
+[{
+    [_this select 0, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+    _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+}, [_box, _boxType]] call CBA_fnc_execNextFrame;
 clearItemCargoGlobal _box;
 clearBackpackCargoGlobal _box;
 clearMagazineCargoGlobal _box;

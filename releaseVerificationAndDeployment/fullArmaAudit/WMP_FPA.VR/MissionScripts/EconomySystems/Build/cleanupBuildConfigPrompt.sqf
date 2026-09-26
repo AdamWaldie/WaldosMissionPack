@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup build config prompt.
+ * Removes controls and state from the curator Construction catalog editor.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuild_cleanupBuildConfigPrompt;
+ * Locality/Authority: Curator interface client; no catalog mutation.
+ * Repeat/JIP Behaviour: Safe for null/already-cleaned displays; no JIP UI replay.
+ * Current Callers: Construction editor close/cancel and Economy UI cleanup.
+ * Result: Temporary controls, form state and dedicated prompt display are removed.
  */
 
         params [["_disp", displayNull]];

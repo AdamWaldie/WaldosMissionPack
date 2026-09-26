@@ -16,6 +16,10 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoCommand_startLocalGroundCommandIdentityService;
+ * Locality/Authority: Interface client only; owns its local CBA player-unit handler.
+ * Repeat/JIP Behaviour: Already-started calls return without stacking handlers; JIP starts its
+ * own service and publishes the current unit's identity.
+ * Result: Returns true when the service is active and false outside a valid interface.
  */
 
 if (!hasInterface || {!([] call Waldo_fnc_EcoCore_isModuleActive)}) exitWith {false};

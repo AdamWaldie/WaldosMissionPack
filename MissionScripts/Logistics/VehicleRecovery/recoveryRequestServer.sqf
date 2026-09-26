@@ -20,6 +20,10 @@
  * [player, "LOAD", recoveryCarrier] remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2];
  *
  * Current callers: local recovery vehicle and carrier actions.
+ * Locality and authority: Server authenticates the player's owner, range and recovery state;
+ * any physical loading command is sent to the carrier owner. Repeated or stale requests are
+ * revalidated, while current package/vehicle state is available to JIP clients.
+ * Result: A valid PACK, LOAD or UNLOAD operation advances the package lifecycle.
  */
 params [["_actor", objNull, [objNull]], ["_operation", "", [""]], ["_target", objNull, [objNull]]];
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2]; false};

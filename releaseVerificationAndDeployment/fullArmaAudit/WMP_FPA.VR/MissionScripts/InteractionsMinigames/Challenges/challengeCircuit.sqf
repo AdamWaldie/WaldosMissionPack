@@ -1,6 +1,15 @@
 /*
- * Breaker-cabinet continuity routing procedure.
- * Config: [pairs(3..6), maxMistakes, timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the breaker-cabinet continuity routing procedure.
+ * Locality and authority: Creates a private display on the player's interface client;
+ * the supplied resolver reports success/failure to its caller. Repeated attempts create
+ * fresh display state, not JIP gameplay state.
+ * Arguments: 0: config <ARRAY> [pairs 3..6, maxMistakes, timeLimit, title] ([] defaults);
+ *   1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; the resolver receives the outcome.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[4, 3, 60, "BREAKER CABINET"], {}] call Waldo_fnc_MiniGameCircuit;
+ * Result: The player sees the circuit procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

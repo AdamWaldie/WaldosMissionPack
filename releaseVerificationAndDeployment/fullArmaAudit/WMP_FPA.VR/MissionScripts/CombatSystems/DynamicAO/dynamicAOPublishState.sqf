@@ -15,6 +15,9 @@
  *
  * Example:
  * [] call Waldo_fnc_DynamicAOPublishState;
+ * Locality and authority: Server publishes the current complete AO summary. Repeated calls
+ * replace the public snapshot; joining clients receive that latest snapshot.
+ * Result: Current and JIP clients can read the refreshed AO list.
  */
 if !(isServer) exitWith {[]};
 private _registry = missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap];

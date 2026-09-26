@@ -14,6 +14,9 @@
  * Example: [] call Waldo_fnc_RespawnSeedCarryOver;
  * Current callers: Waldo_fnc_RespawnSeedSideSwitch (CARRY_OVER mode, and as SIDE_BASE_LOADOUT's
  * automatic fallback when the target side has no usable mission.sqm pool).
+ * Locality and authority: Reads the player's current equipment on the interface client.
+ * Repeat calls recalculate the seed; it is per-player state, not a global JIP broadcast.
+ * Result: The next respawn seed uses the player's carried-over equipment.
  */
 missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotTag", "BRIDGED"];
 [false] call Waldo_fnc_SaveLoadout;

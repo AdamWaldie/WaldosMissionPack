@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Captures the local player's enabled persistence fields into a network-safe array.
+ * Locality and authority: Interface-client capture only. This function reads that player's
+ * state; the server decides whether a submitted payload may be saved.
+ * Repeat/JIP: Each call captures current state. JIP players receive the normal persistence
+ * load handshake before automatic saving is allowed.
  *
  * Arguments:
  * None
@@ -10,6 +14,9 @@
  *
  * Example:
  * private _state = [] call Waldo_fnc_PersistenceClientCapture;
+ * Result: _state contains a versioned Array of enabled loadout, medical, needs, position and
+ * radio fields, or an empty Array without an interface.
+ * Current callers: Waldo_fnc_PersistenceSavePlayerLocal and local save workflows.
  */
 
 if !(hasInterface) exitWith {[]};

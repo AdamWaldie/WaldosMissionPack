@@ -3,9 +3,14 @@
  * Creates (or updates) a localised radio jammer anchored to a world object. This is the main
  * ease-of-use entry point for the jamming system: give it an object and a radius and you have
  * a working jammer that denies ACRE2 and/or TFAR radio comms in that area. Server-authoritative
- * - calling it from a client (or an object init field on a client) forwards to the server, which
+ * - client calls after local startup forward to the server; client Eden Init replays are skipped.
+ * The server
  * owns the broadcast jammer registry so JIP / rejoining players inherit every jammer. Idempotent
  * per object: calling again on the same object updates that jammer in place instead of stacking.
+ * Locality and authority: Client calls after local startup forward to the server; client Eden Init
+ * replays are skipped. The server owns the registry; clients apply local radio and interaction state.
+ * Repeat/JIP: Re-registering an emitter updates its entry. Named interaction replay is bound to
+ * the emitter lifetime so other WMP features can share it. Joining clients receive current state.
  *
  * Arguments:
  * 0: Object <OBJECT> - the emitter the jammer is anchored to (its position is the jam centre)
@@ -45,6 +50,9 @@
  * [this, 500, "EAST", [[30, 88]], 50, 1, true, true] call Waldo_fnc_Jammer;
  * // An 800 m cone facing 090 deg, 60 deg wide, pulsing 4s on / 2s off:
  * [this, 800, "ALL", "ALL", 50, 1, true, true, [90, 60], [4, 2]] call Waldo_fnc_Jammer;
+ * Current callers: mission-maker object init/trigger scripts and Waldo_fnc_ZenCreateJammerServer.
+ * Result: The emitter has one server-owned jammer entry; the returned ID identifies it for
+ * later toggle or removal.
  */
 
 params [
@@ -70,6 +78,12 @@ if (isNull _object) exitWith {
 
 // Keep all registry writes on the server so JIP behaviour stays correct.
 if (!isServer) exitWith {
+    // Init-field replay on a joining client: the server already ran this Init line, and forwarding
+    // it again would recreate state removed since. Later script/action calls still forward.
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {
+        diag_log format ["[WMP JIP] Skipped Init-field replay of %1 on client %2.", "Waldo_fnc_Jammer", clientOwner];
+        -1
+    };
     private _interactionForward = _interactionOptions;
     if (typeName _interactionForward == "HASHMAP") then {
         private _pairs = [];
@@ -204,7 +218,9 @@ if (_isNew && {missionNamespace getVariable ["Waldo_Jamming_Destructible", true]
 
 // Install the player ACE interaction (toggle / detonate) on every machine for this emitter.
 if (_isNew) then {
-    [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _object];
+    private _jipId = format ["Waldo_JammerInteraction_%1", netId _object];
+    [_object, _jipId] call Waldo_fnc_JipBindToObjectServer;
+    [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _jipId];
 };
 
 diag_log format ["[WMP JAM] Jammer %1 registered: radius=%2 falloff=%3 sides=%4 sector=%5 duty=%6 active=%7", _id, _radius, _falloff, _sidesN, _sectorN, _dutyN, _active];

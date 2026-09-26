@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Is build requirement satisfied.
+ * Checks whether any operational completed building satisfies a named requirement.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _buildName <STRING> - build name (optional, default: "")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when a matching operational building exists.
  *
  * Example:
  * [_buildName] call Waldo_fnc_EcoBuild_isBuildRequirementSatisfied;
+ * Locality/Authority: Any machine; reads public completed-building registry.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP sees current objects/definitions.
+ * Current Callers: No in-pack caller; available to mission scripts checking any-side requirements.
+ * Result: Disabled or deleted buildings do not satisfy the requirement.
  */
 
         params [["_buildName", ""]];

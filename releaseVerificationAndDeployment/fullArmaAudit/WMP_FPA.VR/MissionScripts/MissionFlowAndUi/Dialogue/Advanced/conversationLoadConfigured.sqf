@@ -7,6 +7,7 @@
  * Arguments: None. Return Value: BOOL indicating that every configured row registered successfully.
  * Current caller: initServer.sqf immediately after LoadFeatureConfigs SERVER.
  * Example: [] call Waldo_fnc_ConversationLoadConfigured;
+ * Result: Each valid configured conversation is registered before NPC assignment begins.
  */
 if (!isServer) exitWith {false};
 if (missionNamespace getVariable ["Waldo_Conversation_ConfigLoaded", false]) exitWith {true};

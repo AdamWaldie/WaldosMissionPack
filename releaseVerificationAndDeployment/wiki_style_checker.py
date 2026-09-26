@@ -29,41 +29,84 @@ INDEX_HUBS = {
 }
 
 REQUIRED_STANDALONE = {
-    "ACE-Cargo-And-Object-Handling", "Quartermaster", "Base-Services",
+    "ACE-Vehicle-Services", "ACE-Cargo-And-Object-Handling", "Quartermaster", "Base-Services",
     "Supply-Transfers", "Physical-Cargo", "Field-Resupply", "Tactical-Display",
     "Treatment-Feedback", "Hazardous-Environments", "Tree-Felling",
     "Emergency-Dismount", "Explosive-Breaching", "Object-Scaling", "WMP-HUD",
     "EMP-Burst", "Signal-Trackers",
 }
 
-# These are player-facing feature guides with independent setup paths. Add a new
-# feature here when it enters Feature-Tutorials.md; the checker then requires a
-# navigable page with setup, reference, and fault-finding sections. Hub and
-# reference pages are deliberately outside this list.
-FEATURE_GUIDES = {
-    "ACE-Cargo-And-Object-Handling",
-    "ACE-Corpse-Traps",
-    "Base-Services",
-    "Improved-AI-Helicopter-Landings",
-    "Mobile-Command-Post-With-Integrated-Logistics-System",
-    "Physical-Cargo",
-    "Quartermaster",
-    "Radio-Jamming",
-    "Supply-Transfers",
-    "Field-Resupply",
-    "Tactical-Display",
-    "Treatment-Feedback",
-    "Hazardous-Environments",
-    "Tree-Felling",
-    "Emergency-Dismount",
-    "Explosive-Breaching",
-    "Object-Scaling",
-    "UI-Visual-Themes",
+# Public, maker-facing guides must show the actual argument and setting types.
+# The setting check reads MissionConfig rather than duplicating its key list here.
+TYPED_GUIDES = {
+    "ACE-Vehicle-Services",
+    "ACE-Cargo-And-Object-Handling", "Base-Services", "Quartermaster",
+    "Supply-Transfers", "Physical-Cargo", "Field-Resupply", "Tactical-Display",
+    "Treatment-Feedback", "Hazardous-Environments", "Tree-Felling",
+    "Emergency-Dismount", "Explosive-Breaching", "Object-Scaling",
+    "EMP-Burst", "Signal-Trackers", "Vehicle-Recovery", "WMP-HUD",
+    "Loadout-Saving-and-Respawn",
+    "Safestart", "Transport-Services", "Improved-AI-Helicopter-Landings",
+    "Dynamic-Anti-Air", "Dynamic-AO-Generation", "Paradrop", "Custom-3D-World-Markers",
+    "Custom-UI-Notifications", "Vehicle-Appearance", "Vehicle-Weapon-Loadout",
+    "Dialogue-And-Conversations", "Mission-UI-Text-Overlays", "Mission-Intro-Or-Title-Text",
+    "Vehicle-Uprighting", "Team-Colour-Setup", "Squad-Rally-Points",
+    "AI-Helicopter-Deceleration", "Headless-Client-Support", "ACE-Corpse-Traps",
+    "UI-Visual-Themes", "Obituary-and-Confirmed-Deaths",
+    "ACRE2-Automated-CEOI-Document", "ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup",
+    "ENDEX-Script-&-Custom-End-Screen",
+    "Waldos-Economy-Systems-Setup-And-Configuration",
+    "ACRE-2-Long-Range-Radio-Presetting", "ACRE2-Vehicle-Radio-Rack-Setup",
+    "ACRE2-Babel-Configuration",
+    "Waldos-AI-Tweak",
+    "Medical-Vehicle-Flags", "Unit-Insignias",
+    "Map-Location-Tools",
+    "Airborne-Gunship-Support",
+    "Cover-Loading-Screen-Generation", "Third-Party-Scripts-Headless-Client-And-Player-Markers",
+    "Radio-Reports,-Checklists,-Support-Calls-And-Documentation",
+    "Mission-Maker-Resource-Scripts",
+    "Waldos-Economy-Systems-Resource-System", "Waldos-Economy-Systems-Research-System",
+    "Waldos-Economy-Systems-Build-System", "Waldos-Economy-Systems-Buy-System",
+    "Waldos-Mini-Games-Table-Games",
+    "Waldos-Economy-Systems-Ground-Command-And-Tools",
+    "Tasks-And-Objectives", "Persistence",
+    "Virtual-Vehicle-Depot",
+    "Bomb-Defusal",
 }
+SETTING_CONTRACTS = {
+    "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
+    "Quartermaster": ("logisticsConfig.sqf", ("Waldo_QM_", "Waldo_Quartermaster_")),
+    "Supply-Transfers": ("logisticsConfig.sqf", ("Waldo_SupplyTransfers_",)),
+    "Physical-Cargo": ("logisticsConfig.sqf", ("Waldo_PhysicalCargo_",)),
+    "Field-Resupply": ("logisticsConfig.sqf", ("Waldo_FieldResupply_",)),
+    "Tactical-Display": ("interfaceConfig.sqf", ("Waldo_TacticalDisplay_",)),
+    "Treatment-Feedback": ("interfaceConfig.sqf", ("Waldo_TreatmentFeedback_",)),
+    "Hazardous-Environments": ("environmentConfig.sqf", ("Waldo_Hazard_",)),
+    "Tree-Felling": ("environmentConfig.sqf", ("Waldo_TreeFelling_",)),
+    "Emergency-Dismount": ("interfaceConfig.sqf", ("Waldo_EmergencyDismount_",)),
+    "Explosive-Breaching": ("environmentConfig.sqf", ("Waldo_Breaching_",)),
+    "Object-Scaling": ("logisticsConfig.sqf", ("Waldo_ObjectScaling_",)),
+    "Vehicle-Recovery": ("logisticsConfig.sqf", ("Waldo_Recovery_",)),
+    "WMP-HUD": ("interfaceConfig.sqf", ("Waldo_WmpHud_",)),
+    "Loadout-Saving-and-Respawn": ("logisticsConfig.sqf", ("Waldo_Respawn_",)),
+    "Safestart": ("missionSystemsConfig.sqf", ("Waldo_SafeStart_",)),
+    "Improved-AI-Helicopter-Landings": ("aiConfig.sqf", ("Waldo_ImprovedHelicopterLanding_",)),
+    "Squad-Rally-Points": ("missionSystemsConfig.sqf", ("Waldo_Rally_",)),
+    "AI-Helicopter-Deceleration": ("aiConfig.sqf", ("Waldo_HelicopterDeceleration_",)),
+    "ACE-Corpse-Traps": ("missionSystemsConfig.sqf", ("Waldo_CorpseTraps_",)),
+    "Headless-Client-Support": ("headlessConfig.sqf", ("Waldo_Headless_",)),
+    "Obituary-and-Confirmed-Deaths": ("interfaceConfig.sqf", ("Waldo_Obituary_",)),
+    "Waldos-AI-Tweak": ("aiConfig.sqf", ("Waldo_AIRebalance_", "Waldo_AI_")),
+    "Airborne-Gunship-Support": ("airOperationsConfig.sqf", ("Waldo_Gunship_",)),
+    "Persistence": ("persistenceConfig.sqf", ("Waldo_Persistence_",)),
+}
+
+# Every indexed feature guide is checked below. Navigation hubs in INDEX_HUBS
+# are the only exception; new feature pages enter this gate automatically.
 
 GUIDE_SECTIONS = {
     "setup": re.compile(r"^## (?:Before|Enable|Set |Start |Place |Try |The quickest|Change an object|Setup|Quick|Create a first|Scale one)", re.I | re.M),
-    "reference": re.compile(r"^## (?:Script|Settings|Parameters|Choose|Change crate|Mission-wide|Mission extensions|The jamming model|Configuration|Set handling|WMP-created|Supported Throwables|Seats covered|Calls and settings|Change access|Change the result|Choose the safety|Choose the cards|Change the player|Configure another|Limits and placement)", re.I | re.M),
+    "reference": re.compile(r"^## (?:Call|Script|Settings|Parameters|Choose|Change crate|Mission-wide|Mission extensions|The jamming model|Configuration|Set handling|WMP-created|Supported Throwables|Seats covered|Calls and settings|Change access|Change the result|Choose the safety|Choose the cards|Change the player|Configure another|Limits and placement)", re.I | re.M),
     "limits": re.compile(r"^## (?:If |During play and troubleshooting|Engine boundaries|Carrying cargo away|Limitations|Runtime and troubleshooting|Salvage and troubleshooting|Remove or diagnose)", re.I | re.M),
     "related": re.compile(r"^## See also\s*$", re.I | re.M),
 }
@@ -86,6 +129,7 @@ STALE_SETUP = {
     '`Waldo_SafeStart_Radius` defaults to 75 m': "SafeStart radius now defaults to 150 m",
     '`Waldo_SafeStart_Confine` | `true`': "SafeStart confinement is off by default",
     '`MissionConfig/missionSystemsConfig.sqf` if your mission requires a different allowed range': "object scaling limits belong in logisticsConfig.sqf",
+    '`MissionConfig\\missionSystemsConfig.sqf` defines object-scaling limits': "object scaling limits belong in logisticsConfig.sqf",
 }
 
 
@@ -177,12 +221,32 @@ def audit() -> tuple[int, list[str]]:
             if not INDEXED_LIMITS.search(text):
                 findings.append(f"{page.name}: indexed feature needs troubleshooting or engine limits")
 
-        if page.stem in FEATURE_GUIDES:
+        if page.stem in indexed_features:
             if page.stem not in indexed_targets:
                 findings.append(f"{page.name}: dedicated feature guide is missing from Feature-Tutorials.md")
             for section, pattern in GUIDE_SECTIONS.items():
                 if not pattern.search(text):
                     findings.append(f"{page.name}: missing {section} section required by the Wiki Page Standard")
+
+        if page.stem in indexed_features or page.stem in TYPED_GUIDES:
+            if not re.search(r"^\|[^\n]*\bType\b[^\n]*\|", text, re.I | re.M):
+                findings.append(f"{page.name}: add a typed argument or settings table")
+        if page.stem in indexed_features:
+            if "Waldo_fnc_" in text and not re.search(r"\breturns?\b|\bReturn Value\b", text, re.I):
+                findings.append(f"{page.name}: explain what the public call returns")
+        if page.stem in SETTING_CONTRACTS:
+            config_name, prefixes = SETTING_CONTRACTS[page.stem]
+            config = (ROOT / "MissionConfig" / config_name).read_text(encoding="utf-8")
+            for key in set(re.findall(r'^ {8}\["(Waldo_[A-Za-z0-9_]+)"\s*,', config, re.M)):
+                for prefix in prefixes:
+                    if not key.startswith(prefix):
+                        continue
+                    names = (key, key[len(prefix):])
+                    rows = [line for line in lines if line.startswith("|") and any(f"`{name}`" in line.split("|", 2)[1] for name in names)]
+                    if not rows:
+                        findings.append(f"{page.name}: add a settings-table row for {key}")
+                    elif not any(len([cell.strip() for cell in row.split("|")[1:-1] if cell.strip()]) >= 4 for row in rows):
+                        findings.append(f"{page.name}: give {key} a type, default and effect in its table row")
 
         for match in LINK.finditer(text):
             target = local_page_target(match.group(1))

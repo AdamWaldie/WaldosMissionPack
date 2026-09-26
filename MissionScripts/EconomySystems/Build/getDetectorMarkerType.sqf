@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get detector marker type.
+ * Chooses a valid map-marker type for a detector contact.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <STRING> CfgMarkers type, falling back to mil_dot.
  *
  * Example:
  * [_entity, _sideKey] call Waldo_fnc_EcoBuild_getDetectorMarkerType;
+ * Locality/Authority: Any machine; read-only entity/config lookup.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Detector contact marker construction.
+ * Result: Unsupported entity markers display as a dot.
  */
 
         params [["_entity", objNull], ["_sideKey", "NONE"]];

@@ -675,8 +675,8 @@ annotated profile and advanced replacement-row format.
 | `Waldo_Jamming_Enable` | Master electronic-warfare opt-in. |
 | `Waldo_Jamming_Notify` | Shows client interference feedback. |
 | `Waldo_Jamming_LOS` | Applies line-of-sight attenuation. |
-| `Waldo_Jamming_BurnThrough` | Allows sufficiently close radios to overcome interference. |
-| `Waldo_Jamming_BurnThroughRef` | Reference distance for burn-through calculations. |
+| `Waldo_Jamming_BurnThrough` | Lets higher-power radios shrink the effective jammer field. |
+| `Waldo_Jamming_BurnThroughRef` | Reference transmit power in mW for burn-through calculations. |
 | `Waldo_Jamming_Curve` | Signal-loss curve identifier. |
 | `Waldo_Jamming_Destructible` | Allows jammer destruction to stop its effect. |
 | `Waldo_Jamming_GmOverlay` | Enables curator diagnostics overlay. |

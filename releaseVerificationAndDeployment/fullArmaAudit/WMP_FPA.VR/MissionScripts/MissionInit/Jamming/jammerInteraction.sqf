@@ -7,6 +7,10 @@
  * retained; the optional procedure flag only changes that action from immediate disablement to
  * launching the shared challenge. The result is resolved on the server and the action remains
  * local and repeat-safe for JIP clients.
+ * Locality and authority: Interface clients install ACE actions locally; the server validates
+ * any completed disable request and owns jammer registry changes.
+ * Repeat/JIP: The action paths are reconciled for current clients and object-keyed JIP replay;
+ * a changed settings payload replaces the old local interaction version.
  *
  * Arguments:
  * 0: jammer emitter <OBJECT>
@@ -28,6 +32,7 @@
  * Example:
  * [myJammer, [false, true, "circuit", "standard", true, "DISABLE"]]
  *     call Waldo_fnc_JammerInteraction;
+ * Result: The emitter shows the actions allowed by its current field state and challenge rules.
  */
 
 params [

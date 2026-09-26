@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Can player manage building.
+ * Checks whether a unit may manage an operational building owned by its side.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _unit <OBJECT> - unit (optional, default: objNull)
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when unit, side and building state permit management.
  *
  * Example:
  * [_building, _unit] call Waldo_fnc_EcoBuild_canPlayerManageBuilding;
+ * Locality/Authority: Client visibility check and server request gate read the same public owner state.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP receives current building ownership.
+ * Current Callers: Building management action and server-side manage validation.
+ * Result: Opposing sides and units without command authority cannot manage it.
  */
 
         params [["_building", objNull], ["_unit", objNull]];

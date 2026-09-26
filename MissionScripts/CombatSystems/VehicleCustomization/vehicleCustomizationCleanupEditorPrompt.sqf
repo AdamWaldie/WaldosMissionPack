@@ -17,6 +17,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (the Ok/Close button).
+ * Locality and authority: Runs on the curator's interface client and clears only its open
+ * editor display. Repeated cleanup is harmless; no JIP state is involved.
+ * Result: The editor's temporary controls and state are released.
  */
 
 params [["_disp", displayNull]];

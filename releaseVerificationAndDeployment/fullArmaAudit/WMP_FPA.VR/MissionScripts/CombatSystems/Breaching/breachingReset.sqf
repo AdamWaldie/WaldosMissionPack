@@ -1,13 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
  * Restores one non-deleted breached object and optionally removes its replacement debris.
+ * Locality/authority: server owns object state. Client calls forward to the server; remote callers
+ * must hold an assigned curator. Repeat/JIP: repeat resets leave the original visible and clear
+ * the processed state. Object variables replicate to current clients and JIP.
  *
  * Arguments:
- * 0: object <OBJECT>
- * 1: remove replacements <BOOLEAN>
+ * 0: object <OBJECT> - the original retained wall (required).
+ * 1: remove replacements <BOOLEAN> - delete WMP-created debris (default true).
  *
  * Return Value:
- * Boolean - true when reset was accepted
+ * Boolean - true when reset was accepted; false for a missing object or rejected server request.
+ * Current callers: mission-maker scripts and runtime recovery flows.
+ * Example: [wall1, true] call Waldo_fnc_BreachingReset;
+ * Result: wall1 is shown, healed and marked unprocessed; its replacement pieces are removed.
  */
 
 params [["_object", objNull, [objNull]], ["_removeReplacements", true, [false]]];

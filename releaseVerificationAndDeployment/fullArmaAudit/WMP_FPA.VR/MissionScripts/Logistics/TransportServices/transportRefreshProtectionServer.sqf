@@ -14,6 +14,7 @@
  * Example: _entry = [_entry] call Waldo_fnc_TransportRefreshProtectionServer;
  * Current callers: registration and the server monitor's owner-change branch.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
+ * Result: The entry reflects the aircraft's current owner and protection state.
  */
 params [["_entry", createHashMap, [createHashMap]]];
 if (!isServer || {_entry isEqualTo createHashMap}) exitWith {_entry};

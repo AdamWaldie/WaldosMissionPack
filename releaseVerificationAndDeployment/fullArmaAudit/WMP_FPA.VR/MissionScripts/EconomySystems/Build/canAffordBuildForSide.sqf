@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Can afford build for side.
+ * Checks whether one side has every resource charged by a build entry.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when all resource balances cover the costs.
  *
  * Example:
  * [_entry, _sideKey] call Waldo_fnc_EcoBuild_canAffordBuildForSide;
+ * Locality/Authority: Any machine may inspect published balances; server checks again before debit.
+ * Repeat/JIP Behaviour: Pure read; no JIP side effect.
+ * Current Callers: Construction status, upgrade status and authoritative job start.
+ * Result: Returns false at the first short resource balance.
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];

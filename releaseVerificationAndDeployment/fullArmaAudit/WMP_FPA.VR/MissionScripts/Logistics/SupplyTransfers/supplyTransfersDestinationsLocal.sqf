@@ -6,6 +6,7 @@
  * Arguments: source <OBJECT>. Return Value: destination objects <ARRAY>.
  * Current callers: transfer and merge destination choosers.
  * Example: private _targets = [myCrate] call Waldo_fnc_SupplyTransfersDestinationsLocal;
+ * Result: Returns nearby registered containers and vehicles eligible to receive this source.
  */
 params [["_source", objNull, [objNull]]];
 if (!hasInterface || {isNull _source}) exitWith {[]};

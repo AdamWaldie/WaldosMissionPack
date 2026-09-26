@@ -3,12 +3,16 @@
  * Applies configured understood and speaking Babel languages to the local player. UID/variable-name
  * overrides support partial multilingual characters. Knowledge persists across side changes unless
  * changeOnSideChange is enabled, and is reapplied after local player-object replacement.
+ * Locality and authority: Interface-client only; applies ACRE Babel state to the current player.
+ * Repeat/JIP: Reapplies after player replacement and updates the same local diary record rather
+ * than creating duplicates for a joining player.
  *
  * Arguments: None.
  * Return Value: BOOL - true when Babel was disabled or successfully applied.
  *
  * Example: [] call Waldo_fnc_ACRE2ApplyBabel;
  * Current callers: Waldo_fnc_ACRE2Init, Waldo_fnc_BabelActivation and player unit handler.
+ * Result: The local player's understood and spoken languages match mission configuration.
  */
 if (!hasInterface || {isNull player} || {!(isClass (configFile >> 'CfgPatches' >> 'acre_main'))}) exitWith {false};
 private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', createHashMap];

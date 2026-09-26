@@ -25,7 +25,42 @@ record is rebuilt from authoritative plan and live read-back. Join, group change
 replacement all replace the previous record instead of duplicating it. Group changes update this
 reference only and never retune radios.
 
-Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation.
+## Set up the CEOI
+
+Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`;
+`Waldo_fnc_ACRE2Init` handles generation. The shipped file contains a WEST example and empty
+EAST, GUER and CIV group lists. Copy a group row within the correct side, then replace its
+Eden group ID and radio assignments. Give each long-range net a stable key and use that key
+in the group's assignments.
+
+There is no CEOI object, map marker or per-player classname to register. The input is the radio plan in `acreConfig.sqf`: side, matching group name, PRC-343 block and channel, and any named long-range nets. Start with [Squad-level radio setup](ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup) for the short-range row shape and [Long-range presetting](ACRE-2-Long-Range-Radio-Presetting) for named nets. The CEOI displays that plan before briefing ends, then adds live read-back after ACRE starts. It does not tune a radio when a player opens the diary.
+
+## Configuration reference
+
+The `sides` setting is an array of side rows. The CEOI reads these rows; it has no separate
+settings or script parameters. Leave the official ACRE preset for each side in place unless
+you are changing the radio plan itself.
+
+| Part of the `sides` setting | Type | What to supply |
+| --- | --- | --- |
+| Side row | Array | `[side ID, ACRE preset, named nets, groups]`. The shipped IDs are `WEST`, `EAST`, `GUER` and `CIV`. |
+| Side ID | String | The Arma side whose players receive these assignments. |
+| ACRE preset | String | The side's official preset, such as WEST's `default3`. |
+| Named nets | Array of net rows | Use `[]` if this side has no named nets. A net row is `[key, label, family, value]`. |
+| Net key and label | String, String | A stable key such as `PLT1`, then the name players see, such as `PLATOON 1`. |
+| Net family and value | String, Number | For example, `PRC_LR` with channel `2`; the compatible family determines whether the number is a channel or frequency. |
+| Groups | Array of group rows | Use `[]` if no groups on this side have assignments. A row is `[Eden group ID, assignments]`. |
+| Eden group ID | String | The group name as set in Eden. The CEOI prints this spelling, although matching ignores common separators and case. |
+| Assignments | Array of assignment rows | Each row is `[radio class, occurrence, target, ear]`. |
+| Radio class | String | The carried radio's base class, such as `ACRE_PRC343` or `ACRE_PRC152`. |
+| Occurrence | String or Number | `"ALL"` for every radio of this class, or `1`, `2`, and so on for individually configured copies. Do not mix both forms for one class. |
+| Target | Array, String or Number | PRC-343 uses `[block, channel]` or `[]` for callsign inference. Compatible long-range radios can use a named net key or a supported direct value. |
+| Ear | String | `LEFT`, `RIGHT`, `BOTH` or `CENTER`. |
+
+The `sides` setting is present by default, but only the shipped WEST example has populated
+groups. The CEOI is read-only: it returns no value to a mission-maker script and does not
+change a radio when opened. The normal call path is WMP's automatic pre-briefing and
+player-local ACRE setup, including join and player replacement.
 
 ## If a radio line is missing
 

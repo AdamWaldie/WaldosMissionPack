@@ -1,15 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Attach building actions.
+ * Publish the inspect, manage, upgrade and claim actions for a built structure.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only. Action descriptors are published so clients,
+ * including JIP clients, can install their own object interactions.
+ * Repeat/JIP: The publication keys let the shared action installer replace its
+ * local version; do not call this for an invalid or unregistered building.
+ * Current Callers: EcoBuild_spawnConfiguredBuilding.
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
  * 1: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * Nothing; exits without publishing when authority, object or entry is invalid.
+ * Result: Valid buildings receive the five official action descriptors.
  *
  * Example:
  * [_building, _entry] call Waldo_fnc_EcoBuild_attachBuildingActions;

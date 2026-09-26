@@ -1,14 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize build entry.
+ * Validate and fill defaults for one build-definition record.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Pure helper; the catalog setter runs it before authority publishes
+ * and editor prompts use it to preview a definition.
+ * Repeat/JIP: Deterministic and safe on a received record; no side effects.
+ * Current Callers: EcoBuild_collectBuildFormData, EcoBuild_normalizeBuildCatalog,
+ * EcoBuild_importBuildConfiguration and EcoCore_importUnifiedBuildingsAdditive.
  *
  * Arguments:
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - normalized definition, or [] when its name is blank.
+ * Result: Costs, limits, availability, effects and classes get canonical
+ * values; the runtime built flag is reset rather than imported.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_normalizeBuildEntry;

@@ -1,15 +1,22 @@
 /*
- * Fits structured text into its existing control rectangle.
+ * Author: WaldoTheWarfighter
+ * Purpose: Fits structured text into its existing control rectangle.
  *
  * The template must contain one %1 placeholder for the selected text size. Build any other
  * dynamic values into the template before calling this helper. The helper returns the size
  * used and records it on the control for runtime inspection.
  *
  * Arguments:
- * 0: control
- * 1: structured-text template
- * 2: preferred size (default 1)
- * 3: minimum size (default 0.62)
+ * Locality/Authority: Interface client only; changes one local control.
+ * Repeat/JIP Behaviour: Repeat calls recompute the font size; no display is replayed to JIP clients.
+ * Arguments: 0: control <CONTROL>, default controlNull; 1: structured-text template <STRING>
+ * with a %1 size placeholder, default "<t size='%1'></t>"; 2: preferred size <NUMBER>, default 1;
+ * 3: minimum size <NUMBER>, default 0.62.
+ * Return Value: Selected size <NUMBER>, or the minimum for controlNull.
+ * Current Callers: MiniGameChallengeUI and field-equipment challenge openers.
+ * Example: [_label, "<t size='%1'>READY</t>", 1, 0.62]
+ *          call Waldo_fnc_MiniGameEquipmentFitStructuredText;
+ * Result: Text fits the existing control height without changing its rectangle.
  */
 disableSerialization;
 params [

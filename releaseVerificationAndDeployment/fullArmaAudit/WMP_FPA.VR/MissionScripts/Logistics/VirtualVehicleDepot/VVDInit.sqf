@@ -1,12 +1,32 @@
 /*
  * Author: WaldoTheWarfighter
- * Installs the Virtual Vehicle Depot on an object. Setup is repeat-safe. ACE is the sole
- * interaction surface when loaded; the linked vanilla addAction route remains available by
- * default and calls the same authoritative handlers. The
- * selection UI remains local to its operator. Spawned vehicles are network objects, and
- * deletion is routed to their owning machine.
+ * Installs a Virtual Vehicle Depot terminal linked to a separate spawn-point object.
+ * Locality and authority: the server publishes the terminal/pad state and object-keyed client/JIP
+ * setup. Each interface installs ACE actions locally after ACE is ready, or vanilla actions when
+ * ACE is absent. The garage UI runs for its operator. Server request handlers check actor/range,
+ * pad occupancy and the open lock; spawned-vehicle deletion runs on the vehicle owner.
+ * Repeat/JIP: server publication and local action installation are guarded against duplicates.
+ * Calling again does not replace already installed local action arguments; set up once per terminal.
+ * Current callers: mission-maker Eden init fields and the Virtual Vehicle Depot composition.
  *
- * [terminal, spawnPad, ["All"], ["ALL"], false, false, false, 10, ""] call Waldo_fnc_VVDInit;
+ * Arguments:
+ * 0: terminal <OBJECT> - object players interact with (default: objNull; invalid)
+ * 1: spawnPad <OBJECT> - object marking the vehicle spawn point (default: objNull; invalid)
+ * 2: types <ARRAY<STRING>> - vehicle categories (default: ["Auto"])
+ * 3: allowedSides <ARRAY<STRING>> - terminal access labels (default: ["ALL"])
+ * 4: enforcePlayerSide <BOOL> - check terminal user's group side (default: false)
+ * 5: limitToSideVehicles <BOOL> - garage list side filter (default: false)
+ * 6: removeUAVs <BOOL> - garage UAV filter (default: false)
+ * 7: range <NUMBER> - terminal use distance in metres (default: 10; server minimum: 1)
+ * 8: script <STRING> - SQF code run after spawning with _veh in scope (default: "")
+ *
+ * Return Value:
+ * BOOL - false for a null terminal or pad; true after valid setup or repeat guard.
+ *
+ * Example:
+ * // In a terminal's Eden init field, with a placed object named depotPad:
+ * [this, depotPad] call Waldo_fnc_VVDInit;
+ * Result: clients receive the terminal's garage and clear-area interactions.
  */
 
 disableSerialization;

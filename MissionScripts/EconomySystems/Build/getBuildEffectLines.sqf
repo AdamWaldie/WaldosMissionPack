@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get build effect lines.
+ * Describes a build entry's active bonuses for the player-facing detail panel.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY of STRING> effect descriptions.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getBuildEffectLines;
+ * Locality/Authority: Interface client; formats catalog data without mutation.
+ * Repeat/JIP Behaviour: Stateless formatting of current entry; no JIP effect.
+ * Current Callers: No in-pack caller; available to mission scripts presenting build effects.
+ * Result: Returns "No active effects" when the entry grants no listed bonus.
  */
 
         params [["_entry", []]];

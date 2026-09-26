@@ -19,6 +19,9 @@
  * Return Value: Nothing.
  * Example: [_modulePos] call Waldo_fnc_DynamicAAZen;
  * Current caller: Dynamic AA - Create in Zen_initModules.sqf.
+ * Locality and authority: Opens the creation dialog on the curator's interface client.
+ * Submission is validated on the server; a dialog is not replayed for JIP clients.
+ * Result: The curator can configure radar, weapons and detection settings for a new AA system.
  */
 
 params [["_modulePos", [], [[]]]];

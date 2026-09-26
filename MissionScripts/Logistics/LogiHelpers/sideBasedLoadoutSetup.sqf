@@ -13,6 +13,11 @@
  *
  * Example:
  * [] call Waldo_fnc_SideBaseLoadoutSetup;
+ * Locality and authority: Called once by initServer.sqf; the server publishes side pools
+ * and a completion flag. Running it again rescans and republishes, while JIP receives the
+ * latest public arrays and completion state.
+ * Current caller: initServer.sqf mission-loadout setup.
+ * Result: All four side-specific equipment pools are ready for crates and respawn helpers.
  */
 
 // [ SQM side string, global variable suffix ]

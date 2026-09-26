@@ -41,6 +41,10 @@
  * Current callers: mission-maker vehicle init fields, scripts, Waldo_fnc_VehicleComponentRemove, and
  * the ZEN "Vehicle Appearance - Set Texture" / "Vehicle Appearance - Remove/Restore Component"
  * modules (via their respective curator-authenticated server bridges).
+ * Locality and authority: Client calls forward to the server, which validates rows and applies
+ * the global texture/selection changes. Repeating a row reapplies that appearance; JIP sees the
+ * resulting vehicle state rather than replaying the request.
+ * Result: Accepted rows change the target vehicle's textures or hidden selections.
  */
 
 params [["_vehicle", objNull, [objNull]], ["_rows", [], [[]]]];

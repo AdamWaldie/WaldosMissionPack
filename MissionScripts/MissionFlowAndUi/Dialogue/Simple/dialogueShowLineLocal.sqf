@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: a token ensures an older line cannot hide a newer one.
  * Arguments: speaker name STRING, text STRING, duration NUMBER, token STRING. Return Value: BOOL.
  * Current callers: simple and advanced server workers. Example: server remote execution to nearby players.
+ * Result: The receiving player sees and later clears the current subtitle line.
  */
 params [["_speakerName", "", [""]], ["_text", "", [""]], ["_duration", 1.5, [0]], ["_token", "", [""]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

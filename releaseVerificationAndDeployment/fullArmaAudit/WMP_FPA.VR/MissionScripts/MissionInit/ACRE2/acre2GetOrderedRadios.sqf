@@ -6,6 +6,10 @@
  * to define the first and second radio of one type, so WMP must not independently sort unique IDs.
  * ACRE creates new unique IDs after a filtered loadout restore; same-type occurrence is therefore the
  * persistent identity, not the transient ID.
+ * Locality and authority: Interface-client only; reads the current player's ACRE radio list and
+ * inventory without changing either.
+ * Repeat/JIP: Stateless read on each call; a joining player receives a fresh list after ACRE
+ * creates their own unique radio IDs.
  *
  * Arguments: None. The ACRE carried-radio API is local-player scoped.
  *
@@ -13,6 +17,7 @@
  *
  * Example: private _radios = [] call Waldo_fnc_ACRE2GetOrderedRadios;
  * Current callers: plan application and radio-state capture/restoration.
+ * Result: Carried unique radio IDs appear once in ACRE's canonical order, excluding racks.
  */
 if (!hasInterface || {isNull player} || {!(isClass (configFile >> "CfgPatches" >> "acre_main"))}) exitWith {[]};
 private _inventory = [];

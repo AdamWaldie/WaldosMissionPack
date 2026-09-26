@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * This module allows players to add/remove to/from the fortify budget of a given side, so long as fortify is active and setup for that side.
+ * Locality and authority: Curator interface chooses amount and side; the server validates and
+ * applies the budget change through Waldo_fnc_ZenFortifyBudgetServer.
+ * Repeat/JIP: Every submitted change is a separate budget adjustment. The dialog has no local
+ * handler or JIP replay of its own.
  *
  * Arguments:
  * 0: modulePos <POSITION>
@@ -8,6 +12,9 @@
  *
  * Example:
  * [] call Waldo_fnc_FortifyBudgetModule;
+ * Return Value: Nothing useful; the dialog submits asynchronously.
+ * Current caller: ZEN Fortify Budget Manager module registration.
+ * Result: The chosen side's active ACE Fortify budget increases or decreases after validation.
  *
  * Public: No
  */

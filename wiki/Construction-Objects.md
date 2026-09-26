@@ -5,27 +5,29 @@
 _Associated Files: `MissionScripts\Logistics\Construction\ConstructionObjects.sqf`, `Waldo_fnc_ConstructionObjects`_
 
 
-Fakes the **construction of defences, objects or scenery** from a single interaction object via an ACE timed action. Pre-place the objects you want "built" (hidden at mission start); when a player runs the build action on the interaction object, those objects appear with a construction sound and progress bar. It's a lightweight way to let players raise a sandbag wall, a checkpoint, an FOB, or any prop set on demand — without the full Eden/ACE base-building flow.
+Construction Objects gives one Eden object ACE actions to reveal or hide a set of synchronized props. Players see a progress bar and hear the selected construction sound. Put the props where they should appear before the mission starts.
 
-The interaction object can be **carried in ACE cargo** and keeps its build ability after being moved, so you can haul a "build kit" crate to where you need it.
+The script attaches the synchronized props and their Game Logic to the interaction object. They keep their authored offset if that object moves. ACE cargo eligibility is a separate setting on the interaction object. This function does not make it loadable.
 
 ## Requirements
 
-* **ACE3** — the action uses the ACE interaction menu and progress bar. The function silently exits if ACE is not loaded.
+* **ACE3** supplies the interaction menu and progress bar. The function exits without installing actions if ACE is absent.
 
 ## Parameters
 
 | # | Parameter | Type | Default | Purpose |
 |---|---|---|---|---|
-| 0 | Target | Object | — | The object players interact with to build the synced objects. |
-| 1 | Modern audio | Bool | `false` | `true` = modern construction sounds; `false` = older "wooden" construction sounds. |
+| 0 | Target | Object | Required | Existing object that players interact with. |
+| 1 | Modern audio | Boolean | `false` | `true` selects modern construction audio. `false` selects the older wooden sound. |
+
+`Waldo_fnc_ConstructionObjects` has no documented return value. Eden Init runs on the server and each interface client. The server prepares the hidden objects and public status; each client installs its local ACE actions. The function has no duplicate-action guard, so do not call it repeatedly on the same object. Eden Init covers joining players. Runtime-created interaction objects need their setup sent to joining clients.
 
 ## Setup in Eden
 
 1. Place the **interaction object** (e.g. an ammo box) and give it a variable name.
-2. Place a **Game Logic** as close as possible to it (near the Modules menu).
+2. Place a **Game Logic** near it (near the Modules menu). This script chooses the nearest Logic, so keep unrelated Logics farther away.
 3. Place every object you want to appear when built, positioned where it should end up.
-4. If a built object should rest on the ground, raise it ~1 ft to allow for any suspension/physics settling once the mission loads.
+4. Position the props for the interaction object's expected location. If it is a vehicle, leave room for suspension movement and check the placement in play.
 5. Select all the buildable objects, right-click → **Synchronise** them to the Game Logic.
 6. In the interaction object's **init field**, call the function:
 
@@ -33,7 +35,7 @@ The interaction object can be **carried in ACE cargo** and keeps its build abili
 [this, true] call Waldo_fnc_ConstructionObjects;   // modern construction audio
 ```
 
-The synced objects start hidden and are revealed (with sound + progress bar) when a player completes the build action.
+The synchronized objects start hidden. The **Perform Construction Work** action reveals them after a ten-second progress bar. **Tear Down Construction** hides them again with the same progress duration.
 
 ## Examples
 
@@ -42,16 +44,16 @@ The synced objects start hidden and are revealed (with sound + progress bar) whe
 [this, true] call Waldo_fnc_ConstructionObjects;  // modern construction audio
 ```
 
-The ammo box is the object players interact with; the Game Logic holds the synchronised build objects.
+The ammo box is the object players interact with. The Game Logic holds the synchronized build objects. To make the box ACE-loadable, set its handling through [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling).
 
 ## If nothing appears after building
 
-Check ACE, the interaction object's Init call and the Game Logic synchronisations. The objects to reveal must already exist in Eden and be synchronised to that logic. Moving only the interaction box does not change where the pre-placed finished objects will appear.
+Check that ACE is loaded and the interaction object's Init call runs. Make sure the intended Game Logic is nearest and the build objects are synchronized to it. The script attaches those objects to the interaction object, so moving the latter moves their eventual build position too.
 
 ## See also
 
-* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) — deploy/tear-down command post using the same synced-Logic pattern
-* [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup) — full ACE Fortify base-building
+* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System): deploy and tear down a command post using a synchronized Logic
+* [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup): add objects to an ACE Fortify build catalogue
 * [Simple Mass Attach Items](Simple-Mass-Attach-Items)
 
 <!-- WMP-WIKI-NAV -->

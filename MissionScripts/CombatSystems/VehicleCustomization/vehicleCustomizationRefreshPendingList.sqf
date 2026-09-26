@@ -16,6 +16,9 @@
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (every Add button, Remove Selected, Clear All Pending, Apply All Pending, and the Copy From Nearby
  * Vehicle overlay's pick handler).
+ * Locality and authority: Redraws only the curator's local editor list. Repeated redraws
+ * replace its visible rows; there is no server or JIP state.
+ * Result: The list reflects the current pending-row array.
  */
 
 params [["_disp", displayNull]];

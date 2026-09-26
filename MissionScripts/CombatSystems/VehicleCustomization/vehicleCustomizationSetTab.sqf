@@ -21,6 +21,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (the 4 tab buttons' ButtonClick handlers, and the initial dialog setup).
+ * Locality and authority: Changes only the curator's open editor display. Repeating a tab
+ * selection is safe and does not create server or JIP state.
+ * Result: The selected tab's controls are visible while pending changes remain in view.
  */
 
 params [["_disp", displayNull], ["_tab", "turret"]];

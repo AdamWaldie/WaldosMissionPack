@@ -1,21 +1,15 @@
 /*
-Author: WaldoTheWarfighter
-This function assigns members of the team automatically to teams before mission start based on their role description.
-
-For best outcome the role description format of [Team] [Role Name]@[Callsign] Should be followed.
-
-E.g. Alpha Rifleman, Blue Rifleman, ASL, SL@Viking-1
-
-Arguments:
-N/A
-
-Returns:
-Nothing
-
-Example:
-call Waldo_fnc_SetTeamColour;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Assigns the local player an ACE team colour from their Eden role description or unit display name.
+ * A useful role format is `[team] [role]@[callsign]`, such as `Alpha Rifleman@Viking-1`.
+ * Locality/authority: client-local ACE team assignment; no server-owned group or registry change.
+ * Repeat/JIP: joining players run this from init.sqf; a repeat call re-evaluates the current role.
+ * Arguments: none. The function reads the local player.
+ * Return Value: No useful value.
+ * Current caller: init.sqf; mission makers may call it again after changing a player's role.
+ * Example: call Waldo_fnc_SetTeamColour;
+ * Result: a player whose role begins `Alpha` receives the red ACE team colour.
+ */
 
 // Use role description, and if no description, use class display name
 private _roleDesc = if !(roleDescription player == "") then {

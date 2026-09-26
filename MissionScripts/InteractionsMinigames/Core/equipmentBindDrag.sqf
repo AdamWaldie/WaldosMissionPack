@@ -1,6 +1,17 @@
 /*
- * Registers pointer-captured dragging for an equipment control.
- * Callback signature: [display, control, localGridPosition, phase] where phase is START/MOVE/END/CANCEL.
+ * Author: WaldoTheWarfighter
+ * Purpose: Binds pointer-captured dragging to an equipment control. Callback arguments are
+ * [display, control, localGridPosition, phase], with START/MOVE/END/CANCEL phases.
+ * Locality/Authority: Interface client only; operates on a local display and control.
+ * Repeat/JIP Behaviour: Bind once per control. The display cleanup cancels active drags;
+ * no open drag is replayed to a joining player.
+ * Arguments: 0: display <DISPLAY>, default displayNull; 1: control <CONTROL>, default controlNull;
+ * 2: phase callback <CODE>, default {}.
+ * Return Value: <BOOL> true if bound, false if either UI handle is null.
+ * Current Callers: Field-equipment challenge openers with draggable controls.
+ * Example: [_display, _slider, {params ["_display", "_control", "_grid", "_phase"]}]
+ *          call Waldo_fnc_MiniGameEquipmentBindDrag;
+ * Result: Left-button dragging invokes the callback in local 40 x 25 grid coordinates.
  */
 disableSerialization;
 params [

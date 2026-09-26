@@ -8,6 +8,7 @@
  * Arguments: editor DISPLAY, operation STRING. Return Value: BOOL.
  * Current caller: Conversation Author buttons.
  * Example: [_display,"NODE_ADD"] call Waldo_fnc_ConversationAuthorMutateLocal;
+ * Result: The selected draft changes and the editor refreshes without spamming notifications.
  */
 params [["_display", displayNull, [displayNull]], ["_operation", "", [""]]];
 if (isNull _display) exitWith {false};

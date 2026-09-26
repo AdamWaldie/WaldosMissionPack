@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1222,
+  "registeredFunctionCount": 1229,
   "runtimeFunctionCount": 383,
-  "functionCount": 1605,
+  "functionCount": 1612,
   "stations": [
     {
       "id": "control",
@@ -571,6 +571,12 @@
     {
       "name": "Waldo_fnc_JipRemoveBoundServer",
       "file": "MissionScripts/Networking/jipRemoveBoundServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ClientInitPhaseEnd",
+      "file": "MissionScripts/Networking/clientInitPhaseEnd.sqf",
       "station": "control",
       "activation": "manual"
     },
@@ -2555,6 +2561,30 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_VehicleServicesConfigure",
+      "file": "MissionScripts/Logistics/VehicleServices/vehicleServicesConfigure.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleServicesApplyServer",
+      "file": "MissionScripts/Logistics/VehicleServices/vehicleServicesApplyServer.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenVehicleServicesModule",
+      "file": "MissionScripts/ZenModules/zenVehicleServicesModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenVehicleServicesServer",
+      "file": "MissionScripts/ZenModules/zenVehicleServicesServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_LogisticsSpawner",
       "file": "MissionScripts/Logistics/Crates/LogiBoxes.sqf",
       "station": "loadouts",
@@ -2761,6 +2791,12 @@
     {
       "name": "Waldo_fnc_PhysicalCargoRegister",
       "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRegister.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoIsEligible",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoIsEligible.sqf",
       "station": "physical-cargo",
       "activation": "manual"
     },
@@ -3536,6 +3572,12 @@
       "name": "Waldo_fnc_CargoAttributesPrepareObject",
       "file": "MissionScripts/MissionInit/VehicleActionsSetup/cargoAttributesPrepareObject.sqf",
       "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_LogisticsApplyAceHandling",
+      "file": "MissionScripts/Logistics/Crates/logisticsApplyAceHandling.sqf",
+      "station": "loadouts",
       "activation": "manual"
     },
     {

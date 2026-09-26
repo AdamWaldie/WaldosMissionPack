@@ -1,17 +1,16 @@
 /*
-Author: WaldoTheWarfighter
-This function fetches your player role using the role description, failing that it retrieves a generic role from the config.
-
-Arguments:
-N/A
-
-Returns:
-Role Name [String Type]
-
-Example:
-call Waldo_fnc_SetTeamColour;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Returns the local player's Eden role description before `@`, falling back to the unit class
+ * display name. Singleplayer returns "Infantry".
+ * Locality/authority: player interface only; this reads local player state and changes nothing.
+ * Repeat/JIP: repeat-safe, with no persistent state or event handler. A joining player reads their
+ * own current role when the function runs.
+ * Arguments: none. The function always reads local `player`.
+ * Return Value: STRING - readable role name.
+ * Current callers: mission-maker scripts and role-aware WMP setup.
+ * Example: private _role = call Waldo_fnc_GetPlayerRole;
+ * Result: _role contains the text before `@` in the local player's role description.
+ */
 private _return = "Infantry";
 
 if !(isMultiplayer) exitWith { _return };

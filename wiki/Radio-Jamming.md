@@ -99,13 +99,13 @@ The operator sees a persistent **UAV LINK DEGRADED** panel with signal-loss guid
 
 ## Mission-wide jamming settings
 
-These let you tune how realistic/gamey the jamming feels. All are on by default.
+These settings control how the jammer field behaves. The defaults are shown below.
 
 | Flag | Default | Effect |
 |---|---|---|
 | `Waldo_Jamming_LOS` | `true` | **Terrain line-of-sight.** A hill or ridge between the jammer and a radio blocks the field. High ground extends practical coverage. |
 | `Waldo_Jamming_BurnThrough` | `true` | **Power burn-through.** Higher-power radios, such as a PRC-117F, resist jamming and reduce the effective radius. |
-| `Waldo_Jamming_BurnThroughRef` | `500` | Reference distance in metres for the burn-through calculation. |
+| `Waldo_Jamming_BurnThroughRef` | `500` | Reference transmit power in mW. A radio above this power shrinks the jammer's effective radius and falloff. |
 | `Waldo_Jamming_Curve` | `"LINEAR"` | Falloff shape at the edge: `"LINEAR"` or `"INVSQ"` for a sharper inverse-square response near the centre. |
 | `Waldo_Jamming_Destructible` | `true` | Destroying the emitter automatically removes its jammer entry and restores affected links. |
 | `Waldo_Jamming_GmOverlay` | `false` | Opt-in curator-only floating marker (and facing line for cones) over every jammer. Ordinary players never see it. |
@@ -141,6 +141,15 @@ Activation uses the same server-authoritative call as the Zeus/script control. I
 [myTower]        call Waldo_fnc_JammerRemove;    // remove the jammer, keep the object
 [myTower, true]  call Waldo_fnc_JammerRemove;    // remove the jammer AND delete the object
 ```
+
+A removed jammer stays removed for players who join later. A kept emitter object loses its jammer
+actions for everyone, and a jammer placed from an Eden Init field is not re-registered when a
+player joins: the server already ran that Init line, so joining clients do not forward it again.
+Jammer interactions use their own named JIP entry, bound to the emitter lifetime. Removing a
+jammer leaves other WMP features on the same object intact. A delayed Zeus setup checks that the
+emitter is still registered before replaying its interactions.
+The same Init replay protection applies to trackers, objectives, notification triggers and 3D markers set up from Init
+fields.
 
 A destructible jammer can drive an EW objective without a separate trigger:
 

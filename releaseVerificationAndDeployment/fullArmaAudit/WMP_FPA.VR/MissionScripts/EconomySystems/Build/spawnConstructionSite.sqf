@@ -1,8 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Spawn construction site.
+ * Create the temporary props and workers for a new construction site.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; created objects are made curator-editable.
+ * Repeat/JIP: Each call creates a new site, so call once per accepted job;
+ * networked objects are visible to later clients without rerunning this helper.
+ * Current Callers: EcoBuild_startPlacedConstruction and
+ * EcoBuild_startVehicleConstruction.
  *
  * Arguments:
  * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
@@ -11,7 +15,8 @@
  * 3: _buildName <STRING> - build name (optional, default: "Build Site")
  *
  * Return Value:
- * Nothing
+ * ARRAY of OBJECT - site objects, or [] without authority.
+ * Result: Returns every object that job completion/cancellation must remove.
  *
  * Example:
  * [_pos, _dir, _sideKey, _buildName] call Waldo_fnc_EcoBuild_spawnConstructionSite;

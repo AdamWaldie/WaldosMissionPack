@@ -11,6 +11,9 @@
  * Return Value: BOOL - true when actions are already installed or installation succeeds.
  * Current callers: initPlayerLocal.sqf and accessibilitySelfInteractionInit.sqf.
  * Example: [] call Waldo_fnc_SetupUiCleanupAction;
+ * Locality and authority: Installs WMP UI cleanup actions on the player's interface client.
+ * Repeated setup reuses installed actions; respawn/JIP clients install their own local menu.
+ * Result: The player can clear stuck WMP panels through a local self-interaction.
  */
 if (!hasInterface || {isNull player}) exitWith {false};
 if (player getVariable ["Waldo_UI_CleanupActionInstalled", false]) exitWith {true};

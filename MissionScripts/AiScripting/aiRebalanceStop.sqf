@@ -13,6 +13,8 @@
  *
  * Example:
  * [] call Waldo_fnc_AIRebalanceStop;
+ * Result: Stops future application, restores captured values where requested by the server,
+ * and clears the previous baseline for a later explicit restart.
  *
  * Current callers: AI ZEN runtime control and the audit AI reset station.
  */

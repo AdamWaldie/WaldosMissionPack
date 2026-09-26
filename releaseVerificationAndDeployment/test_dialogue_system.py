@@ -376,7 +376,7 @@ class DialogueSystemTests(unittest.TestCase):
 
     def test_documentation_starts_with_eden_examples(self):
         guide = (ROOT / "wiki" / "Dialogue-And-Conversations.md").read_text(encoding="utf-8")
-        self.assertLess(guide.index('[this, "CIVILIAN"]'), guide.index("## Advanced Conversations"))
+        self.assertLess(guide.index('[this, "CIVILIAN"]'), guide.index("## Script calls: advanced conversations"))
         self.assertIn("Do not add anything to `init.sqf` or", guide)
         self.assertIn('[this, "MODERN_CIVILIAN"]', guide)
         self.assertIn("loads that example pack on demand", guide)

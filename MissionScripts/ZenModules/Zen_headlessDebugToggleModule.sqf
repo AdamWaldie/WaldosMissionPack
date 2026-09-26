@@ -4,6 +4,10 @@
  * (Waldo_Headless_Debug) on/off. No dialog - acts immediately, same pattern as
  * Waldo_fnc_ZenJammerToggle. The curator-authenticated bridge forwards to the server-authoritative
  * Waldo_fnc_HeadlessDebugToggle.
+ * Locality and authority: Runs on the curator interface and asks the server to change the
+ * mission-wide headless debug setting.
+ * Repeat/JIP: Each placement requests another flip; the authoritative setting is published to
+ * joining machines by the headless service.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module (unused).
@@ -11,6 +15,9 @@
  *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessDebugToggle;
+ * Return Value: Nothing useful; the server request is asynchronous.
+ * Current caller: ZEN Headless Client Toggle Debug module registration.
+ * Result: Headless diagnostic output switches between enabled and disabled on server acceptance.
  *
  * Public: No
  */

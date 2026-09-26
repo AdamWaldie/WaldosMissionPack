@@ -5,6 +5,9 @@
  * into its own reusable function rather than staying inlined so side-switch respawn seeding and joint
  * radio nets can resolve the same side->preset mapping without duplicating this lookup a second and
  * third time.
+ * Locality and authority: Pure config lookup on the calling machine; it does not write ACRE
+ * presets or mutate the server's communications plan.
+ * Repeat/JIP: Stateless; every machine, including a joiner, can resolve the same config and side.
  *
  * Arguments:
  * 0: ACRE configuration <HASHMAP> (default current mission configuration)
@@ -17,6 +20,7 @@
  * [missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap], "WEST"] call Waldo_fnc_ACRE2ResolveSidePresetMap;
  *
  * Current callers: acre2PreInit.sqf, respawnSeedSideBaseLoadout.sqf, acre2ApplyJointNets.sqf.
+ * Result: Each known radio base class maps to the side's correct ACRE preset name.
  */
 params [["_config", missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap], [createHashMap]], ["_sideKey", "CIV", [""]]];
 private _sideAliases = switch (toUpper _sideKey) do {

@@ -1,6 +1,18 @@
 /*
- * Acquires the server-owned VVD UI lock and opens the local garage only for the
- * accepted actor. This prevents two clients from opening the same depot at once.
+ * Author: WaldoTheWarfighter
+ * Acquires the depot's single-user GUI lock and opens the garage for the accepted actor.
+ * Locality and authority: Client calls forward to the server. The server checks actor owner,
+ * range, pad clearance and current lock before issuing a token to that actor's client.
+ * Repeat/JIP: A busy lock rejects another request; a bounded timeout releases abandoned
+ * locks. JIP reads current lock state and never receives an old open request.
+ * Arguments: 0: depot terminal <OBJECT>; 1: spawn point <OBJECT>;
+ *   2: allowed vehicle types <ARRAY> ([]); 3: side limit <BOOL> (false);
+ *   4: remove UAV crew <BOOL> (false); 5: requesting player <OBJECT>.
+ * Return Value: No supported synchronous result; acceptance opens VVDOpen on the actor's client.
+ * Current callers: Waldo_fnc_VVDInit actions and direct Waldo_fnc_VVDOpen requests.
+ * Example: [depotTerminal, depotPad, ["Car"], true, false, player]
+ *   remoteExecCall ["Waldo_fnc_VVDRequestOpenServer", 2];
+ * Result: An eligible player receives the vehicle picker while the depot is locked to them.
  */
 params [
     ["_terminal", objNull, [objNull]],

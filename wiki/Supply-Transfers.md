@@ -98,15 +98,15 @@ backpack contents. If the server rejects a transfer, both inventories should sta
 
 ## Settings and script call
 
-`[container] call Waldo_fnc_SupplyTransfersRegister;` takes one existing inventory box or cargo-capable vehicle. Use `this` in that object's Eden Init field, or its Eden variable name in `initServer.sqf`. WMP-issued crates call the same registration path automatically, except starter crates.
+`[container] call Waldo_fnc_SupplyTransfersRegister;` takes one required `OBJECT`: an existing inventory box or cargo-capable vehicle with storage capacity. It does not take a marker name, classname or position array. Use `this` in that object's Eden Init field, or its Eden variable name in `initServer.sqf`. The server returns `true` for accepted, repeat or queued registration, and `false` for disabled or unsuitable objects. Eden client copies return `false` without adding duplicate actions. WMP-issued crates call the same registration path automatically, except starter crates.
 
-| Setting in `MissionConfig/logisticsConfig.sqf` | Default | Result |
-|---|---:|---|
-| `Waldo_SupplyTransfers_Enable` | `false` | Enables registration and ACE logistics actions. |
-| `Waldo_SupplyTransfers_Range` | `20` m | Maximum source-to-destination separation; WMP accepts 2–50 m. |
-| `Waldo_SupplyTransfers_SourceTimeout` | `120` s | Clears a selected merge source; WMP accepts 15–600 s. |
-| `Waldo_SupplyTransfers_IgnoreCapacity` | `false` | Allows overloads only when WMP can still rebuild the exact inventory. |
-| `Waldo_SupplyTransfers_EmptyCrateCapacity` | `400` | Inventory capacity for a supported standard box that reports zero. |
+| Setting in `MissionConfig/logisticsConfig.sqf` | Type | Default | Result |
+|---|---|---:|---|
+| `Waldo_SupplyTransfers_Enable` | Boolean | `false` | Enables registration and ACE logistics actions. |
+| `Waldo_SupplyTransfers_Range` | Number, metres | `20` | Maximum source-to-destination separation; WMP accepts 2–50 m. |
+| `Waldo_SupplyTransfers_SourceTimeout` | Number, seconds | `120` | Clears a selected merge source; WMP accepts 15–600 s. |
+| `Waldo_SupplyTransfers_IgnoreCapacity` | Boolean | `false` | Allows overloads only when WMP can still rebuild the exact inventory. |
+| `Waldo_SupplyTransfers_EmptyCrateCapacity` | Number | `400` | Inventory capacity for a supported standard box that reports zero. |
 
 ## If transfer or merge fails
 

@@ -36,7 +36,8 @@
  *      shutdownDifficulty <easy|standard|hard|expert>.
  *
  * Return Value:
- * Boolean - true when creation was accepted; false when id, centre, classes or authority are invalid.
+ * Boolean - server true when accepted or queued, false for invalid id, centre, classes or authority.
+ * A duplicate non-server Eden call returns true without creating anything.
  *
  * Example:
  * private _config = createHashMapFromArray [

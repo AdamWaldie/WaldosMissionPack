@@ -19,6 +19,9 @@
  * [2, 3, 4] remoteExecCall ["Waldo_fnc_FieldResupplyNotifyGrantLocal", owner _unit];
  *
  * Current caller: Waldo_fnc_FieldResupplyGrantCrates after a server-authorized grant.
+ * Locality and authority: Runs only on the granted carrier's interface client. Notification
+ * feedback is transient and is not replayed for JIP.
+ * Result: The carrier sees the granted count after mission-introduction UI has finished.
  */
 
 params [

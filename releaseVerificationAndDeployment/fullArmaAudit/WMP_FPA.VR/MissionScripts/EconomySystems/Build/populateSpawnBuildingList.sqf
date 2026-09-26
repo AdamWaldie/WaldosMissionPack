@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Populate spawn building list.
+ * Lists valid build definitions in the curator building-spawn prompt.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - spawn prompt
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuild_populateSpawnBuildingList;
+ * Locality/Authority: Curator interface client; reads published catalog.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP UI state.
+ * Current Callers: Building-spawn prompt open and filter controls.
+ * Result: Invalid definitions are excluded from the selectable list.
  */
 
         params ["_disp"];

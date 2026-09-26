@@ -1,8 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
- * Start placed construction.
+ * Validate an aimed site and start a paid, timed construction job.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; the client placement UI does not itself
+ * authorize creation or payment.
+ * Repeat/JIP: Each accepted request creates one job and networked site;
+ * request processing must reject duplicates before calling this helper.
+ * Current Callers: EcoBuild_processStartConstructionRequest and the legacy
+ * EcoBuild_beginPlayerConstructionPlacement confirmation callback.
  *
  * Arguments:
  * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
@@ -13,6 +18,8 @@
  *
  * Return Value:
  * Nothing
+ * Result: On valid side, source, definition, limit and resource checks,
+ * charges costs, creates a site and records its timed job.
  *
  * Example:
  * [_pos, _dir, _caller, _buildName, _source] call Waldo_fnc_EcoBuild_startPlacedConstruction;

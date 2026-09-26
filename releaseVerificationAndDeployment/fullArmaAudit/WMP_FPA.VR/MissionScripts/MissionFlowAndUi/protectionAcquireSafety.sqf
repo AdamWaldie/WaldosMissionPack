@@ -3,6 +3,14 @@
  * Claims ACE weapon safety for one WMP protection source. Claims are reference
  * counted so SafeStart and ENDEX cannot release each other's safety state.
  * Only safety states added by WMP are later removed by WMP.
+ * Locality and authority: Runs on the player's interface client, where ACE safety state
+ * lives. A duplicate source claim returns without another lock; private safety claims are
+ * restored by the local protection lifecycle, not a server JIP broadcast.
+ * Arguments: 0: protection source ID <STRING> (required, for example "SAFESTART").
+ * Return Value: <BOOL> true when a claim exists or was added; false if unavailable.
+ * Current callers: SafeStart and ENDEX protection entry paths.
+ * Example: ["SAFESTART"] call Waldo_fnc_ProtectionAcquireSafety;
+ * Result: WMP claims ACE safety for the current weapon and remembers whether it owns it.
  */
 params [["_source", "", [""]]];
 

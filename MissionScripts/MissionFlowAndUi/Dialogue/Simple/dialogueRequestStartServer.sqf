@@ -6,6 +6,7 @@
  * notice. Every rejected request is counted by reason and written to the server RPT.
  * Arguments: 0 speaker <OBJECT>; 1 caller <OBJECT>. Return Value: BOOL.
  * Current caller: local ACE/vanilla dialogue actions. Example: [npc,player] remoteExecCall ["Waldo_fnc_DialogueRequestStartServer",2];
+ * Result: An eligible player begins a server-owned dialogue session with the speaker.
  */
 params [["_speaker", objNull, [objNull]], ["_caller", objNull, [objNull]]];
 private _reject = {

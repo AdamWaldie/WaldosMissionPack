@@ -7,6 +7,10 @@
  * inside FinalCommitDistance, premature engine completion of the landing waypoint cannot cancel
  * the flare, while deletion or editing of that waypoint always releases the aircraft immediately.
  * LastResult is broadcast on the helicopter for locality-safe diagnostics and QA.
+ * Locality and authority: Only the current helicopter owner may drive this AI approach.
+ * It checks its pilot, waypoint and ownership before and during control.
+ * Repeat/JIP: One control revision owns an approach. A changed waypoint, pilot or locality
+ * aborts that run; the published LastResult is readable by joining clients.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -18,6 +22,8 @@
  * Return Value: BOOL - true on touchdown, false after a validated abort.
  *
  * Example: [_helicopter, _position, "TR UNLOAD", _index, ""] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
+ * Result: Returns true after validated touchdown, or false after an ineligible or aborted
+ * approach, and updates the aircraft's published LastResult for diagnostics.
  * Current caller: ImprovedHelicopterLandingTrackLocal when a supported landing waypoint enters range.
  */
 

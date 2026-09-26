@@ -18,6 +18,10 @@ Place the explosive object in Eden and call this from its **Initialization** fie
 
 The object receives linked ACE and vanilla interactions. The server exclusively owns each attempt and applies the result. By default, success disarms the object and failure, timeout, confirmed abort, or abandonment detonates it.
 
+`Waldo_fnc_BombDefuseSetup` takes the object as argument 0 (`Object`, required) and named options as argument 1 (`Array` of `[key, value]` pairs or `HashMap`, default `[]`). The Eden init field runs on every machine so each client can install its local action. The server publishes the shared state. Repeat setup is handled by the underlying interaction system.
+
+The setup call returns `true` for a recognised procedure and `false` for an unknown procedure. A null object exits without a Boolean result, so check that the Eden `this` reference points to the device. The return value reports setup on the calling machine; it is not the player's eventual defusal result.
+
 ## Choose the procedure
 
 Set `challengeId` when bomb security is better represented by something other than wire isolation.
@@ -49,14 +53,16 @@ Example: use a breaker cabinet to isolate a generator-fed charge.
 
 ## Common options
 
-The wrapper accepts the shared options from `Waldo_fnc_MiniGameInteractionSetup` plus explosive-specific settings.
+The wrapper passes the options below to the shared interaction system. Use the exact key spelling shown here.
 
 | Option | Type | Default | Purpose |
 |---|---|---|---|
 | `challengeId` | String | `wirecut` | Built-in procedure used to disarm the device |
+| `procedure` | String | `wirecut` | Legacy alias used if `challengeId` is absent |
 | `difficulty` | String | `standard` | `easy`, `standard`, `hard`, or `expert` |
 | `config` | Array | Procedure default | Complete procedure-specific configuration override |
 | `actionTitle` | String | `Defuse Bomb` | ACE and vanilla interaction wording |
+| `title` | String | `Defuse Bomb` | Legacy action title; `actionTitle` takes priority when both are present |
 | `equipmentTitle` | String | Procedure faceplate | Optional equipment faceplate title |
 | `successVariable` | String | `Waldo_MG_BombDefused` | Preferred shared object variable set on success |
 | `defusedVariable` | String | Compatibility fallback | Legacy name used only when `successVariable` is absent |
@@ -70,6 +76,7 @@ The wrapper accepts the shared options from `Waldo_fnc_MiniGameInteractionSetup`
 | `condition` | Code | `{true}` | Additional server-rechecked availability condition |
 | `onSuccess` | Code | `{}` | Server callback after authoritative state is published |
 | `onFailure` | Code | `{}` | Server callback before the optional detonation is applied |
+| `icon` | String (texture path) | `\a3\ui_f\data\igui\cfg\actions\take_ca.paa` | ACE action icon |
 
 Presentation options such as `preset`, `manufacturer`, `model`, `objective`, `controls`, `skin`, and accessibility-safe texture settings pass through to the selected procedure.
 
@@ -85,7 +92,13 @@ Existing EOD calls remain valid:
 ]] call Waldo_fnc_BombDefuseSetup;
 ```
 
-`wireCount`, `timeLimit`, and `verificationLevel` apply only to the default `wirecut` procedure. For another procedure, use `difficulty` or its documented `config` array.
+| Wire-cut option | Type | Default | Meaning |
+|---|---|---|---|
+| `wireCount` | Number | `5` | Number of wires for the legacy configuration |
+| `timeLimit` | Number (seconds) | `20` | Time limit for the legacy configuration; `0` means no limit |
+| `verificationLevel` | Number | `-1` | Let the procedure derive its check level; an explicit level is used as supplied |
+
+These three keys apply to `wirecut`. Supplying any of them makes the wrapper use the legacy wire-cut configuration. For another procedure, use `difficulty` or its documented `config` array.
 
 ## Using the result
 
@@ -124,13 +137,19 @@ Use the result directly in an ACE condition:
 
 ## Resetting a training device
 
-The reset helper is server-only:
+The reset helper is server-only. Call it from `initServer.sqf` or another server-owned script:
 
 ```sqf
 [_bomb, true, false] call Waldo_fnc_MiniGameInteractionReset;
 ```
 
-Arguments are `[object, reenableAction, forceRunningReset]`. A normal reset refuses to interrupt a running attempt. A forced reset invalidates the current token before returning the object to `IDLE`.
+| # | Argument | Type | Default | Meaning |
+|---|---|---|---|---|
+| 0 | `object` | Object | `objNull` (invalid) | Existing device to reset |
+| 1 | `reenableAction` | Boolean | `true` | Make its interaction available again |
+| 2 | `forceRunningReset` | Boolean | `false` | Interrupt a running attempt |
+
+`Waldo_fnc_MiniGameInteractionReset` returns `true` after a reset. It returns `false` off-server, for a null object, or when an attempt is running and `forceRunningReset` is `false`. A forced reset invalidates the current token before returning the object to `IDLE`.
 
 For a detonating live device, the original object is deleted on failure. Create or rearm a replacement object instead of trying to reset the deleted reference.
 

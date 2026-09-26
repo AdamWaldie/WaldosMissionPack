@@ -3,6 +3,10 @@
  * Authenticates a ZEN curator request before invoking the normal server-authoritative notification
  * broadcast API. This protects the public ZEN path without changing mission-script uses of
  * Waldo_fnc_NotificationBroadcast.
+ * Locality and authority: Server-only; verifies the requesting remote owner's assigned curator
+ * before broadcasting through WMP's notification service.
+ * Repeat/JIP: Each accepted request sends one current notification. A past notification is not
+ * replayed to players who join later.
  *
  * Arguments:
  * 0: config <HASHMAP> - see Waldo_fnc_NotificationBroadcast.
@@ -13,6 +17,8 @@
  * Example:
  * [_config, player] remoteExecCall ["Waldo_fnc_ZenNotifyServer", 2];
  * Current caller: Waldo_fnc_ZenNotify.
+ * Result: The selected current audience receives the notification; the curator sees the reached
+ * player count.
  */
 params [["_config", createHashMap, [createHashMap]], ["_requester", objNull, [objNull]]];
 if (!isServer) exitWith {false};

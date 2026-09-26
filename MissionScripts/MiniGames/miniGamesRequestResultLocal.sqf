@@ -8,6 +8,7 @@
  * Return Value: Nothing.
  * Current callers: MiniGamesRequestServer and server rule processors through resultServer.
  * Example: ["JOIN_1", true, "Seat assigned.", 4] call Waldo_fnc_MiniGamesRequestResultLocal;
+ * Result: The requesting client receives the outcome and current revision for its action.
  */
 
 params [["_token", "", [""]], ["_accepted", false, [false]], ["_reason", "", [""]], ["_revision", -1, [0]]];

@@ -7,6 +7,8 @@
  * Return Value: BOOL - true after cleanup; false on non-interface machines.
  * Current caller: FeatureRuntimeApply disable path and manual mission cleanup.
  * Example: [] call Waldo_fnc_TreeFellingStop;
+ * Result: Removes WMP's local action and cache, restores the prior IMS handler, and returns true
+ * on an interface client.
  */
 
 if !(hasInterface) exitWith {false};

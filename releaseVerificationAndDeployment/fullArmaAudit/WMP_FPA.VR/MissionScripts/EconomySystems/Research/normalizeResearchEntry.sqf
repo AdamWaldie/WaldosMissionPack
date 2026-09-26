@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize research entry.
+ * Validates defaults and converts one technology definition to the catalog's nine-field row.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -8,10 +8,14 @@
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> normalized technology row.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoResearch_normalizeResearchEntry;
+ * Locality/Authority: Any machine; transforms supplied data without publishing it.
+ * Repeat/JIP Behaviour: Deterministic for the same row; no JIP state change.
+ * Current Callers: Research catalog normalization, import and curator form handling.
+ * Result: Returns the row with normalized name, costs, requirements, time and exclusives.
  */
 
         params [["_entry", []]];

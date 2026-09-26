@@ -1,7 +1,15 @@
 /*
- * Developer gallery for real in-engine field-equipment displays.
- * Arguments: [challengeId|"all", state, accessibilityOverrides]
+ * Author: WaldoTheWarfighter
+ * Purpose: Opens real field-equipment displays in a local developer gallery.
+ * Locality/Authority: Interface client only; gallery previews do not mutate world state.
+ * Repeat/JIP Behaviour: Every call opens a local preview or picker; no JIP state is published.
+ * Arguments: 0: challenge ID or "all" <STRING>, default "all"; 1: preview state <STRING>,
+ * default "BRIEFING"; 2: accessibility overrides <ARRAY or HASHMAP>, default [].
  * States: BRIEFING, ACTIVE, HOVER, SELECTED, DISABLED, WARNING, SUCCESS, FAILURE, TIMEOUT.
+ * Return Value: <BOOL> true when opened, false without an interface/known challenge.
+ * Current Callers: MiniGameEquipmentGallerySetup action and developer QA scripts.
+ * Example: ["wirecut", "WARNING", []] call Waldo_fnc_MiniGameEquipmentGallery;
+ * Result: A non-resolving preview of the chosen equipment face appears on this client.
  */
 if (!hasInterface) exitWith {false};
 params [["_challengeId", "all", [""]], ["_state", "BRIEFING", [""]], ["_accessibility", [], [[], createHashMap]]];

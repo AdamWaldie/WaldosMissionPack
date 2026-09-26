@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Promote ground command.
+ * Adds a valid identity key to the authoritative Ground Command list.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
@@ -12,6 +12,11 @@
  *
  * Example:
  * [_uid] call Waldo_fnc_EcoCommand_promoteGroundCommand;
+ * Locality/Authority: Economy authority machine only; the curator requests changes through
+ * the validated Economy server bridge rather than calling this on a client.
+ * Repeat/JIP Behaviour: Existing keys are not duplicated; the updated list is published for JIP.
+ * Current Callers: Ground Command curator request handling.
+ * Result: The selected player gains Ground Command membership when the key is valid.
  */
 
     params [["_uid", ""]];

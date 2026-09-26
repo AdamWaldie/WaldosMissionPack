@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get drop points for type.
+ * Filters published delivery points by purchase type and side access.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "ANY")
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> matching drop-point rows.
  *
  * Example:
  * [_typeName, _sideKey] call Waldo_fnc_EcoBuy_getDropPointsForType;
+ * Locality/Authority: Any machine; read-only registry filter.
+ * Repeat/JIP Behaviour: Repeat-safe read of the published registry.
+ * Current Callers: Purchase status and drop-point selection.
+ * Result: Includes side-neutral points and points matching the requested side.
  */
 
         params [["_typeName", "Ground"], ["_sideKey", "ANY"]];

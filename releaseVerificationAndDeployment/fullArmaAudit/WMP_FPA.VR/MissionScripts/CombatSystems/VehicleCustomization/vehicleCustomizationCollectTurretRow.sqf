@@ -32,6 +32,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Turret tab's Add Turret Row button).
+ * Locality and authority: Reads the curator's local editor controls without changing the
+ * vehicle. Repeated collection has no JIP side effect.
+ * Result: Returns one validated turret row, or an empty row when the input is unusable.
  */
 
 params [["_disp", displayNull]];

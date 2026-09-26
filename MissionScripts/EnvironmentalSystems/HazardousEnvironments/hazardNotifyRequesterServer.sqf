@@ -1,11 +1,13 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
+ * Contribution credit: Val's original mission pattern informed this WMP feature.
  * Relays one client-owned dosimeter result to the player who requested it. Hazard exposure is
  * intentionally stored on the exposed player's machine, so the server authenticates that machine
  * before forwarding the result through the server-only WMP notification endpoint.
  *
- * Locality, repeat and JIP behaviour:
+ * Locality and authority:
  * Runs only on the server. A remote caller must own the target player whose exposure was read.
+ * Repeat/JIP behaviour:
  * Each accepted reading creates one transient notification for the requester and is not replayed
  * to JIP clients. Repeated dosimeter uses are independent and safe.
  *
@@ -24,6 +26,7 @@
  * Example:
  * [player, remoteRequester, "Player has no measurable exposure.", "SUCCESS"]
  *     remoteExecCall ["Waldo_fnc_HazardNotifyRequesterServer", 2];
+ * Result: The server forwards one six-second HAZARD DOSIMETER card to the requester and returns true.
  */
 params [
     ["_target", objNull, [objNull]],

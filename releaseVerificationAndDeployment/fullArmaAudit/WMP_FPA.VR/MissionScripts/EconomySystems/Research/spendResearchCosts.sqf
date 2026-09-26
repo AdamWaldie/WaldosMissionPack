@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Spend research costs.
+ * Deducts one technology's resource costs from its side after start validation.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,14 @@
  * 1: _entry <ANY> - entry
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true after processing the entry's cost rows.
  *
  * Example:
  * [_sideKey, _entry] call Waldo_fnc_EcoResearch_spendResearchCosts;
+ * Locality/Authority: Economy authority only; changes published resource balances.
+ * Repeat/JIP Behaviour: Not idempotent; call once per accepted start, never from a client retry.
+ * Current Callers: EcoResearch_startResearch after affordability and authority checks.
+ * Result: Each required resource balance is reduced by its cost.
  */
 
         params ["_sideKey", "_entry"];

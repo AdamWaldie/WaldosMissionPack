@@ -13,6 +13,10 @@
  * time in ACRE2, so this owns that hook while the jamming feature is enabled. Requires ACRE2's
  * signal model to be "LOS Multipath" (the default) or "Arcade" - the custom hook is not called
  * under "LOS Simple".
+ * Locality and authority: Interface-client only; installs one ACRE custom signal function on
+ * that machine and reads the server-published jammer registry.
+ * Repeat/JIP: A local installed flag prevents replacing the hook twice. Joining clients
+ * install their own hook once ACRE is initialized.
  *
  * Arguments:
  * None
@@ -22,6 +26,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammingAcreSignal;
+ * Current caller: Waldo_fnc_JammingInit during local EW setup.
+ * Result: ACRE radio links attenuate inside applicable fields; clear links use ACRE's own result.
  */
 
 if !(hasInterface) exitWith {};

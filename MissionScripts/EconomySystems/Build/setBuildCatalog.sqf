@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Set build catalog.
+ * Normalizes and publishes the authoritative Construction catalog.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_catalog] call Waldo_fnc_EcoBuild_setBuildCatalog;
+ * Locality/Authority: Economy authority only; clients consume the public catalog.
+ * Repeat/JIP Behaviour: Repeated calls replace definitions; JIP receives latest rows.
+ * Current Callers: Construction ZEN configuration and exported mission setup calls.
+ * Result: Validated build rows become available to Construction actions.
  */
 
         params [["_catalog", []]];

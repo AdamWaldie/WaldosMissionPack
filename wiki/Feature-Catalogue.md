@@ -8,6 +8,7 @@ This is the complete top-level index of mission systems currently supplied by Wa
 
 | Feature | What it provides | Primary setup and operation |
 |---|---|---|
+| [ACE Vehicle Services](ACE-Vehicle-Services) | Independent rearm, fuel, repair and medical vehicle roles | ZEN **ACE Vehicle Services - Configure**, or `Waldo_fnc_VehicleServicesConfigure` in Eden Init |
 | [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) | Per-object Drag, Carry, loading size and storage space | Place **ACE Cargo - Set Object Handling** on an object in ZEN, or call `Waldo_fnc_SetCargoAttributes`; no WMP feature flag |
 | [Supply Transfers](Supply-Transfers) | Inventory transfers and merges between crates and vehicles | Enable in `MissionConfig\logisticsConfig.sqf`; WMP-issued crates register automatically, while placed objects need registration |
 | [Physical Cargo](Physical-Cargo) | Visible attachment of ACE-carried objects to vehicles, with verified-seat blocking | Enabled by default in `MissionConfig\logisticsConfig.sqf`; carry an eligible crate to a vehicle |
@@ -104,7 +105,11 @@ Runtime configuration is server-authoritative. Current settings are published fo
 ## AI, radio and mission-maker tools
 
 - [AI Convoy System](AI-Convoy-System)
-- [Map Location Tools](Map-Location-Tools)
+- [Map Location Tools](Map-Location-Tools) (helpers need repair before live mission use)
+- [ACE Limited Arsenal Exporter](ACE-Limited-Arsenal-Exporter)
+- [Vehicle Damage Monitor](Vehicle-Damage-Monitor)
+- [Example Unhiding Script](Example-Unhiding-Script)
+- [Mod Config Patch Logger](Mod-Config-Patch-Logger)
 - [Headless Client Support](Headless-Client-Support)
 - [Optional Third-Party Scripts (Player Markers)](Third-Party-Scripts-Headless-Client-And-Player-Markers)
 - [ACRE 2 Long-Range Presetting](ACRE-2-Long-Range-Radio-Presetting)

@@ -9,6 +9,9 @@
  * Return Value: HASHMAP with showIcons, showNames, scale and opacity presentation values.
  * Current callers: WmpHudInit Draw3D handler and WMP HUD settings screen.
  * Example: private _preferences = [] call Waldo_fnc_WmpHudPreferences;
+ * Locality and authority: Reads only the player's local HUD preferences. Repeated reads do
+ * not change world state or publish anything for JIP.
+ * Result: Returns resolved visibility, size and opacity choices for local HUD rendering.
  */
 
 private _cached = missionNamespace getVariable ["Waldo_WmpHud_PlayerPreferencesLocal", createHashMap];

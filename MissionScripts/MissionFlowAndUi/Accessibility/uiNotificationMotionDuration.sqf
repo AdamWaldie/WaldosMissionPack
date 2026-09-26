@@ -9,6 +9,9 @@
  * Return Value: NUMBER - effective duration in seconds from 0 to 1.
  * Current callers: ReflowUiPanels and AnimateUiNotificationEntryLocal.
  * Example: [0.18] call Waldo_fnc_UiNotificationMotionDuration;
+ * Locality and authority: Computes a client-local presentation duration from preferences.
+ * Repeated calls have no server or JIP state.
+ * Result: Returns the effective notification movement time in seconds.
  */
 
 params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], [0]]];

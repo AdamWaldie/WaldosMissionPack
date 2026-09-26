@@ -13,6 +13,9 @@
  * Return Value: Boolean.
  * Current caller: FIELD_EQUIPMENT action in Waldo_fnc_FeatureRuntimeApply via JIP remote execution.
  * Example: [this,"STANDARD","repair","Repair Controller","standard",false,true,false,false] call Waldo_fnc_FieldEquipmentZenSetupLocal;
+ * Locality/Authority: Server stores state/callbacks; interface clients install their own actions.
+ * Repeat/JIP Behaviour: Object-keyed setup replaces the previous action and is replayed for JIP.
+ * Result: Returns whether the supplied object and definition were accepted locally.
  */
 params [
     ["_object", objNull, [objNull]], ["_mode", "STANDARD", [""]], ["_procedure", "repair", [""]],

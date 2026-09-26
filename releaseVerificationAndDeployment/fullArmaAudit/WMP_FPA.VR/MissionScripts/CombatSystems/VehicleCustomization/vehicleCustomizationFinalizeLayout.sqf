@@ -19,6 +19,9 @@
  *
  * Example:
  * [_display] call Waldo_fnc_VehCust_finalizeLayout;
+ * Locality and authority: Adjusts only the requesting curator's display after its controls
+ * exist. Repeated layout passes do not alter server state or require JIP replay.
+ * Result: Fits the editor's controls to the available screen area.
  */
 
 params [["_display", displayNull, [displayNull]]];

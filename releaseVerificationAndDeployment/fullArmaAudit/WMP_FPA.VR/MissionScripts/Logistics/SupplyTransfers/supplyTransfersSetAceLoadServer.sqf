@@ -6,6 +6,7 @@
  * Arguments: player <OBJECT>, container <OBJECT>, allow loading <BOOL>.
  * Return Value: <BOOL> accepted. Current caller: ACE crate options in SupplyTransfersSetupLocal.
  * Example: [player, supplyCrate, false] remoteExecCall ["Waldo_fnc_SupplyTransfersSetAceLoadServer", 2];
+ * Result: The crate's ACE load eligibility changes while its prior positive size is retained.
  */
 params [["_player", objNull, [objNull]], ["_container", objNull, [objNull]], ["_allow", true, [true]]];
 if (!isServer || {!(missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false])}

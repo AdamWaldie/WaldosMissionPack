@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: session token, 256-transition cap and explicit cleanup prevent stale workers.
  * Arguments: registry key STRING, session ID STRING. Return Value: BOOL.
  * Current caller: DialogueRequestStartServer. Example: internal server worker only.
+ * Result: The current session plays its lines and choices, then releases its own lock.
  */
 params [["_key", "", [""]], ["_sessionId", "", [""]]];
 if (!isServer) exitWith {false};

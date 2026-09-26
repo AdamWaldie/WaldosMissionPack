@@ -5,6 +5,10 @@
  * object is added to every curator. Simulation state is applied explicitly: ordinary utility
  * objects are enabled, while optional freezing remains available only for genuinely static
  * interaction props. Feature state continues to follow the object's live networked transform.
+ * Locality and authority: Server-only after object creation; it assigns curator ownership and
+ * editable-object access without changing the feature's own server registry.
+ * Repeat/JIP: Reapplying ownership/editability is safe for the same object. Engine ownership and
+ * simulation state carry to joining clients; no client action is installed here.
  *
  * Arguments:
  * 0: object <OBJECT>
@@ -16,6 +20,8 @@
  *
  * Example: [_jammer, owner _curatorPlayer, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
  * Current callers: ZEN jammer, crate, loadout-save, field-resupply and paradrop boarding creation.
+ * Result: The live object is editable by curators and, when requested, owned by the requesting
+ * curator with its intended simulation state.
  */
 params [
     ["_object", objNull, [objNull]],

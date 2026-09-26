@@ -1,18 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Prompt build config.
+ * Opens the curator's Construction catalog editor.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _ctrl <ANY> - ctrl
- * 1: _index <ANY> - index
+ * None; ZEN callback arguments, if supplied, are not read.
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
- * [_ctrl, _index] call Waldo_fnc_EcoBuild_promptBuildConfig;
+ * [] call Waldo_fnc_EcoBuild_promptBuildConfig;
+ * Locality/Authority: Curator interface client; catalog updates go to server authority.
+ * Repeat/JIP Behaviour: Each open builds a fresh local form from published definitions.
+ * Current Callers: Construction catalog ZEN authoring action.
+ * Result: Shows definitions and editable fields for the selected tab.
  */
 
         if (!hasInterface) exitWith {};

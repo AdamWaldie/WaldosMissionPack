@@ -68,7 +68,7 @@ class Header {
 ```sqf
 respawn      = BASE;   // Respawn method. BASE = on a respawn marker/module.
 respawnDelay = 20;     // Seconds before a player can respawn
-respawnOnStart = -1;   // DO NOT CHANGE — required by the loadout saving system
+respawnOnStart = -1;   // DO NOT CHANGE: required by the loadout saving system
 respawnTemplatesWest[] = {"MenuPosition","Counter"};
 respawnTemplatesEast[] = {"MenuPosition","Counter"};
 respawnTemplatesGuer[] = {"MenuPosition","Counter"};
@@ -97,7 +97,7 @@ See [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) for ful
 ### Includes (do not remove)
 
 ```sqf
-#include "MissionScripts\WaldosFunctions.sqf"             // Required — registers all functions
+#include "MissionScripts\WaldosFunctions.sqf"             // Required: registers all functions
 #include "MissionScripts\Logistics\VirtualVehicleDepot\GarageDisplayDefine.hpp"  // VVD GUI
 class MissionSQM { #include "mission.sqm" };              // Required for logistics loadout scanning
 ```
@@ -110,7 +110,7 @@ Runs **on the server only**. Its server defaults are loaded synchronously from t
 
 ### Server-Owned Optional Feature Settings
 
-`MissionConfig\missionSystemsConfig.sqf` defines object-scaling limits, and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
+`MissionConfig\logisticsConfig.sqf` defines object-scaling limits, and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
@@ -182,18 +182,6 @@ Runs on **all clients, headless clients and the server** during the loading-scre
 The guarded `Waldo_*` defaults cover persistence policy, field resupply, airborne-gunship defaults, hazardous-environment presets, tree felling, explosive breaching and AI rebalance. The `isNil` guards are intentional: they prevent a joining machine from replacing settings that the server changed during the mission.
 
 Do not move presentation-only settings back here. Player UI/actions belong in `initPlayerLocal.sqf`; server-only limits and pools belong in `initServer.sqf`. See the [Complete Feature Catalogue](Feature-Catalogue).
-
-### Third-Party Player Markers (disabled by default)
-
-```sqf
-// Remove the // to enable the legacy player-marker integration
-// [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
-```
-
-This legacy entry point does not enable WMP's Headless Client manager. Configure the native manager
-through `MissionConfig\headlessConfig.sqf`; see [Headless Client Support](Headless-Client-Support).
-See [Third-Party Scripts and Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers)
-for the optional marker settings inside the legacy file.
 
 ### Mini Games (table games)
 
@@ -269,7 +257,7 @@ radio does not invalidate that net until the mission assigns that radio to it. A
 A PRC-343 row whose target is `[]` requests deterministic callsign allocation; explicit
 `[block, channel]` reserves it.
 
-### ACRE2 Babel (optional — disabled by default)
+### ACRE2 Babel (optional, disabled by default)
 
 ```sqf
 ["languages", [["common", "Common"], ["en", "English"], ["ru", "Russian"], ["fr", "French"], ["ar", "Arabic"]]],
@@ -309,6 +297,19 @@ call Waldo_fnc_SetTeamColour;  // remove to disable automatic ACE team colour as
 ## initPlayerLocal.sqf
 
 Runs **once locally when each player joins**. Respawn behavior is handled by the event handlers installed here.
+
+### Third-Party Player Markers (disabled by default)
+
+The optional launcher line is inside the shipped `hasInterface` block:
+
+```sqf
+// [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
+```
+
+Uncomment it only when you need local player markers, then uncomment the marker call inside the
+launcher. This does not enable WMP's Headless Client manager. See [Third-Party Scripts and Player
+Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers) for the settings, and
+[Headless Client Support](Headless-Client-Support) for the separate native manager.
 
 ### Introduction Text
 

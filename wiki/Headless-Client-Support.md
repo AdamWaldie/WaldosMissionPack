@@ -13,7 +13,7 @@ distributes eligible AI groups to it automatically.
 This native implementation is the only headless-client distribution system bundled with WMP. It
 uses WMP's locality and exclusion model, diagnostics, and JIP snapshot handshake.
 
-## Off by default
+## Quick setup: off by default
 
 `Waldo_Headless_Enable` in `MissionConfig\headlessConfig.sqf` defaults to `false`. Dedicated-server
 testing has verified registration, distribution, manual handoff, debug display and disconnect
@@ -31,6 +31,20 @@ to do anything while it's false, so there is no partial/accidental activation pa
 ["Waldo_Headless_MinGroupAgeSeconds", 10],     // ADVANCED: per-group settle time before eligibility.
 ["Waldo_Headless_MigrationPaceSeconds", 3]     // ADVANCED: pause between each queued migration.
 ```
+
+| Setting | Type | Default | What it controls |
+|---|---|---:|---|
+| `Waldo_Headless_Enable` | Boolean | `false` | Enables WMP headless-client registration and AI distribution. |
+| `Waldo_Headless_StartDelaySeconds` | Number (seconds) | `30` | Grace period before migration begins. |
+| `Waldo_Headless_MinGroupAgeSeconds` | Number (seconds) | `10` | A new AI group must exist this long before it is eligible. |
+| `Waldo_Headless_MigrationPaceSeconds` | Number (seconds) | `3` | Minimum gap between queued WMP group transfers. |
+| `Waldo_Headless_Debug` | Boolean | `false` | Extra ownership and migration logging. |
+
+Edit the existing entries in `headlessConfig.sqf`; do not paste the example as a second settings
+block. WMP starts detection from its shipped init files. Mission makers do not call
+`Waldo_fnc_HeadlessDetectLocal` or register a headless client manually. The server owns the
+registry and migration queue, while a connected headless client runs the AI it owns. A joining
+curator receives the current ownership/debug state through the runtime snapshot.
 
 ## Eden setup - one required step, Arma-level not WMP-specific
 
@@ -146,7 +160,7 @@ connected. **Manual Group Handoff** lists nearby AI-only groups and named destin
 managed/excluded groups, adoption acknowledgements, failed transfers, ownership mismatches and the
 migration queue in the RPT.
 
-## Eligibility
+## Settings and eligibility
 
 ### WMP assets with server-local controllers
 
@@ -391,7 +405,7 @@ is SHARED-scope config loaded by `init.sqf` and there is no guaranteed ordering 
 diagnostics run that lands inside that short registration window would otherwise report a false error
 on a perfectly healthy headless-enabled mission.
 
-## Diagnostics
+## If headless transfer fails: diagnostics
 
 `Waldo_fnc_HeadlessGetDiagnostics` feeds into `Waldo_fnc_RunDiagnostics` under area `headless`.
 While `Waldo_Headless_Enable` is false, it reports a single `headless-enable: DISABLED` check and

@@ -14,7 +14,7 @@ other physical equipment instead of opening a generic minigame window.
 
 They register on first use and work even when the seated table-game engine is disabled.
 
-## One-line Eden setup
+## Quick setup in Eden
 
 Place this in an object's Eden **Initialization** field:
 
@@ -539,7 +539,7 @@ each entry retains its own presentation profile.
 
 Existing party tables are unchanged unless this function is called.
 
-## Generic and standalone APIs
+## Script calls: generic and standalone APIs
 
 `Waldo_fnc_MiniGameInteraction` keeps the established signature:
 

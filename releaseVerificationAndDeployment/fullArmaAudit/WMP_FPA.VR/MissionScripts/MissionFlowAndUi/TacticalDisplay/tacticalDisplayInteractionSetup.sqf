@@ -17,6 +17,9 @@
  *
  * Example:
  * [mapBoard, ["commandinput", "standard"]] call Waldo_fnc_TacticalDisplayInteractionSetup;
+ * Locality and authority: Installs the board's ACE action on each interface client. The
+ * server validates shared challenge outcomes; repeat-safe object-keyed replay covers JIP.
+ * Result: Eligible players can start the Tactical Display interaction at this board.
  */
 
 params [["_object", objNull, [objNull]], ["_settings", [], [[]]]];

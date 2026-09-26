@@ -183,3 +183,16 @@ and acknowledgement messages; ownership transfer before and after acceptance; di
 assault and cover movement; independent cargo-group exclusions; empty, AA and dual-purpose launchers;
 wet ground and bridges; suppressed gunfire; narrow cover; and crowded mixed-vehicle convoys. Check WMP
 and ACE headless migration separately. Static validation does not establish these engine behaviours.
+
+### Current-main integration
+
+Merged main `d5e26d2` into the PR branch, retaining its logistics, ACE vehicle-services and JIP fixes.
+Resolved convoy conflicts in favour of the current-owner controller and exact-target Zeus workflow;
+combined the paradrop headers and retained typed Dynamic AO documentation. The combined palette has
+82 modules. The merged branch passed 369 repository tests, including 43 Smart AI/modularity contracts.
+Engine acceptance and the requested Control/Tuning consolidation remain outstanding.
+
+All ten static gates passed after the merge: 1,251 SQF files, 82 Zeus modules, wiki/configuration
+contracts, UI checks and performance regression. The performance scan remains at 95 findings
+(10 high, 85 medium), with no new high-severity recurring patterns. The audit fixture was rebuilt
+before scanners. No in-engine validation has been performed.

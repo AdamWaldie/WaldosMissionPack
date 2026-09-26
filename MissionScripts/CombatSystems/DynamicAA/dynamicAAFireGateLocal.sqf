@@ -19,6 +19,7 @@
  * Return Value: Boolean - true when updated locally or sent to the vehicle owner.
  * Current caller: Waldo_fnc_DynamicAASetGroupState on every detector pass.
  * Example: [_tigris, true, [_hostileHelicopter]] call Waldo_fnc_DynamicAAFireGateLocal;
+ * Result: The owning machine updates the vehicle's firing gate for the approved targets.
  */
 
 params [

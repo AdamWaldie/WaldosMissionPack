@@ -26,6 +26,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (every tab's Add button, and the Copy From Nearby Vehicle overlay's pick handler).
+ * Locality and authority: Mutates only the curator's local editor display. Repeated calls add
+ * distinct pending rows; none are authoritative or sent to JIP clients until applied.
+ * Result: Stores one identified pending row for later review or application.
  */
 
 params [["_disp", displayNull], ["_rowType", ""], ["_rowData", []]];

@@ -11,13 +11,15 @@
  * 0: Reference <OBJECT or NUMBER> - the tracked object, or the tracker id from Waldo_fnc_Tracker
  *
  * Return Value:
- * Bool <BOOL> - true if a matching tracker was found and removed (server side)
+ * Bool <BOOL> - true if a matching tracker was found and removed on the server. A client call
+ * forwards the request and immediately returns false; that value is not the server result.
  *
  * Current Callers: Public script API, tracker ZEN controls and mission-maker integrations.
  *
  * Example:
  * [enemyTruck] call Waldo_fnc_TrackerRemove;
  * [2] call Waldo_fnc_TrackerRemove;
+ * Result: tracker 2 disappears from the authoritative registry and current/JIP marker state.
  */
 
 params [["_ref", objNull]];

@@ -14,6 +14,9 @@
  * Return Value: BOOL - true when applied.
  * Current caller: WMP HUD Settings Apply button.
  * Example: [true, false, "SMALL", "HIGH", true] call Waldo_fnc_WmpHudSettingsApplyLocal;
+ * Locality and authority: Changes only the player's HUD presentation. Repeated calls replace
+ * local preferences; each joining client uses its own settings.
+ * Result: WMP HUD icons and labels follow the selected local choices.
  */
 
 if (!hasInterface) exitWith {false};

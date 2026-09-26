@@ -10,6 +10,9 @@
  * Return Value: HASHMAP - fully resolved notification presentation tokens.
  * Current callers: ShowUiNotification, RestyleUiNotificationsLocal and notification settings preview.
  * Example: ["GRIMDARK"] call Waldo_fnc_UiNotificationTheme;
+ * Locality and authority: Read-only theme resolution on the caller. Repeated calls use current
+ * local settings and do not change server or JIP state.
+ * Result: Returns the colours and presentation tokens for the selected theme.
  */
 
 params [["_requested", missionNamespace getVariable ["Waldo_UI_NotificationThemeLocal", profileNamespace getVariable ["Waldo_UI_NotificationTheme", "FOLLOW_MISSION"]], [""]]];

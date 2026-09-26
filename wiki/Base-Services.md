@@ -8,6 +8,10 @@ Base services put save, heal, spectator and travel actions on objects you place 
 
 ACE and CBA are required. The feature is off by default. Change `Waldo_BaseServices_Enable` to `true` in `MissionConfig/missionSystemsConfig.sqf`, then place the objects that will host services. The server owns each network. Current players and joiners receive local actions and 3D markers.
 
+| Setting | Type | Shipped default | Effect |
+| --- | --- | --- | --- |
+| `Waldo_BaseServices_Enable` | Boolean | `false` | Set `true` to accept registered service networks; it does not create objects or grant services by itself. |
+
 ## Place two service points
 
 1. Set `Waldo_BaseServices_Enable` to `true` in `MissionConfig/missionSystemsConfig.sqf`.
@@ -58,7 +62,26 @@ If your mission already names its objects in Eden, register the whole network fr
 ]] call Waldo_fnc_BaseServicesRegister;
 ```
 
-Each row accepts `[object, label, services, optionalIcon, optionalTransition, optionalMarkerOffset]`. The icon is a `.paa` path. Leave it out to use WMP's icon. The marker sits against the object's upper surface by default. For an unusual sign or model, set the sixth value to a measured model-space offset such as `[0, -0.06, 0.18]`. Use `""` for the icon and transition when you only need the offset.
+`Waldo_fnc_BaseServicesRegister` takes:
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | String | Required | Nonempty network ID shared by its destinations. |
+| 1 | Array of node rows | `[]` | Complete current list for this network. An empty list removes it. |
+| 2 | String or array of `[key, value]` rows | `"STANDARD"` | Transition used by nodes without their own transition. |
+
+Each node row has the same structure as the object-init call, except its network ID comes from position 0 of the group call:
+
+| Row position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Existing service object. |
+| 1 | String | Required | Player-facing location name. |
+| 2 | Array of strings | `[]` | Any combination of `SAVE`, `HEAL`, `SPECTATE`, `TELEPORT`. |
+| 3 | String | WMP service icon | Optional `.paa` path. |
+| 4 | String or array | Network transition | Optional arrival transition override. |
+| 5 | Three-number model-space array | Object surface | Optional marker point, such as `[0, -0.06, 0.18]`. |
+
+The icon is a `.paa` path. Leave it out to use WMP's icon. The marker sits against the object's upper surface by default. Use `""` for the icon and transition when you only need the offset. The server returns `true` when it accepts or queues a valid network and publishes the replacement to current players and JIP.
 
 An optional third argument sets the transition for every destination in the network. A row's fifth value overrides it for that destination:
 

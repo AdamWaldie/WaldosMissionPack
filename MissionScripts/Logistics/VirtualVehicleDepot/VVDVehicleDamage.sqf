@@ -6,14 +6,21 @@
  *
  * Arguments:
  * 0: _veh <OBJECT> - the vehicle to damage
- * 1: _hitpointsDamage <ARRAY> - [hitpoint, damage] pairs to apply
+ * 1: _hitpointsDamage <ARRAY<NUMBER>> - damage values by index in the vehicle's
+ *    getAllHitPointsDamage names array, not [name, damage] pairs.
  * 2: _damageDelays <ARRAY> - [minDelay, maxDelay] seconds before applying
  *
  * Return Value:
  * Nothing
  *
  * Example:
- * [_veh, [["HitEngine", 0.5]], [0, 5]] call Waldo_fnc_VVDVehicleDamage;
+ * private _damage = (getAllHitPointsDamage _veh) select 2;
+ * if (count _damage > 0) then {_damage set [0, 0.5]; [_veh, _damage, [0, 5]] spawn Waldo_fnc_VVDVehicleDamage;};
+ * Locality and authority: Runs where the spawned vehicle is local, normally the client's
+ * depot-spawn path. A repeat call applies another damage pass after its own delay; current
+ * vehicle damage replicates to JIP clients.
+ * Current caller: Waldo_fnc_VVDOpen after a vehicle is spawned.
+ * Result: The specified hitpoints reach their requested damage after the chosen delay.
  */
 
 params["_veh", "_hitpointsDamage", "_damageDelays"];

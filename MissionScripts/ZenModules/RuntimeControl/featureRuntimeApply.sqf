@@ -18,6 +18,7 @@
  *     remoteExecCall ["Waldo_fnc_FeatureRuntimeApply", 2];
  *
  * Current caller: Waldo_fnc_FeatureRuntimeZen forwards validated ZEN runtime-control dialogs.
+ * Result: Accepted settings are applied on the server and published for joining clients.
  */
 
 params [
@@ -126,8 +127,12 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
-            [_hub, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
-            [_hub, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+            // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+            // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+            [{
+                [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+                _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+            }, [_hub, "CARGO"]] call CBA_fnc_execNextFrame;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};

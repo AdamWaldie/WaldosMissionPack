@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: full replacement snapshot; JIP clients request the current version.
  * Arguments: 0 optional owner ID <NUMBER>, default all clients. Return Value: ARRAY descriptors.
  * Current callers: registration, clearing and state requests. Example: [] call Waldo_fnc_DialoguePublishState;
+ * Result: The current speaker-action snapshot replaces stale client state.
  */
 params [["_ownerId", -2, [0]]];
 if (!isServer) exitWith {[]};

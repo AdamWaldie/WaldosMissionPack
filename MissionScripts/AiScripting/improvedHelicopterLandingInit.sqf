@@ -8,12 +8,18 @@
  * transition, before this landing controller ever activated. Keeping the aircraft group on the
  * server avoids that engine/locality transition while still allowing WMP AI skill values to be
  * applied to its crew. Only the machine owning an aircraft runs its tracker.
+ * Locality and authority: Each machine installs local class-init and ownership handlers. The
+ * current helicopter owner runs the flight tracker; server-side ownership exclusions remain
+ * with the server.
+ * Repeat/JIP: A local installed flag prevents duplicate handlers. JIP and new owners install
+ * their own handler but do not share a competing flight controller.
  *
  * Arguments: None.
  *
  * Return Value: BOOL - true when the handlers are installed or were already present.
  *
  * Example: [] call Waldo_fnc_ImprovedHelicopterLandingInit;
+ * Result: Returns true after handler installation or when they were already installed.
  * Current caller: init.sqf on every machine, including JIP and headless clients.
  */
 

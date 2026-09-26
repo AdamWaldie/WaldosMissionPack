@@ -26,6 +26,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Export All Pending To Clipboard button).
+ * Locality and authority: Runs only on the curator's interface client and writes its local
+ * clipboard. Repeating export replaces that clipboard text; nothing is published for JIP.
+ * Result: Copies a ready-to-paste Eden init statement for the queued rows.
  */
 
 params [["_disp", displayNull]];

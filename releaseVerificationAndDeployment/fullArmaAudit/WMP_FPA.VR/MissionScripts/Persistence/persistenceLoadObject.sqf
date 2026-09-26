@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Restores one registered object's selected state fields from INIDBI2.
+ * Locality and authority: Server-only database read and object restoration. Remote direct
+ * requests are rejected; callers must use a server-owned registration path.
+ * Repeat/JIP: Repeating a load reapplies stored fields to the object. Restored shared object
+ * state reaches joining players through normal object synchronization.
  *
  * Arguments:
  * 0: object <OBJECT>
@@ -12,6 +16,9 @@
  *
  * Example:
  * [_crate, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceLoadObject;
+ * Result: Returns true when a compatible stored record was applied, false when absent,
+ * inactive or invalid.
+ * Current caller: Waldo_fnc_PersistenceRegisterObject after accepted registration.
  */
 
 params ["_object", "_key", "_options"];

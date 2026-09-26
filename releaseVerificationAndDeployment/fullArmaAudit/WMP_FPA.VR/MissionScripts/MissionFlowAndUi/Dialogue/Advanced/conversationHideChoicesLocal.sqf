@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: session-aware and idempotent. Arguments: optional session ID STRING.
  * Return Value: BOOL. Current callers: choice selection, cancel button and server cleanup.
  * Example: ["sessionId"] call Waldo_fnc_ConversationHideChoicesLocal;
+ * Result: The matching client's response panel closes without disturbing a newer session.
  */
 params [["_sessionId", "", [""]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

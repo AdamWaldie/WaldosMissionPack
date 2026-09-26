@@ -8,6 +8,7 @@
  * Return Value: <BOOL> actions installed or already present.
  * Current caller: Waldo_fnc_QuartermasterExtendedSpawn via object-scoped JIP remote execution.
  * Example: [rearmBox] call Waldo_fnc_QuartermasterRearmLabelLocal;
+ * Result: Players see whether the ACE rearm source is limited, depleted or unlimited.
  */
 params [["_box", objNull, [objNull]]];
 if (!hasInterface || {isNull _box}) exitWith {false};

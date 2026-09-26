@@ -1,6 +1,16 @@
 /*
- * Installs the player-local InventoryOpened handler on a newly joined or
- * respawned player object.
+ * Author: WaldoTheWarfighter
+ * Installs the local player's inventory-open handler for armed corpses.
+ * Locality and authority: Interface-client only; it sends a trigger request to the server when
+ * the current player opens a corpse marked ARMED.
+ * Repeat/JIP: The unit flag prevents duplicate event handlers. CorpseTrapInit calls this on
+ * initial join and again for a new player unit after respawn.
+ * Arguments:
+ * 0: current player unit <OBJECT> (default objNull)
+ * Return Value: <BOOL> - true if already installed or now installed; false for another unit.
+ * Current caller: Waldo_fnc_CorpseTrapInit and its respawn class event handler.
+ * Example: [player] call Waldo_fnc_CorpseTrapInstallInventoryHandler;
+ * Result: Opening an armed corpse's inventory requests one authoritative trap trigger.
  */
 params [
     ["_unit", objNull, [objNull]]

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get research status.
+ * Classifies one technology's current availability to a side/player.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,16 @@
  * 1: _entry <ANY> - entry
  *
  * Return Value:
- * Any - see function body
+ * <STRING> invalid, done, active, busy, command, locked, exclusive,
+ * unaffordable or ready.
  *
  * Example:
  * [_sideKey, _entry] call Waldo_fnc_EcoResearch_getResearchStatus;
+ * Locality/Authority: Interface/authority query; reads published research and resource state
+ * and uses the local player for the Ground Command gate.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP clients see current published state.
+ * Current Callers: Research centre action visibility and status display.
+ * Result: Returns the first reason the technology cannot start, or "ready".
  */
 
         params ["_sideKey", "_entry"];

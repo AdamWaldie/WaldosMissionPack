@@ -10,7 +10,7 @@
  * real player (not a headless client) is a no-op here - only owner ids present in
  * Waldo_Headless_Clients are acted on.
  *
- * Arguments (engine-supplied HandleDisconnect signature):
+ * Arguments: Engine-supplied HandleDisconnect signature.
  * 0: unit <OBJECT> - the disconnecting network entity's object, still valid at this point; its
  *    owner id is read directly rather than trusting the engine's separate id/uid/name strings.
  * 1-3: id/uid/name <STRING> - unused.
@@ -20,6 +20,9 @@
  * Example:
  * Installed once by initServer.sqf as:
  * addMissionEventHandler ["HandleDisconnect", {_this call Waldo_fnc_HeadlessReassignOnDisconnect}];
+ * Result: A disconnected HC's managed groups return to the server and become eligible for a
+ * new rebalance pass. A normal player disconnect leaves the HC registry unchanged.
+ * Current caller: initServer.sqf HandleDisconnect mission event handler.
  */
 
 params [["_unit", objNull, [objNull]]];

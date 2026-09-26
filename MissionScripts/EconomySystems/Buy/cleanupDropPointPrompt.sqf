@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup drop point prompt.
+ * Removes controls from the curator delivery-point prompt and closes its display.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_cleanupDropPointPrompt;
+ * Locality/Authority: Curator interface client only; no registry mutation.
+ * Repeat/JIP Behaviour: Safe for a null/closed prompt; no JIP UI state.
+ * Current Callers: Delivery-point prompt close/cancel and Economy UI cleanup.
+ * Result: Temporary controls and prompt state are removed.
  */
 
         params [["_disp", displayNull]];

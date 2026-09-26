@@ -1,4 +1,18 @@
-/* Resolves caller default -> mission channel default -> permitted local override. */
+/*
+ * Author: WaldoTheWarfighter
+ * Resolves a WMP UI channel's display position from caller default, mission setting and any
+ * player override that the mission maker allowed.
+ * Locality and authority: Reads published mission defaults and, on an interface client,
+ * local profile choices. Repeated calls are read-only; JIP uses current published defaults
+ * and that player's own profile preferences.
+ * Arguments: 0: channel <STRING> ("MISSION"); 1: requested placement <STRING> ("TOP");
+ *   2: permit local override lookup <BOOL> (false).
+ * Return Value: <STRING> one of TOP, TOP_RIGHT, CENTER, BOTTOM_LEFT, BOTTOM_CENTER,
+ *   BOTTOM_RIGHT; invalid values fall back to TOP.
+ * Current callers: WMP notification placement and specialist UI layout helpers.
+ * Example: ["QUARTERMASTER", "TOP_RIGHT", true] call Waldo_fnc_ResolveUiPanelPlacement;
+ * Result: Returns the mission choice, or this player's permitted override when one exists.
+ */
 params [["_channel", "MISSION", [""]], ["_requested", "TOP", [""]], ["_allowLocalOverride", false, [true]]];
 _channel = toUpper _channel;
 private _placement = toUpper _requested;

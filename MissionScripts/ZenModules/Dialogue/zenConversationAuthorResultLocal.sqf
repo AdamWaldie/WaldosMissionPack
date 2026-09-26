@@ -7,6 +7,7 @@
  * Arguments: request ID STRING, success BOOL, message STRING, warnings ARRAY. Return Value: BOOL.
  * Current caller: ZenConversationAuthorServer.
  * Example: server remote execution only.
+ * Result: The matching editor request shows the server's outcome and any warnings.
  */
 params [["_requestId", "", [""]], ["_success", false, [true]], ["_message", "", [""]], ["_warnings", [], [[]]]];
 if (!hasInterface || {remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}}) exitWith {false};

@@ -20,6 +20,9 @@
  *
  * Example:
  * [[east, independent]] call Waldo_fnc_ResolveFactionCatalog;
+ * Locality and authority: Reads loaded faction configuration on the caller and caches the
+ * result there. No server mutation or JIP replay is needed; later joiners build their own cache.
+ * Result: Returns the selectable factions matching the allowed sides.
  */
 params [["_allowedSides", [west, east, independent], [[]]]];
 

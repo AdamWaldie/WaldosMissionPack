@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Delete drop point.
+ * Removes one delivery-point row and optionally its world anchor.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -13,6 +13,10 @@
  *
  * Example:
  * [_dropPointId, _deleteAnchor] call Waldo_fnc_EcoBuy_deleteDropPoint;
+ * Locality/Authority: Economy authority only; changes the published registry and world object.
+ * Repeat/JIP Behaviour: An absent ID is a no-op; JIP receives the updated registry.
+ * Current Callers: Delivery-point curator deletion and Economy cleanup.
+ * Result: Purchases can no longer select the removed point.
  */
 
         params [["_dropPointId", ""], ["_deleteAnchor", true]];

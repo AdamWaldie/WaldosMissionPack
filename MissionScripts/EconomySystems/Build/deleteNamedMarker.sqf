@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Delete named marker.
+ * Deletes an Economy marker by name and removes it from the shared registry.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_markerName] call Waldo_fnc_EcoBuild_deleteNamedMarker;
+ * Locality/Authority: Economy authority only; deletes a global marker.
+ * Repeat/JIP Behaviour: Repeat deletion of an absent name is harmless; JIP gets updated registry.
+ * Current Callers: Detector contact and building marker cleanup.
+ * Result: Marker name is no longer tracked or visible.
  */
 
         params [["_markerName", ""]];

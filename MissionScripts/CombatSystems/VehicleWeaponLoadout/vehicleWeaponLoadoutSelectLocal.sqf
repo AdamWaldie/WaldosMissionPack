@@ -21,6 +21,9 @@
  * Example:
  * [vehicle, [0], "autocannon_40mm_CTWS", "60Rnd_40mm_GPR_Tracer_Red_shells"]
  *     call Waldo_fnc_VehicleWeaponLoadoutSelectLocal;
+ * Locality and authority: Runs on the owner of the specified turret after the server-approved
+ * change. Repeating it reselects the intended weapon; JIP inherits vehicle loadout state.
+ * Result: Selects and loads the replacement weapon for that turret when it exists locally.
  */
 
 params [

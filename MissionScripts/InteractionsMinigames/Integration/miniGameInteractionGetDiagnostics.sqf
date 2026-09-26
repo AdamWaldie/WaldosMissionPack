@@ -5,9 +5,10 @@
  * to make diagnostics look active. A procedure is LOADED when its function exists and either a
  * configured local object uses it or its opener has already been registered by normal use.
  *
- * Locality/authority and repeat/JIP behaviour: Runs on an interface client as part of the bounded
+ * Locality/Authority: Runs on an interface client as part of the bounded
  * server diagnostic request. It inspects that client's local actions/registry and can be repeated;
  * it publishes no state and has no JIP side effects.
+ * Repeat/JIP Behaviour: Repeat-safe local inspection; no state is broadcast or replayed.
  *
  * Arguments:
  * 0: Objects to inspect <ARRAY<OBJECT>> (default []) - empty discovers locally configured objects.
@@ -19,6 +20,7 @@
  *
  * Example:
  * [] call Waldo_fnc_MiniGameInteractionGetDiagnostics;
+ * Result: Returns a read-only report of locally available equipment procedures.
  */
 params [["_objects", [], [[]]]];
 private _procedures = [

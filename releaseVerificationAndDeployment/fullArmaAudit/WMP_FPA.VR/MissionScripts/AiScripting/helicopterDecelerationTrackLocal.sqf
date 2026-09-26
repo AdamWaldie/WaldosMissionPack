@@ -12,6 +12,8 @@
  * Return Value: Nothing (scheduled tracker lifecycle).
  *
  * Example: [_helicopter] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
+ * Result: Samples only its local aircraft until an exit condition and starts a bounded
+ * correction when the cruise-braking predicate is met.
  * Current callers: Waldo_fnc_HelicopterDecelerationInit and its aircraft Local event handler.
  */
 

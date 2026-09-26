@@ -27,7 +27,7 @@ Open **ACE Self Interact > WMP Options > Notification UI Settings** for the noti
 
 Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER` and `BOTTOM_RIGHT`.
 
-## Basic mission-maker use
+## Quick setup: first notification
 
 ```sqf
 [
@@ -41,28 +41,30 @@ Cards measure their text, retain internal padding and stay inside Arma's current
 ] call Waldo_fnc_ShowUiNotification;
 ```
 
+## Script call and arguments
+
 The arguments are:
 
 ```sqf
 [title, message, state, duration, placement, channel, source, policy, priority, allowLocalOverride]
 ```
 
-| Argument | Type | Meaning |
-|---|---|---|
-| `title` | String | Main notification heading |
-| `message` | String or structured text | Explanation shown below the heading |
-| `state` | String | `INFO`, `SUCCESS`, `WARNING` or `ERROR` |
-| `duration` | Number | Maximum lifetime in seconds; `0` remains until replaced or dismissed |
-| `placement` | String | Requested screen region |
-| `channel` | String | Ownership and sequencing key, such as `LOGISTICS` or `ELECTRONIC_WARFARE` |
-| `source` | String | Small system or mission label above the title |
-| `policy` | String | `AUTO`, `FIFO` or `REPLACE` |
-| `priority` | Number | Mission metadata retained with the active card |
-| `allowLocalOverride` | Boolean | Whether an authorized player placement may be used |
+| Argument | Type | Default | Meaning |
+|---|---|---|---|
+| `title` | String | `"NOTICE"` | Main notification heading |
+| `message` | String or structured text | `""` | Explanation shown below the heading |
+| `state` | String enum | `"INFO"` | `INFO`, `SUCCESS`, `WARNING` or `ERROR` |
+| `duration` | Number (seconds) | `8` | Maximum lifetime; `0` remains until replaced or dismissed |
+| `placement` | String enum | `"TOP"` | Requested screen region |
+| `channel` | String | `"MISSION"` | Ownership and sequencing key, such as `LOGISTICS` or `ELECTRONIC_WARFARE` |
+| `source` | String | `"WALDOS MISSION PACK"` | Small system or mission label above the title |
+| `policy` | String enum | `"AUTO"` | `AUTO`, `FIFO` or `REPLACE` |
+| `priority` | Number | `0` | Mission metadata retained with the active card |
+| `allowLocalOverride` | Boolean | `false` | Whether an authorized player placement may be used |
 
 The function returns a unique token for a displayed card, `"QUEUED"` when the request enters a bounded queue, or an empty string when no interface is available. If the gameplay display is still opening, WMP keeps one bounded, coalesced waiting set and waits for it for up to 20 seconds rather than starting one waiter per request.
 
-Timed cards automatically fit their reading time to their title and message length. A short confirmation clears near the configured three-second minimum; progressively longer text remains longer, up to—but never beyond—the duration supplied by its caller. This preserves every feature's existing duration as a safe ceiling while reducing the time small cards occupy a lane. Set `Waldo_UiNotification_MinimumDuration` for the shortest readable lifetime and leave `Waldo_UiNotification_CharactersPerSecond` at its tested default unless accessibility testing supports a different reading rate.
+Timed cards fit their reading time to their title and message length. A short confirmation clears near the configured three-second minimum. Longer text stays visible longer, but never beyond the duration its caller supplied. Set `Waldo_UiNotification_MinimumDuration` for the shortest readable lifetime. Leave `Waldo_UiNotification_CharactersPerSecond` at its tested default unless accessibility testing supports a different reading rate.
 
 The shipped minimum is **3 seconds**. There is deliberately no second global maximum: each call supplies its own ceiling. The generic example defaults to 8 seconds, Transport Services supplies 7 seconds, and `0` means a persistent status card that remains until replaced or dismissed.
 
@@ -225,16 +227,20 @@ It is safe to call on any machine and does not need an `isServer` wrapper:
 
 The arguments, in order, are:
 
-| Position | Setting | Beginner-friendly meaning |
-|---:|---|---|
-| 0 | Title | Short heading, such as `COMMAND`. |
-| 1 | Message | The text players need to read. Empty messages are rejected. |
-| 2 | Type | `INFO`, `SUCCESS`, `WARNING`, or `ERROR`. |
-| 3 | Recipients | Optional: `"ALL"`, a side such as `west`, a group, one player object, or an array of player objects. |
-| 4 | Duration | Optional seconds. `0` persists; other values are limited to 1-60. |
-| 5 | Placement | Optional: `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, or `BOTTOM_RIGHT`. |
-| 6 | Channel | Optional stable key used to replace/coalesce related updates. |
-| 7 | Source | Optional small source label. |
+| Position | Setting | Type | Default | Beginner-friendly meaning |
+|---:|---|---|---|---|
+| 0 | Title | String | `"NOTICE"` | Short heading, such as `COMMAND`. |
+| 1 | Message | String | `""` | The text players need to read. Empty messages are rejected. |
+| 2 | Type | String enum | `"INFO"` | `INFO`, `SUCCESS`, `WARNING`, or `ERROR`. |
+| 3 | Recipients | String, Side, Group, player Object or Array of player Objects | `"ALL"` | Who receives the card. A String recipient must be `"ALL"`. |
+| 4 | Duration | Number (seconds) | `8` | `0` persists; other values are limited to 1–60. |
+| 5 | Placement | String enum | `"TOP_RIGHT"` | `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, or `BOTTOM_RIGHT`. |
+| 6 | Channel | String | `"MISSION_MESSAGE"` | Stable key used to replace/coalesce related updates. |
+| 7 | Source | String | `"MISSION"` | Small source label. |
+
+On the server this helper returns the number of players reached. A client call returns `0` after
+forwarding, so `0` there is not proof that nobody received the card. Empty messages are rejected
+and also return `0`. Cards are transient; players joining later do not receive past messages.
 
 Examples for common audiences:
 
@@ -270,14 +276,27 @@ The composition's beginner call is:
     call Waldo_fnc_NotificationTrigger;
 ```
 
-The positions mean: anchor object, radius in metres, title, message and card type. Optional later
-positions accept recipients, duration, repeatable, placement, channel and source; the full typed list
-is documented in `notificationTrigger.sqf`. Running setup again on the same anchor safely replaces
-its old server trigger.
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 | Object | required | Eden anchor, usually `this` in its Init field. |
+| 1 | Number (metres) | `25` | Circular radius, clamped to 1–5000 m. |
+| 2 | String | `"MESSAGE FROM COMMAND"` | Card title. |
+| 3 | String | `""` | Card body; empty is rejected. |
+| 4 | String enum | `"INFO"` | Card state. |
+| 5 | String, Side, Group, player Object or Array of player Objects | `"ALL"` | Recipients, using the forms above. |
+| 6 | Number (seconds) | `8` | Card duration; `0` persists. |
+| 7 | Boolean | `false` | Send again when a player leaves and re-enters. |
+| 8 | String enum | `"TOP_RIGHT"` | Card placement. |
+| 9 | String | `"MISSION_TRIGGER"` | Coalescing channel. |
+| 10 | String | `"MISSION"` | Small source label. |
+
+Running setup again on the same anchor replaces its old server trigger. The function returns
+`false` for a missing anchor or empty message, and `true` after server setup or client forwarding.
+It does not replay a past card to JIP players.
 
 `Waldo_fnc_ShowUiNotification` shows a card on whichever machine runs it; it does not choose an
 audience for you. `Waldo_fnc_NotificationBroadcast` wraps it with audience targeting so mission code
-and Zeus curators do not have to hand-resolve player lists. It is server-authoritative — calling it
+and Zeus curators do not have to hand-resolve player lists. It is server-authoritative; calling it
 from a client forwards to the server automatically, the same pattern as `Waldo_fnc_Jammer`.
 
 ```sqf
@@ -287,17 +306,23 @@ from a client forwards to the server automatically, the same pattern as `Waldo_f
 ]] call Waldo_fnc_NotificationBroadcast;
 ```
 
-The single hashmap argument accepts every `Waldo_fnc_ShowUiNotification` field (`title`, `message`,
-`state`, `duration`, `placement`, `channel`, `source`) plus:
+The function takes one HashMap at position 0. The server resolves its audience against currently
+connected players, sends each player one card, and returns the number reached. A client forwards
+the request and returns `0` before delivery.
 
-| Key | Type | Meaning |
-|---|---|---|
-| `audience` | String | `ALL` (default), `SIDE`, `GROUP`, or `UNITS` |
-| `side` | Side | Read when `audience` is `SIDE` |
-| `group` | String | Group callsign, matched case-insensitively against `groupId`; read when `audience` is `GROUP` |
-| `units` | Array\<Object\> | Explicit player units; read when `audience` is `UNITS` |
-
-It returns the number of distinct players actually reached.
+| Key | Type | Default | Meaning |
+|---|---|---|---|
+| `title` | String | `"NOTICE"` | Card heading. |
+| `message` | String | `""` | Card body. |
+| `state` | String enum | `"INFO"` | `INFO`, `SUCCESS`, `WARNING` or `ERROR`. |
+| `duration` | Number (seconds) | `8` | Card lifetime ceiling; `0` persists. |
+| `placement` | String enum | `"TOP"` | Requested screen region. |
+| `channel` | String | `"ZEUS_MESSAGE"` | Channel used for replacement/coalescing. |
+| `source` | String | `"ZEUS"` | Small source label. |
+| `audience` | String enum | `"ALL"` | `ALL`, `SIDE`, `GROUP`, or `UNITS`. |
+| `side` | Side | `sideUnknown` | Read when `audience` is `SIDE`. |
+| `group` | String | `""` | Group callsign, matched case-insensitively against `groupId` when `audience` is `GROUP`. |
+| `units` | Array of player Objects | `[]` | Explicit players when `audience` is `UNITS`. |
 
 ### Zeus module
 

@@ -218,9 +218,9 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         transfer = source('MissionScripts/Logistics/SupplyTransfers/supplyTransfersRegister.sqf')
         self.assertIn('[_container] call Waldo_fnc_CargoAttributesPrepareObject', transfer)
         purchase = source('MissionScripts/EconomySystems/Buy/executePurchase.sqf')
-        self.assertIn('[_spawned, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned', purchase)
+        self.assertIn('[{_this spawn Waldo_fnc_LogisticsRegisterSpawned}, [_spawned, "CARGO"]] call CBA_fnc_execNextFrame', purchase)
         resource = source('MissionScripts/EconomySystems/Resource/spawnResourceCrate.sqf')
-        self.assertIn('[_crate] call Waldo_fnc_CargoAttributesPrepareObject', resource)
+        self.assertIn('[{[_this select 0] call Waldo_fnc_CargoAttributesPrepareObject}, [_crate]] call CBA_fnc_execNextFrame', resource)
 
     def test_node_registration_is_additive_and_zen_is_curator_gated(self):
         node = source('MissionScripts/MissionFlowAndUi/BaseServices/baseServicesRegisterNode.sqf')
@@ -284,15 +284,139 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             ('MissionScripts/ZenModules/ZenSpawnCrateServer.sqf', '_crate'),
             ('MissionScripts/ZenModules/Zen_loadoutSaveModule.sqf', '_target'),
             ('MissionScripts/ZenModules/RuntimeControl/featureRuntimeApply.sqf', '_hub'),
+            ('MissionScripts/Logistics/FieldResupply/fieldResupplyServerHandle.sqf', '_crate'),
         ):
-            self.assertIn(f'[{object_name}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'
-                          if path.endswith(('ZenSpawnCrateServer.sqf',
-                                            'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
-                          else f'[{object_name}, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes',
+            # Remote-executed callers finish cargo setup from CBA's next frame, where the
+            # object is passed as _this select 0 (see test_registration_leaves_remote_context).
+            deferred = path.endswith(('LogiBoxes.sqf', 'quartermasterExtendedSpawn.sqf', 'ZenSpawnCrateServer.sqf',
+                                      'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf',
+                                      'fieldResupplyServerHandle.sqf'))
+            target = '_this select 0' if deferred else object_name
+            self.assertIn(f'[{target}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'
+                          if path.endswith(('ZenSpawnCrateServer.sqf', 'Zen_loadoutSaveModule.sqf',
+                                            'featureRuntimeApply.sqf', 'fieldResupplyServerHandle.sqf'))
+                          else f'[{target}, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes',
                           source(path), path)
         starter = source('MissionScripts/Logistics/Crates/doStarterCrate.sqf')
         self.assertLess(starter.index('[_target, nil, -1, false, false] call Waldo_fnc_SetCargoAttributes'),
                         starter.index('waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE"'))
+
+    def test_registration_leaves_remote_context(self):
+        # A child spawned from a client's remoteExec request keeps isRemoteExecuted, which
+        # LogisticsRegisterSpawned and SetCargoAttributes reject. Every caller must hand off
+        # through CBA's server-local next frame, otherwise non-crate QM issues (wheels, tracks)
+        # never become physical-cargo eligible on a dedicated server.
+        import pathlib, re
+        root = pathlib.Path(__file__).resolve().parent.parent / 'MissionScripts'
+        callers = []
+        for path in root.rglob('*.sqf'):
+            text = path.read_text(encoding='utf-8', errors='replace')
+            if 'Waldo_fnc_LogisticsRegisterSpawned' not in text or path.name == 'logisticsRegisterSpawned.sqf':
+                continue
+            callers.append(path.name)
+            self.assertIsNone(re.search(r'\]\s*spawn\s+Waldo_fnc_LogisticsRegisterSpawned', text), path.name)
+            self.assertIn('_this spawn Waldo_fnc_LogisticsRegisterSpawned', text, path.name)
+            self.assertIn('call CBA_fnc_execNextFrame', text, path.name)
+        self.assertIn('LogiBoxes.sqf', callers)
+        zen = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
+        physical = zen[zen.index('case "PHYSICAL_ENABLE"'):zen.index('case "PHYSICAL_DISABLE"')]
+        self.assertIn('[{_this spawn {', physical)
+        self.assertIn('}}, [_target, _replyOwner]] call CBA_fnc_execNextFrame;', physical)
+        # BASE_UPSERT, BASE_REMOVE, SUPPLY_REGISTER and PHYSICAL_ENABLE call guarded registrars.
+        self.assertIsNone(re.search(r'\]\s*spawn\s*\{', zen))
+        self.assertEqual(zen.count('[{_this spawn {'), 4)
+        logi = source('MissionScripts/Logistics/Crates/LogiBoxes.sqf')
+        self.assertLess(logi.index('call Waldo_fnc_SetCargoAttributes'),
+                        logi.index('_this spawn Waldo_fnc_LogisticsRegisterSpawned'))
+
+    def test_3d_marker_joiner_forwards_do_not_rebroadcast_or_restore(self):
+        # Eden Init fields run again on every JIP client and forward the same create call.
+        create = source('MissionScripts/MissionFlowAndUi/create3DMarker.sqf')
+        remove = source('MissionScripts/MissionFlowAndUi/remove3DMarker.sqf')
+        self.assertIn('[_id, _anchor, _options, true] remoteExecCall ["Waldo_fnc_Create3DMarker", 2];', create)
+        self.assertIn('if (_forwarded && {_id in _removed}) exitWith', create)
+        self.assertIn('if (_index >= 0 && {(_registry select _index) isEqualTo _row}) exitWith {_id};', create)
+        self.assertLess(create.index('isEqualTo _row}) exitWith'),
+                        create.index('remoteExecCall ["Waldo_fnc_Marker3DApplyDeltaLocal", -2]'))
+        self.assertIn('{_tombstones set [_x, true]} forEach _removedIds;', remove)
+
+    def test_transport_menus_hidden_without_registered_transports(self):
+        text = source('MissionScripts/Logistics/TransportServices/transportInteractionInitLocal.sqf')
+        for action in ('Waldo_Transport_Root', 'Waldo_Transport_HelicopterRoot', 'Waldo_Transport_GroundRoot',
+                       'Waldo_Transport_BoatRoot', 'Waldo_Transport_AllRoot', 'Waldo_Transport_AllHeliRtb',
+                       'Waldo_Transport_AllGroundRtb', 'Waldo_Transport_AllBoatRtb'):
+            line = next(l for l in text.splitlines() if f'["{action}",' in l)
+            self.assertNotIn('{true}]', line, action)
+            self.assertIn('Waldo_TransportService_Type', line, action)
+        for label in ('Return All Helicopters to Base', 'Return All Ground Vehicles to Base', 'Return All Boats to Base'):
+            line = next(l for l in text.splitlines() if 'player addAction' in l and label in l)
+            self.assertIn("Waldo_TransportService_Type", line, label)
+
+    def test_theme_font_applied_before_button_text_is_fitted(self):
+        fit = source('MissionScripts/EconomySystems/Core/fitPromptDisplay.sqf')
+        # Both the card and nested-group passes set the theme font before the shrink loop.
+        starts = [i for i in range(len(fit)) if fit.startswith('ctrlSetFont (_theme getOrDefault ["font"', i)]
+        loops = [i for i in range(len(fit)) if fit.startswith('ctrlTextWidth _x > (_newWidth', i)]
+        self.assertEqual(len(starts), 2)
+        self.assertEqual(len(loops), 2)
+        for font, loop in zip(starts, loops):
+            self.assertLess(font, loop)
+        live = source('MissionScripts/MissionFlowAndUi/uiThemeApplyDisplayLocal.sqf')
+        self.assertIn('Waldo_UI_BaseFontHeight', live)
+        self.assertIn('ctrlTextWidth _control > (_width * 0.94)', live)
+
+    def test_wmp_setup_paths_apply_standard_ace_handling(self):
+        helper = source('MissionScripts/Logistics/Crates/logisticsApplyAceHandling.sqf')
+        self.assertIn('_object isKindOf "CAManBase"', helper)
+        self.assertIn('!(_object isKindOf "StaticWeapon")', helper)
+        self.assertIn('true, true, true, true] call Waldo_fnc_SetCargoAttributes', helper)
+        self.assertIn('class LogisticsApplyAceHandling', source('MissionScripts/WaldosFunctions.sqf'))
+        for path in ('MissionScripts/Logistics/Crates/doSupplyCrate.sqf',
+                     'MissionScripts/Logistics/Crates/doMedicalCrate.sqf'):
+            text = source(path)
+            self.assertIn('[_this select 0, 1] call Waldo_fnc_LogisticsApplyAceHandling;', text, path)
+            self.assertLess(text.index('LogisticsApplyAceHandling'), text.index('_this spawn Waldo_fnc_LogisticsRegisterSpawned'))
+        zen = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
+        for case, registrar in (('BASE_UPSERT', 'BaseServicesRegisterNode'),
+                                ('SUPPLY_REGISTER', 'SupplyTransfersRegister'),
+                                ('PHYSICAL_ENABLE', 'PhysicalCargoRegister')):
+            block = zen[zen.index(f'case "{case}"'):]
+            self.assertLess(block.index('[_target] call Waldo_fnc_LogisticsApplyAceHandling;'),
+                            block.index(f'Waldo_fnc_{registrar}'), case)
+            # Applied inside the deferred worker, never in the curator's remote context.
+            self.assertLess(block.index('[{_this spawn {'), block.index('LogisticsApplyAceHandling'), case)
+
+    def test_jip_replays_never_recreate_removed_state(self):
+        import re
+        functions = source('MissionScripts/WaldosFunctions.sqf')
+        block = functions[functions.index('class ClientInitPhaseEnd'):]
+        block = block[:block.index('};')]
+        self.assertIn('clientInitPhaseEnd.sqf', block)
+        self.assertIn('postInit = 1;', block)
+        self.assertIn('missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];',
+                      source('MissionScripts/Networking/clientInitPhaseEnd.sqf'))
+        # The event scripts also set the flag first, so mission-maker calls there are never
+        # suppressed even if postInit happens to run after them.
+        for script in ('init.sqf', 'initPlayerLocal.sqf'):
+            text = source(script)
+            flag = text.index('missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];')
+            self.assertLess(flag, text.index('/*', text.index('*/')), script)
+        for path, fn in (('MissionScripts/MissionInit/Jamming/jammerCreate.sqf', 'Waldo_fnc_Jammer'),
+                         ('MissionScripts/MissionInit/ElectronicWarfare/tracker.sqf', 'Waldo_fnc_Tracker'),
+                         ('MissionScripts/MissionFlowAndUi/createObjective.sqf', 'Waldo_fnc_CreateObjective'),
+                         ('MissionScripts/MissionFlowAndUi/notificationTrigger.sqf', 'Waldo_fnc_NotificationTrigger'),
+                         ('MissionScripts/MissionFlowAndUi/create3DMarker.sqf', 'Waldo_fnc_Create3DMarker')):
+            text = source(path)
+            branch = text[text.index('if (!isServer) exitWith {'):]
+            self.assertLess(branch.index('Waldo_ClientInitPhaseDone'), branch.index(f'"{fn}", 2]'), path)
+            self.assertIn('Skipped Init-field replay', branch[:branch.index(f'"{fn}", 2]')], path)
+        remove = source('MissionScripts/MissionInit/Jamming/jammerRemove.sqf')
+        kept = remove[remove.index('if (!isNull _obj) then {'):remove.index('if (_deleteObject')]
+        self.assertIn('_obj setVariable ["Waldo_Jamming_Id", nil, true];', kept)
+        self.assertIn('[_obj, format ["Waldo_JammerInteraction_%1", netId _obj]] call Waldo_fnc_JipRemoveBoundServer;', kept)
+        self.assertNotIn('remoteExec ["", _obj]', kept)
+        creator = source('MissionScripts/MissionInit/Jamming/jammerCreate.sqf')
+        self.assertIn('call Waldo_fnc_JipBindToObjectServer', creator)
 
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")

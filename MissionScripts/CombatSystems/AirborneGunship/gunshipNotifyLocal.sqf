@@ -19,6 +19,7 @@
  *
  * Example:
  * ["SPECTRE is on station."] call Waldo_fnc_GunshipNotifyLocal;
+ * Result: The receiving player sees the gunship status after mission presentation clears.
  */
 
 params [["_message", "", [""]]];

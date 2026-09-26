@@ -67,6 +67,7 @@
 
 * [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 * [Quartermaster](Quartermaster)
+* [ACE Vehicle Services](ACE-Vehicle-Services)
 * [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 * [Supply Transfers](Supply-Transfers)
 * [Field Resupply](Field-Resupply)
@@ -102,6 +103,10 @@
 * [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
+  * [ACE Arsenal Exporter](ACE-Limited-Arsenal-Exporter)
+  * [Vehicle Damage Monitor](Vehicle-Damage-Monitor)
+  * [Unhiding Template](Example-Unhiding-Script)
+  * [Mod Config Patch Logger](Mod-Config-Patch-Logger)
 * [Eden Compositions](Eden-Compositions)
 * [Coding Standards](Coding-Standards)
 

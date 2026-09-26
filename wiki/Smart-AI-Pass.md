@@ -120,7 +120,7 @@ These settings set how hard the AI are without touching their skill values. Set 
 > AI Tuning** in Zeus. Changes reach the server and every headless client at once, including
 headless clients that join later. Each squad uses them from its next step; nothing restarts.
 
-| Setting | Default | Effect |
+| Setting | Type | Default | Effect |
 |---|---|---|
 | `Waldo_AIPass_BehaviourProfile` | `""` | Tactics profile for every squad without its own or its faction's. Empty follows the AI Rebalance profile. |
 | `Waldo_AIPass_Aggression` | `1` | Scales how often squads flank, assault, advance, investigate and join coordinated assaults. `0` never, `2` twice as often. |

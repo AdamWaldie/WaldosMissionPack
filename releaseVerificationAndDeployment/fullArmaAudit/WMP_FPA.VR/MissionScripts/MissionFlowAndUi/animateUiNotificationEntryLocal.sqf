@@ -13,6 +13,9 @@
  * Return Value: BOOL - true when the matching live card was animated.
  * Current caller: Waldo_fnc_ShowUiNotification after its immediate geometry pass.
  * Example: [_token, "BOTTOM_RIGHT", 0.18] call Waldo_fnc_AnimateUiNotificationEntryLocal;
+ * Locality and authority: Animates only the recipient's interface controls. Repeat calls
+ * check the live card token; no server or JIP display state is involved.
+ * Result: The matching notification enters its chosen screen region.
  */
 
 if (!hasInterface) exitWith {false};

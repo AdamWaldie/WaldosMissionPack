@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Process building manage request.
+ * Validates an actor's queued building Claim, Enable, Disable or Upgrade request.
  *
  * Part of the Waldos Economy Systems suite (Build system).
- * Locality / Authority: Server authority only; validates and applies claim, enable, disable and upgrade
+ * Locality/Authority: Server authority only; validates and applies claim, enable, disable and upgrade
  * operations through the existing Economy transaction functions.
- * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicates. Direct requests
+ * Repeat/JIP Behaviour: Existing bounded request-token history rejects duplicates. Direct requests
  * are not JIP state; legacy mailbox state is cleared only when it is actually present.
  *
  * Arguments:
@@ -19,6 +19,7 @@
  *
  * Example:
  * [_building, _request] call Waldo_fnc_EcoBuild_processBuildingManageRequest;
+ * Result: Only an authorised, current request reaches the underlying building transaction.
  */
 
         params [["_building", objNull], ["_request", []]];

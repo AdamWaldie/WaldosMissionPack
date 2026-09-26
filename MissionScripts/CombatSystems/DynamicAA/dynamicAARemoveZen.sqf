@@ -7,6 +7,11 @@
  *
  * Return Value:
  * Nothing
+ * Locality and authority: Opens a confirmation dialog on the curator's interface client.
+ * Confirmation requests server-side destruction; the dialog is not JIP replayed.
+ * Current caller: Dynamic AA - Remove in Zen_initModules.sqf.
+ * Example: [_modulePos] call Waldo_fnc_DynamicAARemoveZen;
+ * Result: The nearest live AA system can be removed or left disabled with assets intact.
  */
 
 params [["_modulePos", [], [[]]]];

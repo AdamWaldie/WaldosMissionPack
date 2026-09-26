@@ -1,18 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Companion to Waldo_fnc_CreateObjective. Updates a task's state (and tidies up
- * its map marker on completion) without the mission maker touching the BIS task
- * framework directly. Server-authoritative for JIP safety.
+ * Changes a BIS task state and updates WMP's AAR ledger. Resolved tasks lose their WMP map marker.
+ * Locality and authority: client calls forward to the server. BIS task state is JIP-safe; the AAR ledger is
+ * public. Repeating a state update replaces that task's ledger state. This call can update a task
+ * created elsewhere, but then its new AAR row uses the fallback title "Mission objective".
+ * Current callers: mission-maker scripts/triggers; the full-pack audit checks this public API.
  *
  * Arguments:
- * 0: Task ID  <STRING>  - the id passed to Waldo_fnc_CreateObjective
+ * 0: Task ID  <STRING>  - non-empty id passed to Waldo_fnc_CreateObjective (required)
  * 1: State    <STRING>  - SUCCEEDED / FAILED / CANCELED / ASSIGNED / CREATED (default: "SUCCEEDED")
  *
  * Return Value:
- * Nothing
+ * Nothing usable. Empty IDs are logged and ignored; a client call only queues server work.
  *
  * Example:
  * ["secure_lz", "SUCCEEDED"] call Waldo_fnc_SetObjectiveState;
+ * Result: the task is succeeded, its WMP marker is removed, and the AAR state is updated.
  */
 
 params [

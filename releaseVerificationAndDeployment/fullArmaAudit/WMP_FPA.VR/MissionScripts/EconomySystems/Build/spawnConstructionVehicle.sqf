@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Spawn construction vehicle.
+ * Spawns and registers a Construction Vehicle of the requested class.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _pos <ANY> - pos
+ * 0: _pos <ARRAY> - world position
  * 1: _className <STRING> - class name (optional, default: "B_Truck_01_box_F")
  *
  * Return Value:
- * Nothing
+ * <OBJECT> created vehicle on authority; client calls forward without a local result.
  *
  * Example:
  * [_pos, _className] call Waldo_fnc_EcoBuild_spawnConstructionVehicle;
+ * Locality/Authority: Server creates the vehicle; client/ZEN calls forward there.
+ * Repeat/JIP Behaviour: Each call creates a new vehicle; published tag/registry support JIP.
+ * Current Callers: Construction ZEN placement and exported mission setup calls.
+ * Result: Players receive Construction actions on the spawned vehicle.
  */
 
         params ["_pos", ["_className", "B_Truck_01_box_F"]];

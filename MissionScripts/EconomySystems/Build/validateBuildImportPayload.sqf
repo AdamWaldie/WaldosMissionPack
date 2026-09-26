@@ -1,14 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Validate build import payload.
+ * Check the outer shape and version of a saved build catalog payload.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Pure helper; import callers must still use Economy authority for
+ * mutations and normalize each entry after this shape check.
+ * Repeat/JIP: Read-only and repeat-safe; no state is published here.
+ * Current Callers: EcoBuild_importBuildConfiguration,
+ * EcoCore_buildUnifiedSaveExportPayload and EcoCore_importUnifiedBuildingsAdditive.
  *
  * Arguments:
- * 0: _payload <ANY> - payload
+ * 0: _payload <ARRAY> - decoded V1, V2 or V3 build export record (required)
  *
  * Return Value:
- * Any - see function body
+ * BOOL - true when version, include-built flag and catalog list have the
+ * expected outer types.
+ * Result: This is a shape check, not proof that each definition is valid.
  *
  * Example:
  * [_payload] call Waldo_fnc_EcoBuild_validateBuildImportPayload;

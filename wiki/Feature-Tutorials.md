@@ -37,6 +37,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Comp
 |---|---|
 | [Logistics and loadout-derived crates](Logistics-System,-Starter-Crates-And-Quartermaster) | Starter, supply and medical crates built from playable loadouts |
 | [Quartermaster](Quartermaster) | Player-requested supplies, spares, ACE rearm and fuel issues |
+| [ACE Vehicle Services](ACE-Vehicle-Services) | Give a vehicle independent ACE rearm, fuel, repair and medical roles |
 | [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) | Set an object's Drag, Carry, ACE loading size and storage space by ZEN or script |
 | [Supply Transfers](Supply-Transfers) | Selective moves, crate consolidation and per-crate ACE loading choice |
 | [Field Resupply](Field-Resupply) | Carrier-held supply allowances and refill hubs |
@@ -99,12 +100,16 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Comp
 | [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional cruise-only correction for helicopters that zoom-climb while braking |
 | [Smart AI Pass](Smart-AI-Pass) | Optional squad behaviour for non-player AI: contact drills, flanking, fire control, morale, support, orders and survivor regroup |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
-| [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
+| [Map Location Tools](Map-Location-Tools) | Intended location helpers; not ready for live missions in this version |
 | [Headless Client Support](Headless-Client-Support) | Optional AI distribution across connected headless clients; disabled by default |
 | [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional player-marker integration |
 | [ACE Corpse Traps](ACE-Corpse-Traps) | Concealed throwable traps on bodies |
 | [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
 | [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts) | Smaller arsenal, damage, visibility, and config helpers |
+| [ACE Limited Arsenal Exporter](ACE-Limited-Arsenal-Exporter) | Copy a curated item list from BLUFOR loadouts |
+| [Vehicle Damage Monitor](Vehicle-Damage-Monitor) | Inspect a target vehicle's hit-point damage in a test session |
+| [Example Unhiding Script](Example-Unhiding-Script) | Adapt a server-side reveal template to your own groups |
+| [Mod Config Patch Logger](Mod-Config-Patch-Logger) | Find loaded `CfgPatches` class names in the RPT |
 | [Cover and Loading Screen Generation](Cover-Loading-Screen-Generation) | Versioned mission artwork |
 
 ## Optional and advanced systems

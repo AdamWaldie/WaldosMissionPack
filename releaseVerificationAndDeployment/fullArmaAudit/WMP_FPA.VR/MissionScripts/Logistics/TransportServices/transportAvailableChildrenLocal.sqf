@@ -13,6 +13,7 @@
  * Example: [player, "HELICOPTER"] call Waldo_fnc_TransportAvailableChildrenLocal;
  * Current callers: Select / Manage Transport under the helicopter and ground self-action branches.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
+ * Result: ACE receives only the service choices currently available to this player.
  */
 
 params [["_player", objNull, [objNull]], ["_type", "GROUND", [""]]];

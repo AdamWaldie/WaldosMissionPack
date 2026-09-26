@@ -1,20 +1,24 @@
 /*
  * Author: WaldoTheWarfighter
- * Spawn configured building.
+ * Spawns and registers a completed building from its catalog definition.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _pos <ANY> - pos
- * 1: _buildName <ANY> - build name
+ * 0: _pos <ARRAY> - world position
+ * 1: _buildName <STRING> - catalog build name
  * 2: _sideKey <STRING> - side key (optional, default: "NONE")
- * 3: _dir <SCALAR> - dir (optional, default: 0)
+ * 3: _dir <NUMBER> - bearing in degrees (optional, default: 0)
  *
  * Return Value:
- * Nothing
+ * <OBJECT> created building on authority; client calls forward without a local result.
  *
  * Example:
  * [_pos, _buildName, _sideKey, _dir] call Waldo_fnc_EcoBuild_spawnConfiguredBuilding;
+ * Locality/Authority: Server creates the object; client/ZEN calls forward there.
+ * Repeat/JIP Behaviour: Each call creates a new building; published registry/state support JIP.
+ * Current Callers: Construction ZEN placement and exported mission setup calls.
+ * Result: The named building appears with its configured actions and marker.
  */
 
         params ["_pos", "_buildName", ["_sideKey", "NONE"], ["_dir", 0]];

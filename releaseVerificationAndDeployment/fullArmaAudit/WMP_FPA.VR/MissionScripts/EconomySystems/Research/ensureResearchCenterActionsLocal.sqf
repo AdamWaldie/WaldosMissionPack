@@ -3,9 +3,9 @@
  * Ensure research center actions local.
  *
  * Part of the Waldos Economy Systems suite (Research system).
- * Locality / Authority: Interface-client action installation only. Research and construction requests
+ * Locality/Authority: Interface-client action installation only. Research and construction requests
  * are delivered to server authority through Waldo_fnc_EcoCore_submitRequestServer.
- * Repeat / JIP Behaviour: Versioned local actions are repeat-safe and are reconstructed by the existing
+ * Repeat/JIP Behaviour: Versioned local actions are repeat-safe and are reconstructed by the existing
  * registry snapshot/revision path for JIP players.
  *
  * Arguments:
@@ -18,6 +18,7 @@
  *
  * Example:
  * [_researchCenter] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;
+ * Result: The local client receives current Research and construction actions on this centre.
  */
 
         params [["_researchCenter", objNull]];

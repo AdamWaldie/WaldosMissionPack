@@ -1,6 +1,19 @@
 /*
- * Server-authoritative arming endpoint. Rejected requests refund the magazine
- * that the client consumed after its progress action.
+ * Author: WaldoTheWarfighter
+ * Validates a completed corpse-trap planting action and arms the corpse with its projectile.
+ * Locality and authority: Server-only. The request must come from the planting player's owner;
+ * the server checks distance, magazine compatibility and unused corpse state again.
+ * Repeat/JIP: A corpse already marked ARMED is rejected. The public state lets joining clients
+ * see that a trap exists; rejected client magazines are refunded on the requesting owner.
+ * Arguments:
+ * 0: dead target <OBJECT> (default objNull)
+ * 1: planting player <OBJECT> (default objNull)
+ * 2: consumed throwable magazine classname <STRING> (default "")
+ * 3: projectile ammo classname <STRING> (default "")
+ * Return Value: <BOOL> - true after arming; false for an invalid or repeated request.
+ * Current caller: Waldo_fnc_CorpseTrapPlant after ACE progress completes.
+ * Example: [_corpse, player, "HandGrenade", "GrenadeHand"] remoteExecCall ["Waldo_fnc_CorpseTrapArmServer", 2];
+ * Result: The corpse is marked ARMED, or the consumed magazine is refunded after rejection.
  */
 params [
     ["_corpse", objNull, [objNull]],

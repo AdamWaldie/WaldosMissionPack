@@ -16,6 +16,10 @@
  * Example:
  * [] call Waldo_fnc_BreachingStop;
  * Current callers: mission-maker scripts and the full-pack function station.
+ * Locality and authority: Stops this machine's breaching listener; the server remains the
+ * authority for any already-received breach request. Repeated stop is safe; new clients
+ * receive no prior listener state.
+ * Result: This machine no longer forwards new breaching events.
  */
 
 if !(isServer) exitWith {[] remoteExecCall ["Waldo_fnc_BreachingStop", 2]};

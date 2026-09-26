@@ -11,6 +11,9 @@
  * Example:
  * [] call Waldo_fnc_UiColourVisionOpenLocal;
  * Current caller: WMP Options > Accessibility Settings self-interaction.
+ * Locality and authority: Opens a dialog only on the requesting interface client. Reopening
+ * uses current local preferences; there is no server or JIP display state.
+ * Result: The player can preview and select a colour-vision profile.
  */
 
 disableSerialization;

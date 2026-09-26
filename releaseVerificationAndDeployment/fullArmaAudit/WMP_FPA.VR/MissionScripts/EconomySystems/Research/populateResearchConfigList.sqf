@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Populate research config list.
+ * Fills the curator Research list from the current technology catalog.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - Research editor display
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoResearch_populateResearchConfigList;
+ * Locality/Authority: Curator interface client only; reads catalog and updates local listbox.
+ * Repeat/JIP Behaviour: Rebuilds list on demand; no JIP UI state is stored.
+ * Current Callers: Research editor open and catalog-change handlers.
+ * Result: Shows the current technologies while retaining a valid selection.
  */
 
         params ["_disp"];

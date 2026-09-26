@@ -45,7 +45,7 @@ private _seats = createHashMap;
             if (local _unit && {!isPlayer _unit} && {!_fireEnabled || {!(combatMode group _unit in ["YELLOW", "RED"] && {unitCombatMode _unit in ["YELLOW", "RED"]})}}) then {
                 private _previous = _unit getVariable ["Waldo_Convoy_Target", objNull];
                 if (!isNull _previous && {assignedTarget _unit == _previous}) then {_unit doTarget objNull};
-                _unit setVariable ["Waldo_Convoy_Target", nil, true];
+                if (!isNil {_unit getVariable "Waldo_Convoy_Target"}) then {_unit setVariable ["Waldo_Convoy_Target", nil, true]};
             };
             if (_fireEnabled && {local _unit} && {alive _unit} && {!isPlayer _unit} && {!_personTurret} && {_role in ["gunner", "commander", "turret"]}
                 && {!(_unit getVariable ["ACE_isUnconscious", false])} && {lifeState _unit != "INCAPACITATED"}
@@ -62,7 +62,7 @@ private _seats = createHashMap;
                 } else {
                     private _previous = _unit getVariable ["Waldo_Convoy_Target", objNull];
                     if (!isNull _previous && {assignedTarget _unit == _previous}) then {_unit doTarget objNull};
-                    _unit setVariable ["Waldo_Convoy_Target", nil, true];
+                    if (!isNil {_unit getVariable "Waldo_Convoy_Target"}) then {_unit setVariable ["Waldo_Convoy_Target", nil, true]};
                 };
             };
         } forEach fullCrew [_vehicle, "", false];

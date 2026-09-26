@@ -24,16 +24,22 @@ crew through the engine, so they are unsuitable when drivers and gunners must st
 [convoyGroup, 0, 15, true, true] call Waldo_fnc_SimpleAiConvoy; // release controller
 ```
 
+## Parameters and return value
+
 | Parameter | Type | Default | Meaning |
 |---|---|---|---|
-| Group | GROUP | required | The vehicle-driver group. |
+| Group | GROUP | `grpNull`, rejected | The vehicle-driver group. |
 | Speed | NUMBER | 30 | Maximum km/h, clamped to 5–120. Zero or less holds and unloads. |
 | Separation | NUMBER | 15 | Minimum centre spacing in metres, clamped to 10–100. Vehicle length can increase it. |
 | Push through | BOOL | true | Continue through contact; halt after being pinned for 15 seconds. False halts on contact. |
 | Release controller | BOOL | false | Remove registration and restore the recorded settings, without issuing a cargo unload. |
 
+The optional sixth argument is an internal array of named `reason` and `threat` pairs (default `[]`)
+used by the server halt helper. Mission makers normally use the five controls above.
+
 The first four parameters remain the ordinary setup controls. The fifth provides explicit cleanup
-now that stop means a persistent hold. Calls return acceptance.
+now that stop means a persistent hold. On the server, calls return Boolean acceptance. A forwarded client/HC call returns dispatch acceptance
+before the server result; inspect the registry or use Zeus feedback for confirmation.
 An existing convoy can resume with one surviving vehicle. Terminating an old spawn handle does not stop the convoy. Server scripts, authorised Zeus requests
 and the group's current headless owner may change registration.
 

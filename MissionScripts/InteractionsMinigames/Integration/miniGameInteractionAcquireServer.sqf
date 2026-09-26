@@ -12,6 +12,10 @@
  *
  * Example: [_equipment, player] remoteExecCall ["Waldo_fnc_MiniGameInteractionAcquireServer", 2];
  * Current callers: ACE and vanilla interaction actions installed by MiniGameInteraction.
+ * Locality/Authority: Server only; validates the requesting actor and owns the attempt ID.
+ * Repeat/JIP Behaviour: Rejects competing attempts while one is running. The published state
+ * is available to JIP clients, but a running display opens only for its accepted owner.
+ * Result: Returns true only for an accepted new attempt.
  */
 
 params [
