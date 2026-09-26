@@ -10,6 +10,7 @@
  * Return Value: <BOOL> whether a supported object/role was examined on the server.
  * Current callers: WMP quartermaster, crate issuers, ZEN spawners and composition object Init.
  * Example: [this, "SUPPLY"] call Waldo_fnc_LogisticsRegisterSpawned;
+ * Result: A supported new object receives WMP's appropriate ACE handling and registration.
  */
 params [["_object", objNull, [objNull]], ["_role", "", [""]]];
 if (!isServer || {isRemoteExecuted} || {isNull _object}) exitWith {false};

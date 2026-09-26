@@ -12,6 +12,10 @@
  *
  * Example:
  * private _loadoutArray = [east] call Waldo_fnc_GetSideLoadoutArray;
+ * Locality and authority: Reads the server-published side pool on the caller. Repeated reads
+ * have no side effect; JIP receives the public pool before dependent crate setup.
+ * Current callers: dynamic supply, medical/limited arsenal and side-base respawn helpers.
+ * Result: Returns the stored eight-category pool for the requested side, or [] if absent.
  */
 
 params [["_side", west]];

@@ -9,6 +9,7 @@
  * Return Value: Boolean - true when installed or already present.
  * Example: [] call Waldo_fnc_TransportInteractionInitLocal;
  * Current callers: object-keyed JIP registration from Waldo_fnc_TransportRegister and respawn init.
+ * Result: The player sees current service-request actions without duplicate ACE entries.
  */
 if (!hasInterface || {isNull player}) exitWith {false};
 if (player getVariable ["Waldo_Transport_InteractionsInstalled", false]) exitWith {true};

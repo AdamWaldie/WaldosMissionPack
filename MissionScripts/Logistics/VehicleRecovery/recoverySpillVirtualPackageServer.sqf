@@ -12,6 +12,10 @@
  *
  * Example: [_package, _carrier] call Waldo_fnc_RecoverySpillVirtualPackageServer;
  * Current caller: Waldo_fnc_RecoveryMonitorServer on carrier loss or destruction.
+ * Locality and authority: Server resolves a clear spill position and updates package state.
+ * Repeated attempts retain a virtual package until a safe position exists; resulting object
+ * state replicates to joining clients.
+ * Result: A lost carrier's virtual package appears at a safe location or stays queued.
  */
 params [['_package', objNull, [objNull]], ['_carrier', objNull, [objNull]]];
 if (!isServer || {remoteExecutedOwner > 0} || {isNull _package} || {!(_package getVariable ['Waldo_Recovery_IsVirtualLoaded', false])}) exitWith {false};

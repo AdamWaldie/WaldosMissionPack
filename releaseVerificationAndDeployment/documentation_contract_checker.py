@@ -68,7 +68,10 @@ def changed_sqf(base: str) -> list[Path]:
 
 def audit_file(path: Path, required: tuple[str, ...]) -> list[str]:
     text = path.read_text(encoding="utf-8", errors="replace")
-    header = re.match(r"\s*/\*(.*?)\*/", text, re.S)
+    # SQF #include directives must stay ahead of the first block comment for the
+    # repository's source validator. Treat only leading includes as part of the
+    # opening region; executable statements still cannot hide a late header.
+    header = re.match(r"\s*(?:#include[^\n]*\n\s*)*/\*(.*?)\*/", text, re.S)
     if required is SCRIPT_REQUIRED and header is None:
         return ["missing opening documentation block"]
     scope = header.group(1) if required is SCRIPT_REQUIRED else text

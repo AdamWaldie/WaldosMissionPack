@@ -20,6 +20,7 @@
  *
  * Example:
  * [quartermaster, player, "Ammo", 90, 3] call Waldo_fnc_LogisticsSpawner;
+ * Result: A validated issue creates one requested supply or support object near the QM.
  */
 
 params [

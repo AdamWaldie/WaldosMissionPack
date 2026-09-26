@@ -12,6 +12,10 @@
  *
  * Example:
  * private _clean = [_rawWeapons] call Waldo_fnc_UniqueLoadoutArray;
+ * Locality and authority: Stateless array cleanup on the caller; no server mutation or JIP
+ * replay. Repeating it on the same array returns the same unique values.
+ * Current callers: MissionSQMLookup and CreateLimitedArsenal.
+ * Result: Empty and duplicate classnames are removed from the supplied list.
  */
 
 params [["_arr", []]];

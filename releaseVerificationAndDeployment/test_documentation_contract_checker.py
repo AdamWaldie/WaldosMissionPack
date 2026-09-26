@@ -50,6 +50,22 @@ true
         self.assertIn("missing `Arguments:`", findings)
         self.assertIn("missing locality/authority", findings)
 
+    def test_leading_include_directives_before_header_pass(self) -> None:
+        contents = """#include "VVDIDC.inc"
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Example only.
+ * Locality and authority: Client only; repeat-safe and no JIP replay.
+ * Arguments: None.
+ * Return Value: Boolean.
+ * Current callers: initPlayerLocal.sqf.
+ * Example: [] call Waldo_fnc_Example;
+ * Result: Returns true.
+ */
+true
+"""
+        self.assertEqual([], self.audit_text(contents))
+
     def test_script_needs_an_opening_block(self) -> None:
         self.assertEqual(["missing opening documentation block"], self.audit_text("true"))
 

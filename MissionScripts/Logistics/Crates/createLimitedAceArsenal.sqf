@@ -1,18 +1,17 @@
 /*
-Function with the purpose to create an ace arsenal on the object, limited to the equipment retireved from the mission.sqm
-
-parameters:
-_target - the object variable name you want this to apply to
-_crateSupplyside - the side that the crate will populate equipment from. Options: West,East,Independent,Civilian
-_preExisting - user defined boolean for specifying whether an ace arsenal already exists on the object.
-
-[_target,_crateSupplyside,_preExisting] spawn Waldo_fnc_CreateLimitedArsenal;
-
-e.g.
-
-[this, west, false] spawn Waldo_fnc_CreateLimitedArsenal;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Creates an ACE arsenal limited to equipment found in the mission's side-specific loadout pool.
+ * Locality and authority: Scheduled helper called by the server's starter-crate setup after
+ * mission scanning is ready. It waits for both readiness flags, then updates the target arsenal.
+ * Repeat/JIP: Calling again adds the same pool to an existing arsenal or reinitialises the box;
+ * ACE owns arsenal state for later joiners. Do not call once per client from an unguarded init.
+ * Arguments: 0: target arsenal object <OBJECT>; 1: supply side <SIDE> (west);
+ *   2: arsenal already exists <BOOL> (false).
+ * Return Value: No supported value; spawn this scheduled helper for its arsenal side effect.
+ * Current caller: Waldo_fnc_DoStarterCrate after the mission loadout scan.
+ * Example: [this, west, false] spawn Waldo_fnc_CreateLimitedArsenal;
+ * Result: The object offers only the equipment derived for the west-side mission pool.
+ */
 params["_target",["_crateSupplySide",west],["_preExisting",false]];
 
 //Wait Until Init is completed & players ingame (Postinit hack)

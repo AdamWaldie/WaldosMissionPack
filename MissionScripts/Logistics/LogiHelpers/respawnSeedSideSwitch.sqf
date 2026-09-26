@@ -16,6 +16,9 @@
  * ["EAST"] call Waldo_fnc_RespawnSeedSideSwitch;
  *
  * Current callers: initPlayerLocal.sqf's live "group" event handler.
+ * Locality and authority: Handles a group-side change on the player's interface client.
+ * Repeating a switch recalculates only that player's respawn seed; no global JIP state changes.
+ * Result: The next respawn follows the configured side-switch policy.
  */
 params [["_newSideKey", "", [""]]];
 if !(hasInterface) exitWith {false};
