@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: repeat-safe and reconciled for every client.
  * Arguments: module position ARRAY, selected object OBJECT. Return Value: Nothing.
  * Current caller: ZEN "Dialogue - Clear". Example: place directly on an NPC.
+ * Result: The curator receives a clear-assignment dialog for the selected NPC.
  */
 params ["_modulePos", ["_target", objNull, [objNull]]];
 if (isNull _target) exitWith {["DIALOGUE", "Place this module directly on an NPC.", "WARNING", "DIALOGUE_ZEN", 6] call Waldo_fnc_FeatureNotifyLocal};
