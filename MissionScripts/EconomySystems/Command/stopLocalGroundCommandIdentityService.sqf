@@ -16,6 +16,9 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoCommand_stopLocalGroundCommandIdentityService;
+ * Locality/Authority: Interface client only; removes its local player-unit handler.
+ * Repeat/JIP Behaviour: Repeated cleanup is safe and invalidates pending callbacks.
+ * Result: Returns true after cleanup, false without an interface client.
  */
 
 if (!hasInterface) exitWith {false};

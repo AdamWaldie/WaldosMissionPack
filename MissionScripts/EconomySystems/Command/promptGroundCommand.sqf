@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Prompt ground command.
+ * Opens the curator's Ground Command membership prompt.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
  * Arguments:
- * 0: _ctrl <ANY> - ctrl
- * 1: _index <ANY> - index
+ * None; ZEN callback arguments, if supplied, are not read by this function.
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
- * [_ctrl, _index] call Waldo_fnc_EcoCommand_promptGroundCommand;
+ * [] call Waldo_fnc_EcoCommand_promptGroundCommand;
+ * Locality/Authority: Curator interface client only; Promote/Remove buttons send validated
+ * requests to the Economy server bridge.
+ * Repeat/JIP Behaviour: Opens a fresh local prompt; membership comes from published state.
+ * Current Callers: Ground Command ZEN/curator authoring action.
+ * Result: Shows the current command list with Promote and Remove controls.
  */
 
     if (!hasInterface) exitWith {};
