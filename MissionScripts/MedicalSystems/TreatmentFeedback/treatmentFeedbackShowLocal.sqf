@@ -11,7 +11,7 @@
  * 2: semanticState <STRING> (default "INFO").
  * Return Value: BOOLEAN - true when queued for local notification; false without an interface
  * or with an empty message.
- * Current caller: Waldo_fnc_TreatmentFeedbackNotify, locally or via remoteExecCall to a patient.
+ * Current caller: Waldo_fnc_TreatmentFeedbackNotify, locally or sent to the patient's client.
  * Example: ["TREATMENT COMPLETE", "Bandage applied", "SUCCESS"] call Waldo_fnc_TreatmentFeedbackShowLocal;
  * Result: The executing player sees a timed bottom-centre treatment notification.
  */
