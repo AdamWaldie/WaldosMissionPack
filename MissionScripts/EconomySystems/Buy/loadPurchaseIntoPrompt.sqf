@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Load purchase into prompt.
+ * Loads one catalog row into the curator Purchase editor controls.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
- * 1: _index <SCALAR> - index (optional, default: -1)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
+ * 1: _index <NUMBER> - selected row (optional, default: -1)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp, _index] call Waldo_fnc_EcoBuy_loadPurchaseIntoPrompt;
+ * Locality/Authority: Curator interface client; local form only.
+ * Repeat/JIP Behaviour: Each selection replaces form values; no JIP UI replay.
+ * Current Callers: Purchase editor list selection.
+ * Result: The fields and icon preview reflect the selected asset.
  */
 
         params [["_disp", displayNull], ["_index", -1]];

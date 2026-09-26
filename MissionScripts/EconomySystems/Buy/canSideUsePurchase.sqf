@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Can side use purchase.
+ * Checks whether an asset is available to the specified side.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true for EVERYONE entries or a matching side.
  *
  * Example:
  * [_entry, _sideKey] call Waldo_fnc_EcoBuy_canSideUsePurchase;
+ * Locality/Authority: Any machine; pure check against the catalog row.
+ * Repeat/JIP Behaviour: Stateless; JIP receives the same published row.
+ * Current Callers: Purchase status and authoritative purchase validation.
+ * Result: Returns false for an empty row or a side-restricted mismatch.
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];
