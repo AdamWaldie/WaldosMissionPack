@@ -101,6 +101,10 @@
 * [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
+  * [ACE Arsenal Exporter](ACE-Limited-Arsenal-Exporter)
+  * [Vehicle Damage Monitor](Vehicle-Damage-Monitor)
+  * [Unhiding Template](Example-Unhiding-Script)
+  * [Mod Config Patch Logger](Mod-Config-Patch-Logger)
 * [Eden Compositions](Eden-Compositions)
 * [Coding Standards](Coding-Standards)
 

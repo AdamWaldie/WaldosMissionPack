@@ -194,9 +194,10 @@ python releaseVerificationAndDeployment/wiki_style_checker.py
 python releaseVerificationAndDeployment/check_wiki_assets.py
 ```
 
-The structure check follows the feature index, requires a separate page for the registered
-standalone features, checks their setup/reference/troubleshooting sections, and catches known
-obsolete instructions. It also refuses external screenshots except the repository cover image.
+The structure check follows the feature index automatically. Every indexed feature must have
+its own page with setup, reference, troubleshooting and related-page sections. New index entries
+enter this check without a manual allow-list. The check also catches known obsolete instructions
+and refuses external screenshots except the repository cover image.
 These checks catch omissions, not factual errors. Compare setup examples and defaults with the
 current `MissionConfig` and the function called before publishing a page.
 

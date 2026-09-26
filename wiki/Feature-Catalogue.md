@@ -103,7 +103,11 @@ Runtime configuration is server-authoritative. Current settings are published fo
 ## AI, radio and mission-maker tools
 
 - [AI Convoy System](AI-Convoy-System)
-- [Map Location Tools](Map-Location-Tools)
+- [Map Location Tools](Map-Location-Tools) (helpers need repair before live mission use)
+- [ACE Limited Arsenal Exporter](ACE-Limited-Arsenal-Exporter)
+- [Vehicle Damage Monitor](Vehicle-Damage-Monitor)
+- [Example Unhiding Script](Example-Unhiding-Script)
+- [Mod Config Patch Logger](Mod-Config-Patch-Logger)
 - [Headless Client Support](Headless-Client-Support)
 - [Optional Third-Party Scripts (Player Markers)](Third-Party-Scripts-Headless-Client-And-Player-Markers)
 - [ACRE 2 Long-Range Presetting](ACRE-2-Long-Range-Radio-Presetting)
