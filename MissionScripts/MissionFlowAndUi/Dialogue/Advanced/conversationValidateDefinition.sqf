@@ -4,6 +4,7 @@
  * Locality/authority: pure validation; callbacks are inspected but never executed.
  * Repeat/JIP behaviour: deterministic. Arguments: 0 definition HASHMAP. Return Value: ARRAY [valid BOOL, issues ARRAY].
  * Current caller: ConversationRegister. Example: private _result = [_definition] call Waldo_fnc_ConversationValidateDefinition;
+ * Result: Returns whether the definition is valid and which issues require correction.
  */
 params [["_definition", createHashMap, [createHashMap]]];
 private _issues = [];

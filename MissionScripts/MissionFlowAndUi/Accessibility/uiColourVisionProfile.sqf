@@ -12,6 +12,9 @@
  * Example:
  * private _profile = ["RED_GREEN"] call Waldo_fnc_UiColourVisionProfile;
  * Current callers: UiTheme, UiColourVisionApplyLocal and UiColourVisionOpenLocal.
+ * Locality and authority: Pure local profile lookup. Repeated calls do not change mechanics
+ * or publish JIP state.
+ * Result: Returns colour tokens for the requested supported profile.
  */
 
 params [["_requested", profileNamespace getVariable ["Waldo_UI_ColourVisionProfile", "STANDARD"], [""]]];
