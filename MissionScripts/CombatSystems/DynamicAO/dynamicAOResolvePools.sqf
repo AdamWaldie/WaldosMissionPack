@@ -17,6 +17,9 @@
  *
  * Example:
  * ["OPF_F", east] call Waldo_fnc_DynamicAOResolvePools;
+ * Locality and authority: Reads faction and unit configuration on the caller. Repeated calls
+ * resolve the same available mod classes; no state is published for JIP.
+ * Result: Returns the usable class pools for this faction and side.
  */
 params [["_faction", "", [""]], ["_side", east, [west]]];
 private _sideKey = [east, west, independent, civilian] find _side;

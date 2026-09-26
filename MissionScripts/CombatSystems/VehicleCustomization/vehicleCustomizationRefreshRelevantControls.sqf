@@ -20,6 +20,9 @@
  *
  * Example:
  * [_display] call Waldo_fnc_VehCust_refreshRelevantControls;
+ * Locality and authority: Runs only on the requesting curator's interface display. Repeated
+ * refreshes replace visible control state; no server or JIP state is involved.
+ * Result: Controls unrelated to the selected editor operation are hidden or disabled.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {false};
