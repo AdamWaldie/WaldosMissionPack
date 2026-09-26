@@ -3,6 +3,10 @@
  * Zeus module handler: finds the nearest registered radio jammer to where the curator dropped the
  * module and removes it, deleting its emitter object and map marker (Waldo_fnc_JammerRemove). No
  * dialog - it acts immediately and reports to the curator. The registry write is server-authoritative.
+ * Locality and authority: Client forwards placement to the server. The server identifies the
+ * nearest registered jammer and removes its authoritative state.
+ * Repeat/JIP: A repeated request can only remove a currently registered jammer; removed state
+ * is no longer replayed to joining clients.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -10,6 +14,9 @@
  *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenJammerRemove;
+ * Return Value: Nothing useful; a client request is forwarded asynchronously.
+ * Current caller: ZEN Remove Radio Jammer module registration.
+ * Result: The nearest registered jammer is removed, with feedback to the curator.
  *
  * Public: No
  */

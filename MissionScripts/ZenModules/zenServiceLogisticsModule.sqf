@@ -7,6 +7,8 @@
  * Return Value: <BOOL> whether a dialog or inspection was opened.
  * Current callers: WMP Logistics and Mission Flow ZEN registrations.
  * Example: ["BASE", getPosATL cursorObject, cursorObject] call Waldo_fnc_ZenServiceLogisticsModule;
+ * Result: The selected object's current service, quartermaster or ACE Cargo settings open in
+ * a labelled curator dialog; applying changes sends an authenticated server request.
  */
 params [["_feature", "", [""]], ["_modulePos", [], [[]]], ["_target", objNull, [objNull]]];
 if (!hasInterface || {isNull _target}) exitWith {

@@ -7,6 +7,10 @@
  * modules it replaces. Purely read-only, so it runs entirely on the curator's own client with no
  * server round-trip and no curator-authentication bridge - nothing here is more sensitive than looking
  * at the vehicle in Eden already would tell you.
+ * Locality and authority: Curator-client read-only inspection; it does not mutate vehicle or
+ * server state.
+ * Repeat/JIP: Each placement reads current vehicle state afresh. No persistent JIP or local
+ * action is installed.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module (unused).
@@ -21,6 +25,8 @@
  *
  * Current caller: the ZEN "Vehicle Customisation - Inspect" module registered by
  * Waldo_fnc_ZenInitModules under category "WMP Vehicle Customisation".
+ * Result: The current combined report is shown and logged, with paste-ready rows copied when
+ * the vehicle exposes any.
  */
 
 if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};

@@ -4,6 +4,10 @@
  * managed convoy using the pack's own Waldo_fnc_SimpleAiConvoy behaviour
  * (column formation, speed limiting, separation keeping, optional push-through).
  * The Zeus places the module on or near the lead vehicle of the convoy.
+ * Locality and authority: Curator interface finds the nearest crewed land vehicle within 150 m;
+ * the convoy behaviour is then configured through the selected group's normal AI path.
+ * Repeat/JIP: Each placement opens a new dialog; the module installs no persistent local
+ * handler of its own. Existing convoy setup determines repeat and JIP behaviour.
  *
  * Arguments:
  * 0: modulePos <POSITION> - where the Zeus dropped the module
@@ -13,6 +17,8 @@
  *
  * Example:
  * [_modulePos] call Waldo_fnc_ZenConvoyModule;
+ * Current caller: ZEN "Spawn AI Convoy" module registration.
+ * Result: The curator sees convoy speed and behaviour controls for the resolved AI group.
  *
  * Public: No
  */

@@ -9,6 +9,10 @@
  * ignored. Any picked sides/groups/players are resolved into one deduplicated unit list and sent as
  * a single UNITS notification, so a player who is both on a selected side and individually selected
  * is never notified twice.
+ * Locality and authority: Opens on the curator interface; the server validates and dispatches
+ * the final audience and notification request.
+ * Repeat/JIP: Each placement opens one transient dialog. Notifications are sent to current
+ * recipients rather than stored for later joining players.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module.
@@ -22,6 +26,7 @@
  * [_modulePos, _objectPos] call Waldo_fnc_ZenNotify;
  *
  * Current caller: the ZEN "Mission Flow: Send Notification" module.
+ * Result: The curator can compose one message for everyone or a deduplicated mixed audience.
  */
 
 if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};
