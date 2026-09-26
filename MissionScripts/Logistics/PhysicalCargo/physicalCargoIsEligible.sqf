@@ -7,6 +7,7 @@
  *
  * Any carryable prop is eligible by default: crates, ACE spare wheels and tracks, fuel barrels,
  * jerrycans and mission props. People, static weapons, vehicles, aircraft and boats never are.
+ * Starter crates remain excluded from automatic physical mounting.
  * An explicit Waldo_PhysicalCargo_Eligible = false (ZEN "Disallow physical mounting") opts an
  * object out and leaves it on native ACE Carry and Cargo.
  *
@@ -19,7 +20,7 @@
  * Example: [cursorObject] call Waldo_fnc_PhysicalCargoIsEligible;
  */
 params [["_object", objNull, [objNull]]];
-if (isNull _object) exitWith {false};
+if (isNull _object || {_object getVariable ["Waldo_Logistics_StarterCrate", false]}) exitWith {false};
 if (_object isKindOf "CAManBase" || {_object isKindOf "StaticWeapon"} || {_object isKindOf "LandVehicle"}
     || {_object isKindOf "Air"} || {_object isKindOf "Ship"}) exitWith {false};
 _object getVariable ["Waldo_PhysicalCargo_Eligible", true]

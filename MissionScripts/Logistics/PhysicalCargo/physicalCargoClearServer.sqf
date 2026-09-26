@@ -24,6 +24,7 @@ private _vehicle = _cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", ob
 private _mounts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);
 private _mountIndex = _mounts findIf {(_x select 0) isEqualTo _cargo};
 if (isNull _vehicle && {_mountIndex < 0}) exitWith {false};
+_cargo setVariable ["Waldo_PhysicalCargo_ServerMountRevision", nil];
 if (isNull _vehicle && {_mountIndex >= 0}) then {_vehicle = (_mounts select _mountIndex) select 1};
 private _safeDrop = count _dropPosition == 3;
 private _priorSimulation = _cargo getVariable ["Waldo_PhysicalCargo_PreviousSimulation", true];

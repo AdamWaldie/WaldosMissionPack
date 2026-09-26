@@ -20,8 +20,11 @@ if (isNil "ace_common_fnc_addActionEventHandler" || {isNil "ace_common_fnc_remov
 
 private _id = ["ace_dragging_startedCarry", {
     params ["_unit", "_cargo"];
-    if !(missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) exitWith {};
     if (_unit isNotEqualTo player || {!local _unit} || {isNull _cargo}) exitWith {};
+    private _savedMass = _cargo getVariable ["Waldo_PhysicalCargo_OriginalMass", 0];
+    if (_savedMass > 0) then {
+        _cargo setVariable ["ace_dragging_originalMass", _savedMass, true];
+    };
     private _mounted = !isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]);
     if (!_mounted) then {
         _mounted = ((missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []])
@@ -32,6 +35,7 @@ private _id = ["ace_dragging_startedCarry", {
             netId _cargo, owner _unit, netId (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])];
         [_cargo, _unit] remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer", 2];
     };
+    if !(missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) exitWith {};
     if !([_cargo] call Waldo_fnc_PhysicalCargoIsEligible) exitWith {
         diag_log format ["[WMP PHYSICAL CARGO] %1 is not eligible; native ACE release remains.", typeOf _cargo];
     };

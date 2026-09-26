@@ -3015,7 +3015,7 @@ class FullAuditTests(unittest.TestCase):
         range_check = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionRange.sqf").read_text(encoding="utf-8")
         zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf").read_text(encoding="utf-8")
         fixture = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
-        self.assertIn('remoteExec ["Waldo_fnc_JammerInteraction", 0, _object]', create)
+        self.assertIn('remoteExec ["Waldo_fnc_JammerInteraction", 0, _jipId]', create)
         self.assertIn('call Waldo_fnc_MiniGameInteractionSetup', interaction)
         self.assertIn('"actorCondition"', interaction)
         self.assertIn('call Waldo_fnc_JammerDisableServer', interaction)

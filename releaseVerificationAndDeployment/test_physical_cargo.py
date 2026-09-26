@@ -92,6 +92,7 @@ class PhysicalCargoSourceTests(unittest.TestCase):
             self.assertIn(f'isKindOf {kind}', rule)
         self.assertIn('_object getVariable ["Waldo_PhysicalCargo_Eligible", true]', rule)
         self.assertNotIn('ReammoBox_F', rule)
+        self.assertIn('Waldo_Logistics_StarterCrate', rule)
         for source in (self.read("physicalCargoInitLocal.sqf"), self.read("physicalCargoAttachServer.sqf"),
                        (ROOT / "MissionScripts" / "ZenModules" / "zenServiceLogisticsModule.sqf").read_text(encoding="utf-8"),
                        (ROOT / "MissionScripts" / "ZenModules" / "zenServiceLogisticsServer.sqf").read_text(encoding="utf-8")):
@@ -100,7 +101,7 @@ class PhysicalCargoSourceTests(unittest.TestCase):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         self.assertIn('class PhysicalCargoIsEligible', functions)
 
-    def test_mount_never_simulates_full_mass_inside_vehicle(self):
+    def test_mount_mass_recovery_uses_owner_acknowledgement(self):
         release = self.read("physicalCargoReleaseLocal.sqf")
         attach = self.read("physicalCargoAttachServer.sqf")
         clear = self.read("physicalCargoClearServer.sqf")
@@ -113,13 +114,38 @@ class PhysicalCargoSourceTests(unittest.TestCase):
                         release.index('Waldo_fnc_PhysicalCargoAttachServer'))
         # A rejected mount is detached and moved clear before its mass returns.
         reject = attach[attach.index('private _reject'):attach.index('private _bounds')]
-        self.assertLess(reject.index('detach _cargo'), reject.index('ace_common_setMass'))
-        self.assertLess(reject.index('findEmptyPosition'), reject.index('ace_common_setMass'))
+        self.assertNotIn('ace_common_setMass', reject)
+        self.assertIn('if (_clear isEqualTo []) exitWith', reject)
+        self.assertIn('Waldo_PhysicalCargo_RestorePending', reject)
+        self.assertIn('Waldo_fnc_PhysicalCargoRestoreLocal', reject)
+        self.assertIn('CBA_fnc_execNextFrame', attach)
+        recovery = attach[attach.index('// The recovery worker'):]
+        self.assertNotIn('call Waldo_fnc_PhysicalCargoClearServer', recovery)
+        self.assertIn('private _released =', recovery)
         self.assertIn('Waldo_fnc_PhysicalCargoUnmountServer', attach)
         # Mass returns to ACE on pickup, or after the safe set-down is acknowledged.
         self.assertIn('_cargo setVariable ["ace_dragging_originalMass", _mass, true]', clear)
         self.assertIn('Waldo_PhysicalCargo_RestoreMass', clear)
         self.assertLess(ack.index('_cargo enableSimulationGlobal _priorSimulation'), ack.index('ace_common_setMass'))
+
+    def test_provisional_attachment_is_not_an_owner_acknowledgement(self):
+        apply = self.read("physicalCargoApplyLocal.sqf")
+        attach = self.read("physicalCargoAttachServer.sqf")
+        owner = apply.split('if (local _cargo) then {', 1)[1]
+        self.assertLess(owner.index('setVectorDirAndUp'), owner.index('"Waldo_PhysicalCargo_OwnerAppliedRevision"'))
+        self.assertEqual(attach.count('"Waldo_PhysicalCargo_OwnerAppliedRevision", -1'), 3)
+
+    def test_old_mount_worker_cannot_recover_a_later_mount(self):
+        attach = self.read("physicalCargoAttachServer.sqf")
+        clear = self.read("physicalCargoClearServer.sqf")
+        self.assertIn('"Waldo_PhysicalCargo_ServerMountRevision", _revision', attach)
+        self.assertEqual(attach.count('"Waldo_PhysicalCargo_ServerMountRevision", -1'), 2)
+        self.assertIn('"Waldo_PhysicalCargo_ServerMountRevision", nil', clear)
+
+    def test_pickup_recovers_mass_before_server_clear_request(self):
+        pickup = self.read("physicalCargoInitLocal.sqf")
+        self.assertLess(pickup.index('"ace_dragging_originalMass", _savedMass'),
+                        pickup.index('remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer"'))
 
     def test_unload_restores_physics_after_owner_placement(self):
         clear = self.read("physicalCargoClearServer.sqf")

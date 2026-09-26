@@ -53,6 +53,8 @@ if (local _cargo) then {
     // The object is already attached. Arma interprets direction changes relative to
     // the carrier's model space, which is exactly how the saved axes were measured.
     _cargo setVectorDirAndUp [vectorNormalized _relativeDir, vectorNormalized _relativeUp];
+    // A provisional client attach is not proof that the owner applied the approved pose.
+    _cargo setVariable ["Waldo_PhysicalCargo_OwnerAppliedRevision", _revision, true];
 };
 if (isNil {_cargo getVariable "Waldo_PhysicalCargo_LocalityEH"}) then {
     private _id = _cargo addEventHandler ["Local", {

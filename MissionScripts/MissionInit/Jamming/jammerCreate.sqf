@@ -3,9 +3,12 @@
  * Creates (or updates) a localised radio jammer anchored to a world object. This is the main
  * ease-of-use entry point for the jamming system: give it an object and a radius and you have
  * a working jammer that denies ACRE2 and/or TFAR radio comms in that area. Server-authoritative
- * - calling it from a client (or an object init field on a client) forwards to the server, which
+ * - client calls after local startup forward to the server; client Eden Init replays are skipped.
+ * The server
  * owns the broadcast jammer registry so JIP / rejoining players inherit every jammer. Idempotent
  * per object: calling again on the same object updates that jammer in place instead of stacking.
+ * Interaction replay uses a named entry bound to the emitter lifetime, allowing other WMP
+ * features to share that emitter. Current callers: Eden Init, server scripts, ZEN placement.
  *
  * Arguments:
  * 0: Object <OBJECT> - the emitter the jammer is anchored to (its position is the jam centre)
@@ -210,7 +213,9 @@ if (_isNew && {missionNamespace getVariable ["Waldo_Jamming_Destructible", true]
 
 // Install the player ACE interaction (toggle / detonate) on every machine for this emitter.
 if (_isNew) then {
-    [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _object];
+    private _jipId = format ["Waldo_JammerInteraction_%1", netId _object];
+    [_object, _jipId] call Waldo_fnc_JipBindToObjectServer;
+    [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _jipId];
 };
 
 diag_log format ["[WMP JAM] Jammer %1 registered: radius=%2 falloff=%3 sides=%4 sector=%5 duty=%6 active=%7", _id, _radius, _falloff, _sidesN, _sectorN, _dutyN, _active];

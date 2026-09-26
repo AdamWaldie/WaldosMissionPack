@@ -16,6 +16,10 @@
  * 6: Create marker <BOOL>                         - drop a persistent map marker at destination (default: true)
  * 7: Task type     <STRING>                       - task icon type (default: "" = default icon)
  *
+ * Repeat / JIP: Server calls update the task; client Eden Init replays are ignored.
+ * Later client calls forward to the server. BIS task state and the AAR ledger synchronize to JIP.
+ * Current callers: mission-maker Eden Init fields, scripts and triggers.
+ *
  * Return Value:
  * Nothing
  *

@@ -82,7 +82,7 @@ this setVariable ["ace_cargo_delay", 5, true];
 
 That sets a five-second ACE loading delay for that object. Changing a crate's cargo size does not change the loading time of a vehicle placed inside it. See the [ACE Cargo framework](https://ace3.acemod.org/wiki/framework/cargo-framework) for ACE's cargo rules.
 
-ACE handling alone does not register an object for [Supply Transfers](Supply-Transfers) or enable [Physical Cargo](Physical-Cargo). Follow each feature's setup if you need those actions.
+ACE handling alone does not register an object for [Supply Transfers](Supply-Transfers) or switch on the global [Physical Cargo](Physical-Cargo) feature. While Physical Cargo is enabled, carryable props qualify by default unless excluded or explicitly opted out.
 
 ## If a setting does not stick
 

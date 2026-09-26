@@ -18,11 +18,12 @@ The server owns eligibility and mount records. Each object's owner applies its a
 
 Release the crate away from a vehicle for an ordinary ground drop. ACE's menu can still load it
 inside ACE Cargo. [Crate options](Supply-Transfers) can change that loading choice for a registered
-crate. WMP reports a failed physical mount after it releases the object, leaving the crate available.
+crate. A rejected mount requests a checked ground position on the cargo owner. If no clear
+position exists, WMP retains the near-zero-mass attachment and asks you to recover it with ACE Carry.
 
 Any object a player can ACE Carry is eligible by default: crates, Quartermaster spare wheels and
 tracks, fuel barrels, jerrycans and your own props. People, static weapons, vehicles, aircraft and
-boats never are. To keep one object on plain ACE Carry and Cargo, use **Disallow physical mounting**
+boats and starter crates are excluded. To keep one object on plain ACE Carry and Cargo, use **Disallow physical mounting**
 in the Zeus module below. WMP registers placed `ReammoBox_F` crates at startup and its own issued
 stores when they spawn, which also gives them ACE Drag and Carry regardless of weight.
 The feature flag controls mounting and seat effects. [ACE Cargo and object handling](ACE-Cargo-And-Object-Handling)
@@ -52,8 +53,10 @@ WMP also registers every Quartermaster issue, including wheels, tracks, fuel bar
 for the physical carry-release path.
 
 While mounted, an object keeps the near-zero physics mass ACE gives it during a carry. It gets its
-real mass back when a player picks it up again or when it is set down clear of the vehicle. This
-stops a heavy crate from throwing or destroying the vehicle it is released onto.
+saved mass back through ACE on the next ground drop, or after the cargo owner acknowledges a
+checked set-down. The server recovery worker runs outside the remote request context. A failed
+clear-position search keeps the cargo inert; it never falls back to waking it inside the vehicle.
+These changes still require dedicated-server physics testing with the mission's ACE version.
 
 WMP accepts a valid contact hit on land, air or sea vehicles. Test each crate and vehicle combination
 in Arma before using it in a mission.
@@ -110,7 +113,7 @@ figures. Test a heavily loaded mission on its intended server before relying on 
 ## Carrying cargo away
 
 Stand near the crate and the intended contact point. Stop the vehicle before mounting. If the click
-misses the vehicle or the mount fails, the crate drops and remains available. Use ACE **Carry** to
+misses the vehicle, the crate drops normally. A rejected mount uses the checked recovery path above. Use ACE **Carry** to
 remove mounted cargo, then put it on clear ground or another vehicle. A direct unload could leave the
 crate inside the vehicle model, so there is no player **Unload physical cargo** action. Server scripts
 can call `Waldo_fnc_PhysicalCargoUnmountServer` when they need a checked ground position.

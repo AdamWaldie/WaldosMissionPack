@@ -140,7 +140,7 @@ switch (toUpperANSI _operation) do {
     };
     case "PHYSICAL_ENABLE": {
         if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]
-            && {!(_target isKindOf "StaticWeapon" || {_target isKindOf "LandVehicle"}
+            && {!(_target isKindOf "CAManBase" || {_target isKindOf "StaticWeapon"} || {_target isKindOf "LandVehicle"}
                 || {_target isKindOf "Air"} || {_target isKindOf "Ship"})}) then {
             [{_this spawn {
                 params ["_target", "_replyOwner"];

@@ -36,6 +36,8 @@ if (!isNull _requestedVehicle && {_vehicle isNotEqualTo _resolvedVehicle}) then 
 };
 private _validVehicle = !isNull _vehicle
     && {_vehicle isKindOf "LandVehicle" || {_vehicle isKindOf "Air"} || {_vehicle isKindOf "Ship"}}
+    && {[_cargo] call Waldo_fnc_PhysicalCargoIsEligible}
+    && {missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]}
     && {_vehicle isNotEqualTo _cargo}
     && {alive _vehicle}
     && {abs speed _vehicle < 5}
@@ -63,6 +65,12 @@ if (_validVehicle) then {
     if (_mass > 0) then {
         _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", _mass, true];
         _cargo setVariable ["ace_dragging_originalMass", 0, true];
+    };
+} else {
+    private _mass = _cargo getVariable ["Waldo_PhysicalCargo_OriginalMass", 0];
+    if (_mass > 0) then {
+        _cargo setVariable ["ace_dragging_originalMass", _mass, true];
+        _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", nil, true];
     };
 };
 

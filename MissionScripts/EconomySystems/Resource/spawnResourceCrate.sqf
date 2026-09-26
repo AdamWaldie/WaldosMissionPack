@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Purpose: Spawn a collectible economy resource case with its resource rows,
  * marker and ACE Drag/Carry. This case is not an inventory crate and does not
- * join Supply Transfers or Physical Cargo automatically.
+ * join Supply Transfers. Its ACE-carryable prop can use Physical Cargo when enabled.
  * Locality / Authority: Economy authority creates and tags the case. ACE
  * portability is published globally from the server.
  * Repeat / JIP: Each call creates one new case. Resource and ACE state replay

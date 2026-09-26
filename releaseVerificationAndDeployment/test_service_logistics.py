@@ -413,7 +413,10 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         remove = source('MissionScripts/MissionInit/Jamming/jammerRemove.sqf')
         kept = remove[remove.index('if (!isNull _obj) then {'):remove.index('if (_deleteObject')]
         self.assertIn('_obj setVariable ["Waldo_Jamming_Id", nil, true];', kept)
-        self.assertIn('remoteExec ["", _obj];', kept)
+        self.assertIn('[_obj, format ["Waldo_JammerInteraction_%1", netId _obj]] call Waldo_fnc_JipRemoveBoundServer;', kept)
+        self.assertNotIn('remoteExec ["", _obj]', kept)
+        creator = source('MissionScripts/MissionInit/Jamming/jammerCreate.sqf')
+        self.assertIn('call Waldo_fnc_JipBindToObjectServer', creator)
 
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")

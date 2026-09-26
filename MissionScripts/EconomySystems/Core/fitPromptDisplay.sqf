@@ -122,6 +122,9 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             private _fontHeight = ctrlFontHeight _x;
             if (_fontHeight > 0) then {
                 _fontHeight = _fontHeight min (_newHeight * 0.72);
+                if ((ctrlType _x) in [1, 16]) then {
+                    _x setVariable ["Waldo_UI_BaseFontHeight", _fontHeight];
+                };
                 private _minimumFont = (0.012 max (_newHeight * 0.34)) min _fontHeight;
                 _x ctrlSetFontHeight _fontHeight;
                 _x ctrlCommit 0;
@@ -160,6 +163,9 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             private _fontHeight = (ctrlFontHeight _x) * _scale;
             if (_fontHeight > 0) then {
                 _fontHeight = _fontHeight min (_newHeight * 0.72);
+                if ((ctrlType _x) in [1, 16]) then {
+                    _x setVariable ["Waldo_UI_BaseFontHeight", _fontHeight];
+                };
                 private _minimumFont = (0.010 max (_newHeight * 0.30)) min _fontHeight;
                 _x ctrlSetFontHeight _fontHeight;
                 _x ctrlCommit 0;
