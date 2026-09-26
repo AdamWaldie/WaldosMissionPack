@@ -1,6 +1,14 @@
 /*
- * Secure control-console sequence procedure.
- * Config: [padCount(3..6), rounds(1..8), playbackSpeed(0.25..1.5), timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the secure-console sequence memory procedure.
+ * Locality and authority: Runs in a private client display; the resolver reports success
+ * or failure to the caller. Repeated attempts reset the sequence and need no JIP replay.
+ * Arguments: 0: config <ARRAY> [padCount 3..6, rounds 1..8, playbackSpeed 0.25..1.5,
+ *   timeLimit, title] ([] defaults); 1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[4, 4, 0.85, 60, "CONTROL CONSOLE"], {}] call Waldo_fnc_MiniGameSequence;
+ * Result: The player sees the sequence procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

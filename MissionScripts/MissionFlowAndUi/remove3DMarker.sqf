@@ -24,6 +24,7 @@
  * Example: ["generator_alpha"] call Waldo_fnc_Remove3DMarker;
  * Example: [generator_1] call Waldo_fnc_Remove3DMarker;
  * Example: [[1200, 800, 0], 50] call Waldo_fnc_Remove3DMarker;
+ * Result: Matching WMP markers disappear from current clients and the JIP registry.
  */
 params [
     ["_selector", "", ["", objNull, []]],

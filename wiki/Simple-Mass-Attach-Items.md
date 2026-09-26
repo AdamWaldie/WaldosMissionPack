@@ -5,22 +5,24 @@
 _Associated Files: `MissionScripts\Logistics\LogiHelpers\massAttachItems.sqf`, `Waldo_fnc_MassAttachRelative`_
 
 
-Attaches a whole group of editor-placed objects to one "parent" object in a single call, keeping each item's **relative position** to the parent. Use it to bolt scenery, cargo, decoration or props onto a vehicle (or any object) so they travel with it — sandbags on a truck, jerry cans on a quad, crates lashed to a boat, and so on.
+Attaches editor-placed objects to one parent while keeping their relative positions. This is a manual Eden layout helper for scenery and props. It does not use [Physical Cargo](Physical-Cargo), check collision safety, manage seats or provide pickup and unloading actions.
 
-Objects are gathered automatically by a synced **Game Logic**, so you never list classnames or offsets by hand: place the props where you want them, sync them, and call the function.
+The helper reads objects synchronized to the nearest **Game Logic**. Place the props where you want them, synchronize them to that Logic and call the function on the parent.
 
 ## Parameters
 
-| # | Parameter | Type | Purpose |
-|---|---|---|---|
-| 0 | Target object | Object | Variable name of the object everything is attached **to**. |
+| # | Parameter | Type | Default | Purpose |
+|---|---|---|---|---|
+| 0 | Target object | Object | Required | Existing parent object to which the Logic's children attach. |
+
+The function returns no useful value. It has no server authority check or explicit JIP replay. Eden Init runs for joining clients, but dynamically created parents need a setup path for those clients. Test movement and locality changes with a real vehicle before relying on a mounted layout.
 
 ## Setup in Eden
 
 1. Place the **parent** object (vehicle or object) you want everything attached to.
 2. Place a **Game Logic** as close as possible to the parent (found near the Modules menu).
 3. Place every object you want attached, positioned where it should end up.
-4. If the parent is a vehicle and a prop should rest on the ground, raise it ~1 ft to allow for the vehicle's suspension settling once the mission loads.
+4. On a vehicle, leave room for its suspension to settle after the mission loads. Test the placed props in game.
 5. Select all the props, right-click → **Synchronise** them to the Game Logic.
 6. In the **parent object's init field**, call the function:
 
@@ -28,21 +30,21 @@ Objects are gathered automatically by a synced **Game Logic**, so you never list
 [this] call Waldo_fnc_MassAttachRelative;
 ```
 
-The script finds the nearest Logic to the parent, reads everything synced to it, and attaches each object at its current relative position.
+The script finds the nearest Logic to the parent, reads everything synced to it, and attaches each object at its current relative position. Keep unrelated Logics away from the parent so the nearest one is unambiguous.
 
 ## Notes
 
 * Attachment uses `BIS_fnc_attachToRelative`, so objects keep the exact offset/rotation you placed them at.
-* For a single **mannable** weapon with get-in actions, use [Weapon Mounting With Custom Name](Weapon-Mounting-With-Custom-Name) instead — this function is for static/decorative attachments.
+* For a separate **mannable** weapon with get-in actions, see the [legacy weapon-mounting helper](Weapon-Mounting-With-Custom-Name) and its safety limits.
 
 ## If an item attaches in the wrong place
 
-Check the parent object's Init call, the synchronised children and their starting positions in Eden. This helper keeps the authored relative placement; it does not find a vehicle mount point. Test moving the parent after mission start to confirm the layout before putting it on a live vehicle.
+Check the parent object's Init call, the synchronised children and their starting positions in Eden. This helper keeps the authored relative placement. It does not find a vehicle mount point. Move the parent after mission start to check the layout.
 
 ## See also
 
 * [Weapon Mounting With Custom Name](Weapon-Mounting-With-Custom-Name)
-* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) — also uses the synced-Logic pattern for deployable objects
+* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System): also uses the synced-Logic pattern for deployable objects
 * [Construction Objects](Construction-Objects)
 
 <!-- WMP-WIKI-NAV -->

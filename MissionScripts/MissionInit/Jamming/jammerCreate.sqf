@@ -7,8 +7,10 @@
  * The server
  * owns the broadcast jammer registry so JIP / rejoining players inherit every jammer. Idempotent
  * per object: calling again on the same object updates that jammer in place instead of stacking.
- * Interaction replay uses a named entry bound to the emitter lifetime, allowing other WMP
- * features to share that emitter. Current callers: Eden Init, server scripts, ZEN placement.
+ * Locality and authority: Client calls after local startup forward to the server; client Eden Init
+ * replays are skipped. The server owns the registry; clients apply local radio and interaction state.
+ * Repeat/JIP: Re-registering an emitter updates its entry. Named interaction replay is bound to
+ * the emitter lifetime so other WMP features can share it. Joining clients receive current state.
  *
  * Arguments:
  * 0: Object <OBJECT> - the emitter the jammer is anchored to (its position is the jam centre)
@@ -48,6 +50,9 @@
  * [this, 500, "EAST", [[30, 88]], 50, 1, true, true] call Waldo_fnc_Jammer;
  * // An 800 m cone facing 090 deg, 60 deg wide, pulsing 4s on / 2s off:
  * [this, 800, "ALL", "ALL", 50, 1, true, true, [90, 60], [4, 2]] call Waldo_fnc_Jammer;
+ * Current callers: mission-maker object init/trigger scripts and Waldo_fnc_ZenCreateJammerServer.
+ * Result: The emitter has one server-owned jammer entry; the returned ID identifies it for
+ * later toggle or removal.
  */
 
 params [

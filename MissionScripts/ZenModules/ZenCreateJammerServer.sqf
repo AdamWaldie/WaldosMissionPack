@@ -5,8 +5,10 @@
  * Waldo_fnc_Jammer broadcasts the interaction payload for current clients and JIP. The current
  * named key/value payload is preferred; older positional 9-, 12-, 15- and 18-field payloads remain
  * supported without block-local params shadowing their parsed values.
- * Repeat / JIP: Existing emitters update in place; the delayed interaction replay uses the
- * jammer-owned queue entry and checks that the emitter is still registered.
+ * Locality and authority: Server validates the requesting curator, creates or reuses the emitter
+ * and registers the jammer; the requesting curator may own the movable object afterward.
+ * Repeat/JIP: Existing emitters update in place; a spawn request creates a separate object.
+ * Delayed interaction replay uses the jammer-owned entry and checks the emitter is still registered.
  *
  * Arguments:
  * 0: placement position <ARRAY>
@@ -23,6 +25,7 @@
  * [[100,100,0], [["radius",300],["side","WEST"],["bands","ALL"],
  * ["className","Land_DataTerminal_01_F"]], player]
  *     remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
+ * Result: The requested emitter is registered as a jammer, or no object is created on rejection.
  */
 
 params [

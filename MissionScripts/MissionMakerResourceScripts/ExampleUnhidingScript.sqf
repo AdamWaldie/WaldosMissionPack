@@ -1,15 +1,17 @@
 /*
- * Mission-maker example - reveals and enables simulation for the units/vehicles of a named group
+ * Author: WaldoTheWarfighter
+ * Purpose: Mission-maker example that reveals and enables simulation for named groups
  * (the inverse of hiding them at mission start). Mission-specific example; safe to delete.
  *
- * Arguments:
- * None (edit the group references inside to match your mission)
- *
- * Return Value:
- * Nothing
- *
- * Example:
- * [] execVM "MissionScripts\MissionMakerResourceScripts\ExampleUnhidingScript.sqf";
+ * Locality and authority: Run from a server-owned trigger or script because hideObjectGlobal
+ * and enableSimulationGlobal change shared world state.
+ * Repeat/JIP: No explicit replay or guard. Repeating the reveal is unnecessary; adapt the
+ * mission's trigger and late-join state before using this template in live play.
+ * Arguments: None. Replace the shipped Attack1... Group variables in this file.
+ * Return Value: Nothing; execVM returns an Arma Script handle immediately.
+ * Current callers: Mission-maker trigger or server script after adapting the group references.
+ * Example: [] execVM "MissionScripts\MissionMakerResourceScripts\ExampleUnhidingScript.sqf";
+ * Result: Existing members and vehicles of the named groups become visible and simulated.
  */
 
 //Wave1 - specific to this mission file so you can safely ignore and delete this

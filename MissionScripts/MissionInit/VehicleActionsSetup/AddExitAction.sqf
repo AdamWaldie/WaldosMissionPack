@@ -1,15 +1,20 @@
 /*
- * Author: CPL.Brostrom.A (With the help from; 654wak654)
- * This function add two get out side addActions avaible for players in
- * cargoIndex positions.
+ * Author: WaldoTheWarfighter
+ * Adds left/right exit choices to cargo passengers of one vehicle.
+ * Locality/authority: the object's local addAction handles only the passenger selecting it.
+ * Repeat/JIP: an object flag prevents duplicate setup. Eden Init runs on each client; a vehicle
+ * created later needs the same client setup for joining players.
  *
  * Arguments:
- * 0: Object <OBJECT>
- * 1: Color Action <BOOL>
+ * 0: vehicle <OBJECT> - existing aircraft or other cargo-capable vehicle (required).
+ * 1: coloured labels <BOOL> - true for coloured sides (default true).
+ * Return Value: No useful value.
+ * Current callers: automatic vehicle-action setup and mission-maker object Init fields.
  *
  * Example:
  * [this] call Waldo_fnc_AddExitActions;
  * [this, true] call Waldo_fnc_AddExitActions;
+ * Result: cargo passengers see separate left and right exit actions.
  */
 
 params [

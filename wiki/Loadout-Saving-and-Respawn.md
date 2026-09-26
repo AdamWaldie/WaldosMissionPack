@@ -4,7 +4,7 @@
 
 Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required. That first automatic capture waits a moment for a slower-loading client's gear to actually finish appearing before saving it as the baseline - a client that took a bit longer to load in still gets a correct starting kit, not an incomplete one.
 
-## ACRE2-safe storage
+## Quick setup: ACRE2-safe storage
 
 When ACRE2 is loaded, every saved respawn and persistence loadout passes through `acre_api_fnc_filterUnitLoadout`. Unique classes such as `ACRE_PRC152_ID_7` are converted to base classes before storage. Without ACRE2, the original loadout is returned unchanged.
 
@@ -51,9 +51,9 @@ response, releases ordinary ACRE and mission startup but keeps that client's per
 disabled for the session. This fail-open gameplay/fail-closed saving split prevents persistence from
 breaking the main radio system or overwriting an unread database record.
 
-ACRE generates fresh unique IDs after a filtered loadout restore. WMP therefore guarantees occurrence identity—first PRC-152, second PRC-152—not the identity of a particular transient `_ID_n` item. Occurrence follows ACRE's canonical carried-radio order, which is also what ACRE's repeated-radio setup API uses. WMP deliberately does not sort unique IDs independently. Explicit mission assignments manage only their listed occurrences; additional same-type radios are preserved.
+ACRE generates fresh unique IDs after a filtered loadout restore. WMP therefore tracks each occurrence of a radio type, such as the first and second PRC-152, rather than a transient `_ID_n` item. Occurrence follows ACRE's carried-radio order, which its repeated-radio setup API also uses. WMP does not sort unique IDs independently. Explicit mission assignments manage only their listed occurrences. Additional radios of the same type are preserved.
 
-## Manual saving
+## Script calls: manual saving
 
 Starter crates and loadout-save points call:
 
@@ -62,6 +62,21 @@ Starter crates and loadout-save points call:
 ```
 
 Pass `[false]` for automatic startup work that must not display a notification over the loading presentation. Explicit player saves use the WMP notification UI and replace their prior message instead of growing the queue.
+
+Call `Waldo_fnc_SaveLoadout` on the **player's client**. A server-side call cannot save that player's local radio state. The loadout and supported ACRE radio settings are kept together as one snapshot for that player and side. A player who joins in progress gets their own startup capture; this call does not save another player's kit for them.
+
+| Argument | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `0: show notification` | Boolean | `true` | `true` shows the saved-loadout confirmation; `false` is for automatic saves during startup or radio assignment. |
+
+The call returns `true` after a complete snapshot is saved. It returns `false` if the local player does not exist yet, or if ACRE is present but not ready and an earlier complete snapshot must be preserved. Its current callers include the starter/loadout-save interactions and ACRE radio-assignment finalisation.
+
+The two mission settings live in `MissionConfig/logisticsConfig.sqf`:
+
+| Setting | Type | Shipped default | What to change |
+| --- | --- | --- | --- |
+| `Waldo_Respawn_SaveOnDeath` | Boolean | `false` | Use `true` to capture what the player carried at death. Leave `false` to restore the most recent deliberate save or startup baseline. |
+| `Waldo_Respawn_SideSwitchMode` | String: `"CARRY_OVER"` or `"SIDE_BASE_LOADOUT"` | `"CARRY_OVER"` | Chooses the first kit on a side for which the player has no saved snapshot; see below. |
 
 ACE Respawn can conflict with this mission-owned restore path and should remain disabled in ACE addon settings.
 

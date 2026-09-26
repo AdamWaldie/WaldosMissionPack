@@ -7,6 +7,7 @@
  * Return Value: <BOOL> true when the saved simulation/collision state was restored.
  * Current caller: Waldo_fnc_PhysicalCargoRestoreLocal after a checked unload placement.
  * Example: [crate, 3] remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreAckServer", 2];
+ * Result: The server completes cleanup only for the matching restore token.
  */
 params [["_cargo", objNull, [objNull]], ["_token", -1, [0]]];
 if (!isServer || {isNull _cargo} || {_token < 0}) exitWith {false};

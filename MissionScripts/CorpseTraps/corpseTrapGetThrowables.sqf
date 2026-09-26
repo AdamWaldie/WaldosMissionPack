@@ -1,12 +1,16 @@
 /*
- * Returns the distinct throwable magazines carried by a unit, including modded
- * magazines exposed through Throw muzzle magazine wells.
- *
+ * Author: WaldoTheWarfighter
+ * Lists a unit's compatible throwable magazines, including live modded Throw muzzle wells.
+ * Locality and authority: Called on the interface client while building the ACE corpse action;
+ * it reads that player's inventory and local game configuration.
+ * Repeat/JIP: The compatible-class list is cached per machine; inventory counts are read afresh
+ * on every call. No action or public state is installed here.
  * Arguments:
- * 0: Unit <OBJECT>
- *
- * Return Value:
- * Rows in the form [magazine, ammo, display name, picture, count] <ARRAY>
+ * 0: unit to inspect <OBJECT> (default objNull)
+ * Return Value: <ARRAY> - rows [magazine class, ammo class, display name, picture, count].
+ * Current callers: Waldo_fnc_CorpseTrapInit ACE action builder and condition.
+ * Example: private _throwables = [player] call Waldo_fnc_CorpseTrapGetThrowables;
+ * Result: Each carried compatible throwable appears once with its current quantity.
  */
 params [
     ["_unit", objNull, [objNull]]

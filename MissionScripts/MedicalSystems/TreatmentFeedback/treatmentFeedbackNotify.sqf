@@ -1,16 +1,23 @@
 /*
  * Author: WaldoTheWarfighter
  * Displays one configured ACE treatment event through the pack notification UI.
+ * Locality and authority: Runs on the treating unit's owner. It validates that locality, then
+ * presents locally or sends the formatted card to the patient owner's client.
+ * Repeat/JIP: Each enabled event produces a transient card on a stable replacement channel.
+ * Past treatment cards are not replayed to joining players.
  *
  * Arguments:
  * 0: state <STRING> - START, SUCCESS or FAILURE
  * 1: event arguments <ARRAY> - medic, patient, body part and treatment classname
  *
  * Return Value:
- * Boolean - true when a notification was shown locally
+ * Boolean - true when feedback was shown locally or sent to a player patient; false when
+ * disabled, rejected or without an eligible recipient.
  *
  * Example:
  * ["SUCCESS", _this] call Waldo_fnc_TreatmentFeedbackNotify;
+ * Result: An eligible patient sees the treatment result in the bottom-centre notification lane.
+ * Current callers: ACE treatment event callbacks installed by Waldo_fnc_TreatmentFeedbackInit.
  */
 
 params [

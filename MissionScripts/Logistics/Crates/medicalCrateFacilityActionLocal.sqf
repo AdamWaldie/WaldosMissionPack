@@ -18,6 +18,10 @@
  * [_crate, true] remoteExec ["Waldo_fnc_MedicalCrateFacilityActionLocal", 0, _crate];
  *
  * Current callers: Waldo_fnc_MedicalCratePopulate.
+ * Locality and authority: Installs or removes the informational ACE action on each interface
+ * client; the server publishes the crate's facility state. Repeating setup replaces the local
+ * action as needed, and object-scoped replay covers JIP.
+ * Result: Players can identify whether the crate is an ACE medical facility.
  */
 
 params [["_crate", objNull, [objNull]], ["_enabled", true]];

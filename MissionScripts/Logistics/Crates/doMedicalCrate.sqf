@@ -4,8 +4,10 @@
  * Locality / Authority: Server mutates global cargo; caller owns crate-handling registration.
  * Repeat / JIP: Rebuilds inventory on repeat; global contents and facility state replicate to JIP.
  * Arguments: crate <OBJECT>, field-hospital mode <BOOL> (true), scale <NUMBER> (1).
- * Return Value: See function body. Current callers: starter crates, quartermaster and ZEN medical crate.
+ * Return Value: No supported return value; use the crate's resulting inventory/facility state.
+ * Current callers: starter crates, quartermaster and ZEN medical crate.
  * Example: [myCrate, true, 1] call Waldo_fnc_MedicalCratePopulate;
+ * Result: The crate receives medical stock and, when requested, ACE medical-facility status.
  */
 
 params [

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Can afford research.
+ * Checks whether a side has enough of every resource charged by one technology row.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,15 @@
  * 1: _entry <ANY> - entry
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when every required resource balance is sufficient.
  *
  * Example:
  * [_sideKey, _entry] call Waldo_fnc_EcoResearch_canAffordResearch;
+ * Locality/Authority: Any machine can inspect published balances; the server repeats this
+ * check before authoritative spending.
+ * Repeat/JIP Behaviour: Pure read and repeat-safe; no JIP side effect.
+ * Current Callers: Research status and server-side start validation.
+ * Result: Returns false at the first short resource balance.
  */
 
         params ["_sideKey", "_entry"];

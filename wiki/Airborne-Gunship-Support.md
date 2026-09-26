@@ -18,17 +18,43 @@ waits the configured duration, applies the configured fuel, ammunition and repai
 returns to the previous combat orbit. During RTB/service the assigned controller sees only a status
 interaction, including approximate remaining service time.
 
-The feature is disabled by default. Calling `Waldo_fnc_GunshipRegister` or using the registration Zeus module explicitly enables it.
+The enable flag defaults to `true`, but WMP does not create a gunship on its own.
+Register an aircraft or use the Zeus module to create one.
 
-## Three ways to get one flying
+## Mission-wide settings
+
+Edit the existing rows in `MissionConfig/airOperationsConfig.sqf`. These are defaults
+and safety limits; a registration request may override the supported flight and
+service values for one gunship.
+
+| Setting | Type | Shipped default | Meaning |
+| --- | --- | --- | --- |
+| `Waldo_Gunship_Enable` | Boolean | `true` | Permits registration; creates nothing alone. |
+| `Waldo_Gunship_DefaultAltitude` | Number, metres | `700` | Initial orbit altitude. |
+| `Waldo_Gunship_MaximumAltitude` | Number, metres | `5000` | Maximum accepted altitude. |
+| `Waldo_Gunship_DefaultRadius` | Number, metres | `1500` | Initial orbit radius. |
+| `Waldo_Gunship_MaximumRadius` | Number, metres | `10000` | Maximum accepted radius. |
+| `Waldo_Gunship_DefaultServiceDuration` | Number, seconds | `900` | Service time when the request does not override it. |
+| `Waldo_Gunship_MonitorInterval` | Number, seconds | `2` | Server state-check interval; advanced performance setting. |
+| `Waldo_Gunship_MinimumFuel` | Number, fraction 0–1 | `0.25` | Fuel threshold for return to service. |
+| `Waldo_Gunship_MaximumDamage` | Number, fraction 0–1 | `0.65` | Damage threshold for return to service. |
+| `Waldo_Gunship_ServiceFuelFraction` | Number, fraction 0–1 | `1` | Fuel level after service. |
+| `Waldo_Gunship_ServiceAmmoFraction` | Number, fraction 0–1 | `1` | Ammunition level after service. |
+| `Waldo_Gunship_ServiceDamage` | Number, fraction 0–1 | `0` | Damage left after service. |
+| `Waldo_Gunship_MaximumServiceCycles` | Number | `-1` | Negative means unlimited service cycles. |
+| `Waldo_Gunship_ReturnWhenOutOfAmmo` | Boolean | `true` | Return when usable ammunition runs out. |
+| `Waldo_Gunship_SideAircraftPools` | HashMap of side ID to aircraft-class String Array | Shipped side pools | Fallback airframes for a chosen operational side. |
+| `Waldo_Gunship_FactionAircraftPools` | HashMap of faction key to aircraft-class String Array | Empty HashMap | Optional narrower airframe pools. |
+
+## Quick setup: three ways to get one flying
 
 1. **No scripting:** place a crewed aircraft in Eden, then in a running mission use the **Gunship - Register or Spawn** Zeus module on it (see Focused Zeus modules below).
-2. **Drop-in example:** place the `[WMP]Gunship_Support_Example_Minimal` composition from `WMP_Compositions/` — an armed Blackfish with its complete four-person BLUFOR editor crew (pilot, copilot and two weapon operators), already registered with the minimum required keys.
+2. **Drop-in example:** place the `[WMP]Gunship_Support_Example_Minimal` composition from `WMP_Compositions/`. It contains an armed Blackfish with a four-person BLUFOR editor crew (pilot, copilot and two weapon operators), registered with the minimum required keys.
 3. **Smallest working script call**, in the placed-and-crewed aircraft's own init field:
    ```sqf
    [createHashMapFromArray [["id", "spectre_1"], ["aircraft", this]]] call Waldo_fnc_GunshipRegister;
    ```
-   Every other key below (callsign, side, home/orbit markers, altitude, radius, service envelope, turret profiles) has a working default — add only the ones a mission actually needs to change.
+Every other key below (callsign, side, home/orbit markers, altitude, radius, service envelope, turret profiles) has a default. Set only the ones your mission needs to change.
 
 ## Controller assignment (FAC / JTAC)
 
@@ -37,15 +63,11 @@ separate, correctly grouped BLUFOR team leader and assigns that unit as its exam
 mission start; replace it with the intended playable FAC/JTAC or use Zeus during play. Until a
 controller exists:
 
-- Every player on a friendly side can still see a **Status** interaction (aircraft callsign,
-  current state, and who — if anyone — is the assigned controller), so the aircraft is never
-  invisible or silently broken.
-- Designating an orbit, requesting service, releasing control and — the one players hit most —
-  taking control of a turret all stay locked to that one player, so nobody else's menu shows those
-  actions at all. This is deliberate access control (the equivalent of a FAC/JTAC role), not a bug;
-  if "take control" seems to do nothing, check Status first — it names the missing step.
+- Every player on a friendly side can see **Status**, which shows the callsign, current state and any assigned controller.
+- Orbit designation, service requests, controller release and turret control remain unavailable until a controller is assigned. Only the assigned player sees those actions. If **Take control** does nothing, check **Status** for the current assignment.
 
 Assign a controller one of four ways:
+
 1. **Zeus (recommended for a live session):** curator runs **Gunship - Assign Controller**, which
    assigns the nearest player.
 2. **Eden, from a placed unit's own init field (recommended for "always has a controller from
@@ -70,6 +92,40 @@ reassigns control at any time (also releasing the previous controller's turret a
 ## Scripted setup (every option)
 
 Run registration from `initServer.sqf` after the aircraft and player slots exist:
+
+`Waldo_fnc_GunshipRegister` takes one HashMap and returns a Boolean on the server:
+`true` when registration succeeds, `false` when validation or aircraft setup fails.
+An Eden Init field also runs on clients; those copies exit without registering a
+second system. The server publishes the registered state for existing and JIP players.
+
+| Registration key | Type | Default or use |
+| --- | --- | --- |
+| `id` | String | Required, unique safe key for this gunship. |
+| `aircraft` | Object | Existing, crewed aircraft. Omit when spawning. |
+| `aircraftClass` | `CfgVehicles` class String | Explicit airframe to spawn. |
+| `aircraftClasses` | Array of class Strings | Candidate spawned airframes when no explicit class is given. |
+| `spawnPosition` | Position Array | Spawn location; `home` is the fallback. |
+| `spawnDirection` | Number, degrees | `0` for a spawned aircraft. |
+| `callsign` | String | Defaults to `id`; shown to players. |
+| `side` | Side value, such as `west` | Existing crew's side, or WEST for spawned selection. Independent of aircraft class. |
+| `faction` | Faction-key String | Optional narrower class pool when spawning. |
+| `controller` | Unit Object | Initial player/controller when the unit already exists. |
+| `controllerUID` | Steam UID String | Persistent controller identity across player-object replacement. |
+| `createCrew` | Boolean | `true` for a spawned airframe; existing Eden aircraft must already be crewed. |
+| `forceCrewSide` | Boolean | `true`; align spawned/registered crew to the chosen operational side. |
+| `lockAircraft` | Boolean | `true`; lock the registered aircraft. |
+| `home` | Position Array | Existing aircraft position when omitted; service destination. |
+| `orbit` | Position Array or marker-name String | Defaults to `home`; first combat orbit. A marker name also lets WMP remove the placeholder. |
+| `altitude` | Number, metres | Mission default `700`, clamped by the configured maximum. |
+| `radius` | Number, metres | Mission default `1500`, clamped by the configured maximum. |
+| `direction` | String | `CIRCLE_L` or `CIRCLE_R`; defaults to `CIRCLE_L`. |
+| `serviceDuration` | Number, seconds | Mission default `900`; time in the service state. |
+| `minimumFuel`, `maximumDamage` | Numbers, fractions 0–1 | Mission defaults `0.25` and `0.65`; automatic return thresholds. |
+| `serviceFuelFraction`, `serviceAmmoFraction`, `serviceDamage` | Numbers, fractions 0–1 | Mission defaults `1`, `1`, `0`; post-service levels. |
+| `maximumServiceCycles` | Number | Mission default `-1` for unlimited cycles. |
+| `returnWhenOutOfAmmo` | Boolean | Mission default `true`. |
+| `maximumRangeFromHome` | Number, metres | `-1` means no range limit for designated orbits. |
+| `turretProfiles` | Array of `[display name String, turret path Array]` rows | Empty discovers gunner turret paths. |
 
 ```sqf
 private _config = createHashMapFromArray [

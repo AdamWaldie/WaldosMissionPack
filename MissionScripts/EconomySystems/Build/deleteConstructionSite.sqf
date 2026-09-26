@@ -1,14 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
- * Delete construction site.
+ * Delete the temporary objects that represent a construction site.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; the server removes the supplied objects.
+ * Repeat/JIP: Null entries are skipped, so cleanup can run after earlier
+ * deletion; deleted objects have no JIP state to replay.
+ * Current Callers: EcoBuild_progressConstructionJobs and EcoCore_purgeBuildingValues.
  *
  * Arguments:
  * 0: _items <ARRAY> - items (optional, default: [])
  *
  * Return Value:
  * Nothing
+ * Result: Deletes each still-existing object in the array.
  *
  * Example:
  * [_items] call Waldo_fnc_EcoBuild_deleteConstructionSite;

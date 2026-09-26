@@ -40,6 +40,18 @@ Then paste this in the vehicle or object's Eden **Init** field:
 
 No `isServer` wrapper is required. The function forwards to the server itself.
 
+| `Waldo_fnc_ACRE2RackSetup` argument | Type and default | What to supply |
+| --- | --- | --- |
+| Object | Object; required | The vehicle or prop with the ACRE rack. `objNull` is rejected. |
+| Profile or settings | String, HashMap or Array; default `[]` | A name from `rackProfiles`, or inline key/value settings. |
+| Inline overrides | HashMap or Array; default `[]` | Use with a named profile to replace whole top-level settings. |
+| Force | Boolean; default `false` | Reapply a completed identical request when needed. Normal Eden setup leaves this out. |
+
+The call returns a Boolean. `true` means the request was accepted or forwarded; it does
+not mean the rack has finished applying. `false` means the basic request shape was
+rejected. WMP retains an accepted request while the dedicated server waits for an
+ACRE-ready player, then verifies the result. Repeating the same completed request is safe.
+
 A profile sitting in `acreConfig.sqf` does nothing until an object calls it. Several vehicles may
 reuse the same profile.
 
@@ -78,7 +90,7 @@ problem unless the row also supplies a compatible radio to mount.
 This loads `COMMAND_VEHICLE`, then replaces that profile's complete `assignments` setting for this
 one vehicle. WMP does not perform a hidden array merge.
 
-## Understanding central rack profiles
+## Configuration reference: central rack profiles
 
 Each profile is:
 
@@ -91,12 +103,12 @@ Each profile is:
 ]]
 ```
 
-| Setting | What it means |
-|---|---|
-| `preset` | Optional existing ACRE preset name applied before rack initialisation. `""` reuses the preset configured for `netSide`. |
-| `netSide` | Side whose named net table is used: `WEST`, `EAST`, `GUER`, `CIV`, or carefully chosen `AUTO`. |
-| `addRacks` | Physical racks WMP should ensure exist on the object. |
-| `assignments` | Named-net/channel changes or radio/rack changes after ACRE has synchronized the rack IDs. |
+| Setting | Type and default | What it means |
+|---|---|---|
+| `preset` | String; `""` | Optional existing ACRE preset name applied before rack initialisation. Empty reuses the preset configured for `netSide`. |
+| `netSide` | String; `"AUTO"` | Side whose named net table is used: `WEST`, `EAST`, `GUER`, `CIV`, or `AUTO`. |
+| `addRacks` | Array; `[]` | Physical racks WMP should ensure exist on the object. |
+| `assignments` | Array; `[]` | Named-net/channel changes or radio/rack changes after ACRE has synchronized the rack IDs. |
 
 The preset is not a WMP net name. It must already exist in ACRE's radio preset configuration. When
 this is `""`, WMP deterministically reuses the selected side's preset rather than depending on which
@@ -124,20 +136,21 @@ because those radios are not ordinary numbered-channel radios.
 ]]]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
-`count` means the desired total number of that rack class on this object—not “add this many every
+`count` means the desired total number of that rack class on this object. It does not mean “add this many every
 time.” If the call is retried after adding the first rack, WMP sees that it already exists and does
 not duplicate it.
 
-| Rack option | Beginner meaning |
-|---|---|
-| `displayName` | Name shown in the ACRE/ACE interaction menu. |
-| `shortName` | Short GUI label; ACRE allows 1-4 characters. |
-| `removable` | Whether the mounted radio can later be removed/replaced. |
-| `access` | Who can access it. `['inside']` is the normal vehicle default; `['external']` suits a radio table. |
-| `disabled` | Vehicle positions denied access. `[]` denies none. |
-| `mountedRadio` | Compatible base radio, or `""` for an empty rack. |
-| `components` | Advanced extra ACRE component classes. Beginners should use `[]`. |
-| `intercoms` | ACRE intercom IDs connected to the rack, or `[]`. |
+| Rack option | Type | Beginner meaning |
+|---|---|---|
+| `count` | Number | Desired total of this rack class on the object, not a number to add each time. |
+| `displayName` | String | Name shown in the ACRE/ACE interaction menu. |
+| `shortName` | String | Short GUI label; ACRE allows 1-4 characters. |
+| `removable` | Boolean | Whether the mounted radio can later be removed or replaced. |
+| `access` | Array of Strings | Who can access it. `["inside"]` is the normal vehicle default; `["external"]` suits a radio table. |
+| `disabled` | Array | Vehicle positions denied access. `[]` denies none. |
+| `mountedRadio` | String | Compatible base radio, or `""` for an empty rack. |
+| `components` | Array | Advanced extra ACRE component classes. Beginners should use `[]`. |
+| `intercoms` | Array | ACRE intercom IDs connected to the rack, or `[]`. |
 
 ## Rack and radio compatibility
 
@@ -234,7 +247,7 @@ Rack setup begins on the server, as required by ACRE's public rack APIs:
 Repeated identical Eden calls are suppressed both while running and after success. A genuinely new
 setup arriving mid-run replaces the queued request and runs after the current worker cleans up.
 
-## Diagnostics
+## If a rack does not apply
 
 WMP Diagnostics reports both an `acre-vehicle-racks` summary and one `acre-rack-<network ID>` row
 per configured object. Each object row shows its class, resolved profile, current owner, initial

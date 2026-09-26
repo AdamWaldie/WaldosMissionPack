@@ -99,12 +99,16 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Comp
 | [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
 | [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional cruise-only correction for helicopters that zoom-climb while braking |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
-| [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
+| [Map Location Tools](Map-Location-Tools) | Intended location helpers; not ready for live missions in this version |
 | [Headless Client Support](Headless-Client-Support) | Optional AI distribution across connected headless clients; disabled by default |
 | [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional player-marker integration |
 | [ACE Corpse Traps](ACE-Corpse-Traps) | Concealed throwable traps on bodies |
 | [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
 | [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts) | Smaller arsenal, damage, visibility, and config helpers |
+| [ACE Limited Arsenal Exporter](ACE-Limited-Arsenal-Exporter) | Copy a curated item list from BLUFOR loadouts |
+| [Vehicle Damage Monitor](Vehicle-Damage-Monitor) | Inspect a target vehicle's hit-point damage in a test session |
+| [Example Unhiding Script](Example-Unhiding-Script) | Adapt a server-side reveal template to your own groups |
+| [Mod Config Patch Logger](Mod-Config-Patch-Logger) | Find loaded `CfgPatches` class names in the RPT |
 | [Cover and Loading Screen Generation](Cover-Loading-Screen-Generation) | Versioned mission artwork |
 
 ## Optional and advanced systems

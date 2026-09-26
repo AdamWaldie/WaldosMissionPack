@@ -19,6 +19,9 @@
  *
  * Example:
  * [_equipment, player] call Waldo_fnc_MiniGameInteractionRange;
+ * Locality/Authority: Any machine; the server uses the same calculation for authoritative validation.
+ * Repeat/JIP Behaviour: Pure measurement with no stored state or JIP replay.
+ * Result: Returns nearest-bound distance or a large sentinel for invalid objects.
  */
 
 params [

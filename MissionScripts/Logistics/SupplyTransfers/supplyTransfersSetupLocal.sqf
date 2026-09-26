@@ -9,6 +9,7 @@
  * Current callers: initPlayerLocal.sqf and Waldo_fnc_SupplyTransfersRegister broadcast.
  * Example: [missionNamespace getVariable ["Waldo_SupplyTransfers_Registry", []]]
  *     remoteExecCall ["Waldo_fnc_SupplyTransfersSetupLocal", 0];
+ * Result: Registered containers receive current ACE actions on this interface client.
  */
 params [["_snapshot", [], [[]]]];
 if (!hasInterface || {!(missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false])}) exitWith {false};

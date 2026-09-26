@@ -7,9 +7,16 @@
  * Waldo_fnc_GunshipStatusHud). The monitor's own post-service resume call and the RETURN operation
  * both re-issue the exact same stored orbit position, so neither is mistaken for a real retask; a
  * SERVICE/RTB issue never reaches this branch at all (status is "RTB", not "TRANSIT").
+ * Locality and authority: Server validates the system and route; the aircraft's current owner
+ * receives the actual loiter waypoint operation.
+ * Repeat/JIP: Reissuing the same stored orbit does not mark a new retask. The resulting status
+ * and orbit are published for joining clients.
  *
  * Arguments: 0: id <STRING>; 1: position <ARRAY>; 2: status after issue <STRING>
  * Return Value: Boolean
+ * Current callers: GunshipServerHandle, GunshipMonitor and gunship startup routing.
+ * Example: ["SPECTRE_1", _orbitCentre, "TRANSIT"] call Waldo_fnc_GunshipSetOrbit;
+ * Result: The aircraft receives a loiter route and its public orbit/status state changes.
  */
 
 params ["_id", "_position", ["_status", "TRANSIT", [""]]];

@@ -22,6 +22,9 @@ jobs:
       run: python3 releaseVerificationAndDeployment/wiki_style_checker.py
     - name: Validate beginner-first documentation contracts
       run: python3 releaseVerificationAndDeployment/documentation_contract_checker.py
+    - name: Test documentation header contracts
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_documentation_contract_checker.py
     - name: Install PyYAML for the Claude skill validator
       run: pip install pyyaml
     - name: Validate the Claude Mission Config Skill package

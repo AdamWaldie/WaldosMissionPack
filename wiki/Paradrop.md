@@ -6,7 +6,7 @@ WMP adds static-line and HALO actions to supported aircraft. Use a placed aircra
 
 This guide covers jumps and drop routes. See [Vehicle Exit Actions](Vehicle-Exit-Actions) for left/right dismount controls, [Medical Vehicle Flags](Medical-Vehicle-Flags) for ACE medical tagging, and [Aircraft Boarding Action](Aircraft-Boarding-Actions) for a separate boarding-object interaction.
 
-## Beginner setup: choose one path
+## Quick setup: choose one path
 
 | If you want... | Start with... | Coding required |
 |---|---|---|
@@ -158,6 +158,19 @@ heading from the aircraft. The call waits up to 180 seconds for a pilot while mi
 finishes. You may put a separate `Waldo_fnc_MoveInCargoPlane` call on another composition object;
 the two Init fields can run in either order.
 
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `aircraft` | Object | required | The placed aircraft, usually `this` in its Eden Init field. |
+| 1 `target` | Marker name String, position Array or Object | required | The drop point; a named Eden marker is easiest. |
+| 2 `direction` | Number (degrees) | `-1` | Approach heading; `-1` reads marker direction or calculates a heading. |
+| 3 `altitude` | Number (metres AGL) | Static-line route altitude from `airOperationsConfig.sqf` (`300` shipped) | Requested route height, clamped to 100–2000 m. |
+| 4 `maxSpeed` | Number (km/h) | Static-line route speed from `airOperationsConfig.sqf` (`300` shipped) | Requested speed ceiling, clamped to 80–500 km/h. |
+| 5 `options` | HashMap | empty | Optional keys in the table below. |
+
+The call returns a Boolean. On the server, `true` means setup was accepted, not that the aircraft
+already has a pilot or has begun flying. An Eden Init field also runs on clients; those copies
+do not start another route. Check the RPT if the aircraft does not fly after the pilot wait.
+
 When `target` is a marker, the script immediately reads its position and Eden **Direction**, creates
 the WMP-owned point/corridor markers, then deletes the original setup marker. Dedicated clients can
 load their mission.sqm marker copy after that server deletion, so WMP also publishes a persistent
@@ -188,16 +201,22 @@ profile. `Waldo_fnc_ParadropCreateDropZone` uses the same route values.
 
 The optional `options` HashMap accepts these keys:
 
-| Key | What it changes |
-|---|---|
-| `staticJumpEnabled`, `haloJumpEnabled`, `staticMinimumAltitude`, `staticMaximumAltitude`, `staticMaximumSpeed`, `staticChuteClass`, `haloMinimumAltitude`, `haloBackpackClass` | Sets which jumps are offered and their limits. Omitted values come from `MissionConfig\airOperationsConfig.sqf`; WMP then normalizes them to the route. |
-| `lifecycle` | `LOOP` (default), `RETAIN` or `DESPAWN`. This quick-flight call never deletes the aircraft. `DESPAWN` changes the route waypoints and can trigger marker cleanup. |
-| `circuitDirection` | `LEFT` (default) or `RIGHT`. |
-| `approachDistance`, `runLength`, `exitDistance` | Sets the route geometry. |
-| `name` | Sets the marker label; default `"Drop Zone"`. |
-| `aircraftInvincible` | Off by default. Protects against normal engine damage and reapplies after locality changes. Scripted `setDamage` and `setHit` can still damage the aircraft. |
-| `createMarkers` | On by default. Creates hidden AREA, STANDBY, GREEN and RED route markers, plus a visible POINT marker for a named Eden target. Set `false` to omit them. |
-| `keepMarkersOnCleanup` | Off by default. Set `true` to keep static markers after aircraft loss or a `DESPAWN` run reaches its exit. It does not change the aircraft or crew. |
+| Key | Type | Default | What it changes |
+|---|---|---|---|
+| `staticJumpEnabled` | Boolean | `true` | Offer a static-line jump. |
+| `haloJumpEnabled` | Boolean | `false` | Offer a HALO jump. |
+| `staticMinimumAltitude`, `staticMaximumAltitude` | Number (metres AGL) | Mission jump envelope | Static-line altitude range; normalized against this route. |
+| `staticMaximumSpeed` | Number (km/h) | Mission jump envelope | Highest static-line release speed. |
+| `staticChuteClass`, `haloBackpackClass` | String (`CfgVehicles` classname) | Mission jump envelope | Parachute or backpack used by that jump method. |
+| `haloMinimumAltitude` | Number (metres AGL) | Mission jump envelope | Lowest HALO release altitude. |
+| `requireOpenDoor` | Boolean | `true` | Require an open ramp or door when the aircraft has a recognized animation. |
+| `lifecycle` | String enum | `"LOOP"` | `"LOOP"`, `"RETAIN"` or `"DESPAWN"`. Quick flight never deletes this Eden aircraft; `"DESPAWN"` affects route and marker cleanup. |
+| `circuitDirection` | String enum | `"LEFT"` | `"LEFT"` or `"RIGHT"` for repeat circuits. |
+| `approachDistance`, `runLength`, `exitDistance` | Number (metres) | `2500` each | Route geometry. |
+| `name` | String | `"Drop Zone"` | Marker label. |
+| `aircraftInvincible` | Boolean | `false` shipped | Protects against normal engine damage and reapplies after locality changes. Scripted `setDamage` and `setHit` can still damage the aircraft. |
+| `createMarkers` | Boolean | `true` | Creates hidden AREA, STANDBY, GREEN and RED route markers, plus a visible POINT marker for a named Eden target. |
+| `keepMarkersOnCleanup` | Boolean | `false` | Keeps static markers after aircraft loss or a `"DESPAWN"` run reaches its exit. It does not change the aircraft or crew. |
 
 See the function header for the full option list and a one-shot HALO example.
 
@@ -335,7 +354,67 @@ private _drop = createHashMapFromArray [
 Use `Waldo_fnc_ParadropEmbark` to transfer players or create a boarding point, and
 `Waldo_fnc_ParadropRemoveDropZone` with the stable operation ID for scripted cleanup.
 
-## Configuring Jump Parameters
+`Waldo_fnc_ParadropCreateDropZone` takes a configuration HashMap at position 0 (required) and a
+curator player Object at position 1 (optional, `objNull` by default). Call it on the server for a
+mission-script setup. A curator client must supply its player object so the server can authorize
+the request; a client call without one returns `true` but does no work. The server returns `true`
+only after it creates the operation. A client `true` means only that it sent the request.
+
+| Configuration key | Type | Default | Meaning |
+|---|---|---|---|
+| `id` | String | required | Stable operation key; a new operation with the same id replaces the old one. |
+| `centre` | Position Array `[x, y, z]` | required | Drop-zone centre in metres. |
+| `aircraftClass` | String (`CfgVehicles` aircraft classname) | required | Airframe to spawn. It may come from a different faction than the crew. |
+| `name` | String | `id` | Player-facing operation name. |
+| `direction` | Number (degrees) | `0` | Approach heading. |
+| `side` | Side | `west` | Crew and generated jumper side: `west`, `east` or `independent`. |
+| `altitude` | Number (metres AGL) | mission static route altitude (`300` shipped) | Route height, clamped to 100–2000 m. |
+| `maximumSpeed` | Number (km/h) | mission static route speed (`300` shipped) | Speed ceiling, clamped to 80–500 km/h. |
+| `approachDistance`, `exitDistance` | Number (metres) | `2500` each | Route legs, clamped to 800–10000 m. |
+| `runLength` | Number (metres) | `2500` | Drop run, clamped to 300–6000 m. |
+| `lifecycle` | String enum | `"LOOP"` | `"LOOP"`, `"RETAIN"` or `"DESPAWN"`. |
+| `circuitDirection` | String enum | `"LEFT"` | `"LEFT"` or `"RIGHT"` for loops. |
+| `staticJumpEnabled`, `haloJumpEnabled` | Boolean | `true`, `false` | Jump methods offered to passengers. |
+| `staticMinimumAltitude`, `staticMaximumAltitude`, `haloMinimumAltitude` | Number (metres AGL) | mission jump envelope | Release limits, normalized against the route. |
+| `staticMaximumSpeed` | Number (km/h) | mission jump envelope | Static-line release limit. |
+| `staticChuteClass`, `haloBackpackClass` | String (`CfgVehicles` classname) | mission jump envelope | Issued parachute or backpack. |
+| `requireOpenDoor` | Boolean | `true` | Require a recognized aircraft door or ramp to be open. |
+| `createJumpers` | Boolean | `true` | Allow AI jumper creation; `jumperCount` still defaults to zero. |
+| `jumperClass` | String (`CfgVehicles` unit classname) | side-specific rifleman | AI unit class for generated jumpers. |
+| `jumperCount` | Number (whole) | `0` | AI jumpers, capped at 60 and by free cargo seats. |
+| `jumpInterval` | Number (seconds) | `2` | Gap between automatic jumps, clamped to 0.5–10 seconds. |
+| `autoDropPlayers` | Boolean | `false` | Include onboard players in automatic jump sequencing. |
+| `automaticJumpMode` | String enum | `"STATIC"` | Jump type for automatic sequencing. |
+| `createMarkers` | Boolean | `true` | Draw the drop-zone and route markers. |
+| `keepMarkersOnCleanup` | Boolean | `false` | Keep static markers after automatic teardown, not explicit removal. |
+| `aircraftInvincible` | Boolean | mission setting (`false` shipped) | Protect aircraft against normal engine damage during the operation. |
+| `operationTimeout` | Number (seconds) | `900` | Automatic run watchdog, with a 60-second minimum. |
+| `notifyRequester` | Boolean | `true` | Send creation feedback to the curator requester. |
+
+The other server APIs use positional arguments:
+
+| Call | Position | Type | Default | Meaning |
+|---|---:|---|---|---|
+| `Waldo_fnc_ParadropEmbark` | 0 | String | required | Dynamic operation id, or a quick-flight `QUICK_<netId>` id. |
+| | 1 | String enum | `"SELECTION"` | `"SELECTION"`, `"POLE"` or `"BOTH"`. |
+| | 2 | Array of player Objects | `[]` | Players to move into free cargo seats; AI are ignored. |
+| | 3 | Position Array | `[]` | Boarding-point position for `"POLE"` or `"BOTH"`. |
+| | 4 | String (`CfgVehicles` classname) | `"FlagPole_F"` | Boarding-point object class. |
+| | 5 | String | `"Board Paradrop Aircraft"` | Boarding action label. |
+| | 6 | Object | `objNull` | Curator requester for remote authorization. |
+| `Waldo_fnc_ParadropRemoveDropZone` | 0 | String | required | Operation id to remove. |
+| | 1 | Boolean | `true` | Delete aircraft when no players are aboard. |
+| | 2 | Object | `objNull` | Curator requester for remote authorization. |
+| | 3 | Boolean | `true` | Notify the requester. |
+| | 4 | Boolean | `true` | Remove route markers; automatic cleanup may pass `false` to retain them. |
+
+Call these on the server from mission scripts. Their server result is `true` when the requested
+boarding surface was dispatched or an existing operation was removed, respectively. Client calls
+return `true` when forwarded, before the server has validated or completed the operation. The
+server checks curator ownership for remote requests. Boarding points and jump actions are replayed
+to joining clients; removal clears their registration and actions.
+
+## Configuration reference: jump parameters
 
 Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to **all** aircraft: both auto-detected and manually set up:
 
@@ -384,7 +463,7 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 
 `Waldo_fnc_VehicleJumpSetup` applies both jump types using the parameters in `MissionConfig\airOperationsConfig.sqf`. To add left/right exit selection instead, see [Vehicle Exit Actions](Vehicle-Exit-Actions).
 
-## Beginner troubleshooting
+## If a jump fails
 
 | Symptom | Check first |
 |---|---|

@@ -1,7 +1,15 @@
 /*
- * Maintenance-hatch calibrated torque procedure.
- * Config remains [boltCount(3..6), precisionLevel(1..4), maxMistakes, timeLimit, title].
- * The former turnsRequired position now controls wrench tolerance without breaking callers.
+ * Author: WaldoTheWarfighter
+ * Opens the maintenance-hatch calibrated torque procedure. The former turnsRequired slot
+ * now controls wrench precision without changing the five-position config shape.
+ * Locality and authority: Runs in a private client display; the result resolver reports
+ * completion to the caller. Repeat attempts reset the bolts and are not JIP replayed.
+ * Arguments: 0: config <ARRAY> [boltCount 3..6, precisionLevel 1..4, maxMistakes,
+ *   timeLimit, title] ([] defaults); 1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[4, 2, 3, 30, "MAINTENANCE HATCH"], {}] call Waldo_fnc_MiniGameRepair;
+ * Result: The player sees the repair procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

@@ -8,6 +8,8 @@
  * Return Value: BOOL - true when installed or waiting for runtime state, otherwise false.
  * Current callers: initPlayerLocal and FeatureRuntimeApply.
  * Example: [] call Waldo_fnc_TreeFellingInit;
+ * Result: Returns true after installation or while waiting for the runtime snapshot. Returns
+ * false without an interface or when the feature is disabled.
  */
 
 if !(hasInterface) exitWith {false};

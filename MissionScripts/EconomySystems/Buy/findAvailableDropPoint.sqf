@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Find available drop point.
+ * Chooses a compatible delivery point for an asset near the requested origin.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -11,10 +11,14 @@
  * 3: _sideKey <STRING> - side key (optional, default: "ANY")
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> selected drop-point row, or [] when none is usable.
  *
  * Example:
  * [_typeName, _origin, _className, _sideKey] call Waldo_fnc_EcoBuy_findAvailableDropPoint;
+ * Locality/Authority: Economy authority only; off-authority calls return [].
+ * Repeat/JIP Behaviour: Read-only search of published points; no JIP side effect.
+ * Current Callers: Purchase status and authoritative purchase execution.
+ * Result: Returns a point that matches type/side and can accept the asset.
  */
 
         params [["_typeName", "Ground"], ["_origin", [0, 0, 0]], ["_className", ""], ["_sideKey", "ANY"]];

@@ -18,6 +18,8 @@
  *     remoteExecCall ["Waldo_fnc_ZenSpawnCrateServer", 2];
  *
  * Current callers: the ZEN supply and medical crate module handlers.
+ * Result: One safely placed, stocked crate is created and registered with enabled logistics
+ * handling, or no crate is created when validation rejects the request.
  */
 
 params [

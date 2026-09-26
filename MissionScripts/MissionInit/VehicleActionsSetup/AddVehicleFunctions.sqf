@@ -1,18 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
  * Purpose: Applies class-specific WMP vehicle actions and default medical status.
- * Locality / Authority: Runs per machine for local actions. Only the server publishes medical
+ * Locality and authority: Runs per machine for local actions. Only the server publishes medical
  * defaults, and an existing explicit ACE medical flag always wins, including false.
- * Repeat / JIP: Local Waldo_Vehicle_Functions_Added prevents duplicate setup. Public medical
- * choices survive client JIP and owner migration. Deferred jump setup respects manual overrides.
- * Return Value: Nothing.
- * Current callers: Waldo_fnc_InitVehicles class Init and CuratorObjectPlaced handlers.
+ * Repeat/JIP: Local Waldo_Vehicle_Functions_Added prevents duplicate setup. Joining clients install
+ * local actions. Public medical choices survive JIP and owner migration. Deferred jump setup
+ * respects manual overrides.
  *
  * Arguments:
  * 0: Vehicle <OBJECT>
  *
  * Example:
  * [_vehicle] call Waldo_fnc_AddVehicleFunctions;
+ * Return Value: Nothing useful; the function records local setup on the vehicle.
+ * Current callers: Waldo_fnc_InitVehicles CBA class init and curator object-placement handlers.
+ * Result: Applicable recovery and paradrop interactions are available on the vehicle.
  */
 params [["_vehicle", objNull, [objNull]]];
 

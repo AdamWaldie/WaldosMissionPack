@@ -3,11 +3,17 @@
  * Converts the economy state authored through Purchasing Zeus modules into public setup calls.
  *
  * Arguments:
- * 0: include purchase definitions
- * 1: include delivery points and player terminals
+ * 0: include purchase definitions <BOOL>, default true.
+ * 1: include delivery points and player terminals <BOOL>, default true.
  *
  * Return Value:
  * ARRAY of STRING - ordered SQF statements.
+ * Locality/Authority: Read-only export on the curator's machine; generated calls should run
+ * from authoritative mission setup rather than from every client.
+ * Repeat/JIP Behaviour: Repeated export reads current published state without changing it.
+ * Current Callers: Economy unified setup-script exporter.
+ * Example: [true, true] call Waldo_fnc_EcoBuy_buildSetupCalls;
+ * Result: Returns catalog, delivery-point and terminal setup statements in order.
  */
 params [
     ["_includeDefinitions", true, [false]],

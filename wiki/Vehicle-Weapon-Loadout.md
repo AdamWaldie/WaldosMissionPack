@@ -21,7 +21,7 @@ Turret weapons and aircraft pylons are two genuinely separate Arma systems under
 and this feature keeps that same split rather than papering over it, since a "weapon" on a pylon is
 really just an ordnance/magazine classname with no separate weapon class of its own.
 
-## Scripting
+## Quick setup
 
 ```sqf
 // [vehicle, rows]
@@ -29,6 +29,18 @@ really just an ordnance/magazine classname with no separate weapon class of its 
     ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]
 ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
 ```
+
+## Script call reference
+
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `vehicle` | Object | `objNull` (rejected) | Live vehicle or static weapon; use `this` in its Eden Init field. |
+| 1 `rows` | Array of weapon/pylon rows | `[]` | One or more eight-field rows as specified below. |
+
+Positions 2 and 3 are internal locality/result-routing arguments. Mission scripts should omit
+them. When the target vehicle is local to the executing machine, the result is one `[ok, detail]`
+pair per row. A forwarded call returns `[]` before the vehicle owner completes it. Check the RPT
+or inspect the vehicle if a client-side call returns an empty array.
 
 Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount, magazineQuantity]`:
 
@@ -77,6 +89,13 @@ path/pylon index) is reported for that row only and never blocks the rest. The r
 // vehicles are copied, and pylons are copied by index (1st to 1st, 2nd to 2nd, ...) including the
 // source's exact remaining ammo via ammoOnPylon.
 ```
+
+`Waldo_fnc_VehicleWeaponLoadoutCopy` takes source vehicle Object (position 0), destination vehicle
+Object (position 1) and optional Array or HashMap settings (position 2, default empty). Both objects
+must be live vehicles. The named settings are `copyTurrets` and `copyPylons`, each a Boolean that
+defaults to `true`. The return is `[copiedTurretPaths, copiedPylonIndices, applyResults]` when the
+work finishes locally; a forwarded client call or invalid vehicle returns `[]`. It matches turret
+paths exactly and pylons by their one-based index.
 
 ### Discovering real turret paths and pylon counts
 
@@ -276,7 +295,7 @@ curator-authentication bridge and never touches the server, because it never cha
 turret whose only weapon is the horn is still reported (informational) but never gets a row.
 
 
-## Notes and limitations
+## Limitations and notes
 
 - Works on any `AllVehicles`-derived object with turrets and/or pylons - cars, tanks, boats, static
   weapons, aircraft. `Man` (soldiers/AI) is explicitly excluded even though it technically inherits

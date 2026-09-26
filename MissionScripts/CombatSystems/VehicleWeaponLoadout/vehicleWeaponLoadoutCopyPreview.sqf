@@ -28,6 +28,9 @@
  * Example:
  * private _preview = [donorVehicle, targetVehicle] call Waldo_fnc_VehicleWeaponLoadoutCopyPreview;
  * _preview params ["_rows", "_copiedTurretPaths", "_copiedPylonIndices"];
+ * Locality and authority: Read-only on the requesting curator's client. A repeat preview reads
+ * the latest visible source/target state; no network mutation or JIP replay occurs.
+ * Result: Returns the rows that would be copied, without applying them.
  */
 
 params [

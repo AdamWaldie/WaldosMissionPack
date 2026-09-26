@@ -3,9 +3,10 @@
  * Permanently removes a jammer from the registry (and its map marker), optionally deleting the
  * emitter object too. Server-authoritative - calling on a client forwards to the server, which
  * re-broadcasts the updated registry so the jammer stops affecting every machine.
- * Repeat / JIP: Missing entries return false. Removal clears only the named jammer replay;
- * other features on a kept emitter retain their own state and replay entries.
- * Current callers: Zeus removal, jammer destruction, and server mission scripts.
+ * Locality and authority: Client calls forward to the server, which removes registry and marker
+ * state and optionally deletes the emitter.
+ * Repeat/JIP: Missing entries return false. Removal clears only the named jammer replay;
+ * other features on a kept emitter retain their state. Joiners receive the updated registry.
  *
  * Arguments:
  * 0: Reference <OBJECT or NUMBER> - the jammer object, or its jammer id (from Waldo_fnc_Jammer)
@@ -17,6 +18,8 @@
  * Example:
  * [myJammer, true] call Waldo_fnc_JammerRemove;   // remove jammer and delete its object
  * [3] call Waldo_fnc_JammerRemove;                // remove jammer id 3, keep the object
+ * Current callers: mission-maker scripts, Waldo_fnc_ZenJammerRemove and jammer disable DESTROY.
+ * Result: The jammer stops affecting radios and the optional emitter object is deleted.
  */
 
 params [["_ref", objNull], ["_deleteObject", false]];

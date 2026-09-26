@@ -6,13 +6,28 @@ _Associated Files: MissionScripts\EconomySystems\Command\ (`Waldo_fnc_EcoCommand
 
 Alongside the four economy systems, [Waldos Economy Systems](Waldos-Economy-Systems) ships several management tools, all reached from the **WMP Economy Systems** menu in Zeus.
 
+## Setup values, script calls and result
+
+| Control | Type and default | Where it belongs | Result |
+| --- | --- | --- | --- |
+| Ground Command designation | Connected player Object selected in ZEN | Live Zeus module | Grants that connection spending/order authority for its side. |
+| `Waldo_Economy_CommitmentMode` | Boolean; unset in the shipped `initServer.sqf` | Optional server setup or Zeus control | `true` freezes catalogue refreshes after authoring. |
+| `Waldo_Economy_Preset` | String: `LOW`, `MEDIUM` or `HIGH`; unset by default | Optional `initServer.sqf` value or preset composition | Loads the chosen catalogue at economy start. |
+| `Waldo_Economy_ConfigString` | Exported String; unset by default | Optional `initServer.sqf` value | Imports the catalogue string at economy start. |
+| `call Waldo_fnc_EcoCore_isActive` | No arguments | Script that needs to wait for economy startup | Returns a Boolean on the calling machine. |
+
+These tools do not take a map marker or a `CfgVehicles` classname. World
+placement belongs to the Resource, Research, Build and Buy guides. Ground
+Command permissions follow the current player connection, so set them in a
+running mission. The server owns economy state and supplies it to JIP players.
+
 ## Ground Command
 
 By default, any player on a side can spend that side's resources. **Ground Command** lets you restrict that to trusted players: designate someone as Ground Command and only they (and Zeus) may spend resources, order research, and manage/upgrade buildings for the side. This gives you a clear commander role without locking everyone else out of the rest of the game.
 
 Assign it live in Zeus: **WMP Economy Systems → Ground Command**, then pick the player(s).
 
-> Ground Command is intentionally **Zeus-only** — its permission keys are tied to a player's current connection, so it can't be reliably pre-set from the editor. Assign it once the mission is running.
+> Ground Command is **Zeus-only**. Its permission keys are tied to a player's current connection, so assign it after the mission starts.
 
 ## Commitment mode
 
@@ -41,13 +56,13 @@ The recommended workflow is **configure and place everything with the Zeus modul
 
 ## Presets
 
-Three bundled presets give you a ready-made economy at increasing complexity — **LOW** (a single resource and research) through **HIGH** (a deep, interlocking economy). Apply one from the Zeus preset menu, from `Waldo_Economy_Preset`, or by dropping a preset composition. Faction catalogues (`NATO`, `CSAT`, `AAF`, `SYNDIKAT`) tailor each side's purchasable vehicles.
+Three bundled presets provide economies of increasing complexity, from **LOW** (a single resource and research) to **HIGH** (a larger linked economy). Apply one from the Zeus preset menu, through `Waldo_Economy_Preset`, or with a preset composition. Faction catalogues (`NATO`, `CSAT`, `AAF`, `SYNDIKAT`) set each side's purchasable vehicles.
 
 ## Purge
 
-**Purge** cleanly removes the entire economy suite from the running mission — deletes its world objects and markers and stops its loops — if you decide you no longer want it. Purge is **permanent for that mission**: it also prevents joining (JIP) players from re-initialising the suite, so it is a teardown, not a reset. Restart the mission to run the economy again afterwards.
+**Purge** removes the economy suite from the running mission. It deletes its world objects and markers and stops its loops. Purge is **permanent for that mission**: it also prevents joining (JIP) players from re-initialising the suite. Restart the mission to run the economy again.
 
-## Status check (for scripters)
+## Script call: status check
 
 `call Waldo_fnc_EcoCore_isActive` returns whether the suite is currently running, so you can gate dependent scripts, e.g. `waitUntil { call Waldo_fnc_EcoCore_isActive };`. Failed player actions (not enough resources, unmet requirements, no drop point in range) use a branded timed notice instead of silently failing or burying the reason in game chat.
 

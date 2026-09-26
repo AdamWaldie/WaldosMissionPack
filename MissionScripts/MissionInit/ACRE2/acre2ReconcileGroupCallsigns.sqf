@@ -15,8 +15,12 @@
  * - `Alpha Rifleman` has no `@` and is ignored.
  * - `Alpha Team Leader@Viking` sets the leader's group callsign to `Viking`.
  * - `Alpha Team Leader@Viking-1-1` sets it to `Viking-1-1`.
- * Example call: call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
+ * Example: call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
  * Current caller: initServer.sqf before authoritative ACRE plan compilation.
+ * Repeat/JIP: A later identical pass leaves already named groups unchanged. The server's group
+ * identity is network-visible; this function does not install a client action.
+ * Result: Groups with unique explicit @callsigns are named, and counts of changed, unchanged
+ * and rejected groups are returned.
  */
 if (!isServer) exitWith {[0, 0, 0]};
 

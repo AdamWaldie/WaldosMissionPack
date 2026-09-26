@@ -17,6 +17,9 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoCommand_requestLocalGroundCommandIdentityRefresh;
+ * Locality/Authority: Interface client owning the current player.
+ * Repeat/JIP Behaviour: Generation-gated retries prevent stale player identities after respawn/JIP.
+ * Result: Returns true when the current identity is published or a retry is queued.
  */
 
 if (!hasInterface || {isNull player}) exitWith {false};

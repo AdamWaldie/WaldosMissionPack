@@ -15,6 +15,8 @@
  * Arguments: None.
  * Return Value: HashMap - the Waldo_fnc_DiagnosticFeatureReport shape for area "headless".
  * Example: [] call Waldo_fnc_HeadlessGetDiagnostics;
+ * Result: Returns a normalized diagnostic report for the current HC state, including a
+ * DISABLED entry when the feature is off. The call does not move groups.
  * Current caller: Waldo_fnc_RunDiagnostics.
  */
 

@@ -12,6 +12,9 @@
  *
  * Example: [] call Waldo_fnc_ACRE2BuildBabelDiary;
  * Current callers: Waldo_fnc_AddDocs and Waldo_fnc_ACRE2ApplyBabel.
+ * Repeat/JIP: Replaces the same local diary record when called again; AddDocs runs on a joining
+ * player's client before live radio setup, then ApplyBabel refreshes it.
+ * Result: The player's briefing map shows planned Babel languages before ACRE runtime is ready.
  */
 if (!hasInterface || {isNull player}) exitWith {false};
 private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', createHashMap];

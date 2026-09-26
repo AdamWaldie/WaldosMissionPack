@@ -33,6 +33,9 @@
  *     ["icon", "\a3\ui_f\data\map\markers\military\warning_CA.paa"],
  *     ["colour", [1, 0.75, 0.2, 1]], ["offset", [0,0,0]], ["distance", 80]
  * ]] call Waldo_fnc_Create3DMarker;
+ * Locality and authority: Server stores the marker and sends revisioned deltas; non-server
+ * calls forward a request. Reusing an ID replaces that entry, and JIP receives a full snapshot.
+ * Result: The named object-following or fixed-position marker appears for its selected audience.
  */
 params [
     ["_id", "", [""]],

@@ -36,6 +36,10 @@
  * Example:
  * [this, 25, "MESSAGE FROM COMMAND", "Move to the marked assembly area.", "INFO"]
  *     call Waldo_fnc_NotificationTrigger;
+ * Locality and authority: Sets up a mission trigger on the server; activation uses the shared
+ * notification broadcast. Re-registering the same anchor replaces its prior trigger; JIP
+ * does not replay notifications already shown.
+ * Result: Players receive the configured message when the trigger activates.
  */
 params [
     ["_anchor", objNull, [objNull]],

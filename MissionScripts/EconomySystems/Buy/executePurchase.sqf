@@ -2,9 +2,9 @@
  * Author: WaldoTheWarfighter
  * Purpose: Debits a validated economy purchase and creates it at its selected
  * drop point. A purchased supply/ammunition crate joins WMP crate logistics.
- * Locality / Authority: Runs on the economy authority; the created object and
+ * Locality/Authority: Runs on the economy authority; the created object and
  * cargo permissions are published from the server.
- * Repeat / JIP: Each accepted call is a new purchase. ACE drag/carry and
+ * Repeat/JIP Behaviour: Each accepted call is a new purchase. ACE drag/carry and
  * optional logistics registration replay to joining clients.
  *
  * Arguments:
@@ -15,6 +15,8 @@
  *
  * Return Value:
  * Nothing; the buyer receives WMP feedback on success or rejection.
+ * Current Callers: Validated Purchasing request processor.
+ * Result: Debits the side and delivers the purchased asset to a compatible drop point.
  *
  * Example:
  * ["WEST", "Supply Crate", getPosATL player, player] call Waldo_fnc_EcoBuy_executePurchase;

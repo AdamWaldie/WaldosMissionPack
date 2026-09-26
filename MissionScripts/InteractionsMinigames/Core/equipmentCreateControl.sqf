@@ -1,6 +1,17 @@
 /*
- * Creates a control inside the equipment work-area group.
- * Arguments: [display, className, gridRect, semanticLabel]
+ * Author: WaldoTheWarfighter
+ * Purpose: Creates and records a control inside the equipment work-area group.
+ * Locality/Authority: Interface client only; no server state changes.
+ * Repeat/JIP Behaviour: One control per call, scoped to the supplied display. A new client
+ * creates controls only when it opens its own challenge.
+ * Arguments: 0: display <DISPLAY>, default displayNull; 1: control class <STRING>, default "RscText";
+ * 2: rectangle <ARRAY [x,y,w,h]> in the 40 x 25 grid, default [0,0,1,1];
+ * 3: semantic label <STRING>, default "".
+ * Return Value: <CONTROL> new control, or controlNull if no work-area group exists.
+ * Current Callers: MiniGameChallengeUI and field-equipment challenge openers.
+ * Example: [_display, "RscText", [1, 2, 8, 1], "status label"]
+ *          call Waldo_fnc_MiniGameEquipmentCreateControl;
+ * Result: The control is positioned and recorded for validation/cleanup.
  */
 disableSerialization;
 params [

@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup spawn building prompt.
+ * Removes controls and state from the curator building-spawn prompt.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuild_cleanupSpawnBuildingPrompt;
+ * Locality/Authority: Curator interface client; no world object is deleted.
+ * Repeat/JIP Behaviour: Safe for null/already-cleaned displays; no JIP UI replay.
+ * Current Callers: Building-spawn prompt close/cancel and Economy UI cleanup.
+ * Result: Temporary prompt controls and variables are removed.
  */
 
         params [["_disp", displayNull]];

@@ -7,6 +7,7 @@
  * Arguments: editor DISPLAY. Return Value: BOOL.
  * Current caller: Conversation Author editor and all editor mutations.
  * Example: [_display] call Waldo_fnc_ConversationAuthorRefreshLocal;
+ * Result: Editor controls reflect the current selected draft and validation state.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {false};

@@ -15,6 +15,14 @@ The feature is off by default. Set `Waldo_CorpseTraps_Enable` to `true` in `Miss
 
 Edit the existing row in that file; do not add a second row. WMP starts the client listener from its shipped init files. ACE Interact is required for placing a trap. Joiners and respawning players receive the listener when the setting is on.
 
+| Setting | Type | Default | What it controls |
+|---|---|---|---|
+| `Waldo_CorpseTraps_Enable` | Boolean | `false` | Installs the corpse-trap actions and inventory listener. |
+
+There is no object-init call or per-corpse registration. Set the flag once in the existing config
+row and test with a dead body and a supported throwable. The server validates placement and
+activation. Client actions and inventory listeners install for current and joining players.
+
 ## Using a Trap
 
 1. Carry at least one throwable.

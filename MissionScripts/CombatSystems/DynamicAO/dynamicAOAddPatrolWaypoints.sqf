@@ -30,6 +30,7 @@
  * Example:
  * [_group, _centre, 500, false, "SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]]
  * call Waldo_fnc_DynamicAOAddPatrolWaypoints;
+ * Result: The group's existing route is replaced by patrol waypoints around the centre.
  */
 params [
     "_group", "_centre", ["_radius", 500, [0]], ["_simple", false, [true]],

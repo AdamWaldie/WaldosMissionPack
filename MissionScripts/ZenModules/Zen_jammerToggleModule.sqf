@@ -3,6 +3,10 @@
  * Zeus module handler: finds the nearest registered radio jammer to where the curator dropped the
  * module and flips it on/off (Waldo_fnc_JammerToggle). No dialog - it acts immediately and reports
  * the new state to the curator via systemChat. The registry write is server-authoritative.
+ * Locality and authority: Client forwards placement to the server. The server finds the nearest
+ * registered jammer and changes its authoritative active state.
+ * Repeat/JIP: Each accepted placement flips current state; the current registry state, not the
+ * historical flip request, is published for joining clients.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -10,6 +14,9 @@
  *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenJammerToggle;
+ * Return Value: Nothing useful; a client request is forwarded asynchronously.
+ * Current caller: ZEN Toggle Radio Jammer module registration.
+ * Result: The nearest registered jammer switches on or off, with curator feedback.
  *
  * Public: No
  */

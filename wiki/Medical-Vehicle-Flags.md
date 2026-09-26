@@ -4,6 +4,24 @@
 
 WMP automatically sets `ace_medical_isMedicalVehicle` on selected medical variants. ACE Medical decides what that flag changes in play. This flag is independent of vehicle exit actions, paradrops, and Base Services healing.
 
+## Quick setup: check or set the flag
+
+The shipped class list below is applied automatically during vehicle setup. For another
+medical vehicle, put the example call in that vehicle's Eden Init field. There is no
+WMP registration call or map marker for this flag.
+
+## Script contract
+
+| Input | Type | Value in the example |
+| --- | --- | --- |
+| `this` | Object | The vehicle placed in Eden. |
+| `ace_medical_isMedicalVehicle` | Object-variable name String | The ACE flag read by ACE Medical. |
+| Flag value | Boolean; ACE/WMP class default otherwise | `true` marks this vehicle as medical. |
+| Public broadcast | Boolean | `true` in `setVariable` publishes the value to connected and later-joining clients. |
+
+`setVariable` is an Arma command and does not return a WMP result. If several scripts
+set the same flag, inspect the vehicle's final value in play.
+
 | Vehicle | WMP detection |
 |---|---|
 | RHS UH-60 MEV | `RHS_UH60M_MEV2_d`, `RHS_UH60M_MEV_d`, `RHS_UH60M_MEV2`, `RHS_UH60M_MEV` |

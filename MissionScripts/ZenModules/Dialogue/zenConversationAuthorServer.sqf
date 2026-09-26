@@ -9,6 +9,7 @@
  * Arguments: named value rows ARRAY, requester OBJECT. Return Value: BOOL.
  * Current caller: ZEN Conversation Author editor.
  * Example: ZEN authenticated remote execution only.
+ * Result: A validated conversation is registered or updated and the curator receives its outcome.
  */
 params [["_rows", [], [[]]], ["_requester", objNull, [objNull]]];
 if (!isServer || {isNull _requester}) exitWith {false};

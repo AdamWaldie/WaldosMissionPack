@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Move the player outside the passanger door on the left or right side.
+ * Moves the current player outside a supported vehicle's left or right passenger door.
+ * Locality and authority: Player-client action only; it changes the local player's position and
+ * may animate a recognised helicopter door.
+ * Repeat/JIP: Each call makes one exit. No persistent action or JIP state is installed here;
+ * vehicle action setup owns the interaction.
  *
  * Arguments:
  * 0: Object <OBJECT>
@@ -8,6 +12,9 @@
  *
  * Example:
  * [this, true] call Waldo_fnc_DoExitOnSide;
+ * Return Value: Nothing useful; this is a local exit action.
+ * Current callers: vehicle exit actions installed by Waldo_fnc_AddExitAction.
+ * Result: The player appears beside the selected passenger door.
  */
 
 params [

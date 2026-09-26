@@ -3,12 +3,17 @@
  * Requests an ordered snapshot of network-safe runtime feature settings from the server.
  * Public variables remain useful for live updates; this handshake prevents a JIP machine from
  * activating against local defaults before the server's latest settings have arrived.
+ * Locality and authority: Clients and headless clients request state; the server assembles and
+ * returns the authoritative snapshot to the validated requesting owner.
+ * Repeat/JIP: The client uses bounded retries until the complete snapshot arrives. An in-flight
+ * flag prevents parallel local request loops during join.
  *
  * Arguments: None
  * Return Value: Boolean - true when requested/queued
  *
  * Example: [] call Waldo_fnc_FeatureRuntimeRequestState;
  * Current callers: init.sqf startup handshake on clients and headless clients.
+ * Result: A non-server starts or keeps one request loop; the server sends a full snapshot.
  */
 
 if !(isServer) exitWith {

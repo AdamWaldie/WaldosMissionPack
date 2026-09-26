@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Authenticates a ZEN curator request and changes one side's ACE Fortify budget on the server.
  * The dialog remains local to Zeus; the shared ACE budget is never mutated on a dedicated client.
+ * Locality and authority: Server-only; checks the remote owner's assigned curator before calling
+ * ACE Fortify's shared budget API.
+ * Repeat/JIP: Each accepted signed delta changes the current budget once. There is no replay of
+ * this request to joining clients; ACE owns the current shared budget.
  *
  * Arguments:
  * 0: side <SIDE> - side whose Fortify budget is changed.
@@ -11,6 +15,7 @@
  * Return Value: BOOL - true when the server accepted the change.
  * Example: [west, 100, player] remoteExecCall ["Waldo_fnc_ZenFortifyBudgetServer", 2];
  * Current caller: Waldo_fnc_FortifyBudgetModule.
+ * Result: The chosen side's ACE Fortify budget changes by the signed delta.
  */
 params [["_side", sideUnknown, [sideUnknown]], ["_delta", 0, [0]], ["_requester", objNull, [objNull]]];
 if (!isServer) exitWith {false};

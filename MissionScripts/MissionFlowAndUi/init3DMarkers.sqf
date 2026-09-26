@@ -13,6 +13,9 @@
  * Return Value: Boolean - true when installed/already installed; false without an interface.
  * Current caller: initPlayerLocal.sqf during player UI setup.
  * Example: [] call Waldo_fnc_Init3DMarkers;
+ * Locality and authority: Installs one Draw3D handler on each interface client. Repeated
+ * setup reuses it, then requests current server state for that client including JIP.
+ * Result: This player sees eligible WMP 3D markers through the shared renderer.
  */
 if (!hasInterface) exitWith {false};
 if ((missionNamespace getVariable ["Waldo_3DMarker_DrawHandler", -1]) >= 0) exitWith {true};

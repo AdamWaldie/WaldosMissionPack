@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get build count for side.
+ * Counts completed and active construction jobs of one definition for a side.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _buildName <STRING> - build name (optional, default: "")
  *
  * Return Value:
- * Any - see function body
+ * <NUMBER> completed plus in-progress count.
  *
  * Example:
  * [_sideKey, _buildName] call Waldo_fnc_EcoBuild_getBuildCountForSide;
+ * Locality/Authority: Any machine; reads published building/job registries.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP sees current registries.
+ * Current Callers: Construction build-limit checks and status display.
+ * Result: The count includes ongoing jobs so limits cannot be bypassed by queueing.
  */
 
         params [["_sideKey", "NONE"], ["_buildName", ""]];

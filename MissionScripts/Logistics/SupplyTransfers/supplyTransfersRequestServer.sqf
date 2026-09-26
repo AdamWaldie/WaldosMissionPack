@@ -10,6 +10,7 @@
  * Category ALL merges; DELETE removes an empty source.
  * Return Value: <BOOL> committed. Current caller: ACE supply-transfer action.
  * Example: [player, boxA, boxB, "ALL", [], 1] remoteExecCall ["Waldo_fnc_SupplyTransfersRequestServer", 2];
+ * Result: A validated transfer commits both inventories atomically or leaves them unchanged.
  */
 params [["_player", objNull, [objNull]], ["_source", objNull, [objNull]],
     ["_destination", objNull, [objNull]], ["_category", "", [""]],

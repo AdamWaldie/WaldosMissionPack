@@ -7,6 +7,10 @@
  * Improved Helicopter Landing is authoritative. A supported landing order or active landing
  * controller cancels this correction before another impulse is applied. Terrain clearance, pilot,
  * damage, sling-load, locality and timeout checks also fail safe by releasing immediately.
+ * Locality and authority: Scheduled only on the current aircraft owner. It changes velocity
+ * only while that owner still controls an eligible AI helicopter.
+ * Repeat/JIP: A bounded correction exits on timeout or locality change. The owner-local
+ * tracker can start a new correction when needed; JIP clients do not gain flight authority.
  *
  * Arguments:
  * 0: aircraft <OBJECT>
@@ -17,6 +21,7 @@
  *
  * Example: [_helicopter, speed _helicopter, getPosASL _helicopter # 2, {false}]
  *     spawn Waldo_fnc_HelicopterDecelerationCorrectLocal;
+ * Result: Returns true after at least one bounded impulse, or false when no correction is applied.
  * Current caller: Waldo_fnc_HelicopterDecelerationTrackLocal.
  */
 

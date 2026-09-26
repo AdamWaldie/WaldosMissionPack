@@ -8,6 +8,11 @@ ACE and CBA are required. The feature is on by default through `Waldo_PhysicalCa
 
 The server owns eligibility and mount records. Each object's owner applies its attachment, while the vehicle owner applies seat locks. Players who join later receive the current mounts. `Waldo_PhysicalCargo_BlockSeats` is on by default; set it to `false` in the same config file if the mission should never block seats.
 
+| Setting in `MissionConfig/logisticsConfig.sqf` | Type | Shipped default | Effect |
+| --- | --- | --- | --- |
+| `Waldo_PhysicalCargo_Enable` | Boolean | `true` | Enables the ACE carry-release mounting path. `false` leaves ordinary ACE handling available. |
+| `Waldo_PhysicalCargo_BlockSeats` | Boolean | `true` | Locks only verified seats covered by mounted cargo; `false` prevents WMP-owned seat locks. |
+
 ## Try it in a mission
 
 1. Place an inventory crate and a vehicle in Eden. You do not need an Init call on the vehicle.
@@ -38,7 +43,13 @@ For another non-weapon prop, put this in the prop's Eden **Init** field:
 The same call works in `initServer.sqf` with a named object in place of `this`. It marks the prop
 eligible and asks ACE to make it carryable; you need it only for a prop ACE cannot already carry.
 
-`[object] call Waldo_fnc_PhysicalCargoRegister;` takes one existing non-weapon prop or crate. It returns `true` when the server accepts the object or queues it until settings load. It returns `false` if the feature is off, the object is unsupported or a client calls it directly. Repeating the call does not add another ACE event. WMP-issued crates already qualify; use this call for a prop you placed yourself.
+`Waldo_fnc_PhysicalCargoRegister` has one required argument:
+
+| Position | Type | What to supply |
+|---|---|---|
+| 0 | Object | An existing non-weapon prop or inventory crate. Do not pass a marker name, position, static weapon or vehicle. |
+
+It returns `true` when the server accepts the object or queues it until settings load. It returns `false` if the feature is off, the object is unsupported or a client calls it directly. Repeating the call does not add another ACE event. WMP-issued crates already qualify; use this call for a prop you placed yourself.
 
 WMP rejects visible mounts for static weapons after an HMG flipped a test vehicle. Players can
 still use ACE Carry, ground drop and ACE Cargo for static weapons. WMP has no working weapon mount

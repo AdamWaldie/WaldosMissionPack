@@ -13,6 +13,9 @@
  *
  * Example: [_display, true] call Waldo_fnc_UiThemeApplyDisplayLocal;
  * Current callers: party-game display guard and live UI-theme apply path.
+ * Locality and authority: Restyles only controls in this client's live display. Repeating
+ * it updates presentation without server or JIP gameplay changes.
+ * Result: The selected display uses current WMP theme and accessibility colours.
  */
 
 disableSerialization;

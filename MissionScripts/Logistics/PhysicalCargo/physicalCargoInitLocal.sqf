@@ -9,6 +9,7 @@
  * Return Value: BOOLEAN - true when the listener is installed or already present.
  * Current caller: initPlayerLocal.sqf after the shared logistics settings are ready.
  * Example: [] call Waldo_fnc_PhysicalCargoInitLocal;
+ * Result: One client-side carry-release listener is available when the feature is enabled.
  */
 if (!hasInterface) exitWith {false};
 if (missionNamespace getVariable ["Waldo_PhysicalCargo_LocalInstalled", false]) exitWith {true};

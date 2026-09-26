@@ -9,6 +9,7 @@
  * Return Value: BOOLEAN - true when an ACE release was processed.
  * Current caller: the DefaultAction handler installed by Waldo_fnc_PhysicalCargoInitLocal.
  * Example: [player, player getVariable ["ace_dragging_carriedObject", objNull]] call Waldo_fnc_PhysicalCargoReleaseLocal;
+ * Result: A valid vehicle click submits a physical mount; other releases follow ACE's drop path.
  */
 params [
     ["_carrier", objNull, [objNull]],

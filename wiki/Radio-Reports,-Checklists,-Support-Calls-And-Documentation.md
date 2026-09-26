@@ -8,8 +8,6 @@ The pack provides in-game documentation, quick-reference templates, and checklis
 
 Operational reference cards use native rich text rather than fixed-size pictures. Text wraps to the player's diary width, remains readable at different resolutions and UI scales, and can be copied or updated without re-exporting an image. The converted references include the five-line gunship brief, nine-line CAS brief, CAS check-in, call for fire, landing-zone brief, helicopter insertion and extraction, landing-zone specifications, and jumpmaster checklists.
 
----
-
 ## What Is Provided
 
 ### Radio Reports
@@ -45,31 +43,36 @@ Operational reference cards use native rich text rather than fixed-size pictures
 |---|---|
 | General Mission & Player Info | `Waldo_fnc_GENINFO` |
 
----
-
 ## Setup
 
-Documents are loaded automatically. The call in `init.sqf` looks like this:
+Documents are loaded automatically for each player by `initPlayerLocal.sqf`. The
+existing local call is:
 
 ```sqf
 call Waldo_fnc_AddDocs;
 ```
 
+You do not need to copy that call into another init file. WMP runs it for each
+player, including someone who joins late, because Arma diary entries belong to
+that player's client. Calling it on the dedicated server will not put records
+in every player's map.
+
+| Call | Argument type | Return value | Locality and repeat behaviour |
+| --- | --- | --- | --- |
+| `call Waldo_fnc_AddDocs` | None | Boolean: `true` when records are present for the current local player; `false` without an interface/player | Player-local. Repeated calls for the same player do not duplicate the records. |
+| Individual `Waldo_fnc_*` document builders | None | No supported return contract for mission-maker use | Called by `AddDocs.sqf` on the player's client. |
+
 All documents are added to the player's **map screen briefing diary** (the `Diary` tab when opening the map). Each document is a separate entry.
 
----
-
-## Enabling or Disabling Individual Documents
+## Settings: enabling or disabling individual documents
 
 All individual document functions are called from `AddDocs.sqf`. To remove a document from the briefing, open `MissionScripts\MissionInit\BriefingDocuments\AddDocs.sqf` and comment out the corresponding function call.
 
 For example, to remove the SITREP template:
 
 ```sqf
-// [] call Waldo_fnc_SITREP;   // commented out — no longer shown to players
+// [] call Waldo_fnc_SITREP;   // commented out; no longer shown to players
 ```
-
----
 
 ## Adding Custom Briefing Documents
 

@@ -4,8 +4,9 @@
  * electronic warfare, environmental hazards, air operations, transport, logistics, mission flow,
  * mission tools and interface/QA are separated so curators can find a control by purpose.
  *
- * Locality and repeat/JIP behaviour:
- * Player-interface only. Every curator client (including JIP) registers its own local palette after
+ * Locality and authority: Player-interface only; this file registers ZEN palette entries and
+ * leaves each selected module's mutation to its documented server or object owner.
+ * Repeat/JIP: Every curator client (including JIP) registers its own local palette after
  * ZEN is available. A missionNamespace guard prevents duplicate registration on the same machine.
  * Module effects retain their documented server/object-owner authority; this file only creates UI.
  *
@@ -14,6 +15,7 @@
  *
  * Example: [] call Waldo_fnc_ZenInitModules;
  * Current caller: initPlayerLocal.sqf after local player and ZEN readiness.
+ * Result: The local curator palette contains WMP's task-grouped modules once.
 */
 
 // Registration creates local curator UI entries; servers and headless clients have no consumer.

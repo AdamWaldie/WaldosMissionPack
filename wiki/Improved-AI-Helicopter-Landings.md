@@ -33,22 +33,31 @@ Improved Landing has unconditional priority over the optional [AI Helicopter Dec
 
 The feature is on by default. To disable it, change the `Waldo_ImprovedHelicopterLanding_Enable` row to `false` in `MissionConfig/aiConfig.sqf`. Keep the shipped init files; they load the setting and install the locality-aware controller.
 
-Important global settings include:
+These are the current rows in `MissionConfig/aiConfig.sqf`. Start with the first setup above; the timing and velocity settings are for tuning a tested airframe.
 
-| Setting | Default | Purpose |
-|---|---:|---|
-| `Waldo_ImprovedHelicopterLanding_MinimumActivationDistance` | `50` | Hard minimum range before takeover |
-| `Waldo_ImprovedHelicopterLanding_TriggerDistance` | `500` | Base distance at which a valid approach may start |
-| `Waldo_ImprovedHelicopterLanding_MinimumApproachSpeed` | `55` | Minimum km/h before takeover outside the close descent envelope; prevents very slow short legs |
-| `Waldo_ImprovedHelicopterLanding_TransitAltitude` | `30` | Minimum terrain-relative approach height |
-| `Waldo_ImprovedHelicopterLanding_GlideSlopeRatio` | `4` | Descent distance multiplier |
-| `Waldo_ImprovedHelicopterLanding_TreeScanRadius` | `25` | Landing-zone canopy scan radius |
-| `Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer` | `5` | Clearance above the highest detected canopy |
-| `Waldo_ImprovedHelicopterLanding_GoAroundHeight` | `150` | Excessive relative height near the landing point |
-| `Waldo_ImprovedHelicopterLanding_MaximumGoArounds` | `1` | Bounded repeated approaches; `0` disables them |
-| `Waldo_ImprovedHelicopterLanding_MaximumClimbRate` | `8` | Maximum scripted upward velocity in metres/second |
-| `Waldo_ImprovedHelicopterLanding_MaximumDescentRate` | `10` | Maximum scripted downward velocity in metres/second |
-| `Waldo_ImprovedHelicopterLanding_FinalCommitDistance` | `75` | Inside this range, premature vanilla LAND-waypoint completion no longer cancels the scripted flare and touchdown |
+| Setting (`Waldo_ImprovedHelicopterLanding_` prefix) | Type | Shipped default | Purpose |
+|---|---:|---:|---|
+| `Enable` | Boolean | `true` | Watch eligible AI landing waypoints. |
+| `MinimumActivationDistance` | Number, metres | `50` | Waypoint must begin at least this far away. |
+| `TriggerDistance` | Number, metres | `500` | Distance at which a valid approach may start. |
+| `TriggerSpeedFactor` | Number, multiplier | `4.2` | Scales the speed-based approach trigger. |
+| `MinimumApproachSpeed` | Number, km/h | `55` | Minimum speed for takeover outside the close descent envelope. |
+| `TransitAltitude` | Number, metres above terrain | `30` | Clear-terrain approach height. |
+| `GlideSlopeRatio` | Number, horizontal-to-vertical ratio | `4` | Descent distance multiplier. |
+| `TreeScanRadius` | Number, metres | `25` | Canopy search radius around touchdown. |
+| `TreeSafetyBuffer` | Number, metres | `5` | Extra clearance above detected canopy. |
+| `MaximumTreeHoverHeight` | Number, metres | `40` | Ceiling for canopy correction. |
+| `GoAroundTriggerDistance` | Number, metres | `200` | Assess excessive height inside this range. |
+| `GoAroundHeight` | Number, metres above terrain | `150` | Climb target during a go-around. |
+| `GoAroundExitDistance` | Number, metres | `250` | Distance flown clear before re-approach. |
+| `GoAroundSpeed` | Number, km/h | `70` | Commanded go-around speed. |
+| `MaximumGoArounds` | Number, whole attempts | `1` | Maximum retries for one landing; `0` disables them. |
+| `MaximumClimbRate` | Number, metres/second | `8` | Upward velocity cap. |
+| `MaximumDescentRate` | Number, metres/second | `10` | Downward velocity cap. |
+| `TouchdownRadius` | Number, metres | `5` | Accepted horizontal position error. |
+| `FinalCommitDistance` | Number, metres | `75` | Inside this range, early vanilla waypoint completion does not cancel the flare. |
+| `ControlInterval` | Number, seconds | `0.05` | Owner-local control update interval; performance-sensitive. |
+| `TouchdownHoldSeconds` | Number, seconds | `20` | Grounded settling period before onward movement. |
 
 Set `Waldo_ImprovedHelicopterLanding_Exclude = true` on a helicopter to opt it out. For class-, role- or mission-specific tuning, store a HashMap in `Waldo_ImprovedHelicopterLanding_Profile`; keys use the global suffix without the `Waldo_ImprovedHelicopterLanding_` prefix.
 
@@ -61,6 +70,24 @@ this setVariable ["Waldo_ImprovedHelicopterLanding_Profile", createHashMapFromAr
 ```
 
 The feature has no ZEN module. Change mission defaults in `MissionConfig/aiConfig.sqf`, use a per-aircraft `Waldo_ImprovedHelicopterLanding_Profile` override, or call `Waldo_fnc_ImprovedHelicopterLandingConfigureServer` from an authorised mission script for a live global change.
+
+The live server call takes **one Array** at position 0. It requires all 11 values in this exact order; a partial array returns `false`. Call it on the server to read its Boolean acceptance result. A client request is forwarded and immediately returns `false`, so that return is not proof the server rejected it.
+
+| Array index | Type | Meaning |
+| --- | --- | --- |
+| 0 | Boolean | Enable landing control. |
+| 1 | Number, metres | Minimum activation distance, clamped to 50–500. |
+| 2 | Number, metres | Transit altitude, clamped to 15–150. |
+| 3 | Number, ratio | Glide-slope ratio, clamped to 2–10. |
+| 4 | Number, metres | Tree scan radius, clamped to 0–75. |
+| 5 | Number, metres | Tree safety buffer, clamped to 0–25. |
+| 6 | Number, metres | Go-around height, clamped to 50–500. |
+| 7 | Number, metres/second | Maximum climb rate, clamped to 1–20. |
+| 8 | Number, metres/second | Maximum descent rate, clamped to 1–25. |
+| 9 | Number, whole attempts | Maximum go-arounds, rounded and clamped to 0–3. |
+| 10 | Number, seconds | Touchdown hold, clamped to 0–60. |
+
+For example, `[[true, 50, 30, 4, 25, 5, 150, 8, 10, 1, 20]] call Waldo_fnc_ImprovedHelicopterLandingConfigureServer;` republishes the shipped core profile. The runtime call does not change the other global settings in the table. Ordinary waypoint setup never needs this call. Its current callers are mission scripts that intentionally change the live global profile.
 
 ## Engine boundaries
 

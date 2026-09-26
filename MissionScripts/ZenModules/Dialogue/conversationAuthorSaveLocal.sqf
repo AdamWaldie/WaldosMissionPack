@@ -7,6 +7,7 @@
  * Arguments: editor DISPLAY. Return Value: BOOL.
  * Current callers: Conversation Author selection, mutation, validation, submission and export paths.
  * Example: [_display] call Waldo_fnc_ConversationAuthorSaveLocal;
+ * Result: The current editor draft is saved for reuse during this mission session.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display || {_display getVariable ["WaldoConvAuthor_Refreshing", false]}) exitWith {false};

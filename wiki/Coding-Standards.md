@@ -149,6 +149,21 @@ Wiki pages are the mission-maker-facing guides; optimise them for usability. A f
 
 Large features get a **hub page** plus one sub-page per sub-system (see *Waldos Economy Systems*). Write in plain language; assume the reader is a mission maker, not a scripter.
 
+For a public call, show a table with **each numbered position**, its actual input type (Object,
+marker-name String, Side, position Array, HashMap and so on), required/default value, accepted form
+and units. Describe what `[]`, `""`, `-1` and `objNull` mean *for that call*. State the return type
+and what an unsuccessful result means; a forwarded client call may return before the server accepts
+it. For a nested array or HashMap, give every field's type and default. Do not hide this contract in
+an unexplained code sample. If normal setup is automatic, say that no manual call is needed and
+identify the config file instead of inventing a call for the page.
+
+For configuration, list **every feature-owned setting** with type, shipped value and effect. Keep
+the mission-wide setting table separate from per-object arguments and from player-local preferences.
+Confirm the shipped values against the current `MissionConfig` rows, not an old wiki example. A
+page about a Zeus or ZEN module must also say whether the module expects an existing object, a
+selected class or an empty placement; list the fields the maker can change and what Apply does.
+Do not present the audit/test station as the normal setup workflow.
+
 Keep test-station procedures and audit notes under `releaseVerificationAndDeployment`, not in a
 feature's first-time setup path. A screenshot belongs on a guide only while it shows the current
 interface or placement. Remove an old screenshot when the interface changes; do not keep it to
@@ -179,9 +194,10 @@ python releaseVerificationAndDeployment/wiki_style_checker.py
 python releaseVerificationAndDeployment/check_wiki_assets.py
 ```
 
-The structure check follows the feature index, requires a separate page for the registered
-standalone features, checks their setup/reference/troubleshooting sections, and catches known
-obsolete instructions. It also refuses external screenshots except the repository cover image.
+The structure check follows the feature index automatically. Every indexed feature must have
+its own page with setup, reference, troubleshooting and related-page sections. New index entries
+enter this check without a manual allow-list. The check also catches known obsolete instructions
+and refuses external screenshots except the repository cover image.
 These checks catch omissions, not factual errors. Compare setup examples and defaults with the
 current `MissionConfig` and the function called before publishing a page.
 
@@ -194,6 +210,16 @@ python releaseVerificationAndDeployment/documentation_contract_checker.py --chan
 
 The strict audit deliberately reports older incomplete headers instead of inserting guessed
 locality, arguments or callers. Fix those findings by reading the implementation and real call sites.
+
+To inventory older script headers outside the current branch, run:
+
+```text
+python releaseVerificationAndDeployment/documentation_contract_checker.py --all-scripts
+```
+
+This optional audit reports the historical header backlog. The normal CI check stays focused on
+changed scripts so an unrelated old header does not block a documentation correction. A passing
+changed-file check does not mean every historical SQF header is complete.
 
 ## Code Conventions
 ## ACE Coding Guidelines

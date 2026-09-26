@@ -21,6 +21,7 @@
  *
  * Example:
  * [] call Waldo_fnc_TrackerRender;   // started from Waldo_fnc_JammingInit
+ * Result: Own-side visible tracker markers follow current targets and disappear when removed.
  */
 
 if !(hasInterface) exitWith {};

@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Process start research request.
+ * Validates an actor's queued Research request before invoking the server start gate.
  *
  * Part of the Waldos Economy Systems suite (Research system).
- * Locality / Authority: Server authority only; preserves current side, catalogue, prerequisite, cost
+ * Locality/Authority: Server authority only; preserves current side, catalogue, prerequisite, cost
  * and active-job validation before mutating research state.
- * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicates. Direct requests
+ * Repeat/JIP Behaviour: Existing bounded request-token history rejects duplicates. Direct requests
  * are transient and legacy mailbox cleanup occurs only when a value is present.
  *
  * Arguments:
@@ -16,6 +16,7 @@
  * Nothing
  *
  * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
+ * Result: Invalid, duplicate or out-of-range requests do not start Research.
  *
  * Example:
  * [_holder, _request] call Waldo_fnc_EcoResearch_processStartResearchRequest;

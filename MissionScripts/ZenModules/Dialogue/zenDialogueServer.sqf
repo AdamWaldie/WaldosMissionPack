@@ -6,6 +6,7 @@
  * Arguments: operation STRING, target OBJECT, values ARRAY, requester OBJECT. Return Value: BOOL.
  * Current callers: four dialogue/conversation ZEN handlers.
  * Example: ZEN remote execution only.
+ * Result: A validated dialogue assignment is updated or cleared, with feedback to the curator.
  */
 params [["_operation", "", [""]], ["_target", objNull, [objNull]], ["_values", [], [[]]], ["_requester", objNull, [objNull]]];
 if (!isServer || {isNull _requester}) exitWith {false};

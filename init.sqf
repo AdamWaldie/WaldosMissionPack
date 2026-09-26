@@ -7,8 +7,12 @@
  *
  * Arguments: None.
  * Return Value: Nothing; initializes shared mission state and schedules feature startup.
+ * Locality and authority: Runs on server, interface clients and headless clients. Shared config
+ * loading guards server-published values so joining players do not replace newer authority.
+ * Repeat/JIP: Arma calls this once per machine join. It does not replay local UI actions.
  *
  * Example: Arma executes init.sqf automatically during mission initialization.
+ * Result: Each machine has shared WMP config data before its dependent startup proceeds.
  * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
 
@@ -27,10 +31,6 @@ missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
 
 // OPTIONAL VISUAL EXPERIMENT: uncomment only if this mission wants the post-process effect.
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
-
-// OPTIONAL THIRD-PARTY ENTRY POINT: review that file before enabling it.
-//[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
-
 
 // Pure-data shared feature configs are synchronous and repeat-safe. Runtime authority remains below.
 ["SHARED"] call Waldo_fnc_LoadFeatureConfigs;

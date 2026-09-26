@@ -1,4 +1,16 @@
-/* Removes rally actions on this client; active rally ownership remains server-side. */
+/*
+ * Author: WaldoTheWarfighter
+ * Removes this client's rally self-actions when the rally feature is disabled at runtime.
+ * Locality and authority: Interface-client only; rejects remote senders other than the server.
+ * Server-side rally objects and respawn handles are cleared by a separate server function.
+ * Repeat/JIP: Safe to call again after actions are removed. Runtime control replays current
+ * feature state to joining clients; this function leaves no active action paths behind.
+ * Arguments: None.
+ * Return Value: <BOOL> - true when local action cleanup completed; false without an interface.
+ * Current caller: Waldo_fnc_FeatureRuntimeApply during ZEN runtime disable.
+ * Example: [] call Waldo_fnc_RallyPointStop;
+ * Result: The local player has no WMP squad-rally interaction actions.
+ */
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!hasInterface) exitWith {false};
 {

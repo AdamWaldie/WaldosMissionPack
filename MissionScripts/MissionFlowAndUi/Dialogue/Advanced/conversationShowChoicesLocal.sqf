@@ -9,6 +9,7 @@
  * Arguments: speaker OBJECT, session ID STRING, choices ARRAY<[id,label,enabled,branches]>, internal
  * render attempt NUMBER (default -1). Return Value: BOOL.
  * Current caller: ConversationRunServer. Example: server remote execution to the initiating player.
+ * Result: The initiating player sees the currently enabled response choices.
  */
 params [["_speaker", objNull, [objNull]], ["_sessionId", "", [""]], ["_choices", [], [[]]], ["_attempt", -1, [0]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

@@ -29,6 +29,9 @@
  *
  * Current callers: the "Mission Flow: Send Notification" ZEN module (via Waldo_fnc_ZenNotifyServer)
  * and mission scripts.
+ * Locality and authority: Server selects current recipients and sends cards to their
+ * interface owners. Repeated channels coalesce locally; transient cards are not JIP replayed.
+ * Result: Eligible current players receive the requested notification.
  */
 params [["_config", createHashMap, [createHashMap]]];
 if !(isServer) exitWith {[_config] remoteExecCall ["Waldo_fnc_NotificationBroadcast", 2]; 0};

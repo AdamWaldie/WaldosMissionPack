@@ -13,6 +13,10 @@
  * lives in Waldo_fnc_VehCust_promptEditor and its supporting
  * MissionScripts/CombatSystems/VehicleCustomization/ files - this handler only does the placement
  * check and opens the dialog.
+ * Locality and authority: The curator client validates a direct vehicle target and opens the
+ * editor locally; applying queued changes follows the Vehicle Customisation authority path.
+ * Repeat/JIP: The editor can be reopened for another authoring session. This handler installs
+ * no persistent action or JIP replay.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -26,6 +30,7 @@
  *
  * Current caller: the ZEN "Vehicle Customisation - Editor" module registered by
  * Waldo_fnc_ZenInitModules under category "WMP Vehicle Customisation".
+ * Result: The targeted vehicle's customisation editor opens for queued changes or Eden export.
  */
 
 if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};

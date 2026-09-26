@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Process building production.
+ * Applies active buildings' periodic resource production and prunes lost buildings.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,11 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoBuild_processBuildingProduction;
+ * Locality/Authority: Economy authority only; mutates resource and building registries.
+ * Repeat/JIP Behaviour: Invoked by one authority scheduler; do not start duplicate loops.
+ * Published balances and building state reach JIP clients.
+ * Current Callers: Economy authority maintenance scheduler.
+ * Result: Operational buildings contribute their configured production for this tick.
  */
 
         if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};

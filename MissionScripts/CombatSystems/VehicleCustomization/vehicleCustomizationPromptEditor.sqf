@@ -64,6 +64,10 @@
  * [_objectPos] call Waldo_fnc_VehCust_promptEditor;
  *
  * Current caller: MissionScripts/ZenModules/Zen_vehicleCustomizationEditorModule.sqf.
+ * Locality and authority: Opens controls only on the requesting curator's interface client.
+ * Applying queued changes separately sends them for server validation; reopening replaces the
+ * local editor state and does not replay a display to joining clients.
+ * Result: The curator receives a multi-tab editor for the selected vehicle.
  */
 
 params [["_vehicle", objNull, [objNull]]];

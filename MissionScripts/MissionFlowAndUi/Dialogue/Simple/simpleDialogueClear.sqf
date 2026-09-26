@@ -4,6 +4,7 @@
  * Locality/authority: server only. Repeat/JIP behaviour: repeat-safe and republishes the complete snapshot.
  * Arguments: 0 targets <OBJECT|GROUP|ARRAY>. Return Value: BOOL.
  * Current callers: scripts and ZEN. Example: [this] call Waldo_fnc_SimpleDialogueClear;
+ * Result: Target speakers lose their simple dialogue actions after snapshot reconciliation.
  */
 params ["_targetsInput"];
 if (!isServer) exitWith {false};
