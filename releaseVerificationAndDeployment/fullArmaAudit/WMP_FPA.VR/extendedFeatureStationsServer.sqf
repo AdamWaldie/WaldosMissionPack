@@ -3,6 +3,8 @@
  * Builds the server-authoritative fixtures and control endpoints for the full-pack audit mission's
  * extended feature stations. State-changing actions are repeatable and are invoked by local station
  * controls through explicit server remote execution.
+ * Locality/JIP: run once on the server after the range is ready. Clients, including JIP clients,
+ * use the published fixtures and readiness state; they do not rerun this server setup.
  *
  * Arguments: None.
  * Return Value: Nothing; publishes Waldo_QA_ExtendedFeatureStationsReady when setup completes.
@@ -415,7 +417,6 @@ Waldo_QA_fnc_removeDynamicAATargetServer = {
 // roads, deliberately proving that garrison and roadblock requests cap cleanly instead of failing.
 Waldo_QA_fnc_createDynamicAOServer = {
     params [["_actor", objNull, [objNull]]];
-    ["QA_DYNAMIC_AO"] call Waldo_fnc_DynamicAODestroy;
     private _config = createHashMapFromArray [
         ["id", "QA_DYNAMIC_AO"], ["center", [350, -300, 0]], ["side", east], ["faction", "OPF_F"],
         ["radius", 250], ["patrolGroups", 2], ["garrisonGroups", 2],
@@ -424,7 +425,7 @@ Waldo_QA_fnc_createDynamicAOServer = {
         ["civilianGarrisons", 2], ["civilianCars", 1], ["minefields", 1],
         ["showMineMarkers", true], ["roadblocks", 1], ["showMarker", true]
     ];
-    private _created = [_config] call Waldo_fnc_DynamicAOCreate;
+    private _created = [_config, _actor] call Waldo_fnc_DynamicAOCreate;
     private _state = (missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap]) getOrDefault ["QA_DYNAMIC_AO", createHashMap];
     private _objects = _state getOrDefault ["objects", []];
     private _groups = _state getOrDefault ["groups", []];

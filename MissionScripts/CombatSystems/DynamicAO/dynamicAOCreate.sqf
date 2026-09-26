@@ -15,8 +15,8 @@
  * AI commands run where their groups are local and compact published state supplies JIP clients.
  *
  * Arguments:
- * 0: config <HASHMAP> - see Wiki/Dynamic-AO-Generation.md for every supported key
- * 1: requester <OBJECT> - optional curator player used for authorization and feedback
+ * 0: config <HASHMAP> - default empty (rejected); see wiki/Dynamic-AO-Generation.md
+ * 1: requester <OBJECT> - default objNull; curator player for remote authorization/feedback
  *
  * Return Value:
  * Boolean - true when the AO was accepted and registered
@@ -38,9 +38,7 @@ if (!isServer) exitWith {
     true
 };
 
-if (remoteExecutedOwner > 0) then {
-    if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
-};
+if (remoteExecutedOwner > 0 && {isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}}) exitWith {false};
 private _notify = {
     params ["_message", ["_state", "INFO"]];
     if (!isNull _requester) then {
@@ -93,13 +91,21 @@ _config set ["faction", _faction];
 _config set ["displayName", _displayName];
 _config set ["radius", _radius];
 private _registry = missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap];
-if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
-
 private _pools = [_faction, _side] call Waldo_fnc_DynamicAOResolvePools;
 private _infantry = _pools get "infantry";
-if (count _infantry == 0) exitWith {["The selected faction has no public infantry classes.", "ERROR"] call _notify; false};
+// Crewed vehicles, statics, aircraft and civilian-only requests do not consume this pool.
+// Reject an unusable infantry request before replacing an existing AO with the same id.
+private _needsInfantry = _patrolCount > 0 || {_garrisonCount > 0} || {_roadblockCount > 0};
+if (_needsInfantry && {count _infantry == 0}) exitWith {
+    private _message = if (_side == civilian) then {"The selected faction has no public infantry classes."} else {"The selected faction has no public armed infantry classes."};
+    [_message, "ERROR"] call _notify;
+    diag_log format ["[WMP DYNAMIC AO] Rejected '%1': faction=%2 side=%3 has no eligible infantry classes.", _id, _faction, _side];
+    false
+};
 private _civilianFaction = _config getOrDefault ["civilianFaction", ""];
 private _civilianPools = if (_civilianFaction == "") then {createHashMapFromArray [["infantry", []], ["car", []]]} else {[_civilianFaction, civilian] call Waldo_fnc_DynamicAOResolvePools};
+
+if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
 
 private _objects = [];
 private _groups = [];
@@ -127,6 +133,8 @@ private _spawnUnit = {
     // server the overlapping collision geometries can prevent the leader and followers from
     // acquiring their first path even though the group's waypoint is valid.
     private _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+    // Keep the chosen class and its initialization lifecycle intact. Mod InitPost/loadout handlers
+    // may equip it later; an immediate inventory check must not delete it or poison the pool cache.
     _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
     _unit setVariable ["acex_headless_blacklist", true, true];
     _objects pushBack _unit;

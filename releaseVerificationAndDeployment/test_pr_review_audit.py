@@ -1448,6 +1448,23 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('FeatureNotifyLocal", _sideRecipients]', combined)
 
 
+    def test_dynamic_ao_rejection_precedes_replacement_and_spawn_preserves_class(self):
+        ao_dir = ROOT / "MissionScripts" / "CombatSystems" / "DynamicAO"
+        create = (ao_dir / "dynamicAOCreate.sqf").read_text(encoding="utf-8")
+        code = re.sub(r"/\*.*?\*/|//[^\n]*", "", create, flags=re.DOTALL)
+        # A nested exitWith only leaves the authorization block, allowing creation to continue.
+        self.assertRegex(code, r'if \(remoteExecutedOwner > 0 && \{.*?\}\) exitWith \{false\};')
+        self.assertLess(code.index('exitWith {false}'), code.index('private _id'))
+        reject = code.index('if (_needsInfantry && {count _infantry == 0}) exitWith')
+        replace = code.index('[_id] call Waldo_fnc_DynamicAODestroy')
+        self.assertLess(reject, replace)
+        self.assertIn('_patrolCount > 0 || {_garrisonCount > 0} || {_roadblockCount > 0}', code)
+        spawn = code.split('private _spawnUnit = {', 1)[1].split('private _groundPosition', 1)[0]
+        self.assertEqual(spawn.count('createUnit'), 1)
+        self.assertNotIn('deleteVehicle', spawn)
+        self.assertNotIn('deleteAt', spawn)
+        self.assertNotIn('selectRandom', spawn)
+
     def test_dynamic_ao_runtime_generator_and_recent_regressions_are_wired(self):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         ao_dir = ROOT / "MissionScripts" / "CombatSystems" / "DynamicAO"
