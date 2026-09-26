@@ -10,6 +10,10 @@
  *
  * Example:
  * call Waldo_fnc_FIRECOMMANDS;
+ * Locality and authority: Client-local diary record for the current player only.
+ * Repeat/JIP: Waldo_fnc_AddDocs guards repeat installation and runs for joining players.
+ * Current caller: Waldo_fnc_AddDocs during player-local briefing setup.
+ * Result: The player's Preparation diary subject gains the fire-commands reference.
  */
 
 player createDiaryRecord["Preperation",
