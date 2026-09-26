@@ -153,7 +153,7 @@ sliders.
 ### Artillery support and counter-battery
 
 The two have separate switches (`Waldo_AIPass_Artillery_Enable`, `Waldo_AIPass_CounterBattery_Enable`)
-and separate settings. Each gun can also be limited to one job:
+and separate settings. Set roles on the server (or in an Eden init field, whose client calls are ignored). Each gun can also be limited to one job:
 
 ```sqf
 [this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole;   // gun's init field: counter-battery only

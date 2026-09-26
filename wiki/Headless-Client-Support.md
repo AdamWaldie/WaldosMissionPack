@@ -424,6 +424,13 @@ crew group, but third-party AI scripts can still issue local commands on the old
 becomes unresponsive after migration, exclude that group or disable the conflicting distributor;
 do not try to solve it by transferring WMP's aircraft state machines.
 
+
+AI convoys now use server registration and owner-local driving workers instead of server pins.
+Their ordered registry replays to joining headless clients, and a new owner rebuilds the local
+route trail. Smart AI restoration checkpoints and clear-building progress also survive as public
+state. These new handover paths still need in-engine WMP and ACE headless verification.
+Feature-crew release restores recorded pre-pin exclusions; unknown exclusions are preserved.
+
 ## See also
 
 - [Mission Diagnostics](Mission-Diagnostics) - the general diagnostics report this feature feeds into.
@@ -433,9 +440,3 @@ do not try to solve it by transferring WMP's aircraft state machines.
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
-
-AI convoys now use server registration and owner-local driving workers instead of server pins.
-Their ordered registry replays to joining headless clients, and a new owner rebuilds the local
-route trail. Smart AI restoration checkpoints and clear-building progress also survive as public
-state. These new handover paths still need in-engine WMP and ACE headless verification.
-Feature-crew release restores recorded pre-pin exclusions; unknown exclusions are preserved.

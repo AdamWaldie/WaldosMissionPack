@@ -46,7 +46,7 @@ The numbers are in `Waldo_AIPass_ProfileBehaviour` (ADVANCED).
 | `Vehicles` | true | dismount under fire; damaged vehicles smoke and withdraw |
 | `ContactReports` | true | radio (jammable) or voice sharing |
 | `Reinforce` | true | idle squads move up behind a squad in contact (never garrisons, defence lines, aircrews, gun or artillery crews) |
-| `Artillery` | false | fire missions on well-located enemies only |
+| `Artillery` | false | explicit radio/binocular spotters; spaced ranging rounds and observed corrections |
 | `CounterBattery` | false | `Waldo_AIPass_CounterBattery_Mode` "KNOWN" or "RADAR" |
 | `Airborne` | false | AI passengers of AI-flown aircraft parachute out near known enemies (nothing spawned) |
 | `AircraftFlares` | false | WMP gunships and Dynamic AA fighters |
@@ -91,3 +91,5 @@ clear, parachute out now for a squad in an aircraft, keep for Zeus, return to pa
 `-drills`, `-zeus`, `-support`, `-tuning`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.
+
+Artillery spotters are assigned on the server with `[spotter1, true] call Waldo_fnc_AIPassSetSpotter`; false removes assignment. Opening HE aim exclusion defaults to 200 m plus 100 m buffer, with a 20 s warning pause after estimated impact. This is not an impact guarantee. Observation loss freezes the last report and correction quality. The server coordinates shots across AI owners. Battery roles are server-authoritative. Headless restoration uses changed public checkpoints and ownership epochs; clear orders replay remaining progress/time. These paths require in-engine verification.

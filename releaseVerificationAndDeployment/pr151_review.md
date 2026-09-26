@@ -33,7 +33,7 @@ remote `036942e` blocker fixes and reconciles their intent with the expanded imp
   groups and generated paradrop units. Release restores recorded values and preserves unknown pins.
 - **Zeus results:** named payloads are validated on the server and run on the current owner. Success
   follows the owner's result; missing responses are reported as uncertain. Required building and
-  spotter targets are explicit. Legacy positional AI_ORDER input retains a documented adapter.
+  spotter targets are explicit. Legacy positional AI_ORDER input retains a documented adapter. Battery roles change on the server; JIP init calls cannot overwrite them.
 - **Convoy:** server registration replaces a server-pinned infinite controller. Owner-local workers
   follow a sampled leader route, damp spacing speed, slow turns and use bounded stuck recovery.
   Stop restores recorded formation, attack, forced speed and unloading. No FSM, teleport or repeated
@@ -67,7 +67,7 @@ there is no continuous player/projectile safety monitor. Restoration broadcasts 
 
 Convoys share one worker per AI-owning machine, considering one convoy each 0.25 s. A convoy steps
 at most once per second, holds at most 128 route samples and sends at most ten path points per
-follower no more often than every three seconds. Registration permits 2ñ20 vehicles. Larger convoy
+follower no more often than every three seconds. Registration permits 2‚Äì20 vehicles. Larger convoy
 counts reduce update frequency. On migration, formation following bridges reconstruction of the
 local trail; complete route history is not broadcast.
 
@@ -81,9 +81,13 @@ imported. WMP remains a mission-script pack.
 
 ## Verification
 
-The current pre-integration repository run passed **318 tests**, including **19 Smart AI contract
-tests**. These inspect source/tooling contracts; they do not execute SQF mechanics. Final integrated
-static gate results are recorded below when completed. The builder runs before source scanners.
+The integrated branch includes main `b7ca3fe` and remote PR commit `036942e`. The full repository
+suite passed **319 tests**, including **19 Smart AI contract tests**. All ten static gates passed:
+SQF (1,225 files), configuration, interaction UI, drawn UI, Zeus/script parity (78 modules), wiki
+assets/style, documentation contracts, skill validation and performance regression. The performance
+scanner reports 95 findings (10 high, 85 medium), with no new high recurring patterns. Wiki checks
+initially caught a document encoding error; it was corrected and both checks then passed.
+The audit builder ran before scanners. Git whitespace validation passed. These checks inspect source/tooling contracts, not AI mechanics.
 
 ## Remaining merge blockers: engine acceptance
 
@@ -105,6 +109,6 @@ entry plus fresh RPT initialization evidence. Exercise:
 6. Existing Paradrop, Transport Services, Gunship, Dynamic AA, dialogue and Dynamic AO interactions,
    SafeStart/ENDEX, airborne cancellation and damage restoration.
 
-Agent-driven launch permission is required by AGENTS.md: ìAgent-driven launches write a disposable
+Agent-driven launch permission is required by AGENTS.md: ‚ÄúAgent-driven launches write a disposable
 mission into the installed Arma directory and open a desktop application, so obtain the required
-permission.î That permission request remains pending. Static work proceeds independently.
+permission.‚Äù That permission request remains pending. Static work proceeds independently.

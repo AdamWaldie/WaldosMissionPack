@@ -6,7 +6,8 @@
  * answer enemy artillery, "BOTH" (the default) do either. Given a group, every artillery piece its
  * soldiers crew is set, and the group keeps the role for guns it mans later. The role is broadcast,
  * so it survives a headless-client handover.
- * Locality and authority: callable anywhere, including a gun's Eden init field.
+ * Locality and authority: server only; Eden init runs there once. Zeus routes role changes to the server.
+ * Repeat/JIP: public role state is repeat-safe and reaches JIP; joining clients cannot replay Eden defaults.
  *
  * Arguments:
  * 0: battery <OBJECT, GROUP> - artillery vehicle or static weapon, or the group crewing it
@@ -24,6 +25,7 @@
  */
 
 params [["_battery", objNull, [objNull, grpNull]], ["_role", "BOTH", [""]]];
+if (!isServer || {remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}}) exitWith {false};
 _role = toUpperANSI _role;
 if !(_role in ["SUPPORT", "COUNTER", "BOTH"]) exitWith {false};
 if (_battery isEqualType grpNull) exitWith {

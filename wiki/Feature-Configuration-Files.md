@@ -427,9 +427,9 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Artillery_DefaultRole` | *(AI Tuning)* Missions a gun takes without its own role: `SUPPORT`, `COUNTER` or `BOTH`. Default `"BOTH"`. |
 | `Waldo_AIPass_Artillery_Enable` | Squads call fire from friendly AI artillery on well-located enemies only. Default `false`. |
 | `Waldo_AIPass_Artillery_Rounds` | Rounds per fire mission. Default `3`. |
-| `Waldo_AIPass_Artillery_OpeningSafeDistance` | Opening HE aim exclusion around living players. Default `200` m; tuning range 100–500 m. |
-| `Waldo_AIPass_Artillery_OpeningBuffer` | Additional opening aim margin. Default `100` m; tuning range 50–300 m. Does not guarantee a harmless impact. |
-| `Waldo_AIPass_Artillery_WarningInterval` | Delay after estimated impact before the next shot. Default `20` s; tuning range 10–60 s. |
+| `Waldo_AIPass_Artillery_OpeningSafeDistance` | Opening HE aim exclusion around living players. Default `200` m; tuning range 100â€“500 m. |
+| `Waldo_AIPass_Artillery_OpeningBuffer` | Additional opening aim margin. Default `100` m; tuning range 50â€“300 m. Does not guarantee a harmless impact. |
+| `Waldo_AIPass_Artillery_WarningInterval` | Delay after estimated impact before the next shot. Default `20` s; tuning range 10â€“60 s. |
 | `Waldo_AIPass_Artillery_MinFriendlyDistance` | No mission lands within this distance of friendlies or civilians. Default `200`. |
 | `Waldo_AIPass_Artillery_MaxError` | Largest target position error accepted for a mission. Default `50`. |
 | `Waldo_AIPass_Artillery_Cooldown` | Seconds between missions called by one squad. Default `120`. |

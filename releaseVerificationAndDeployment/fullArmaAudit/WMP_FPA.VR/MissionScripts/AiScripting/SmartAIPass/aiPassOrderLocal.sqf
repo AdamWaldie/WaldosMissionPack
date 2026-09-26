@@ -49,9 +49,6 @@ if (_order in ["GARRISON", "DEFEND"]) then {[_group] call Waldo_fnc_AIPassClearR
         };
         case "CLEAR": {[_group, _building] call Waldo_fnc_AIPassClearBuilding};
         case "AIRBORNE": {[_group] call Waldo_fnc_AIPassAirborneDrop};
-        case "ARTY_SUPPORT": {[_group, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole};
-        case "ARTY_COUNTER": {[_group, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole};
-        case "ARTY_BOTH": {[_group, "BOTH"] call Waldo_fnc_AIPassSetArtilleryRole};
         default {false};
     };
 

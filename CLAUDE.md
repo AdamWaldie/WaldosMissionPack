@@ -360,9 +360,8 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   behind the squad in contact. Squads with AT are preferred, and an extra AT-only request is made
   against armour. Garrison, defence-line and clear-building squads, aircrews, static-gun crews and
   artillery never respond.
-- **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): known positions only, a maximum
-  error, a friendly and civilian standoff at impact, range-scaled dispersion, shoot and scoot. A
-  SMOKE mode screens retreats.
+- **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): explicit equipped spotters, reported positions, displaced opening HE and observed corrections. Server mission tokens coordinate different owners. Single rounds require actual firing events, flight time and a warning interval; unknown results are quarantined. A SMOKE mode screens retreats.
+- **Convoys**: server registration, current-owner SQF driving, bounded local trails and stop restoration. Convoys no longer use server pins or a terminable per-convoy script handle.
 - **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): `KNOWN` or
   `RADAR` via `Waldo_fnc_AIPassRegisterRadar`, with its own rounds, accuracy, interval, friendly
   standoff and shoot-and-scoot settings. Each gun's role (`Waldo_fnc_AIPassArtilleryRole`: SUPPORT,
@@ -1348,7 +1347,7 @@ against `ace_headless`'s own "Full Rebalance" behaviour, it moves every eligible
 with no settle-time grace period at all. Real-time, continuously-driven WMP systems -
 `Waldo_fnc_GunshipRegister`, the paradrop flight route builder (`Waldo_fnc_ParadropBuildFlightRoute`,
 covering both `Waldo_fnc_ParadropQuickFlightSetup` and `Waldo_fnc_ParadropCreateDropZone`),
-`Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` - therefore call
+`Waldo_fnc_DynamicAACreate` - therefore call
 `Waldo_fnc_HeadlessPinCrew` on their own managed vehicle(s) by default, which sets both
 `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) and ACE's own
 `acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
@@ -1968,7 +1967,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Call Endex → `remoteExec ["Waldo_fnc_ENDEX", 0, true]`
 - Custom Mission End → `["end1"] remoteExec ["BIS_fnc_endMission", 0, true]`
 - Fortify Budget Manager → calls `Waldo_fnc_FortifyBudgetModule`
-- Spawn AI Convoy → calls `Waldo_fnc_ZenConvoyModule` (turns the nearest crewed land-vehicle group into a managed convoy via `Waldo_fnc_SimpleAiConvoy`)
+- Spawn AI Convoy → calls `Waldo_fnc_ZenConvoyModule` (configures or stops the explicitly selected crewed land-vehicle group as a managed convoy via `Waldo_fnc_SimpleAiConvoy`)
 - Loadout Save Point → calls `Waldo_fnc_ZenLoadoutSaveModule`
 - Safestart - Activate → `[true] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Go Live (Lift) → `[false] remoteExec ["Waldo_fnc_SafeStart", 2]`

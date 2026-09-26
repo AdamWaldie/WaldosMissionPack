@@ -5,14 +5,14 @@
 _Associated Files: `MissionScripts/AiScripting/simpleAiConvoy.sqf`, `convoySync.sqf`, `convoyTick.sqf`, `convoyReleaseLocal.sqf`_
 
 The convoy follows its lead vehicle's route with sampled path points, spacing-based speed control
-and slower turns. It uses mission SQF and CBA; no addon or imported FSM is required. Registration
+and slower turns. It uses mission SQF and CBA. No addon or imported FSM is required. Registration
 belongs to the server, while driving commands run on the current AI owner.
 
 ## Setup
 
-Use a simulation-enabled group with 2–20 AI-driven land vehicles, then give the leader normal
+Use a simulation-enabled group with 2â€“20 AI-driven land vehicles, then give the leader normal
 waypoints. Static weapons, player crews and vehicles controlled by another WMP feature are rejected.
-Call on the server; an authorised Zeus module or current headless owner can also request changes.
+Call on the server. An authorised Zeus module or current headless owner can also request changes.
 
 ```sqf
 [convoyGroup] call Waldo_fnc_SimpleAiConvoy; // 30 km/h, 15 m, push through
@@ -23,8 +23,8 @@ Call on the server; an authorised Zeus module or current headless owner can also
 | Parameter | Type | Default | Meaning |
 |---|---|---|---|
 | Group | GROUP | required | The AI vehicle group. |
-| Speed | NUMBER | 30 | Maximum km/h, clamped to 5–120. Zero or less stops the controller. |
-| Separation | NUMBER | 15 | Target metres between vehicles, clamped to 10–100. |
+| Speed | NUMBER | 30 | Maximum km/h, clamped to 5â€“120. Zero or less stops the controller. |
+| Separation | NUMBER | 15 | Target metres between vehicles, clamped to 10â€“100. |
 | Push through | BOOL | true | Suppress group attack/unloading while travelling; otherwise release control during combat. |
 
 Calling again updates the existing convoy. The function returns registration success, not a
@@ -36,8 +36,8 @@ Waldo_fnc_SimpleAiConvoy` on the server. Multiple groups use the same API indepe
 
 Place **WMP AI & Combat > Convoy - Create Moving Group** on an existing crewed AI land vehicle.
 Choose configure or stop, speed, spacing and push-through from labelled controls. A missing or
-invalid selection is rejected; the module never guesses a nearby vehicle. Feedback confirms
-registration; the owner applies driving settings on its next worker step.
+invalid selection is rejected. The module never guesses a nearby vehicle. Feedback confirms
+registration. The owner applies driving settings on its next worker step.
 
 ## Movement and recovery
 
@@ -61,14 +61,14 @@ values are public. Both WMP and ACE headless migration paths still require live 
 One CBA worker per AI-owning machine considers one convoy every 0.25 seconds. Each convoy updates
 at most once per second, so many convoys receive less frequent updates. Each holds at most 128 route
 samples, sends at most ten path points per follower, and refreshes a follower path no more often than
-every three seconds. Route samples stay local; registration changes send registry snapshots.
+every three seconds. Route samples stay local. Registration changes send registry snapshots.
 
 ## Limitations and checks
 
 This implementation has static regression coverage, but has not passed in-engine acceptance.
 Test bends, junctions, mixed vehicle sizes, blocked roads, lead loss, repeated configuration/stop,
 Zeus intervention, player entry and transfer between server and headless clients before live use.
-Migration reconstructs the trail; it does not preserve the complete previous route history.
+Migration reconstructs the trail. It does not preserve the complete previous route history.
 Engine driving and road geometry can still prevent progress. Push-through changes AI orders, not
 vehicle invulnerability or the engine's ability to navigate a blocked route.
 
@@ -80,4 +80,4 @@ vehicle invulnerability or the engine's ability to navigate a blocked route.
 
 <!-- WMP-WIKI-NAV -->
 ---
-[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
+[Wiki home](Home) Â· [Quickstart](Quickstart-Guide) Â· [Feature index](Feature-Tutorials)

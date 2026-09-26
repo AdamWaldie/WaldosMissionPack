@@ -40,7 +40,7 @@ if (!local _group) exitWith {
 };
 if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {false};
 private _building = if (_target isEqualType objNull) then {_target} else {nearestBuilding _target};
-if (isNull _building) exitWith {false};
+if (isNull _building) exitWith {if (_options getOrDefault ["resume", false]) then {[_group] call Waldo_fnc_AIPassClearRelease}; false};
 if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
     && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "SPLIT"}) exitWith {
     [_group] call Waldo_fnc_AIPassClearRelease;
@@ -63,7 +63,8 @@ private _previous = _group getVariable ["Waldo_AIPass_ClearOrder", []];
 private _resume = _options getOrDefault ["resume", false] && {_previous isNotEqualTo []} && {(_previous select 0) == _building};
 private _baseBehaviour = if (_previous isEqualTo []) then {behaviour _leader} else {_previous select 3};
 private _cleared = if (_resume) then {+(_previous select 1)} else {[]};
-private _deadline = if (_resume) then {_previous select 2} else {time + 240};
+private _deadline = if (_resume) then {_previous select 2} else {serverTime + 240};
+if (serverTime >= _deadline) exitWith {[_group] call Waldo_fnc_AIPassClearRelease; false};
 _group setVariable ["Waldo_AIPass_ClearOrder", [_building, _cleared, _deadline, _baseBehaviour], true];
 _group setVariable ["Waldo_AIPass_ClearApplied", true];
 private _generation = (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1;
@@ -130,7 +131,7 @@ _group setBehaviour "COMBAT";
     if (count _cleared != _before) then {
         _group setVariable ["Waldo_AIPass_ClearOrder", [_job get "building", +_cleared, _job get "deadline", _job get "baseBehaviour"], true];
     };
-    if (count _cleared >= count _positions || {_now > (_job get "deadline")} || {(_job get "team") findIf {alive _x} < 0}) exitWith {call _finish};
+    if (count _cleared >= count _positions || {serverTime > (_job get "deadline")} || {(_job get "team") findIf {alive _x} < 0}) exitWith {call _finish};
     1.5
 }, createHashMapFromArray [
     ["group", _group], ["team", _team], ["positions", _positions], ["cleared", _cleared], ["building", _building], ["assigned", _team apply {[]}],

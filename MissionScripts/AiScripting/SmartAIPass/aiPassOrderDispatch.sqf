@@ -34,6 +34,11 @@ if (_order in ["GARRISON", "DEFEND"]) then {
 };
 if (_order == "CLEAR") then {_valid = _valid && {!isNull (_settings getOrDefault ["building", objNull])}};
 if (!_valid) exitWith {[_token, false] call Waldo_fnc_AIPassOrderResult; false};
+if (_order in ["ARTY_SUPPORT", "ARTY_COUNTER", "ARTY_BOTH"]) exitWith {
+    private _accepted = [_group, _order select [5]] call Waldo_fnc_AIPassSetArtilleryRole;
+    [_token, _accepted] call Waldo_fnc_AIPassOrderResult;
+    _accepted
+};
 if (_order in ["SPOTTER_ON", "SPOTTER_OFF"]) exitWith {
     private _unit = _settings getOrDefault ["unit", objNull];
     private _accepted = !isNull _unit && {group _unit == _group} && {[_unit, _order == "SPOTTER_ON"] call Waldo_fnc_AIPassSetSpotter};
