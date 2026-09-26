@@ -218,6 +218,10 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Logistics", "ACE Cargo - Set Object Handling", "ACE_CARGO", "\a3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"]
 ];
 
+["WMP Logistics", "ACE Vehicle Services - Configure", {
+    _this call Waldo_fnc_ZenVehicleServicesModule;
+}, "\a3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa"] call zen_custom_modules_fnc_register;
+
 ["WMP Mission Flow", "Conversation: Author",
     {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAuthor;},
     "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\documents_ca.paa"

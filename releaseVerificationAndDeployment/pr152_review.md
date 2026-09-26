@@ -2,6 +2,14 @@
 
 The submitted changes address dedicated-server logistics registration, physical cargo, deleted-state replay on join, transport menu visibility and themed buttons. Source review found additional faults in cargo recovery and feature coexistence. The corrections are included in this branch. In-engine acceptance remains pending.
 
+## ACE vehicle service roles
+
+ZEN **WMP Logistics > ACE Vehicle Services - Configure** now uses the same `Waldo_fnc_VehicleServicesConfigure` API available in Eden Init. Ammunition supply, fuel supply, repair and medical status are independent roles. Omitted script keys and Keep current dialog choices preserve the selected vehicle's other services. Explicit refill controls replace stock only when requested. The API accepts live land vehicles, aircraft and boats and preserves inventory, simulation and movement.
+
+Server-side validation covers named payload types, stock ranges, required ACE components and supported rearm modes. Active fuel nozzles block disable/refill operations. A per-vehicle queue waits for ACE settings and drains requests in order outside the remote-call context. ACE owns action replay and gameplay. Re-enabling ammunition supply replays deduplicated action setup for clients that joined while the role was disabled. WMP's automatic medical setup respects existing explicit true/false choices.
+
+The live `qa_transfer_vehicle` HEMTT has all four roles, 1500 ammunition points and 2000 litres of service fuel. This prepares a real test vehicle and does not count as a live pass. The new ACE Vehicle Services wiki guide contains setup examples, keys, limits and the required dedicated-server checks.
+
 ## Corrections
 
 The cargo acknowledgement worker now starts through CBA's next-frame queue. Its calls to the server-only unmount API therefore leave the original remote request context. The cargo owner publishes the applied revision after setting the approved pose. A provisional attachment alone is not accepted as acknowledgement. A mount revision prevents an older worker from recovering a later mount of the same object.
@@ -14,7 +22,7 @@ Prompt fitting saves each button's layout-constrained font height before shrinki
 
 ## Validation
 
-The full Python suite passes: 310 tests. SQF validation passes for 1,141 files; configuration validation passes for 15 files. Wiki structure passes for 107 pages, Zeus/script parity passes for 76 modules, and documentation contracts pass for 13 files. The performance audit reports 95 existing findings, including 10 high-severity findings, with no new high-severity recurring patterns. These are static checks, including source-contract assertions, and do not establish Arma runtime behaviour.
+The full Python suite passes: 320 tests. SQF validation passes for 1,145 files; configuration validation passes for 15 files. Wiki structure passes for 108 pages, Zeus/script parity passes for 77 modules, and documentation contracts pass for 13 files. The performance audit reports 95 existing findings, including 10 high-severity findings, with no new high-severity recurring patterns. These are static checks, including source-contract assertions, and do not establish Arma runtime behaviour.
 
 ACE 3.21.2 source was checked directly for startCarryLocal and dropObject_carry. It confirms the saved-mass variable and the global mass-restoration event. The engine's object-keyed JIP slot is shared, so independent features need named entries. Init replay suppression remains a startup-phase heuristic: it also suppresses custom local client calls made before that phase ends. Custom server setup belongs in initServer.sqf; later client calls retain forwarding.
 

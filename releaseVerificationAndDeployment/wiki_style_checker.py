@@ -29,7 +29,7 @@ INDEX_HUBS = {
 }
 
 REQUIRED_STANDALONE = {
-    "ACE-Cargo-And-Object-Handling", "Quartermaster", "Base-Services",
+    "ACE-Vehicle-Services", "ACE-Cargo-And-Object-Handling", "Quartermaster", "Base-Services",
     "Supply-Transfers", "Physical-Cargo", "Field-Resupply", "Tactical-Display",
     "Treatment-Feedback", "Hazardous-Environments", "Tree-Felling",
     "Emergency-Dismount", "Explosive-Breaching", "Object-Scaling", "WMP-HUD",
@@ -41,7 +41,7 @@ REQUIRED_STANDALONE = {
 # navigable page with setup, reference, and fault-finding sections. Hub and
 # reference pages are deliberately outside this list.
 FEATURE_GUIDES = {
-    "ACE-Cargo-And-Object-Handling",
+    "ACE-Vehicle-Services", "ACE-Cargo-And-Object-Handling",
     "ACE-Corpse-Traps",
     "Base-Services",
     "Improved-AI-Helicopter-Landings",

@@ -57,6 +57,7 @@ The following modules are under **WMP Logistics**:
 
 - **Quartermaster - Set Up Object** configures an existing quartermaster point, its spawn position and the issues it offers. Mission-wide issue flags still apply. See [Quartermaster](Quartermaster).
 - **Supply Transfers - Register or Inspect** registers an inventory crate or cargo-capable vehicle and reports why an object is rejected. The Supply Transfers flag must be on. See [Supply Transfers](Supply-Transfers).
+- **ACE Vehicle Services - Configure** assigns independent ACE ammunition, fuel, repair and medical roles to the selected vehicle. Explicit refill controls preserve consumed stocks on ordinary edits. See [ACE Vehicle Services](ACE-Vehicle-Services).
 - **Physical Cargo - Eligibility** allows, blocks or inspects visible mounting for a carryable object. Allowing a supported prop also applies standard WMP ACE Drag/Carry handling without changing its cargo size. See [Physical Cargo](Physical-Cargo).
 - **ACE Cargo - Set Object Handling** sets ACE Drag, Carry, loading size and storage space on the selected object. It does not register the object for the other logistics features. See [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling).
 

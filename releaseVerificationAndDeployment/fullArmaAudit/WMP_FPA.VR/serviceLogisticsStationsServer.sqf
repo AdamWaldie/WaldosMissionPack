@@ -55,6 +55,11 @@ if (!isNull _transferVehicle) then {
     _transferVehicle enableSimulationGlobal true;
     [_transferVehicle, 30, -1, false, false] call Waldo_fnc_SetCargoAttributes;
     [_transferVehicle] call Waldo_fnc_SupplyTransfersRegister;
+    // Live HEMTT: service roles coexist with inventory transfers and preserve simulation.
+    // Exercise ZEN edits, consumption, explicit refill and JIP here; this is setup, not a pass result.
+    [_transferVehicle, [["rearm", true], ["rearmSupply", 1500], ["refuel", true],
+        ["fuelLitres", 2000], ["repair", true], ["medical", true]]]
+        call Waldo_fnc_VehicleServicesConfigure;
 };
 if (!isNull _source && {!isNull _target}) then {
     { _x setPhysicsCollisionFlag true; _x enableSimulationGlobal true } forEach [_source, _target];

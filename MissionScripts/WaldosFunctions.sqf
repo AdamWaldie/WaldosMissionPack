@@ -554,6 +554,10 @@ class CfgFunctions
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
             };
+            class VehicleServicesConfigure {file = "MissionScripts\Logistics\VehicleServices\vehicleServicesConfigure.sqf";};
+            class VehicleServicesApplyServer {file = "MissionScripts\Logistics\VehicleServices\vehicleServicesApplyServer.sqf";};
+            class ZenVehicleServicesModule {file = "MissionScripts\ZenModules\zenVehicleServicesModule.sqf";};
+            class ZenVehicleServicesServer {file = "MissionScripts\ZenModules\zenVehicleServicesServer.sqf";};
             class LogisticsSpawner {
                 file = "MissionScripts\Logistics\Crates\LogiBoxes.sqf";
             };
