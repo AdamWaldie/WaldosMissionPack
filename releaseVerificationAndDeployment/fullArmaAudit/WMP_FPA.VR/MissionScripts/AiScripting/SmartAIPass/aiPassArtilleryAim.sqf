@@ -3,7 +3,7 @@
  * Chooses a bounded ranging aim point. Player positions are used only to reject unsafe opening aim points.
  * Locality/authority: documented guards enforce server coordination and owner-local execution.
  * Repeat/JIP: mission tokens reject stale work; server state survives HC migration, not restart.
- * Arguments: 0: mission <HASHMAP>, required; keys fix, battery, offset, bearing, fired, mode, magazine.
+ * Arguments: 0: mission <HASHMAP>, required; keys fix, battery, offset, bearing, opening, mode, magazine.
  * Return Value: Array ATL aim, or [] if all eight candidates fail.
  * Current callers: ArtilleryMissionStep.
  * Example: private _aim = [_mission] call Waldo_fnc_AIPassArtilleryAim;
@@ -11,7 +11,7 @@
 params ["_mission"];
 (_mission get "fix") params ["_centre", "_error"];
 private _battery = _mission get "battery";
-private _opening = (_mission get "fired") == 0 && {(_mission get "mode") != "SMOKE"};
+private _opening = (_mission get "opening") && {(_mission get "mode") != "SMOKE"};
 private _safe = (missionNamespace getVariable ["Waldo_AIPass_Artillery_OpeningSafeDistance", 200]) max 100;
 private _buffer = (missionNamespace getVariable ["Waldo_AIPass_Artillery_OpeningBuffer", 100]) max 50;
 private _players = if (_opening) then {(allPlayers select {alive _x && {!(_x isKindOf "HeadlessClient_F")}}) apply {getPosATL vehicle _x}} else {[]};

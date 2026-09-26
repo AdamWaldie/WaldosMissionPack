@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Queues spaced single rounds on the server. This is dispatch acceptance, not proof a shell fired.
+ * Queues a finite mission of bounded bursts on the server. This is dispatch acceptance, not proof a shell fired.
  * Locality/authority: documented guards enforce server coordination and owner-local execution.
  * Repeat/JIP: mission tokens reject stale work; server state survives HC migration, not restart.
  * Arguments: 0: battery <OBJECT>, objNull selects a same-side gun for the spotter; 1: reported ATL <ARRAY>; 2: error <NUMBER>, 0; 3: mode <STRING>, HE; 4: rounds <NUMBER>, -1; 5: scoot <BOOL/NUMBER>, -1; 6: purpose <STRING>, SUPPORT; 7: spotter <OBJECT>, objNull; 8: enemy <OBJECT>, objNull.
@@ -51,12 +51,14 @@ missionNamespace setVariable ["Waldo_AIPass_FireSerial", _serial];
 private _token = format ["%1:%2", netId _battery, _serial];
 private _mission = createHashMapFromArray [
     ["battery", _battery], ["key", netId _battery], ["token", _token], ["fix", [+_target, _error max 0]], ["mode", _mode], ["purpose", _purpose],
-    ["spotter", _spotter], ["enemy", _enemy], ["remaining", (round _rounds max 1) min 10], ["fired", 0],
+    ["spotter", _spotter], ["enemy", _enemy], ["remaining", (round _rounds max 1) min 10], ["fired", 0], ["burstSize", (round _rounds max 1) min 10],
+    ["burstsLeft", if (_mode == "SMOKE") then {1} else {(round (missionNamespace getVariable ["Waldo_AIPass_Artillery_Bursts", 3]) max 1) min 5}],
+    ["burstsCompleted", 0], ["opening", true], ["location", +_target],
     ["offset", [300, 0] select (_mode == "SMOKE")], ["bearing", random 360], ["magazine", _magazine],
     ["phase", "WAIT"], ["due", time], ["deadline", time + 900], ["scoot", _scoot], ["side", side group gunner _battery]
 ];
-if (!isNull _spotter) then {_spotter setVariable ["Waldo_AIPass_NextFireRequest_" + _purpose, time + (missionNamespace getVariable [["Waldo_AIPass_Artillery_Cooldown", "Waldo_AIPass_CounterBattery_Interval"] select _counter, 120])]};
-if (_counter && {!isNull _enemy}) then {_enemy setVariable ["Waldo_AIPass_CounterUntil_" + str (side group gunner _battery), time + (missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Interval", 60])]};
+if (!isNull _spotter) then {_spotter setVariable ["Waldo_AIPass_NextFireRequest_" + _purpose, time + 900]};
+if (_counter && {!isNull _enemy}) then {_enemy setVariable ["Waldo_AIPass_CounterUntil_" + str (side group gunner _battery), time + 900]};
 _missions set [netId _battery, _mission];
 missionNamespace setVariable ["Waldo_AIPass_FireMissions", _missions];
 _battery setVariable ["Waldo_AIPass_FireToken", _token, true];

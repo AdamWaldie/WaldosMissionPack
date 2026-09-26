@@ -46,8 +46,8 @@ The numbers are in `Waldo_AIPass_ProfileBehaviour` (ADVANCED).
 | `Vehicles` | true | dismount under fire; damaged vehicles smoke and withdraw |
 | `ContactReports` | true | radio (jammable) or voice sharing |
 | `Reinforce` | true | idle squads move up behind a squad in contact (never garrisons, defence lines, aircrews, gun or artillery crews) |
-| `Artillery` | false | explicit radio/binocular spotters; spaced ranging rounds and observed corrections |
-| `CounterBattery` | false | `Waldo_AIPass_CounterBattery_Mode` "KNOWN" or "RADAR" |
+| `Artillery` | false | explicit binocular spotters; finite bursts and observed support corrections |
+| `CounterBattery` | false | automatic firing-event acquisition; radar reduces delay |
 | `Airborne` | false | AI passengers of AI-flown aircraft parachute out near known enemies (nothing spawned) |
 | `AircraftFlares` | false | WMP gunships and Dynamic AA fighters |
 
@@ -64,7 +64,7 @@ aircraft with an AI squad in cargo and give it waypoints towards the enemy (not 
 [_group] call Waldo_fnc_AIPassGarrisonRelease;
 [group this, nearestBuilding this] call Waldo_fnc_AIPassClearBuilding;   // clear one building
 [group this] call Waldo_fnc_AIPassAirborneDrop;                        // passenger squad parachutes out now
-[this, west] call Waldo_fnc_AIPassRegisterRadar;                         // counter-battery RADAR mode
+[this, west] call Waldo_fnc_AIPassRegisterRadar;                         // optional faster counter-battery acquisition
 ```
 
 `Waldo_AIPass_Garrison_DynamicAO = true` gives Dynamic AO garrisons the WMP garrison handling. With
@@ -92,6 +92,6 @@ clear, parachute out now for a squad in an aircraft, keep for Zeus, return to pa
 
 Wiki: `Smart-AI-Pass`.
 
-Artillery spotters are assigned on the server with `[spotter1, true] call Waldo_fnc_AIPassSetSpotter`; false removes assignment. Opening HE aim exclusion defaults to 200 m plus 100 m buffer, with a 20 s warning pause after estimated impact. This is not an impact guarantee. Observation loss freezes the last report and correction quality. The server coordinates shots across AI owners. Battery roles are server-authoritative. Headless restoration uses changed public checkpoints and ownership epochs; clear orders replay remaining progress/time. These paths require in-engine verification.
+Artillery spotters are assigned on the server with `[spotter1, true] call Waldo_fnc_AIPassSetSpotter`; false removes assignment. Opening HE aim exclusion defaults to 200 m plus 100 m buffer, with a 20 s warning pause after estimated impact. This is not an impact guarantee. Observation loss freezes the last support report and correction quality for the remaining finite bursts. The server coordinates shots across AI owners. Battery roles are server-authoritative. Headless restoration uses changed public checkpoints and ownership epochs; clear orders replay remaining progress/time. These paths require in-engine verification.
 
 Dedicated artillery setup modules in WMP AI Control assign/remove the exact spotter, set the exact gun role, and register/update/remove an existing radar for a selected side. They preserve feature switches. AI Orders now contains tactical and exclusion controls only.

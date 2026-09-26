@@ -3,9 +3,8 @@
  * Shares what a squad in contact can see with nearby friendly squads, by radio or by voice.
  *
  * Reports stay machine-local. Up to three enemies
- * seen in the last 10 s are reported. With a working radio (Waldo_fnc_AIPassCanTransmit: carried and
- * not jammed) the report reaches friendly squads whose leader is within
- * Waldo_AIPass_ContactReports_Radius; without one, only squads within
+ * seen in the last 10 s are reported. With unjammed AI communications (Waldo_fnc_AIPassCanTransmit; no inventory item required) the report reaches friendly squads whose leader is within
+ * Waldo_AIPass_ContactReports_Radius; when blocked, only squads within
  * Waldo_AIPass_ContactReports_VoiceRange hear it. Each receiving leader gets the information after
  * 1.5 s plus 1 s per 250 m, at no better than the sender's own knowledge and never above 1.5 (reveal
  * knowledge scale 0-4). Repeated reports are at least 20 s apart. Receivers must be owned by the same

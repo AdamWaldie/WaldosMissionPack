@@ -602,7 +602,7 @@ switch (toUpperANSI _feature) do {
             ["AI SPOTTER", "Place this module on the existing AI soldier to assign or remove.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
         };
         [format ["Artillery spotter: %1", name _objectPos], [
-            ["COMBO", ["Assignment", "Assign only this soldier. Equip binoculars and a radio yourself; observation and jamming rules still apply. Enable artillery in AI Control to run support."],
+            ["COMBO", ["Assignment", "Assign only this soldier. Equip binoculars; radio inventory is ignored, and observation and jamming rules still apply. Enable artillery in AI Control to run support."],
                 [["SPOTTER_ON", "SPOTTER_OFF"], ["Assign artillery spotter", "Remove spotter assignment"], 0]]
         ], {
             params ["_values", "_unit"];
@@ -631,7 +631,7 @@ switch (toUpperANSI _feature) do {
         private _entry = _radars findIf {(_x select 0) == _objectPos};
         private _side = if (_entry < 0) then {"WEST"} else {(_radars select _entry) select 1};
         ["Counter-battery radar", [
-            ["COMBO", ["Registration", "Uses this exact object without spawning, moving or changing its simulation. Counter-battery must be enabled and set to RADAR in AI Tuning."], [[true, false], ["Register / update radar", "Remove radar registration"], 0]],
+            ["COMBO", ["Registration", "Uses this exact object without spawning, moving or changing its simulation. Counter-battery works without radar. Registering this object reduces acquisition delay for its supported side."], [[true, false], ["Register / update radar", "Remove radar registration"], 0]],
             ["COMBO", ["Supported side", "The side receiving detection from this radar; independent of the object's model or faction. Ignored when removing."], [["WEST", "EAST", "GUER"], ["BLUFOR", "OPFOR", "Independent"], (["WEST", "EAST", "GUER"] find _side) max 0]]
         ], {
             params ["_values", "_target"];

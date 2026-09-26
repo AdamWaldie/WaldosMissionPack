@@ -3,7 +3,7 @@
  * Sends idle nearby squads to support a squad in contact, and optionally calls in an airborne drop.
  *
  * Reinforcement has a responder cap and requires a
- * working radio (Waldo_fnc_AIPassCanTransmit, so jamming blocks it). A request is made on first
+ * transmission path (Waldo_fnc_AIPassCanTransmit; jamming blocks it, inventory radios are not required). A request is made on first
  * contact and again if the squad falls below 60% of its peak strength. When known armour appears
  * one more request is made that only squads with an anti-tank
  * gunner answer, with one extra responder slot, and squads with AT are preferred in every request. Up to

@@ -15,6 +15,7 @@ if (count _mission == 0 || {(_mission get "token") != _token}
     || {remoteExecutedOwner != (_mission getOrDefault ["gunOwner", -1])}
     || {!((_mission get "phase") in ["PENDING", "UNCERTAIN"])}) exitWith {};
 _mission set ["remaining", 0];
+_mission set ["burstsLeft", 0];
 _mission set ["phase", "WAIT"];
 _mission set ["due", time];
 _mission set ["scoot", false];

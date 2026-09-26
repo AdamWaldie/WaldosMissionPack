@@ -14,13 +14,7 @@ if (!local _spotter || {!alive _spotter} || {isPlayer _spotter} || {!alive _enem
     || {vehicle _spotter != _spotter} || {binocular _spotter == ""}
     || {_spotter getVariable ["ACE_isUnconscious", false]} || {lifeState _spotter == "INCAPACITATED"}
     || {!([group _spotter] call Waldo_fnc_AIPassIsEligible)}) exitWith {[]};
-// Spotters always need a radio, even when ordinary contact reports have that option disabled.
-private _radio = ((assignedItems _spotter) + items _spotter) findIf {
-    private _name = toLowerANSI _x;
-    getText (configFile >> "CfgWeapons" >> _x >> "simulation") == "ItemRadio"
-        || {_name find "acre_prc" == 0} || {_name find "tf_" == 0} || {_name find "tfar_" == 0}
-};
-if (_radio < 0 || {!([_spotter] call Waldo_fnc_AIPassCanTransmit)}) exitWith {[]};
+if (!([_spotter] call Waldo_fnc_AIPassCanTransmit)) exitWith {[]};
 private _knowledge = _spotter targetKnowledge _enemy;
 if (!(_knowledge select 1) || {_spotter knowsAbout _enemy < 1.5}
     || {time - (_knowledge select 2) > 5}

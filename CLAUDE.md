@@ -357,11 +357,9 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   behind the squad in contact. Squads with AT are preferred, and an extra AT-only request is made
   against armour. Garrison, defence-line and clear-building squads, aircrews, static-gun crews and
   artillery never respond.
-- **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): explicit equipped spotters, reported positions, displaced opening HE and observed corrections. Server mission tokens coordinate different owners. Single rounds require actual firing events, flight time and a warning interval; unknown results are quarantined. A SMOKE mode screens retreats.
+- **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): explicit equipped spotters, reported positions, displaced opening HE and observed corrections. Server mission tokens coordinate different owners. Finite bursts share an aim point, with corrections after estimated flight time and a warning pause. Each round requires an actual firing event; unknown results are quarantined. AI radio inventory is not required. A SMOKE mode screens retreats.
 - **Convoys**: server registration, current-owner SQF driving, bounded local trails and stop restoration. Convoys no longer use server pins or a terminable per-convoy script handle.
-- **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): `KNOWN` or
-  `RADAR` via `Waldo_fnc_AIPassRegisterRadar`, with its own rounds, accuracy, interval, friendly
-  standoff and shoot-and-scoot settings. Each gun's role (`Waldo_fnc_AIPassArtilleryRole`: SUPPORT,
+- **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): firing-event positions trigger acquisition after 60 s, reduced to 20 s by registered radar coverage. Radar is optional. Missions default to three bursts of four rounds; each newly reported location starts displaced, then subsequent bursts get closer. A reported move of 150 m resets ranging without extending the burst cap. Separate friendly standoff and shoot-and-scoot settings apply. Each gun's role (`Waldo_fnc_AIPassArtilleryRole`: SUPPORT,
   COUNTER or BOTH, set with `Waldo_fnc_AIPassSetArtilleryRole` or `Waldo_AIPass_Artillery_DefaultRole`)
   decides which missions it takes.
 - **Airborne insertion** (`Waldo_fnc_AIPassAirborneCheck`, from the group tick;

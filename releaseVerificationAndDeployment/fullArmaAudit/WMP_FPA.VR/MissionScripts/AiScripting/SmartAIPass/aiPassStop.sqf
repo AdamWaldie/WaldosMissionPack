@@ -28,6 +28,7 @@
 
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 if (isServer) then {
+    missionNamespace setVariable ["Waldo_AIPass_CounterGeneration", (missionNamespace getVariable ["Waldo_AIPass_CounterGeneration", 0]) + 1];
     missionNamespace setVariable ["Waldo_AIPass_Enable", false, true];
     {
         private _battery = _y get "battery";

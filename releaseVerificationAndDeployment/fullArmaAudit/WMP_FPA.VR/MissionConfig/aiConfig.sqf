@@ -148,8 +148,8 @@
  * - Waldo_AIPass_Vehicles_Enable (MISSION MAKER): infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw.
  * - Waldo_AIPass_ContactReports_Enable (MISSION MAKER): squads share sighted enemies by radio (blocked by jamming) or by voice.
  * - Waldo_AIPass_ContactReports_Radius (ADVANCED): radio report range in metres.
- * - Waldo_AIPass_ContactReports_VoiceRange (ADVANCED): report range in metres without a working radio.
- * - Waldo_AIPass_ContactReports_RequireRadio (ADVANCED): false treats every AI as carrying a radio (jamming still applies).
+ * - Waldo_AIPass_ContactReports_VoiceRange (ADVANCED): report range in metres when AI transmission is blocked.
+ * - Waldo_AIPass_ContactReports_RequireRadio (ADVANCED): legacy compatibility setting; inventory radios are no longer checked. Jamming still applies.
  * - Waldo_AIPass_Reinforce_Enable (MISSION MAKER): idle nearby squads move up behind a squad in contact.
  * - Waldo_AIPass_Reinforce_Radius (ADVANCED): how far away responding squads may be.
  * - Waldo_AIPass_Reinforce_MaxResponders (ADVANCED): responding squads per squad in contact.
@@ -161,20 +161,24 @@
  *   - Waldo_AIPass_Cohesion: how much punishment squads take before morale breaks (1 = normal).
  *   - Waldo_AIPass_ReactionSpeed: how often squads re-assess (1 = normal; higher costs more server time).
  * - Waldo_AIPass_Artillery_Enable (MISSION MAKER): squads call fire from friendly AI artillery on well-located enemies only.
- * - Waldo_AIPass_Artillery_Rounds (ADVANCED): rounds per fire mission.
+ * - Waldo_AIPass_Artillery_Bursts (ADVANCED): Maximum HE bursts per mission; smoke uses one burst.
+ * - Waldo_AIPass_Artillery_RoundInterval (ADVANCED): Minimum seconds between confirmed rounds inside one burst.
+ * - Waldo_AIPass_Artillery_LocationResetDistance (ADVANCED): Reported movement in metres that resets opening offset and safety checks.
+ * - Waldo_AIPass_CounterBattery_RadarDelay (ADVANCED): Counter-battery acquisition seconds with radar coverage; capped by the normal delay.
+ * - Waldo_AIPass_Artillery_Rounds (ADVANCED): rounds per support burst.
  * - Waldo_AIPass_Artillery_OpeningSafeDistance (ADVANCED): opening HE aim exclusion around living players; default 200 m.
  * - Waldo_AIPass_Artillery_OpeningBuffer (ADVANCED): extra opening aim margin; default 100 m, not an impact guarantee.
- * - Waldo_AIPass_Artillery_WarningInterval (ADVANCED): pause after estimated impact before next shot; default 20 s.
+ * - Waldo_AIPass_Artillery_WarningInterval (ADVANCED): pause after the last estimated burst impact before the next burst; default 20 s.
  * - Waldo_AIPass_Artillery_MinFriendlyDistance (ADVANCED): no mission lands within this distance of friendlies or civilians.
  * - Waldo_AIPass_Artillery_MaxError (ADVANCED): largest target position error accepted for a mission.
  * - Waldo_AIPass_Artillery_Cooldown (ADVANCED): seconds between missions called by one squad.
  * - Waldo_AIPass_Artillery_ShootAndScoot (ADVANCED): mobile batteries move 200-350 m after a support mission.
  * - Waldo_AIPass_Artillery_DefaultRole (MISSION MAKER): missions a battery takes unless you set its own role: SUPPORT (squads' calls only), COUNTER (counter-battery only) or BOTH. Per gun: [this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole; or the AI Orders Zeus module.
  * - Waldo_AIPass_CounterBattery_Enable (MISSION MAKER): AI artillery answers enemy artillery whose position is known.
- * - Waldo_AIPass_CounterBattery_Mode (MISSION MAKER): KNOWN answers only spotted batteries; RADAR also uses radars registered with Waldo_fnc_AIPassRegisterRadar.
+ * - Waldo_AIPass_CounterBattery_Mode (MISSION MAKER): legacy compatibility setting; automatic firing-event acquisition always works, with radar reducing delay.
  * - Waldo_AIPass_CounterBattery_RadarRange (ADVANCED): detection range of a registered counter-battery radar.
- * - Waldo_AIPass_CounterBattery_Delay (ADVANCED): seconds before counter-battery fire is returned.
- * - Waldo_AIPass_CounterBattery_Rounds (ADVANCED): rounds per counter-battery mission.
+ * - Waldo_AIPass_CounterBattery_Delay (ADVANCED): acquisition seconds without radar (default 60).
+ * - Waldo_AIPass_CounterBattery_Rounds (ADVANCED): rounds per counter-battery burst.
  * - Waldo_AIPass_CounterBattery_MaxError (ADVANCED): largest position error on the enemy gun accepted in KNOWN mode.
  * - Waldo_AIPass_CounterBattery_MinFriendlyDistance (ADVANCED): no counter-battery fire when friendlies or civilians are this close to the enemy gun.
  * - Waldo_AIPass_CounterBattery_Interval (ADVANCED): seconds before the same enemy gun is answered again.
@@ -208,7 +212,7 @@
  * - Waldo_AIPass_AmmoShare_Distance (ADVANCED): how close a squad-mate must be to hand over a magazine.
  * - Waldo_AIPass_VehicleGunnery_Enable (MISSION MAKER): AI gunners engage anti-tank soldiers first, then armour; armour backs away from known AT teams.
  * - Waldo_AIPass_Vehicles_StandoffDistance (ADVANCED): distance armour tries to keep from known anti-tank soldiers.
- * - Waldo_AIPass_ArtillerySmoke_Enable (MISSION MAKER): a retreating squad with a radio gets an artillery smoke screen; needs artillery support on and a battery with smoke.
+ * - Waldo_AIPass_ArtillerySmoke_Enable (MISSION MAKER): an unjammed retreating squad gets an artillery smoke screen; needs artillery support on and a battery with smoke.
  * - Waldo_AIPass_AircraftBreak_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters jink sideways away from a missile launch; test your aircraft first.
  */
 createHashMapFromArray [
@@ -316,8 +320,8 @@ createHashMapFromArray [
         ["Waldo_AIPass_Vehicles_Enable", true], // BOOL: dismount under fire; damaged vehicles smoke and withdraw.
         ["Waldo_AIPass_ContactReports_Enable", true], // BOOL: share sightings by radio (jammable) or voice.
         ["Waldo_AIPass_ContactReports_Radius", 500], // METRES: radio report range.
-        ["Waldo_AIPass_ContactReports_VoiceRange", 35], // METRES: report range without a working radio.
-        ["Waldo_AIPass_ContactReports_RequireRadio", true], // BOOL: false treats every AI as carrying a radio.
+        ["Waldo_AIPass_ContactReports_VoiceRange", 35], // METRES: report range when AI transmission is blocked.
+        ["Waldo_AIPass_ContactReports_RequireRadio", false], // Legacy compatibility only: AI inventory radios are no longer checked.
         ["Waldo_AIPass_Reinforce_Enable", true], // BOOL: idle nearby squads move up behind a squad in contact.
         ["Waldo_AIPass_Reinforce_Radius", 600], // METRES: how far away responders may be.
         ["Waldo_AIPass_Reinforce_MaxResponders", 2], // COUNT: responding squads per squad in contact.
@@ -325,17 +329,21 @@ createHashMapFromArray [
         ["Waldo_AIPass_Artillery_OpeningSafeDistance", 200], // Advanced artillery ranging control.
         ["Waldo_AIPass_Artillery_OpeningBuffer", 100], // Advanced artillery ranging control.
         ["Waldo_AIPass_Artillery_WarningInterval", 20], // Advanced artillery ranging control.
-        ["Waldo_AIPass_Artillery_Rounds", 3], // COUNT: rounds per fire mission.
+        ["Waldo_AIPass_Artillery_Bursts", 3], // Maximum HE bursts per mission; smoke uses one burst.
+        ["Waldo_AIPass_Artillery_RoundInterval", 2], // Minimum seconds between confirmed rounds inside one burst.
+        ["Waldo_AIPass_Artillery_LocationResetDistance", 150], // Reported movement in metres that resets opening offset and safety checks.
+        ["Waldo_AIPass_CounterBattery_RadarDelay", 20], // Counter-battery acquisition seconds with radar coverage; capped by the normal delay.
+        ["Waldo_AIPass_Artillery_Rounds", 3], // COUNT: rounds per support burst.
         ["Waldo_AIPass_Artillery_MinFriendlyDistance", 200], // METRES: no mission near friendlies or civilians.
         ["Waldo_AIPass_Artillery_MaxError", 50], // METRES: largest target position error accepted.
         ["Waldo_AIPass_Artillery_Cooldown", 120], // SECONDS: between missions called by one squad.
         ["Waldo_AIPass_Artillery_ShootAndScoot", true], // BOOL: mobile batteries relocate after a support mission.
         ["Waldo_AIPass_Artillery_DefaultRole", "BOTH"], // STRING: SUPPORT, COUNTER or BOTH for guns with no role of their own.
         ["Waldo_AIPass_CounterBattery_Enable", false], // BOOL: AI artillery answers enemy artillery whose position is known.
-        ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"], // STRING: KNOWN (spotted only) or RADAR (also registered radars).
+        ["Waldo_AIPass_CounterBattery_Mode", "AUTO"], // Legacy compatibility: detection is always automatic.
         ["Waldo_AIPass_CounterBattery_RadarRange", 8000], // METRES: radar detection range.
-        ["Waldo_AIPass_CounterBattery_Delay", 20], // SECONDS: before counter-battery fire.
-        ["Waldo_AIPass_CounterBattery_Rounds", 4], // COUNT: rounds per counter-battery mission.
+        ["Waldo_AIPass_CounterBattery_Delay", 60], // SECONDS: before counter-battery fire.
+        ["Waldo_AIPass_CounterBattery_Rounds", 4], // COUNT: rounds per counter-battery burst.
         ["Waldo_AIPass_CounterBattery_MaxError", 100], // METRES: largest enemy-gun position error accepted (KNOWN).
         ["Waldo_AIPass_CounterBattery_MinFriendlyDistance", 200], // METRES: no fire near friendlies or civilians.
         ["Waldo_AIPass_CounterBattery_Interval", 60], // SECONDS: before the same enemy gun is answered again.

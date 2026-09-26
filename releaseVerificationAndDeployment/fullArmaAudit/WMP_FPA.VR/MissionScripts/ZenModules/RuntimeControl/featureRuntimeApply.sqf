@@ -437,7 +437,7 @@ switch (toUpperANSI _action) do {
             private _accepted = if (_action == "AI_BATTERY") then {[_target, _role] call Waldo_fnc_AIPassSetArtilleryRole}
                 else {[_target, _side, _enabled] call Waldo_fnc_AIPassRegisterRadar};
             diag_log format ["[WMP ZEN SERVER] action=%1 target=%2 role=%3 side=%4 enabled=%5 accepted=%6", _action, typeOf _target, _role, _side, _enabled, _accepted];
-            ["AI SETUP", ["Setup refused; check the selected object.", "Setup applied. Feature switches remain as configured in AI Control; radar detection also needs RADAR mode in AI Tuning."] select _accepted,
+            ["AI SETUP", ["Setup refused; check the selected object.", "Setup applied. Feature switches remain as configured in AI Control; radar coverage reduces counter-battery acquisition delay."] select _accepted,
                 ["ERROR", "SUCCESS"] select _accepted, "AI_SETUP", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
         }, [_action, _target, _role, _side, _enabled, _requestOwner]] call CBA_fnc_execNextFrame;
     };

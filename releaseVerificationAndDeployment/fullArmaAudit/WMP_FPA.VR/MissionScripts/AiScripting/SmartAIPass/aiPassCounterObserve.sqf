@@ -5,7 +5,7 @@
  * Repeat/JIP: server-side per-target/side cooldown deduplicates replies. No persistent observer job.
  * Arguments: 0: firing vehicle <OBJECT>, objNull.
  * Return Value: Nothing.
- * Current callers: AIPassCounterBattery.
+ * Current callers: legacy server-script observation requests; automatic counter-battery uses firing events.
  * Example: [_enemyGun] remoteExecCall ["Waldo_fnc_AIPassCounterObserve", 0];
  */
 params [["_enemy", objNull, [objNull]]];

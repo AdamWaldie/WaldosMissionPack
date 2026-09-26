@@ -35,8 +35,8 @@ with CBA, ACE, ZEN and ACRE2 (and once more with LAMBS Danger and Waypoints) and
   turned, and no chemlight or ACE flashbang is thrown as smoke;
 - `IncomingMissile` fires on the aircraft owner's machine and `ArtilleryShellFired` reaches the
   machine that owns the answering battery (counter-battery across server and headless client);
-- AI with vanilla, TFAR and ACRE2 radios pass the radio check (contact reports, reinforcement,
-  artillery), and a radio-less soldier does not;
+- AI contact reports, reinforcement and artillery work without an inventory radio; WMP jamming still blocks transmission;
+- support and counter-battery stop at their configured burst cap, correct only between bursts, and restart ranging after a reported relocation; counter-battery works without radar and acquires faster with radar coverage;
 - flanking elements engage on the final approach and assault, and cover spots face away from the
   enemy rather than all being accepted;
 - zero SQF errors in server, client and headless-client RPTs.

@@ -121,6 +121,25 @@ class SmartAIPassContracts(unittest.TestCase):
         self.assertIn('if (_enabled) then {_radars pushBack', radar)
         self.assertIn('(_x select 0) != _object', radar)
 
+    def test_finite_bursts_and_inventory_independent_comms(self):
+        self.assertNotIn('assignedItems', source('aiPassCanTransmit'))
+        self.assertNotIn('assignedItems', source('aiPassSpotterFix'))
+        self.assertIn('JammingFactor', source('aiPassCanTransmit'))
+        fired = source('aiPassArtilleryFired')
+        self.assertIn('get "burstsLeft") - 1', fired)
+        self.assertIn('["phase", "FIRING"]', fired)
+        step = source('aiPassArtilleryMissionStep')
+        self.assertIn('get "burstsLeft") <= 0', step)
+        self.assertIn('then {_mission get "aim"}', step)
+        self.assertIn('LocationResetDistance', step)
+        self.assertNotIn('getPosATL', step)
+        self.assertIn('LastEmission', step)
+        counter = source('aiPassCounterBattery')
+        self.assertNotIn('CounterBattery_Mode', counter)
+        self.assertNotIn('AIPassCounterObserve', counter)
+        self.assertIn('CounterBattery_RadarDelay', counter)
+        self.assertIn('CounterGeneration', counter)
+
     def test_repeat_orders_invalidate_old_jobs(self):
         for kind in ['Garrison', 'Defend']:
             text = source(f'aiPass{kind}ApplyLocal')

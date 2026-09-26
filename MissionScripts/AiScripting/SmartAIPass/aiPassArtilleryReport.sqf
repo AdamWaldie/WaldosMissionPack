@@ -18,6 +18,17 @@ if (count _fix == 2 && {alive _spotter} && {_spotter getVariable ["Waldo_AIPass_
     && {(_fix select 0) isEqualType []} && {count (_fix select 0) == 3} && {(_fix select 1) isEqualType 0}
     && {(_fix select 1) <= (missionNamespace getVariable [["Waldo_AIPass_Artillery_MaxError", "Waldo_AIPass_CounterBattery_MaxError"] select ((_mission get "purpose") == "COUNTER"), 50])}) then {
     _mission set ["fix", _fix];
-    if ((_mission get "fired") > 0) then {_mission set ["offset", ((_mission get "offset") * 0.55) max 40]};
+    private _moved = (_fix select 0) distance2D (_mission get "location") >= (missionNamespace getVariable ["Waldo_AIPass_Artillery_LocationResetDistance", 150]);
+    if (_moved) then {
+        _mission set ["location", +(_fix select 0)];
+        _mission set ["offset", 300];
+        _mission set ["opening", true];
+        _mission set ["bearing", random 360];
+    } else {
+        if ((_mission get "burstsCompleted") > 0) then {
+            _mission set ["offset", ((_mission get "offset") * 0.55) max 40];
+            _mission set ["opening", false];
+        };
+    };
 };
 _mission set ["phase", "READY"];

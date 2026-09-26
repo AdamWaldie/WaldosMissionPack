@@ -71,13 +71,13 @@ This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup),
 | AI Control | Anywhere | Enable/stop the pass, skill profile, behaviour switches and LAMBS mode. |
 | AI Tuning | Anywhere | Live tactical, artillery safety/warning and support settings. |
 | AI Orders | Position or target building | Group selector; garrison, defend, clear, release, parachute, exclude or return. |
-| Artillery - Set Up Spotter | Existing AI soldier | Assign or remove the selected soldier. Equip binoculars and radio separately. |
+| Artillery - Set Up Spotter | Existing AI soldier | Assign or remove the selected soldier. Equip binoculars separately; no inventory radio is required. |
 | Artillery - Set Battery Role | Exact artillery gun or mortar | Support, counter-battery or both; empty guns can be prepared. |
 | Artillery - Set Up Radar | Existing vehicle or prop | Register/update/remove; BLUFOR, OPFOR or Independent support. |
 | Convoy - Create Moving Group | Crewed AI land vehicle | Configure or stop; speed, spacing and push-through. |
 
 Setup helpers use existing objects and preserve feature switches. Enable artillery/counter-battery
-through AI Control after setup; radar detection also requires RADAR mode in AI Tuning. Mutations
+through AI Control after setup; radar coverage shortens acquisition delay. Mutations
 are validated on the server and AI orders execute on the current owner. The new helpers add no
 periodic workers. Dynamic AO and Dynamic AA remain in WMP AI & Combat.
 

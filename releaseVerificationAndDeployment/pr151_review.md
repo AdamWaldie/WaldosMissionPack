@@ -12,11 +12,18 @@ remote `036942e` blocker fixes and reconciles their intent with the expanded imp
   candidates are checked against one living-player snapshot; each needs the configured 200 m
   exclusion plus 100 m buffer. Failure cancels the mission. This is an aim safeguard, not a promise
   that dispersion or later movement cannot hurt players.
-- **Observed corrections:** only explicitly assigned existing soldiers with binoculars and a working
-  radio request support. Zeus lists assigned names. No extra units spawn. Each confirmed round is
-  followed by estimated flight time plus a default 20 s warning pause. A fresh observed report
-  reduces offset to 55%, with a 40 m floor. Lost observation/radio freezes the report and accuracy;
-  the current mission may continue there. Radar-only fixes remain displaced.
+- **Finite bursts:** support defaults to three bursts of three rounds; counter-battery to three
+  bursts of four. Smoke uses one burst. Rounds share one aim point, with a 2 s minimum requested
+  spacing subject to gun reload. After the last round, estimated flight time plus a 20 s warning
+  pause precedes correction. The mission ends at its burst cap and then enters cooldown.
+- **Observed corrections:** only explicitly assigned existing soldiers with binoculars request
+  support. Inventory radios are not required; WMP jamming still blocks transmission. Zeus lists
+  assigned names and no extra units spawn. A fresh observed report reduces offset to 55%, with
+  a 40 m floor. Lost observation or blocked communications freezes support position and accuracy.
+- **Counter-battery:** firing events capture positions; no spotter or radar is required. Acquisition
+  defaults to 60 s, reduced to 20 s under registered radar coverage. Bursts walk closer to the last
+  captured position. A reported move of at least 150 m resets opening offset and safety checks,
+  without adding bursts. No live transform tracking or continuous player/projectile monitoring.
 - **Cross-owner artillery:** the server holds the mission and shot count, asks the spotter owner for
   a report and sends one firing command to the gun owner. Actual engine firing events confirm
   expenditure. Unknown outcomes are quarantined without retry; explicit owner rejection ends the
@@ -61,8 +68,8 @@ Stop explicitly cancels clearing; it does not silently replay a stopped clear or
 ## Performance limits
 
 The AI scheduler has a default soft 1 ms budget checked between jobs, not a hard pre-emption limit.
-Queue traversal still scales with queue size. Discovery supplies gun and spotter caches. Counter
-observation handles at most four cached spotters per job. Opening HE checks at most eight aims once;
+Queue traversal still scales with queue size. Discovery supplies gun and spotter caches. The legacy counter
+observation helper handles at most four cached spotters per job. Opening HE checks at most eight aims per opening burst;
 there is no continuous player/projectile safety monitor. Restoration broadcasts occur on change.
 
 Convoys share one worker per AI-owning machine, considering one convoy each 0.25 s. A convoy steps
@@ -81,7 +88,7 @@ existing ownership requirements.
 ## Verification
 
 The integrated branch includes main `b7ca3fe` and remote PR commit `036942e`. The full repository
-suite passed **320 tests**, including **20 Smart AI contract tests**. All ten static gates passed:
+suite passed **321 tests**, including **21 Smart AI contract tests**. All ten static gates passed:
 SQF (1,225 files), configuration, interaction UI, drawn UI, Zeus/script parity (81 modules), wiki
 assets/style, documentation contracts, skill validation and performance regression. The performance
 scanner reports 95 findings (10 high, 85 medium), with no new high recurring patterns. Wiki checks
@@ -94,7 +101,7 @@ No Arma session was launched in this follow-up. Source fixes do not establish co
 Use `launch_pr_review_audit.ps1`, default 3840x2160 and `-noBattlEye`, and require actual VR mission
 entry plus fresh RPT initialization evidence. Exercise:
 
-1. Explicit spotter assignment/removal, binocular/radio loss, jamming, occlusion and death. Move the
+1. Explicit spotter assignment/removal, binocular loss, absent inventory radios, jamming, occlusion and death. Move the
    target after observation loss and verify the aim does not follow or tighten without a report.
 2. Opening aim rejection near players, no safe candidate, friendly occupied vehicles near later
    aims, role/switch changes, ammunition exhaustion and gun deletion. Measure warning intervals
@@ -123,4 +130,4 @@ All helper changes use the authenticated server route, retain public JIP state a
 Feature switches and equipment are not changed implicitly. Dialog selection, server logs, resulting
 state and JIP/HC behaviour remain subject to the existing live acceptance gate.
 
-The dedicated-category changes passed the full 320-test suite and all ten static gates. The palette contains 81 registered modules overall. No new high recurring performance patterns were reported. Live ZEN rendering and execution remain unverified.
+The dedicated-category changes passed the full 320-test suite before the burst changes and all ten static gates. The palette contains 81 registered modules overall. No new high recurring performance patterns were reported. Live ZEN rendering and execution remain unverified.

@@ -82,11 +82,11 @@ touched.
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
 | Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Infantry riding in the squad's vehicle get out under fire and get back in afterwards. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
 | Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
-| Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass sighted enemies to nearby friendly squads. The range is 500 m with a working radio, or 35 m by voice. Radio jamming blocks the radio report. |
-| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help needs a radio. |
-| Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | Explicitly assigned spotters request spaced HE ranging rounds from friendly artillery, including guns on another owner. Corrections require observation and radio contact. Opening aim points avoid players; every shot checks friendlies and civilians. Mobile guns may relocate afterwards. |
+| Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass sighted enemies to nearby friendly squads. The range is 500 m through abstracted AI communications, or 35 m by voice. Radio jamming blocks the radio report. |
+| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help must pass WMP jamming checks. |
+| Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | Explicitly assigned spotters request finite HE ranging bursts from friendly artillery, including guns on another owner. Support corrections require observation and an unjammed report. Opening aim points avoid players; every shot checks friendlies and civilians. Mobile guns may relocate afterwards. |
 | Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
-| Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Friendly AI artillery answers enemy artillery, but only if its position is known (see below). |
+| Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Acquires enemy firing locations, then fires finite ranging bursts. Radar reduces acquisition delay. |
 | Airborne insertion | `Waldo_AIPass_Airborne_Enable` (off) | AI squads riding in AI-flown helicopters or planes climb to jump altitude as they near an enemy they know about, then parachute out one at a time about 700 m away. Each soldier keeps his backpack. Once down they fight as a normal squad. Helicopters on an unload waypoint still land, and player-flown aircraft never trigger it. |
 | Aircraft flares | `Waldo_AIPass_AircraftFlares_Enable` (off) | WMP gunships and Dynamic AA fighters fire flares when a missile is launched at them. |
 | Aircraft break-away | `Waldo_AIPass_AircraftBreak_Enable` (off) | The same aircraft jink sideways away from the launch, without changing their orbit or waypoints. |
@@ -135,7 +135,8 @@ headless clients that join later. Each squad uses them from its next step; nothi
 | `Waldo_AIPass_Artillery_Rounds`, `_MaxError`, `_Cooldown`, `_MinFriendlyDistance`, `_ShootAndScoot` | `3`, `50`, `120`, `200`, on | Squads' artillery support. |
 | `Waldo_AIPass_Artillery_OpeningSafeDistance`, `_OpeningBuffer`, `_WarningInterval` | `200`, `100`, `20` | Opening aim exclusion and added margin in metres; warning pause after estimated impact in seconds. |
 | `Waldo_AIPass_Artillery_DefaultRole` | `"BOTH"` | Missions a gun takes when it has no role of its own (see below). |
-| `Waldo_AIPass_CounterBattery_Mode`, `_Rounds`, `_MaxError`, `_Delay`, `_Interval`, `_MinFriendlyDistance`, `_ShootAndScoot` | `KNOWN`, `4`, `100`, `20`, `60`, `200`, on | Counter-battery, set separately from support. |
+| `Waldo_AIPass_CounterBattery_Rounds`, `_Delay`, `_RadarDelay`, `_Interval` | `4`, `60`, `20`, `60` | Rounds per burst, normal/radar acquisition delay, cooldown after completion (seconds). |
+| `Waldo_AIPass_Artillery_Bursts`, `_RoundInterval`, `_LocationResetDistance` | `3`, `2`, `150` | HE burst cap; minimum spacing between rounds in seconds; reported relocation reset distance in metres. |
 | `Waldo_AIPass_Airborne_DeployDistance`, `_Altitude`, `_MinAltitude` | `700`, `250`, `120` | Airborne insertion. |
 
 The behaviour switches (which behaviours run at all) stay in **AI Control**. From a trigger or
@@ -169,28 +170,40 @@ until removed; it neither spawns nor equips anyone.
 [spotter1, false] call Waldo_fnc_AIPassSetSpotter; // remove assignment
 ```
 
-The soldier needs binoculars, a radio, a recent known enemy and a clear view. WMP radio jamming
-blocks reports. The spotter watches the enemy and uses binoculars while reporting. An ordinary
-radio-equipped squad member cannot substitute. Retreat smoke is a separate support utility.
+The soldier needs binoculars, recent target knowledge and a clear view. AI communications do not
+check inventory radios. WMP jamming still blocks a report. Assignment remains explicit, and the
+soldier watches the enemy and uses binoculars while reporting.
 
-HE starts with a deliberate 300 m offset, plus report error. At most eight aim candidates are
-checked against one snapshot of living players. The first aim must be at least the configured
-200 m safety distance plus 100 m buffer from each player. If none is safe and in range, the mission
-ends. This protects aim selection, not the eventual blast: dispersion and player movement during
-flight prevent an absolute impact guarantee.
+Artillery fires finite bursts. Support defaults to three rounds per burst; counter-battery defaults
+to four. HE missions have a default cap of three bursts, configurable from one to five. Smoke uses
+one burst. Each round is still owner-checked and confirmed by an engine firing event. Inside a burst,
+rounds use the same aim and a minimum two-second interval, subject to the weapon's reload speed.
+After the last round, WMP waits for estimated flight time plus a 20-second warning pause before
+preparing the next burst. The mission ends at its burst cap; it cannot refill itself indefinitely.
+Cooldown starts when it ends. Further support needs a fresh request; counter-battery needs another
+firing event after cooldown.
 
-The server issues one round and waits for the engine firing event, estimated flight time and a
-20 s warning pause. A fresh observed report reduces the offset to 55% of its previous value, with
-a 40 m floor. The spotter must see the target and previous aim area to correct. Losing the spotter,
-visibility or radio leaves the current mission firing at its last report and correction quality;
-it does not follow unseen movement. Radar-only missions keep their displaced aim quality unless
-an assigned observer supplies corrections through a new observed mission.
+The opening HE burst uses a deliberate 300 m offset plus report error. At most eight aim candidates
+are checked against one living-player snapshot, each needing 200 m safety distance plus a 100 m
+buffer. All rounds in that burst use the accepted aim. No safe point ends the mission. This protects
+aim selection, not guaranteed blast safety: dispersion and player movement still matter.
 
-Each shot rechecks role, eligibility, ammunition, range and friendly/civilian proximity on the gun
-owner. Server mission tokens and actual firing events coordinate guns and spotters on different
-owners. An unconfirmed firing command is quarantined without retry; an explicit owner rejection
-ends it. Already issued engine orders and airborne shells cannot be recalled. Stop/restart is not
-proof that an outstanding engine command has disappeared.
+Support corrections require fresh observation of the target and prior aim area. Between bursts,
+the offset reduces to 55%, with a 40 m floor. Lost observation, spotter or transmission freezes the
+report and accuracy for the remaining finite bursts. A reported move of at least 150 m from the
+ranging location resets the next burst to the opening offset and safety check. The burst cap is not
+reset, so moving targets cannot prolong the same mission forever.
+
+Counter-battery uses captured firing-event positions without requiring a spotter or radar. It waits
+60 seconds to acquire a position, reduced to 20 seconds with live friendly radar coverage. It then
+walks successive bursts closer to that recorded location. It never follows an unseen moving gun's
+live position. A new firing event can reveal relocation and restart ranging at the new location.
+Every new mission also begins with an offset burst.
+
+Each shot rechecks role, eligibility, switches, ammunition, range and friendly/civilian proximity.
+The server holds burst counts and coordinates guns/spotters across owners. Unknown firing outcomes
+are quarantined without retry; explicit rejection ends the mission. Issued engine orders and shells
+already in flight cannot be recalled.
 
 ### Survivor regroup in detail
 
@@ -203,16 +216,19 @@ proof that an outstanding engine command has disappeared.
 - Survivors join once close to the host leader. If they get stuck or take too long, they join where
   they stand.
 
-### Counter-battery modes
+### Counter-battery setup
 
-`Waldo_AIPass_CounterBattery_Mode` sets how an enemy battery can be located:
-- `KNOWN` (default): only a battery an explicitly assigned spotter can observe and report.
-- `RADAR`: also any enemy battery firing within `Waldo_AIPass_CounterBattery_RadarRange` of a radar
-  you register:
+Enable counter-battery and give a suitable gun the COUNTER or BOTH role. Radar is optional.
+Register an existing radar object for a supported side to shorten acquisition within the configured
+8 km radar range. Registration does not enable counter-battery or change the object's faction.
 
 ```sqf
-[this, west] call Waldo_fnc_AIPassRegisterRadar;   // in the radar object's init field
+[radar1, west] call Waldo_fnc_AIPassRegisterRadar;
+[radar1, west, false] call Waldo_fnc_AIPassRegisterRadar; // remove
 ```
+
+The old KNOWN/RADAR mode and RequireRadio settings remain compatibility entries; they no longer
+gate automatic acquisition or inspect AI inventory.
 
 ## Orders
 
@@ -351,9 +367,8 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
 - **Artillery - Set Up Radar**: select an existing vehicle or prop, choose the supported side and register/update or remove it. Object faction and supported side are independent.
 - **Convoy - Create Moving Group**: select a crewed AI land vehicle, then configure or stop its convoy.
 
-For artillery setup: assign and equip a spotter, set the battery role, then enable the Smart AI Pass
-and artillery in **AI Control**. Tune warning/safety settings in **AI Tuning**. Radar counter-battery
-also needs the counter-battery switch and RADAR mode. Setup helpers preserve the current switches.
+For artillery setup: assign and equip a spotter with binoculars, set the battery role, then enable the Smart AI Pass
+and artillery in **AI Control**. Tune warning/safety settings in **AI Tuning**. Radar acceleration also needs the counter-battery switch. Setup helpers preserve the current switches.
 
 Order success is reported after the current owner accepts it. Missing responses are reported as
 uncertain, rather than presented as successful execution.
@@ -369,7 +384,7 @@ uncertain, rather than presented as successful execution.
   state and morale.
 - Uses only what the engine already knows about enemies, and adds no detection of its own.
 - Restoration checkpoints broadcast only when their contents change. Clear-building progress and orders have durable replay state.
-- Artillery uses cached guns/spotters, one observer request per round and at most eight opening aim candidates. Counter-battery observer jobs inspect at most four cached spotters per step.
+- Artillery uses cached guns/spotters, one observer request per burst and at most eight opening aim candidates. Counter-battery uses firing-event snapshots; its legacy observer helper is not needed for automatic acquisition.
 - Contact reports and reinforcement remain owner-local; artillery has a server coordinator and owner-local execution.
 
 ## Limitations

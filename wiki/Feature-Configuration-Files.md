@@ -416,7 +416,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_ContactReports_Enable` | Squads share sighted enemies by radio (blocked by jamming) or by voice. Default `true`. |
 | `Waldo_AIPass_ContactReports_Radius` | Radio report range in metres. Default `500`. |
 | `Waldo_AIPass_ContactReports_VoiceRange` | Report range in metres without a working radio. Default `35`. |
-| `Waldo_AIPass_ContactReports_RequireRadio` | False treats every AI as carrying a radio (jamming still applies). Default `true`. |
+| `Waldo_AIPass_ContactReports_RequireRadio` | Legacy compatibility only. AI communications ignore radio inventory; jamming still applies. Default `false`. |
 | `Waldo_AIPass_Reinforce_Enable` | Idle nearby squads move up behind a squad in contact. Default `true`. |
 | `Waldo_AIPass_Reinforce_Radius` | How far away responding squads may be. Default `600`. |
 | `Waldo_AIPass_Reinforce_MaxResponders` | Responding squads per squad in contact. Default `2`. |
@@ -426,7 +426,11 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_ReactionSpeed` | *(AI Tuning)* Above `1` squads re-assess more often (more server time). Default `1`. |
 | `Waldo_AIPass_Artillery_DefaultRole` | *(AI Tuning)* Missions a gun takes without its own role: `SUPPORT`, `COUNTER` or `BOTH`. Default `"BOTH"`. |
 | `Waldo_AIPass_Artillery_Enable` | Squads call fire from friendly AI artillery on well-located enemies only. Default `false`. |
-| `Waldo_AIPass_Artillery_Rounds` | Rounds per fire mission. Default `3`. |
+| `Waldo_AIPass_Artillery_Bursts` | Maximum HE bursts per mission; smoke uses one burst. Default `3`; range 1-5. |
+| `Waldo_AIPass_Artillery_RoundInterval` | Minimum seconds between confirmed rounds inside one burst. Default `2`; range 1-15. |
+| `Waldo_AIPass_Artillery_LocationResetDistance` | Reported movement in metres that resets opening offset and safety checks. Default `150`; range 50-500. |
+| `Waldo_AIPass_CounterBattery_RadarDelay` | Counter-battery acquisition seconds with radar coverage; capped by the normal delay. Default `20`; range 1-120. |
+| `Waldo_AIPass_Artillery_Rounds` | Rounds per support burst. Default `3`. |
 | `Waldo_AIPass_Artillery_OpeningSafeDistance` | Opening HE aim exclusion around living players. Default `200` m; tuning range 100–500 m. |
 | `Waldo_AIPass_Artillery_OpeningBuffer` | Additional opening aim margin. Default `100` m; tuning range 50–300 m. Does not guarantee a harmless impact. |
 | `Waldo_AIPass_Artillery_WarningInterval` | Delay after estimated impact before the next shot. Default `20` s; tuning range 10–60 s. |
@@ -435,11 +439,11 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Artillery_Cooldown` | Seconds between missions called by one squad. Default `120`. |
 | `Waldo_AIPass_Artillery_ShootAndScoot` | Mobile batteries move 200-350 m after firing. Default `true`. |
 | `Waldo_AIPass_CounterBattery_Enable` | AI artillery answers enemy artillery whose position is known. Default `false`. |
-| `Waldo_AIPass_CounterBattery_Mode` | KNOWN answers only spotted batteries; RADAR also uses radars registered with Waldo_fnc_AIPassRegisterRadar. Default `"KNOWN"`. |
+| `Waldo_AIPass_CounterBattery_Mode` | Legacy compatibility only. Automatic acquisition works without radar; radar shortens delay. Default `AUTO`. |
 | `Waldo_AIPass_CounterBattery_RadarRange` | Detection range of a registered counter-battery radar. Default `8000`. |
-| `Waldo_AIPass_CounterBattery_Delay` | Seconds before counter-battery fire is returned. Default `20`. |
-| `Waldo_AIPass_CounterBattery_Rounds` | *(AI Tuning)* Rounds per counter-battery mission. Default `4`. |
-| `Waldo_AIPass_CounterBattery_MaxError` | *(AI Tuning)* Largest enemy-gun position error accepted in KNOWN mode. Default `100`. |
+| `Waldo_AIPass_CounterBattery_Delay` | Acquisition delay without radar. Default `60` seconds. |
+| `Waldo_AIPass_CounterBattery_Rounds` | *(AI Tuning)* Rounds per counter-battery burst. Default `4`. |
+| `Waldo_AIPass_CounterBattery_MaxError` | Retained for legacy observed counter-battery script requests. Automatic firing-event acquisition does not use this setting. Default `100` m. |
 | `Waldo_AIPass_CounterBattery_MinFriendlyDistance` | *(AI Tuning)* No counter-battery fire when friendlies or civilians are this close to the enemy gun. Default `200`. |
 | `Waldo_AIPass_CounterBattery_Interval` | *(AI Tuning)* Seconds before the same enemy gun is answered again. Default `60`. |
 | `Waldo_AIPass_CounterBattery_ShootAndScoot` | *(AI Tuning)* Mobile guns relocate after a counter-battery mission. Default `true`. |
