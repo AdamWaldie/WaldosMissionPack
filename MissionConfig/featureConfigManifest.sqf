@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Lists every pure-data WMP feature configuration in deterministic load order. Add a new feature
  * configuration here; do not call it directly from an init file or place lifecycle code in it.
+ * Locality / Authority: Waldo_fnc_LoadFeatureConfigs reads this list in SHARED, SERVER and
+ * PLAYER_LOCAL phases, each on the machine allowed for that phase.
+ * Repeat/JIP: Reading the list is side-effect free. The loader keeps existing settings on
+ * repeat calls and reads this same list when a player joins later.
  *
  * Arguments: None.
  * Return Value: ARRAY of STRING mission-relative configuration paths.

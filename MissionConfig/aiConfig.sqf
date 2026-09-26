@@ -3,6 +3,10 @@
  * Defines AI rebalance selection, filters, display names and improved helicopter-landing control
  * limits, plus optional cruise-deceleration climb suppression. AI application and locality
  * migration remain in MissionScripts\AiScripting.
+ * Locality / Authority: The SHARED loader reads these defaults on every machine. AI handlers
+ * apply them only where they own the affected unit or aircraft.
+ * Repeat/JIP: Guarded defaults leave existing values alone. A joining machine loads its local
+ * defaults. AI handlers handle later locality changes and group migration.
  *
  * Schema: SHARED entries are [missionNamespace variable name, guarded default value].
  * Arguments: None.

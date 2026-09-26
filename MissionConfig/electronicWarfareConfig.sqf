@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines server-authoritative electronic-warfare and jammer defaults. Every entry is published
  * once by initServer for current clients and JIP; later server/ZEN changes remain authoritative.
+ * Locality / Authority: The SERVER loader reads this file only on the server. Server-side
+ * electronic-warfare scripts own state changes. Client actions send requests to them.
+ * Repeat/JIP: Guarded defaults preserve current server values. Published rows reach joining
+ * clients. Editing this file does not create a jammer or replay object setup.
  *
  * Schema: SERVER entries are [missionNamespace variable name, guarded default, publish BOOL].
  * Arguments: None. Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
