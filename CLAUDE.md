@@ -2103,3 +2103,5 @@ All functions follow `Waldo_fnc_FunctionName` (CamelCase after the prefix). Addi
 - **No tabs** — spaces only. The validator flags tab characters in SQF files.
 - Strings use either `"double"` or `'single'` quotes — both are valid in SQF; be consistent within a file.
 - Statements end with `;` — the validator checks for missing semicolons after closing `}`.
+
+AI behaviour controls use the WMP AI Control ZEN category: AI Control, AI Tuning, AI Orders, Artillery - Set Up Spotter, Artillery - Set Battery Role, Artillery - Set Up Radar, and Convoy - Create Moving Group. Artillery setup uses exact selected targets and authenticated server APIs; it does not enable features or equip/spawn units. Dynamic AO and Dynamic AA remain in WMP AI & Combat.

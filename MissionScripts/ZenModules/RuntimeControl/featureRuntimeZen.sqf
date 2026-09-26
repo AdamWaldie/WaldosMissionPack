@@ -543,7 +543,7 @@ switch (toUpperANSI _feature) do {
                 ["CHECKBOX", ["Vehicle drills", "Infantry dismount under fire; damaged vehicles smoke and withdraw."], missionNamespace getVariable ["Waldo_AIPass_Vehicles_Enable", true]],
                 ["CHECKBOX", ["Contact reports", "Squads share sighted enemies by radio (blocked by jamming) or by voice."], missionNamespace getVariable ["Waldo_AIPass_ContactReports_Enable", true]],
                 ["CHECKBOX", ["Reinforcement", "Idle nearby squads move up behind a squad in contact."], missionNamespace getVariable ["Waldo_AIPass_Reinforce_Enable", true]],
-                ["CHECKBOX", ["Artillery support", "Squads call fire from friendly AI artillery on well-located enemies only."], missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]],
+                ["CHECKBOX", ["Artillery support", "Explicitly assigned spotters request ranging fire from friendly AI artillery. Use the artillery setup modules first."], missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]],
                 ["CHECKBOX", ["Counter-battery", "AI artillery answers enemy artillery whose position is known."], missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]],
                 ["CHECKBOX", ["Airborne insertion", "AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy."], missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false]],
                 ["CHECKBOX", ["Aircraft flares", "WMP gunships and Dynamic AA fighters fire flares at incoming missiles."], missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]],
@@ -597,6 +597,48 @@ switch (toUpperANSI _feature) do {
             {}, _spec
         ] call zen_dialog_fnc_create;
     };
+    case "AI_SPOTTER": {
+        if (isNull _objectPos || {!(_objectPos isKindOf "CAManBase")} || {isPlayer _objectPos} || {!alive _objectPos}) exitWith {
+            ["AI SPOTTER", "Place this module on the existing AI soldier to assign or remove.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
+        };
+        [format ["Artillery spotter: %1", name _objectPos], [
+            ["COMBO", ["Assignment", "Assign only this soldier. Equip binoculars and a radio yourself; observation and jamming rules still apply. Enable artillery in AI Control to run support."],
+                [["SPOTTER_ON", "SPOTTER_OFF"], ["Assign artillery spotter", "Remove spotter assignment"], 0]]
+        ], {
+            params ["_values", "_unit"];
+            ["AI_ORDER", [["order", _values select 0], ["group", group _unit], ["unit", _unit]]] call Waldo_fnc_FeatureRuntimeApply;
+        }, {}, _objectPos] call zen_dialog_fnc_create;
+    };
+    case "AI_BATTERY": {
+        if (isNull _objectPos || {getNumber (configOf _objectPos >> "artilleryScanner") != 1} || {!alive _objectPos}) exitWith {
+            ["AI BATTERY", "Place this module on an existing artillery vehicle or mortar.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
+        };
+        private _roles = ["SUPPORT", "COUNTER", "BOTH"];
+        private _role = _objectPos getVariable ["Waldo_AIPass_ArtilleryRole", missionNamespace getVariable ["Waldo_AIPass_Artillery_DefaultRole", "BOTH"]];
+        ["Artillery battery role", [
+            ["COMBO", ["Allowed missions", "Applies only to the selected gun, including an empty gun prepared before crewing. This does not enable artillery or bypass spotter and safety checks."],
+                [_roles, ["Support and retreat smoke", "Counter-battery only", "Support and counter-battery"], (_roles find _role) max 0]]
+        ], {
+            params ["_values", "_target"];
+            ["AI_BATTERY", [["target", _target], ["role", _values select 0]]] call Waldo_fnc_FeatureRuntimeApply;
+        }, {}, _objectPos] call zen_dialog_fnc_create;
+    };
+    case "AI_RADAR": {
+        if (isNull _objectPos || {!alive _objectPos} || {_objectPos isKindOf "CAManBase"}) exitWith {
+            ["AI RADAR", "Place this module on the existing radar vehicle or prop to register.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
+        };
+        private _radars = missionNamespace getVariable ["Waldo_AIPass_CounterBatteryRadars", []];
+        private _entry = _radars findIf {(_x select 0) == _objectPos};
+        private _side = if (_entry < 0) then {"WEST"} else {(_radars select _entry) select 1};
+        ["Counter-battery radar", [
+            ["COMBO", ["Registration", "Uses this exact object without spawning, moving or changing its simulation. Counter-battery must be enabled and set to RADAR in AI Tuning."], [[true, false], ["Register / update radar", "Remove radar registration"], 0]],
+            ["COMBO", ["Supported side", "The side receiving detection from this radar; independent of the object's model or faction. Ignored when removing."], [["WEST", "EAST", "GUER"], ["BLUFOR", "OPFOR", "Independent"], (["WEST", "EAST", "GUER"] find _side) max 0]]
+        ], {
+            params ["_values", "_target"];
+            _values params ["_enabled", "_side"];
+            ["AI_RADAR", [["target", _target], ["enabled", _enabled], ["side", _side]]] call Waldo_fnc_FeatureRuntimeApply;
+        }, {}, _objectPos] call zen_dialog_fnc_create;
+    };
     case "AI_ORDERS": {
         private _preferred = if (!isNull _objectPos && {_objectPos isKindOf "CAManBase"} && {!isPlayer _objectPos}) then {group _objectPos} else {grpNull};
         private _ranked = [];
@@ -622,10 +664,9 @@ switch (toUpperANSI _feature) do {
         [
             "AI Orders",
             [
-                ["COMBO", ["Order", "Every order uses the selected group. Airborne makes a squad riding in an AI-flown aircraft parachute out now. The artillery orders set battery roles. Spotter orders require placement on the exact AI soldier: equip binoculars and a radio. No other squad members are assigned. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
-                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "ARTY_SUPPORT", "ARTY_COUNTER", "ARTY_BOTH", "SPOTTER_ON", "SPOTTER_OFF", "EXCLUDE", "RETURN"],
-                    ["Garrison buildings here", "Defend a line here", "Release garrison or defence", "Clear the building here", "Parachute out now (squad in an aircraft)",
-                        "Artillery: support fire only", "Artillery: counter-battery only", "Artillery: support and counter-battery", "Assign selected soldier as spotter", "Remove selected soldier as spotter",
+                ["COMBO", ["Order", "Every order uses the selected group. Airborne makes a squad riding in an AI-flown aircraft parachute out now. Use the artillery setup modules for batteries, spotters and radars. Zeus always has priority: selecting or giving waypoints to a group already pauses the pass for it."], [
+                    ["GARRISON", "DEFEND", "RELEASE", "CLEAR", "AIRBORNE", "EXCLUDE", "RETURN"],
+                    ["Garrison buildings here", "Defend a line here", "Release garrison, defence or clearing", "Clear the building here", "Parachute out now (squad in an aircraft)",
                         "Keep for Zeus (exclude from the pass)", "Return to the Smart AI Pass"], 0]],
                 ["COMBO", ["Group", "Nearby AI groups, nearest first; a unit under the module is listed first."], [_groupIndices, _groupLabels, 0]],
                 ["SLIDER", ["Garrison radius / line width", "Garrison: metres searched for building positions. Defend: width of the line."], [15, 150, 50, 0]],

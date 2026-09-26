@@ -81,8 +81,8 @@ existing ownership requirements.
 ## Verification
 
 The integrated branch includes main `b7ca3fe` and remote PR commit `036942e`. The full repository
-suite passed **319 tests**, including **19 Smart AI contract tests**. All ten static gates passed:
-SQF (1,225 files), configuration, interaction UI, drawn UI, Zeus/script parity (78 modules), wiki
+suite passed **320 tests**, including **20 Smart AI contract tests**. All ten static gates passed:
+SQF (1,225 files), configuration, interaction UI, drawn UI, Zeus/script parity (81 modules), wiki
 assets/style, documentation contracts, skill validation and performance regression. The performance
 scanner reports 95 findings (10 high, 85 medium), with no new high recurring patterns. Wiki checks
 initially caught a document encoding error; it was corrected and both checks then passed.
@@ -111,3 +111,16 @@ entry plus fresh RPT initialization evidence. Exercise:
 Agent-driven launch permission is required by AGENTS.md: “Agent-driven launches write a disposable
 mission into the installed Arma directory and open a desktop application, so obtain the required
 permission.” That permission request remains pending. Static work proceeds independently.
+
+## Dedicated Zeus AI controls
+
+WMP AI Control contains AI Control, AI Tuning, AI Orders, Artillery - Set Up Spotter,
+Artillery - Set Battery Role, Artillery - Set Up Radar and Convoy - Create Moving Group.
+Dynamic AO and Dynamic AA stay in WMP AI & Combat. Artillery setup moves out of the tactical order
+selector into exact-target helpers. Battery setup supports empty guns; radar setup provides side
+selection and repeat-safe removal through the script API's optional third boolean argument.
+All helper changes use the authenticated server route, retain public JIP state and add no loops.
+Feature switches and equipment are not changed implicitly. Dialog selection, server logs, resulting
+state and JIP/HC behaviour remain subject to the existing live acceptance gate.
+
+The dedicated-category changes passed the full 320-test suite and all ten static gates. The palette contains 81 registered modules overall. No new high recurring performance patterns were reported. Live ZEN rendering and execution remain unverified.

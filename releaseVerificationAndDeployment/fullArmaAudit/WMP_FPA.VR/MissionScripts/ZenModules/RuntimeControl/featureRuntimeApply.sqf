@@ -416,6 +416,31 @@ switch (toUpperANSI _action) do {
                 ["ERROR", "SUCCESS"] select _accepted, "CONVOY", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
         }, [_values, _requestOwner]] call CBA_fnc_execNextFrame;
     };
+    case "AI_BATTERY";
+    case "AI_RADAR": {
+        if (_settings findIf {!(_x isEqualType []) || {count _x != 2} || {!((_x select 0) isEqualType "")}} >= 0) exitWith {false};
+        private _values = createHashMapFromArray _settings;
+        private _target = _values getOrDefault ["target", objNull];
+        if (!(_target isEqualType objNull) || {isNull _target} || {!alive _target}) exitWith {
+            ["AI SETUP", "The selected object no longer exists or is not alive.", "ERROR", "AI_SETUP"] call _reply;
+        };
+        private _role = _values getOrDefault ["role", ""];
+        private _side = _values getOrDefault ["side", ""];
+        private _enabled = _values getOrDefault ["enabled", true];
+        private _valid = if (_action == "AI_BATTERY") then {
+            _role isEqualType "" && {_role in ["SUPPORT", "COUNTER", "BOTH"]} && {getNumber (configOf _target >> "artilleryScanner") == 1}
+        } else {_side isEqualType "" && {_side in ["WEST", "EAST", "GUER"]} && {_enabled isEqualType true} && {!(_target isKindOf "CAManBase")}};
+        if (!_valid) exitWith {["AI SETUP", "The object or selected settings are not valid for this setup.", "ERROR", "AI_SETUP"] call _reply};
+        // Run trusted server APIs outside the remote caller context after authenticating the curator.
+        [{
+            params ["_action", "_target", "_role", "_side", "_enabled", "_requestOwner"];
+            private _accepted = if (_action == "AI_BATTERY") then {[_target, _role] call Waldo_fnc_AIPassSetArtilleryRole}
+                else {[_target, _side, _enabled] call Waldo_fnc_AIPassRegisterRadar};
+            diag_log format ["[WMP ZEN SERVER] action=%1 target=%2 role=%3 side=%4 enabled=%5 accepted=%6", _action, typeOf _target, _role, _side, _enabled, _accepted];
+            ["AI SETUP", ["Setup refused; check the selected object.", "Setup applied. Feature switches remain as configured in AI Control; radar detection also needs RADAR mode in AI Tuning."] select _accepted,
+                ["ERROR", "SUCCESS"] select _accepted, "AI_SETUP", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+        }, [_action, _target, _role, _side, _enabled, _requestOwner]] call CBA_fnc_execNextFrame;
+    };
     case "AI_ORDER": {
         private _pairs = _settings;
         // Legacy positional adapter: order, group, position, radius, building, facing.

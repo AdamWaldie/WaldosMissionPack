@@ -103,6 +103,24 @@ class SmartAIPassContracts(unittest.TestCase):
         for name in ['aiPassGarrison', 'aiPassDefend']:
             self.assertIn('call Waldo_fnc_AIPassClearRelease', source(name))
 
+    def test_ai_setup_palette_and_exact_target_contract(self):
+        modules = (ROOT / 'MissionScripts/ZenModules/Zen_initModules.sqf').read_text()
+        for name in ['AI Control', 'AI Tuning', 'AI Orders', 'Artillery - Set Up Spotter',
+                     'Artillery - Set Battery Role', 'Artillery - Set Up Radar', 'Convoy - Create Moving Group']:
+            self.assertIn(f'["WMP AI Control", "{name}"', modules)
+        zen = (ROOT / 'MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf').read_text()
+        setup = zen[zen.index('case "AI_SPOTTER"'):zen.index('case "AI_ORDERS"')]
+        self.assertNotIn('nearestObjects', setup)
+        self.assertNotIn('call _resolveTarget', setup)
+        server = (ROOT / 'MissionScripts/ZenModules/RuntimeControl/featureRuntimeApply.sqf').read_text()
+        for key in ['target', 'role', 'enabled', 'side']:
+            self.assertIn(f'["{key}",', setup)
+            self.assertIn(f'getOrDefault ["{key}"', server)
+        radar = source('aiPassRegisterRadar')
+        self.assertIn('remoteExecutedOwner != 2', radar)
+        self.assertIn('if (_enabled) then {_radars pushBack', radar)
+        self.assertIn('(_x select 0) != _object', radar)
+
     def test_repeat_orders_invalidate_old_jobs(self):
         for kind in ['Garrison', 'Defend']:
             text = source(f'aiPass{kind}ApplyLocal')

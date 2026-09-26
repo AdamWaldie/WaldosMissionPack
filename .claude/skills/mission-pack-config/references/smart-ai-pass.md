@@ -86,10 +86,12 @@ Difficulty (set here, or live with the **AI Tuning** Zeus module / `Waldo_fnc_AI
 support and counter-battery have separate switches and settings; per gun
 `[this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole;` (SUPPORT/COUNTER/BOTH).
 
-Zeus: **WMP AI & Combat > AI Control** (every switch), **AI Tuning** (difficulty) and **AI Orders** (garrison, defend, release,
+Zeus: **WMP AI Control > AI Control** (every switch), **AI Tuning** (difficulty) and **AI Orders** (garrison, defend, release,
 clear, parachute out now for a squad in an aircraft, keep for Zeus, return to pass). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
 `-drills`, `-zeus`, `-support`, `-tuning`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.
 
 Artillery spotters are assigned on the server with `[spotter1, true] call Waldo_fnc_AIPassSetSpotter`; false removes assignment. Opening HE aim exclusion defaults to 200 m plus 100 m buffer, with a 20 s warning pause after estimated impact. This is not an impact guarantee. Observation loss freezes the last report and correction quality. The server coordinates shots across AI owners. Battery roles are server-authoritative. Headless restoration uses changed public checkpoints and ownership epochs; clear orders replay remaining progress/time. These paths require in-engine verification.
+
+Dedicated artillery setup modules in WMP AI Control assign/remove the exact spotter, set the exact gun role, and register/update/remove an existing radar for a selected side. They preserve feature switches. AI Orders now contains tactical and exclusion controls only.

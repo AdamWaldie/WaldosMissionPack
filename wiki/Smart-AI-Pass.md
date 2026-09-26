@@ -116,7 +116,7 @@ Edit `Waldo_AIPass_ProfileBehaviour` in `aiConfig.sqf` to change the numbers.
 ## Difficulty and tuning
 
 These settings set how hard the AI are without touching their skill values. Set them in
-`aiConfig.sqf` for the start of the mission, and change any of them during play with **WMP AI & Combat
+`aiConfig.sqf` for the start of the mission, and change any of them during play with **WMP AI Control
 > AI Tuning** in Zeus. Changes reach the server and every headless client at once, including
 headless clients that join later. Each squad uses them from its next step; nothing restarts.
 
@@ -158,12 +158,10 @@ and separate settings. Set roles on the server (or in an Eden init field, whose 
 [this, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole;   // squads' fire requests (and smoke) only
 ```
 
-Guns without a role use `Waldo_AIPass_Artillery_DefaultRole`. In Zeus, **AI Orders** has the same
-three choices for a group's guns. Counter-battery never fires when friendlies or civilians are within
+Guns without a role use `Waldo_AIPass_Artillery_DefaultRole`. In Zeus, **Artillery - Set Battery Role** applies the selected role to the exact gun. Counter-battery never fires when friendlies or civilians are within
 `Waldo_AIPass_CounterBattery_MinFriendlyDistance` of the enemy gun.
 
-Assign existing soldiers explicitly on the server, or select the soldier and use **AI Orders >
-Assign artillery spotter**. The group selector lists assigned spotter names. Assignment persists
+Assign existing soldiers explicitly on the server, or select the soldier and use **Artillery - Set Up Spotter**. The group selector lists assigned spotter names. Assignment persists
 until removed; it neither spawns nor equips anyone.
 
 ```sqf
@@ -218,7 +216,7 @@ proof that an outstanding engine command has disappeared.
 
 ## Orders
 
-Orders are given to a specific squad from a script or from Zeus (**WMP AI & Combat > AI Orders**).
+Orders are given to a specific squad from a script or from Zeus (**WMP AI Control > AI Orders**).
 
 **Garrison** occupies the buildings around a point:
 - roofed and upper positions are taken first;
@@ -332,23 +330,30 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
 
 ## Zeus control
 
-- **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*): skill profile, the Smart AI
+- **WMP AI Control > AI Control** (formerly *AI Rebalance - Control*): skill profile, the Smart AI
   Pass master switch, every behaviour switch and the LAMBS mode. Changes reach every machine,
   including headless clients that join later.
-- **WMP AI & Combat > AI Tuning**: every difficulty and tuning setting in
+- **WMP AI Control > AI Tuning**: every difficulty and tuning setting in
   [Difficulty and tuning](#difficulty-and-tuning), opening on the live values. Applying takes effect
   on each squad's next step.
-- **WMP AI & Combat > AI Orders**: place it at a spot, pick a nearby AI group (a unit under the
+- **WMP AI Control > AI Orders**: place it at a spot, pick a nearby AI group (a unit under the
   module is listed first), and choose an order:
   - garrison buildings here;
   - defend a line here (width and facing);
   - release a garrison, defence or clear-building order;
   - clear the explicitly selected building (a missing target is rejected);
-  - assign or remove the explicitly selected soldier as an artillery spotter;
   - parachute out now, for a squad riding as cargo in an AI-flown aircraft at least 120 m over land;
-  - artillery role for the group's guns: support only, counter-battery only, or both;
   - keep the group for Zeus (exclude it from the pass);
   - return it to the pass.
+
+- **Artillery - Set Up Spotter**: select an existing AI soldier, then assign or remove its spotter role. No automatic equipment or spawns.
+- **Artillery - Set Battery Role**: select the exact artillery vehicle or mortar, including an empty gun, then choose support, counter-battery or both.
+- **Artillery - Set Up Radar**: select an existing vehicle or prop, choose the supported side and register/update or remove it. Object faction and supported side are independent.
+- **Convoy - Create Moving Group**: select a crewed AI land vehicle, then configure or stop its convoy.
+
+For artillery setup: assign and equip a spotter, set the battery role, then enable the Smart AI Pass
+and artillery in **AI Control**. Tune warning/safety settings in **AI Tuning**. Radar counter-battery
+also needs the counter-battery switch and RADAR mode. Setup helpers preserve the current switches.
 
 Order success is reported after the current owner accepts it. Missing responses are reported as
 uncertain, rather than presented as successful execution.

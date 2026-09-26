@@ -34,7 +34,7 @@ Waldo_fnc_SimpleAiConvoy` on the server. Multiple groups use the same API indepe
 
 ## Zeus controls
 
-Place **WMP AI & Combat > Convoy - Create Moving Group** on an existing crewed AI land vehicle.
+Place **WMP AI Control > Convoy - Create Moving Group** on an existing crewed AI land vehicle.
 Choose configure or stop, speed, spacing and push-through from labelled controls. A missing or
 invalid selection is rejected. The module never guesses a nearby vehicle. Feedback confirms
 registration. The owner applies driving settings on its next worker step.

@@ -781,5 +781,35 @@
       "anchor object or fixed position remains untouched",
       "REMOVE_3D_MARKER"
     ]
+  },
+  {
+    "category": "core",
+    "module": "Artillery - Set Up Spotter",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_AIPassOrderDispatch"
+    ],
+    "script_api": "Waldo_fnc_AIPassSetSpotter",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Artillery - Set Battery Role",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassSetArtilleryRole",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Artillery - Set Up Radar",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIPassRegisterRadar",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
   }
 ]
