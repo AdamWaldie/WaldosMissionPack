@@ -10,6 +10,7 @@
  * Return Value: BOOLEAN - true when prior physical-cargo state was cleared.
  * Current callers: Waldo_fnc_PhysicalCargoInitLocal and Waldo_fnc_PhysicalCargoInitServer.
  * Example: [crate, player] remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer", 2];
+ * Result: The mount record and its owned seat locks are removed before cargo restoration.
  */
 params [
     ["_cargo", objNull, [objNull]],

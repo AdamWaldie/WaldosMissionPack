@@ -8,6 +8,7 @@
  * Return Value: Boolean.
  * Current callers: MiniGamesRequestMetadataServer targeted response.
  * Example: [[[_table, _registration]]] call Waldo_fnc_MiniGamesApplyMetadataLocal;
+ * Result: The receiving client updates its local table metadata from the server response.
  */
 
 params [["_rows", [], [[]]]];

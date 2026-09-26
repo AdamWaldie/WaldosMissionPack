@@ -6,6 +6,7 @@
  * Arguments: requesting player <OBJECT> or headless client owner ID <NUMBER>. Return Value: <BOOL> sent.
  * Current callers: Waldo_fnc_PhysicalCargoInitLocal and the headless path in init.sqf.
  * Example: [player] remoteExecCall ["Waldo_fnc_PhysicalCargoRequestStateServer", 2];
+ * Result: The requester receives the current ordered mount snapshot.
  */
 params [["_requester", objNull, [objNull, 0]]];
 if (!isServer) exitWith {false};

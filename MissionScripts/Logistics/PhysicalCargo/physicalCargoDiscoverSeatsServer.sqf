@@ -9,6 +9,7 @@
  * Return Value: <ARRAY> verified [kind, seat key, model-space point] rows, or [] if unsupported.
  * Current caller: Waldo_fnc_PhysicalCargoSeatsServer when a vehicle has no explicit seat map.
  * Example: [_truck] call Waldo_fnc_PhysicalCargoDiscoverSeatsServer;
+ * Result: Returns only seats whose model-space positions can be verified for this vehicle.
  */
 params [["_vehicle", objNull, [objNull]]];
 if (!isServer || {isNull _vehicle}) exitWith {[]};
