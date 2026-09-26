@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Combines a squad in contact with the squads that came to reinforce it into one prepared assault.
  *
- * From Smart Combat V2's multi-squad coordination. The squad in contact becomes the base of fire
+ * The squad in contact becomes the base of fire
  * (its fire control keeps suppressing) and the reinforcing squads that have reached their rally
  * point assault the enemy position together from alternate sides (90 degrees left and right of the
  * line to the base of fire). Each assault is a SEEK AND DESTROY waypoint inserted ahead of the

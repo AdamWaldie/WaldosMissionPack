@@ -2,9 +2,8 @@
  * Author: WaldoTheWarfighter
  * Orders an AI group to garrison the buildings around a point.
  *
- * Combines Digii's garrison (height-sorted, roofed positions, outward watch sectors, PATH locked only
- * after arrival) with Better Static AI's defenders who duck under fire, and makes both survive
- * locality changes, which Better Static could not (its handlers ran on the curator's machine).
+ * Uses height-sorted, roofed positions and outward watch sectors. PATH locks only after arrival.
+ * Defenders duck under fire; local handlers and assignments replay after ownership changes.
  * Positions: building positions within the radius, roofed positions first, then highest first.
  * Each soldier is sent to his own position, then held there with PATH disabled, watching outward.
  * Suppressed or hit, he drops to a lower stance for a few seconds, then stands back up. The order

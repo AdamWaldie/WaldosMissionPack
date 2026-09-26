@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Orders an AI group to clear a building room by room.
  *
- * From Digii's CQB clear. The leader holds at the entrance side while the rest clear, each taking the
+ * The leader holds at the entrance side while the rest clear, each taking the
  * nearest position not yet cleared or reserved by someone else. A soldier clears a position by
  * reaching it (within 1.5 m) or after 25 s; the order ends when every position is cleared or after
  * 240 s, and the squad rejoins formation. The group is set to COMBAT for the clear, and its previous

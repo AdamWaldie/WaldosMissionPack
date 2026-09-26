@@ -60,4 +60,4 @@ Required direction:
 
 ## PR 151 review follow-up (2026-09-26)
 
-Smart AI source corrections and outstanding runtime acceptance are recorded in [the PR 151 review](releaseVerificationAndDeployment/pr151_review.md) and [source review](releaseVerificationAndDeployment/pr151_ai_source_review.md). The PR remains draft. Add live coverage for opening ranging exclusion, explicit spotter loss/recovery and jamming, cross-owner shot accounting, ownership restoration, clear-building replay, pin provenance, owner-confirmed Zeus results, and convoy route/recovery/stop behaviour under WMP and ACE headless migration. Static results do not satisfy these checks.
+Smart AI source corrections and outstanding runtime acceptance are recorded in [the PR 151 review](releaseVerificationAndDeployment/pr151_review.md). The PR remains draft. Add live coverage for opening ranging exclusion, explicit spotter loss/recovery and jamming, cross-owner shot accounting, ownership restoration, clear-building replay, pin provenance, owner-confirmed Zeus results, and convoy route/recovery/stop behaviour under WMP and ACE headless migration. Static results do not satisfy these checks.

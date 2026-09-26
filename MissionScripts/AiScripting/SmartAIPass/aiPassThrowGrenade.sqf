@@ -3,7 +3,7 @@
  * Makes one soldier throw a smoke or fragmentation grenade he is carrying, towards a position.
  *
  * Grenade types are identified from config, so mod grenades work: smoke is ammo simulation shotSmoke
- * or shotSmokeX (Smart Combat V2's method); fragmentation is shotGrenade. Chemlights and ACE
+ * or shotSmokeX; fragmentation is shotGrenade. Chemlights and ACE
  * flashbangs are skipped. The throw muzzle is the "Throw" weapon muzzle that accepts that magazine.
  * The thrower is turned to face the target and throws on the next frame, because a throw leaves
  * along the unit's facing. A fragmentation grenade is never thrown when a

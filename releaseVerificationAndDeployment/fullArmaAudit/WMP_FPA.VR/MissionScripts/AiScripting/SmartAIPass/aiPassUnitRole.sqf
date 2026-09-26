@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Classifies a soldier's combat role from what he carries, as Scorpion's utility AI did.
+ * Classifies a soldier's combat role from what he carries.
  *
  * MG: primary magazine holds 75 rounds or more. AT: carries a launcher with ammunition. MEDIC: ACE
  * or vanilla medic trait. LEADER: group leader. Otherwise RIFLE. Magazine sizes are cached per class

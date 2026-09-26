@@ -71,13 +71,12 @@ follower no more often than every three seconds. Registration permits 2–20 veh
 counts reduce update frequency. On migration, formation following bridges reconstruction of the
 local trail; complete route history is not broadcast.
 
-## Source review
+## Implementation boundaries
 
-The [reference matrix](pr151_ai_source_review.md) inventories 14 packages and records targeted
-mechanisms, adaptations, existing coverage and rejected/deferred ideas. The inventory includes 633
-SQF files; this is not a full line-by-line audit of every source. Upstream comments are not evidence
-of correctness. No addon FSM, medical replacement, skill takeover or broad flight controller was
-imported. WMP remains a mission-script pack.
+WMP remains a mission-script pack. AI behaviour uses existing engine knowledge, WMP skill tuning,
+ACE medical handling and the established feature ownership rules. Convoy paths stay local and
+bounded; artillery uses explicit observations and confirmed rounds. Flight controllers retain their
+existing ownership requirements.
 
 ## Verification
 

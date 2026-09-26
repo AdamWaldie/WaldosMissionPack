@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Returns a group to CALM and undoes everything the pass changed for the engagement.
  *
- * Exact restore, fixing Smart Combat V2's unconditional re-enables: behaviour goes back to the value
+ * Restores recorded changes: behaviour goes back to the value
  * recorded at first contact only if the pass changed it and the group is still in COMBAT (a squad
  * that was SAFE before an actual firefight comes back AWARE, not SAFE); speed goes
  * back only if the pass changed it. Pass waypoints are removed so the group resumes its own

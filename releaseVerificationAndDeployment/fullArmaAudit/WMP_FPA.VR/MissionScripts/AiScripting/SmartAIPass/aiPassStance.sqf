@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Chooses each soldier's stance from the height of the cover in front of him, as Digii did.
+ * Chooses each soldier's stance from the height of the cover in front of him.
  *
  * For soldiers on foot in contact (not in a drill and not garrisoned), three short rays are cast 3 m
  * towards the enemy at 1.5 m, 1.0 m and 0.5 m. Cover that blocks at chest height when standing means

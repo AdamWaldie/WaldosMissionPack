@@ -3,7 +3,7 @@
  * Airborne insertion: decides when an AI squad riding as cargo in an AI-flown aircraft parachutes
  * onto a known enemy, and starts the drop.
  *
- * PROTOCOL Airborne's idea, rewritten. It acts on aircraft the mission maker (or Zeus) already put in
+ * It acts on aircraft the mission maker (or Zeus) already put in
  * the air with AI passengers; nothing is spawned. Its faults are not repeated: the aircraft check
  * works, only hostile sides count (civilians never trigger a drop), soldiers keep their own
  * backpacks (each gets a parachute of his own, Waldo_fnc_AIPassParachuteJump), and it runs inside the

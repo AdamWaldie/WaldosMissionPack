@@ -213,10 +213,7 @@ The compatibility profile preserves established missions. New missions can selec
 
 ### Smart AI Pass (`MissionConfig\aiConfig.sqf`)
 
-Optional behaviour improvements for non-player AI groups. It is written from scratch for WMP; the
-design comes from an audit of Smart Combat V2, Digii AI, Scorpion's Advanced AI, PROTOCOL, Smart
-Merge, Smart Aircraft and Better Static, keeping their ideas and fixing their locality, performance
-and network faults. Off by default (`Waldo_AIPass_Enable = false`). Every behaviour has its own
+Optional behaviour improvements for non-player AI groups, implemented as WMP mission scripts. Off by default (`Waldo_AIPass_Enable = false`). Every behaviour has its own
 `Waldo_AIPass_<Behaviour>_Enable` switch. Artillery, counter-battery, airborne, surrender, grenade
 evasion and aircraft flares default off.
 
@@ -368,8 +365,7 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   COUNTER or BOTH, set with `Waldo_fnc_AIPassSetArtilleryRole` or `Waldo_AIPass_Artillery_DefaultRole`)
   decides which missions it takes.
 - **Airborne insertion** (`Waldo_fnc_AIPassAirborneCheck`, from the group tick;
-  `Waldo_fnc_AIPassAirborneDropStep`; `Waldo_fnc_AIPassParachuteJump`): PROTOCOL Airborne's idea,
-  rewritten. Nothing is spawned. An eligible AI squad riding as cargo in an AI-flown aircraft climbs
+  `Waldo_fnc_AIPassAirborneDropStep`; `Waldo_fnc_AIPassParachuteJump`): Uses existing AI passengers. An eligible AI squad riding as cargo in an AI-flown aircraft climbs
   to `Waldo_AIPass_Airborne_Altitude` within `_ApproachDistance` of an enemy it knows about, then
   jumps one soldier at a time within `_DeployDistance`, never below `_MinAltitude` or over water.
   Each jumper gets his own parachute vehicle, so backpacks are kept. Skipped for player-flown

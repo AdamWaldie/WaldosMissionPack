@@ -3,9 +3,9 @@
  * Runs one Smart AI Pass step for one locally owned group: reads the situation, moves it along the
  * group state ladder and calls each enabled behaviour.
  *
- * State ladder (Digii's ladder, with Scorpion's post-contact doctrine and built-in hysteresis):
+ * State ladder with post-contact search and hysteresis:
  * CALM -> CONTACT when an enemy was seen in the last 10 s.
- * CALM -> INVESTIGATE (Digii's alert state) when the squad knows about an enemy within
+ * CALM -> INVESTIGATE when the squad knows about an enemy within
  *   Waldo_AIPass_Investigate_Range that it has not seen, for example one revealed by a contact report
  *   or heard firing, and the behaviour profile's investigateChance roll succeeds (at most every
  *   120 s). Within 150 m, two riflemen check the believed position while the rest watch it; a small
@@ -23,7 +23,7 @@
  * A squad riding as cargo in an AI-flown aircraft is handled by airborne insertion instead
  * (Waldo_fnc_AIPassAirborneCheck) until it has parachuted and landed.
  *
- * Cadence (Digii's distance tiers, measured to the nearest player): Waldo_AIPass_TickContact in
+ * Cadence (distance tiers measured to the nearest player): Waldo_AIPass_TickContact in
  * contact near players; Waldo_AIPass_TickNear within Waldo_AIPass_NearRange; Waldo_AIPass_TickMid
  * within Waldo_AIPass_FarRange; Waldo_AIPass_TickFar beyond. Beyond FarRange only the state ladder
  * and morale run; drills, fire control and support calls are skipped.

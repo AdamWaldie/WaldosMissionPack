@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Vehicle drills for a squad in contact, from Digii AI: dismount infantry under fire, and pull a
+ * Vehicle drills for a squad in contact: dismount infantry under fire, and pull a
  * damaged vehicle back behind smoke.
  *
  * Dismount: infantry riding as cargo in the squad's own ground vehicle get out once an enemy is
@@ -89,7 +89,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             };
         };
     };
-    // Digii's gunner priorities and standoff (Waldo_AIPass_VehicleGunnery_Enable): anti-tank infantry
+    // Gunner priorities and standoff (Waldo_AIPass_VehicleGunnery_Enable): anti-tank infantry
     // first, then armour, then everything else; armour keeps its distance from known AT teams.
     if (alive _vehicle && {missionNamespace getVariable ["Waldo_AIPass_VehicleGunnery_Enable", true]}) then {
         private _gunner = gunner _vehicle;

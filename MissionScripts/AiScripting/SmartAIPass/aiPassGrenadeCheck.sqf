@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Lets nearby AI react to a live hand grenade by moving away from it into cover.
  *
- * From Smart Combat V2's grenade evasion, without Scorpion's per-grenade broadcasts. Queued by the
+ * Grenade evasion is queued by the
  * ProjectileCreated handler that Waldo_fnc_AIPassInit installs (Waldo_AIPass_GrenadeEvasion_Enable,
  * off by default because that event's multiplayer locality still needs in-engine confirmation; with
  * the wrong locality the feature is simply inert). After a short reaction delay, each local AI soldier

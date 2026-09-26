@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Shares what a squad in contact can see with nearby friendly squads, by radio or by voice.
  *
- * From Smart Combat V2's contact reports, kept machine-local instead of broadcast. Up to three enemies
+ * Reports stay machine-local. Up to three enemies
  * seen in the last 10 s are reported. With a working radio (Waldo_fnc_AIPassCanTransmit: carried and
  * not jammed) the report reaches friendly squads whose leader is within
  * Waldo_AIPass_ContactReports_Radius; without one, only squads within

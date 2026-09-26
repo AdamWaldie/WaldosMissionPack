@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Squad fire control while in contact: close-threat priority, target distribution and disciplined
- * suppression, adapted from Smart Combat V2 (the audit's strongest fire-control source).
+ * suppression.
  *
  * Close threat: a soldier with an enemy believed within 20 m targets it immediately.
  * Target distribution: when two or more enemies are visible, soldiers whose target already has more

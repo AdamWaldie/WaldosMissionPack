@@ -2,10 +2,10 @@
  * Author: WaldoTheWarfighter
  * Sends idle nearby squads to support a squad in contact, and optionally calls in an airborne drop.
  *
- * From Digii's reinforcement with its responder cap, plus Scorpion's rule that the call needs a
+ * Reinforcement has a responder cap and requires a
  * working radio (Waldo_fnc_AIPassCanTransmit, so jamming blocks it). A request is made on first
  * contact and again if the squad falls below 60% of its peak strength. When known armour appears
- * (Scorpion's capability-aware support), one more request is made that only squads with an anti-tank
+ * one more request is made that only squads with an anti-tank
  * gunner answer, with one extra responder slot, and squads with AT are preferred in every request. Up to
  * Waldo_AIPass_Reinforce_MaxResponders CALM, eligible, unordered squads of three or more on the same
  * side, owned by the same machine and within Waldo_AIPass_Reinforce_Radius move to a rally point 80 m
@@ -70,7 +70,7 @@ private _candidates = [];
         private _candidateState = _candidate getVariable ["Waldo_AIPass_State", createHashMap];
         if ((_candidateState getOrDefault ["phase", "CALM"]) == "CALM" && {!(_candidateState getOrDefault ["responding", false])}
             && {behaviour _candidateLeader != "CARELESS"} && {[_candidate] call Waldo_fnc_AIPassIsEligible}) then {
-            // Scorpion's capability-aware support: against armour, squads with an AT gunner go first.
+            // Capability-aware support: against armour, squads with an AT gunner go first.
             private _hasAT = (units _candidate) findIf {alive _x && {([_x] call Waldo_fnc_AIPassUnitRole) == "AT"}} >= 0;
             if (!_armourCall || {_hasAT}) then {
                 _candidates pushBack [[1, 0] select (_armour && {_hasAT}), _candidateLeader distance2D _leader, _forEachIndex, _candidate];

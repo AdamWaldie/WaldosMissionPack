@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Updates a squad's morale during a fight and says whether it should retreat or surrender.
  *
- * Weighted pressure, from Smart Combat V2's model: casualties against peak strength (45%), average
+ * Weighted pressure: casualties against peak strength (45%), average
  * suppression (20%), losing the leader it started the fight with (10%), being outnumbered by enemies
  * seen in the last 30 s (15%), known armour within 400 m with no anti-tank gunner in the squad (20%)
  * and average wounds (10%). Average courage skill offsets it, so AI Rebalance profiles and mission
@@ -14,10 +14,8 @@
  * cannot flicker. With the shipped table, MILITIA breaks much sooner than ELITE.
  * Shaken squads do not start flank, assault or advance drills. Broken squads retreat; with
  * Waldo_AIPass_Surrender_Enable, a broken squad no larger than the profile's surrenderSurvivors, with
- * an enemy believed within 60 m and no friendly squad within 300 m, surrenders instead (Scorpion's
- * rule).
- * Morale inputs come from state the pass already holds; there are no allUnits scans (the fault the
- * audit found in Scorpion's morale tick).
+ * an enemy believed within 60 m and no friendly squad within 300 m, surrenders instead.
+ * Morale inputs come from state the pass already holds; there are no allUnits scans.
  * Locality and authority: call where the group is local.
  *
  * Arguments:

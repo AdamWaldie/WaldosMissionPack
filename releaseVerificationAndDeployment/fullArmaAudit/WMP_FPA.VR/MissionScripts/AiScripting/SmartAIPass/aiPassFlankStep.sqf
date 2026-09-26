@@ -9,19 +9,17 @@
  * street crossings, members have TARGET and AUTOTARGET switched off so they do not stop to trade fire
  * mid-bound; the final approach, assault and clearing rush keep both on so they can engage. Only features
  * that were on are switched off, and they are switched back on at every halt, so mission-maker
- * disableAI settings survive (Smart Combat V2 re-enabled them unconditionally). A bound ends when
+ * disableAI settings survive. A bound ends when
  * every member is within 7 m of his spot or after Waldo_AIPass_Flank_BoundTimeout. Halts last
  * Waldo_AIPass_Flank_BoundPause seconds, 3 s at a street edge, and 20 s (flank) or 10 s (advance) at
  * the final position.
- * Final assault (Smart Combat V2's phased assault; Waldo_AIPass_Assault_Enable): after a flank's hold,
+ * Final assault (Waldo_AIPass_Assault_Enable): after a flank's hold,
  * if the enemy is believed within Waldo_AIPass_Assault_Range of the element, morale is STEADY and the
  * behaviour profile's assaultChance roll succeeds, one member throws a fragmentation grenade
  * (Waldo_fnc_AIPassThrowGrenade, never near friendlies). The element then bounds to a covered spot
  * 12 m short of the enemy and rushes the position, while the base of fire keeps suppressing.
  * Ending: a completed drill leaves the element holding the ground it took. Members rejoin formation
- * when the leader comes within 30 m, when the squad returns to CALM, or when it retreats (Digii's
- * flank without the audited faults: the element no longer runs straight back to the leader, which
- * undid the manoeuvre). The drill aborts, with members following the leader again, when the group
+ * when the leader comes within 30 m, when the squad returns to CALM, or when it retreats . The drill aborts, with members following the leader again, when the group
  * leaves CONTACT, Zeus takes the group (Waldo_fnc_AIPassZeusHeld), or half the element is lost. It
  * also ends, holding ground, when an enemy is believed within 30 m before the assault. Only element
  * members receive move orders; the leader never does.

@@ -136,7 +136,7 @@ if (_wantArtillery || _wantFlares) then {
                             }, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
                         };
                     };
-                    // Smart Aircraft's break: one sideways jink away from the shooter, without touching
+                    // Break-away: one sideways jink away from the shooter, without touching
                     // the aircraft's waypoints or orbit (Waldo_AIPass_AircraftBreak_Enable, off by default).
                     if ((missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]) && {!isNull _shooter}) then {
                         private _velocity = velocityModelSpace _vehicle;

@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Orders an AI group to hold a defensive line facing a direction, with a rear reserve.
  *
- * From Smart Combat V2's defence: about two thirds of the squad form a firing line across the facing
+ * About two thirds of the squad form a firing line across the facing
  * direction, spread over the given width. Each soldier's spot is snapped to cover facing the threat,
  * and soldiers watch overlapping sectors (up to 30 degrees either side of the facing). The rest form a
  * reserve 40 m behind the centre; squads of three or fewer are all line. Soldiers hold with doStop

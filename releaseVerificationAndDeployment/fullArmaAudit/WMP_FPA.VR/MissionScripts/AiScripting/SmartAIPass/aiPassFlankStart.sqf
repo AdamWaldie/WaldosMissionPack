@@ -2,8 +2,7 @@
  * Author: WaldoTheWarfighter
  * Decides whether a squad in contact should flank, and if so plans the manoeuvre.
  *
- * Base of fire and manoeuvre (Digii), executed as real multi-bound movement (fixing Smart Combat
- * V2's single bound). The leader, machine gunners and anti-tank gunners stay as the base of fire,
+ * Base of fire and manoeuvre uses multiple movement bounds. The leader, machine gunners and anti-tank gunners stay as the base of fire,
  * which Waldo_fnc_AIPassFireControl uses to suppress. Up to half the squad (2-5 riflemen) becomes
  * the manoeuvre element. The route has two legs: a wide swing about 70 degrees off the enemy's line
  * to the squad, then a close-in position about 60 degrees off, 35-60 m from the enemy. Each leg is cut

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Redistributes rifle magazines inside a squad, from Smart Combat V2's squad logistics.
+ * Redistributes rifle magazines inside a squad.
  *
  * A soldier with one spare magazine or fewer for his primary weapon receives one from a squad-mate
  * within Waldo_AIPass_AmmoShare_Distance who has at least four spare magazines his weapon accepts.

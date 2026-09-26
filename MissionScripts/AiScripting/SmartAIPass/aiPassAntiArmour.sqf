@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Puts the squad's best anti-tank gunner onto a known armoured vehicle, clear of backblast.
  *
- * From Smart Combat V2: when a tank or armoured vehicle the squad knows about is within 600 m, the
+ * When a tank or armoured vehicle the squad knows about is within 600 m, the
  * launcher gunner with ammunition, least damage and least suppression is ordered to target and fire on
  * it, unless he is already engaging it. Before firing, the backblast area (4 m behind him) is
  * checked for walls and for friendly soldiers; if it is blocked he first moves to a covered spot

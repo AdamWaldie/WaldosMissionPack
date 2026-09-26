@@ -8,7 +8,7 @@
  * (Waldo_fnc_AIPassGroupMove) at FULL speed, so its own waypoints resume afterwards. Soldiers holding
  * ground from a drill fall back with it. One soldier throws smoke towards the enemy, and with
  * artillery support and Waldo_AIPass_ArtillerySmoke_Enable on, a friendly battery on the same machine
- * lays a smoke screen between the squad and the enemy (Digii), never within 50 m of friendlies. Any flank drill ends because the phase
+ * lays a smoke screen between the squad and the enemy, never within 50 m of friendlies. Any flank drill ends because the phase
  * leaves CONTACT. The speed change is recorded and restored when the squad returns to CALM.
  * Locality and authority: call where the group is local.
  *
@@ -48,7 +48,7 @@ if (speedMode _group != "FULL") then {
 _state set ["holders", []];
 private _smokers = (units _group) select {alive _x && {local _x} && {vehicle _x == _x}};
 if (_smokers isNotEqualTo []) then {[selectRandom _smokers, _enemyPos, "SMOKE"] call Waldo_fnc_AIPassThrowGrenade};
-// Digii: a retreating squad with a radio asks friendly artillery for a smoke screen between it and the enemy.
+// A retreating squad with a radio asks friendly artillery for a smoke screen between it and the enemy.
 if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]) && {missionNamespace getVariable ["Waldo_AIPass_ArtillerySmoke_Enable", true]}
     && {[_leader] call Waldo_fnc_AIPassCanTransmit}) then {
     private _screen = _enemyPos getPos [((_enemyPos distance2D _leader) * 0.4) min 80, _enemyPos getDir _leader];

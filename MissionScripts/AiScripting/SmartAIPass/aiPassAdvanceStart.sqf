@@ -3,7 +3,7 @@
  * Starts a bounding advance: a squad under fire that still has somewhere to go pushes an element
  * forward in covered bounds instead of stalling.
  *
- * From PROTOCOL's Combat Pairs and Smart Combat V2's bounding, rebuilt so that it cannot freeze or
+ * Uses bounded fire-team movement so that it cannot freeze or
  * undo itself. The squad must have been in CONTACT for Waldo_AIPass_Advance_MinContactSeconds, its
  * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, the nearest
  * known enemy must be at least 60 m away, morale must be STEADY, no drill may be running, and the

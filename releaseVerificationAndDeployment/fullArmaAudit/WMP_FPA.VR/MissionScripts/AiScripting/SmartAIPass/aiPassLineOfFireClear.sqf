@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Checks that no friendly or civilian is inside a narrow cone between a shooter and a target.
  *
- * Adapted from Smart Combat V2's safety cone. Every friendly-side or civilian soldier and land
+ * Every friendly-side or civilian soldier and land
  * vehicle within range of the shooter is projected onto the line of fire. Anyone between 2 m in front
  * of the muzzle and 10 m beyond the target, and within 2 m plus about 5 degrees of the line, blocks
  * the shot. Suppression orders are only given when this returns true.

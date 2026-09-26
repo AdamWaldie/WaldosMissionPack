@@ -2,11 +2,9 @@
  * Author: WaldoTheWarfighter
  * Finds a covered position near a point, on the far side of a solid object from a threat.
  *
- * Uses the Smart Combat V2 method, which the audit found correct: the candidate sits outside the
+ * The candidate sits outside the
  * object's bounding radius on the side away from the threat, and it is accepted only if a
- * line-of-fire ray from the threat's eye height to the candidate's chest height is blocked. Digii's
- * fault (spots 1.5-2 m from an object's centre, inside large buildings) is avoided, and a candidate
- * under the same object's roof is rejected. Trees, rocks, walls, fences, hides and buildings count;
+ * line-of-fire ray from the threat's eye height to the candidate's chest height is blocked. Candidates inside the object's bounds or under its roof are rejected. Trees, rocks, walls, fences, hides and buildings count;
  * bushes do not (they conceal but do not stop rounds). The engine's `findCover` is not implemented in
  * Arma 3, so this is scripted.
  * Locality and authority: read-only; callable anywhere.

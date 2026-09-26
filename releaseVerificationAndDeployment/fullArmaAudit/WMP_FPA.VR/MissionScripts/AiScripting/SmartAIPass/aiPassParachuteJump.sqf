@@ -4,8 +4,7 @@
  *
  * The soldier leaves behind the aircraft with its speed, and a parachute vehicle (the pack's
  * static-line class, WALDO_STATIC_STATICCHUTE, default NonSteerable_Parachute_F) is created for him a
- * moment later, so his backpack is never swapped out (PROTOCOL Airborne's addBackpack dropped the
- * real backpack under the aircraft). He is protected from damage for the few seconds of the exit.
+ * moment later, so his backpack is never swapped out. He is protected from damage for the few seconds of the exit.
  * AI leave a parachute on their own when they land. For players, use the Paradrop feature instead.
  * Locality and authority: call where the soldier is local (moveOut and moveInDriver are local-argument).
  *

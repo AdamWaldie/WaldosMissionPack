@@ -8,11 +8,9 @@ The Smart AI Pass improves how AI squads behave. [Waldo's AI Tuning](Waldos-AI-T
 well they shoot and spot; this pass changes what they do. It covers every non-player AI group,
 including Dynamic AO patrols and garrisons, and needs no mod beyond the pack's required CBA and ACE.
 
-WMP implements these behaviours as mission scripts. The reference review covered Smart Combat V2,
-Digii AI, Scorpion's Advanced AI, PROTOCOL, Smart Merge, Smart Aircraft, Better Static and Better
-Convoy. It adapted selected mechanisms without importing addon controllers or FSMs. Targeting uses
-engine knowledge; owner-local workers issue AI commands. Restoration records preserve the values
-WMP needs when releasing its own changes. These contracts still require in-engine acceptance.
+WMP implements these behaviours as mission scripts. Targeting uses engine knowledge, and commands
+run on the AI owner. Restoration records preserve the values WMP needs when releasing its changes.
+These contracts still require in-engine acceptance.
 
 It is **off by default**, and every behaviour has its own switch.
 
