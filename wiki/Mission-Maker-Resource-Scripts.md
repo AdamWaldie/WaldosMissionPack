@@ -20,7 +20,7 @@ feature toggle.
 result. They do not publish JIP state as a feature service; for a live unhiding event,
 design its trigger and late-join behaviour for your mission.
 
-## ACE Limited Arsenal Toolkit
+## Quick setup: ACE Limited Arsenal Toolkit
 
 **File:** `ToolkitAceLimitedArsenal.sqf`
 
@@ -44,7 +44,7 @@ Generates a ready-to-paste ACE Arsenal items array from the loadouts of all play
 
 > This method is best for highly curated loadout pools. For mission packs with standard player loadouts, use the automatic [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) instead.
 
-## Vehicle Damage Monitor
+## Script reference: Vehicle Damage Monitor
 
 **File:** `vehicleDamageMonitor.sqf`
 

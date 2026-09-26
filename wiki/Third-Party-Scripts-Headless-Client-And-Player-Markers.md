@@ -11,7 +11,7 @@ clean.
 Headless-client distribution is provided by WMP's native headless-client system. It needs no
 third-party script or `init.sqf` entry. See [Headless Client Support](Headless-Client-Support).
 
-## Enabling player markers
+## Quick setup: enabling player markers
 
 Off by default. In `init.sqf`, uncomment the loader line:
 
@@ -26,7 +26,7 @@ one place instead of cluttering `init.sqf`.
 
 ---
 
-## Player Markers
+## Settings: player markers
 
 Draws dynamic map markers for players (and optionally AI), showing driver/pilot, vehicle name and
 passenger count, with click-to-expand passenger lists. **Best used when ACE map markers are not an

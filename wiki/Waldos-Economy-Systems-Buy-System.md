@@ -10,7 +10,7 @@ _Associated Files: MissionScripts\EconomySystems\Buy\ (`Waldo_fnc_EcoBuy_*`)_
 
 The Buy System lets players **purchase vehicles** with their side's [resources](Waldos-Economy-Systems-Resource-System), once any [research](Waldos-Economy-Systems-Research-System) or [building](Waldos-Economy-Systems-Build-System) requirements are met. Purchases are made at a terminal and the vehicle appears at a configured drop point.
 
-## Purchase terminals
+## Quick setup: purchase terminals
 
 `Waldo_fnc_EcoBuy_registerTerminal` takes one existing laptop Object and has no
 documented return value. The server publishes its terminal tag; interface clients,
@@ -46,7 +46,7 @@ A **drop point** is where purchased vehicles spawn, typed by **Ground**, **Air**
 
 When a vehicle is purchased, the system finds an available drop point of the matching type for the buyer's side and spawns the vehicle there.
 
-## Defining purchases
+## Settings: defining purchases
 
 | Purchase row field | Type | Default or rule |
 | --- | --- | --- |

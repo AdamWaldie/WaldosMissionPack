@@ -126,7 +126,7 @@ All action requests carry a unique token plus the table game ID and current hand
 
 Late joiners receive compact registered-table metadata and phase summary. Choosing **Spectate Game** subscribes that player, applies one targeted current public-state snapshot, opens the display only after the snapshot is present, and then keeps every live transition flowing at the existing cadence. Closing the spectator view unsubscribes it. No executable script or complete game state is sent through JIP. Seating remains locked to the table roster during a game. If a player departs one of the fixed-roster games, the server safely clears that match and returns the remaining seats to the lobby. Table deletion and reset clear private payloads and game state.
 
-## New-game tuning constants
+## Settings: new-game tuning constants
 
 | Constant | Type | Default | Purpose |
 |---|---|---:|---|

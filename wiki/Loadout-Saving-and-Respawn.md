@@ -4,7 +4,7 @@
 
 Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required. That first automatic capture waits a moment for a slower-loading client's gear to actually finish appearing before saving it as the baseline - a client that took a bit longer to load in still gets a correct starting kit, not an incomplete one.
 
-## ACRE2-safe storage
+## Quick setup: ACRE2-safe storage
 
 When ACRE2 is loaded, every saved respawn and persistence loadout passes through `acre_api_fnc_filterUnitLoadout`. Unique classes such as `ACRE_PRC152_ID_7` are converted to base classes before storage. Without ACRE2, the original loadout is returned unchanged.
 
@@ -51,9 +51,9 @@ response, releases ordinary ACRE and mission startup but keeps that client's per
 disabled for the session. This fail-open gameplay/fail-closed saving split prevents persistence from
 breaking the main radio system or overwriting an unread database record.
 
-ACRE generates fresh unique IDs after a filtered loadout restore. WMP therefore guarantees occurrence identity—first PRC-152, second PRC-152—not the identity of a particular transient `_ID_n` item. Occurrence follows ACRE's canonical carried-radio order, which is also what ACRE's repeated-radio setup API uses. WMP deliberately does not sort unique IDs independently. Explicit mission assignments manage only their listed occurrences; additional same-type radios are preserved.
+ACRE generates fresh unique IDs after a filtered loadout restore. WMP therefore tracks each occurrence of a radio type, such as the first and second PRC-152, rather than a transient `_ID_n` item. Occurrence follows ACRE's carried-radio order, which its repeated-radio setup API also uses. WMP does not sort unique IDs independently. Explicit mission assignments manage only their listed occurrences. Additional radios of the same type are preserved.
 
-## Manual saving
+## Script calls: manual saving
 
 Starter crates and loadout-save points call:
 

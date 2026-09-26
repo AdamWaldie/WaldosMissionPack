@@ -25,7 +25,7 @@ Detection remains server-owned, while AI state, target revelation and ammunition
 
 Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above terrain over land and height above sea level over water.
 
-## Beginner quick start
+## Quick setup for a first Dynamic AA site
 
 For the first test, place **Dynamic AA Example (Full)** on open, flat ground and do not edit its init.
 It teaches the script setup and creates one radar, one integrated static site and one mobile system.

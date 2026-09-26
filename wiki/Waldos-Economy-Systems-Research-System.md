@@ -8,7 +8,7 @@ _Associated Files: MissionScripts\EconomySystems\Research\ (`Waldo_fnc_EcoResear
 
 The Research System adds a **tech tree** to [Waldos Economy Systems](Waldos-Economy-Systems). A side spends [resources](Waldos-Economy-Systems-Resource-System) at a Research Center to unlock research, which in turn gates what they can [build](Waldos-Economy-Systems-Build-System) and [buy](Waldos-Economy-Systems-Buy-System).
 
-## The Research Center
+## Quick setup: the Research Center
 
 | Call | Input type | Return and locality |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Research is conducted at a Research Center (`Land_Research_HQ_F`). Players inter
 [this] call Waldo_fnc_EcoResearch_registerCenter;
 ```
 
-## Defining research
+## Settings: defining research
 
 | Research row field | Type | Default or rule |
 | --- | --- | --- |

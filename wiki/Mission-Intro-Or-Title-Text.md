@@ -8,6 +8,10 @@ Displays an animated title sequence when a player loads into the mission. It fad
 
 The sequence runs automatically from `initPlayerLocal.sqf` with no required setup. Mission makers can optionally customise the title text, location name, date format, and a player animation.
 
+## Quick setup: use the automatic intro
+
+Leave the settings below unchanged to use the mission title and map name. To change either, edit its value in `MissionConfig\interfaceConfig.sqf`. Do not add a second startup call in `initPlayerLocal.sqf`; WMP already starts the intro there.
+
 **Displayed information:**
 1. Mission title: pulled from `description.ext` automatically, or overridden by the mission maker
 2. In-game time and date: automatic (short or long format)

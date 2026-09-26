@@ -46,7 +46,7 @@ service values for one gunship.
 | `Waldo_Gunship_SideAircraftPools` | HashMap of side ID to aircraft-class String Array | Shipped side pools | Fallback airframes for a chosen operational side. |
 | `Waldo_Gunship_FactionAircraftPools` | HashMap of faction key to aircraft-class String Array | Empty HashMap | Optional narrower airframe pools. |
 
-## Three ways to get one flying
+## Quick setup: three ways to get one flying
 
 1. **No scripting:** place a crewed aircraft in Eden, then in a running mission use the **Gunship - Register or Spawn** Zeus module on it (see Focused Zeus modules below).
 2. **Drop-in example:** place the `[WMP]Gunship_Support_Example_Minimal` composition from `WMP_Compositions/`. It contains an armed Blackfish with a four-person BLUFOR editor crew (pilot, copilot and two weapon operators), registered with the minimum required keys.

@@ -21,7 +21,7 @@ Both paths call `generateLoadingScreen.py`. It draws the text with the bundled *
 
 The generator and its assets live in `releaseVerificationAndDeployment/loadingAssets/`. Every build excludes that folder through `notlist` in `config.json`. Mission makers receive the finished `Pictures/loading.jpg` without the base image, font or generator.
 
-## Regenerating the image by hand
+## Quick setup: regenerate the image by hand
 
 ```bash
 pip install -r releaseVerificationAndDeployment/requirements.txt   # installs Pillow
@@ -31,7 +31,9 @@ python3 releaseVerificationAndDeployment/generateLoadingScreen.py
 python3 releaseVerificationAndDeployment/generateLoadingScreen.py 4.9.2
 ```
 
-Options (these are generator command-line inputs, not WMP mission settings):
+## Script options and return
+
+These are generator command-line inputs, not WMP mission settings:
 
 | Argument | Type and default | Purpose |
 |---|---|---|

@@ -8,7 +8,7 @@ _Associated Files: MissionScripts\EconomySystems\Resource\ (`Waldo_fnc_EcoResour
 
 The Resource System is the backbone of [Waldos Economy Systems](Waldos-Economy-Systems). It lets you define arbitrary resources and have players gather them from crates and capturable zones, subject to per-side storage limits. Resources are then spent by the [Research](Waldos-Economy-Systems-Research-System), [Build](Waldos-Economy-Systems-Build-System) and [Buy](Waldos-Economy-Systems-Buy-System) systems.
 
-## Defining resources
+## Quick setup: defining resources
 
 | `Waldo_fnc_EcoResource_addResourceType` argument | Type | Default or rule |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ In Zeus: open **WMP Economy Systems → Resource → Configure Resources**. From
 ["Electricity", "#8ED1FC", call Waldo_fnc_EcoResource_getDefaultResourceIcon, 50] call Waldo_fnc_EcoResource_addResourceType;
 ```
 
-## Resource crates
+## Settings: resource crates
 
 | `Waldo_fnc_EcoResource_spawnResourceCrate` argument | Type | Default or rule |
 | --- | --- | --- |

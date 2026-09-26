@@ -4,11 +4,13 @@
 
 WMP automatically sets `ace_medical_isMedicalVehicle` on selected medical variants. ACE Medical decides what that flag changes in play. This flag is independent of vehicle exit actions, paradrops, and Base Services healing.
 
-## Check or set the flag
+## Quick setup: check or set the flag
 
 The shipped class list below is applied automatically during vehicle setup. For another
 medical vehicle, put the example call in that vehicle's Eden Init field. There is no
 WMP registration call or map marker for this flag.
+
+## Script contract
 
 | Input | Type | Value in the example |
 | --- | --- | --- |

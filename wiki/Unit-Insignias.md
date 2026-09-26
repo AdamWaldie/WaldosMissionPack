@@ -12,7 +12,7 @@ the [releases page](https://github.com/AdamWaldie/WaldosMissionPack/releases/lat
 Check that the `.paa` files are present in your mission's `UnitInsignias/` folder
 before using a path from the examples below.
 
-## Show a texture on a world object
+## Quick setup: show a texture on a world object
 
 1. In Eden, place a **User Texture** object.
 2. Open that object's Attributes and find its texture path.
@@ -22,7 +22,7 @@ This creates an in-world textured object. It does not change any unit's uniform.
 shipped `UnitInsignias/How to make these work.txt` describes this same User Texture
 method.
 
-## Put a patch on a unit
+## Script calls: put a patch on a unit
 
 Register the texture as a `CfgUnitInsignia` class in your mission's `description.ext`.
 Then apply that class to the unit. For example:

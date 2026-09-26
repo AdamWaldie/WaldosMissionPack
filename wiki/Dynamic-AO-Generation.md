@@ -6,7 +6,7 @@ _Associated Files: `MissionScripts/CombatSystems/DynamicAO/`; `MissionScripts/Ze
 
 Dynamic AO is a runtime-only, server-authoritative generator. It does not require compositions, pre-placed units or an editor module. One request can independently create infantry patrols, building garrisons, manned static weapons, weighted ground and air patrols, civilians, parked civilian cars, minefields, roadblocks and global AO markers.
 
-## Zeus workflow
+## Quick setup in Zeus
 
 Open **Modules → WMP AI & Combat → Dynamic AO - Create** and place it at the intended centre. The dialog uses a live **enemy faction and side** selector. Entries are friendly names such as `[OPFOR] CSAT`; no config classname or separate side selection is required, so the two values cannot contradict each other.
 
@@ -21,7 +21,7 @@ The modules are registered only when Zeus Enhanced is available. The script API 
 Call the generator on the server. An ordinary Eden Init field runs on several machines; only its server copy creates the AO. A client script must supply the requesting curator player as the second argument to forward a live request. A client call without that player quietly returns without creating an AO.
 
 Unlike most other keys, **`faction` has no default and is genuinely required** alongside `id` and
-`center` — omitting it makes the whole call silently do nothing (no error, no spawned assets). The
+`center`. Omitting it makes the whole call silently do nothing: no error and no spawned assets. The
 smallest working call is:
 
 ```sqf
@@ -113,7 +113,7 @@ Only the server owns the full registry of objects, groups, mines and markers. Cl
 
 Every generated object is added to current curator editable objects. Whole-AO cleanup removes the registry entry first, then deletes tracked mines, field anchors, objects, units, groups and markers. This order makes deletion-event cleanup repeat-safe. Patrol generation is server-local, enables movement/pathing, leaves Arma's engine-created waypoint lifecycle intact and appends the MOVE/CYCLE route without a competing direct movement order. Infantry in a new patrol receive placement clearance around the group start instead of sharing one exact position; this prevents collision-locked squads on dedicated servers. Generated AI are passed through `Waldo_fnc_AIApplyProfile` after their final group assignment and remain eligible for the handler's new-unit and locality-change paths. The active WMP profile is therefore authoritative. A legacy scripted config may still contain `skill`; it is accepted for compatibility but ignored.
 
-## Engine and terrain boundaries
+## Engine boundaries and terrain limits
 
 Open terrain legitimately produces fewer garrisons, parked cars and roadblocks because those features require suitable buildings, open positions or roads. The generator caps them rather than fabricating unsuitable locations. `BIS_fnc_findSafePos` reduces overlap risk but cannot guarantee a perfect placement in extremely dense custom terrain; use cleanup and regenerate at a clearer centre if required.
 

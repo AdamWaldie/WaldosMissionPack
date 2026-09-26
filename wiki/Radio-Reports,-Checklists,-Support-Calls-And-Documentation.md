@@ -64,7 +64,7 @@ in every player's map.
 
 All documents are added to the player's **map screen briefing diary** (the `Diary` tab when opening the map). Each document is a separate entry.
 
-## Enabling or Disabling Individual Documents
+## Settings: enabling or disabling individual documents
 
 All individual document functions are called from `AddDocs.sqf`. To remove a document from the briefing, open `MissionScripts\MissionInit\BriefingDocuments\AddDocs.sqf` and comment out the corresponding function call.
 

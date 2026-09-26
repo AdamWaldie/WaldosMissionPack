@@ -10,7 +10,7 @@ positions. Markers are server-owned and immediately available to JIP players. Cu
 receive one-row create/update/remove deltas; a joining client requests one complete revisioned
 snapshot. All markers share one local `Draw3D` handler, avoiding one permanent loop per marker.
 
-## Fastest setup in Zeus
+## Quick setup in Zeus
 
 Place **WMP Mission Tools > Create Custom 3D Marker**. Drop it directly on an object when the marker
 should follow that object, or place it on empty ground for a fixed marker. The dialog provides named
@@ -29,7 +29,7 @@ object's model origin rather than a guessed bounding-box height.
 
 ## Create or update a marker
 
-Smallest working call — a stable ID and an anchor, everything else takes its default:
+Smallest working call: provide a stable ID and an anchor. Everything else takes its default.
 
 ```sqf
 ["generator_alpha", generator_1] call Waldo_fnc_Create3DMarker;
@@ -49,10 +49,10 @@ The return value is the marker ID String, or an empty String if the server rejec
 anchor. A client receives the generated/chosen ID as soon as it forwards the request; that is not
 confirmation the server accepted it. Reusing an ID replaces that marker without creating another.
 
-## Network and JIP behaviour
+## Script options, network and JIP behaviour
 
 The server keeps the authoritative registry and a monotonically increasing revision. It sends only
-the changed marker row—or the removed marker IDs—to clients already in the mission. A client that
+the changed marker row or the removed marker IDs to clients already in the mission. A client that
 joins later requests one `[revision, registry]` snapshot after installing its renderer. If a client
 ever observes a revision gap, it requests the same snapshot again instead of applying uncertain
 state. Consequently, creating 35 markers transmits 35 individual rows to current clients rather
@@ -151,7 +151,7 @@ Check the marker ID, visible sides, maximum distance and anchor object. A delete
 
 ## See also
 
-- [Eden Compositions](Eden-Compositions) — the `[WMP]Custom_3D_Marker_Example` Minimal/Full pair
+- [Eden Compositions](Eden-Compositions): the `[WMP]Custom_3D_Marker_Example` Minimal/Full pair
 - [Optional Feature Systems](Optional-Feature-Systems)
 - [Mission Configuration Reference](Mission-Configuration-Reference)
 

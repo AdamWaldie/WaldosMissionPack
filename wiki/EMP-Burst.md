@@ -4,7 +4,7 @@
 
 An EMP affects units and vehicles inside a radius for a set duration. It runs no background loop while unused. Unlike [Radio Jamming](Radio-Jamming), this is a single event rather than a persistent field.
 
-## Detonate an EMP
+## Quick setup: detonate an EMP
 
 In Zeus, place **EMP - Detonate at Cursor** under **WMP Electronic Warfare**. Choose a radius and duration in the dialog. The burst occurs at the module position. For a scripted mission, call:
 
@@ -22,7 +22,7 @@ In Zeus, place **EMP - Detonate at Cursor** under **WMP Electronic Warfare**. Ch
 
 The call runs on the server, forwards a client call there, and returns no useful value. It affects entities inside the radius once, then restores temporary effects after the duration. It creates no persistent zone for late joiners.
 
-## Effects and immunity
+## Settings, effects and immunity
 
 Unprotected infantry lose their night-vision goggles. With TFAR, they cannot use their radios for the duration. Vehicles temporarily lose engine power until WMP restores their fuel state. Aircraft can lose lift, so choose the radius carefully. Players in range see a white flash.
 

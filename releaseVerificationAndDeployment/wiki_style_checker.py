@@ -100,58 +100,8 @@ SETTING_CONTRACTS = {
     "Persistence": ("persistenceConfig.sqf", ("Waldo_Persistence_",)),
 }
 
-# These are player-facing feature guides with independent setup paths. Add a new
-# feature here when it enters Feature-Tutorials.md; the checker then requires a
-# navigable page with setup, reference, and fault-finding sections. Hub and
-# reference pages are deliberately outside this list.
-FEATURE_GUIDES = {
-    "ACE-Cargo-And-Object-Handling",
-    "ACE-Corpse-Traps",
-    "Base-Services",
-    "Improved-AI-Helicopter-Landings",
-    "Mobile-Command-Post-With-Integrated-Logistics-System",
-    "Physical-Cargo",
-    "Quartermaster",
-    "Radio-Jamming",
-    "Supply-Transfers",
-    "Field-Resupply",
-    "Tactical-Display",
-    "Treatment-Feedback",
-    "Hazardous-Environments",
-    "Tree-Felling",
-    "Emergency-Dismount",
-    "Explosive-Breaching",
-    "Object-Scaling",
-    "UI-Visual-Themes",
-    "Aircraft-Boarding-Actions",
-    "Teleport-Actions",
-    "AI-Convoy-System",
-    "Automatic-ACE-Fortify-Setup",
-    "Weapon-Mounting-With-Custom-Name",
-    "Simple-Mass-Attach-Items",
-    "Construction-Objects",
-    "Vehicle-Ambush-Script-And-Vehicle-Camo",
-    "Tasks-And-Objectives",
-    "Persistence",
-    "Virtual-Vehicle-Depot",
-    "Bomb-Defusal",
-    "ACRE2-Automated-CEOI-Document",
-    "ACRE2-Babel-Configuration",
-    "ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup",
-    "ACRE-2-Long-Range-Radio-Presetting",
-    "ACRE2-Vehicle-Radio-Rack-Setup",
-    "AI-Helicopter-Deceleration",
-    "Signal-Trackers",
-    "Squad-Rally-Points",
-    "Vehicle-Recovery",
-    "Vehicle-Exit-Actions",
-    "Transport-Services",
-    "Paradrop",
-    "Obituary-and-Confirmed-Deaths",
-    "WMP-HUD",
-    "Vehicle-Appearance",
-    "Vehicle-Weapon-Loadout",
-}
+# Every indexed feature guide is checked below. Navigation hubs in INDEX_HUBS
+# are the only exception; new feature pages enter this gate automatically.
 
 GUIDE_SECTIONS = {
     "setup": re.compile(r"^## (?:Before|Enable|Set |Start |Place |Try |The quickest|Change an object|Setup|Quick|Create a first|Scale one)", re.I | re.M),
@@ -270,7 +220,7 @@ def audit() -> tuple[int, list[str]]:
             if not INDEXED_LIMITS.search(text):
                 findings.append(f"{page.name}: indexed feature needs troubleshooting or engine limits")
 
-        if page.stem in FEATURE_GUIDES:
+        if page.stem in indexed_features:
             if page.stem not in indexed_targets:
                 findings.append(f"{page.name}: dedicated feature guide is missing from Feature-Tutorials.md")
             for section, pattern in GUIDE_SECTIONS.items():

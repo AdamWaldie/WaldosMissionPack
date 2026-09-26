@@ -32,7 +32,7 @@ its server copy registers the speaker; client copies return `false` and do not c
 actions. Repeating setup on the same NPC replaces its dialogue, and the server publishes the
 current speaker list to joining clients.
 
-## Simple Dialogue: start here
+## Quick setup: simple dialogue
 
 Put one of these directly in the NPC's Eden **Init** field. Do not add anything to `init.sqf` or
 `initServer.sqf`; the component starts itself and the public function keeps server authority.
@@ -134,7 +134,7 @@ The medieval example is selected the same way; its IDs are `DORNOW_CIVILIAN`,
 `Waldo_fnc_DialogueLoadPresetPack` remains available when a script author deliberately wants to
 preload `MODERN_CIVILIANS` or `MEDIEVAL_DORNOW`, but beginners do not need that extra step.
 
-## Advanced Conversations
+## Script calls: advanced conversations
 
 Advanced Conversations are defined once, then assigned to NPCs. The beginner builder uses readable
 rows rather than requiring HashMaps. Each node is:
@@ -380,7 +380,7 @@ NPC init field. The config changes presentation and timing globally; it does not
 Theme selection remains in `MissionConfig\interfaceConfig.sqf`. Dialogue automatically inherits the
 resolved WMP theme, its era font/colours, and each player's local colour-vision profile.
 
-## Beginner troubleshooting
+## If a conversation fails: beginner troubleshooting
 
 | Symptom | Check |
 |---|---|

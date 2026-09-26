@@ -8,7 +8,7 @@ _Associated Files: MissionScripts\EconomySystems\Build\ (`Waldo_fnc_EcoBuild_*`)
 
 The Build System lets players construct and upgrade buildings. Buildings can produce [resources](Waldos-Economy-Systems-Resource-System), raise storage, speed up [research](Waldos-Economy-Systems-Research-System) and construction, or reveal enemies.
 
-## Construction vehicles
+## Quick setup: construction vehicles
 
 Players build using a **construction vehicle**. From it they pick a building from the catalog, place it, and a construction job runs to completion. Designate any vehicle as a construction vehicle in Zeus (**WMP Economy Systems → Build → Spawn Construction Vehicle**), from script, or via an editor-placed vehicle's init field:
 
@@ -26,7 +26,7 @@ The same build controls are available through ACE and a vanilla interaction.
 All player Economy dialogs are constrained to the protected screen area and use
 the WMP operations-console visual treatment.
 
-## Defining buildings
+## Settings: defining buildings
 
 Each build entry names the object to construct, its cost, requirements and build
 time. Optional fields control production, storage, speed boosts, upkeep, side

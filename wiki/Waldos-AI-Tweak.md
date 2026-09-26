@@ -76,7 +76,7 @@ These are requested inputs, not guaranteed final values. The engine interpolates
 
 AI behaviour mods can still change tactical decisions independently of these skill inputs. WMP does not assume or require one.
 
-## Mission overrides
+## Settings: mission overrides
 
 Add or replace named profiles before initialisation:
 

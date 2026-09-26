@@ -79,7 +79,7 @@ Put this in a placed object's Eden **Init** field to offer the west-side mission
 
 The Init call starts the setup asynchronously. Inspect the arsenal in a multiplayer preview before handing the mission to players.
 
-## Crate models and other issue points
+## Settings: crate models and other issue points
 
 The general supply spawner uses `Logi_SupplyBoxClass` from the **server** rows in `MissionConfig/logisticsConfig.sqf`. It defaults to `B_supplyCrate_F`. WMP chooses the medical class automatically: `ACE_medicalSupplyCrate_advanced` with ACE Medical, or `C_IDAP_supplyCrate_F` without it. Leave that conditional default alone unless your mission needs a tested override.
 

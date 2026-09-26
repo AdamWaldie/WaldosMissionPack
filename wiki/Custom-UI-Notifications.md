@@ -27,7 +27,7 @@ Open **ACE Self Interact > WMP Options > Notification UI Settings** for the noti
 
 Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER` and `BOTTOM_RIGHT`.
 
-## Basic mission-maker use
+## Quick setup: first notification
 
 ```sqf
 [
@@ -40,6 +40,8 @@ Cards measure their text, retain internal padding and stay inside Arma's current
     "WMP OPERATIONS // LOGISTICS"
 ] call Waldo_fnc_ShowUiNotification;
 ```
+
+## Script call and arguments
 
 The arguments are:
 
@@ -62,7 +64,7 @@ The arguments are:
 
 The function returns a unique token for a displayed card, `"QUEUED"` when the request enters a bounded queue, or an empty string when no interface is available. If the gameplay display is still opening, WMP keeps one bounded, coalesced waiting set and waits for it for up to 20 seconds rather than starting one waiter per request.
 
-Timed cards automatically fit their reading time to their title and message length. A short confirmation clears near the configured three-second minimum; progressively longer text remains longer, up to—but never beyond—the duration supplied by its caller. This preserves every feature's existing duration as a safe ceiling while reducing the time small cards occupy a lane. Set `Waldo_UiNotification_MinimumDuration` for the shortest readable lifetime and leave `Waldo_UiNotification_CharactersPerSecond` at its tested default unless accessibility testing supports a different reading rate.
+Timed cards fit their reading time to their title and message length. A short confirmation clears near the configured three-second minimum. Longer text stays visible longer, but never beyond the duration its caller supplied. Set `Waldo_UiNotification_MinimumDuration` for the shortest readable lifetime. Leave `Waldo_UiNotification_CharactersPerSecond` at its tested default unless accessibility testing supports a different reading rate.
 
 The shipped minimum is **3 seconds**. There is deliberately no second global maximum: each call supplies its own ceiling. The generic example defaults to 8 seconds, Transport Services supplies 7 seconds, and `0` means a persistent status card that remains until replaced or dismissed.
 
@@ -294,7 +296,7 @@ It does not replay a past card to JIP players.
 
 `Waldo_fnc_ShowUiNotification` shows a card on whichever machine runs it; it does not choose an
 audience for you. `Waldo_fnc_NotificationBroadcast` wraps it with audience targeting so mission code
-and Zeus curators do not have to hand-resolve player lists. It is server-authoritative — calling it
+and Zeus curators do not have to hand-resolve player lists. It is server-authoritative; calling it
 from a client forwards to the server automatically, the same pattern as `Waldo_fnc_Jammer`.
 
 ```sqf

@@ -10,7 +10,7 @@ _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\safeStart.
 Safestart protects players while they load in and sort their kit. Missions start live by default, but Zeus can activate Safestart at any point. Unlike [ENDEX](ENDEX-Script-&-Custom-End-Screen), Safestart can be lifted when play begins.
 
 While Safestart is active:
-* All weapons are placed on safe (ACE), and **every** shot, thrown grenade, launcher round, underbarrel round and crewed vehicle weapon round is deleted — firing just shows a red **"Hold Fire!"** prompt.
+* ACE places weapons on safe. Shots, thrown grenades, launcher rounds, underbarrel rounds and crewed vehicle weapon rounds are deleted. Firing shows a red **"Hold Fire!"** prompt.
 * Players take and deal **no damage**.
 * If the mission maker enables confinement, players are pulled back when they leave the safe zone.
 * An on-screen **banner** is shown, with a live go-live countdown when a timer is running.
@@ -18,7 +18,7 @@ While Safestart is active:
 
 The freeze runs on its own variables, so it never clashes with ENDEX.
 
-## Starting state
+## Quick setup: starting state
 
 Safestart is available automatically but starts **inactive**. To begin a mission under protection, open `MissionConfig\missionSystemsConfig.sqf` and change the existing `Waldo_SafeStart_AutoStart` row from `false` to `true`. To use confinement, change the existing `Waldo_SafeStart_Confine` row too. Do not add a second copy of either setting to an init file.
 
@@ -37,9 +37,9 @@ Safestart is available automatically but starts **inactive**. To begin a mission
 | `Waldo_SafeStart_ZoneMarker` | Marker-name string | `""` | Blank uses the per-player radius; an existing Eden area marker name uses one shared zone, including that marker's size. This is a **string**, not an Object. |
 | `Waldo_SafeStart_GoLiveHintDuration` | Number, seconds | `12` (script fallback) | Time the go-live explanation stays visible. This is not a shipped config row; advanced missions can set it on the server before the notice. |
 
-## Going live & the scripting API
+## Script calls: going live
 
-The API is **server-authoritative** — it is safe to call from a client, it forwards to the server for you.
+The API is **server-authoritative**. A client call forwards to the server.
 
 ```sqf
 [true]  call Waldo_fnc_SafeStart;        // activate the freeze
@@ -76,7 +76,7 @@ player sees that go-live is approaching. They may acknowledge it a second time t
 go-live. The acknowledgement is cleared when SafeStart ends and never carries into a later
 activation.
 
-## Diagnostics
+## If safe start does not end: diagnostics
 
 ```sqf
 private _report = [] call Waldo_fnc_SafeStartGetDiagnostics;
@@ -111,10 +111,10 @@ though Safestart starts inactive:
 
 ## See also
 
-* [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the matching mission-end freeze
+* [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen): the matching mission-end freeze
 * [Mission Configuration Reference](Mission-Configuration-Reference) - where the mission settings are loaded
 * [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
-* [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — additive selected-object fallback for the normal Zeus END action
+* [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore): additive selected-object fallback for the normal Zeus END action
 
 <!-- WMP-WIKI-NAV -->
 ---

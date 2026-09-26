@@ -4,7 +4,7 @@
 
 _Associated Files: MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf_
 
-Automatically assigns players to ACE3 team colours at mission start based on their role description set in the Eden Editor. No per-unit configuration is required — the function reads each player's **Role Description** field and matches it to a colour.
+WMP assigns players to ACE3 team colours at mission start using their Eden role description. No per-unit setup is required. The function reads each player's **Role Description** field and matches it to a colour.
 
 Called automatically from `init.sqf`. Requires ACE3. No object Init call or module placement is needed.
 
@@ -12,7 +12,7 @@ Called automatically from `init.sqf`. Requires ACE3. No object Init call or modu
 
 On mission start, each player's Role Description (or unit class display name as a fallback) is checked against a keyword table. The first keyword match determines the ACE3 team colour assigned to that player. The check is case-insensitive and searches for the keyword anywhere in the role description string.
 
-## Keyword-to-Colour Mapping
+## Settings: keyword-to-colour mapping
 
 | Team Colour | Matching Keywords |
 |---|---|
@@ -26,7 +26,7 @@ Players whose role description matches none of the keywords are not assigned to 
 `SQUAD LEADER` and `SL` checks match those names first. They currently resolve to Yellow. Use an
 unambiguous `Alpha` role label when that assistant should be Red.
 
-## Recommended Role Description Format
+## Quick setup: recommended role description format
 
 For best results, use the following convention in each unit's **Role Description** field in Eden:
 
@@ -79,7 +79,7 @@ private _groupCallsign = [player] call Waldo_fnc_GetPlayerGroup;
 
 ### `Waldo_fnc_GetPlayerRole`
 
-Returns the role — the part of the role description **before** the `@`. Falls back to the unit class display name if no role description is set.
+Returns the part of the role description **before** the `@`. If no role description is set, it returns the unit class display name.
 
 ```sqf
 // Returns "Alpha Rifleman" from role description "Alpha Rifleman@Viking-1"

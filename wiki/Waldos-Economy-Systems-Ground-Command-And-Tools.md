@@ -6,7 +6,7 @@ _Associated Files: MissionScripts\EconomySystems\Command\ (`Waldo_fnc_EcoCommand
 
 Alongside the four economy systems, [Waldos Economy Systems](Waldos-Economy-Systems) ships several management tools, all reached from the **WMP Economy Systems** menu in Zeus.
 
-## Setup values and script result
+## Setup values, script calls and result
 
 | Control | Type and default | Where it belongs | Result |
 | --- | --- | --- | --- |
@@ -62,7 +62,7 @@ Three bundled presets provide economies of increasing complexity, from **LOW** (
 
 **Purge** removes the economy suite from the running mission. It deletes its world objects and markers and stops its loops. Purge is **permanent for that mission**: it also prevents joining (JIP) players from re-initialising the suite. Restart the mission to run the economy again.
 
-## Status check (for scripters)
+## Script call: status check
 
 `call Waldo_fnc_EcoCore_isActive` returns whether the suite is currently running, so you can gate dependent scripts, e.g. `waitUntil { call Waldo_fnc_EcoCore_isActive };`. Failed player actions (not enough resources, unmet requirements, no drop point in range) use a branded timed notice instead of silently failing or burying the reason in game chat.
 

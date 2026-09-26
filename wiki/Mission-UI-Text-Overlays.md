@@ -7,7 +7,7 @@ at the top right. `Waldo_fnc_TimedHint` still uses Arma's local hint display. Re
 automatically. For new mission messages, use [Custom UI Notifications](Custom-UI-Notifications):
 it has explicit audiences, channels, states and queue handling.
 
-## Send a short WMP message
+## Quick setup: send a short WMP message
 
 ```sqf
 ["Supplies ready", _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
@@ -24,7 +24,7 @@ not wait for the recipient's display. The card uses `INFO`, four seconds, the `T
 and a replacement channel based on the title. It is transient, so it is not replayed to JIP.
 The function can run on the server or a client; the target client's interface draws the card.
 
-## Show a local timed hint
+## Script calls: local timed hint
 
 ```sqf
 ["Rendezvous respawn activated", 10] spawn Waldo_fnc_TimedHint;

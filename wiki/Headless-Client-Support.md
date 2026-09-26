@@ -13,7 +13,7 @@ distributes eligible AI groups to it automatically.
 This native implementation is the only headless-client distribution system bundled with WMP. It
 uses WMP's locality and exclusion model, diagnostics, and JIP snapshot handshake.
 
-## Off by default
+## Quick setup: off by default
 
 `Waldo_Headless_Enable` in `MissionConfig\headlessConfig.sqf` defaults to `false`. Dedicated-server
 testing has verified registration, distribution, manual handoff, debug display and disconnect
@@ -160,7 +160,7 @@ connected. **Manual Group Handoff** lists nearby AI-only groups and named destin
 managed/excluded groups, adoption acknowledgements, failed transfers, ownership mismatches and the
 migration queue in the RPT.
 
-## Eligibility
+## Settings and eligibility
 
 ### WMP feature assets always remain on the server
 
@@ -405,7 +405,7 @@ is SHARED-scope config loaded by `init.sqf` and there is no guaranteed ordering 
 diagnostics run that lands inside that short registration window would otherwise report a false error
 on a perfectly healthy headless-enabled mission.
 
-## Diagnostics
+## If headless transfer fails: diagnostics
 
 `Waldo_fnc_HeadlessGetDiagnostics` feeds into `Waldo_fnc_RunDiagnostics` under area `headless`.
 While `Waldo_Headless_Enable` is false, it reports a single `headless-enable: DISABLED` check and

@@ -23,7 +23,7 @@ When ENDEX activates:
 
 The notification uses its own `ENDEX` channel. Repeated activation replaces the existing panel instead of stacking another UI element. Reset dismisses that exact channel and removes only protections owned by ENDEX.
 
-## Starting and resetting ENDEX
+## Quick setup: starting and resetting ENDEX
 
 The API is server-authoritative. Calls made on a client are forwarded to the server.
 
@@ -56,7 +56,7 @@ ENDEX and SafeStart track their handlers, damage state, and ACE weapon-safety ow
 
 `Waldo_fnc_ENDEXReset` also takes **no public arguments** and returns nothing. A client call is forwarded to the server; WMP removes only the ENDEX-owned client protections. It is repeat-safe when ENDEX is already inactive.
 
-## After-Action Report
+## Script calls: after-action report
 
 Tracking starts through `[] call Waldo_fnc_AARTrack`. It uses mission event handlers rather than a
 per-frame loop. KIA, vehicle-loss, player-loss, friendly-fire and fragger counters remain
@@ -98,7 +98,7 @@ missionNamespace setVariable ["Waldo_ENDEX_ReportDuration", 60, true];
 
 Use **Mission Flow: End Mission + Show AAR** under **WMP Mission Flow**. It calls the same public, server-authoritative function as script setup. The reset function is intended for rehearsals and controlled testing rather than normal mission flow.
 
-## Diagnostics
+## If ENDEX does not start: diagnostics
 
 ```sqf
 private _report = [] call Waldo_fnc_ENDEXGetDiagnostics;
@@ -124,7 +124,7 @@ Configure the ending title, subtitle, description, and image in `description.ext
 - [Custom WMP UI Notifications](Custom-UI-Notifications)
 - [Mission Diagnostics](Mission-Diagnostics)
 - [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
-- [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — additive selected-object fallback for the normal Zeus END action
+- [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore): additive selected-object fallback for the normal Zeus END action
 
 <!-- WMP-WIKI-NAV -->
 ---
