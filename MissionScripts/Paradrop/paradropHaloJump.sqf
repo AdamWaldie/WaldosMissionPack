@@ -4,6 +4,10 @@
  * and contents through Waldo_fnc_ParaBackpack, equips the selected steerable parachute backpack,
  * applies the configured equipment simulation, and restores damage after the exit transition.
  * Must run where the jumping unit is local and in a scheduled environment.
+ * Locality and authority: The jumping unit's owner performs moveOut, loadout changes and damage
+ * restoration. The caller must select an eligible aircraft and unit before invoking this function.
+ * Repeat/JIP: Each call starts one jump; no persistent action is installed here. JIP players use
+ * the aircraft actions installed by paradrop setup when they join.
  *
  * Arguments:
  * 0: jumping unit <OBJECT>
@@ -18,6 +22,7 @@
  *
  * Example:
  * [player, aircraft, "B_Parachute"] spawn Waldo_fnc_HaloJumpFunc;
+ * Result: The jumper exits with a chute backpack and can restore the original backpack on landing.
  */
 
 params [

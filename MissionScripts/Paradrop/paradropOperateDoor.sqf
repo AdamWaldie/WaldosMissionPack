@@ -21,6 +21,10 @@
  *  - animateDoor covers the two Doors-class components read back via doorPhase (RearDoors,
  *    Door_1_source). animateDoor's phase argument is a NUMBER (0..1), the same as animate/
  *    animateSource - it does not accept the "OPEN"/"CLOSE" strings some standalone door scripts use.
+ * Locality and authority: Called by the server-side door watcher for its aircraft. This function
+ * does not transfer ownership or decide when the door should open.
+ * Repeat/JIP: Repeating the same phase is safe; the aircraft's animation state is the visible
+ * state, rather than an action or handler installed for joining clients.
  *
  * Arguments:
  * 0: aircraft <OBJECT>
@@ -34,6 +38,7 @@
  *
  * Example:
  * [_aircraft, true] call Waldo_fnc_ParadropOperateDoor;
+ * Result: Recognised aircraft door and ramp animation sources receive phase 1 (open) or 0 (closed).
  */
 
 params [["_aircraft", objNull, [objNull]], ["_open", true, [true]]];
