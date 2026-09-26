@@ -4,32 +4,35 @@
 
 _Associated Files: `MissionScripts\Logistics\LogiHelpers\attachedWeapon.sqf`, `Waldo_fnc_VehicleMountedWeapon`_
 
-## Weapon Mounting With Custom Name
+## What this helper does
 
-Attaches a separate weapon/turret object to a vehicle and wires up "Get In" / "Return" actions so a player can hop between the carrier and the mounted weapon without it counting as a normal turret seat. Handy for a static gun bolted to a truck bed, a mortar on a trailer, or any field-expedient mounted weapon.
+This older helper attaches a separate static weapon to a vehicle and adds vanilla **Get In** and **Return** actions. It is independent of [Physical Cargo](Physical-Cargo). It does not check clearance or physics safety, so test the exact vehicle and weapon together before using it in a live mission.
 
-The action label is customisable, so the scroll-wheel option can read **"Get In M2"**, **"Get In Mortar"** or whatever you like, instead of a generic prompt.
+The name controls the scroll-wheel label, such as **Get In M2**.
 
 ## What it sets up
 
 * Attaches the turret to the vehicle at its **relative** position (so it rides along correctly).
 * Adds a **"Get In _name_"** action both on the turret (when stood next to it) and from inside the vehicle.
 * Adds a **"Return To Main Vehicle"** action on the turret to move back into the carrier.
-* On ACE, claims the turret (`ace_common_fnc_claim`) so other mods' interactions don't hijack it, and blocks the stray *Unmount / Turn left / Turn right* engine actions that some mods (e.g. IFA3) inject.
+* When ACE is present, calls `ace_common_fnc_claim` for the turret.
+* Replaces the client's global action UI handler to block **Unmount**, **Turn left** and **Turn right** labels. That handler can conflict with another mission script that uses the same slot.
 
 ## Parameters
 
 | # | Parameter | Type | Default | Purpose |
 |---|---|---|---|---|
-| 0 | Turret | Object | — | Variable name of the weapon/turret object to mount. |
-| 1 | Vehicle | Object | — | Variable name of the carrier vehicle. |
+| 0 | Turret | Object | Required | Existing static weapon object to mount. |
+| 1 | Vehicle | Object | Required | Existing carrier vehicle. |
 | 2 | Custom name | String | `"Turret"` | Text shown in the **"Get In _X_"** action. |
+
+The call returns the local action ID of the final **Return To Main Vehicle** action. It has no server-owned mount record, collision rollback, or duplicate-action guard. Eden Init runs for joining players. Set up a gun and carrier created during play on each joining interface.
 
 ## Setup in Eden
 
 1. Place the **vehicle** and give it a variable name (e.g. `truck1`).
 2. Place the **weapon/turret** object and give it a variable name (e.g. `mountedM2`).
-3. Position the turret roughly where it should ride — it is attached at that relative offset.
+3. Position the turret where it should ride. The helper keeps that relative offset.
 4. In the **turret's init field**, call the function:
 
 ```sqf
@@ -43,15 +46,15 @@ The action label is customisable, so the scroll-wheel option can read **"Get In 
 [gunObject, technical1, "DShK"] call Waldo_fnc_VehicleMountedWeapon;
 ```
 
-Players see **"Get In DShK"** on both the gun and the truck, and **"Return To Main Vehicle"** while manning it.
+Players see **Get In DShK** on both objects and **Return To Main Vehicle** while manning the gun. Test entry, exit, movement and damage with the chosen mod classes. This helper does not make an unsafe attachment safe.
 
 ## If the named action is missing
 
-Check that the weapon and interaction object are the ones passed to the setup call, and that the player has access to the object. This helper names an existing weapon interaction. It is not the retired working-static-weapon branch of [Physical Cargo](Physical-Cargo).
+Check that the weapon and carrier are the exact objects passed to the call. Repeated calls can add duplicate actions. If the vehicle flips or collides with the gun, stop using this pair. The working-static-weapon branch of [Physical Cargo](Physical-Cargo) was retired.
 
 ## See also
 
-* [Simple Mass Attach Items](Simple-Mass-Attach-Items) — attach decorative/cargo objects to a vehicle
+* [Simple Mass Attach Items](Simple-Mass-Attach-Items): attach decorative objects to a vehicle
 * [Paradrop](Paradrop)
 
 <!-- WMP-WIKI-NAV -->

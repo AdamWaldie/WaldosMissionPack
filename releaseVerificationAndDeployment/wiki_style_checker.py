@@ -123,6 +123,8 @@ FEATURE_GUIDES = {
     "Teleport-Actions",
     "AI-Convoy-System",
     "Automatic-ACE-Fortify-Setup",
+    "Weapon-Mounting-With-Custom-Name",
+    "Simple-Mass-Attach-Items",
 }
 
 GUIDE_SECTIONS = {

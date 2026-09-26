@@ -1,18 +1,20 @@
 /*
-This script attached an object (weapon) to a vehicle object, as well as providing a method to switch into the mounted weapon from the vehicle it is attached to.
-
-parameters:
-_turret - variable name of the turret.
-_vehicle - variable name of the vehicle you wish to attach the turret to.
-_customName - set a custom Get in X addaction for the turret, where X is the contents of _customName.
-
-Example call:
-
-In turret init:
-
-[turretVariableName,VehiclevariableName,"Custom Name For Turret"] call Waldo_fnc_VehicleMountedWeapon;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Purpose: Legacy manual static-weapon attachment with named vanilla Get In and Return actions.
+ * It does not perform a collision, clearance, or physics safety check.
+ * Locality/authority: intended for an Eden turret Init on each machine. It calls BIS relative
+ * attachment, installs local addActions, and replaces that client's global action UI handler.
+ * Repeat/JIP: no duplicate guard or explicit mount-state replay. A repeated call can add actions
+ * again. Eden Init runs for joining clients, but a runtime-spawned pair needs its own JIP setup.
+ * Arguments:
+ * 0: turret <OBJECT> (required) - existing static weapon to attach.
+ * 1: vehicle <OBJECT> (required) - existing carrier object.
+ * 2: custom name <STRING> (default "Turret") - Get In action suffix.
+ * Return Value: NUMBER - local action ID of the final Return To Main Vehicle action.
+ * Current callers: mission-maker Eden turret Init fields and legacy scripted compositions.
+ * Example: [mountedM2, truck1, "M2 Browning"] call Waldo_fnc_VehicleMountedWeapon;
+ * Result: local Get In and Return actions appear around the manually attached gun.
+ */
 
 params["_turret","_vehicle",["_customName","Turret"]];
 
