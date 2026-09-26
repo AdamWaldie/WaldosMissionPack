@@ -32,7 +32,7 @@ The `[WMP]Vehicle_Recovery_Workshop_Example_Minimal` composition places all thre
 
 Workshops accept a key, delivery radius and serviced side (`"ALL"` permits all sides; use `west`, `east`, `independent` or `civilian` to restrict it). `RecoveryRegisterVehicle` accepts the workshop key, living-vehicle damage threshold, whether destroyed vehicles are accepted, whether an engineer is required, package class, inventory-preservation policy and restored fuel fraction. The system also restores textures and pylon magazines. `RecoveryRegisterCarrier` accepts loading range, cargo mode and package capacity. A registered recovery carrier remains a carrier with the same mode and capacity after it is recovered.
 
-### Registration call reference
+## Calls and settings
 
 All three calls belong in an Eden object's **Init** field for ordinary setup, or in a server script for runtime setup. Eden runs an object's Init on more than one machine; these functions deliberately accept the server copy and ignore the duplicate client copies. The server publishes the registration so players joining later receive the actions. Repeating a call updates that object's registration.
 

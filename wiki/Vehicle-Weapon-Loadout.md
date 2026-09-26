@@ -21,7 +21,7 @@ Turret weapons and aircraft pylons are two genuinely separate Arma systems under
 and this feature keeps that same split rather than papering over it, since a "weapon" on a pylon is
 really just an ordnance/magazine classname with no separate weapon class of its own.
 
-## Scripting
+## Quick setup
 
 ```sqf
 // [vehicle, rows]
@@ -29,6 +29,8 @@ really just an ordnance/magazine classname with no separate weapon class of its 
     ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]
 ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
 ```
+
+## Script call reference
 
 | Position | Type | Default | What to supply |
 |---:|---|---|---|
@@ -293,7 +295,7 @@ curator-authentication bridge and never touches the server, because it never cha
 turret whose only weapon is the horn is still reported (informational) but never gets a row.
 
 
-## Notes and limitations
+## Limitations and notes
 
 - Works on any `AllVehicles`-derived object with turrets and/or pylons - cars, tanks, boats, static
   weapons, aircraft. `Man` (soldiers/AI) is explicitly excluded even though it technically inherits

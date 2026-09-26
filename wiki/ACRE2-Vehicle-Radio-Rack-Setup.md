@@ -90,7 +90,7 @@ problem unless the row also supplies a compatible radio to mount.
 This loads `COMMAND_VEHICLE`, then replaces that profile's complete `assignments` setting for this
 one vehicle. WMP does not perform a hidden array merge.
 
-## Understanding central rack profiles
+## Configuration reference: central rack profiles
 
 Each profile is:
 
@@ -136,7 +136,7 @@ because those radios are not ordinary numbered-channel radios.
 ]]]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
-`count` means the desired total number of that rack class on this object—not “add this many every
+`count` means the desired total number of that rack class on this object. It does not mean “add this many every
 time.” If the call is retried after adding the first rack, WMP sees that it already exists and does
 not duplicate it.
 
@@ -247,7 +247,7 @@ Rack setup begins on the server, as required by ACRE's public rack APIs:
 Repeated identical Eden calls are suppressed both while running and after success. A genuinely new
 setup arriving mid-run replaces the queued request and runs after the current worker cleans up.
 
-## Diagnostics
+## If a rack does not apply
 
 WMP Diagnostics reports both an `acre-vehicle-racks` summary and one `acre-rack-<network ID>` row
 per configured object. Each object row shows its class, resolved profile, current owner, initial

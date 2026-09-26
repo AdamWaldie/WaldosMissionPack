@@ -2,11 +2,15 @@
 
 > **Use this page when:** squad leaders need a temporary, group-owned respawn position.
 
+A rally lets a squad leader place a temporary respawn point for their group. The leader can pack it again, and the server removes it when its lifetime ends.
+
+## Quick setup
+
 Set `Waldo_Rally_Enable = true` in `MissionConfig\missionSystemsConfig.sqf`, or enable the feature during play with **Respawn - Squad Rally Control**. The current leader of a qualifying group receives controls to deploy or pack its rally. Ownership and cooldown stay with the group if its leader changes.
 
 The server checks that the leader is alive, on foot, on dry and level ground, and outside the hostile exclusion radius. The group must also have enough living members. The server chooses a clear position and adds a group-scoped respawn point. Only current group members see the rally marker. Destroying, packing, or disabling the rally removes its object, respawn point, and marker. They also disappear when the rally expires.
 
-## Settings
+## Settings reference
 
 Edit the existing rows in `MissionConfig\missionSystemsConfig.sqf`:
 

@@ -6,7 +6,7 @@ WMP HUD is one local, friendly-only identification system with two independent w
 
 The HUD does not change side relations, AI knowledge or network state. Each client draws only eligible friendly units using local line-of-sight checks. Names and icons have separate ranges, follow animated head positions, respect incapacitation/vehicle policy, and use the active WMP theme plus the player's colour-vision profile.
 
-## Beginner setup
+## Quick setup
 
 Open `MissionConfig\interfaceConfig.sqf` and find the **WMP HUD** block.
 

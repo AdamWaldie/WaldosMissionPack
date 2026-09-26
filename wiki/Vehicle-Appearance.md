@@ -36,7 +36,7 @@ Editor's Component tab opens (name-filtered, best-effort turret correlation, eve
 with an explicit "verify" caveat) instead of relying on a persistent per-class registration step. You
 can still confirm a real selection name yourself first with **Vehicle Customisation - Inspect**.
 
-## Scripting
+## Quick setup
 
 ```sqf
 // [vehicle, rows]; each row: [targetType, selector, action, value]
@@ -44,6 +44,8 @@ can still confirm a real selection name yourself first with **Vehicle Customisat
     ["TEXTURE", 0, "SET", [1, 0, 1, 1]]   // paint texture slot 0 pink - no texture asset needed
 ]] call Waldo_fnc_VehicleAppearanceApply;
 ```
+
+## Script call reference
 
 | Position | Type | Default | What to supply |
 |---:|---|---|---|
@@ -172,7 +174,7 @@ produces is built to be paste-safe: single-statement, comment-free text only. Th
 field.
 
 
-## Notes and limitations
+## Limitations and notes
 
 - Works on any `AllVehicles`-derived object - cars, tanks, boats, static weapons, aircraft. `Man`
   (soldiers/AI) is explicitly excluded even though it technically inherits from `AllVehicles` too in

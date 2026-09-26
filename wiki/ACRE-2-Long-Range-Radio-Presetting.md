@@ -11,7 +11,7 @@ server sends the complete side/group setup to joining players, and each player's
 configures only the radios that player carries after ACRE is ready. Do not add ACRE waits or radio
 setup calls to multiplayer `init.sqf`.
 
-## Smallest working example: one group, one net
+## Quick setup: one group, one net
 
 This example gives one squad a shared channel. In the `"sides"` row for `WEST` in
 `MissionConfig\acreConfig.sqf`, keep the shipped official ACRE preset name and use:
@@ -264,7 +264,7 @@ carried PRC-117F/148/152 occurrence instead of being preserved as unmanaged.
 
 ACRE's `setupRadios` frequency path is asynchronous and exposes no public frequency read-back. WMP validates the request and records it as pending/unverified; the audit requires checking the physical PRC-77/SEM70 interface. It refuses frequency setup when same-type rack/external radios make ACRE's occurrence order ambiguous.
 
-## Diagnostics and testing
+## If a radio assignment fails
 
 The CEOI is generated from the compiled plan and lists each named net once, the current group's
 PRC-343 assignment, and live channel highlights where ACRE provides read-back. Diagnostics report

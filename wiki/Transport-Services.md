@@ -4,7 +4,7 @@
 
 WMP Transport Services manages helicopters, ground vehicles and boats in separate typed pools. A helicopter request can never reserve a ground vehicle or a boat, and two requests cannot reserve the same vehicle. The server owns registration, access rules, reservations, request IDs, requester identity, state and JIP-visible vehicle status. The machine currently owning the AI group performs movement, so server, headless-client and client-local AI are supported. Optional invulnerability covers only the vehicle and its original AI service crew; it is off by default and never protects passenger players.
 
-## Beginner setup
+## Quick setup
 
 The safest first setup is the **Helicopter, Ground and Boat Transport Services (Minimal)**
 composition. It contains one correctly crewed example of every type. Move its boat onto open water,
@@ -161,7 +161,7 @@ An empty cabin alone is not enough. WMP also requires continuous ground contact 
 
 These choices follow Bohemia's documented behaviour: [`doStop` must be released with `doFollow`](https://community.bohemia.net/wiki/doFollow), a zero-radius [`addWaypoint`](https://community.bohemia.net/wiki/addWaypoint) can still be shifted while radius `-1` is exact, and [`landAt`](https://community.bohemia.net/wiki/landAt) targets a specific helipad.
 
-## Per-service options
+## Settings and per-service options
 
 | Option key | Type | Default | Effect |
 |---|---|---|---|
@@ -196,11 +196,11 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 
 ## ZEN and lifecycle
 
-Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides a player-facing display name and plain-language timing/recovery settings, and rejects a type/vehicle mismatch. Internal service IDs are always generated automatically and are never exposed to Zeus. A successful registration publishes the pool availability, installs player controls, creates the optional marker and renames the AI crew group to the display name—even when the registration originated from a remote curator and the AI group is owned by another machine. A rejected registration sends Zeus the exact reason. **Transport Service - Return to Base** immediately cancels a selected registered service without an extra confirmation dialog.
+Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog lets Zeus choose the service type, display name, timing and recovery settings. It rejects a service type that does not match the vehicle. WMP generates the internal service ID. A successful registration publishes availability, installs player controls, creates the optional marker and gives the AI crew group the display name. The group rename also works when a remote curator registers AI owned by another machine. Zeus receives the reason for a rejected registration. **Transport Service - Return to Base** immediately cancels a selected service without another confirmation dialog.
 
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
 
-Registration locks the driver seat to players and disables fleeing/panic on the captured AI service crew (`allowFleeing 0`) — a driver who bails out under fire otherwise stranded the vehicle the same way a dead driver would, just without the monitor's driver-death check ever catching it. A passenger who boards later as cargo is unaffected. A registered vehicle that becomes too heavily damaged to remain effective — `Waldo_Transport_MaxEffectiveDamage` in `MissionConfig\logisticsConfig.sqf`, default `0.8` — is written off the service pool the same way an outright loss is, and (unlike a self-evident loss) every player on the service's `allowedSides` gets a warning card naming it, since a vehicle quietly vanishing from availability otherwise has no explanation.
+Registration locks the driver seat to players and sets `allowFleeing 0` for the captured AI crew. A later cargo passenger is unaffected. If vehicle damage exceeds `Waldo_Transport_MaxEffectiveDamage`, WMP removes it from the service pool. The setting defaults to `0.8` in `MissionConfig\logisticsConfig.sqf`. Players on the service's `allowedSides` receive a warning card naming the damaged vehicle.
 
 RTB always targets the service's exact registered base position. The generic safe-position search is
 used for player-selected stops, not for returning a service to its own prepared parking point.

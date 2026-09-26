@@ -4,12 +4,14 @@
 
 Babel is configured in the `babel` map inside `MissionConfig\acreConfig.sqf`. Language `[ID, display name]` pairs are registered once in the same declared order on every ACRE machine, including JIP clients. Do not add or reorder language definitions during play.
 
-## Configure languages
+## Quick setup: configure languages
 
 Edit the `babel` block in `MissionConfig\acreConfig.sqf`. The shipped example contains five
 language definitions and one default row for each side, but Babel starts disabled. Change
 `enabled` to `true`, then adjust the rows your mission needs. WMP runs the setup for players,
 including late joiners. No unit Init call is required.
+
+## Configuration reference
 
 | Setting or row | Type | Shipped default | What to supply |
 | --- | --- | --- | --- |

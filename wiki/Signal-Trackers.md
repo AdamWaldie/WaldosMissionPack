@@ -4,7 +4,7 @@
 
 A signal tracker follows its target and draws a side-private map marker. Players can plant one through ACE, Zeus can attach one to a selected object, and scripts can register one directly. The renderer starts only while a tracker exists.
 
-## Plant a tracker
+## Quick setup: plant a tracker
 
 As a player, approach a unit or vehicle and choose **Plant Signal Tracker** in ACE interaction. The planting player's side sees the marker. In Zeus, place **Tracker - Attach to Selected Object** directly on the intended unit or vehicle under **WMP Electronic Warfare**. Empty-ground placement is rejected. Choose the tracking side, label and starting state in the dialog.
 
@@ -27,7 +27,7 @@ The server returns a numeric tracker ID. A call made on a client forwards the re
 
 For a player-facing placement action, `[_target, _side, _label] call Waldo_fnc_TrackerAttach` uses the player's cursor target, side and an automatic label when arguments are omitted. Its arguments have the same object, side and string types as positions 0–2 above, and it returns no useful value.
 
-## Remove or inspect it
+## Calls: remove or inspect a tracker
 
 Use `[enemyTruck] call Waldo_fnc_TrackerRemove` to remove by object, or pass an ID returned by a server-side creation call. The one required argument is an `OBJECT` or numeric tracker ID. The server returns `true` if it removed an entry and `false` if none matched. A client call forwards the request and returns `false` before the server finishes. WMP also removes a tracker when its target dies or someone deletes it. Markers update every few seconds and follow the target's position and facing.
 

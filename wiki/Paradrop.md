@@ -6,7 +6,7 @@ WMP adds static-line and HALO actions to supported aircraft. Use a placed aircra
 
 This guide covers jumps and drop routes. See [Vehicle Exit Actions](Vehicle-Exit-Actions) for left/right dismount controls, [Medical Vehicle Flags](Medical-Vehicle-Flags) for ACE medical tagging, and [Aircraft Boarding Action](Aircraft-Boarding-Actions) for a separate boarding-object interaction.
 
-## Beginner setup: choose one path
+## Quick setup: choose one path
 
 | If you want... | Start with... | Coding required |
 |---|---|---|
@@ -414,7 +414,7 @@ return `true` when forwarded, before the server has validated or completed the o
 server checks curator ownership for remote requests. Boarding points and jump actions are replayed
 to joining clients; removal clears their registration and actions.
 
-## Configuring Jump Parameters
+## Configuration reference: jump parameters
 
 Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to **all** aircraft: both auto-detected and manually set up:
 
@@ -463,7 +463,7 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 
 `Waldo_fnc_VehicleJumpSetup` applies both jump types using the parameters in `MissionConfig\airOperationsConfig.sqf`. To add left/right exit selection instead, see [Vehicle Exit Actions](Vehicle-Exit-Actions).
 
-## Beginner troubleshooting
+## If a jump fails
 
 | Symptom | Check first |
 |---|---|

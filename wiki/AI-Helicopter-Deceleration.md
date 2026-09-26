@@ -3,7 +3,7 @@
 > **Use this page when:** AI helicopters climb sharply while slowing down during ordinary cruise flight.
 
 Arma AI can trade forward speed for an unwanted zoom-climb while braking. This optional helper
-detects that specific trend—speed falling, altitude rising and the nose pitching up—and applies a
+detects falling speed, rising altitude and nose-up pitch. It applies a
 short downward world-space impulse on the machine that currently owns the aircraft. It does not
 replace waypoints, set velocity, change AI features or prescribe a route.
 
@@ -16,7 +16,7 @@ remote-controlled and UAV aircraft are never changed.
 
 [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) always wins. As soon as a LAND,
 UNLOAD, TRANSPORT UNLOAD, GET OUT, scripted landing, or WMP transport-destination order is active,
-the cruise helper stands down—even before Improved Landing enters its final control range. If the
+the cruise helper stands down. This happens before Improved Landing enters its final control range. If the
 landing controller becomes active during the same frame, correction releases before another
 impulse. The landing system remains solely responsible for approach, flare, go-around and touchdown.
 
@@ -24,7 +24,7 @@ This separation is deliberate. Cruise detection has no knowledge of landing slop
 touchdown commitment or go-around state, so using its force calculation inside an approach would
 make the two controllers fight rather than improve the landing.
 
-## Beginner setup
+## Quick setup
 
 1. Open `MissionConfig\aiConfig.sqf`.
 2. Change `Waldo_HelicopterDeceleration_Enable` from `false` to `true`.
@@ -38,7 +38,7 @@ No init call or ZEN module is required. To exclude one unusual airframe, put thi
 this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 ```
 
-### What you should edit
+## Settings reference
 
 | Setting | Type | Default | What it controls |
 |---|---|---:|---|
@@ -74,7 +74,7 @@ locality changes. It does not replay a past correction to joining players.
 There is intentionally no composition: the feature reacts to ordinary AI helicopter flight and has
 no object or station to place. Check it with a crewed AI helicopter on a representative route.
 
-## Safety model
+## Limitations and safety
 
 - correction runs only on the aircraft's current owner and follows locality migration;
 - terrain clearance is checked beneath the aircraft and 100, 300 and 500 metres ahead;

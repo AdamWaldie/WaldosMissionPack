@@ -70,6 +70,7 @@ TYPED_GUIDES = {
     "Waldos-Economy-Systems-Ground-Command-And-Tools",
     "Tasks-And-Objectives", "Persistence",
     "Virtual-Vehicle-Depot",
+    "Bomb-Defusal",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -133,6 +134,23 @@ FEATURE_GUIDES = {
     "Tasks-And-Objectives",
     "Persistence",
     "Virtual-Vehicle-Depot",
+    "Bomb-Defusal",
+    "ACRE2-Automated-CEOI-Document",
+    "ACRE2-Babel-Configuration",
+    "ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup",
+    "ACRE-2-Long-Range-Radio-Presetting",
+    "ACRE2-Vehicle-Radio-Rack-Setup",
+    "AI-Helicopter-Deceleration",
+    "Signal-Trackers",
+    "Squad-Rally-Points",
+    "Vehicle-Recovery",
+    "Vehicle-Exit-Actions",
+    "Transport-Services",
+    "Paradrop",
+    "Obituary-and-Confirmed-Deaths",
+    "WMP-HUD",
+    "Vehicle-Appearance",
+    "Vehicle-Weapon-Loadout",
 }
 
 GUIDE_SECTIONS = {

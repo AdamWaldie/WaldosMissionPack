@@ -7,7 +7,7 @@ The Obituary system is enabled by default. It records useful information when a 
 allows a qualified medic to confirm that death through ACE Self Interaction. Confirming a death
 does not kill, revive, delete, or otherwise alter the casualty. It only creates the report.
 
-## Fastest working setup
+## Quick setup
 
 You normally do not need to add a call, module, or composition:
 
@@ -91,7 +91,7 @@ This feature belongs to each medic's player object and the bodies already create
 placed prop would not configure or demonstrate anything necessary, and a Zeus module would duplicate
 the medic workflow. Check the ACE interaction with a playable medic and a dead player in your mission.
 
-## Troubleshooting
+## If a death report is missing
 
 ### Pronounce Dead is missing
 
