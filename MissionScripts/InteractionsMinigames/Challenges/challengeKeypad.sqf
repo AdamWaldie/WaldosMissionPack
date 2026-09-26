@@ -1,6 +1,14 @@
 /*
- * Industrial access-terminal code deduction procedure.
- * Config: [digits(3..6), maxGuesses, timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the industrial access-terminal code deduction procedure.
+ * Locality and authority: Creates a private client display; the resolver reports the final
+ * outcome. Repeated attempts reset the code, and no display state is JIP replayed.
+ * Arguments: 0: config <ARRAY> [digits 3..6, maxGuesses, timeLimit, title] ([] defaults);
+ *   1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[4, 6, 60, "ACCESS TERMINAL"], {}] call Waldo_fnc_MiniGameKeypad;
+ * Result: The player sees the keypad procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

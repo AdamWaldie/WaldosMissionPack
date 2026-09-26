@@ -7,6 +7,10 @@
  *
  * Example: [_table] call Waldo_fnc_MiniGameEquipmentPicker;
  * Current caller: the table's Field Equipment interaction action.
+ * Locality/Authority: Interface client only; it reads local table entries and opens local UI.
+ * Repeat/JIP Behaviour: Refuses a second picker while a challenge display is already open.
+ * Joining clients use their local table action; no picker state is replayed.
+ * Result: Returns true when the picker opens, false when unavailable or empty.
  */
 disableSerialization;
 params [

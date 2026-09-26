@@ -1,5 +1,14 @@
 /*
- * Fits plain text inside its existing control rectangle. Returns the selected font height.
+ * Author: WaldoTheWarfighter
+ * Purpose: Fits plain text inside an existing control rectangle.
+ * Locality/Authority: Interface client only; changes one local control.
+ * Repeat/JIP Behaviour: Repeat calls recompute the font height; no JIP UI replay.
+ * Arguments: 0: control <CONTROL>, default controlNull; 1: preferred height <NUMBER>,
+ * default 0.035; 2: minimum height <NUMBER>, default 0.014.
+ * Return Value: Selected font height <NUMBER>, or minimum for controlNull.
+ * Current Callers: MiniGameChallengeUI and field-equipment challenge openers.
+ * Example: [_title, 0.035, 0.014] call Waldo_fnc_MiniGameEquipmentFitText;
+ * Result: Shrinks the font until it fits, retaining the control's rectangle.
  */
 disableSerialization;
 params [

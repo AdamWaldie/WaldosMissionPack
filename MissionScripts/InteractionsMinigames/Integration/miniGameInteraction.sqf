@@ -39,6 +39,11 @@
  * [this, "minesweeper", [3], { (_this#0) setVariable ["hacked", true, true]; }, {}] call Waldo_fnc_MiniGameInteraction;
  *
  * Current callers: MiniGameInteractionSetup and direct Eden feature integrations.
+ * Locality/Authority: Call on server and every interface client. Server keeps authoritative
+ * callbacks and attempt state; interface clients install their own ACE/vanilla actions.
+ * Repeat/JIP Behaviour: Repeated setup refreshes local actions rather than stacking them.
+ * Published object state lets a joining client install an action with the current availability.
+ * Result: The object gains a gated procedure; this call does not report its eventual outcome.
  */
 
 params [

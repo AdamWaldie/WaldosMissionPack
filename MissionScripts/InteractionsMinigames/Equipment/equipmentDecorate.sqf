@@ -1,4 +1,16 @@
-/* Adds equipment-specific faceplate details to a challenge content area. */
+/*
+ * Author: WaldoTheWarfighter
+ * Draws the recessed faceplate and fasteners around a procedure's content area.
+ * Locality and authority: Creates only local controls on the player's active display.
+ * Each call adds a new decoration, so callers should invoke it once per display; no JIP
+ * gameplay state is involved.
+ * Arguments: 0: procedure display <DISPLAY>; 1: content rectangle <ARRAY of four NUMBERS>
+ *   in UI coordinates [x, y, width, height].
+ * Return Value: No supported value; controls are tracked on the display.
+ * Current caller: WMP interaction equipment display construction.
+ * Example: [_display, [_x, _y, _width, _height]] call Waldo_fnc_MiniGameEquipmentDecorate;
+ * Result: The display receives a recessed faceplate and four fasteners.
+ */
 disableSerialization;
 params [
     ["_display", displayNull, [displayNull]],
