@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Refresh spawn building side.
+ * Redraws the building-spawn prompt's selected owner-side label.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - spawn prompt
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuild_refreshSpawnBuildingSide;
+ * Locality/Authority: Curator interface client; presentation only.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP state.
+ * Current Callers: Building-spawn prompt opening and side arrow controls.
+ * Result: Label matches the selected side index.
  */
 
         params ["_disp"];
