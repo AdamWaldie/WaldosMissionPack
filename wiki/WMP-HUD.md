@@ -32,6 +32,11 @@ Script APIs are local: `Waldo_fnc_WmpHudInit`, `Waldo_fnc_WmpHudToggle`, `Waldo_
 
 ## Settings reference
 
+The settings preview uses the configured HUD icon, font and colour, mission icon/name permissions,
+and the same personal scale and opacity values as the live HUD. It is a presentation sample:
+in-world size, distance fading and eligibility still depend on mission settings and the viewed unit.
+Pending choices are not saved until **Apply**. The operator confirmed correct preview appearance and behaviour in the fresh 3840x2160 VR audit on 27 September 2026.
+
 These are the shipped values in `MissionConfig/interfaceConfig.sqf`. Change the values there, not in `init.sqf`. An empty classname list grants no access by that equipment route. An empty UID exclusion list excludes nobody.
 
 | Setting (`Waldo_WmpHud_` prefix) | Type | Shipped default | Meaning |

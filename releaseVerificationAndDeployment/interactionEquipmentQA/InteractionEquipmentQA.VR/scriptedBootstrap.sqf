@@ -17,6 +17,8 @@ private _functions = [
     ["Waldo_fnc_UiTheme", "MissionScripts\MissionFlowAndUi\uiTheme.sqf"],
     ["Waldo_fnc_RegisterUiReservationLocal", "MissionScripts\MissionFlowAndUi\registerUiReservationLocal.sqf"],
     ["Waldo_fnc_UnregisterUiReservationLocal", "MissionScripts\MissionFlowAndUi\unregisterUiReservationLocal.sqf"],
+    ["Waldo_fnc_CreateUiNotificationCardLocal", "MissionScripts\MissionFlowAndUi\createUiNotificationCardLocal.sqf"],
+    ["Waldo_fnc_LayoutUiNotificationCardLocal", "MissionScripts\MissionFlowAndUi\layoutUiNotificationCardLocal.sqf"],
     ["Waldo_fnc_ReflowUiPanels", "MissionScripts\MissionFlowAndUi\reflowUiPanels.sqf"],
     ["Waldo_fnc_DialogueShowLineLocal", "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueShowLineLocal.sqf"],
     ["Waldo_fnc_DialogueHideLocal", "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueHideLocal.sqf"],
