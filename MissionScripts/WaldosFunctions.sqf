@@ -257,6 +257,12 @@ class CfgFunctions
               class CleanupTransientUi {
                   file = "MissionScripts\MissionFlowAndUi\cleanupTransientUi.sqf";
               };
+              class CreateUiNotificationCardLocal {
+                  file = "MissionScripts\MissionFlowAndUi\createUiNotificationCardLocal.sqf";
+              };
+              class LayoutUiNotificationCardLocal {
+                  file = "MissionScripts\MissionFlowAndUi\layoutUiNotificationCardLocal.sqf";
+              };
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
               };

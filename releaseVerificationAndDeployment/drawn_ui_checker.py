@@ -79,6 +79,7 @@ def audit(root: Path = ROOT) -> tuple[list[str], list[str]]:
             layout_source = source
             if relative == "MissionFlowAndUi/showUiNotification.sqf":
                 layout_source += (scripts / "MissionFlowAndUi" / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+                layout_source += (scripts / "MissionFlowAndUi" / "createUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
             if "safeZone" not in layout_source:
                 findings.append(f"{relative}: transient panel has no safe-zone anchor")
             if "ctrlTextHeight" not in layout_source:

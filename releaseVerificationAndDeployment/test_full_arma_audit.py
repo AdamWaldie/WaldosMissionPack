@@ -3387,7 +3387,9 @@ class FullAuditTests(unittest.TestCase):
     def test_public_ui_notifications_and_local_cleanup_are_owned_and_repeat_safe(self):
         flow = ROOT / "MissionScripts" / "MissionFlowAndUi"
         show = (flow / "showUiNotification.sqf").read_text(encoding="utf-8")
+        show += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "createUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         reflow = (flow / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+        reflow += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "layoutUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         drain = (flow / "drainUiNotificationQueue.sqf").read_text(encoding="utf-8")
         placement = (flow / "setUiPanelPlacement.sqf").read_text(encoding="utf-8")
         local_placement = (flow / "setLocalUiPanelPlacement.sqf").read_text(encoding="utf-8")

@@ -47,9 +47,9 @@ uiNamespace setVariable ["Waldo_UI_ResolvedTheme", _resolved];
 if (!isNil "Waldo_fnc_RestyleUiNotificationsLocal") then {[] call Waldo_fnc_RestyleUiNotificationsLocal;};
 if (_preview && {hasInterface}) then {
     private _label = _resolved getOrDefault ["label", _themeId];
-    ["THEME ACTIVE", format ["%1 presentation is now active.", _label], "INFO", 10, "TOP_RIGHT", "UI_THEME_QA_1", "WMP UI QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
-    ["SEMANTIC SUCCESS", "Layout and feature behavior remain unchanged.", "SUCCESS", 10, "TOP_RIGHT", "UI_THEME_QA_2", "WMP UI QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
-    ["SEMANTIC WARNING", "Check contrast, font readability and three-lane stacking.", "WARNING", 10, "TOP_RIGHT", "UI_THEME_QA_3", "WMP UI QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+    ["THEME ACTIVE", format ["%1 presentation is now active.", _label], "INFO", 10, "TOP_RIGHT", "UI_THEME_QA_1", "WMP UI QA", "REPLACE", 0, false, false, 0, 0, _themeId] call Waldo_fnc_ShowUiNotification;
+    ["SEMANTIC SUCCESS", "Layout and feature behavior remain unchanged.", "SUCCESS", 10, "TOP_RIGHT", "UI_THEME_QA_2", "WMP UI QA", "REPLACE", 0, false, false, 0, 0, _themeId] call Waldo_fnc_ShowUiNotification;
+    ["SEMANTIC WARNING", "Check contrast, font readability and three-lane stacking.", "WARNING", 10, "TOP_RIGHT", "UI_THEME_QA_3", "WMP UI QA", "REPLACE", 0, false, false, 0, 0, _themeId] call Waldo_fnc_ShowUiNotification;
 };
 diag_log format [
     "[WMP UI] Visual theme applied locally: theme=%1 revision=%2 owner=%3 preview=%4.",

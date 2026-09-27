@@ -29,6 +29,8 @@ private _registry = +(uiNamespace getVariable ["Waldo_UiPanelRegistry", []]);
 private _restyled = 0;
 {
     private _entry = _x;
+    private _previewThemeId = _entry param [17, ""];
+    private _theme = if (_previewThemeId isEqualTo "") then {[] call Waldo_fnc_UiNotificationTheme} else {[_previewThemeId] call Waldo_fnc_UiTheme};
     private _controls = _entry param [1, []];
     private _metadata = _entry param [14, []];
     if (count _controls >= 4 && {count _metadata >= 4}) then {

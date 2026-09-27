@@ -19,6 +19,22 @@ with the token's safe blue, green, amber or violet fallback before any WMP contr
 
 ## Set a mission theme
 
+For a personal notification style, open **ACE Self Interact > WMP Options > Notification UI Settings**.
+The preview uses the live notification card renderer, including its frame, rails, symbols, font,
+colours and measured text layout. Changing theme, card size or entry motion redraws the sample.
+**Follow Mission** resolves the current mission theme; custom themes, token overrides and your
+colour-vision profile apply to the sample too. Reduced-motion accessibility settings still take
+priority. **Apply** saves the pending choices. **Cancel** discards them, and **Restore Defaults**
+changes only the pending selections. Preview controls belong to the dialog and disappear when it closes.
+
+The Zeus theme preview explicitly shows the selected mission theme even when the curator has a
+different personal notification theme. Ordinary notifications continue to use that personal choice.
+
+The preview changes have static regression coverage and passed operator testing in the fresh
+3840x2160 dedicated-server VR audit on 27 September 2026. The operator confirmed that all previews
+looked and worked correctly. A separate aspect-ratio matrix was not rerun; the gallery below is
+earlier capture evidence.
+
 Open `MissionConfig/interfaceConfig.sqf` and change the existing `Waldo_UI_Theme` row. For example:
 
 ```sqf

@@ -74,6 +74,13 @@ private _theme = [] call Waldo_fnc_UiTheme;
         };
     };
     _control ctrlCommit 0;
-} forEach allControls _display;
+} forEach ((allControls _display) select {!(_x getVariable ["Waldo_UI_OwnStyle", false])});
 _display setVariable ["Waldo_UI_ThemedDisplay", true];
+// Preview controls own their theme; refresh from pending selections after shell restyling.
+private _refresh = _display getVariable ["Waldo_UI_NotificationRefresh", {}];
+private _combo = _display getVariable ["Waldo_UI_NotificationThemeCombo", controlNull];
+if (!isNull _combo) then {[_combo] call _refresh;};
+private _hudRefresh = _display getVariable ["Waldo_WmpHud_RefreshPreview", {}];
+private _hudCombo = _display getVariable ["Waldo_WmpHud_DisplayCombo", controlNull];
+if (!isNull _hudCombo) then {[_hudCombo] call _hudRefresh;};
 true

@@ -530,6 +530,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_notification_scale_is_personal_persistent_and_live(self):
         apply = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiNotificationScaleApplyLocal.sqf").read_text(encoding="utf-8")
         show = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "showUiNotification.sqf").read_text(encoding="utf-8")
+        show += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "createUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         restyle = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         self.assertIn('profileNamespace setVariable ["Waldo_UI_NotificationScale"', apply)
@@ -544,6 +545,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_notification_entry_animation_follows_stack_direction(self):
         animate = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "animateUiNotificationEntryLocal.sqf").read_text(encoding="utf-8")
         show = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "showUiNotification.sqf").read_text(encoding="utf-8")
+        show += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "createUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         for placement in ("BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"):
             self.assertIn(f'"{placement}"', animate)
@@ -580,6 +582,7 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_notification_stack_reflows_surviving_cards(self):
         source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+        source += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "layoutUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         extended = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
         server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
@@ -1244,7 +1247,9 @@ class PrReviewAuditTests(unittest.TestCase):
         apply_local = (root / "uiThemeApplyLocal.sqf").read_text(encoding="utf-8")
         restyle_notifications = (root / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
         notification = (root / "showUiNotification.sqf").read_text(encoding="utf-8")
+        notification += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "createUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         reflow_notifications = (root / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+        reflow_notifications += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "layoutUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
         shared_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
@@ -1538,6 +1543,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_concurrent_hud_regions_reflow_and_yield_to_ace(self):
         ui_root = ROOT / "MissionScripts" / "MissionFlowAndUi"
         reflow = (ui_root / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+        reflow += (ROOT / "MissionScripts" / "MissionFlowAndUi" / "layoutUiNotificationCardLocal.sqf").read_text(encoding="utf-8")
         suppress = (ui_root / "setUiPanelsSuppressed.sqf").read_text(encoding="utf-8")
         priority = (ui_root / "setupUiAcePriority.sqf").read_text(encoding="utf-8")
         rally = (ROOT / "MissionScripts" / "Respawn" / "RallyPoint" / "rallyPointNotifyLocal.sqf").read_text(encoding="utf-8")

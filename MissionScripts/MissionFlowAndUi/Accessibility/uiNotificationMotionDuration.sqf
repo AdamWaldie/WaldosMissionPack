@@ -6,6 +6,7 @@
  *
  * Arguments:
  * 0: mission/default duration <NUMBER> (default Waldo_UiNotification_ReflowDuration)
+ * 1: pending motion mode <STRING> (default saved local/profile mode); read-only preview override.
  * Return Value: NUMBER - effective duration in seconds from 0 to 1.
  * Current callers: ReflowUiPanels and AnimateUiNotificationEntryLocal.
  * Example: [0.18] call Waldo_fnc_UiNotificationMotionDuration;
@@ -14,8 +15,8 @@
  * Result: Returns the effective notification movement time in seconds.
  */
 
-params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], [0]]];
-private _mode = toUpperANSI (missionNamespace getVariable ["Waldo_UI_NotificationMotionLocal", profileNamespace getVariable ["Waldo_UI_NotificationMotion", "NORMAL"]]);
+params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], [0]], ["_mode", missionNamespace getVariable ["Waldo_UI_NotificationMotionLocal", profileNamespace getVariable ["Waldo_UI_NotificationMotion", "NORMAL"]], [""]]];
+_mode = toUpperANSI _mode;
 if (profileNamespace getVariable ["Waldo_UI_ReducedMotion", false] && {_mode isEqualTo "NORMAL"}) then {_mode = "REDUCED";};
 switch (_mode) do {
     case "OFF": {0};
