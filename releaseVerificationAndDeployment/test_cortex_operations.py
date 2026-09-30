@@ -120,7 +120,9 @@ class CortexOperations(unittest.TestCase):
         tick=source('cortexGroupTick')
         for release in [garrison,defend]:
             self.assertIn('["_restore",true,[true]]',release)
-            self.assertIn('if (_restore) then {_x doFollow _leader}',release)
+            self.assertIn('_restore || {_ownedHold',release)
+            self.assertIn('_x doFollow _leader',release)
+            self.assertIn('["","STOP","ATTACK","FIRE","SUPPRESS"]',release)
         self.assertIn('[_group,false] call Waldo_fnc_CortexGarrisonRelease',tick)
         self.assertIn('[_group,false] call Waldo_fnc_CortexDefendRelease',tick)
 
@@ -920,6 +922,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_x doFollow _leader',support)
         self.assertIn('_state set ["movementLease",["INFANTRY_WITHDRAW",time+120]]',retreat)
         self.assertLess(retreat.index('CortexGroupMove'),retreat.index('["INFANTRY_WITHDRAW",time+120]'))
+
+    def test_replacement_orders_release_owned_garrison_and_defence_holds(self):
+        for name,marker in [
+            ('cortexDefendRelease','Waldo_AIPass_DefendHolding'),
+            ('cortexGarrisonRelease','Waldo_AIPass_GarrisonDisabledPath')]:
+            code=source(name)
+            self.assertIn(marker,code)
+            self.assertIn('toUpperANSI currentCommand _x',code)
+            self.assertIn('["","STOP","ATTACK","FIRE","SUPPRESS"]',code)
+            self.assertIn('_restore || {_ownedHold',code)
+            for external in ['MOVE','GET IN','GET OUT','ACTION','SCRIPTED']:
+                self.assertNotIn(f'"{external}"',code)
 
     def test_vehicle_movement_owns_its_waypoint_until_physical_completion(self):
         vehicles=source('cortexVehicles')

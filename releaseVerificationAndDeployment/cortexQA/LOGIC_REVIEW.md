@@ -483,3 +483,7 @@ Cortex samples cover only after speed falls below 1 km/h.
 Infantry withdrawal now releases the explicit `supportHeld` actors from both PATH locks and
 `doStop` before it issues the retreat route. The route acquires the shared movement lease as
 `INFANTRY_WITHDRAW`, preventing stale support cleanup or another tactic from replacing it.
+
+Garrison and defence replacement-order release now distinguishes Cortex-owned `doStop` holds from
+newer direct commands. Combat-labelled owned holds rejoin the leader so a fresh group waypoint can
+move them; direct movement, boarding, actions, and scripts remain untouched.

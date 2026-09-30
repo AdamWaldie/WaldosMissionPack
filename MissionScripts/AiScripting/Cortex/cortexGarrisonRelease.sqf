@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Ends a garrison order: soldiers can move again and return to their normal stance. Normal release
- * rejoins formation; replacement-order release clears Cortex state without issuing movement.
+ * rejoins formation; replacement-order release clears only a still-owned combat-labelled hold so
+ * a new group waypoint can move the soldier without overwriting a newer direct unit command.
  *
  * Re-enables PATH, restores each soldier's recorded stance and rejoins formation, and clears the
  * published order so no machine re-applies it. Called automatically when a garrison breaks (losses
@@ -40,6 +41,8 @@ private _leader = leader _group;
 {
     if (local _x) then {
         private _unit = _x;
+        private _ownedHold = (_unit getVariable ["Waldo_AIPass_GarrisonPos",[]]) isNotEqualTo []
+            || {_unit getVariable ["Waldo_AIPass_GarrisonDisabledPath",false]};
         {_unit removeEventHandler _x} forEach (_unit getVariable ["Waldo_AIPass_GarrisonHandlerIds", []]);
         _unit setVariable ["Waldo_AIPass_GarrisonHandlerIds", nil];
         _unit setVariable ["Waldo_AIPass_GarrisonHandlers", nil];
@@ -52,7 +55,10 @@ private _leader = leader _group;
                 _x setUnitPos (_x getVariable ["Waldo_AIPass_GarrisonStance", "AUTO"]);
             };
             _x doWatch objNull;
-            if (_restore) then {_x doFollow _leader};
+            private _command = toUpperANSI currentCommand _x;
+            if (_restore || {_ownedHold && {_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]}}) then {
+                _x doFollow _leader
+            };
         };
     };
     _x setVariable ["Waldo_Cortex_GarrisonDuckStance",nil,true];
