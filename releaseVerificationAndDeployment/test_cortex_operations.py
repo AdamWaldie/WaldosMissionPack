@@ -796,6 +796,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true}', requester)
         self.assertIn('[_state,"coordinated",10] call Waldo_fnc_CortexCooldown', requester)
 
+    def test_coordinated_approaches_do_not_cross_support_fire_lane(self):
+        server=source('cortexSupportAssaultServer')
+        self.assertNotIn('([90,-90] select (_sent mod 2 == 1))',server)
+        self.assertIn('private _crossesSupportLane=',server)
+        self.assertIn('_lateral < 22',server)
+        self.assertIn('!([_rally,_candidate] call _crossesSupportLane)',server)
+        self.assertIn('_approaches findIf {_x distance2D _candidate < 35} < 0',server)
+        self.assertIn('forEach [[45,90],[85,90],[65,135],[45,-90],[85,-90],[65,-135]]',server)
+        self.assertIn('private _score=_rally distance2D _candidate',server)
+
     def test_coordinated_assault_owns_requester_movement_before_local_tactics(self):
         tick=source('cortexGroupTick')
         coordinated=source('cortexCoordinatedAssault')

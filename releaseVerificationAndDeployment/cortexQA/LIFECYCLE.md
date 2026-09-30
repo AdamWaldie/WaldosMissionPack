@@ -82,6 +82,8 @@ These are intended outcomes, not claims that current live tests pass.
 
 Multi-squad variants require assigned supporting/manoeuvring squads, coordinated progress and a shared consolidation plan. They are not proved by a single-squad pass. QA cards must distinguish these intended manoeuvres from the narrower scenario currently being exercised.
 
+Coordinated assault approach assignment now evaluates bounded left/right candidates from each helper's durable rally area. It rejects routes that enter the requester's firing corridor, selects the shortest safe route and keeps squad approach points at least 35 metres apart. This removes the previous dispatch-order alternation that could make a helper cross the base of fire. Terrain cover/concealment scoring and physical live acceptance remain outstanding.
+
 Recovery follow-up: saved controller now tracks stragglers, continues only with at least two actors and 60 percent of the original element, bounds rejoin attempts and reports PARTIAL when separation remains. Rejoining requires usable PATH/MOVE and occurs between movement stages, avoiding mid-bound insertion into obsolete slots. Controlled PATH-inhibition fixtures were added; physical geometry blockage, separated leaders, multiple blocked actors, migration and explicit fallback notifications remain pending.
 
 Movement ROE candidate: RED movers use YELLOW during each bound to retain firing without independent pursuit. At halt, release or ownership adoption, restore the original value only if the current value still matches the Cortex-applied override. Other authored modes and later external changes are preserved. Live acceptance remains pending.
