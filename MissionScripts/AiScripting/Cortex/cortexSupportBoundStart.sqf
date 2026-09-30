@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Runs one reserved squad bound as two successive fire-team movements.
  * Locality/authority: group owner consumes the current server role and matching lease.
- * Repeat/JIP: sequence prevents duplicate starts; migration restores old overrides before
+ * Repeat/JIP: sequence prevents duplicate starts; migration restores mover leases before
  * the new owner consumes the durable role. Uses the existing bounded movement scheduler.
  * Arguments: 0: group <GROUP>; 1: state <HASHMAP>; 2: role <ARRAY>, required.
  * Return: Boolean, true if a finite bound starts. Current caller: CortexSupportMaintain.
@@ -22,8 +22,6 @@ private _first=_riflemen select [0,(floor (count _fit/2)) min count _riflemen];
 if (count _first < 2) exitWith {false};
 private _second=_fit-_first;
 private _token=format ["SUPPORT:%1:%2:%3",_leaseToken,_sequence,clientOwner];
-if !("baseAttack" in _state) then {_state set ["baseAttack",attackEnabled _group]; _state set ["attackChanged",attackEnabled _group]};
-_group enableAttack false;
 _state set ["drill",createHashMapFromArray [
     ["token",_token],["supportToken",_leaseToken],["supportSequence",_sequence],
     ["type","ADVANCE"],["teams",[_first,_second]],["teamSizes",[count _first,count _second]],["teamTurn",0],["units",_fit],["desiredStrength",count _fit],

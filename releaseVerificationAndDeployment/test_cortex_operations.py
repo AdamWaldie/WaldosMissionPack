@@ -749,11 +749,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('abs speed _x > 2',qa)
         self.assertIn('_shots-(_shotCounts select _i)',qa)
 
-    def test_assault_attack_setting_is_captured_and_restored(self):
+    def test_assault_preserves_group_attack_setting(self):
         apply=source('cortexSupportApply')
-        self.assertIn('if (_attackAllowed && {!("baseAttack" in _state)})', apply)
-        self.assertIn('set ["baseAttack",attackEnabled _group]', apply)
-        self.assertIn('if (_attackAllowed && {attackEnabled _group})', apply)
+        self.assertNotIn('enableAttack false',apply)
+        self.assertNotIn('set ["baseAttack",attackEnabled _group]',apply)
+        self.assertNotIn('enableAttack false',source('cortexSupportBoundStart'))
         maintain=source('cortexSupportMaintain')
         self.assertEqual(2, maintain.count('call _restoreAttack;'))
         self.assertIn('enableAttack (_state getOrDefault ["baseAttack",true])', maintain)
@@ -832,7 +832,7 @@ class CortexOperations(unittest.TestCase):
             text = source(name)
             guard = 'if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {false};'
             self.assertIn(guard, text)
-            self.assertLess(text.index(guard), text.index('_group enableAttack false'))
+            self.assertNotIn('_group enableAttack false',text)
 
     def test_assault_contact_does_not_force_combat_mode(self):
         text = source('cortexGroupTick').split('private _beginContact = {')[1].split('switch (_state get "phase")')[0]
@@ -852,13 +852,12 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_reason == "COMPLETE") then', end)
         self.assertIn('Waldo_Cortex_DrillResult', end)
 
-    def test_drill_attack_assignment_restores_after_transfer(self):
-        for name in ['cortexFlankStart','cortexAdvanceStart']:
-            self.assertIn('attackEnabled _group',source(name))
-            self.assertIn('_group enableAttack false',source(name))
-        for name in ['cortexFlankEnd','cortexRestoreCalm']:
-            self.assertIn('_group enableAttack (_state getOrDefault ["baseAttack",true])',source(name))
-        self.assertIn('"baseAttack", "attackChanged"',source('cortexCheckpoint'))
+    def test_manoeuvres_preserve_covering_element_attack_assignment(self):
+        for name in ['cortexFlankStart','cortexAdvanceStart','cortexSupportApply','cortexSupportBoundStart']:
+            self.assertNotIn('_group enableAttack false',source(name))
+        step=source('cortexFlankStep')
+        for feature in ['TARGET','AUTOTARGET','AUTOCOMBAT']:
+            self.assertIn(f'_unit disableAI "{feature}"',step)
 
     def test_every_ai_setting_has_an_acceptance_case(self):
         import re, json

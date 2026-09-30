@@ -151,10 +151,9 @@ if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCoo
 
 private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
 
-// Keep engine leader attack assignments from replacing individual movement bounds.
-_state set ["baseAttack",attackEnabled _group];
-_state set ["attackChanged",attackEnabled _group];
-if (attackEnabled _group) then {_group enableAttack false};
+// Keep native target sharing and engagement available to the covering element.
+// CortexFlankStep leases pursuit features only from the soldiers currently moving;
+// disabling attack assignment for the whole squad made its base of fire inert.
 private _serial = (missionNamespace getVariable ["Waldo_Cortex_DrillSerial",0]) + 1;
 missionNamespace setVariable ["Waldo_Cortex_DrillSerial",_serial];
 private _token = format ["%1:%2",clientOwner,_serial];

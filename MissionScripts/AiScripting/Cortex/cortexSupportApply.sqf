@@ -5,8 +5,8 @@
  * Repeat/JIP: at most five seconds waiting for ordered state; stale tokens never issue movement.
  * Rally uses a finite MOVE. Assault hands movement to server-assigned squad roles and
  * owner-local successive fire-team bounds; it does not issue a competing whole-squad waypoint.
- * Autonomous individual attack orders are suspended during assault, checkpointed for migration,
- * and restored on release. Normal weapon engagement remains enabled.
+ * During assault, each bound leases pursuit features only from its current moving fire team.
+ * The covering fire team and other squads retain native target sharing and engagement.
  * Rally movement also uses 10 m completion; readiness requires physical squad arrival in GroupTick.
  * Arguments: 0: job <HASHMAP> containing group, lease and waitUntil.
  * Return Value: Retry delay in seconds or -1 after acknowledgement.
@@ -42,12 +42,6 @@ private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!
     && {!_needAT || {_fit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
 private _attackAllowed = _attack isNotEqualTo [] && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 if (_okay && {!_same || {_attackAllowed && {!(_state getOrDefault ["assaulting",false])}}}) then {
-    if (_attackAllowed && {!("baseAttack" in _state)}) then {
-        _state set ["baseAttack",attackEnabled _group];
-        _state set ["attackChanged",attackEnabled _group];
-    };
-    // Keep members on the assigned group movement; weapons can still engage normally.
-    if (_attackAllowed && {attackEnabled _group}) then {_group enableAttack false};
     if (_attackAllowed) then {[_group] call Waldo_fnc_CortexGroupMoveClear} else {[_group,_rally,10,"MOVE"] call Waldo_fnc_CortexGroupMove};
     _state set ["assaulting",_attackAllowed];
     _state set ["responding",true]; _state set ["respondingTo",_requester];

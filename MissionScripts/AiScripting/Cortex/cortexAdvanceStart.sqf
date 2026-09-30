@@ -10,6 +10,8 @@
  * behaviour profile's advanceChance roll must succeed. Two elements advance successively: riflemen
  * move first while the leader/support element covers, then hold while that element closes up.
  * Both elements must physically arrive before the next bound. Movers retain firing permission while the other element covers.
+ * Group attack assignment remains enabled so the covering element can acquire and share targets;
+ * only the current movers receive short, owned pursuit-feature leases in CortexFlankStep.
  * This is successive bounding overwatch, not alternating leapfrog or multi-squad coordination.
  * Locality and authority: call where the group is local.
  *
@@ -68,10 +70,8 @@ private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistanc
 private _goal = _start getPos [((_start distance2D _objective) - 20) min (_bound * 3), _start getDir _objective];
 if (surfaceIsWater _goal) exitWith {[_state, "advance", 30] call Waldo_fnc_CortexCooldown; false};
 private _points = [_start, [_goal], "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
-// Keep engine leader attack assignments from replacing individual movement bounds.
-_state set ["baseAttack",attackEnabled _group];
-_state set ["attackChanged",attackEnabled _group];
-if (attackEnabled _group) then {_group enableAttack false};
+// Do not suppress the whole squad's attack assignment. CortexFlankStep protects only
+// the current moving element while the paired element continues native engagement.
 private _serial = (missionNamespace getVariable ["Waldo_Cortex_DrillSerial",0]) + 1;
 missionNamespace setVariable ["Waldo_Cortex_DrillSerial",_serial];
 private _token = format ["%1:%2",clientOwner,_serial];
