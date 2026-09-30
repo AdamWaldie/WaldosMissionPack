@@ -91,7 +91,9 @@ than every five seconds; wheeled paths no more than every three seconds.
 
 Column speed is capped by the configured maximum and 80% of the slowest surviving vehicle's declared
 maximum speed. Vehicle dimensions set a minimum physical gap. Away from contact, the leader waits
-when a gap exceeds three times its target spacing. Followers use gap and relative-speed corrections;
+when a gap exceeds three times its target spacing. Followers on the same heading use forward
+separation as well as physical distance, so a lateral offset cannot satisfy the target and stabilize
+a wedge. Followers use gap and relative-speed corrections;
 a 20-second stall invokes formation following with a ten-second path retry delay. Leader waypoints
 remain intact. New travel orders clear the lead driver's previous hold.
 

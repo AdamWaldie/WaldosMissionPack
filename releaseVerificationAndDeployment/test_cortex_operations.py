@@ -1493,7 +1493,15 @@ class CortexOperations(unittest.TestCase):
         text=(ROOT/'MissionScripts/AiScripting/convoyTick.sqf').read_text()
         self.assertNotIn('_frontDistance > _desiredGap * 0.7',text)
         self.assertNotIn('_frontDistance < _gap',text)
-        self.assertIn('private _limit = (_frontSpeed + (_gap-_desiredGap)*0.4) max 0;',text)
+        self.assertIn('private _limit = (_frontSpeed + (_controlGap-_desiredGap)*0.4) max 0;',text)
+
+    def test_convoy_spacing_cannot_stabilize_a_lateral_wedge(self):
+        text=(ROOT/'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
+        self.assertIn('private _controlGap = _gap;',text)
+        self.assertIn('_controlGap=(_delta vectorDotProduct _direction) max 0;',text)
+        self.assertIn('private _lateralOffset = 0;',text)
+        self.assertIn('_lateralOffset > _tolerance',text)
+        self.assertIn('_pairGap=(_delta vectorDotProduct _direction) max 0;',text)
 
     def test_convoy_snapshot_preserves_navigation_before_release(self):
         text=(ROOT/'MissionScripts/AiScripting/convoySync.sqf').read_text()

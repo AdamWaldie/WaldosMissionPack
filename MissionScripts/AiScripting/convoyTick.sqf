@@ -3,6 +3,7 @@
  * Drives mixed convoys along each predecessor trail, detects arrival and requests a persistent halt after pinned contact.
  * Locality/authority: server owns phase; group owner drives and reports, each cargo/turret owner applies crew work.
  * Spacing uses a size-aware target with a 20 percent tolerance band (at least 3 m).
+ * Aligned vehicles use forward separation, so lateral spread cannot satisfy the gap and stabilize a wedge.
  * Speed corrects toward the target; the tolerance band bounds catch-up and stronger close-gap braking.
  * Acceleration is bounded; outside contact the lead slows to let stretched followers catch up.
  * Path refreshes do not repeatedly stop drivers, and tracked vehicles receive longer look-ahead targets.
@@ -186,7 +187,22 @@ private _turn = abs (((getDir _lead - (_state get "heading") + 540) mod 360) - 1
 _state set ["heading", getDir _lead];
 private _stretch = 0;
 for "_i" from 1 to (count _vehicles - 1) do {
-    _stretch = _stretch max (((_vehicles select _i) distance2D (_vehicles select (_i - 1))) / (_gaps select _i));
+    private _follower=_vehicles select _i;
+    private _front=_vehicles select (_i-1);
+    private _pairGap=_follower distance2D _front;
+    private _headingDifference=abs (((getDir _follower-getDir _front+540) mod 360)-180);
+    // On a common heading, Euclidean distance rewards lateral spread: a 40 m
+    // side-by-side offset looks like a perfect 40 m convoy gap. Measure the
+    // forward component instead. Turning pairs retain normal distance so the
+    // controller does not mistake a legitimate corner for compression.
+    if (_headingDifference <= 25 && {_pairGap <= (_gaps select _i)*1.8}) then {
+        private _direction=vectorDir _front;
+        _direction set [2,0];
+        private _delta=(getPosATL _front) vectorDiff (getPosATL _follower);
+        _delta set [2,0];
+        _pairGap=(_delta vectorDotProduct _direction) max 0;
+    };
+    _stretch = _stretch max (_pairGap / (_gaps select _i));
 };
 // During contact, keep the front moving instead of waiting inside the ambush for a disabled rear vehicle.
 private _leadLimit = (_maximum - ((_stretch - 1.2) max 0) * 5 - (_turn min 60) * 0.4) max 5;
@@ -255,17 +271,31 @@ for "_i" from 1 to (count _vehicles - 1) do {
     private _bodyGap = (((_specs get (netId _vehicle)) select 1) + ((_specs get (netId _front)) select 1))*0.5+5;
     private _gapLow = (_desiredGap - _tolerance) max _bodyGap;
     private _gapHigh = _desiredGap + _tolerance;
+    private _controlGap = _gap;
+    private _lateralOffset = 0;
+    private _headingDifference=abs (((getDir _vehicle-getDir _front+540) mod 360)-180);
+    if (_headingDifference <= 25 && {_gap <= _desiredGap*1.8}) then {
+        private _direction=vectorDir _front;
+        _direction set [2,0];
+        private _delta=(getPosATL _front) vectorDiff (getPosATL _vehicle);
+        _delta set [2,0];
+        _controlGap=(_delta vectorDotProduct _direction) max 0;
+        _lateralOffset=sqrt ((_gap*_gap-_controlGap*_controlGap) max 0);
+    };
     private _frontSpeed = abs speed _front;
     private _previous = _speedLimits getOrDefault [_key,[_frontSpeed,time-1]];
     // Match predecessor speed at the requested gap; proportional correction avoids drifting along a band edge.
     // Acceleration remains bounded below, while compression still applies an immediate braking cap.
-    private _limit = (_frontSpeed + (_gap-_desiredGap)*0.4) max 0;
-    if (_gap > _gapHigh) then {_limit = _limit max 5};
-    if (_gap < _gapLow) then {_limit = _limit min ((_frontSpeed-(_gapLow-_gap)*1.2) max 0)};
+    private _limit = (_frontSpeed + (_controlGap-_desiredGap)*0.4) max 0;
+    if (_controlGap > _gapHigh) then {_limit = _limit max 5};
+    if (_controlGap < _gapLow) then {_limit = _limit min ((_frontSpeed-(_gapLow-_controlGap)*1.2) max 0)};
     // A stationary/braking predecessor must still constrain us inside the tolerance band.
-    private _closingCap = (_frontSpeed + ((_gap-_gapLow) max 0)*0.8) min _maximum;
+    private _closingCap = (_frontSpeed + ((_controlGap-_gapLow) max 0)*0.8) min _maximum;
     private _elapsed = ((time-(_previous select 1)) max 0.1) min 3;
     _limit = ((_limit min ((_previous select 0)+4*_elapsed)) min _closingCap) max 0;
+    // Keep enough motion to steer back onto the recorded predecessor track.
+    // A full stop while physically clear but offset would preserve the wedge indefinitely.
+    if (_lateralOffset > _tolerance && {_gap > _gapLow} && {_pathOwners getOrDefault [_key,false]}) then {_limit=_limit max 5};
     _limit = [_vehicle,_limit,_group] call Waldo_fnc_CortexInfantrySpeed;
     _vehicle forceSpeed (_limit / 3.6);
     _speedLimits set [_key,[_limit,time]];
