@@ -8,7 +8,8 @@
  * reaction delay, each local AI soldier
  * on foot within 12 m reacts if he can see the grenade or it is within 5 m, with a chance based on his
  * general skill and reduced by suppression. Escape spots are spread out, 9 m away from the grenade,
- * and moved into cover facing it where possible. Soldiers rejoin formation 6 s later; flank element
+ * and moved into cover facing it where possible. One Cortex scheduler job per grenade checks every
+ * reacting soldier six seconds later; no callback or scheduler is created per unit. Flank element
  * members are left to their drill. Delayed regroup requires the same group, Zeus token and
  * evasion destination, an on-foot combat-effective soldier and no newer drill; and soldiers held in place by a garrison order (PATH disabled)
  * cannot move and are skipped.
@@ -17,7 +18,7 @@
  *
  * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
- * 0: job <HASHMAP> - contains "projectile"
+ * 0: job <HASHMAP> - contains "projectile", or internal "regroup" actor records
  *
  * Return Value:
  * Number - -1 (one-shot)
@@ -30,6 +31,24 @@
  */
 
 params [["_job", createHashMap, [createHashMap]]];
+private _regroup = _job getOrDefault ["regroup", []];
+if (_regroup isNotEqualTo []) exitWith {
+    {
+        _x params ["_unit","_group","_spot","_hold"];
+        if (local _unit && {group _unit == _group} && {vehicle _unit == _unit}
+            && {[_unit] call Waldo_fnc_CortexCombatEffective}
+            && {_unit checkAIFeature "PATH"}
+            && {[_group] call Waldo_fnc_CortexIsEligible}
+            && {(_group getVariable ["Waldo_AIPass_ZeusHold",[]]) isEqualTo _hold}
+            && {((expectedDestination _unit) select 0) distance2D _spot <= 1}) then {
+            private _drill = (_group getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["drill",createHashMap];
+            if (!(_unit in (_drill getOrDefault ["units",[]])) && {alive leader _group}) then {
+                _unit doFollow (leader _group);
+            };
+        };
+    } forEach _regroup;
+    -1
+};
 private _grenade = _job getOrDefault ["projectile", objNull];
 if (isNull _grenade || {!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", true])}) exitWith {-1};
 private _grenadePos = getPosATL _grenade;
@@ -37,6 +56,7 @@ private _grenadeASL = getPosASL _grenade;
 private _checkedGroups = [];
 private _checkedResults = [];
 private _reacted = 0;
+private _regroupActors = [];
 {
     private _unit = _x;
     private _group = group _unit;
@@ -44,7 +64,7 @@ private _reacted = 0;
     if (_groupIndex < 0) then {
         _groupIndex = count _checkedGroups;
         _checkedGroups pushBack _group;
-        _checkedResults pushBack ([_group] call Waldo_fnc_CortexIsEligible && {[_group,"Waldo_AIPass_GrenadeEvasion_Enable",false] call Waldo_fnc_CortexFeatureEnabled});
+        _checkedResults pushBack ([_group] call Waldo_fnc_CortexIsEligible && {[_group,"Waldo_AIPass_GrenadeEvasion_Enable",true] call Waldo_fnc_CortexFeatureEnabled});
     };
     private _drillUnits = ((_group getVariable ["Waldo_AIPass_State", createHashMap]) getOrDefault ["drill", createHashMap]) getOrDefault ["units", []];
     if (local _unit && {!isPlayer _unit} && {[_unit] call Waldo_fnc_CortexCombatEffective} && {vehicle _unit == _unit} && {_unit checkAIFeature "PATH"}
@@ -56,22 +76,12 @@ private _reacted = 0;
             private _spot = ([(getPosATL _unit) getPos [9, _direction], _grenadePos, 6, [], _group] call Waldo_fnc_CortexFindCover) select 0;
             _unit doMove _spot;
             _reacted = _reacted + 1;
-            [{
-                params ["_unit","_group","_spot","_hold"];
-                if (!local _unit || {group _unit != _group} || {vehicle _unit != _unit}
-                    || {!([_unit] call Waldo_fnc_CortexCombatEffective)}
-                    || {!(_unit checkAIFeature "PATH")}
-                    || {!([_group] call Waldo_fnc_CortexIsEligible)}
-                    || {(_group getVariable ["Waldo_AIPass_ZeusHold",[]]) isNotEqualTo _hold}
-                    || {((expectedDestination _unit) select 0) distance2D _spot > 1}) exitWith {};
-                private _drill = (_group getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["drill",createHashMap];
-                if (_unit in (_drill getOrDefault ["units",[]])) exitWith {};
-                if (alive leader _group) then {_unit doFollow (leader _group)};
-            }, [_unit,_group,+_spot,+(_group getVariable ["Waldo_AIPass_ZeusHold",[]])], 6] call CBA_fnc_waitAndExecute;
+            _regroupActors pushBack [_unit,_group,+_spot,+(_group getVariable ["Waldo_AIPass_ZeusHold",[]])];
         };
     };
 } forEach (_grenade nearEntities ["CAManBase", 12]);
 if (_reacted > 0) then {
     missionNamespace setVariable ["Waldo_AIPass_GrenadeReactions", (missionNamespace getVariable ["Waldo_AIPass_GrenadeReactions", 0]) + _reacted];
+    [Waldo_fnc_CortexGrenadeCheck,createHashMapFromArray [["regroup",_regroupActors]],6] call Waldo_fnc_CortexQueueJob;
 };
 -1

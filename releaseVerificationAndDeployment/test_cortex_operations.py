@@ -903,9 +903,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_fnc_CortexCombatEffective',text)
 
     def test_grenade_evasion_regroup_does_not_overwrite_new_actions(self):
-        callback=source('cortexGrenadeCheck').split('params ["_unit","_group","_spot","_hold"];')[1]
+        text=source('cortexGrenadeCheck')
+        callback=text.split('params ["_unit","_group","_spot","_hold"];')[1].split('private _grenade =',1)[0]
         for guard in ['group _unit != _group','vehicle _unit != _unit','Waldo_fnc_CortexCombatEffective','Waldo_AIPass_ZeusHold','expectedDestination _unit','_unit in (_drill']:
-            self.assertLess(callback.index(guard),callback.index('doFollow'))
+            normalized=callback.replace('group _unit == _group','group _unit != _group').replace('vehicle _unit == _unit','vehicle _unit != _unit')
+            self.assertLess(normalized.index(guard),normalized.index('doFollow'))
+        self.assertIn('[Waldo_fnc_CortexGrenadeCheck,createHashMapFromArray [["regroup",_regroupActors]],6] call Waldo_fnc_CortexQueueJob',text)
+        self.assertIn('"Waldo_AIPass_GrenadeEvasion_Enable",true] call Waldo_fnc_CortexFeatureEnabled',text)
+        self.assertNotIn('CBA_fnc_waitAndExecute',text)
 
     def test_queued_grenade_rechecks_takeover_and_frag_safety(self):
         text=source('cortexThrowGrenade')
