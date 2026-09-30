@@ -308,7 +308,8 @@ class CortexContracts(unittest.TestCase):
         discover = source('cortexDiscover')
         permission = source('cortexAircraftEligible')
         self.assertIn('[_vehicle] call Waldo_fnc_CortexAircraftEligible', discover)
-        self.assertIn('[_this] call Waldo_fnc_CortexAircraftEligible', discover)
+        self.assertIn('{[_vehicle] call Waldo_fnc_CortexAircraftEligible}', discover)
+        self.assertIn('Waldo_Cortex_FlareBurstGeneration', discover)
         for guard in ['local _aircraft', 'CortexIsPaused', 'CortexZeusHeld',
                       'Waldo_AI_ExternalControl', 'bis_fnc_moduleRemoteControl_owner',
                       'Waldo_AIPass_IncludedSides', 'Waldo_AI_ExcludedFactions',

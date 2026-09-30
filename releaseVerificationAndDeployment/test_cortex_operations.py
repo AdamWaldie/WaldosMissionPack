@@ -1933,6 +1933,18 @@ class CortexOperations(unittest.TestCase):
                             'CortexIsEligible','CortexAircraftEligible']:
             self.assertIn(requirement,block)
 
+    def test_delayed_missile_flare_bursts_are_generation_owned(self):
+        discover=source('cortexDiscover')
+        for requirement in ['Waldo_Cortex_FlareBurstGeneration',
+                            'params ["_vehicle","_generation"]',
+                            '== _generation',
+                            '[_vehicle,_generation], _burst * 0.4']:
+            self.assertIn(requirement,discover)
+        stop=source('cortexStop')
+        self.assertIn('Waldo_Cortex_FlareBurstGeneration',stop)
+        self.assertLess(stop.index('Waldo_Cortex_FlareBurstGeneration'),
+                        stop.index('Waldo_AIPass_FlaresHandler", nil'))
+
     def test_attack_flare_audit_preserves_missile_cases_and_uses_real_flight(self):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
         for item in ['AIR-paired-real-threats','O_Heli_Attack_02_dynamicLoadout_F','O_Plane_CAS_02_dynamicLoadout_F','-physical-flight','-approach-release','-departure-release','-ammunition-consumed','-no-cortex-release','addEventHandler ["Fired"']:

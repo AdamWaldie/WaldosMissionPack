@@ -24,6 +24,8 @@
  * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
  *
  * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
+ * Missile-warning bursts carry an owner-local generation token, so handler replacement, locality
+ * migration or a stop/restart cannot revive countermeasures queued by an earlier Cortex run.
  * Arguments:
  * 0: job <HASHMAP> - unused
  *
@@ -134,20 +136,28 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
             if (_wantFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_AIPass_FlaresInstalled", false])}
                 && {!isNil {_vehicle getVariable "Waldo_Gunship_Id"} || {!isNil {_vehicle getVariable "Waldo_DynamicAA_SystemId"}}}) then {
                 _vehicle setVariable ["Waldo_AIPass_FlaresInstalled", true];
+                // The value is intentionally owner-local. A newly installed owner handler advances it,
+                // permanently invalidating callbacks left by an earlier handler on this machine.
+                _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",
+                    (_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1];
                 private _handler = _vehicle addEventHandler ["IncomingMissile", {
                     params ["_vehicle", "", "_shooter"];
                     if !([_vehicle] call Waldo_fnc_CortexAircraftEligible) exitWith {};
                     if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
                     _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
                     if ([group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled) then {
+                        private _generation=(_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1;
+                        _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",_generation];
                         for "_burst" from 0 to 2 do {
                             [{
-                                if ([_this] call Waldo_fnc_CortexAircraftEligible
-                                    && {[group driver _this,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled}
+                                params ["_vehicle","_generation"];
+                                if ((_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",-1]) == _generation
+                                    && {[_vehicle] call Waldo_fnc_CortexAircraftEligible}
+                                    && {[group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled}
                                     ) then {
-                                    [_this] call Waldo_fnc_CortexFireCountermeasure;
+                                    [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
                                 };
-                            }, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
+                            }, [_vehicle,_generation], _burst * 0.4] call CBA_fnc_waitAndExecute;
                         };
                     };
                     // Break-away: one sideways jink away from the shooter, without touching

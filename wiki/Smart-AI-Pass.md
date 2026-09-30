@@ -100,7 +100,7 @@ normal CALM cleanup. Search actors rejoin and Cortex-owned movement and settings
 group does not wait for the old phase timeout. CONTACT remains active because its individual
 behaviours have separate switches and the contact state owns the safe transition back to the mission.
 
-Aircraft reactions recheck owner locality, active/pause state, pilot health, explicit exclusions, included sides/factions and Zeus priority. Delayed flare bursts repeat these checks. WMP gunship/Dynamic AA ownership is expected here; it does not grant an exemption from explicit compatibility exclusions. The live aircraft QA is partial and not yet accepted across native-AI, low-altitude and ownership variants.
+Aircraft reactions recheck owner locality, active/pause state, pilot health, explicit exclusions, included sides/factions and Zeus priority. Delayed flare bursts repeat these checks and carry an owner-local generation token. Handler replacement, locality migration and Cortex stop/restart advance or replace that token, so a countermeasure queued by an earlier run cannot fire under a later run. WMP gunship/Dynamic AA ownership is expected here; it does not grant an exemption from explicit compatibility exclusions. The live aircraft QA is partial and not yet accepted across native-AI, low-altitude and ownership variants.
 
 ## Behaviour profiles
 
