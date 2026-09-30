@@ -31,6 +31,17 @@ _group setVariable ["Waldo_AIPass_Managed", nil];
 {_group setVariable [_x, nil]} forEach ["Waldo_AIPass_GarrisonApplied", "Waldo_AIPass_DefendApplied", "Waldo_AIPass_ClearApplied"];
 _group setVariable ["Waldo_AIPass_Adopted", _gained];
 if (!_gained || {!local _group}) exitWith {};
+// A pending shoot-and-scoot request is durable, but its queued callback belonged to the old owner.
+// Resume it once on the new vehicle owner; the server token still authenticates the request.
+private _scootVehicles = [];
+{
+    private _vehicle = vehicle _x;
+    if (_vehicle != _x && {!(_vehicle in _scootVehicles)}) then {
+        _scootVehicles pushBack _vehicle;
+        private _scootToken = _vehicle getVariable ["Waldo_Cortex_ArtilleryScootToken",""];
+        if (_scootToken != "") then {[_vehicle,_scootToken] call Waldo_fnc_CortexArtilleryScoot};
+    };
+} forEach units _group;
 // Recovery is cancelled by adoption, not silently resumed from stale diagnostics.
 if ((_group getVariable ["Waldo_Cortex_DrillRecovery",[]]) isNotEqualTo []) then {
     _group setVariable ["Waldo_Cortex_DrillRecovery",["MIGRATED",[],-1],true];

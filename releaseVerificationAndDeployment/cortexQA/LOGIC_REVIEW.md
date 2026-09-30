@@ -461,3 +461,9 @@ Cortex movement acquisition. Gunnery and the other contact layers continue norma
 The ownership check is deliberately not an early return from vehicle handling: it blocks only a new
 destination. Target selection, firing, onboard reports and passenger handling still run during the
 move.
+
+The lease is now a shared group-movement contract rather than a vehicle-only flag. Mobile artillery
+uses it for shoot-and-scoot. A battery waits in bounded five-second steps if a manoeuvre or explicit
+order already owns movement, then acquires the lease when free. Contact entry and investigation
+observe the lease even if vehicle tactics are disabled. The authenticated request token and deadline
+are public so a new group owner can resume a pending relocation after locality migration.

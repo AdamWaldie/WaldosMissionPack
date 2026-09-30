@@ -44,13 +44,13 @@
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
-private _vehicleMove = _state getOrDefault ["vehicleMovement",[]];
+private _vehicleMove = _state getOrDefault ["movementLease",[]];
 private _activeVehicleMove = false;
 if (_vehicleMove isNotEqualTo []) then {
     _activeVehicleMove = ((waypoints _group) findIf {
         (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
     } >= 0) && {time < (_vehicleMove select 1)};
-    if (!_activeVehicleMove) then {_state deleteAt "vehicleMovement"};
+    if (!_activeVehicleMove) then {_state deleteAt "movementLease"};
 };
 // Movement ownership blocks only another destination. Reporting, dismount handling and
 // gunnery remain composable for the duration of the physical move.
@@ -118,7 +118,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             private _away = (getPosATL _vehicle) getPos [300, _enemyPos getDir _vehicle];
             if (!surfaceIsWater _away) then {
                 [_group, _away, 40] call Waldo_fnc_CortexGroupMove;
-                _state set ["vehicleMovement",["WITHDRAW",time+120]];
+                _state set ["movementLease",["VEHICLE_WITHDRAW",time+120]];
                 _movementOwned = true;
                 _state set ["phase", "RETREAT"];
                 _state set ["phaseStart", time];
@@ -166,7 +166,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             private _away = (getPosATL _vehicle) getPos [(_standoff - (_vehicle distance2D _atPos)) max 60, _atPos getDir _vehicle];
             if (!surfaceIsWater _away) then {
                 [_group, _away, 30] call Waldo_fnc_CortexGroupMove;
-                _state set ["vehicleMovement",["STANDOFF",time+60]];
+                _state set ["movementLease",["VEHICLE_STANDOFF",time+60]];
                 _movementOwned = true;
                 [_state, "standoff", 60] call Waldo_fnc_CortexCooldown;
             };

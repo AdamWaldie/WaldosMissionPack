@@ -124,6 +124,13 @@ if (_airborneDelay >= 0) exitWith {_airborneDelay};
 
 private _state = [_group] call Waldo_fnc_CortexGroupState;
 [_group,_state] call Waldo_fnc_CortexSupportMaintain;
+private _movementLease = _state getOrDefault ["movementLease",[]];
+private _groupMovementOwned = count _movementLease == 2 && {time < (_movementLease select 1)} && {
+    (waypoints _group) findIf {
+        (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
+    } >= 0
+};
+if (!_groupMovementOwned && {_movementLease isNotEqualTo []}) then {_state deleteAt "movementLease"};
 private _now = time;
 private _get = {
     _this params ["_name", "_fallback"];
@@ -233,7 +240,7 @@ private _beginContact = {
     };
     {if (alive _x && {local _x}) then {_x doFollow _leader}} forEach (_state getOrDefault ["searchTeam", []]);
     _state set ["searchTeam", []];
-    if (!(_state getOrDefault ["responding", false]) && {!(_state getOrDefault ["assaulting", false])}) then {[_group] call Waldo_fnc_CortexGroupMoveClear};
+    if (!_groupMovementOwned && {!(_state getOrDefault ["responding", false])} && {!(_state getOrDefault ["assaulting", false])}) then {[_group] call Waldo_fnc_CortexGroupMoveClear};
     call _enterContact;
     // A coordinated responder already has a finite assault movement order. Do not
     // lock the entire approach into script-forced COMBAT bounding; native
@@ -273,7 +280,7 @@ switch (_state get "phase") do {
         if (_visible isNotEqualTo []) exitWith {call _beginContact};
         private _area = _group getVariable ["Waldo_AIPass_AreaReport",[]];
         if (_area isNotEqualTo [] && {serverTime >= (_area select 2)}) then {_group setVariable ["Waldo_AIPass_AreaReport",nil,true]; _area = []};
-        if (!_ordered && {!_lambsCombat} && {!(_state getOrDefault ["responding",false])} && {_enemies isEqualTo []} && {_area isNotEqualTo []}
+        if (!_ordered && {!_groupMovementOwned} && {!_lambsCombat} && {!(_state getOrDefault ["responding",false])} && {_enemies isEqualTo []} && {_area isNotEqualTo []}
             && {["Waldo_AIPass_Investigate_Enable",true] call _get} && {!([_state,"investigate"] call Waldo_fnc_CortexCooldown)}
             && {leader _group distance2D (_area select 0) <= (["Waldo_AIPass_Investigate_Range",300] call _get)}
             && {[_group, ["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select ((_area select 3) == "SOUND"),false] call Waldo_fnc_CortexFeatureEnabled}) then {
@@ -287,7 +294,7 @@ switch (_state get "phase") do {
             _group setVariable ["Waldo_AIPass_AreaReport",nil,true];
         };
 
-        if (!_ordered && {!(_state getOrDefault ["responding", false])} && {_enemies isNotEqualTo []}
+        if (!_ordered && {!_groupMovementOwned} && {!(_state getOrDefault ["responding", false])} && {_enemies isNotEqualTo []}
             && {["Waldo_AIPass_Investigate_Enable", true] call _get}
             && {((_enemies select 0) select 3) <= (["Waldo_AIPass_Investigate_Range", 300] call _get)}
             && {!([_state, "investigate"] call Waldo_fnc_CortexCooldown)}) then {
@@ -379,7 +386,7 @@ switch (_state get "phase") do {
             (_enemy isKindOf "Tank" || {_enemy isKindOf "Wheeled_APC_F"}) && {(_x select 2) <= 60} && {(_x select 3) <= 800}
         } >= 0}];
         if (_nearTier) then {
-            private _vehicleOwnsMovement = false;
+            private _vehicleOwnsMovement = _groupMovementOwned;
             {
                 if (local _x && {!(_x getVariable ["Waldo_AIPass_Spotter", false])} && {binocular _x != ""} && {currentWeapon _x == binocular _x} && {primaryWeapon _x != ""}) then {
                     _x selectWeapon (primaryWeapon _x);
