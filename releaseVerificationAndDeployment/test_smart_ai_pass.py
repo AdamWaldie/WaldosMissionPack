@@ -365,6 +365,28 @@ class CortexContracts(unittest.TestCase):
         for name in names:
             self.assertIn(f'["{name}",', config)
 
+    def test_runtime_boolean_fallbacks_match_configured_defaults(self):
+        config = (ROOT / 'MissionConfig' / 'aiConfig.sqf').read_text(encoding='utf-8')
+        defaults = {
+            name: value.lower()
+            for name, value in re.findall(
+                r'\["(Waldo_(?:AIPass|Convoy)_[A-Za-z0-9_]+(?:Enable|Enabled))",\s*(true|false)',
+                config,
+                re.IGNORECASE,
+            )
+        }
+        self.assertIn('Waldo_AIPass_GrenadeEvasion_Enable', defaults)
+        pattern = re.compile(
+            r'missionNamespace\s+getVariable\s*\[\s*"(Waldo_(?:AIPass|Convoy)_[A-Za-z0-9_]+(?:Enable|Enabled))"\s*,\s*(true|false)\s*\]',
+            re.IGNORECASE,
+        )
+        mismatches = []
+        for path in (ROOT / 'MissionScripts').rglob('*.sqf'):
+            for name, value in pattern.findall(path.read_text(encoding='utf-8')):
+                if name in defaults and value.lower() != defaults[name]:
+                    mismatches.append(f'{path.relative_to(ROOT)}: {name} uses {value.lower()}, configured {defaults[name]}')
+        self.assertEqual([], mismatches, '\n'.join(mismatches))
+
     def test_ai_settings_revision_is_complete_before_worker_changes(self):
         local = source('cortexSettingsLocal')
         self.assertIn('remoteExecutedOwner != 2', local)

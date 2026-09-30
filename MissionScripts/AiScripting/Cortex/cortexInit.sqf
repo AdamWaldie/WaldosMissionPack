@@ -74,11 +74,11 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_KilledHandler"}) then {
     }]];
 };
 
-if (!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", false]) && {!isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"}}) then {
+if (!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", true]) && {!isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"}}) then {
     removeMissionEventHandler ["ProjectileCreated", missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"];
     missionNamespace setVariable ["Waldo_AIPass_ProjectileHandler", nil];
 };
-if (isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"} && {missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", false]}) then {
+if (isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"} && {missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", true]}) then {
     missionNamespace setVariable ["Waldo_AIPass_ProjectileHandler", addMissionEventHandler ["ProjectileCreated", {
         params ["_projectile"];
         if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {};

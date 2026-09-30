@@ -4,8 +4,8 @@
  *
  * Grenade evasion is queued by the
  * ProjectileCreated handler that Waldo_fnc_CortexInit installs (Waldo_AIPass_GrenadeEvasion_Enable,
- * off by default because that event's multiplayer locality still needs in-engine confirmation; with
- * the wrong locality the feature is simply inert). After a short reaction delay, each local AI soldier
+ * on by default; the handler and reaction job still restrict orders to locally owned AI. After a short
+ * reaction delay, each local AI soldier
  * on foot within 12 m reacts if he can see the grenade or it is within 5 m, with a chance based on his
  * general skill and reduced by suppression. Escape spots are spread out, 9 m away from the grenade,
  * and moved into cover facing it where possible. Soldiers rejoin formation 6 s later; flank element
@@ -31,7 +31,7 @@
 
 params [["_job", createHashMap, [createHashMap]]];
 private _grenade = _job getOrDefault ["projectile", objNull];
-if (isNull _grenade || {!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", false])}) exitWith {-1};
+if (isNull _grenade || {!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", true])}) exitWith {-1};
 private _grenadePos = getPosATL _grenade;
 private _grenadeASL = getPosASL _grenade;
 private _checkedGroups = [];
