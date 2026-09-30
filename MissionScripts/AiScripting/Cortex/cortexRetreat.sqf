@@ -8,7 +8,9 @@
  * (Waldo_fnc_CortexGroupMove) at FULL speed, so its own waypoints resume afterwards. Soldiers holding
  * ground from a drill fall back with it. One soldier throws smoke towards the enemy, and with
  * artillery support and Waldo_AIPass_ArtillerySmoke_Enable on, a friendly battery selected by the server across owners
- * lays a smoke screen between the squad and the enemy, never within 50 m of friendlies. Any flank drill ends because the phase
+ * lays a smoke screen between the squad and the enemy, never within 50 m of friendlies. A carried-smoke thrower is handed back
+ * to the same withdrawal route after the throw animation; this is guarded by the exact public withdrawal intent and Zeus hold,
+ * so it cannot revive an old retreat or replace a curator order. Any flank drill ends because the phase
  * leaves CONTACT. Individual attack assignments are suspended and behaviour set to AWARE for
  * withdrawal. A RED group temporarily uses YELLOW: it keeps firing, but the engine may no longer
  * replace the retreat waypoint with independent pursuit. GroupTick measures physical travel; a
@@ -99,7 +101,8 @@ _state set ["retreatStart",_origin];
 _state set ["retreatTarget",_point];
 _state set ["retreatProgress",[time,_bestTravel,_replans]];
 _group setVariable ["Waldo_Cortex_Withdrawal",["MOVING",round (_leader distance2D _origin),_replans],true];
-_group setVariable ["Waldo_Cortex_WithdrawalIntent",["INFANTRY",_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel],true];
+private _withdrawalIntent=["INFANTRY",_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel];
+_group setVariable ["Waldo_Cortex_WithdrawalIntent",_withdrawalIntent,true];
 if (speedMode _group != "FULL") then {
     if !(_state getOrDefault ["speedChanged", false]) then {_state set ["baseSpeed", speedMode _group]};
     _state set ["speedChanged", true];
@@ -109,10 +112,27 @@ if (speedMode _group != "FULL") then {
 _state set ["holders", []];
 if (!_resuming) then {
     private _smokers = (units _group) select {alive _x && {local _x} && {vehicle _x == _x}};
+    // Preserve the leader's route ownership when another survivor can throw the screen.
+    _smokers=(_smokers select {_x != _leader})+(_smokers select {_x == _leader});
     // Use one available carried smoke, rather than selecting a possibly empty carrier.
+    private _smoker=objNull;
     {
-        if ([_x, _enemyPos, "SMOKE"] call Waldo_fnc_CortexThrowGrenade) exitWith {};
+        if ([_x, _enemyPos, "SMOKE"] call Waldo_fnc_CortexThrowGrenade) exitWith {_smoker=_x};
     } forEach _smokers;
+    if (!isNull _smoker) then {
+        [{
+            params ["_group","_smoker","_target","_intent"];
+            if (isNull _group || {!local _group} || {!alive _smoker} || {group _smoker != _group}
+                || {(_group getVariable ["Waldo_Cortex_WithdrawalIntent",[]]) isNotEqualTo _intent}
+                || {(_group getVariable ["Waldo_AIPass_ZeusHold",[]]) isNotEqualTo []}) exitWith {};
+            private _state=_group getVariable ["Waldo_AIPass_State",createHashMap];
+            private _lease=_state getOrDefault ["movementLease",[]];
+            if ((_state getOrDefault ["phase",""]) == "RETREAT" && {count _lease == 2}
+                && {(_lease select 0) == "INFANTRY_WITHDRAW"} && {time < (_lease select 1)}) then {
+                if (_smoker == leader _group) then {_smoker doMove _target} else {_smoker doFollow leader _group};
+            };
+        },[_group,_smoker,+_point,+_withdrawalIntent],2] call CBA_fnc_waitAndExecute;
+    };
     // A communicating retreating squad asks server-coordinated artillery for smoke; no radio item is required.
     if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]) && {[_group,"Waldo_AIPass_ArtillerySmoke_Enable", true] call Waldo_fnc_CortexFeatureEnabled}
         && {[_leader] call Waldo_fnc_CortexCanTransmit}) then {

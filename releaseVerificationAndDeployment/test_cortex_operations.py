@@ -1116,6 +1116,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_intent set [6,_bestTravel]',tick)
         self.assertIn('setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true]',restore)
 
+    def test_withdrawal_smoke_cannot_leave_the_route_owner_staring_at_the_screen(self):
+        text=source('cortexRetreat')
+        self.assertIn('_smokers=(_smokers select {_x != _leader})+(_smokers select {_x == _leader});',text)
+        self.assertIn('Waldo_Cortex_WithdrawalIntent",[]]) isNotEqualTo _intent',text)
+        self.assertIn('Waldo_AIPass_ZeusHold",[]]) isNotEqualTo []',text)
+        self.assertIn('(_lease select 0) == "INFANTRY_WITHDRAW"',text)
+        self.assertIn('if (_smoker == leader _group) then {_smoker doMove _target} else {_smoker doFollow leader _group};',text)
+
     def test_post_contact_movement_resumes_across_locality_with_original_deadline(self):
         checkpoint=source('cortexCheckpoint')
         locality=source('cortexLocality')
