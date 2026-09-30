@@ -126,10 +126,20 @@ if (_airborneDelay >= 0) exitWith {_airborneDelay};
 private _state = [_group] call Waldo_fnc_CortexGroupState;
 [_group,_state] call Waldo_fnc_CortexSupportMaintain;
 private _movementLease = _state getOrDefault ["movementLease",[]];
+private _movementOwner = _movementLease param [0,""];
 private _groupMovementOwned = count _movementLease == 2 && {time < (_movementLease select 1)} && {
-    (waypoints _group) findIf {
-        (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
-    } >= 0
+    switch (_movementOwner) do {
+        case "TACTICAL_DRILL": {count (_state getOrDefault ["drill",createHashMap]) > 0};
+        case "COORDINATED_ASSAULT": {
+            _state getOrDefault ["assaulting",false]
+                && {(_state getOrDefault ["supportToken",""]) != ""}
+        };
+        default {
+            (waypoints _group) findIf {
+                (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
+            } >= 0
+        };
+    }
 };
 if (!_groupMovementOwned && {_movementLease isNotEqualTo []}) then {_state deleteAt "movementLease"};
 private _now = time;

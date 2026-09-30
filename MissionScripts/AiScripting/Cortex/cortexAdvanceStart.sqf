@@ -16,7 +16,9 @@
  * Locality and authority: call where the group is local.
  *
  * Each start gives its queued step a unique drill token.
- * Repeat/JIP: a running drill or cooldown refuses duplicate starts; owner migration retires local jobs.
+ * Repeat/JIP: a running drill, shared movement lease or cooldown refuses duplicate starts; owner
+ * migration retires local jobs. A finite TACTICAL_DRILL lease makes direct fire-team movement
+ * visible to reinforcement, vehicle and artillery behaviours until CortexFlankEnd releases it.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -37,6 +39,8 @@ params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap
 // A live support assignment owns group movement until release; do not split its
 // responders into a competing local drill when they acquire contact.
 if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {false};
+private _movementLease = _state getOrDefault ["movementLease",[]];
+if (count _movementLease == 2 && {time < (_movementLease select 1)}) exitWith {false};
 if (count (_state getOrDefault ["drill", createHashMap]) > 0) exitWith {false};
 if ([_state, "advance"] call Waldo_fnc_CortexCooldown) exitWith {false};
 if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false};
@@ -85,6 +89,9 @@ _state set ["drill", createHashMapFromArray [
     ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time],
     ["boundStart", time], ["pauseUntil", 0]
 ]];
+// Direct fire-team bounds are a group movement owner even though they do not
+// create a WMP waypoint. Other behaviours must wait until CortexFlankEnd releases it.
+_state set ["movementLease",["TACTICAL_DRILL",time+300]];
 [Waldo_fnc_CortexFlankStep, createHashMapFromArray [["group", _group],["drillToken",_token]], 0] call Waldo_fnc_CortexQueueJob;
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {
     diag_log format ["[WMP CORTEX] %1 ADVANCE element=%2 points=%3", _group, count _element, count _points];

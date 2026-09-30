@@ -23,7 +23,9 @@
  * minute, through an inserted waypoint.
  * A withdrawal or standoff owns group movement until its tagged waypoint completes or its bounded
  * lease expires. Other Cortex manoeuvres may continue their combat layers but cannot replace that
- * movement. A withdrawal outranks standoff inside the same evaluation.
+ * movement. Conversely, this layer preserves and yields to every active non-vehicle movement lease
+ * while continuing composable gunnery, reporting and passenger handling. A withdrawal outranks
+ * standoff inside the same evaluation.
  * Vehicles owned by other WMP features never reach this function (Waldo_fnc_CortexIsEligible).
  * Locality and authority: call where the group is local.
  *
@@ -49,10 +51,17 @@ params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap
 private _vehicleMove = _state getOrDefault ["movementLease",[]];
 private _activeVehicleMove = false;
 if (_vehicleMove isNotEqualTo []) then {
-    _activeVehicleMove = ((waypoints _group) findIf {
-        (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
-    } >= 0) && {time < (_vehicleMove select 1)};
-    if (!_activeVehicleMove) then {_state deleteAt "movementLease"};
+    private _vehicleOwnsLease = (_vehicleMove param [0,""]) in ["VEHICLE_WITHDRAW","VEHICLE_STANDOFF"];
+    if (_vehicleOwnsLease) then {
+        _activeVehicleMove = ((waypoints _group) findIf {
+            (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
+        } >= 0) && {time < (_vehicleMove select 1)};
+        if (!_activeVehicleMove) then {_state deleteAt "movementLease"};
+    } else {
+        // The group tick has already validated direct tactical/support owners.
+        // Yield to them without requiring a waypoint or deleting their lease.
+        _activeVehicleMove = count _vehicleMove == 2 && {time < (_vehicleMove select 1)};
+    };
 };
 // Movement ownership blocks only another destination. Reporting, dismount handling and
 // gunnery remain composable for the duration of the physical move.

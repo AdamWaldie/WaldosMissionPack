@@ -3,7 +3,9 @@
  * Waits for the matching server reservation before issuing a reinforcement order on its current owner.
  * Locality/authority: queued only by authenticated SupportLocal; all execution gates are checked again.
  * Repeat/JIP: at most five seconds waiting for ordered state; stale tokens never issue movement.
- * Rally uses a finite MOVE. Assault hands movement to server-assigned squad roles and
+ * A support update may replace its own lease, but never an active withdrawal, vehicle route,
+ * artillery scoot or local tactical drill.
+ * Rally uses a finite MOVE and SUPPORT_RALLY lease. Assault hands a COORDINATED_ASSAULT lease to server-assigned squad roles and
  * owner-local successive fire-team bounds; it does not issue a competing whole-squad waypoint.
  * During assault, each bound leases pursuit features only from its current moving fire team.
  * The covering fire team and other squads retain native target sharing and engagement.
@@ -27,6 +29,10 @@ if (_current isNotEqualTo _lease) exitWith {
 _lease params ["_token","_requester","_expiry","_rally","_needAT","_attack"];
 private _state = [_group] call Waldo_fnc_CortexGroupState;
 private _same = (_state getOrDefault ["supportToken",""]) == _token;
+private _movementLease = _state getOrDefault ["movementLease",[]];
+private _movementOwner = _movementLease param [0,""];
+private _movementLeaseActive = count _movementLease == 2 && {time < (_movementLease select 1)};
+private _supportOwnsMovement = _same && {_movementOwner in ["SUPPORT_RALLY","COORDINATED_ASSAULT"]};
 private _fit = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective};
 private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!([] call Waldo_fnc_CortexIsPaused)}
     && {serverTime < _expiry} && {!isNull _requester} && {side _requester == side _group}
@@ -38,11 +44,20 @@ private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!
     && {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo []} && {(_group getVariable ["Waldo_AIPass_Defend",[]]) isEqualTo []}
     && {!(_group getVariable ["Waldo_AIPass_ClearBuilding",false])} && {!(_group getVariable ["Waldo_AIPass_RegroupQueued",false])}
     && {_same || {(_state getOrDefault ["phase","CALM"]) == "CALM" && {!(_state getOrDefault ["responding",false])}}}
+    // A support order may update its own rally/assault, but it cannot erase an
+    // infantry withdrawal, vehicle manoeuvre, artillery scoot or local tactical drill.
+    && {!_movementLeaseActive || {_supportOwnsMovement}}
     && {_fit findIf {private _v = vehicle _x; _v isKindOf "Air" || {_v isKindOf "StaticWeapon"} || {getNumber (configOf _v >> "artilleryScanner") == 1}} < 0}
     && {!_needAT || {_fit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
 private _attackAllowed = _attack isNotEqualTo [] && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 if (_okay && {!_same || {_attackAllowed && {!(_state getOrDefault ["assaulting",false])}}}) then {
-    if (_attackAllowed) then {[_group] call Waldo_fnc_CortexGroupMoveClear} else {[_group,_rally,10,"MOVE"] call Waldo_fnc_CortexGroupMove};
+    if (_attackAllowed) then {
+        [_group] call Waldo_fnc_CortexGroupMoveClear;
+        _state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]];
+    } else {
+        [_group,_rally,10,"MOVE"] call Waldo_fnc_CortexGroupMove;
+        _state set ["movementLease",["SUPPORT_RALLY",time+(_expiry-serverTime)]];
+    };
     _state set ["assaulting",_attackAllowed];
     _state set ["responding",true]; _state set ["respondingTo",_requester];
     _state set ["respondUntil",time+(_expiry-serverTime)]; _state set ["supportToken",_token];

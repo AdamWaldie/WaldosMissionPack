@@ -10,7 +10,8 @@
  * group, or release) orders members to follow the leader again at once. A failed coordinated
  * bound instead holds its gained ground until the next server sequence; it must not regroup
  * backwards before a retry. PATH holds transfer to supportHeld for normal release/migration.
- * The drill's cooldown starts.
+ * The drill's cooldown starts. Cleanup releases a TACTICAL_DRILL movement lease only; a newer
+ * withdrawal, vehicle, artillery or coordinated-assault owner survives a delayed drill callback.
  * Locality and authority: call where the group is local.
  *
  * Repeat/JIP: an empty drill is a no-op; the ending reason is published for observers and JIP.
@@ -109,6 +110,10 @@ if (_supportToken != "") then {
 private _type = _drill getOrDefault ["type", "FLANK"];
 _group setVariable ["Waldo_Cortex_DrillResult",[_type,_reason,time],true];
 _state deleteAt "drill";
+private _movementLease = _state getOrDefault ["movementLease",[]];
+if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {
+    _state deleteAt "movementLease";
+};
 [_state, toLowerANSI _type, missionNamespace getVariable ["Waldo_AIPass_Flank_Cooldown", 90]] call Waldo_fnc_CortexCooldown;
 if (_reason == "COMPLETE") then {
     private _counter = ["Waldo_AIPass_FlanksCompleted", "Waldo_AIPass_AdvancesCompleted"] select (_type == "ADVANCE");

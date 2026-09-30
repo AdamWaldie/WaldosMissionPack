@@ -1157,6 +1157,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _groupMovementOwned = count _movementLease == 2',tick)
         self.assertIn('if (!_groupMovementOwned && {_movementLease isNotEqualTo []})',tick)
 
+    def test_vehicle_combat_layer_preserves_other_movement_owners(self):
+        vehicles=source('cortexVehicles')
+        self.assertIn('in ["VEHICLE_WITHDRAW","VEHICLE_STANDOFF"]',vehicles)
+        self.assertIn('if (_vehicleOwnsLease) then',vehicles)
+        self.assertIn('_activeVehicleMove = count _vehicleMove == 2',vehicles)
+        non_vehicle=vehicles.split('} else {',1)[1].split('};',1)[0]
+        self.assertNotIn('deleteAt "movementLease"',non_vehicle)
+
     def test_artillery_scoot_waits_for_and_acquires_shared_movement_ownership(self):
         mission=source('cortexArtilleryMissionStep')
         scoot=source('cortexArtilleryScoot')
@@ -1177,8 +1185,27 @@ class CortexOperations(unittest.TestCase):
     def test_support_cleanup_does_not_delete_a_newer_shared_movement_route(self):
         maintain=source('cortexSupportMaintain')
         self.assertIn('private _movementLeaseActive = count _movementLease == 2',maintain)
-        self.assertIn('if (!_movementLeaseActive && {_state getOrDefault ["responding",false]',maintain)
-        self.assertIn('if (!_movementLeaseActive) then {[_group] call Waldo_fnc_CortexGroupMoveClear}',maintain)
+        self.assertIn('private _supportOwnsMovement = _movementLeaseActive',maintain)
+        self.assertIn('["SUPPORT_RALLY","COORDINATED_ASSAULT"]',maintain)
+        self.assertIn('if ((_supportOwnsMovement || {!_movementLeaseActive})',maintain)
+        self.assertIn('if (_supportOwnsMovement) then {_state deleteAt "movementLease"}',maintain)
+
+    def test_all_group_manoeuvres_use_one_shared_movement_owner(self):
+        tick=source('cortexGroupTick')
+        apply=source('cortexSupportApply')
+        maintain=source('cortexSupportMaintain')
+        end=source('cortexFlankEnd')
+        self.assertIn('case "TACTICAL_DRILL"',tick)
+        self.assertIn('case "COORDINATED_ASSAULT"',tick)
+        for name in ['cortexFlankStart','cortexAdvanceStart']:
+            code=source(name)
+            self.assertIn('getOrDefault ["movementLease",[]]',code)
+            self.assertIn('_state set ["movementLease",["TACTICAL_DRILL",time+300]]',code)
+        self.assertIn('(_movementLease select 0) == "TACTICAL_DRILL"',end)
+        self.assertIn('!_movementLeaseActive || {_supportOwnsMovement}',apply)
+        self.assertIn('_state set ["movementLease",["SUPPORT_RALLY",time+(_expiry-serverTime)]]',apply)
+        self.assertIn('_state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]]',apply)
+        self.assertIn('case "SUPPORT_RALLY"',maintain)
 
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')

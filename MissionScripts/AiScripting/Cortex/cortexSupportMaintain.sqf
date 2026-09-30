@@ -12,6 +12,9 @@
  * On release, actors held by Cortex resume formation even when engine combat has
  * relabelled the owned doStop as ATTACK/FIRE. Commands which can only have arrived
  * after the hold are preserved, and new-bound movement is not replaced.
+ * Movement ownership uses SUPPORT_RALLY and COORDINATED_ASSAULT leases. Cleanup removes only those
+ * lease types and checks that a rally waypoint is still pending, so a completed waypoint is not
+ * mistaken for active movement and a newer feature route is never deleted.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: group <GROUP>; 1: local state <HASHMAP>.
  * Return Value: Nothing.
@@ -21,11 +24,19 @@
 params ["_group","_state"];
 if (!local _group) exitWith {};
 private _movementLease = _state getOrDefault ["movementLease",[]];
+private _movementOwner = _movementLease param [0,""];
 private _movementLeaseActive = count _movementLease == 2 && {time < (_movementLease select 1)} && {
-    (waypoints _group) findIf {
-        (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
-    } >= 0
+    switch (_movementOwner) do {
+        case "SUPPORT_RALLY": {
+            (waypoints _group) findIf {
+                (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
+            } >= 0
+        };
+        case "COORDINATED_ASSAULT": {_state getOrDefault ["assaulting",false]};
+        default {true};
+    }
 };
+private _supportOwnsMovement = _movementLeaseActive && {_movementOwner in ["SUPPORT_RALLY","COORDINATED_ASSAULT"]};
 private _token = _state getOrDefault ["supportToken",""];
 if (_token == "") exitWith {};
 private _restoreAttack={
@@ -36,17 +47,20 @@ private _lease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
 if (_lease isEqualTo [] || {(_lease select 0) != _token} || {serverTime >= (_lease select 2)}
     || {!([_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
     || {!([_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) then {
-    // The support token owns only its own rally/assault. If a later vehicle or artillery
-    // behaviour has acquired the shared route, retire stale support state without deleting it.
-    if (!_movementLeaseActive && {_state getOrDefault ["responding",false] || {_state getOrDefault ["assaulting",false]}}) then {
-        [_group] call Waldo_fnc_CortexGroupMoveClear
+    // Delete only this support assignment's route. A later withdrawal, vehicle
+    // manoeuvre, artillery scoot or tactical drill survives stale support cleanup.
+    if ((_supportOwnsMovement || {!_movementLeaseActive})
+        && {_state getOrDefault ["responding",false] || {_state getOrDefault ["assaulting",false]}}) then {
+        [_group] call Waldo_fnc_CortexGroupMoveClear;
     };
+    if (_supportOwnsMovement) then {_state deleteAt "movementLease"};
     call _restoreAttack;
     {_state deleteAt _x} forEach ["supportToken","responding","respondingTo","respondUntil","arrivedAt","assaulting"];
 };
 
 if (_state getOrDefault ["assaulting",false] && {!([_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) then {
-    if (!_movementLeaseActive) then {[_group] call Waldo_fnc_CortexGroupMoveClear};
+    if (_supportOwnsMovement || {!_movementLeaseActive}) then {[_group] call Waldo_fnc_CortexGroupMoveClear};
+    if (_supportOwnsMovement) then {_state deleteAt "movementLease"};
     call _restoreAttack;
     _state set ["assaulting",false]; _state set ["responding",false];
 };
