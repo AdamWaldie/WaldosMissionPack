@@ -563,11 +563,15 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('enableAI "PATH"',search_release)
 
     def test_feature_fixtures_are_staged_and_dispatched(self):
-        from check_cortex_coverage import audit
+        from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
         self.assertEqual(len(data['cases']),56)
         self.assertIn('COORD',pending)
+        report=render_markdown(data)
+        self.assertEqual(report,(ROOT/'releaseVerificationAndDeployment/cortexQA/FEATURE_STATUS.md').read_text(encoding='utf-8'))
+        for case in data['cases']:
+            self.assertIn(f"| {case['id']} - {case['title']} |",report)
         crossing=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCrossing.sqf').read_text()
         for marker in ['CROSS-engine-road-prerequisite','CROSS-natural-contact-prerequisite',
                        'CROSS-real-smoke-projectile','CROSS-all-members-physical-far-side']:
