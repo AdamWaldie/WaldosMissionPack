@@ -80,7 +80,7 @@ touched.
 | Ammo sharing | `Waldo_AIPass_AmmoShare_Enable` (on) | A soldier down to his last magazine gets one from a squad-mate within 10 m who has plenty. |
 | Fire control | `Waldo_AIPass_FireControl_Enable` (on) | Soldiers deal with enemies within 20 m first and spread their fire across visible enemies. Machine gunners (and riflemen with ammunition to spare) suppress enemies that are known but hidden. Nobody is ordered to fire through friendlies or civilians. |
 | Morale and retreat | `Waldo_AIPass_Morale_Enable` (on) | Morale is driven by casualties, suppression, a lost leader, being outnumbered, and armour the squad cannot fight. Braver soldiers hold longer. A broken squad falls back 200 m under smoke. |
-| Surrender | `Waldo_AIPass_Surrender_Enable` (off) | The last one or two survivors of a broken, isolated squad drop their weapons and surrender. With ACE Captives loaded, players can take them prisoner. |
+| Surrender | `Waldo_AIPass_Surrender_Enable` (on) | The last one or two survivors of a broken, isolated squad drop their weapons and surrender only when an enemy is within 60 m and no friendly squad is within 300 m. With ACE Captives loaded, players can take them prisoner. |
 | Grenade evasion | `Waldo_AIPass_GrenadeEvasion_Enable` (on) | AI move away from a live grenade they can see. Test it in your setup first (see Limitations). |
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
 | Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Eligible cargo infantry, including a separate passenger squad, get out on known contact and reboard after contact ends. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
@@ -400,7 +400,7 @@ Convoy controls apply to explicitly configured convoys independently of the Smar
 | `Waldo_AIPass_VehicleRemount_Enable` | `true` | Reboard recorded passengers on a normal return to CALM. Stop and locality cleanup never board them. |
 | `Waldo_AIPass_VehicleWithdraw_Enable` | `true` | Damaged vehicle smoke and withdrawal. |
 | `Waldo_AIPass_CoverValidation_Enable` | `true` | Validate cover footprint, slope and blocked line of sight. |
-| `Waldo_AIPass_Hearing_Enable` | `false` | Investigate nearby hostile gunfire reported by the engine to the squad leader. Also requires investigation. |
+| `Waldo_AIPass_Hearing_Enable` | `true` | Investigate nearby hostile gunfire reported by the engine to the squad leader. Reports are throttled and quantized to a 50 m area rather than revealing a target. Also requires investigation. |
 | `Waldo_Convoy_MountedFire_Enable` | `true` | Direct operating weapon crews at known threats under their existing ROE. |
 | `Waldo_Convoy_Cover_Enable` | `true` | Short passenger movement clear of vehicles after a halt, using cover during contact. |
 | `Waldo_Convoy_ContactHalt_Enable` | `true` | Contact-driven halt requests under the existing push-through rule. |

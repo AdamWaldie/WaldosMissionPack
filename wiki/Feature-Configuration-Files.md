@@ -410,14 +410,14 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_FireControl_MaxShootersPerTarget` | Shooters on one visible enemy before extra shooters switch targets. Default `2`. |
 | `Waldo_AIPass_Morale_Enable` | Squads under losses and fire break and fall back under smoke. Default `true`. |
 | `Waldo_AIPass_Morale_RetreatDistance` | How far a broken squad falls back. Default `200`. |
-| `Waldo_AIPass_Surrender_Enable` | The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded). Default `false`. |
+| `Waldo_AIPass_Surrender_Enable` | One or two broken survivors surrender only with an enemy within 60 m and no friendly squad within 300 m (ACE Captives when loaded). Default `true`. |
 | `Waldo_AIPass_GrenadeEvasion_Enable` | AI move away from a live grenade they can see; off until tested in your setup. Default `false`. |
 | `Waldo_AIPass_AntiArmour_Enable` | The best anti-tank gunner engages known armour, clear of backblast. Default `true`. |
 | `Waldo_AIPass_VehicleDismount_Enable` | Routine passenger dismounting during vehicle contact drills. Default `true`. |
 | `Waldo_AIPass_VehicleRemount_Enable` | Reboard recorded passengers on a normal return to CALM. Default `true`. |
 | `Waldo_AIPass_VehicleWithdraw_Enable` | Damaged vehicle smoke and withdrawal. Default `true`. |
 | `Waldo_AIPass_CoverValidation_Enable` | Bounded footprint, slope and geometry validation for cover candidates. Default `true`. |
-| `Waldo_AIPass_Hearing_Enable` | Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default `false`. |
+| `Waldo_AIPass_Hearing_Enable` | Throttled, 50 m-quantized nearby-gunfire reports for eligible squad leaders; requires investigation. Default `true`. |
 | `Waldo_Convoy_MountedFire_Enable` | Mounted crew targeting under existing ROE. Default `true`. |
 | `Waldo_Convoy_Cover_Enable` | Short passenger movement clear of vehicles after a halt, using cover during contact. Default `true`. |
 | `Waldo_Convoy_ContactHalt_Enable` | Contact halt requests under the configured push-through rule. Default `true`. |
