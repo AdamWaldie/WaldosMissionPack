@@ -3,8 +3,9 @@
  * Pulls a broken squad back, away from the enemy, under smoke.
  *
  * The retreat point is Waldo_AIPass_Morale_RetreatDistance (scaled by the behaviour profile's
- * retreatScale) from the leader, directly away from the last known enemy position, turning up to 60
- * degrees either way to avoid water. The squad moves through an inserted waypoint
+ * retreatScale) from the leader. Five bounded escape candidates spread up to 60 degrees around the
+ * direction away from the enemy; Cortex rejects water and selects the shortest screened avenue
+ * through terrain, solid cover or concealment. The squad moves through an inserted waypoint
  * (Waldo_fnc_CortexGroupMove) at FULL speed, so its own waypoints resume afterwards. Soldiers holding
  * ground from a drill fall back with it. One soldier throws smoke towards the enemy, and with
  * artillery support and Waldo_AIPass_ArtillerySmoke_Enable on, a friendly battery selected by the server across owners
@@ -46,10 +47,13 @@ private _distance = (missionNamespace getVariable ["Waldo_AIPass_Morale_RetreatD
 private _away = _enemyPos getDir _leader;
 private _point = if (_resuming) then {+(_resume select 2)} else {[]};
 if (!_resuming) then {
+    private _origin=getPosATL _leader;
+    private _candidates=[];
     {
-        private _candidate = (getPosATL _leader) getPos [_distance, _away + _x];
-        if (!surfaceIsWater _candidate) exitWith {_point = _candidate};
+        _candidates pushBack [_origin getPos [_distance, _away+_x]];
     } forEach [0, 30, -30, 60, -60];
+    private _legs=[_origin,_candidates,_enemyPos] call Waldo_fnc_CortexSelectAvenue;
+    if (_legs isNotEqualTo []) then {_point=+(_legs select ((count _legs)-1))};
 };
 if (_point isEqualTo []) exitWith {false};
 // Finish any manoeuvre before acquiring its attack-setting restoration record.

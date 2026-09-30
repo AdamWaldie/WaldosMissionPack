@@ -670,20 +670,44 @@ class CortexOperations(unittest.TestCase):
 
     def test_flank_routes_avoid_friendly_support_fire_corridors(self):
         start = source('cortexFlankStart')
+        selector = source('cortexSelectAvenue')
         for marker in ['private _supportOrigins = []', 'knowsAbout _target > 0.5',
-                       'private _crossesFireLane = {', '_lateral < 30',
-                       'private _staysOnSupportSide = {', '_pointSide*_startSide < 0',
-                       '[1,110,90]', '!([_candidate] call _crossesFireLane)',
-                       'private _routeProtection = {','forEach [0.25,0.5,0.75]',
-                       'terrainIntersectASL [_enemyASL,_sampleASL]',
-                       'lineIntersectsSurfaces [_rayStart,_sampleASL,_target,objNull',
-                       'private _score = _routeLength-20*([_candidate] call _routeProtection)']:
+                       'private _avenueCandidates=[]','[1,110,90]',
+                       'call Waldo_fnc_CortexSelectAvenue']:
             self.assertIn(marker, start)
+        for marker in ['_lateral < 30','_pointSide*_startSide < 0',
+                       'forEach [0.25,0.5,0.75]',
+                       'terrainIntersectASL [_threatASL,_sampleASL]',
+                       'lineIntersectsSurfaces [_rayStart,_sampleASL,_threatObject,objNull']:
+            self.assertIn(marker, selector)
         self.assertNotIn('selectRandom [',start)
+        self.assertNotIn('private _routeProtection = {',start)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
         self.assertIn('private _fireLaneCrossings=[0,0]',qa)
         self.assertIn('-no-support-fire-lane-crossing',qa)
         self.assertIn('_lateral < 18',qa)
+
+    def test_manoeuvres_share_one_bounded_avenue_selector(self):
+        selector=source('cortexSelectAvenue')
+        functions=(ROOT/'MissionScripts/WaldosFunctions.sqf').read_text(encoding='utf-8')
+        advance=source('cortexAdvanceStart')
+        flank=source('cortexFlankStart')
+        retreat=source('cortexRetreat')
+        self.assertIn('class CortexSelectAvenue',functions)
+        for marker in ['(count _candidates) min 8','forEach [0.25,0.5,0.75]',
+                       'terrainIntersectASL [_threatASL,_sampleASL]',
+                       '"FIRE","GEOM"','"VIEW","GEOM"','_lateral < 30',
+                       '_pointSide*_startSide < 0','(ceil (_legLength/20)) max 3',
+                       '-70*(_hardScreen/(_screenSamples max 1))',
+                       '-25*(_concealed/(_screenSamples max 1))']:
+            self.assertIn(marker,selector)
+        self.assertNotIn('nearObjects',selector)
+        self.assertNotIn('nearestTerrainObjects',selector)
+        self.assertIn('call Waldo_fnc_CortexSelectAvenue',advance)
+        self.assertIn('forEach [90,-90,55,-55]',advance)
+        self.assertIn('call Waldo_fnc_CortexSelectAvenue',flank)
+        self.assertIn('call Waldo_fnc_CortexSelectAvenue',retreat)
+        self.assertIn('forEach [0, 30, -30, 60, -60]',retreat)
 
     def test_multi_manoeuvre_audit_requires_real_drills_and_contact(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()

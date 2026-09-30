@@ -109,113 +109,17 @@ if (_base isNotEqualTo []) then {
     };
 } forEach allGroups;
 
-// Sample actual candidate legs rather than choosing a random flank. A route is unsafe when a point
-// more than 10 m from its own start lies inside the 30 m-wide firing lane between friendly support
-// and the objective. Wider candidates are tried as well, so cancellation is the last resort.
-private _crossesFireLane = {
-    params ["_route"];
-    private _unsafe = false;
-    private _from = _start;
-    {
-        private _to = _x;
-        private _legLength = _from distance2D _to;
-        private _samples = (ceil (_legLength/5)) max 1;
-        for "_sampleIndex" from 1 to _samples do {
-            private _fraction = _sampleIndex/_samples;
-            private _point = [
-                (_from select 0)+((_to select 0)-(_from select 0))*_fraction,
-                (_from select 1)+((_to select 1)-(_from select 1))*_fraction,
-                0
-            ];
-            if (_point distance2D _start > 10) then {
-                {
-                    private _support = _x;
-                    private _laneX = (_enemyPos select 0)-(_support select 0);
-                    private _laneY = (_enemyPos select 1)-(_support select 1);
-                    private _laneLength = sqrt (_laneX*_laneX+_laneY*_laneY);
-                    if (_laneLength > 40) then {
-                        private _pointX = (_point select 0)-(_support select 0);
-                        private _pointY = (_point select 1)-(_support select 1);
-                        private _along = (_pointX*_laneX+_pointY*_laneY)/_laneLength;
-                        private _lateral = abs (_pointX*_laneY-_pointY*_laneX)/_laneLength;
-                        if (_along > 10 && {_along < _laneLength-10} && {_lateral < 30}) exitWith {_unsafe = true};
-                    };
-                } forEach _supportOrigins;
-            };
-            if (_unsafe) exitWith {};
-        };
-        if (_unsafe) exitWith {};
-        _from = _to;
-    } forEach _route;
-    _unsafe
-};
-// Do not select a geometrically valid endpoint by crossing from one side of a supporting
-// squad's active fire axis to the other. The own base of fire begins almost on the element,
-// so a side lock applies only when the manoeuvre starts at least 30 m off an axis.
-private _staysOnSupportSide = {
-    params ["_route"];
-    private _safe = true;
-    {
-        private _support = _x;
-        private _laneX = (_enemyPos select 0)-(_support select 0);
-        private _laneY = (_enemyPos select 1)-(_support select 1);
-        private _laneLength = sqrt (_laneX*_laneX+_laneY*_laneY);
-        if (_laneLength > 40) then {
-            private _startX = (_start select 0)-(_support select 0);
-            private _startY = (_start select 1)-(_support select 1);
-            private _startSide = (_laneX*_startY-_laneY*_startX)/_laneLength;
-            if (abs _startSide >= 30 && {_route findIf {
-                private _pointX = (_x select 0)-(_support select 0);
-                private _pointY = (_x select 1)-(_support select 1);
-                private _pointSide = (_laneX*_pointY-_laneY*_pointX)/_laneLength;
-                abs _pointSide >= 10 && {_pointSide*_startSide < 0}
-            } >= 0}) then {_safe = false};
-        };
-        if (!_safe) exitWith {};
-    } forEach _supportOrigins;
-    _safe
-};
+// Generate six bounded flank shapes. The shared selector rejects water, support-lane crossings and
+// side changes while preferring terrain or object screening. It evaluates this fixed set once.
 private _toGroup = _enemyPos getDir _leader;
-private _legs = [];
-private _bestScore = 1e9;
-private _routeProtection = {
-    params ["_route"];
-    private _protected = 0;
-    private _enemyASL = (getPosASL _target) vectorAdd [0,0,1.4];
-    private _from = _start;
-    {
-        private _to = _x;
-        {
-            private _sample = [
-                (_from select 0)+((_to select 0)-(_from select 0))*_x,
-                (_from select 1)+((_to select 1)-(_from select 1))*_x,
-                0
-            ];
-            private _sampleASL = (AGLToASL _sample) vectorAdd [0,0,1.0];
-            private _rayStart = _enemyASL vectorAdd ((_enemyASL vectorFromTo _sampleASL) vectorMultiply 2);
-            if (terrainIntersectASL [_enemyASL,_sampleASL]
-                || {(lineIntersectsSurfaces [_rayStart,_sampleASL,_target,objNull,true,1,"FIRE","GEOM"]) isNotEqualTo []}) then {
-                _protected = _protected+1;
-            };
-        } forEach [0.25,0.5,0.75];
-        _from = _to;
-    } forEach _route;
-    _protected
-};
+private _avenueCandidates=[];
 {
     _x params ["_side","_wideAngle","_closeAngle"];
     private _wide = _enemyPos getPos [(_distance * 0.8) max 60, _toGroup + _side*_wideAngle];
     private _close = _enemyPos getPos [((_distance * 0.35) max 35) min 60, _toGroup + _side*_closeAngle];
-    private _candidate = [_wide,_close];
-    if (!surfaceIsWater _wide && {!surfaceIsWater _close}
-        && {!([_candidate] call _crossesFireLane)} && {[_candidate] call _staysOnSupportSide}) then {
-        private _routeLength = (_start distance2D _wide)+(_wide distance2D _close);
-        // Each screened sample offsets 20 m of route length. The candidate/sample counts
-        // are fixed, so cover preference cannot become a hot scheduler loop.
-        private _score = _routeLength-20*([_candidate] call _routeProtection);
-        if (_score < _bestScore) then {_legs = _candidate; _bestScore = _score};
-    };
+    _avenueCandidates pushBack [_wide,_close];
 } forEach [[1,70,60],[-1,70,60],[1,90,75],[-1,90,75],[1,110,90],[-1,110,90]];
+private _legs=[_start,_avenueCandidates,_enemyPos,_supportOrigins,_target] call Waldo_fnc_CortexSelectAvenue;
 if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCooldown; false};
 
 private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_CortexPlanRoute;

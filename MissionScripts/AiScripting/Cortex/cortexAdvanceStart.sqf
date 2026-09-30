@@ -7,7 +7,9 @@
  * undo itself. The squad must have been in CONTACT for Waldo_AIPass_Advance_MinContactSeconds, its
  * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, the nearest
  * known enemy must be at least 60 m away, morale must be STEADY, no drill may be running, and the
- * behaviour profile's advanceChance roll must succeed. Two elements advance successively: riflemen
+ * behaviour profile's advanceChance roll must succeed. A bounded avenue selector compares the
+ * direct route with four offset two-leg routes and samples screening once when the drill starts.
+ * Two elements advance successively: riflemen
  * move first while the leader/support element covers, then hold while that element closes up.
  * Both elements must physically arrive before the next bound. Movers retain firing permission while the other element covers.
  * Actors completing a short grenade-evasion or anti-armour relocation lease are omitted from both
@@ -80,8 +82,19 @@ private _start = [0, 0, 0];
 _start = _start vectorMultiply (1 / count _element);
 private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
 private _goal = _start getPos [((_start distance2D _objective) - 20) min (_bound * 3), _start getDir _objective];
-if (surfaceIsWater _goal) exitWith {[_state, "advance", 30] call Waldo_fnc_CortexCooldown; false};
-private _points = [_start, [_goal], "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
+private _routeDistance=_start distance2D _goal;
+private _axis=_start getDir _goal;
+private _midDistance=_routeDistance*0.55;
+private _offset=((_routeDistance*0.25) max 20) min 55;
+private _candidateRoutes=[[_goal]];
+{
+    private _screen=(_start getPos [_midDistance,_axis]) getPos [_offset,_axis+_x];
+    _candidateRoutes pushBack [_screen,_goal];
+} forEach [90,-90,55,-55];
+private _legs=[_start,_candidateRoutes,(_enemies select 0) select 1,[],(_enemies select 0) select 0]
+    call Waldo_fnc_CortexSelectAvenue;
+if (_legs isEqualTo []) exitWith {[_state, "advance", 30] call Waldo_fnc_CortexCooldown; false};
+private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
 // Do not suppress the whole squad's attack assignment. CortexFlankStep protects only
 // the current moving element while the paired element continues native engagement.
 private _serial = (missionNamespace getVariable ["Waldo_Cortex_DrillSerial",0]) + 1;

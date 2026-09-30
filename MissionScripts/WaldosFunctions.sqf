@@ -272,6 +272,7 @@ class CfgFunctions
             class CortexDefendRelease {file = "MissionScripts\AiScripting\Cortex\cortexDefendRelease.sqf";};
             class CortexDefendStep {file = "MissionScripts\AiScripting\Cortex\cortexDefendStep.sqf";};
             class CortexPlanRoute {file = "MissionScripts\AiScripting\Cortex\cortexPlanRoute.sqf";};
+            class CortexSelectAvenue {file = "MissionScripts\AiScripting\Cortex\cortexSelectAvenue.sqf";};
             class CortexProfile {file = "MissionScripts\AiScripting\Cortex\cortexProfile.sqf";};
             class CortexStance {file = "MissionScripts\AiScripting\Cortex\cortexStance.sqf";};
             class CortexZeusHeld {file = "MissionScripts\AiScripting\Cortex\cortexZeusHeld.sqf";};
