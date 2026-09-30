@@ -372,6 +372,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('(_orderedGroups select [0,20])',diagnostic)
         self.assertIn('3D-assignment-distance-or-minus1',diagnostic)
         self.assertIn('cortex-order-snapshot-scope',diagnostic)
+        for ownership in ['cortex-remount-ownership-','cortex-transition-ownership-','cortex-support-ownership-','cortex-artillery-scoot-ownership-']:
+            self.assertIn(ownership,diagnostic)
+        self.assertIn('assignmentConflicts=',diagnostic)
+        self.assertIn('intentPhase=',diagnostic)
+        self.assertIn('leaseToken=',diagnostic)
+        self.assertIn('pending artillery relocations total=',diagnostic)
+        self.assertIn('(_scoots select [0,20])',diagnostic)
 
     def test_full_feature_focus_never_omits_an_all_suite(self):
         import re

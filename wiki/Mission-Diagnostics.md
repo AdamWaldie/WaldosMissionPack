@@ -186,6 +186,8 @@ private _dialogue = [] call Waldo_fnc_DialogueGetDiagnostics;
 
 Each returns `[featureName, checks]`; every check is `[area, feature, state, detail]`. The interaction helper optionally accepts an array of configured equipment objects. `RunDiagnostics` consumes these same helpers, preventing its interpretation from drifting away from the feature's own health report.
 
+The Cortex helper also reports bounded runtime ownership rather than only enabled switches. Its on-demand rows identify stale remount assignments, post-contact transition intents, coordinated-support token disagreements and pending artillery relocations whose deadline or owning gate has expired. These rows do not run a repair loop or prove physical movement; `ERROR` means retained work no longer agrees with its current owner, phase, assignment or feature gate.
+
 A feature small enough to be a single config flag (Corpse Traps, Object Scaling, Emergency
 Dismount's client loop, the Feature Runtime Control snapshot, UI Theme, Accessibility) does not need
 its own `*GetDiagnostics.sqf` - it adds one inline `[area, feature, state, detail]` row directly in
