@@ -22,11 +22,11 @@
  * 1: state <HASHMAP> - from Waldo_fnc_CortexGroupState
  *
  * 2: allow remount <BOOL>, true; false during stop, ownership restoration or external takeover.
- * 3: yield to external order <BOOL>, false; when true Cortex removes only its owned controls and
- *    does not issue follow, behaviour or speed commands over the replacement order.
+ * 3: yield to external order <BOOL>, false; when true Cortex removes its owned controls and
+ *    preserves identifiable replacement commands, behaviour and speed.
  * Repeat/JIP: removes only WMP transient orders and restores recorded values.
- * Held followers resume formation only while their current command is still STOP;
- * an individual replacement command is preserved.
+ * Explicitly tracked Cortex holds resume formation even if combat relabelled doStop
+ * as ATTACK/FIRE. Commands which cannot be a combat-side effect of that hold survive.
  * Pending remount intent is public for owner migration; GroupTick retries for up to 60 seconds.
  * Return Value:
  * Nothing
@@ -45,11 +45,18 @@ if (isNull _group || {!local _group}) exitWith {};
 if (count (_state getOrDefault ["drill",createHashMap]) > 0) then {
     [_group,_state,"CALM"] call Waldo_fnc_CortexFlankEnd;
 };
-{
-    if (local _x && {group _x == _group}) then {
-        _x enableAI "PATH";
-            if (!_yieldToExternal && {_x != leader _group} && {currentCommand _x == "STOP"}) then {_x doFollow leader _group};
+private _releaseOwnedHold={
+    params ["_unit"];
+    if (local _unit && {group _unit == _group}) then {
+        _unit enableAI "PATH";
+        private _command=toUpperANSI currentCommand _unit;
+        if (_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]) then {
+            _unit doFollow leader _group;
+        };
     };
+};
+{
+    [_x] call _releaseOwnedHold;
 } forEach (_state getOrDefault ["supportHeld",[]]);
 _state deleteAt "supportHeld";
 _state deleteAt "supportBoundSequence";
@@ -62,9 +69,9 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
 private _leader = leader _group;
 if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
 [_group] call Waldo_fnc_CortexGroupMoveClear;
-if (!_yieldToExternal) then {
-    {if (alive _x && {local _x}) then {_x doFollow _leader}} forEach ((_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []]));
-};
+// These units were detached by Cortex. Retire that ownership on every release,
+// including Zeus takeover, while preserving a newer individual command.
+{if (alive _x) then {[_x] call _releaseOwnedHold}} forEach ((_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []]));
 {
     if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet", false]}) then {
         if (toUpperANSI (unitPos _x) == (_x getVariable ["Waldo_Cortex_AppliedStance",""])) then {_x setUnitPos "AUTO"};

@@ -7,8 +7,9 @@
  * does not cancel an accepted reinforcement reservation.
  * A failed bound keeps its PATH holds until a new MOVE sequence or reservation release;
  * the old MOVE role must not release them on the next group tick.
- * On release, still-stopped owned followers resume formation; newer individual
- * commands and new-bound movement are not replaced.
+ * On release, actors held by Cortex resume formation even when engine combat has
+ * relabelled the owned doStop as ATTACK/FIRE. Commands which can only have arrived
+ * after the hold are preserved, and new-bound movement is not replaced.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: group <GROUP>; 1: local state <HASHMAP>.
  * Return Value: Nothing.
@@ -61,10 +62,12 @@ if (_newMove || {!_coordinating}) then {
     {
         if (local _x && {group _x == _group}) then {
             _x enableAI "PATH";
-            // Releasing PATH alone leaves our doStop order active. Only retire a
-            // still-stopped owned follower; preserve a newer individual command.
-            // A new bound supplies its own destination and must never regroup here.
-            if (!_coordinating && {_x != leader _group} && {currentCommand _x == "STOP"}) then {
+            // supportHeld is the ownership record. Combat can relabel our doStop
+            // as ATTACK or FIRE without cancelling it, so currentCommand == STOP
+            // is not a valid ownership check. Preserve commands which cannot be a
+            // combat-side effect of the hold. A new bound supplies its own target.
+            private _command=toUpperANSI currentCommand _x;
+            if (!_coordinating && {_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]}) then {
                 _x doFollow leader _group;
             };
         };

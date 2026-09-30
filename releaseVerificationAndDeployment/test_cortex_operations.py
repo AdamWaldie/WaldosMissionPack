@@ -189,7 +189,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('["RELEASE","ZEUS"] select _yieldToExternal',release)
         self.assertIn('[_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm',release)
         self.assertIn('["_yieldToExternal",false,[true]]',restore)
-        self.assertIn('if (!_yieldToExternal) then',restore)
+        self.assertIn('if (!_yieldToExternal && {_state getOrDefault ["behaviourChanged", false]}',restore)
+        self.assertIn('if (!_yieldToExternal && {_state getOrDefault ["speedChanged", false]})',restore)
+        self.assertIn('preserving a newer individual command',restore)
         self.assertIn('if (_reason != "ZEUS") then',flank_end)
 
     def test_garrison_reassigns_unreachable_positions_without_wall_clock_failure(self):
@@ -504,13 +506,27 @@ class CortexOperations(unittest.TestCase):
             self.assertIn('Waldo_CortexQA_Label',stage)
             self.assertIn(label,stage)
 
-    def test_support_release_retires_only_owned_stop_not_new_bound(self):
+    def test_support_release_retires_owned_hold_after_engine_combat_relabels_it(self):
         maintain=source('cortexSupportMaintain')
-        self.assertIn('if (!_coordinating && {_x != leader _group} && {currentCommand _x == "STOP"})',maintain)
-        for name in ['cortexSupportMaintain','cortexRestoreCalm']:
-            text=source(name)
-            self.assertIn('group _x == _group',text)
-            self.assertIn('currentCommand _x == "STOP"',text)
+        self.assertIn('_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]',maintain)
+        self.assertNotIn('_x != leader _group',maintain)
+        self.assertIn('supportHeld is the ownership record',maintain)
+        self.assertIn('group _x == _group',maintain)
+        restore=source('cortexRestoreCalm')
+        self.assertIn('group _unit == _group',restore)
+        for text in [maintain,restore]:
+            self.assertNotIn('currentCommand _x == "STOP"',text)
+
+    def test_calm_cleanup_releases_cortex_holds_without_overwriting_new_individual_orders(self):
+        restore=source('cortexRestoreCalm')
+        release_hold=restore.split('private _releaseOwnedHold={',1)[1].split('};\n{',1)[0]
+        self.assertIn('_unit enableAI "PATH"',release_hold)
+        self.assertIn('_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]',release_hold)
+        self.assertIn('_unit doFollow leader _group',release_hold)
+        for external in ['MOVE','GET IN','GET OUT','ACTION','SCRIPTED']:
+            self.assertNotIn(f'"{external}"',release_hold)
+        self.assertIn('forEach (_state getOrDefault ["supportHeld",[]])',restore)
+        self.assertIn('(_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []])',restore)
 
     def test_feature_fixtures_are_staged_and_dispatched(self):
         from check_cortex_coverage import audit
