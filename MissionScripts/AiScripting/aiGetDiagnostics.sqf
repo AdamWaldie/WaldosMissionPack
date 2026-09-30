@@ -219,13 +219,24 @@ _queue append (missionNamespace getVariable ["Waldo_AIPass_PendingJobs",[]]);
 private _overdue=0;
 private _oldest=0;
 private _staleOwners=0;
+private _earliestQueued=-1;
 {
     _x params ["_due","","_jobState"];
+    if (_earliestQueued < 0 || {_due < _earliestQueued}) then {_earliestQueued=_due};
     if (_due < time) then {_overdue=_overdue+1; _oldest=_oldest max (time-_due)};
     private _jobGroup=_jobState getOrDefault ["group",grpNull];
     if (!isNull _jobGroup && {!local _jobGroup || {(_jobState getOrDefault ["ownerEpoch",-1]) != (_jobGroup getVariable ["Waldo_AIPass_Epoch",0])}}) then {_staleOwners=_staleOwners+1};
 } forEach _queue;
-_checks pushBack ["ai","cortex-queue-health","LOADED",format ["serverJobs=%1 dueNow=%2 oldestDueSeconds=%3 staleOwnerJobs=%4 fps=%5 budgetMs=%6 paused=%7. Due jobs and stale jobs may await the next scheduler tick; repeat the report before diagnosing starvation.",count _queue,_overdue,_oldest,_staleOwners,diag_fps,missionNamespace getVariable ["Waldo_AIPass_TickBudgetMs",1],[] call Waldo_fnc_CortexIsPaused]];
+private _cachedNextDue=missionNamespace getVariable ["Waldo_AIPass_NextJobDue",-1];
+private _cacheConsistent=(_queue isEqualTo [] && {_cachedNextDue < 0})
+    || {_queue isNotEqualTo [] && {_cachedNextDue >= 0} && {_cachedNextDue <= (_earliestQueued+0.001)}};
+private _queueState=if (_cacheConsistent) then {"LOADED"} else {"ERROR"};
+private _queueHint=if (_cacheConsistent) then {
+    "Due jobs and stale jobs may await the next scheduler tick; repeat the report before diagnosing starvation."
+} else {
+    "The scheduler deadline cache is missing or later than the earliest queued job. Restart Cortex or inspect queue mutation paths before trusting idle scheduling."
+};
+_checks pushBack ["ai","cortex-queue-health",_queueState,format ["serverJobs=%1 dueNow=%2 oldestDueSeconds=%3 staleOwnerJobs=%4 cachedNextDueSeconds=%5 earliestQueuedDueSeconds=%6 deadlineCacheConsistent=%7 fps=%8 budgetMs=%9 paused=%10. %11",count _queue,_overdue,_oldest,_staleOwners,if (_cachedNextDue < 0) then {-1} else {_cachedNextDue-time},if (_earliestQueued < 0) then {-1} else {_earliestQueued-time},_cacheConsistent,diag_fps,missionNamespace getVariable ["Waldo_AIPass_TickBudgetMs",1],[] call Waldo_fnc_CortexIsPaused,_queueHint]];
 private _localGroups=_groups select {local _x && {_x getVariable ["Waldo_AIPass_Managed",false]}};
 _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot serverTime=%1; server-local managed groups=%2, sampled=%3 (limit 20); HC-owned groups=%4. HC private action/queue state is unavailable here, not zero. Stationary or PATH-disabled units may be covering; one snapshot cannot prove a stall.",serverTime,count _localGroups,(count _localGroups) min 20,count _hcGroups]];
 {

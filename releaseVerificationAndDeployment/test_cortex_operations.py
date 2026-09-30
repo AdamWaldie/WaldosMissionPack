@@ -329,6 +329,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _parents=+(_dependencies',diagnostic)
         self.assertIn('oldestDueSeconds=',diagnostic)
         self.assertIn('staleOwnerJobs=',diagnostic)
+        self.assertIn('cachedNextDueSeconds=',diagnostic)
+        self.assertIn('earliestQueuedDueSeconds=',diagnostic)
+        self.assertIn('deadlineCacheConsistent=',diagnostic)
+        self.assertIn('private _queueState=if (_cacheConsistent) then {"LOADED"} else {"ERROR"}',diagnostic)
         self.assertIn('tuning [label,current,default]',diagnostic)
         self.assertNotIn('call Waldo_fnc_CortexIsEligible',diagnostic)
 
