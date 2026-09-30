@@ -10,7 +10,9 @@
  * artillery support and Waldo_AIPass_ArtillerySmoke_Enable on, a friendly battery selected by the server across owners
  * lays a smoke screen between the squad and the enemy, never within 50 m of friendlies. Any flank drill ends because the phase
  * leaves CONTACT. Individual attack assignments are suspended and behaviour set to AWARE for
- * withdrawal. Attack, behaviour and speed changes are recorded for CALM, release and ownership cleanup.
+ * withdrawal. A RED group temporarily uses YELLOW: it keeps firing, but the engine may no longer
+ * replace the retreat waypoint with independent pursuit. Attack, combat mode, behaviour and speed
+ * changes are recorded for CALM, release and ownership cleanup. A later Zeus ROE change is preserved.
  * Locality and authority: call where the group is local; server selects and dispatches supporting artillery.
  * Repeat/JIP: caller phase prevents repeated entry; artillery mission tokens persist through owner changes.
  *
@@ -56,6 +58,13 @@ if (!("baseAttack" in _state)) then {
     _state set ["attackChanged",attackEnabled _group];
 };
 _group enableAttack false;
+// RED grants the engine independent pursuit authority, which can replace the finite retreat
+// waypoint while the smoke layer still runs. YELLOW retains fire-at-will and formation movement.
+// Record both the previous and applied values so cleanup only restores a mode Cortex still owns.
+if (combatMode _group == "RED" && {!("retreatCombatMode" in _state)}) then {
+    _state set ["retreatCombatMode",["RED","YELLOW"]];
+    _group setCombatMode "YELLOW";
+};
 // A withdrawal must leave individual attack manoeuvres and combat formation planning.
 // Normal weapon engagement remains available; calm/release restores captured settings.
 if (behaviour _leader != "AWARE") then {

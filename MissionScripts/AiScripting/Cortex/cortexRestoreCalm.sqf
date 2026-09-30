@@ -5,7 +5,8 @@
  * Ends an active drill synchronously before consuming its restoration data; queued
  * steps then find no matching drill and cannot revive the old movement.
  *
- * Restores recorded changes: behaviour goes back to the value
+ * Restores recorded changes: a retreat combat-mode lease goes back to its prior value only while
+ * the group still has Cortex's applied value; behaviour goes back to the value
  * recorded at first contact only if the pass changed it and the group is still in COMBAT (a squad
  * that was SAFE before an actual firefight comes back AWARE, not SAFE); speed goes
  * back only if the pass changed it. Pass waypoints are removed so the group resumes its own
@@ -68,6 +69,10 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
 {_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
 private _leader = leader _group;
 if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
+private _retreatModeLease = _state getOrDefault ["retreatCombatMode",[]];
+if (!_yieldToExternal && {count _retreatModeLease == 2} && {combatMode _group == (_retreatModeLease select 1)}) then {
+    _group setCombatMode (_retreatModeLease select 0);
+};
 [_group] call Waldo_fnc_CortexGroupMoveClear;
 // These units were detached by Cortex. Retire that ownership on every release,
 // including Zeus takeover, while preserving a newer individual command.
@@ -114,7 +119,7 @@ if (!_allowRemount) then {
 {_state deleteAt _x} forEach [
     "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
-    "armourRequested", "coordinated", "coordinatedPendingUntil", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
+    "armourRequested", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 _state set ["phase", "CALM"];

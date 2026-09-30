@@ -432,3 +432,14 @@ Regression gates passed: 483 tests, 1259 production SQF files, 29 QA SQF files, 
 Runtime 20260930-182028 completed with 45 server findings, three client UI findings and no acceptance claim. The coordinated case repeatedly left movers under native ATTACK while Cortex owned an unfinished MOVE; physical advance, moving fire, idle, backtracking and threatened handovers failed. The unopposed handover later moved, which distinguishes permanent path loss from combat-order conflict. The earlier controlled comparison remains decisive: ADVANCE-YELLOW physically completed with moving fire while the matching RED advance stalled. Arma defines RED as fire-at-will plus independent engagement and YELLOW as fire-at-will while retaining formation.
 
 Saved correction gives a RED group a finite, owned YELLOW lease for the whole manoeuvre, one scheduler step before its first bound. It never uses BLUE and therefore does not silence the base of fire. The covering fire-team and supporting squad retain target acquisition and explicit suppression; only current movers keep their existing bounded pursuit-feature leases. The original group mode is restored only while the live value still matches Cortex's applied YELLOW, and the lease is included in locality checkpoints. A later Zeus, waypoint or script ROE change ends the manoeuvre as ROE_CHANGED and survives cleanup. The coordinated audit now separately requires live MOVE-stage samples to remain YELLOW and retains actual fire, movement, ATTACK-override, idle, backtracking and handover checks. Static acceptance: 149 Cortex tests and 1262 SQF files pass. Fresh in-engine acceptance is required.
+
+# Withdrawal movement ownership
+
+- Retreat smoke and the retreat route are independent layers. Smoke may execute even when the
+  engine has replaced the route, so smoke is never evidence of physical withdrawal.
+- A group in RED grants the engine independent pursuit authority. Cortex now leases RED to YELLOW
+  for the withdrawal: weapons remain fire-at-will while the finite retreat waypoint retains movement
+  ownership. Cleanup restores RED only if the group still has the applied YELLOW value; Zeus or
+  another controller changing ROE wins immediately.
+- The lease is part of the public restoration checkpoint so a headless-client locality change cannot
+  strand the squad in Cortex's temporary mode.

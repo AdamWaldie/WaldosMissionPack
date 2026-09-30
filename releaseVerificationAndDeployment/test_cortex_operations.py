@@ -890,6 +890,20 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_state set ["behaviourChanged",true]',text)
         self.assertIn('_state set ["baseBehaviour",behaviour _leader]',text)
 
+    def test_retreat_keeps_fire_while_leasing_engine_pursuit_mode(self):
+        retreat=source('cortexRetreat')
+        restore=source('cortexRestoreCalm')
+        checkpoint=source('cortexCheckpoint')
+        self.assertIn('combatMode _group == "RED"',retreat)
+        self.assertIn('_state set ["retreatCombatMode",["RED","YELLOW"]]',retreat)
+        self.assertIn('_group setCombatMode "YELLOW"',retreat)
+        self.assertNotIn('_group setCombatMode "BLUE"',retreat)
+        self.assertIn('combatMode _group == (_retreatModeLease select 1)',restore)
+        self.assertIn('_group setCombatMode (_retreatModeLease select 0)',restore)
+        self.assertIn('!_yieldToExternal',restore)
+        self.assertIn('"retreatCombatMode"',checkpoint)
+        self.assertIn('"retreatCombatMode"',restore.split('{_state deleteAt _x} forEach [',1)[1])
+
     def test_cover_stance_bounds_rays_and_rotates_units(self):
         text=source('cortexStance')
         self.assertIn('if (_sampled >= 2) exitWith {}', text)
