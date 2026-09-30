@@ -392,7 +392,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('COORD-assault-corridor-clear',qa)
         self.assertIn('{deleteVehicle _x} forEach _movementScreens;',qa)
         self.assertLess(qa.index('COORD-assault-corridor-clear'),qa.index('Movement diagnostic: coordinated bounds'))
-        self.assertIn('(_x findIf {_x distance2D _area > 45}) >= 0',qa)
+        self.assertIn('private _outside = _x findIf {_x distance2D _area > 45};',qa)
+        self.assertIn('_outside >= 0',qa)
 
     def test_literal_qa_tuning_requests_have_transport_entries(self):
         import re
@@ -439,14 +440,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('(_supportRole select 0) == _supportToken', text)
         self.assertIn('(_supportRole select 1) == (_drill get "supportSequence")', text)
 
-    def test_tactical_holds_use_configured_pause_without_shortening_grenade_clearance(self):
+    def test_tactical_holds_use_configured_pause_without_grenade_state_gate(self):
         text = source('cortexFlankStep')
         for stage in ['FINAL','CONSOLIDATE','CLEAR']:
             block = text.split('case "'+stage+'": {')[1].split('case ')[0]
             self.assertIn('Waldo_AIPass_Flank_BoundPause', block)
         self.assertIn('!_support &&', text)
-        self.assertIn('((_flight select 4)+8)', text)
-        self.assertIn('&& {!_inFlight}', text)
+        self.assertIn('_drill set ["grenadeActionUntil",[_now,_now+2] select _queued]', text)
+        self.assertNotIn('case "GRENADE": {', text)
 
     def test_support_reserves_separate_rally_areas_in_durable_leases(self):
         step = source('cortexSupportStep')
@@ -516,8 +517,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _teamPause=if (_support) then {0} else', text)
         self.assertIn('private _pause = if (_support) then {0} else', text)
         self.assertIn('if (_arrived) then {', text)
-        self.assertIn('((_flight select 4)+8)', text)
-        self.assertIn('&& {!_inFlight}', text)
+        self.assertNotIn('case "GRENADE": {', text)
+        self.assertIn('private _teamPause=if (_support) then {0} else', text)
 
     def test_native_waypoint_return_uses_bounded_recovery_without_editing_waypoints(self):
         text = source('cortexFlankStep')
@@ -538,16 +539,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_unit doMove _spot', issue)
         self.assertIn('_combatModes pushBack [_unit,"RED","YELLOW"]', issue)
 
-    def test_cancelled_throw_is_distinct_from_unobserved_live_grenade(self):
+    def test_cancelled_throw_does_not_block_assault_progression(self):
         throw = source('cortexThrowGrenade')
         self.assertIn('setVariable ["Waldo_Cortex_FragCancelled",_drillToken]', throw)
         self.assertIn('exitWith {call _cancel}', throw)
         self.assertIn('if (_thrown) exitWith {};', throw)
         self.assertNotIn('if (_thrown) exitWith {call _cancel}', throw)
         step = source('cortexFlankStep')
-        self.assertIn('getVariable ["Waldo_Cortex_FragCancelled",""]) == _token', step)
-        self.assertIn('"GRENADE_UNRESOLVED" call _end', step)
-        self.assertIn('_now >= ((_drill get "pauseUntil") max ((_flight select 4)+8))', step)
+        self.assertNotIn('getVariable ["Waldo_Cortex_FragCancelled",""]) == _token', step)
+        self.assertNotIn('"GRENADE_UNRESOLVED" call _end', step)
+        self.assertIn('_drill set ["stage","PAUSE"]', step)
 
     def test_previous_holders_cannot_follow_over_replacement_drill(self):
         text = source('cortexGroupTick')
@@ -1141,14 +1142,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('vectorDotProduct _forward) < 10',qa)
         self.assertIn('count _clearThroughTeams >= ([1,2] select _advance)',qa)
 
-    def test_assault_frag_waits_at_approach_for_projectile(self):
+    def test_assault_frag_is_opportunistic_and_never_blocks_movement(self):
         step=source('cortexFlankStep')
         hold=step[step.index('    case "HOLD":'):]
         self.assertNotIn('"FRAG"',hold)
         self.assertIn('case "ASSAULT": {',step)
-        self.assertIn('case "GRENADE": {',step)
-        self.assertIn('!isNull (_flight select 1)',step)
-        self.assertIn('"GRENADE_UNRESOLVED" call _end',step)
+        self.assertNotIn('case "GRENADE": {',step)
+        self.assertNotIn('"GRENADE_UNRESOLVED" call _end',step)
+        self.assertIn('_drill set ["stage","PAUSE"]',step)
+        self.assertIn('_drill set ["grenadeActionUntil",[_now,_now+2] select _queued]',step)
         grenade=source('cortexThrowGrenade')
         self.assertIn('addEventHandler ["FiredMan"',grenade)
         self.assertIn('removeEventHandler ["FiredMan",_thisEventHandler]',grenade)
@@ -1164,7 +1166,7 @@ class CortexOperations(unittest.TestCase):
 
     def test_grenade_hold_times_actual_deployment_and_cleans_owned_listener(self):
         self.assertIn('_flight set [4,time]',source('cortexThrowGrenade'))
-        self.assertIn('((_flight select 4)+8)',source('cortexFlankStep'))
+        self.assertNotIn('((_flight select 4)+8)',source('cortexFlankStep'))
         end=source('cortexFlankEnd')
         self.assertIn('(_flight select 0) == (_drill getOrDefault ["token",""])',end)
         self.assertIn('removeEventHandler ["FiredMan",_handler]',end)
@@ -1195,6 +1197,10 @@ class CortexOperations(unittest.TestCase):
 
     def test_flank_consolidates_support_through_existing_movement_job(self):
         step=source('cortexFlankStep')
+        self.assertIn('private _allUnits = +_units;',step)
+        self.assertIn('private _fit = +_allUnits;',step)
+        self.assertLess(step.index('private _allUnits = +_units;'),step.index('private _fit = +_allUnits;'))
+        self.assertNotIn('private _fit = +_units;',step)
         self.assertIn('_points pushBack [_rally,"CONSOLIDATE"]',step)
         self.assertIn('_drill set ["units",_allUnits + _support]',step)
         self.assertIn('_teams = [+_allUnits,+_support]',step)
@@ -1215,7 +1221,7 @@ class CortexOperations(unittest.TestCase):
     def test_grenade_thrower_is_not_retasked_by_fire_or_antiarmour(self):
         for name in ['cortexFireControl','cortexAntiArmour']:
             code=source(name)
-            self.assertIn('== "GRENADE"',code)
+            self.assertIn('getOrDefault ["grenadeActionUntil",-1]',code)
             self.assertIn('pushBackUnique (_drill getOrDefault ["grenadeThrower",objNull])',code)
 
     def test_combat_mode_fixture_waits_and_reports_expected_and_actual_modes(self):

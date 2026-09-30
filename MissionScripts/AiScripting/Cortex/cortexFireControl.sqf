@@ -16,7 +16,8 @@
  * The pass adds no detection. A live coordinated role may suppress its reported position
  * without assigning an unseen object target; all normal fire safety and ammo limits apply.
  * Locality and authority: call where the group is local; all orders are local-argument commands.
- * A pending drill grenade thrower is not retargeted during the GRENADE stage.
+ * An opportunistic drill grenade thrower is not retargeted during its two-second action window;
+ * the grenade never blocks the squad manoeuvre state.
  * Repeat/JIP: checks current ownership, eligibility and gates on every call. START/MOVE
  * actors and recovering stragglers are excluded; this function creates no JIP actions.
  *
@@ -60,9 +61,9 @@ private _drillUnits = if ((_drill getOrDefault ["teams",[]]) isEqualTo []) then 
     if ((_drill getOrDefault ["stage",""]) in ["START","MOVE"]) then {_drill getOrDefault ["movers",_drill getOrDefault ["units",[]]]} else {[]}
 };
 // Rejoining actors still own movement, even while the main element pauses.
-// The grenade stage owns this actor until deployment is resolved. Other
-// stationary soldiers remain available for covering fire and anti-armour work.
-if ((_drill getOrDefault ["stage",""]) == "GRENADE") then {
+// An opportunistic grenade reserves only its thrower for the short next-frame
+// action window; it never blocks the squad's manoeuvre state.
+if (_now < (_drill getOrDefault ["grenadeActionUntil",-1])) then {
     _drillUnits = +_drillUnits;
     _drillUnits pushBackUnique (_drill getOrDefault ["grenadeThrower",objNull]);
 };

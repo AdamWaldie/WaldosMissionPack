@@ -14,7 +14,8 @@
  * Active drill movers are not reassigned. Explicit holding/clearing orders and disabled
  * PATH/MOVE prevent relocation; stationary support actors may still engage if safe.
  *
- * A pending drill grenade thrower is not retargeted during the GRENADE stage.
+ * An opportunistic drill grenade thrower is not retargeted during its two-second action window;
+ * the grenade never blocks the squad manoeuvre state.
  * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
  * Arguments:
  * 0: group <GROUP>
@@ -39,9 +40,8 @@ private _drill = _state getOrDefault ["drill",createHashMap];
 private _moving = if ((_drill getOrDefault ["stage",""]) in ["START","MOVE"]) then {
     _drill getOrDefault ["movers",_drill getOrDefault ["units",[]]]
 } else {[]};
-// The grenade stage owns this actor until deployment is resolved. Other
-// stationary soldiers remain available for covering fire and anti-armour work.
-if ((_drill getOrDefault ["stage",""]) == "GRENADE") then {
+// Reserve an opportunistic grenade thrower only for its short action window.
+if (time < (_drill getOrDefault ["grenadeActionUntil",-1])) then {
     _moving = +_moving;
     _moving pushBackUnique (_drill getOrDefault ["grenadeThrower",objNull]);
 };

@@ -7,7 +7,8 @@
  * protection at lower heights with standing clearance selects UP. Fully blocked cover retains AUTO.
  * These local height probes are approximate clearance checks, not proof of a clear shot to a target.
  * With no cover in front, the stance is handed back to the engine (AUTO). Each soldier is re-checked
- * at most every 10 s. A rotating cursor limits each group step to two sampled soldiers (six rays),
+ * at most every 10 s. A soldier briefly reserved for an opportunistic grenade keeps his stance
+ * during that action; the grenade never blocks the manoeuvre state. A rotating cursor limits each group step to two sampled soldiers (six rays),
  * avoiding a whole-squad ray burst; ineligible soldiers do not consume the sampling allowance. Only soldiers whose stance was AUTO, or was set by
  * the pass, are changed, so mission-maker stances are respected. The pass returns every stance it set
  * to AUTO when the squad goes back to CALM only while it still matches the applied stance.
@@ -39,7 +40,7 @@ private _drillUnits = if ((_drill getOrDefault ["stage",""]) in ["START","MOVE"]
     +(_drill getOrDefault ["movers",_drill getOrDefault ["units",[]]])
 } else {[]};
 {_drillUnits pushBackUnique (_x select 0)} forEach (_drill getOrDefault ["recovery",[]]);
-if ((_drill getOrDefault ["stage",""]) == "GRENADE") then {
+if (_now < (_drill getOrDefault ["grenadeActionUntil",-1])) then {
     _drillUnits pushBackUnique (_drill getOrDefault ["grenadeThrower",objNull]);
 };
 private _changed = 0;

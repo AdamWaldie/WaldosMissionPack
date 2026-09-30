@@ -30,7 +30,7 @@
  * if the enemy is believed within Waldo_AIPass_Assault_Range of the element, morale is STEADY and the
  * behaviour profile's assaultChance roll succeeds, the element first reaches its assault position before one member may throw a fragmentation grenade
  * (Waldo_fnc_CortexThrowGrenade, never near friendlies). The approach uses a covered spot
- * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. A queued frag cancelled before firing by its final safety check is skipped. The clearing rush waits at least eight seconds after a queued frag and until the tracked projectile is gone; an unresolved projectile after thirty seconds aborts the drill. The assault axis stays fixed through the crossing; water destinations are rejected.
+ * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. A queued frag is an opportunistic action: its own next-frame safety check may cancel it, but deployment never gates the assault or aborts movement. The assault axis stays fixed through the crossing; water destinations are rejected.
  * Consolidation: a flank brings its covering element forward even when no final assault
  * is selected; the manoeuvre element holds its gained position. After clearing through,
  * its surviving on-foot covering element moves
@@ -226,7 +226,11 @@ private _assaultEnabled = [_group,"Waldo_AIPass_Assault_Enable", true] call Wald
 if (_assaulting && {!_assaultEnabled}) exitWith {"ABORT" call _end};
 if (!_support && {!_assaulting} && {!_assaultEnabled} && {_centroid distance2D _enemyPos < 30}) exitWith {"CLOSE" call _end};
 
-private _fit = +_units;
+// Preserve the complete live participant set before selecting the fire team for this bound.
+// HOLD uses this snapshot to bring the base-of-fire element forward; without it the
+// consolidation transition can terminate and leave only the current team assaulting.
+private _allUnits = +_units;
+private _fit = +_allUnits;
 if (_teams isNotEqualTo []) then {_units = (_teams select (_drill getOrDefault ["teamTurn",0])) select {_x in _fit}};
 if (_units isEqualTo [] || {_teams isNotEqualTo [] && {count (_fit - _units) == 0}}) exitWith {"LOSSES" call _end};
 private _points = _drill get "points";
@@ -487,10 +491,13 @@ switch (_drill get "stage") do {
                             _queued = true;
                         };
                     } forEach _throwers;
-                    _drill set ["stage",["PAUSE","GRENADE"] select _queued];
-                    _drill set ["pauseUntil",_now + ([3,8] select _queued)];
-                    _drill set ["grenadeDeadline",_now + 30];
+                    // Grenades support the assault; they do not own its state transition.
+                    // Reserve the actor briefly for the next-frame throw, then continue the
+                    // ordinary tactical pause whether the throw succeeds, cancels or migrates.
+                    _drill set ["stage","PAUSE"];
+                    _drill set ["pauseUntil",_now + 3];
                     _drill set ["grenadeThrower",_thrower];
+                    _drill set ["grenadeActionUntil",[_now,_now+2] select _queued];
                 };
                 case "CONSOLIDATE": {
                     _drill set ["stage","HOLD"];
@@ -505,29 +512,6 @@ switch (_drill get "stage") do {
                     _drill set ["pauseUntil", _now + (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause", 4])];
                 };
             };
-            };
-        };
-    };
-    case "GRENADE": {
-        private _thrower = _drill getOrDefault ["grenadeThrower",objNull];
-        // A final safety/locality check may cancel the queued throw before any fire command.
-        // Continue without a grenade only on that explicit matching cancellation, never
-        // merely because a projectile has not yet been observed.
-        if ((_thrower getVariable ["Waldo_Cortex_FragCancelled",""]) == _token) exitWith {
-            _drill set ["stage","PAUSE"];
-            _drill set ["pauseUntil",_now+3];
-        };
-        private _flight = _thrower getVariable ["Waldo_Cortex_FragFlight",[]];
-        private _confirmed = count _flight == 5 && {(_flight select 0) == _token} && {_flight select 2};
-        private _inFlight = _confirmed && {!isNull (_flight select 1)};
-        if (_confirmed && {_now >= ((_drill get "pauseUntil") max ((_flight select 4)+8))} && {!_inFlight}) then {
-            _drill set ["stage","PAUSE"];
-        } else {
-            if (_now >= (_drill get "grenadeDeadline")) then {
-                diag_log format ["[WMP CORTEX] Grenade unresolved group=%1 actor=%2 flight=%3 cancelled=%4 weapon=%5 magazines=%6 command=%7 locality=%8",
-                    _group,netId _thrower,_flight,_thrower getVariable ["Waldo_Cortex_FragCancelled",""],
-                    weaponState _thrower,magazines _thrower,currentCommand _thrower,local _thrower];
-                _result = "GRENADE_UNRESOLVED" call _end;
             };
         };
     };

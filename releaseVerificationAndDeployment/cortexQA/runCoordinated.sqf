@@ -161,7 +161,8 @@ private _rallied=[{
         if (count _lease != 6) exitWith {true};
         private _area = _lease select 3;
         {_x setVariable ["Waldo_CortexQA_Target",_area,true]} forEach _x;
-        (_x findIf {_x distance2D _area > 45}) >= 0
+        private _outside = _x findIf {_x distance2D _area > 45};
+        _outside >= 0
     } < 0
 },120] call _wait;
 ["COORD-no-premature-rally-readiness",!_prematureReady] call _check;
