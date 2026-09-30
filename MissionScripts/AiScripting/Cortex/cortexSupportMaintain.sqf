@@ -7,6 +7,8 @@
  * does not cancel an accepted reinforcement reservation.
  * A failed bound keeps its PATH holds until a new MOVE sequence or reservation release;
  * the old MOVE role must not release them on the next group tick.
+ * A MOVE role which cannot form two viable local teams reports NOT_READY immediately;
+ * the server can yield the turn instead of waiting for its 180-second safety timeout.
  * On release, actors held by Cortex resume formation even when engine combat has
  * relabelled the owned doStop as ATTACK/FIRE. Commands which can only have arrived
  * after the hold are preserved, and new-bound movement is not replaced.
@@ -87,7 +89,12 @@ if (_newMove || {!_coordinating}) then {
 if (_coordinating) then {
     if (_moving) then {
         if ((_state getOrDefault ["supportBoundSequence",-1]) != (_role select 1)) then {
-            [_group,_state,_role] call Waldo_fnc_CortexSupportBoundStart;
+            private _started=[_group,_state,_role] call Waldo_fnc_CortexSupportBoundStart;
+            if (!_started) then {
+                _state set ["supportBoundSequence",_role select 1];
+                _group setVariable ["Waldo_Cortex_SupportBoundResult",
+                    [_token,_role select 1,"NOT_READY"],true];
+            };
         };
     } else {
         private _drill=_state getOrDefault ["drill",createHashMap];

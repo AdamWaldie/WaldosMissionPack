@@ -728,6 +728,17 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('["teamSizes",[count _element,count _coverElement]]',source('cortexAdvanceStart'))
         self.assertIn('["teamSizes",[count _first,count _second]]',source('cortexSupportBoundStart'))
 
+    def test_coordinated_bound_team_contract_matches_server_reservation(self):
+        start=source('cortexSupportBoundStart')
+        self.assertIn('([_first,_second] select (_forEachIndex mod 2)) pushBack _x',start)
+        self.assertIn('count _first < 2 || {count _second < 2}',start)
+        self.assertNotIn('private _riflemen=',start)
+        self.assertNotIn('CortexUnitRole',start)
+        maintain=source('cortexSupportMaintain')
+        self.assertIn('private _started=[_group,_state,_role] call Waldo_fnc_CortexSupportBoundStart',maintain)
+        self.assertIn('[_token,_role select 1,"NOT_READY"]',maintain)
+        self.assertIn('_state set ["supportBoundSequence",_role select 1]',maintain)
+
     def test_bound_retry_is_finite_and_does_not_fabricate_progress(self):
         text = source('cortexFlankStep')
         retry = text.split('private _retry = _retries select _forEachIndex;')[1].split('if (_now-(_last select 3) > _timeout)')[0]
