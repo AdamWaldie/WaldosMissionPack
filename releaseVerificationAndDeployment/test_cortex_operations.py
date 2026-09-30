@@ -1645,6 +1645,13 @@ class CortexOperations(unittest.TestCase):
             transport=(ROOT/'MissionScripts/ZenModules/RuntimeControl'/f'{name}.sqf').read_text()
             self.assertIn('Waldo_Cortex_AttackRunFlares_Enable',transport)
 
+    def test_attack_run_flare_jobs_are_not_queued_for_ineligible_aircraft(self):
+        discover=source('cortexDiscover')
+        block=discover.split('private _attackFlareEligible',1)[1].split('if (_attackFlareEligible',1)[0]
+        for requirement in ['!isNull _pilot','alive _pilot','!isPlayer _pilot','!unitIsUAV _vehicle',
+                            'CortexIsEligible','CortexAircraftEligible']:
+            self.assertIn(requirement,block)
+
     def test_attack_flare_audit_preserves_missile_cases_and_uses_real_flight(self):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
         for item in ['AIR-paired-real-threats','O_Heli_Attack_02_dynamicLoadout_F','O_Plane_CAS_02_dynamicLoadout_F','-physical-flight','-approach-release','-departure-release','-ammunition-consumed','-no-cortex-release','addEventHandler ["Fired"']:

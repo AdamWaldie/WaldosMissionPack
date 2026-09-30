@@ -17,6 +17,8 @@
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
  * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
  *   WMP gunships and Dynamic AA fighters.
+ * - queues proactive attack-run flare sampling only for a currently eligible, crewed AI aircraft;
+ *   empty, player, UAV and excluded aircraft are reconsidered on later sweeps without job churn.
  * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
  *
  * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
@@ -116,7 +118,11 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
         private _vehicle = _x;
         if (isServer && {alive _vehicle} && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {_allArtillery pushBack _vehicle};
         if (local _vehicle && {alive _vehicle}) then {
-            if (_wantAttackFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_Cortex_AttackFlareJob",false])}) then {
+            private _pilot = driver _vehicle;
+            private _attackFlareEligible = _wantAttackFlares && {_vehicle isKindOf "Air"}
+                && {!isNull _pilot} && {alive _pilot} && {!isPlayer _pilot} && {!unitIsUAV _vehicle}
+                && {[group _pilot] call Waldo_fnc_CortexIsEligible || {[_vehicle] call Waldo_fnc_CortexAircraftEligible}};
+            if (_attackFlareEligible && {!(_vehicle getVariable ["Waldo_Cortex_AttackFlareJob",false])}) then {
                 _vehicle setVariable ["Waldo_Cortex_AttackFlareJob",true];
                 [Waldo_fnc_CortexAttackRunFlares,createHashMapFromArray [["aircraft",_vehicle]],1] call Waldo_fnc_CortexQueueJob;
             };
