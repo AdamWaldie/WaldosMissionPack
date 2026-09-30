@@ -67,8 +67,12 @@
  * Unresolved separation cannot produce COMPLETE; ownership changes cancel this local recovery.
  * Casualties are reassessed only on this group job. A flank draws replacements from surviving
  * uncommitted squad members. Advance and coordinated-bound fire teams first take unassigned
- * survivors, then rebalance only when one team falls below two. A casualty during movement restarts
- * the same bound so the surviving formation cannot inherit another soldier's destination.
+ * survivors, then rebalance only when one team falls below two. Recovery is also checked against the
+ * fire team which is about to move: a covering team with more than two available soldiers reinforces
+ * an under-strength moving team, otherwise the bound waits for that team's recovery instead of sending
+ * one soldier alone. Six unsuccessful recovery orders end the bound rather than waiting forever.
+ * A casualty during movement restarts the same bound so the surviving formation cannot inherit another
+ * soldier's destination.
  * Arguments:
  * 0: job <HASHMAP> - contains "group" and the matching "drillToken" (required)
  *
@@ -243,6 +247,35 @@ if (_recoverySnapshot isNotEqualTo (_group getVariable ["Waldo_Cortex_DrillRecov
     _group setVariable ["Waldo_Cortex_DrillRecovery",_recoverySnapshot,true];
 };
 _units = _units - _recovering;
+// Validate the actual moving element after recovery actors have been removed. The earlier
+// squad-wide strength gate cannot prevent a two-person team becoming a one-man assault.
+// Borrow only a genuine spare so the other element still has at least two soldiers covering.
+private _waitForTeam=false;
+private _teamRecoveryFailed=false;
+if (_teams isNotEqualTo []) then {
+    private _turn=_drill getOrDefault ["teamTurn",0];
+    private _otherTurn=1-_turn;
+    private _movingAvailable=(_teams select _turn) select {_x in _units};
+    private _coverAvailable=(_teams select _otherTurn) select {_x in _units};
+    if (count _movingAvailable < 2 && {count _coverAvailable > 2}) then {
+        private _replacement=_coverAvailable select ((count _coverAvailable)-1);
+        (_teams select _otherTurn) deleteAt ((_teams select _otherTurn) find _replacement);
+        (_teams select _turn) pushBack _replacement;
+        _movingAvailable pushBack _replacement;
+        _drill set ["teams",_teams];
+        private _history=_group getVariable ["Waldo_Cortex_DrillReinforcements",[]];
+        _history pushBack [serverTime,_drill getOrDefault ["type",""],_drill getOrDefault ["index",-1],
+            [[format ["TEAM_%1_RECOVERY",_turn+1],netId _replacement]]];
+        _group setVariable ["Waldo_Cortex_DrillReinforcements",_history,true];
+    };
+    if (count _movingAvailable < 2) then {
+        private _exhausted=_recovery findIf {(_x select 0) in (_teams select _turn)
+            && {(_x select 1) >= 6} && {time >= (_x select 2)}} >= 0;
+        if (_exhausted) then {_teamRecoveryFailed=true} else {_waitForTeam=true};
+    };
+};
+if (_teamRecoveryFailed) exitWith {"RECOVERY_FAILED" call _end};
+if (_waitForTeam) exitWith {1.5};
 if (count _units < 2) exitWith {"RECOVERY_FAILED" call _end};
 private _centroid = [0, 0, 0];
 {_centroid = _centroid vectorAdd getPosATL _x} forEach _units;

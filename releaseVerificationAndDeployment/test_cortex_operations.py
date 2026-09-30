@@ -1319,6 +1319,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_reason == "COMPLETE") then', end)
         self.assertIn('Waldo_Cortex_DrillResult', end)
 
+    def test_recovery_cannot_launch_a_one_soldier_bound(self):
+        text = source('cortexFlankStep')
+        self.assertIn('private _movingAvailable=(_teams select _turn) select {_x in _units};', text)
+        self.assertIn('count _movingAvailable < 2 && {count _coverAvailable > 2}', text)
+        self.assertIn('TEAM_%1_RECOVERY', text)
+        self.assertIn('if (_waitForTeam) exitWith {1.5};', text)
+        self.assertIn('(_x select 1) >= 6', text)
+        self.assertIn('if (_teamRecoveryFailed) exitWith {"RECOVERY_FAILED" call _end};', text)
+
     def test_manoeuvres_preserve_covering_element_attack_assignment(self):
         for name in ['cortexFlankStart','cortexAdvanceStart','cortexSupportApply','cortexSupportBoundStart']:
             self.assertNotIn('_group enableAttack false',source(name))
