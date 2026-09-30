@@ -10,7 +10,9 @@
  *
  * Review contract: Only the current group owner restores the public LAMBS flag. Changed restoration checkpoints are public and consumed on ownership adoption.
  *
- * Repeat/JIP: only tracked changes are restored; repeated cleanup is harmless and never boards passengers.
+ * A Zeus takeover yields movement, formation, behaviour and speed to the curator while still restoring
+ * Cortex-owned AI feature switches and removing Cortex waypoints. Repeat/JIP: only tracked changes are
+ * restored; repeated cleanup is harmless and never boards passengers.
  * Public remount intent is cancelled even when owner migration left no local behaviour map.
  * Arguments:
  * 0: group <GROUP>
@@ -30,9 +32,10 @@
 params [["_group", grpNull, [grpNull]], ["_forget", true, [false]]];
 if (isNull _group) exitWith {};
 private _state = _group getVariable ["Waldo_AIPass_State", createHashMap];
+private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld};
 if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
-    if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, "RELEASE"] call Waldo_fnc_CortexFlankEnd};
-    [_group, _state, false] call Waldo_fnc_CortexRestoreCalm;
+    if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _yieldToExternal] call Waldo_fnc_CortexFlankEnd};
+    [_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm;
 };
 if (local _group && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
     _group setVariable ["lambs_danger_disableGroupAI", false, true];

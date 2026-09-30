@@ -181,6 +181,17 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('setCombatMode',clear)
         self.assertNotIn('setCombatMode',release)
 
+    def test_zeus_takeover_cleanup_does_not_replace_curator_movement(self):
+        release=source('cortexReleaseGroup')
+        restore=source('cortexRestoreCalm')
+        flank_end=source('cortexFlankEnd')
+        self.assertIn('private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld}',release)
+        self.assertIn('["RELEASE","ZEUS"] select _yieldToExternal',release)
+        self.assertIn('[_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm',release)
+        self.assertIn('["_yieldToExternal",false,[true]]',restore)
+        self.assertIn('if (!_yieldToExternal) then',restore)
+        self.assertIn('if (_reason != "ZEUS") then',flank_end)
+
     def test_garrison_reassigns_unreachable_positions_without_wall_clock_failure(self):
         order=source('cortexGarrison')
         apply=source('cortexGarrisonApplyLocal')

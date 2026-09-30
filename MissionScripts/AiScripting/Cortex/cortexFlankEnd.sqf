@@ -17,7 +17,7 @@
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
- * 2: reason <STRING> - COMPLETE, CLOSE, ABORT, LOSSES, STALLED, TIME_LIMIT, RELEASE, CALM, GRENADE_UNRESOLVED or RECOVERY_FAILED
+ * 2: reason <STRING> - COMPLETE, CLOSE, ABORT, LOSSES, STALLED, TIME_LIMIT, RELEASE, ZEUS, CALM, GRENADE_UNRESOLVED or RECOVERY_FAILED
  * Unresolved stragglers change COMPLETE/CLOSE to PARTIAL; main actors hold while stragglers rejoin.
  *
  * Return Value:
@@ -85,7 +85,9 @@ if (_hold) then {
     _state set ["holders", _holders];
 } else {
     private _leader = leader _group;
-    {_x doFollow _leader} forEach _members;
+    // Zeus has already supplied the replacement movement. Restore Cortex-owned
+    // feature switches above, but do not replace that order with formation return.
+    if (_reason != "ZEUS") then {{_x doFollow _leader} forEach _members};
 };
 };
 if (_supportToken != "") then {

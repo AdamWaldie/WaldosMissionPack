@@ -22,6 +22,8 @@
  * 1: state <HASHMAP> - from Waldo_fnc_CortexGroupState
  *
  * 2: allow remount <BOOL>, true; false during stop, ownership restoration or external takeover.
+ * 3: yield to external order <BOOL>, false; when true Cortex removes only its owned controls and
+ *    does not issue follow, behaviour or speed commands over the replacement order.
  * Repeat/JIP: removes only WMP transient orders and restores recorded values.
  * Held followers resume formation only while their current command is still STOP;
  * an individual replacement command is preserved.
@@ -36,7 +38,7 @@
  * Current callers: Waldo_fnc_CortexGroupTick and Waldo_fnc_CortexReleaseGroup.
  */
 
-params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]]];
+params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]], ["_yieldToExternal",false,[true]]];
 if (isNull _group || {!local _group}) exitWith {};
 // A pending drill step may not run until after a checkpoint or ownership change.
 // Restore its movement restrictions now, before clearing the checkpoint below.
@@ -46,7 +48,7 @@ if (count (_state getOrDefault ["drill",createHashMap]) > 0) then {
 {
     if (local _x && {group _x == _group}) then {
         _x enableAI "PATH";
-        if (_x != leader _group && {currentCommand _x == "STOP"}) then {_x doFollow leader _group};
+            if (!_yieldToExternal && {_x != leader _group} && {currentCommand _x == "STOP"}) then {_x doFollow leader _group};
     };
 } forEach (_state getOrDefault ["supportHeld",[]]);
 _state deleteAt "supportHeld";
@@ -60,9 +62,9 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
 private _leader = leader _group;
 if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
 [_group] call Waldo_fnc_CortexGroupMoveClear;
-{
-    if (alive _x && {local _x}) then {_x doFollow _leader};
-} forEach ((_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []]));
+if (!_yieldToExternal) then {
+    {if (alive _x && {local _x}) then {_x doFollow _leader}} forEach ((_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []]));
+};
 {
     if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet", false]}) then {
         if (toUpperANSI (unitPos _x) == (_x getVariable ["Waldo_Cortex_AppliedStance",""])) then {_x setUnitPos "AUTO"};
@@ -76,13 +78,13 @@ if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_sta
         _x setVariable ["Waldo_AIPass_TargetHold",nil];
     };
 } forEach units _group;
-if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader in ["COMBAT", "AWARE"]}) then {
+if (!_yieldToExternal && {_state getOrDefault ["behaviourChanged", false]} && {behaviour _leader in ["COMBAT", "AWARE"]}) then {
     private _base = _state getOrDefault ["baseBehaviour", "AWARE"];
     // After a real firefight a squad stays alert rather than slinging weapons, as the engine does.
     if (_base == "SAFE" && {_state getOrDefault ["hadContact", false]}) then {_base = "AWARE"};
     _group setBehaviour _base;
 };
-if (_state getOrDefault ["speedChanged", false]) then {
+if (!_yieldToExternal && {_state getOrDefault ["speedChanged", false]}) then {
     _group setSpeedMode (_state getOrDefault ["baseSpeed", "NORMAL"]);
 };
 {
