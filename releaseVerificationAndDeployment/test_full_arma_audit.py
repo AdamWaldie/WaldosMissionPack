@@ -3973,6 +3973,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("(_unit skill _x) *", apply_profile)
         self.assertIn('["Waldo_AIRebalance_Mode", "AUTO"]', mission_config)
         self.assertIn('["Waldo_AI_ApplyMode", "BOTH"]', mission_config)
+        self.assertEqual(1, profile_init.count("call CBA_fnc_addPerFrameHandler"))
+        self.assertEqual(2, profile_init.count("Waldo_Cortex_LightingPFH"))
         self.assertNotIn("Waldo_AI_Mode", mission_config + profile_init + apply_profile + runtime)
         self.assertNotIn('["Waldo_AI_Profile",', profile_init + apply_profile)
 
