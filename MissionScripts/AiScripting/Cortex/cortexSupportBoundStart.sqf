@@ -26,12 +26,13 @@ if !("baseAttack" in _state) then {_state set ["baseAttack",attackEnabled _group
 _group enableAttack false;
 _state set ["drill",createHashMapFromArray [
     ["token",_token],["supportToken",_leaseToken],["supportSequence",_sequence],
-    ["type","ADVANCE"],["teams",[_first,_second]],["teamTurn",0],["units",_fit],
+    ["type","ADVANCE"],["teams",[_first,_second]],["teamSizes",[count _first,count _second]],["teamTurn",0],["units",_fit],["desiredStrength",count _fit],
     ["points",[[+_point,["SUPPORT_BOUND","FINAL"] select _final]]],["index",0],["stage","START"],
     ["enemyPos",+_enemy],["disabled",[]],["spots",[]],["started",time],
     ["boundStart",time],["pauseUntil",0]
 ]];
 _state set ["supportBoundSequence",_sequence];
 _group setVariable ["Waldo_Cortex_SupportBoundResult",[],true];
+_group setVariable ["Waldo_Cortex_DrillReinforcements",[],true];
 [Waldo_fnc_CortexFlankStep,createHashMapFromArray [["group",_group],["drillToken",_token]],0] call Waldo_fnc_CortexQueueJob;
 true

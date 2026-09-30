@@ -5,6 +5,24 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / 'MissionScripts/AiScripting/Cortex'
 def source(name): return (BASE / (name + '.sqf')).read_text(encoding='utf-8')
 class CortexOperations(unittest.TestCase):
+    def test_cortex_control_deduplicates_settings_and_diagnostics_explain_once(self):
+        page=source('cortexControlPageLocal')
+        self.assertIn('private _seenKeys = createHashMap',page)
+        self.assertIn('_seenKeys getOrDefault [_key,false]',page)
+        self.assertIn('} forEach _pageRows;',page)
+        opened=source('cortexControlOpenLocal')
+        self.assertIn('private _seenKeys = createHashMap',opened)
+        self.assertIn('_display setVariable ["Cortex_Spec",_spec]',opened)
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        self.assertIn('Trigger and proof:',diagnostics)
+        self.assertNotIn('Trigger/inspection:',diagnostics)
+        self.assertIn('private _seenTuningKeys=createHashMap',diagnostics)
+        self.assertIn('_tuningSpec pushBack _x',diagnostics)
+        client=(ROOT/'releaseVerificationAndDeployment/cortexQA/runClient.sqf').read_text(encoding='utf-8')
+        self.assertIn('UI-01b-canonical-settings',client)
+        self.assertIn('UI-02b-unique-page-',client)
+        self.assertIn('arrayIntersect _editorKeys',client)
+
     def test_replacement_clear_retires_old_movement_after_validation(self):
         text=source('cortexClearBuilding')
         marker='if (!_resume && {_previous isNotEqualTo []}) then {[_group] call Waldo_fnc_CortexClearRelease};'
@@ -52,7 +70,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('isPlayer _x',release)
         self.assertIn('lifeState _x == "INCAPACITATED"',release)
         self.assertIn('_assigned set [_forEachIndex,[]]',release)
-        self.assertIn('group _x == _group} && {_x != _leader}) then {_x commandFollow _leader}',text)
+        self.assertIn('if (_restore) then {',text)
+        release=source('cortexClearRelease')
+        self.assertIn('params [["_group", grpNull, [grpNull]],["_restore",true,[true]]]',release)
+        tick=source('cortexGroupTick')
+        self.assertIn('[_group,false] call Waldo_fnc_CortexClearRelease',tick)
 
     def test_clearance_timeout_cannot_clear_rooms_or_abort_other_workers(self):
         text=source('cortexClearBuilding')
@@ -79,15 +101,17 @@ class CortexOperations(unittest.TestCase):
         text=source('cortexClearBuilding')
         self.assertIn('private _failedBy',text)
         self.assertIn('private _failureThreshold=(count (_job get "pairs")) min 2 max 1',text)
-        self.assertIn('(_pairRoutes select _nextPair) pushBackUnique _positionIndex',text)
+        self.assertIn('(_job get "pending") pushBackUnique _positionIndex',text)
         self.assertIn('private _pairId=format ["PAIR_%1",_pairIndex]',text)
-        self.assertIn('private _entryRoute=_building buildingExit 0',text)
+        self.assertIn('for "_exitIndex" from 0 to 15 do',text)
+        self.assertIn('private _ranked=_entries apply',text)
 
     def test_clearance_uses_multiple_pairs_and_continuous_room_routes(self):
         text=source('cortexClearBuilding')
         self.assertIn('for "_index" from 0 to ((count _team)-1) step 2',text)
-        self.assertIn('private _entryCapacity = ((((count _positions) min 3) * 2) max 2) min 6',text)
-        self.assertIn('private _routeBase=floor ((count _routeOrder)/(count _pairs))',text)
+        self.assertIn('private _entryCapacity = ((((count _positions) min 4) * 2) max 2) min 8',text)
+        self.assertIn('private _pending=+_routeOrder',text)
+        self.assertIn('private _pairRoutes=_pairs apply {[]}',text)
         self.assertIn('_cursor=_cursor+1',text)
 
     def test_clearance_pairs_exchange_point_and_support_without_node_crowding(self):
@@ -108,8 +132,9 @@ class CortexOperations(unittest.TestCase):
     def test_clearance_egresses_before_terminal_handover(self):
         text=source('cortexClearBuilding')
         self.assertIn('(_job getOrDefault ["phase","CLEAR"]) == "EGRESS"',text)
-        self.assertIn('_entry getPos [10,_outward]',text)
+        self.assertIn('[_unit,_entry getPos [10,_outward]]',text)
         self.assertIn('_job set ["phase","EGRESS"]',text)
+        self.assertIn('_job set ["egressAssignments",_egressAssignments]',text)
         self.assertIn('_job set ["egressFailed",true]',text)
         self.assertIn('!(_job getOrDefault ["egressFailed",false])',text)
 
@@ -496,6 +521,19 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_reason = "PARTIAL"', end)
         self.assertIn('forEach (_members-_stragglers)', end)
         self.assertIn('{_x doFollow leader _group} forEach _stragglers', end)
+
+    def test_manoeuvre_elements_reinforce_and_rebalance_after_casualties(self):
+        step=source('cortexFlankStep')
+        for marker in ['private _fitSquad=', 'private _rankCandidates=',
+                       'Waldo_Cortex_DrillReinforcements', 'TEAM_1_REBALANCE',
+                       'TEAM_2_REBALANCE', '_drill set ["stage","START"]',
+                       'private _ownedPathUnits=']:
+            self.assertIn(marker,step)
+        self.assertIn('_x checkAIFeature "PATH" || {_x in _ownedPathUnits}',step)
+        self.assertNotIn('addEventHandler ["Killed"',step)
+        self.assertIn('["desiredStrength",count _element]',source('cortexFlankStart'))
+        self.assertIn('["teamSizes",[count _element,count _coverElement]]',source('cortexAdvanceStart'))
+        self.assertIn('["teamSizes",[count _first,count _second]]',source('cortexSupportBoundStart'))
 
     def test_bound_retry_is_finite_and_does_not_fabricate_progress(self):
         text = source('cortexFlankStep')

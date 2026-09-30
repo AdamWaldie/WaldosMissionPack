@@ -3,15 +3,15 @@
  * Orders an AI group to clear a building room by room.
  *
  * Teams of one or two use every available soldier. Larger teams leave the leader outside and form
- * up to three clearing pairs; remaining members provide exterior security. Building positions are
- * ordered into a continuous nearest-neighbour route from the entrance and split into contiguous
- * sectors. Within each pair, one point soldier advances while the other holds the previous room or
- * an offset entry position; they exchange roles after each visited position. This prevents two AI
- * from fighting over one exact path node while still moving the pair continuously through rooms. A position is visited only
- * when a soldier physically reaches it within 1.5 m. Each pair has an independent progress watchdog,
- * bounded forced replans and failure rotation. A casualty or incapacitation in a clearing pair is
- * replaced from the squad's uncommitted exterior-security members; without a replacement, the
- * surviving partner continues alone. Timeouts never clear rooms.
+ * up to four clearing pairs; remaining members provide exterior security. All pairs draw from one
+ * low-floor-first room queue. A pair claims the nearest free room, stages through the closest real
+ * building entrance, and exchanges point/support roles after each physical visit. The support soldier
+ * holds the last cleared room or doorway instead of crowding the point soldier's path node. A blocked
+ * entry is retried through another real entrance, while a blocked room returns to the shared queue for
+ * another pair before it can be marked unreachable. A position is visited only when a soldier physically
+ * reaches it within 1.5 m. A casualty or incapacitation in a clearing pair is replaced from the squad's
+ * uncommitted exterior-security members; without a replacement, the survivor continues alone. Timeouts
+ * never clear rooms.
  * After all rooms are visited or attempted, the clearing element exits through the building entry
  * to an exterior release point before formation control is restored. This explicit egress avoids
  * abandoning soldiers on interior path nodes and provides the same entry-through-exit primitive used
@@ -74,7 +74,7 @@ if (_team isEqualTo []) exitWith {false};
 // A small building needs an entry element, not one soldier parked at every slot.
 // Leave spare squad members with their leader; bound interior workers by available space.
 // Keeping fewer workers than positions lets each worker advance through successive positions.
-private _entryCapacity = ((((count _positions) min 3) * 2) max 2) min 6;
+private _entryCapacity = ((((count _positions) min 4) * 2) max 2) min 8;
 _team = _team select [0,_entryCapacity];
 [_group,false] call Waldo_fnc_CortexReleaseGroup;
 if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
@@ -103,49 +103,84 @@ private _generation = (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) +
 _group setVariable ["Waldo_AIPass_ClearGeneration", _generation];
 _group setVariable ["Waldo_AIPass_ClearBuilding", true, true];
 _group setBehaviour "COMBAT";
-private _entryRoute=_building buildingExit 0;
-if (_entryRoute isEqualTo [0,0,0]) then {_entryRoute=[]};
+private _entries=[];
+for "_exitIndex" from 0 to 15 do {
+    private _candidate=_building buildingExit _exitIndex;
+    if (_candidate isNotEqualTo [0,0,0] && {_candidate distance2D _building < 50}
+        && {_entries findIf {_x distance2D _candidate < 1} < 0}) then {
+        _entries pushBack _candidate;
+    };
+};
+private _entryRoute=if (_entries isEqualTo []) then {[]} else {
+    private _centroid=[0,0,0];
+    {_centroid=_centroid vectorAdd getPosATL _x} forEach _team;
+    _centroid=_centroid vectorMultiply (1/(count _team));
+    private _ranked=_entries apply {[_centroid distance2D _x,_x]};
+    _ranked sort true;
+    +((_ranked select 0) select 1)
+};
 // Build a stable continuous route rather than repeatedly choosing whichever marker is nearest
 // to each individual. This prevents criss-crossing and gives every pair a clear-through sector.
 private _routeOrder=[];
 private _remaining=[];
-for "_index" from 0 to ((count _positions)-1) do {_remaining pushBack _index};
+for "_index" from 0 to ((count _positions)-1) do {
+    if !(_index in (_cleared+_unreachable)) then {_remaining pushBack _index};
+};
 private _routeCursor=if (_entryRoute isEqualTo []) then {getPosATL _building} else {_entryRoute};
 while {_remaining isNotEqualTo []} do {
+    private _lowest=1e9;
+    {private _height=(_positions select _x) select 2; if (_height < _lowest) then {_lowest=_height}} forEach _remaining;
+    private _floorCandidates=_remaining select {abs (((_positions select _x) select 2)-_lowest) < 1.8};
     private _bestSlot=0;
     private _bestDistance=1e9;
     {
         private _distance=_routeCursor distance2D (_positions select _x);
-        if (_distance < _bestDistance) then {_bestSlot=_forEachIndex; _bestDistance=_distance};
-    } forEach _remaining;
+        if (_distance < _bestDistance) then {_bestSlot=_remaining find _x; _bestDistance=_distance};
+    } forEach _floorCandidates;
     private _positionIndex=_remaining deleteAt _bestSlot;
     _routeOrder pushBack _positionIndex;
     _routeCursor=_positions select _positionIndex;
 };
 private _pairs=[];
 for "_index" from 0 to ((count _team)-1) step 2 do {_pairs pushBack (_team select [_index,2])};
-private _pairRoutes=[];
-private _routeOffset=0;
-private _routeBase=floor ((count _routeOrder)/(count _pairs));
-private _routeRemainder=(count _routeOrder) mod (count _pairs);
-for "_index" from 0 to ((count _pairs)-1) do {
-    private _routeCount=_routeBase+([0,1] select (_index < _routeRemainder));
-    _pairRoutes pushBack (_routeOrder select [_routeOffset,_routeCount]);
-    _routeOffset=_routeOffset+_routeCount;
-};
+// Pairs claim from one shared queue. This prevents a blocked doorway or room from
+// freezing a fixed sector while the other pairs finish and wait outside.
+private _pairRoutes=_pairs apply {[]};
+private _pending=+_routeOrder;
 private _pairStates=[];
-{_pairStates pushBack [0,_entryRoute isNotEqualTo [],_x apply {getPosATL _x},time,0,-1,time+(_forEachIndex*2),0,-1]} forEach _pairs;
+{
+    private _pair=_x;
+    private _pairLead=_pair select 0;
+    private _entryIndex=-1;
+    if (_entries isNotEqualTo []) then {
+        private _ranked=_entries apply {[_pairLead distance2D _x,_forEachIndex]};
+        _ranked sort true;
+        _entryIndex=(_ranked select 0) select 1;
+    };
+    _pairStates pushBack [0,_entryIndex >= 0,_pair apply {getPosATL _x},time,0,-1,
+        time+(_forEachIndex*2),0,-1,_entryIndex,[],0];
+} forEach _pairs;
 [{
     params ["_job"];
     private _group = _job get "group";
     if (isNull _group || {!local _group}) exitWith {-1};
     if ((_group getVariable ["Waldo_AIPass_ClearGeneration", -1]) != (_job get "generation")) exitWith {-1};
     private _finish = {
+        params [["_restore",true,[true]]];
         _group setVariable ["Waldo_Cortex_ClearEvidence",[+(_job get "cleared"),+(_job get "unreachable"),+(_job get "retryCounts"),+(_job get "failedBy"),_job get "deadline",_job get "lastProgressAt"],true];
         if (!isNull _group) then {
-            private _leader = leader _group;
-            {if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {_x != _leader}) then {_x commandFollow _leader}} forEach (_job get "team");
-            if (behaviour _leader == "COMBAT") then {_group setBehaviour (_job get "baseBehaviour")};
+            if (_restore) then {
+                private _leader = leader _group;
+                {
+                    if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
+                        && {group _x == _group}) then {
+                        _x setUnitPos "AUTO";
+                        _x doWatch objNull;
+                        if (_x != _leader) then {_x commandFollow _leader};
+                    };
+                } forEach (_job get "team");
+                if (!isNull _leader && {behaviour _leader == "COMBAT"}) then {_group setBehaviour (_job get "baseBehaviour")};
+            };
             _group setVariable ["Waldo_AIPass_ClearBuilding", nil, true];
             _group setVariable ["Waldo_Cortex_ClearEgress",nil,true];
             _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
@@ -157,27 +192,32 @@ private _pairStates=[];
         -1
     };
     if (isNull _group || {!local _group} || {!(_group getVariable ["Waldo_AIPass_ClearBuilding", false])}
-        || {!alive (_job get "building")} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}
-        || {!([_group] call Waldo_fnc_CortexIsEligible)}) exitWith {call _finish};
+        || {!alive (_job get "building")} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}) exitWith {[true] call _finish};
+    // A fresh Zeus or script order immediately owns movement. Retire Cortex state without
+    // a follow, stance or behaviour command that could overwrite that replacement order.
+    if !([_group] call Waldo_fnc_CortexIsEligible) exitWith {[false] call _finish};
     if ((_job getOrDefault ["phase","CLEAR"]) == "EGRESS") exitWith {
-        private _egressTarget=_job get "egressTarget";
-        private _active=(_job get "team") select {alive _x && {local _x} && {!isPlayer _x}
-            && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}};
-        private _arrived=_active findIf {_x distance2D _egressTarget > 5} < 0;
-        if (_arrived || {_active isEqualTo []} || {time >= (_job get "egressDeadline")}) then {
-            if (!_arrived && {_active isNotEqualTo []}) then {
+        private _assignments=(_job get "egressAssignments") select {
+            _x params ["_unit"];
+            alive _unit && {local _unit} && {!isPlayer _unit} && {lifeState _unit != "INCAPACITATED"}
+                && {group _unit == _group} && {vehicle _unit == _unit}
+        };
+        private _arrived=_assignments findIf {(_x select 0) distance2D (_x select 1) > 5} < 0;
+        if (_arrived || {_assignments isEqualTo []} || {time >= (_job get "egressDeadline")}) then {
+            if (!_arrived && {_assignments isNotEqualTo []}) then {
                 _job set ["egressFailed",true];
-                diag_log format ["[WMP CORTEX] %1 clear egress incomplete (%2 still inside)",_group,{_x distance2D _egressTarget > 5} count _active];
+                diag_log format ["[WMP CORTEX] %1 clear egress incomplete (%2 still inside)",_group,{(_x select 0) distance2D (_x select 1) > 5} count _assignments];
             };
-            call _finish
+            [true] call _finish
         } else {
             {
-                private _openedDoor=[_x,_job get "building"] call Waldo_fnc_CortexBuildingDoor;
-                if (_openedDoor || {currentCommand _x in ["","STOP"]} || {time >= (_job get "egressReissue")}) then {
-                    _x doMove _egressTarget;
-                    _x setDestination [_egressTarget,"LEADER PLANNED",true];
+                _x params ["_unit","_target"];
+                private _openedDoor=[_unit,_job get "building"] call Waldo_fnc_CortexBuildingDoor;
+                if (_openedDoor || {currentCommand _unit in ["","STOP"]} || {time >= (_job get "egressReissue")}) then {
+                    _unit doMove _target;
+                    _unit setDestination [_target,"LEADER PLANNED",true];
                 };
-            } forEach _active;
+            } forEach _assignments;
             if (time >= (_job get "egressReissue")) then {_job set ["egressReissue",time+6]};
             1.5
         }
@@ -196,9 +236,10 @@ private _pairStates=[];
     private _reserved=[];
     {_reserved append _x} forEach _pairs;
     private _leader=leader _group;
+    private _rotatedOut=_job getOrDefault ["rotatedOut",[]];
     private _reserves=(units _group) select {
         alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
-        && {vehicle _x == _x} && {!(_x in _reserved)} && {_x != _leader}
+        && {vehicle _x == _x} && {!(_x in _reserved)} && {!(_x in _rotatedOut)} && {_x != _leader}
     };
     if (_reserves isEqualTo [] && {alive _leader} && {local _leader} && {!isPlayer _leader}
         && {lifeState _leader != "INCAPACITATED"} && {vehicle _leader == _leader} && {!(_leader in _reserved)}) then {
@@ -257,6 +298,8 @@ private _pairStates=[];
                         _cleared pushBackUnique _forEachIndex;
                         private _failedIndex = _unreachable find _forEachIndex;
                         if (_failedIndex >= 0) then {_unreachable deleteAt _failedIndex};
+                        private _pendingIndex = (_job get "pending") find _forEachIndex;
+                        if (_pendingIndex >= 0) then {(_job get "pending") deleteAt _pendingIndex};
                         _failedBy set [_forEachIndex,[]];
                     };
                 };
@@ -267,15 +310,56 @@ private _pairStates=[];
     {
         private _pairIndex=_forEachIndex;
         private _pair=_x select {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}};
+        if (_pair isEqualTo []) then {
+            private _state=_pairStates select _pairIndex;
+            private _route=_pairRoutes select _pairIndex;
+            private _cursor=_state select 0;
+            if (_cursor < count _route) then {
+                private _abandoned=_route select _cursor;
+                if !(_abandoned in (_cleared+_unreachable)) then {(_job get "pending") pushBackUnique _abandoned};
+                _state set [0,count _route];
+            };
+        };
         if (_pair isNotEqualTo []) then {
             private _state=_pairStates select _pairIndex;
-            _state params ["_cursor","_approachingEntry","_lastPositions","_lastProgress","_retries","_lastTarget","_startAt","_moverIndex","_previousPositionIndex"];
+            _state params ["_cursor","_approachingEntry","_lastPositions","_lastProgress","_retries","_lastTarget","_startAt","_moverIndex","_previousPositionIndex","_entryIndex","_triedEntries","_roomsCleared"];
             if (_now >= _startAt) then {
                 private _route=_pairRoutes select _pairIndex;
                 while {_cursor < count _route && {(_route select _cursor) in (_cleared+_unreachable)}} do {_cursor=_cursor+1};
+                // Claim the nearest room that this pair has not already failed. Claims are removed
+                // from the shared queue immediately, preventing several pairs from crowding one node.
+                if (_cursor >= count _route) then {
+                    private _pending=_job get "pending";
+                    private _pairId=format ["PAIR_%1",_pairIndex];
+                    private _candidates=_pending select {!(_pairId in (_failedBy select _x))};
+                    if (_candidates isNotEqualTo []) then {
+                        private _point=_pair select (_moverIndex mod count _pair);
+                        private _ranked=_candidates apply {
+                            private _candidate=_positions select _x;
+                            [(_point distance2D _candidate)+(abs (((getPosATL _point) select 2)-(_candidate select 2))*2.5),_x]
+                        };
+                        _ranked sort true;
+                        private _claimed=(_ranked select 0) select 1;
+                        _pending deleteAt (_pending find _claimed);
+                        _route pushBack _claimed;
+                        _cursor=(count _route)-1;
+                        _lastTarget=-1;
+                        _retries=0;
+                        _triedEntries=[];
+                        _entryIndex=-1;
+                        if ((_job get "entries") isNotEqualTo []) then {
+                            private _entryRanks=(_job get "entries") apply {[_point distance2D _x,_forEachIndex]};
+                            _entryRanks sort true;
+                            _entryIndex=(_entryRanks select 0) select 1;
+                        };
+                        _approachingEntry=_entryIndex >= 0 && {_point distance2D ((_job get "entries") select _entryIndex) > 3};
+                    };
+                };
                 if (_cursor < count _route) then {
                     private _positionIndex=_route select _cursor;
-                    private _entryTarget=_job get "entry";
+                    private _entryTarget=if (_entryIndex >= 0 && {_entryIndex < count (_job get "entries")}) then {
+                        (_job get "entries") select _entryIndex
+                    } else {[]};
                     if (_approachingEntry && {_entryTarget isNotEqualTo []} && {_pair findIf {_x distance2D _entryTarget <= 3} >= 0}) then {
                         _approachingEntry=false;
                         _lastTarget=-1;
@@ -302,7 +386,11 @@ private _pairStates=[];
                         private _openedDoor=[_unit,_job get "building"] call Waldo_fnc_CortexBuildingDoor;
                         if (_issue || {_openedDoor}) then {
                             private _started=_job get "started";
-                            if !(_unit in _started) then {doStop _unit; _started pushBack _unit};
+                            if !(_unit in _started) then {
+                                doStop _unit;
+                                _unit setUnitPos "MIDDLE";
+                                _started pushBack _unit;
+                            };
                             private _unitTarget=if (_unit == _point || {_supportTarget isEqualTo []}) then {_target} else {_supportTarget};
                             _unit doMove _unitTarget;
                             _unit setDestination [_unitTarget,"LEADER PLANNED",true];
@@ -324,6 +412,30 @@ private _pairStates=[];
                     if (_positionIndex in _cleared) then {
                         _previousPositionIndex=_positionIndex;
                         _cursor=_cursor+1;
+                        _roomsCleared=_roomsCleared+1;
+                        // Rotate exterior security through the clearing element after two rooms.
+                        // This keeps a large squad dispersed without leaving the same soldiers outside
+                        // for the entire action. Casualty replacements retain priority above.
+                        if ((_roomsCleared mod 2) == 0 && {_reserves isNotEqualTo []}) then {
+                            private _replaceSlot=_moverIndex mod count _pair;
+                            private _outgoing=_pair select _replaceSlot;
+                            private _replacement=_reserves deleteAt 0;
+                            _pair set [_replaceSlot,_replacement];
+                            private _sourcePair=_pairs select _pairIndex;
+                            private _sourceSlot=_sourcePair find _outgoing;
+                            if (_sourceSlot >= 0) then {_sourcePair set [_sourceSlot,_replacement]};
+                            (_job get "team") pushBackUnique _replacement;
+                            (_job get "rotatedOut") pushBackUnique _outgoing;
+                            doStop _replacement;
+                            _replacement setUnitPos "MIDDLE";
+                            if (_outgoing != leader _group) then {
+                                _outgoing setUnitPos "AUTO";
+                                _outgoing commandFollow leader _group;
+                            };
+                            private _evidence=_group getVariable ["Waldo_Cortex_ClearReinforcements",[]];
+                            _evidence pushBack [serverTime,netId _outgoing,netId _replacement,_pairIndex,"ROTATE"];
+                            _group setVariable ["Waldo_Cortex_ClearReinforcements",_evidence,true];
+                        };
                         if (count _pair > 1) then {_moverIndex=(_moverIndex+1) mod count _pair};
                         _lastTarget=-1;
                         _retries=0;
@@ -342,6 +454,26 @@ private _pairStates=[];
                                 _lastProgress=_now;
                                 _retryCounts set [_positionIndex,(_retryCounts param [_positionIndex,0])+1];
                             } else {
+                                private _changedEntry=false;
+                                if (_approachingEntry && {(_job get "entries") isNotEqualTo []}) then {
+                                    _triedEntries pushBackUnique _entryIndex;
+                                    private _entryRanks=[];
+                                    {
+                                        if !(_forEachIndex in _triedEntries) then {
+                                            _entryRanks pushBack [(_pair select 0) distance2D _x,_forEachIndex];
+                                        };
+                                    } forEach (_job get "entries");
+                                    if (_entryRanks isNotEqualTo []) then {
+                                        _entryRanks sort true;
+                                        _entryIndex=(_entryRanks select 0) select 1;
+                                        _lastTarget=-1;
+                                        _lastProgress=_now;
+                                        _lastPositions=_pair apply {getPosATL _x};
+                                        _retries=0;
+                                        _changedEntry=true;
+                                    };
+                                };
+                                if (!_changedEntry) then {
                                 private _pairId=format ["PAIR_%1",_pairIndex];
                                 private _failures=_failedBy select _positionIndex;
                                 _failures pushBackUnique _pairId;
@@ -349,14 +481,15 @@ private _pairStates=[];
                                 if (count _failures >= _failureThreshold) then {
                                     _unreachable pushBackUnique _positionIndex;
                                 } else {
-                                    // Rotate an unresolved room to a different pair. The failed pair
-                                    // continues its sector instead of holding the whole clearance.
-                                    private _nextPair=(_pairIndex+1) mod count _pairRoutes;
-                                    (_pairRoutes select _nextPair) pushBackUnique _positionIndex;
+                                    // Return the room to the shared queue. Another pair must claim it;
+                                    // this pair's failure identity prevents an immediate self-retry loop.
+                                    (_job get "pending") pushBackUnique _positionIndex;
                                 };
                                 _cursor=_cursor+1;
                                 _lastTarget=-1;
                                 _retries=0;
+                                _triedEntries=[];
+                                };
                             };
                             _retryChanged=true;
                         };
@@ -364,6 +497,8 @@ private _pairStates=[];
                     _state set [0,_cursor]; _state set [1,_approachingEntry]; _state set [2,_lastPositions];
                     _state set [3,_lastProgress]; _state set [4,_retries]; _state set [5,_lastTarget];
                     _state set [7,_moverIndex]; _state set [8,_previousPositionIndex];
+                    _state set [9,_entryIndex]; _state set [10,_triedEntries];
+                    _state set [11,_roomsCleared];
                 };
             };
         };
@@ -379,30 +514,43 @@ private _pairStates=[];
         _group setVariable ["Waldo_AIPass_ClearOrder", [_job get "building", +_cleared, _job get "deadline", _job get "baseBehaviour", +_unreachable, +_retryCounts, +_failedBy, _job get "lastProgressAt"], true];
     };
     if ((count _cleared + count _unreachable) >= count _positions || {serverTime > (_job get "deadline")} || {(_job get "team") findIf {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}} < 0}) exitWith {
-        private _entry=_job get "entry";
-        if (_entry isEqualTo []) then {_entry=getPosATL (_job get "building")};
-        private _outward=(getPosATL (_job get "building")) getDir _entry;
-        private _egressTarget=_entry getPos [10,_outward];
+        private _active=[];
+        {_active append _x} forEach (_job get "pairs");
+        _active=_active arrayIntersect _active;
+        _active=_active select {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
+            && {group _x == _group} && {vehicle _x == _x}};
+        private _entries=_job get "entries";
+        private _buildingPos=getPosATL (_job get "building");
+        private _egressAssignments=_active apply {
+            private _unit=_x;
+            private _entry=_job get "entry";
+            if (_entries isNotEqualTo []) then {
+                private _ranked=_entries apply {[_unit distance2D _x,_x]};
+                _ranked sort true;
+                _entry=+((_ranked select 0) select 1);
+            };
+            if (_entry isEqualTo []) then {_entry=_buildingPos};
+            private _outward=_buildingPos getDir _entry;
+            [_unit,_entry getPos [10,_outward]]
+        };
         _job set ["phase","EGRESS"];
-        _job set ["egressTarget",_egressTarget];
+        _job set ["egressAssignments",_egressAssignments];
         _job set ["egressDeadline",time+45];
         _job set ["egressReissue",time];
         {
-            if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
-                && {group _x == _group} && {vehicle _x == _x}) then {
-                _x doMove _egressTarget;
-                _x setDestination [_egressTarget,"LEADER PLANNED",true];
-            };
-        } forEach (_job get "team");
-        _group setVariable ["Waldo_Cortex_ClearEgress",["EGRESS",_egressTarget,serverTime],true];
+            _x params ["_unit","_target"];
+            _unit doMove _target;
+            _unit setDestination [_target,"LEADER PLANNED",true];
+        } forEach _egressAssignments;
+        _group setVariable ["Waldo_Cortex_ClearEgress",["EGRESS",_egressAssignments apply {_x select 1},serverTime],true];
         1.5
     };
     1.5
 }, createHashMapFromArray [
     ["group", _group], ["team", _team], ["started", []], ["positions", _positions], ["cleared", _cleared], ["building", _building], ["assigned", _team apply {[]}], ["unreachable",_unreachable], ["retryCounts",_retryCounts],
-    ["entry",_entryRoute], ["pairs",_pairs], ["pairRoutes",_pairRoutes], ["pairStates",_pairStates],
+    ["entry",_entryRoute], ["entries",_entries], ["pairs",_pairs], ["pairRoutes",_pairRoutes], ["pairStates",_pairStates], ["pending",_pending],
     ["deadline", _deadline], ["baseBehaviour", _baseBehaviour], ["generation", _generation], ["failedBy",_failedBy], ["lastProgressAt",_lastProgressAt],
-    ["phase","CLEAR"],["egressTarget",[]],["egressDeadline",0],["egressReissue",0],["egressFailed",false]
+    ["phase","CLEAR"],["rotatedOut",[]],["egressAssignments",[]],["egressDeadline",0],["egressReissue",0],["egressFailed",false]
 ], 0] call Waldo_fnc_CortexQueueJob;
-diag_log format ["[WMP CORTEX] %1 clearing %2 (%3 positions, %4 soldiers)", _group, typeOf _building, count _positions, count _team];
+diag_log format ["[WMP CORTEX] %1 clearing %2 (%3 positions, %4 soldiers, %5 entrances)", _group, typeOf _building, count _positions, count _team, count _entries];
 true

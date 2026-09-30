@@ -26,7 +26,19 @@ private _h = safeZoneH * 0.88;
 private _x = safeZoneX + (safeZoneW - _w)/2;
 private _y = safeZoneY + (safeZoneH - _h)/2;
 _display setVariable ["Cortex_Bounds",[_x,_y,_w,_h]];
-_display setVariable ["Cortex_Spec",[] call Waldo_fnc_CortexTuningSpec];
+// Keep the settings snapshot canonical for the entire display lifetime. An old compiled
+// extension or a mission override can otherwise append a second row for the same variable;
+// that used to create duplicate controls and competing values in the Apply payload.
+private _spec = [];
+private _seenKeys = createHashMap;
+{
+    private _key = _x param [0,"",[""]];
+    if (_key != "" && {!(_seenKeys getOrDefault [_key,false])}) then {
+        _seenKeys set [_key,true];
+        _spec pushBack _x;
+    };
+} forEach ([] call Waldo_fnc_CortexTuningSpec);
+_display setVariable ["Cortex_Spec",_spec];
 private _draft = createHashMap;
 {_draft set [_x select 0,missionNamespace getVariable [_x select 0,_x select 5]]} forEach (_display getVariable "Cortex_Spec");
 _display setVariable ["Cortex_Draft",_draft];

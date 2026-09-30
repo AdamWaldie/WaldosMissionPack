@@ -138,7 +138,17 @@ private _checks = [
     ["ai", "helicopter-deceleration", if (!_decelerationEnabled) then {"DISABLED"} else {if (count _decelerationLandingConflict > 0) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 tracked=%2 activelyCorrecting=%3 landingConflicts=%4 includeVTOL=%5", _decelerationEnabled, count _decelerationAircraft, count _decelerationActive, count _decelerationLandingConflict, missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL", false]]]
 ];
 // Shared tuning metadata supplies current values and defaults; feature notes explain execution prerequisites.
-private _tuningSpec=[] call Waldo_fnc_CortexTuningSpec;
+// Build diagnostics from the same canonical key set used by Cortex Control. This keeps a stale
+// mission extension from showing the same setting, gate and trigger explanation more than once.
+private _tuningSpec=[];
+private _seenTuningKeys=createHashMap;
+{
+    private _key=_x param [0,"",[""]];
+    if (_key != "" && {!(_seenTuningKeys getOrDefault [_key,false])}) then {
+        _seenTuningKeys set [_key,true];
+        _tuningSpec pushBack _x;
+    };
+} forEach ([] call Waldo_fnc_CortexTuningSpec);
 private _featureNotes=createHashMapFromArray [
     ["Regroup","Requires casualty survivors and a compatible nearby host; inspect living leader, travel before merge, and replacement-order ownership."],
     ["Contact","Uses natural engine knowledge. Check last-seen age and group phase; known enemies are not necessarily visible."],
@@ -187,7 +197,7 @@ private _dependencies=createHashMapFromArray [
     ["VehicleWithdraw",["Waldo_AIPass_Vehicles_Enable"]]
 ];
 {
-    _x params ["_key","_label","_help","_kind","","_default"];
+    _x params ["_key","_label","","_kind","","_default"];
     if (_kind == "CHECKBOX") then {
         private _value=missionNamespace getVariable [_key,_default];
         private _parts=_key splitString "_";
@@ -200,7 +210,7 @@ private _dependencies=createHashMapFromArray [
         private _related=(_tuningSpec select {(_x select 0) find (_prefix+"_") == 0 && {(_x select 3) != "CHECKBOX"}}) apply {[_x select 1,missionNamespace getVariable [_x select 0,_x select 5],_x select 5]};
         private _scope=if (_key find "Waldo_Convoy_" == 0) then {"Convoy owner; independent of Cortex master. Registry rows below."} else {"Owner-local execution; server counters do not include HC-private activity. Master, pause, group exclusions and compatibility can prevent automatic actions."};
         private _status=if (!_value) then {"DISABLED"} else {if (_blockedParents isNotEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}};
-        _checks pushBack ["ai","cortex-setting-"+_key,_status,format ["%1: configured=%2 default=%3; required gates=%4; tuning [label,current,default]=%5. %6 Trigger/inspection: %7 %8 Enabled is not an execution or success result.",_label,_value,_default,_parentValues,_related,_scope,_help,_featureNotes getOrDefault [_name,"Inspect the corresponding controller/profile rows; no dedicated activity counter is available for this option."]]];
+        _checks pushBack ["ai","cortex-setting-"+_key,_status,format ["%1: configured=%2 default=%3; required gates=%4; related tuning [label,current,default]=%5. %6 Trigger and proof: %7 Enabled is not an execution or success result.",_label,_value,_default,_parentValues,_related,_scope,_featureNotes getOrDefault [_name,"Inspect the corresponding controller/profile rows; no dedicated activity counter is available for this option."]]];
     };
 } forEach _tuningSpec;
 // Queue health is measured locally once per requested report, without executing or rescheduling jobs.

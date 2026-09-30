@@ -28,10 +28,15 @@ private _testValue = if (abs (_initial-1.23) < 0.01) then {0.77} else {1.23};
 private _display = [] call Waldo_fnc_CortexControlOpenLocal;
 ["UI-01-open",!isNull _display] call _check;
 if (!isNull _display) then {
+    private _specKeys=(_display getVariable ["Cortex_Spec",[]]) apply {_x select 0};
+    ["UI-01b-canonical-settings",count _specKeys == count (_specKeys arrayIntersect _specKeys)] call _check;
     for "_tab" from 0 to 7 do {
         if (isNull _display) exitWith {["UI-interrupted-display-closed",false] call _check};
         (_display displayCtrl 9601) lbSetCurSel _tab; uiSleep 3;
-        [format ["UI-02-page-%1",_tab],count (_display getVariable ["Cortex_Editors",[]]) > 0] call _check;
+        private _editors=_display getVariable ["Cortex_Editors",[]];
+        private _editorKeys=_editors apply {(_x select 1) select 0};
+        [format ["UI-02-page-%1",_tab],count _editors > 0] call _check;
+        [format ["UI-02b-unique-page-%1",_tab],count _editorKeys == count (_editorKeys arrayIntersect _editorKeys)] call _check;
     };
     (_display displayCtrl 9601) lbSetCurSel 0; uiSleep 3;
     private _findAggression = {((_display getVariable ["Cortex_Editors",[]]) select {((_x select 1) select 0) == "Waldo_AIPass_Aggression"}) param [0,[]]};

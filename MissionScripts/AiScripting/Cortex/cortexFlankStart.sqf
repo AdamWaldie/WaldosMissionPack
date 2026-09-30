@@ -90,9 +90,10 @@ missionNamespace setVariable ["Waldo_Cortex_DrillSerial",_serial];
 private _token = format ["%1:%2",clientOwner,_serial];
 _group setVariable ["Waldo_Cortex_DrillResult",[],true];
 _group setVariable ["Waldo_Cortex_DrillFailure",[],true];
+_group setVariable ["Waldo_Cortex_DrillReinforcements",[],true];
 _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select _targetIndex) select 0],
-    ["type", "FLANK"], ["units", _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],
+    ["type", "FLANK"], ["units", _element], ["desiredStrength",count _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],
     ["disabled", []], ["spots", []], ["started", time], ["boundStart", time], ["pauseUntil", 0]
 ]];
 [Waldo_fnc_CortexFlankStep, createHashMapFromArray [["group", _group],["drillToken",_token]], 0] call Waldo_fnc_CortexQueueJob;

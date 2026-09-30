@@ -466,6 +466,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Airborne_JumpInterval` | Seconds between jumpers. Default `1`. |
 | `Waldo_AIPass_Garrison_DynamicAO` | Dynamic AO garrisons duck under fire, watch outward and break at losses. Default `false`. |
 | `Waldo_AIPass_Garrison_BreakFraction` | A garrison or defence line breaks when down to this share of its strength at the time of the order. Default `0.5`. |
+| `Waldo_Cortex_AttackRunFlares_Enable` | AI planes and helicopters with an assigned hostile target make finite countermeasure requests on approach and after their closest pass. It uses onboard ammunition and does not alter the flight path. Default `true`. |
 | `Waldo_AIPass_AircraftFlares_Enable` | WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first. Default `false`. |
 | `Waldo_AIPass_ProfileBehaviour` | Behaviour per profile name, alongside AI Rebalance's skill values (which are never changed by the pass): flank, assault, advance, investigate and coordinated-assault chances (0-1), morale thresholds, retreat distance scale and the largest squad that may surrender. The group uses Waldo_AIPass_Profile on the group, then Waldo_AIPass_FactionProfiles, then the active Waldo_AIRebalance_Profile, then LINE. Default `per profile`. |
 | `Waldo_AIPass_FactionProfiles` | Optional map of faction classname to behaviour profile name, overriding the AI Rebalance profile for that faction's squads. Default `empty`. |

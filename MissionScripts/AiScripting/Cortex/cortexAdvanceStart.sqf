@@ -77,10 +77,11 @@ missionNamespace setVariable ["Waldo_Cortex_DrillSerial",_serial];
 private _token = format ["%1:%2",clientOwner,_serial];
 _group setVariable ["Waldo_Cortex_DrillResult",[],true];
 _group setVariable ["Waldo_Cortex_DrillFailure",[],true];
+_group setVariable ["Waldo_Cortex_DrillReinforcements",[],true];
 _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select 0) select 0],
-    ["teams",[_element,_coverElement]],["teamTurn",0],
-    ["type", "ADVANCE"], ["units", _onFoot], ["points", _points], ["index", 0], ["stage", "START"],
+    ["teams",[_element,_coverElement]],["teamSizes",[count _element,count _coverElement]],["teamTurn",0],
+    ["type", "ADVANCE"], ["units", _onFoot], ["desiredStrength",count _onFoot], ["points", _points], ["index", 0], ["stage", "START"],
     ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time],
     ["boundStart", time], ["pauseUntil", 0]
 ]];
