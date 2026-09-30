@@ -394,6 +394,8 @@ class CortexOperations(unittest.TestCase):
         self.assertLess(qa.index('COORD-assault-corridor-clear'),qa.index('Movement diagnostic: coordinated bounds'))
         self.assertIn('private _outside = _x findIf {_x distance2D _area > 45};',qa)
         self.assertIn('_outside >= 0',qa)
+        self.assertIn('(_teams findIf {',qa)
+        self.assertIn('    }) < 0\n},120] call _wait;',qa)
 
     def test_literal_qa_tuning_requests_have_transport_entries(self):
         import re
