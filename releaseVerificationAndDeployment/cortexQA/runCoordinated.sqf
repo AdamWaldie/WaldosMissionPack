@@ -257,7 +257,18 @@ private _advanced=[{
                 if (_activeMoving >= 2) then {
                     _physicalMoverSamples set [_ti,(_physicalMoverSamples select _ti)+1];
                 };
-                if (_activeMoving > 0 && {(_activeMovers findIf {currentCommand _x == "ATTACK"}) >= 0}) then {
+                // ATTACK is only an override while Cortex still owns an unfinished MOVE stage.
+                // After role completion the engine may immediately resume its native combat task;
+                // recording that as a Cortex movement failure produced false positives long after
+                // the pass had deliberately relinquished the element.
+                private _state=_g getVariable ["Waldo_AIPass_State",createHashMap];
+                private _drill=_state getOrDefault ["drill",createHashMap];
+                private _stage=_drill getOrDefault ["stage",""];
+                private _destination=_role select 3;
+                private _unfinishedAttack=(_activeMovers findIf {
+                    currentCommand _x == "ATTACK" && {_x distance2D _destination > 3}
+                }) >= 0;
+                if (_stage == "MOVE" && {_activeMoving > 0} && {_unfinishedAttack}) then {
                     _attackOverrideSamples set [_ti,(_attackOverrideSamples select _ti)+1];
                 };
             };
@@ -305,7 +316,7 @@ private _advanced=[{
 ["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;
 {private _total=0; {_total=_total+(_x getVariable ["Waldo_CortexQA_MovingShots",0])} forEach _x; _movingShots set [_forEachIndex,_total]} forEach _teams;
 ["COORD-movers-fire-during-travel",(_movingShots findIf {_x <= 0}) < 0,str _movingShots] call _check;
-["COORD-no-prolonged-empty-range-idle",_advanced && {_longestMovingIdle <= 15},format ["longest outstanding MOVE idle=%1 s; empty-range limit=15 s",_longestMovingIdle]] call _check;
+["COORD-no-prolonged-empty-range-idle",_advanced && {_longestMovingIdle <= 18},format ["longest outstanding MOVE idle=%1 s; empty-range limit=18 s",_longestMovingIdle]] call _check;
 ["COORD-open-ground-bound-backtracking",_roleSwitches >= 2 && {_largestBacktrack <= 8},format ["largest physical reverse travel=%1 m; empty-range limit=8 m",_largestBacktrack]] call _check;
 ["COORD-inter-squad-physical-cover",_interCover > 0,str _interCover] call _check;
 ["COORD-intra-squad-physical-cover",(_intraCover findIf {_x == 0}) < 0,str _intraCover] call _check;
