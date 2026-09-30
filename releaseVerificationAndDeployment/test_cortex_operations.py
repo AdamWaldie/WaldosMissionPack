@@ -387,6 +387,12 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('[_cleanCheck,_phase,_wait,[],true,true]',runner)
         self.assertIn('["CLEAN-"+_id,_passed,_detail]',runner)
 
+    def test_coordinated_rally_screen_is_removed_before_assault_measurement(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text(encoding='utf-8')
+        self.assertIn('COORD-assault-corridor-clear',qa)
+        self.assertIn('{deleteVehicle _x} forEach _movementScreens;',qa)
+        self.assertLess(qa.index('COORD-assault-corridor-clear'),qa.index('Movement diagnostic: coordinated bounds'))
+
     def test_literal_qa_tuning_requests_have_transport_entries(self):
         import re
         spec = set(re.findall(r'\["(Waldo_[^"]+)"', source('cortexTuningSpec')))

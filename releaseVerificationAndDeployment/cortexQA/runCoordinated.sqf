@@ -11,7 +11,8 @@
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required callbacks.
  * 3: responderOwners <ARRAY of NUMBER>, default []; two HC owners for the migration variant.
  * 4: exposeDuringRally <BOOL>, default false; remove the view screen after reservation
- * to verify natural contact cannot revoke rally movement. The original screened case remains.
+ * to verify natural contact cannot revoke rally movement. Every variant removes its rally-only
+ * screen before measuring the later open-ground coordinated assault.
  * 5: localScreens <BOOL>, default false; additive fixture comparison with short screens
  * at the initial helper positions, never across the later assault corridor. The original
  * long-screen geometry remains available unchanged.
@@ -172,6 +173,15 @@ private _rallyLeases = _teams apply {(group (_x select 0)) getVariable ["Waldo_A
 diag_log format ["WMP CORTEX QA COORD RALLY: requesterPhase=%1 helperStates=%2",_requester getVariable ["Waldo_AIPass_PublicPhase","NONE"],(_teams apply {private _g=group (_x select 0); [groupId _g,_g getVariable ["Waldo_AIPass_PublicPhase","NONE"],_g getVariable ["Waldo_AIPass_SupportLease",[]],_g getVariable ["Waldo_AIPass_SupportStatus",[]]]})];
 sleep 10;
 ["COORD-disabled-no-objective-advance",_rallied && {_helpers findIf {_x distance2D _enemy < 100} < 0}] call _check;
+// The screen validates rally routing and sight isolation only. Leaving it in the assault
+// corridor made the two squads route around opposite ends of a 192 m wall, so the later
+// open-ground backtracking, idle and cohesion checks measured fixture geometry rather than
+// coordinated movement. Obstacle and avenue-of-approach behaviour belongs in a separate case.
+private _movementScreens=+_walls;
+{deleteVehicle _x} forEach _movementScreens;
+_walls=[];
+sleep 0.1;
+["COORD-assault-corridor-clear",_movementScreens findIf {!isNull _x} < 0,str (count _movementScreens)] call _check;
 _enemy setUnitPos "AUTO";
 private _origins=_helpers apply {getPosATL _x};
 [createHashMapFromArray [["Waldo_AIPass_CoordinatedAssault_Enable",true],["Waldo_AIPass_FireControl_Enable",true]]] call Waldo_fnc_CortexTuning;
