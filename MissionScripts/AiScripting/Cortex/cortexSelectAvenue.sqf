@@ -23,8 +23,8 @@
  * Return Value:
  * Array - selected ordered leg endpoints, or [] when no candidate is safe
  *
- * Current callers: Waldo_fnc_CortexFlankStart, Waldo_fnc_CortexAdvanceStart and
- * Waldo_fnc_CortexRetreat.
+ * Current callers: Waldo_fnc_CortexFlankStart, Waldo_fnc_CortexAdvanceStart,
+ * Waldo_fnc_CortexRetreat and Waldo_fnc_CortexSupportAssaultServer.
  *
  * Example:
  * private _legs = [_start, [[_goal],[_screen,_goal]], _enemyPos, [_baseOrigin], _target]
