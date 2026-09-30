@@ -27,7 +27,9 @@
  * Vehicles owned by other WMP features never reach this function (Waldo_fnc_CortexIsEligible).
  * Locality and authority: call where the group is local.
  *
- * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
+ * Repeat/JIP: current feature gates and eligibility are rechecked. A vehicle withdrawal publishes
+ * its origin, target, deadline and progress so the new group owner resumes it after migration;
+ * countermeasures are not fired again. Standoff is finite and may be reassessed after adoption.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -119,6 +121,12 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             if (!surfaceIsWater _away) then {
                 [_group, _away, 40] call Waldo_fnc_CortexGroupMove;
                 _state set ["movementLease",["VEHICLE_WITHDRAW",time+120]];
+                private _origin = getPosATL _vehicle;
+                _state set ["retreatStart",_origin];
+                _state set ["retreatTarget",_away];
+                _state set ["retreatProgress",[time,0,0]];
+                _group setVariable ["Waldo_Cortex_Withdrawal",["MOVING",0,0],true];
+                _group setVariable ["Waldo_Cortex_WithdrawalIntent",["VEHICLE",_origin,_away,_enemyPos,serverTime,0,0],true];
                 _movementOwned = true;
                 _state set ["phase", "RETREAT"];
                 _state set ["phaseStart", time];

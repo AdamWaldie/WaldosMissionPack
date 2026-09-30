@@ -22,7 +22,8 @@
  * Arguments:
  * 0: group <GROUP, default grpNull>
  * 1: state <HASHMAP, default empty HashMap>
- * 2: resume intent <ARRAY, default []> - [origin, target, enemy position, server start, replans, best travel]
+ * 2: resume intent <ARRAY, default []> - ["INFANTRY", origin, target, enemy position,
+ *    server start, replans, best travel]
  *
  * Return Value:
  * Boolean - true when the squad started retreating
@@ -36,12 +37,12 @@
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_resume",[],[[]]]];
 private _leader = leader _group;
-private _resuming = count _resume == 6;
-private _enemyPos = if (_resuming) then {_resume select 2} else {_state getOrDefault ["enemyPos", []]};
+private _resuming = count _resume == 7 && {(_resume select 0) == "INFANTRY"};
+private _enemyPos = if (_resuming) then {_resume select 3} else {_state getOrDefault ["enemyPos", []]};
 if (count _enemyPos < 2) exitWith {false};
 private _distance = (missionNamespace getVariable ["Waldo_AIPass_Morale_RetreatDistance", 200]) * ([_group, "retreatScale"] call Waldo_fnc_CortexProfile);
 private _away = _enemyPos getDir _leader;
-private _point = if (_resuming) then {+(_resume select 1)} else {[]};
+private _point = if (_resuming) then {+(_resume select 2)} else {[]};
 if (!_resuming) then {
     {
         private _candidate = (getPosATL _leader) getPos [_distance, _away + _x];
@@ -87,10 +88,10 @@ if (behaviour _leader != "AWARE") then {
     _group setBehaviour "AWARE";
 };
 [_group, _point, 30] call Waldo_fnc_CortexGroupMove;
-private _origin = if (_resuming) then {+(_resume select 0)} else {getPosATL _leader};
-private _startedAt = if (_resuming) then {_resume select 3} else {serverTime};
-private _replans = if (_resuming) then {_resume select 4} else {0};
-private _bestTravel = if (_resuming) then {_resume select 5} else {0};
+private _origin = if (_resuming) then {+(_resume select 1)} else {getPosATL _leader};
+private _startedAt = if (_resuming) then {_resume select 4} else {serverTime};
+private _replans = if (_resuming) then {_resume select 5} else {0};
+private _bestTravel = if (_resuming) then {_resume select 6} else {0};
 private _elapsed = (serverTime-_startedAt) max 0;
 private _remaining = (120-_elapsed) max 3;
 _state set ["movementLease",["INFANTRY_WITHDRAW",time+_remaining]];
@@ -98,7 +99,7 @@ _state set ["retreatStart",_origin];
 _state set ["retreatTarget",_point];
 _state set ["retreatProgress",[time,_bestTravel,_replans]];
 _group setVariable ["Waldo_Cortex_Withdrawal",["MOVING",round (_leader distance2D _origin),_replans],true];
-_group setVariable ["Waldo_Cortex_WithdrawalIntent",[_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel],true];
+_group setVariable ["Waldo_Cortex_WithdrawalIntent",["INFANTRY",_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel],true];
 if (speedMode _group != "FULL") then {
     if !(_state getOrDefault ["speedChanged", false]) then {_state set ["baseSpeed", speedMode _group]};
     _state set ["speedChanged", true];

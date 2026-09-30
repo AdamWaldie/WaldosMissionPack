@@ -81,7 +81,11 @@ if (_current != _previous && {missionNamespace getVariable ["Waldo_AIPass_Debug"
 };
 if (_current != "BROKEN") exitWith {""};
 
-if ([_group,"Waldo_AIPass_Surrender_Enable", true] call Waldo_fnc_CortexFeatureEnabled && {_count <= (_profile get "surrenderSurvivors")}
+// The surrender executor deliberately handles only soldiers on foot. A mounted crew or passenger
+// group must continue through the common withdrawal path instead of selecting an impossible terminal
+// action and then skipping its movement step every tick.
+private _allOnFoot = _alive findIf {vehicle _x != _x} < 0;
+if (_allOnFoot && {[_group,"Waldo_AIPass_Surrender_Enable", true] call Waldo_fnc_CortexFeatureEnabled} && {_count <= (_profile get "surrenderSurvivors")}
     && {_enemies findIf {(_x select 3) < 60} >= 0}) then {
     private _leaderPos = getPosATL leader _group;
     private _side = side _group;

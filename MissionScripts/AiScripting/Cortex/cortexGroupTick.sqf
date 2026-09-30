@@ -557,10 +557,10 @@ switch (_state get "phase") do {
         };
         _state set ["retreatProgress",[_progressAt,_bestTravel,_replans]];
         private _intent = _group getVariable ["Waldo_Cortex_WithdrawalIntent",[]];
-        if (count _intent == 6) then {
-            _intent set [1,+(_state getOrDefault ["retreatTarget",_intent select 1])];
-            _intent set [4,_replans];
-            _intent set [5,_bestTravel];
+        if (count _intent == 7) then {
+            _intent set [2,+(_state getOrDefault ["retreatTarget",_intent select 2])];
+            _intent set [5,_replans];
+            _intent set [6,_bestTravel];
             _group setVariable ["Waldo_Cortex_WithdrawalIntent",_intent,true];
         };
         private _timedOut = _now - (_state get "phaseStart") > 120;

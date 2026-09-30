@@ -78,10 +78,26 @@ if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) t
 // The old owner's scheduled callbacks are invalid, but physical withdrawal intent is durable.
 // Resume only a structurally valid, unfinished episode and let the common retreat controller
 // reacquire all temporary settings. Its resume path does not repeat smoke or artillery effects.
-if (count _withdrawalIntent == 6 && {serverTime-(_withdrawalIntent select 3) < 120}
+if (count _withdrawalIntent == 7 && {serverTime-(_withdrawalIntent select 4) < 120}
     && {[_group] call Waldo_fnc_CortexIsEligible}) then {
     private _adopted = [_group] call Waldo_fnc_CortexGroupState;
-    [_group,_adopted,_withdrawalIntent] call Waldo_fnc_CortexRetreat;
+    if ((_withdrawalIntent select 0) == "INFANTRY") then {
+        [_group,_adopted,_withdrawalIntent] call Waldo_fnc_CortexRetreat;
+    };
+    if ((_withdrawalIntent select 0) == "VEHICLE") then {
+        private _startedAt = _withdrawalIntent select 4;
+        private _elapsed = (serverTime-_startedAt) max 0;
+        private _target = +(_withdrawalIntent select 2);
+        [_group,_target,40] call Waldo_fnc_CortexGroupMove;
+        _adopted set ["movementLease",["VEHICLE_WITHDRAW",time+((120-_elapsed) max 3)]];
+        _adopted set ["enemyPos",+(_withdrawalIntent select 3)];
+        _adopted set ["retreatStart",+(_withdrawalIntent select 1)];
+        _adopted set ["retreatTarget",_target];
+        _adopted set ["retreatProgress",[time,_withdrawalIntent select 6,_withdrawalIntent select 5]];
+        _adopted set ["phase","RETREAT"];
+        _adopted set ["phaseStart",time-_elapsed];
+        _group setVariable ["Waldo_Cortex_WithdrawalIntent",_withdrawalIntent,true];
+    };
 };
 // A pending shoot-and-scoot request is durable, but its queued callback belonged to the old owner.
 // Resume it only after calm restoration has removed the old owner's waypoint and transient state;

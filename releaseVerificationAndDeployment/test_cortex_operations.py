@@ -1038,7 +1038,7 @@ class CortexOperations(unittest.TestCase):
         tick=source('cortexGroupTick')
         restore=source('cortexRestoreCalm')
         self.assertIn('Waldo_Cortex_WithdrawalIntent',retreat)
-        self.assertIn('[_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel]',retreat)
+        self.assertIn('["INFANTRY",_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel]',retreat)
         self.assertIn('if (!_resuming) then {',retreat)
         effects=retreat.split('if (!_resuming) then {',2)[2]
         self.assertIn('CortexThrowGrenade',effects)
@@ -1046,9 +1046,29 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _withdrawalIntent',locality)
         self.assertGreater(locality.index('CortexRetreat'),locality.index('CortexRestoreCalm'))
         self.assertIn('[_group,_adopted,_withdrawalIntent] call Waldo_fnc_CortexRetreat',locality)
-        self.assertIn('_intent set [4,_replans]',tick)
-        self.assertIn('_intent set [5,_bestTravel]',tick)
+        self.assertIn('_intent set [5,_replans]',tick)
+        self.assertIn('_intent set [6,_bestTravel]',tick)
         self.assertIn('setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true]',restore)
+
+    def test_vehicle_withdrawal_records_and_resumes_physical_progress(self):
+        vehicles=source('cortexVehicles')
+        locality=source('cortexLocality')
+        for marker in ['_state set ["retreatStart",_origin]',
+                       '_state set ["retreatTarget",_away]',
+                       '_state set ["retreatProgress",[time,0,0]]',
+                       '["VEHICLE",_origin,_away,_enemyPos,serverTime,0,0]']:
+            self.assertIn(marker,vehicles)
+        vehicle_resume=locality.split('== "VEHICLE"',1)[1]
+        self.assertIn('CortexGroupMove',vehicle_resume)
+        self.assertIn('["VEHICLE_WITHDRAW",time+((120-_elapsed) max 3)]',vehicle_resume)
+        self.assertIn('_adopted set ["phase","RETREAT"]',vehicle_resume)
+        self.assertNotIn('CortexFireCountermeasure',vehicle_resume)
+
+    def test_mounted_survivors_withdraw_instead_of_selecting_impossible_surrender(self):
+        morale=source('cortexMorale')
+        self.assertIn('private _allOnFoot = _alive findIf {vehicle _x != _x} < 0',morale)
+        surrender=morale.split('if (_allOnFoot',1)[1]
+        self.assertIn('Waldo_AIPass_Surrender_Enable',surrender)
 
     def test_replacement_orders_release_owned_garrison_and_defence_holds(self):
         for name,marker in [
