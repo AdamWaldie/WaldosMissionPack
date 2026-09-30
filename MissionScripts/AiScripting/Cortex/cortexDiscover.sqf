@@ -121,6 +121,7 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
             private _pilot = driver _vehicle;
             private _attackFlareEligible = _wantAttackFlares && {_vehicle isKindOf "Air"}
                 && {!isNull _pilot} && {alive _pilot} && {!isPlayer _pilot} && {!unitIsUAV _vehicle}
+                && {[group _pilot,"Waldo_Cortex_AttackRunFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
                 && {[group _pilot] call Waldo_fnc_CortexIsEligible || {[_vehicle] call Waldo_fnc_CortexAircraftEligible}};
             if (_attackFlareEligible && {!(_vehicle getVariable ["Waldo_Cortex_AttackFlareJob",false])}) then {
                 _vehicle setVariable ["Waldo_Cortex_AttackFlareJob",true];

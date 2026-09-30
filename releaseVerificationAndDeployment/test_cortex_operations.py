@@ -1649,6 +1649,7 @@ class CortexOperations(unittest.TestCase):
         discover=source('cortexDiscover')
         block=discover.split('private _attackFlareEligible',1)[1].split('if (_attackFlareEligible',1)[0]
         for requirement in ['!isNull _pilot','alive _pilot','!isPlayer _pilot','!unitIsUAV _vehicle',
+                            'Waldo_Cortex_AttackRunFlares_Enable','CortexFeatureEnabled',
                             'CortexIsEligible','CortexAircraftEligible']:
             self.assertIn(requirement,block)
 
