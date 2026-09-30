@@ -1211,6 +1211,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('getOrDefault ["consolidating",false]) exitWith {_result = "COMPLETE" call _end}',step)
         self.assertIn('getPos [12,_drill get "assaultDirection"]',step)
 
+    def test_bound_progresses_on_physical_role_quorum_and_recovers_laggards(self):
+        step=source('cortexFlankStep')
+        self.assertIn('private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;',step)
+        self.assertIn('_now - (_drill get "boundStart") >= 6',step)
+        self.assertIn('count _arrivedUnits >= _minimumArrivals',step)
+        self.assertIn('private _stragglers = _units - _arrivedUnits;',step)
+        self.assertIn('_recovery pushBack [_straggler,0,_now]',step)
+        self.assertIn('Bound role complete',step)
+        self.assertNotIn('setPos',step)
+
     def test_late_combat_result_preserves_deadline_and_measures_consolidation(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         self.assertIn('-late-physical-consolidation',qa)

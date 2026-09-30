@@ -20,8 +20,10 @@
  * element and did not reliably cancel stale engine attack orders in live validation.
  * Only features
  * that were on are switched off, and they are switched back on at every halt, so mission-maker
- * disableAI settings survive. A bound ends when
- * every member is within 3 m of his spot. Each arrival holds PATH until the next bound, preventing formation return. Waldo_AIPass_Flank_BoundTimeout limits stationary time; four times that value is the absolute bound limit. Stationary movement ends as STALLED; the absolute limit ends as TIME_LIMIT, never arrival. Halts last
+ * disableAI settings survive. A bound completes when every member is within 3 m of his spot, or after
+ * six seconds when at least two soldiers and 60 percent of the assigned element have physically arrived.
+ * Remaining actors become bounded recovery stragglers and keep moving toward their element; they are
+ * never counted as arrived or teleported. Each arrival holds PATH until the next bound, preventing formation return. Waldo_AIPass_Flank_BoundTimeout limits stationary time; four times that value is the absolute bound limit. Stationary movement ends as STALLED; the absolute limit ends as TIME_LIMIT, never arrival. Halts last
  * Waldo_AIPass_Flank_BoundPause seconds (also after clearing and consolidation),
  * 3 s at a street edge, and twice the configured pause at a standalone flank final position.
  * Coordinated bounds already have a covering squad: fire-team and final handoffs add no
@@ -373,6 +375,7 @@ switch (_drill get "stage") do {
         private _spots = _drill get "spots";
         private _movers = _drill get "movers";
         private _arrived = true;
+        private _arrivedUnits = [];
         private _stalled = false;
         private _blocked = [];
         private _timeout = missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout",25];
@@ -383,6 +386,7 @@ switch (_drill get "stage") do {
             if (alive _unit && {_unit in _units}) then {
                 private _remaining = _unit distance2D (_spots select _forEachIndex);
                 if (_remaining <= 3) then {
+                    _arrivedUnits pushBack _unit;
                     if (_unit checkAIFeature "PATH") then {
                         doStop _unit;
                         _unit disableAI "PATH";
@@ -422,6 +426,24 @@ switch (_drill get "stage") do {
             };
         } forEach _movers;
         private _originalElement = if (_teams isEqualTo []) then {_allUnits} else {_teams select (_drill getOrDefault ["teamTurn",0])};
+        private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;
+        private _quorumReady = !_arrived
+            && {_now - (_drill get "boundStart") >= 6}
+            && {count _arrivedUnits >= _minimumArrivals};
+        if (_quorumReady) then {
+            private _stragglers = _units - _arrivedUnits;
+            {
+                private _straggler = _x;
+                if ((_recovery findIf {(_x select 0) == _straggler}) < 0) then {
+                    _recovery pushBack [_straggler,0,_now];
+                };
+            } forEach _stragglers;
+            _drill set ["recovery",_recovery];
+            _group setVariable ["Waldo_Cortex_DrillRecovery",["REJOINING",_recovery apply {_x select 0},_drill get "index"],true];
+            diag_log format ["[WMP CORTEX] Bound role complete group=%1 arrived=%2/%3 recovery=%4",_group,count _arrivedUnits,count _originalElement,_stragglers];
+            _arrived = true;
+            _stalled = false;
+        };
         if (_stalled && {count (_units - _blocked) >= 2}
             && {count (_units - _blocked) >= ceil (count _originalElement * 0.6)}) then {
             // Continue with a viable majority. These actors are separated, not arrived.
