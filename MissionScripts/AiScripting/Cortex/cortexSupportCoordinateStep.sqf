@@ -4,6 +4,8 @@
  * Locality/authority: server publishes tokened roles; each group owner executes its fire teams.
  * Repeat/JIP: roles are durable snapshots; only changed roles are broadcast. Existing support
  * lease expiry, exclusion and Zeus cancellation remain authoritative. At most six groups are read.
+ * Two failed bounds across an operation trip a circuit breaker and expire the reservation so
+ * Cortex cannot repeatedly split and stop squads that the engine cannot move.
  * Arguments: 0: request <HASHMAP>; 1: accepted leases <ARRAY>, required.
  * Return: Nothing. Current caller: CortexSupportStep.
  * Example: [_job,_kept] call Waldo_fnc_CortexSupportCoordinateStep;
@@ -30,12 +32,23 @@ if (_active isNotEqualTo []) then {
         // A failed mover yields its turn; it cannot freeze all other squads.
         if (!_finished || {(_result select 2) != "COMPLETE"}) then {
             _group setVariable ["Waldo_Cortex_SupportRetryAfter",serverTime+30];
+            private _failures=(_job getOrDefault ["boundFailures",0])+1;
+            _job set ["boundFailures",_failures];
+            if (_failures >= 2) then {
+                _job set ["coordinationAborted",true];
+                _job set ["expiry",serverTime];
+                {
+                    (_x select 0) setVariable ["Waldo_Cortex_SupportAbort",
+                        [serverTime,"BOUND_FAILURES",_failures],true];
+                } forEach _teams;
+            };
         };
         if (_finished && {_final} && {(_result select 2) == "COMPLETE"}) then {_completed pushBackUnique _token; _job set ["boundCompleted",_completed]};
         _job set ["boundActive",[]];
         _active=[];
     };
 };
+if (_job getOrDefault ["coordinationAborted",false]) exitWith {};
 private _next=grpNull;
 private _point=[];
 private _sequence=_job getOrDefault ["boundSequence",0];

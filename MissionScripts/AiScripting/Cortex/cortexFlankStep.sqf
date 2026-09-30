@@ -7,7 +7,9 @@
  * bounds, the final position and the assault position are snapped to cover facing the enemy
  * (Waldo_fnc_CortexFindCover); street crossings and the clearing rush are not. On movement bounds, final approaches and
  * street crossings, pursuit (TARGET) is suspended while automatic target selection,
- * weapon aiming and firing remain enabled. Movers watch the known threat direction. RED movers temporarily use YELLOW
+ * weapon aiming and firing remain enabled. Automatic target acquisition is suspended for movers because the
+ * engine otherwise replaces individual movement with ATTACK; the paired fire team and covering squad retain
+ * normal acquisition and provide fire. Movers watch the known threat direction. RED movers temporarily use YELLOW
  * (fire at will without independent pursuit), restored at each halt or cancellation.
  * Other authored combat modes are unchanged; later external mode changes survive cleanup.
  * COMBAT movers temporarily use per-unit AWARE with automatic combat switching suspended;
@@ -310,6 +312,13 @@ private _issue = {
         if (_unit checkAIFeature "TARGET") then {
             _unit disableAI "TARGET";
             _disabled pushBack [_unit,"TARGET"];
+        };
+        // AUTOTARGET can create an ATTACK command even while TARGET is disabled.
+        // That left only one member of a three-soldier fire team moving in live QA.
+        // The covering elements retain acquisition and fire; movers regain it at the halt.
+        if (_unit checkAIFeature "AUTOTARGET") then {
+            _unit disableAI "AUTOTARGET";
+            _disabled pushBack [_unit,"AUTOTARGET"];
         };
         // Only the moving element leaves autonomous combat movement. Weapon aiming and
         // firing remain enabled; the covering element keeps its combat behaviour.
