@@ -655,7 +655,8 @@ class CortexOperations(unittest.TestCase):
     def test_flank_routes_avoid_friendly_support_fire_corridors(self):
         start = source('cortexFlankStart')
         for marker in ['private _supportOrigins = []', 'knowsAbout _target > 0.5',
-                       'private _crossesFireLane = {', '_lateral < 18',
+                       'private _crossesFireLane = {', '_lateral < 30',
+                       'private _staysOnSupportSide = {', '_pointSide*_startSide < 0',
                        '[1,110,90]', '!([_candidate] call _crossesFireLane)',
                        'private _routeProtection = {','forEach [0.25,0.5,0.75]',
                        'terrainIntersectASL [_enemyASL,_sampleASL]',
@@ -895,11 +896,12 @@ class CortexOperations(unittest.TestCase):
         server=source('cortexSupportAssaultServer')
         self.assertNotIn('([90,-90] select (_sent mod 2 == 1))',server)
         self.assertIn('private _crossesSupportLane=',server)
-        self.assertIn('_lateral < 22',server)
+        self.assertIn('ceil (_routeLength/5)',server)
+        self.assertIn('_lateral < 30',server)
         self.assertIn('!([_rally,_candidate] call _crossesSupportLane)',server)
         self.assertIn('private _rallySide=',server)
         self.assertIn('private _candidateSide=',server)
-        self.assertIn('private _sameSide=abs _rallySide < 22 || {_candidateSide*_rallySide > 0}',server)
+        self.assertIn('private _sameSide=abs _rallySide < 30 || {_candidateSide*_rallySide > 0}',server)
         self.assertIn('if (_sameSide && {!surfaceIsWater _candidate}',server)
         self.assertIn('_approaches findIf {_x distance2D _candidate < 35} < 0',server)
         self.assertIn('forEach [[45,90],[85,90],[65,135],[45,-90],[85,-90],[65,-135]]',server)
@@ -1705,6 +1707,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_recovery pushBack [_straggler,0,_now]',step)
         self.assertIn('Bound role complete',step)
         self.assertNotIn('setPos',step)
+
+    def test_bound_recovery_preserves_combat_targeting(self):
+        step=source('cortexFlankStep')
+        recovery=step.split('// Recovery stays in this existing bounded group job',1)[1].split('private _recoverySnapshot',1)[0]
+        self.assertIn('_actor doMove _rally',recovery)
+        self.assertNotIn('_actor doTarget objNull',recovery)
+        self.assertNotIn('_actor doWatch objNull',recovery)
 
     def test_late_combat_result_preserves_deadline_and_measures_consolidation(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()

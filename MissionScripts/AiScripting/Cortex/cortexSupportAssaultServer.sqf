@@ -3,7 +3,7 @@
  * Updates accepted reinforcement reservations with a finite coordinated assault destination.
  * Locality/authority: requester owner asks; server validates its existing leases; helper owners execute.
  * Each helper keeps the side of the support-to-enemy axis on which it rallied. Candidate approach
- * points are rejected when the route enters the requester's firing corridor, and accepted approach
+ * points are rejected when the route enters the requester's 30 m firing corridor, and accepted approach
  * points remain separated. Three fixed samples score terrain and solid-geometry screening from the
  * objective, so the shortest exposed route does not automatically beat a slightly longer covered
  * avenue. This bounded scoring runs once per assault dispatch, not per group tick or soldier.
@@ -35,7 +35,7 @@ private _crossesSupportLane={
     params ["_from","_to"];
     private _unsafe=false;
     private _routeLength=_from distance2D _to;
-    private _samples=(ceil (_routeLength/10)) max 1;
+    private _samples=(ceil (_routeLength/5)) max 1;
     for "_sampleIndex" from 1 to _samples do {
         private _fraction=_sampleIndex/_samples;
         private _point=[
@@ -47,7 +47,7 @@ private _crossesSupportLane={
         private _pointY=(_point select 1)-(_supportOrigin select 1);
         private _along=if (_laneLength > 0) then {(_pointX*_laneX+_pointY*_laneY)/_laneLength} else {0};
         private _lateral=if (_laneLength > 0) then {abs (_pointX*_laneY-_pointY*_laneX)/_laneLength} else {0};
-        if (_along > 30 && {_along < _laneLength-25} && {_lateral < 22}) exitWith {_unsafe=true};
+        if (_along > 10 && {_along < _laneLength-10} && {_lateral < 30}) exitWith {_unsafe=true};
     };
     _unsafe
 };
@@ -91,7 +91,7 @@ private _approachProtection={
             private _candidateSide=if (_laneLength > 0) then {(_laneX*_candidateY-_laneY*_candidateX)/_laneLength} else {0};
             // A helper which already rallied clear of the support axis stays on that
             // side. Crossing behind or through the base of fire is not a flank route.
-            private _sameSide=abs _rallySide < 22 || {_candidateSide*_rallySide > 0};
+            private _sameSide=abs _rallySide < 30 || {_candidateSide*_rallySide > 0};
             private _separated=_approaches findIf {_x distance2D _candidate < 35} < 0;
             if (_sameSide && {!surfaceIsWater _candidate} && {_separated} && {!([_rally,_candidate] call _crossesSupportLane)}) then {
                 // Each screened route sample offsets 25 m of extra travel. The candidate set

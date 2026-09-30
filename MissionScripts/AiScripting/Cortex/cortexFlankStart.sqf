@@ -6,7 +6,8 @@
  * which Waldo_fnc_CortexFireControl uses to suppress. Up to half the squad (2-5 riflemen) becomes
  * the manoeuvre element. Candidate two-leg routes are sampled against the firing corridors from the
  * squad's own base of fire and nearby friendly squads to the objective. Cortex chooses a side and
- * width that stays outside those corridors. All six bounded candidates are scored once at start;
+ * width that stays outside a 30 m firing corridor and, when it begins clearly on one side of another
+ * supporting squad's fire axis, remains on that side. All six bounded candidates are scored once at start;
  * fixed geometry samples reward terrain and solid objects which screen the manoeuvre from the
  * objective. If neither side is safe the flank is cancelled rather than sending troops across
  * friendly fire. Each accepted leg is cut into bounds by
@@ -108,7 +109,7 @@ if (_base isNotEqualTo []) then {
 } forEach allGroups;
 
 // Sample actual candidate legs rather than choosing a random flank. A route is unsafe when a point
-// more than 25 m from its own start lies inside the 18 m-wide firing lane between friendly support
+// more than 10 m from its own start lies inside the 30 m-wide firing lane between friendly support
 // and the objective. Wider candidates are tried as well, so cancellation is the last resort.
 private _crossesFireLane = {
     params ["_route"];
@@ -117,7 +118,7 @@ private _crossesFireLane = {
     {
         private _to = _x;
         private _legLength = _from distance2D _to;
-        private _samples = (ceil (_legLength/10)) max 1;
+        private _samples = (ceil (_legLength/5)) max 1;
         for "_sampleIndex" from 1 to _samples do {
             private _fraction = _sampleIndex/_samples;
             private _point = [
@@ -125,7 +126,7 @@ private _crossesFireLane = {
                 (_from select 1)+((_to select 1)-(_from select 1))*_fraction,
                 0
             ];
-            if (_point distance2D _start > 25) then {
+            if (_point distance2D _start > 10) then {
                 {
                     private _support = _x;
                     private _laneX = (_enemyPos select 0)-(_support select 0);
@@ -136,7 +137,7 @@ private _crossesFireLane = {
                         private _pointY = (_point select 1)-(_support select 1);
                         private _along = (_pointX*_laneX+_pointY*_laneY)/_laneLength;
                         private _lateral = abs (_pointX*_laneY-_pointY*_laneX)/_laneLength;
-                        if (_along > 20 && {_along < _laneLength-25} && {_lateral < 18}) exitWith {_unsafe = true};
+                        if (_along > 10 && {_along < _laneLength-10} && {_lateral < 30}) exitWith {_unsafe = true};
                     };
                 } forEach _supportOrigins;
             };
@@ -146,6 +147,32 @@ private _crossesFireLane = {
         _from = _to;
     } forEach _route;
     _unsafe
+};
+// Do not select a geometrically valid endpoint by crossing from one side of a supporting
+// squad's active fire axis to the other. The own base of fire begins almost on the element,
+// so a side lock applies only when the manoeuvre starts at least 30 m off an axis.
+private _staysOnSupportSide = {
+    params ["_route"];
+    private _safe = true;
+    {
+        private _support = _x;
+        private _laneX = (_enemyPos select 0)-(_support select 0);
+        private _laneY = (_enemyPos select 1)-(_support select 1);
+        private _laneLength = sqrt (_laneX*_laneX+_laneY*_laneY);
+        if (_laneLength > 40) then {
+            private _startX = (_start select 0)-(_support select 0);
+            private _startY = (_start select 1)-(_support select 1);
+            private _startSide = (_laneX*_startY-_laneY*_startX)/_laneLength;
+            if (abs _startSide >= 30 && {_route findIf {
+                private _pointX = (_x select 0)-(_support select 0);
+                private _pointY = (_x select 1)-(_support select 1);
+                private _pointSide = (_laneX*_pointY-_laneY*_pointX)/_laneLength;
+                abs _pointSide >= 10 && {_pointSide*_startSide < 0}
+            } >= 0}) then {_safe = false};
+        };
+        if (!_safe) exitWith {};
+    } forEach _supportOrigins;
+    _safe
 };
 private _toGroup = _enemyPos getDir _leader;
 private _legs = [];
@@ -179,7 +206,8 @@ private _routeProtection = {
     private _wide = _enemyPos getPos [(_distance * 0.8) max 60, _toGroup + _side*_wideAngle];
     private _close = _enemyPos getPos [((_distance * 0.35) max 35) min 60, _toGroup + _side*_closeAngle];
     private _candidate = [_wide,_close];
-    if (!surfaceIsWater _wide && {!surfaceIsWater _close} && {!([_candidate] call _crossesFireLane)}) then {
+    if (!surfaceIsWater _wide && {!surfaceIsWater _close}
+        && {!([_candidate] call _crossesFireLane)} && {[_candidate] call _staysOnSupportSide}) then {
         private _routeLength = (_start distance2D _wide)+(_wide distance2D _close);
         // Each screened sample offsets 20 m of route length. The candidate/sample counts
         // are fixed, so cover preference cannot become a hot scheduler loop.

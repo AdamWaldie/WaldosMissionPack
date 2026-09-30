@@ -226,8 +226,8 @@ if (_main isNotEqualTo []) then {
             _rejoined pushBack _actor;
         } else {
             if (time >= _next && {_attempts < 6} && {_actor checkAIFeature "PATH"} && {_actor checkAIFeature "MOVE"}) then {
-                _actor doWatch objNull;
-                _actor doTarget objNull;
+                // Recovery owns only movement. Preserve the actor's current target so a
+                // separated soldier can fight while closing on the correct fire team.
                 _actor doMove _rally;
                 _x set [1,_attempts+1];
                 _x set [2,time+8];
