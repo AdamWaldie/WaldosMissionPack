@@ -18,7 +18,9 @@
  * SECURITY (hold) -> SEARCH (two riflemen check the last known enemy position) -> REGROUP (wait for
  *   the squad to close up) -> CALM, which restores the recorded behaviour and speed (a squad that
  *   was SAFE before a real firefight returns AWARE).
- * RETREAT (morale broken or a damaged vehicle withdrawing) -> REGROUP.
+ * RETREAT (morale broken or a damaged vehicle withdrawing) -> REGROUP. A garrison, defence or
+ * building-clear order is released before the same retreat transition; releasing the prior order
+ * alone never counts as withdrawal.
  * Any sighting during SECURITY, SEARCH or REGROUP returns the group to CONTACT.
  * CARELESS groups are left entirely to the mission maker.
  * Waldo_AIPass_ReactionSpeed (AI Tuning) divides the step interval, so squads re-assess faster or slower.
@@ -366,9 +368,11 @@ switch (_state get "phase") do {
             switch (true) do {
                 case (_garrisoned): {[_group] call Waldo_fnc_CortexGarrisonRelease};
                 case (_defending): {[_group] call Waldo_fnc_CortexDefendRelease};
-                case (_group getVariable ["Waldo_AIPass_ClearBuilding", false]): {};
-                default {[_group, _state] call Waldo_fnc_CortexRetreat};
+                case (_group getVariable ["Waldo_AIPass_ClearBuilding", false]): {[_group] call Waldo_fnc_CortexClearRelease};
             };
+            // The release above only relinquishes the previous movement owner. Every broken
+            // non-surrendering squad must still acquire the common physical withdrawal state.
+            [_group, _state] call Waldo_fnc_CortexRetreat;
         };
         _state set ["armourSeen", (_state getOrDefault ["armourSeen", false]) || {_enemies findIf {
             private _enemy = vehicle (_x select 0);

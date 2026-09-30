@@ -904,6 +904,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('"retreatCombatMode"',checkpoint)
         self.assertIn('"retreatCombatMode"',restore.split('{_state deleteAt _x} forEach [',1)[1])
 
+    def test_every_explicit_infantry_order_transitions_into_physical_retreat(self):
+        tick=source('cortexGroupTick')
+        block=tick.split('if (_outcome == "RETREAT") exitWith {',1)[1].split('_state set ["armourSeen"',1)[0]
+        for release in ['CortexGarrisonRelease','CortexDefendRelease','CortexClearRelease']:
+            self.assertIn(f'call Waldo_fnc_{release}',block)
+        self.assertEqual(1,block.count('call Waldo_fnc_CortexRetreat'))
+        self.assertGreater(block.index('call Waldo_fnc_CortexRetreat'),block.index('switch (true)'))
+        self.assertNotIn('default {[_group, _state] call Waldo_fnc_CortexRetreat}',block)
+
     def test_cover_stance_bounds_rays_and_rotates_units(self):
         text=source('cortexStance')
         self.assertIn('if (_sampled >= 2) exitWith {}', text)

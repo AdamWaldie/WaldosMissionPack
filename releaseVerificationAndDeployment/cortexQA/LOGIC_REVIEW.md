@@ -443,3 +443,8 @@ Saved correction gives a RED group a finite, owned YELLOW lease for the whole ma
   another controller changing ROE wins immediately.
 - The lease is part of the public restoration checkpoint so a headless-client locality change cannot
   strand the squad in Cortex's temporary mode.
+
+The CONTACT transition previously treated release of a garrison or defence order as the whole
+retreat, and performed no action at all for a building-clear order. Those branches now release the
+previous movement owner and then call the common physical retreat transition. Surrender remains the
+higher-priority terminal reaction.
