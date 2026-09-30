@@ -7,11 +7,13 @@
  * owner and again on any new owner (Waldo_fnc_CortexDiscover). Soldiers more than 2 m from their
  * position are sent there. Only three-dimensional arrival locks PATH; a fixed safety deadline records
  * failure and leaves movement enabled rather than renewing forever around an unreachable doorway.
- * Routes try every usable building entrance nearest-first before abandoning an interior position.
+ * Routes try the interior destination directly first, matching the engine path that works on viable
+ * building models, then try up to four usable entrances nearest-first as bounded recovery.
  * Twelve seconds without two metres of progress retries the current leg twice, including commands
- * still reporting MOVE, then advances to another entrance. A soldier that exhausts all entrances is
- * reassigned to a free alternative position, twice at most, before the position is reported
- * unreachable. Opening an unlocked door does not reset the physical-progress timer. A replacement
+ * still reporting MOVE. While still approaching the building it then advances to another entrance.
+ * Once the soldier has crossed an entrance, an interior stall reassigns a free alternative position
+ * instead of sending the soldier back outside through another door. Reassignment is attempted twice
+ * before the position is reported unreachable. Opening an unlocked door does not reset the physical-progress timer. A replacement
  * order or locality change retires the old job; the new owner rebuilds its local route.
  * Handlers: Suppressed and Hit drop the soldier to a lower stance for 4-8 s, then restore the stance
  * he held when the order was applied only if the Cortex duck stance still remains.
@@ -49,7 +51,9 @@ private _buildingEntries = {
             _entries pushBackUnique _entry;
         };
     };
-    [_entries,[],{_x distance2D getPosATL _unit},"ASCEND"] call BIS_fnc_sortBy
+    _entries=[_entries,[],{_x distance2D getPosATL _unit},"ASCEND"] call BIS_fnc_sortBy;
+    _entries resize ((count _entries) min 4);
+    _entries
 };
 {
     private _unit = _x;
@@ -93,10 +97,9 @@ private _buildingEntries = {
         private _destination = _assignment select 0;
         private _building = _assignment param [2,objNull];
         private _entries=[_building,_unit,_destination] call _buildingEntries;
-        private _entry = _entries param [0,[]];
-        private _approach = count _entry >= 3 && {_entry distance2D _destination < 50} && {_unit distance2D _entry > 5};
-        private _target = [_destination,_entry] select _approach;
-        _routes set [netId _unit,[_target,_approach,getPosATL _unit,time,0,[str _destination],0,_entries,[0,-1] select (!_approach)]];
+        private _target = _destination;
+        private _approach = false;
+        _routes set [netId _unit,[_target,_approach,getPosATL _unit,time,0,[str _destination],0,_entries,-1]];
         if (_unit distance _destination > 2) then {_unit doMove _target; _unit setDestination [_target,"LEADER PLANNED",true]};
     };
 } forEach units _group;
@@ -175,12 +178,13 @@ private _buildingEntries = {
                                         private _replacementDestination=_replacement select 0;
                                         private _replacementBuilding=_replacement param [2,objNull];
                                         private _replacementEntries=[_replacementBuilding,_x,_replacementDestination] call (_job get "buildingEntries");
-                                        private _replacementEntry=_replacementEntries param [0,[]];
-                                        private _replacementApproach=count _replacementEntry >= 3 && {_replacementEntry distance2D _replacementDestination < 50} && {_x distance2D _replacementEntry > 5};
-                                        private _replacementTarget=[_replacementDestination,_replacementEntry] select _replacementApproach;
+                                        // A reassigned position follows the same direct-first rule as
+                                        // the original assignment. Entrance routing remains recovery.
+                                        private _replacementApproach=false;
+                                        private _replacementTarget=_replacementDestination;
                                         _attempted pushBackUnique (str _replacementDestination);
                                         _x setVariable ["Waldo_AIPass_GarrisonPos",_replacement,true];
-                                        _route=[_replacementTarget,_replacementApproach,getPosATL _x,time,0,_attempted,_reassignments+1,_replacementEntries,[0,-1] select (!_replacementApproach)];
+                                        _route=[_replacementTarget,_replacementApproach,getPosATL _x,time,0,_attempted,_reassignments+1,_replacementEntries,-1];
                                         doStop _x; _x doMove _replacementTarget;
                                         _x setDestination [_replacementTarget,"LEADER PLANNED",true];
                                         diag_log format ["[WMP CORTEX] Garrison reassigned unit=%1 remaining=%2 alternative=%3",_x,_x distance (_assignment select 0),_replacementDestination];

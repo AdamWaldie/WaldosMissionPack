@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Ends a garrison order: soldiers can move again and return to their normal stance.
+ * Ends a garrison order: soldiers can move again and return to their normal stance. Normal release
+ * rejoins formation; replacement-order release clears Cortex state without issuing movement.
  *
  * Re-enables PATH, restores each soldier's recorded stance and rejoins formation, and clears the
  * published order so no machine re-applies it. Called automatically when a garrison breaks (losses
@@ -14,6 +15,7 @@
  * Repeat/JIP: repeated release clears published assignments; new owners do not replay a released order.
  * Arguments:
  * 0: group <GROUP or OBJECT>
+ * 1: restore formation <BOOL> - false when Zeus already supplied replacement movement (default true)
  *
  * Return Value:
  * Boolean - true when released or forwarded
@@ -25,12 +27,12 @@
  * Current callers: Waldo_fnc_CortexGroupTick, the AI Orders ZEN module and mission scripts.
  */
 
-params [["_group", grpNull, [grpNull, objNull]]];
+params [["_group", grpNull, [grpNull, objNull]],["_restore",true,[true]]];
 if (_group isEqualType objNull) then {_group = group _group};
 if (isNull _group) exitWith {false};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!local _group) exitWith {
-    if (isServer) then {[_group] remoteExecCall ["Waldo_fnc_CortexGarrisonRelease", groupOwner _group]; true} else {false};
+    if (isServer) then {[_group,_restore] remoteExecCall ["Waldo_fnc_CortexGarrisonRelease", groupOwner _group]; true} else {false};
 };
 // No Cortex assignment means there is nothing for this release to restore.
 if ((_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo [] && {units _group findIf {(_x getVariable ["Waldo_AIPass_GarrisonPos",[]]) isNotEqualTo []} < 0}) exitWith {false};
@@ -50,7 +52,7 @@ private _leader = leader _group;
                 _x setUnitPos (_x getVariable ["Waldo_AIPass_GarrisonStance", "AUTO"]);
             };
             _x doWatch objNull;
-            if (_x != _leader) then {_x commandFollow _leader};
+            if (_restore) then {_x doFollow _leader};
         };
     };
     _x setVariable ["Waldo_Cortex_GarrisonDuckStance",nil,true];

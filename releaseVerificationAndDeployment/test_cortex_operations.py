@@ -109,10 +109,20 @@ class CortexOperations(unittest.TestCase):
     def test_clearance_release_resumes_formation_after_do_stop(self):
         clear=source('cortexClearBuilding')
         release=source('cortexClearRelease')
-        self.assertIn('_x commandFollow _leader',clear)
-        self.assertIn('_x commandFollow _leader',release)
-        self.assertNotIn('_x doFollow _leader',clear)
-        self.assertNotIn('_x doFollow leader _group',release)
+        self.assertIn('_x doFollow _leader',clear)
+        self.assertIn('_x doFollow _leader',release)
+        self.assertNotIn('_x commandFollow _leader',clear)
+        self.assertNotIn('_x commandFollow _leader',release)
+
+    def test_holding_release_restores_leader_but_yields_to_zeus_replacement(self):
+        garrison=source('cortexGarrisonRelease')
+        defend=source('cortexDefendRelease')
+        tick=source('cortexGroupTick')
+        for release in [garrison,defend]:
+            self.assertIn('["_restore",true,[true]]',release)
+            self.assertIn('if (_restore) then {_x doFollow _leader}',release)
+        self.assertIn('[_group,false] call Waldo_fnc_CortexGarrisonRelease',tick)
+        self.assertIn('[_group,false] call Waldo_fnc_CortexDefendRelease',tick)
 
     def test_clearance_rotates_failed_position_between_workers(self):
         text=source('cortexClearBuilding')
@@ -130,6 +140,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _entryCapacity = ((((count _positions) min 4) * 2) max 2) min 8',text)
         self.assertIn('private _pending=+_routeOrder',text)
         self.assertIn('private _pairRoutes=_pairs apply {[]}',text)
+        self.assertIn('_pairStates pushBack [0,false',text)
+        self.assertIn('_entries resize ((count _entries) min 4)',text)
+        self.assertIn('_approachingEntry=false',text)
+        self.assertIn('_approachingEntry=true',text)
+        self.assertIn('_triedEntries pushBackUnique _entryIndex',text)
         self.assertIn('_cursor=_cursor+1',text)
 
     def test_clearance_workers_claim_without_node_crowding(self):
@@ -157,6 +172,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_job set ["egressFailed",true]',text)
         self.assertIn('!(_job getOrDefault ["egressFailed",false])',text)
 
+    def test_clearance_preserves_live_behaviour_and_combat_mode(self):
+        clear=source('cortexClearBuilding')
+        release=source('cortexClearRelease')
+        self.assertNotIn('_group setBehaviour "COMBAT"',clear)
+        self.assertNotIn('_group setBehaviour (_job get "baseBehaviour")',clear)
+        self.assertNotIn('_group setBehaviour (_order select 3)',release)
+        self.assertNotIn('setCombatMode',clear)
+        self.assertNotIn('setCombatMode',release)
+
     def test_garrison_reassigns_unreachable_positions_without_wall_clock_failure(self):
         order=source('cortexGarrison')
         apply=source('cortexGarrisonApplyLocal')
@@ -168,6 +192,12 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('!(_key in _attempted)',apply)
         self.assertIn('for "_index" from 0 to 31 do',apply)
         self.assertIn('Garrison trying alternate entrance',apply)
+        self.assertIn('private _target = _destination',apply)
+        self.assertIn('private _approach = false',apply)
+        self.assertIn('private _replacementApproach=false',apply)
+        self.assertIn('private _replacementTarget=_replacementDestination',apply)
+        self.assertIn('_entries resize ((count _entries) min 4)',apply)
+        self.assertIn('if (_nextEntry < count _entries) then',apply)
         self.assertIn('["deadline", time + 240]',apply)
         self.assertNotIn('_job set ["deadline",(_job get "deadline") max (time+60)]',apply)
 
@@ -204,6 +234,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('[12,"Land_i_House_Big_02_V1_F"]',cases)
         self.assertIn('call Waldo_fnc_CortexClearBuilding',cases)
         self.assertIn('vectorDistance (AGLToASL _room) <= 1.5',cases)
+        self.assertIn('private _clearingMembers=+_members',cases)
+        self.assertNotIn('_members select [1,2]',text)
         self.assertNotIn('setPos',cases)
         self.assertNotIn('call Waldo_fnc_CortexGarrison',cases)
 
@@ -856,6 +888,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_retries < 2',text)
         self.assertIn('setDestination [_target,"LEADER PLANNED",true]',text)
         self.assertIn('private _nextEntry=_entryIndex+1',text)
+        self.assertIn('private _target = _destination',text)
+        self.assertIn('private _approach = false',text)
+        self.assertIn('_entries resize ((count _entries) min 4)',text)
         self.assertIn('private _replacementEntries=',text)
         self.assertNotIn('_job set ["deadline",(_job get "deadline") max (time+60)]',text)
         self.assertNotIn('if (_openedDoor) then {_route set [3,time]',text)

@@ -107,7 +107,9 @@ private _rooms=_house buildingPos -1;
 private _visits=_rooms apply {false};
 ["CLEAR-order-accepted",[_group,_house] call Waldo_fnc_CortexClearBuilding] call _check;
 private _cleared=[{
-    {private _room=_x; if ((_members select [1,2]) findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_forEachIndex,true]}} forEach _rooms;
+    // Production now commits the leader as an independent clearing worker. Observe the whole
+    // assigned team so a physical visit by the leader is not misreported as an unvisited room.
+    {private _room=_x; if (_members findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_forEachIndex,true]}} forEach _rooms;
     missionNamespace setVariable ["Waldo_CortexQA_Rooms",[_rooms,_visits],true];
     // Room visits and controller completion are published on separate scheduler passes.
     // Keep observing physical visits until the authoritative controller result arrives so
@@ -142,7 +144,9 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
     [format ["Fresh clearance: %1 soldiers / %2",_size,_class],"This fresh group has never garrisoned. Watch clearing pairs physically enter and continue through their assigned sector. The 2/6/12-person cases use progressively larger building models. Markers are navigation positions, not proof that a hostile room is safe. No test-side teleport, door opening or forced completion is applied.",getPosATL _house] call _phase;
     private _rooms=_house buildingPos -1;
     private _visits=_rooms apply {false};
-    private _clearingMembers=if (_size <= 2) then {+_members} else {_members select [1]};
+    // Every committed soldier, including the leader, owns a production clearance lane.
+    // Audit exactly that set rather than preserving the superseded exterior-leader assumption.
+    private _clearingMembers=+_members;
     private _memberVisits=_clearingMembers apply {[]};
     private _accepted=[_group,_house,createHashMapFromArray [["useLambs",false]]] call Waldo_fnc_CortexClearBuilding;
     [format ["CLEAR-fresh-%1-accepted",_size],_accepted] call _check;
@@ -199,7 +203,7 @@ for "_i" from 0 to 9 do {
     _casualtyMembers pushBack _unit;
 };
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_casualtyMembers,true];
-["CQB casualty reinforcement","The ten-person squad starts with four clearing pairs and exterior security. One clearing soldier becomes a real casualty. A surviving reserve must join the clear and physically move toward the building; the remaining room queue must stay active.",getPosATL _casualtyHouse] call _phase;
+["CQB casualty reinforcement","The ten-person squad starts with eight independent clearing workers and two reserves. One clearing soldier becomes a real casualty. A surviving reserve must join the clear and physically move toward the building; the remaining room queue must stay active.",getPosATL _casualtyHouse] call _phase;
 private _casualtyAccepted=[_casualtyGroup,_casualtyHouse,createHashMapFromArray [["useLambs",false]]] call Waldo_fnc_CortexClearBuilding;
 ["CLEAR-casualty-order-accepted",_casualtyAccepted] call _check;
 private _jobStarted=[{_casualtyGroup getVariable ["Waldo_AIPass_ClearBuilding",false]},15] call _wait;

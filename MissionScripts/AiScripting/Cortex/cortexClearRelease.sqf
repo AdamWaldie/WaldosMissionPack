@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Cancels a clearing order immediately, resumes formation after doStop and restores the original behaviour.
+ * Cancels a clearing order immediately and resumes formation after doStop. Clearance does not own
+ * group behaviour or combat mode, so release preserves any contact or Zeus change made during it.
  * Locality/authority: server authenticates dispatch; the current owner executes group commands.
  * Repeat/JIP: request tokens are consumed once; no stale order is replayed for JIP.
  * Arguments: 0: group <GROUP>, default grpNull; 1: restore formation <BOOL>, default true. Pass
@@ -22,7 +23,6 @@ _group setVariable ["Waldo_Cortex_ClearEgress",nil,true];
 _group setVariable ["Waldo_AIPass_ClearApplied", nil];
 if (_restore) then {
     private _leader=leader _group;
-    {if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {_x != _leader}) then {_x commandFollow _leader}} forEach units _group;
-    if (behaviour leader _group == "COMBAT") then {_group setBehaviour (_order select 3)};
+    {if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}) then {_x doFollow _leader}} forEach units _group;
 };
 true

@@ -6,16 +6,20 @@
  * capacity. Each interior worker owns one movement lane and draws the nearest unclaimed room from a
  * shared low-floor-first queue. This avoids a support partner waiting outside while only one soldier
  * attempts every room, and makes a large squad flow through the building instead of parking around it.
- * Spare members above the entry capacity remain an actual reserve. A blocked entry is retried through
- * another real entrance, while a blocked room returns to the shared queue for another worker before it
+ * Spare members above the entry capacity remain an actual reserve. A worker tries its room directly
+ * first, then uses a bounded set of alternate real entrances only after the direct route stalls. A
+ * blocked room returns to the shared queue for another worker before it
  * can be marked unreachable. A position is visited only when a soldier physically reaches it within
  * 1.5 m. A casualty or incapacitation is replaced from the uncommitted reserve; without a replacement,
  * other active workers continue claiming the remaining rooms. Timeouts never clear rooms.
  * After all rooms are visited or attempted, the clearing element exits through the building entry
  * to an exterior release point before formation control is restored. This explicit egress avoids
  * abandoning soldiers on interior path nodes and provides the same entry-through-exit primitive used
- * by later movement actions. The order has a progress-renewed safety lease rather than a fixed performance deadline. The group is set to COMBAT for the clear, and its previous
- * behaviour is restored afterwards. While clearing, the squad does not flank, retreat or search, and
+ * by later movement actions. The order has a progress-renewed safety lease rather than a fixed
+ * performance deadline. It preserves the group's current behaviour and combat mode: aware squads
+ * remain responsive to the route, while squads already fighting keep engaging. Cleanup therefore
+ * cannot overwrite a later contact or Zeus behaviour change. While clearing, the squad does not
+ * flank, retreat or search, and
  * is not sent to reinforce others.
  * With LAMBS Waypoints loaded and Waldo_AIPass_LambsMode "SPLIT", the order is handed to
  * lambs_wp_fnc_taskCQB instead (disable with the "useLambs" option). The WMP clear needs the Smart AI
@@ -101,7 +105,6 @@ _group setVariable ["Waldo_Cortex_ClearReinforcements",[],true];
 private _generation = (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1;
 _group setVariable ["Waldo_AIPass_ClearGeneration", _generation];
 _group setVariable ["Waldo_AIPass_ClearBuilding", true, true];
-_group setBehaviour "COMBAT";
 private _entries=[];
 for "_exitIndex" from 0 to 15 do {
     private _candidate=_building buildingExit _exitIndex;
@@ -109,6 +112,11 @@ for "_exitIndex" from 0 to 15 do {
         && {_entries findIf {_x distance2D _candidate < 1} < 0}) then {
         _entries pushBack _candidate;
     };
+};
+if (_entries isNotEqualTo []) then {
+    private _entryOrigin=getPosATL leader _group;
+    _entries=[_entries,[],{_x distance2D _entryOrigin},"ASCEND"] call BIS_fnc_sortBy;
+    _entries resize ((count _entries) min 4);
 };
 private _entryRoute=if (_entries isEqualTo []) then {[]} else {
     private _centroid=[0,0,0];
@@ -156,7 +164,7 @@ private _pairStates=[];
         _ranked sort true;
         _entryIndex=(_ranked select 0) select 1;
     };
-    _pairStates pushBack [0,_entryIndex >= 0,_pair apply {getPosATL _x},time,0,-1,
+    _pairStates pushBack [0,false,_pair apply {getPosATL _x},time,0,-1,
         time+(_forEachIndex*2),0,-1,_entryIndex,[],0];
 } forEach _pairs;
 [{
@@ -175,10 +183,9 @@ private _pairStates=[];
                         && {group _x == _group}) then {
                         _x setUnitPos "AUTO";
                         _x doWatch objNull;
-                        if (_x != _leader) then {_x commandFollow _leader};
+                        _x doFollow _leader;
                     };
                 } forEach (_job get "team");
-                if (!isNull _leader && {behaviour _leader == "COMBAT"}) then {_group setBehaviour (_job get "baseBehaviour")};
             };
             _group setVariable ["Waldo_AIPass_ClearBuilding", nil, true];
             _group setVariable ["Waldo_Cortex_ClearEgress",nil,true];
@@ -351,7 +358,10 @@ private _pairStates=[];
                             _entryRanks sort true;
                             _entryIndex=(_entryRanks select 0) select 1;
                         };
-                        _approachingEntry=_entryIndex >= 0 && {_point distance2D ((_job get "entries") select _entryIndex) > 3};
+                        // Start with the real room destination. Live comparison proved that viable
+                        // building models accept this path while forcing an exterior entry first can
+                        // strand the actor at the threshold. Entrances are bounded recovery routes.
+                        _approachingEntry=false;
                     };
                 };
                 if (_cursor < count _route) then {
@@ -361,6 +371,7 @@ private _pairStates=[];
                     } else {[]};
                     if (_approachingEntry && {_entryTarget isNotEqualTo []} && {_pair findIf {_x distance2D _entryTarget <= 3} >= 0}) then {
                         _approachingEntry=false;
+                        _triedEntries pushBackUnique _entryIndex;
                         _lastTarget=-1;
                         _retries=0;
                     };
@@ -434,8 +445,8 @@ private _pairStates=[];
                                 _retryCounts set [_positionIndex,(_retryCounts param [_positionIndex,0])+1];
                             } else {
                                 private _changedEntry=false;
-                                if (_approachingEntry && {(_job get "entries") isNotEqualTo []}) then {
-                                    _triedEntries pushBackUnique _entryIndex;
+                                if ((_job get "entries") isNotEqualTo []) then {
+                                    if (_approachingEntry) then {_triedEntries pushBackUnique _entryIndex};
                                     private _entryRanks=[];
                                     {
                                         if !(_forEachIndex in _triedEntries) then {
@@ -445,6 +456,7 @@ private _pairStates=[];
                                     if (_entryRanks isNotEqualTo []) then {
                                         _entryRanks sort true;
                                         _entryIndex=(_entryRanks select 0) select 1;
+                                        _approachingEntry=true;
                                         _lastTarget=-1;
                                         _lastProgress=_now;
                                         _lastPositions=_pair apply {getPosATL _x};
