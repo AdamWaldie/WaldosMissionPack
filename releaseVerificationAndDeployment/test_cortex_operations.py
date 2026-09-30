@@ -843,7 +843,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_sameSide && {!surfaceIsWater _candidate}',server)
         self.assertIn('_approaches findIf {_x distance2D _candidate < 35} < 0',server)
         self.assertIn('forEach [[45,90],[85,90],[65,135],[45,-90],[85,-90],[65,-135]]',server)
-        self.assertIn('private _score=_rally distance2D _candidate',server)
+        self.assertIn('private _approachProtection=',server)
+        self.assertIn('forEach [0.25,0.5,0.75]',server)
+        self.assertIn('terrainIntersectASL [_enemyASL,_sampleASL]',server)
+        self.assertIn('lineIntersectsSurfaces [_rayStart,_sampleASL',server)
+        self.assertIn('private _score=(_rally distance2D _candidate)-25*([_rally,_candidate] call _approachProtection)',server)
 
     def test_coordinated_assault_owns_requester_movement_before_local_tactics(self):
         tick=source('cortexGroupTick')

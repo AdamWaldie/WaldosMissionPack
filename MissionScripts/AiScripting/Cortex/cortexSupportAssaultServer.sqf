@@ -4,8 +4,10 @@
  * Locality/authority: requester owner asks; server validates its existing leases; helper owners execute.
  * Each helper keeps the side of the support-to-enemy axis on which it rallied. Candidate approach
  * points are rejected when the route enters the requester's firing corridor, and accepted approach
- * points remain separated. This avoids arbitrary left/right alternation sending one squad across
- * supporting fire. Repeat/JIP: one assault per request; the updated durable lease revalidates on HC migration.
+ * points remain separated. Three fixed samples score terrain and solid-geometry screening from the
+ * objective, so the shortest exposed route does not automatically beat a slightly longer covered
+ * avenue. This bounded scoring runs once per assault dispatch, not per group tick or soldier.
+ * Repeat/JIP: one assault per request; the updated durable lease revalidates on HC migration.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, [].
  * 2: reply owner <NUMBER>, default -1; HC callers supply clientOwner.
  * Return Value: Nothing.
@@ -49,6 +51,25 @@ private _crossesSupportLane={
     };
     _unsafe
 };
+private _approachProtection={
+    params ["_from","_to"];
+    private _protected=0;
+    private _enemyASL=(AGLToASL _enemy) vectorAdd [0,0,1.4];
+    {
+        private _sample=[
+            (_from select 0)+((_to select 0)-(_from select 0))*_x,
+            (_from select 1)+((_to select 1)-(_from select 1))*_x,
+            0
+        ];
+        private _sampleASL=(AGLToASL _sample) vectorAdd [0,0,1.0];
+        private _rayStart=_enemyASL vectorAdd ((_enemyASL vectorFromTo _sampleASL) vectorMultiply 2);
+        if (terrainIntersectASL [_enemyASL,_sampleASL]
+            || {(lineIntersectsSurfaces [_rayStart,_sampleASL,objNull,objNull,true,1,"FIRE","GEOM"]) isNotEqualTo []}) then {
+            _protected=_protected+1;
+        };
+    } forEach [0.25,0.5,0.75];
+    _protected
+};
 {
     _x params ["_helper","_token","","","_accepted"];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
@@ -73,7 +94,9 @@ private _crossesSupportLane={
             private _sameSide=abs _rallySide < 22 || {_candidateSide*_rallySide > 0};
             private _separated=_approaches findIf {_x distance2D _candidate < 35} < 0;
             if (_sameSide && {!surfaceIsWater _candidate} && {_separated} && {!([_rally,_candidate] call _crossesSupportLane)}) then {
-                private _score=_rally distance2D _candidate;
+                // Each screened route sample offsets 25 m of extra travel. The candidate set
+                // remains intentionally small, preventing terrain preference becoming a hot loop.
+                private _score=(_rally distance2D _candidate)-25*([_rally,_candidate] call _approachProtection);
                 if (_score < _bestScore) then {_attack=_candidate; _bestScore=_score};
             };
         } forEach [[45,90],[85,90],[65,135],[45,-90],[85,-90],[65,-135]];
