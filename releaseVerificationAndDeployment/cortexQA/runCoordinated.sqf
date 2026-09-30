@@ -199,6 +199,8 @@ private _largestBacktrack=0;
 private _interCover=0;
 private _intraCover=[0,0];
 private _movingShots=[0,0];
+private _physicalMoverSamples=[0,0];
+private _attackOverrideSamples=[0,0];
 private _idleSince=createHashMap;
 private _longestMovingIdle=0;
 private _shotCounts=_helpers apply {_x getVariable ["Waldo_CortexQA_Shots",0]};
@@ -245,6 +247,19 @@ private _advanced=[{
                 _x setVariable ["Waldo_CortexQA_Label",format ["S%1.%2 %3 / %4 | shots %5",_ti+1,_forEachIndex+1,_roleName,_element,_shots],true];
                 if (count _role == 5 && {(_role select 3) isNotEqualTo []}) then {_x setVariable ["Waldo_CortexQA_Target",_role select 3,true]};
             } forEach _members;
+            // Prove the selected fire team moves as an element. The earlier controller
+            // selected three soldiers correctly but the engine changed two to ATTACK,
+            // leaving one actual mover while the aggregate squad still appeared active.
+            if (count _role == 5 && {(_role select 2) == "MOVE"} && {count _fireTeams == 6}) then {
+                private _activeMovers=_fireTeams select 5;
+                private _activeMoving={abs speed _x > 2} count _activeMovers;
+                if (_activeMoving >= 2) then {
+                    _physicalMoverSamples set [_ti,(_physicalMoverSamples select _ti)+1];
+                };
+                if (_activeMoving > 0 && {_activeMovers findIf {currentCommand _x == "ATTACK"} >= 0}) then {
+                    _attackOverrideSamples set [_ti,(_attackOverrideSamples select _ti)+1];
+                };
+            };
             // Measure an outstanding movement role, not a stationary covering task.
             // This empty-range inactivity criterion is not a real-combat timing limit.
             if (count _role == 5 && {(_role select 2) == "MOVE"}) then {
@@ -285,6 +300,8 @@ private _advanced=[{
     _ok
 },600] call _wait;
 ["COORD-inter-squad-role-exchange",_roleSwitches >= 2,str _roleSwitches] call _check;
+["COORD-full-fire-team-physical-bounds",_physicalMoverSamples findIf {_x <= 0} < 0,str _physicalMoverSamples] call _check;
+["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;
 {private _total=0; {_total=_total+(_x getVariable ["Waldo_CortexQA_MovingShots",0])} forEach _x; _movingShots set [_forEachIndex,_total]} forEach _teams;
 ["COORD-movers-fire-during-travel",_movingShots findIf {_x <= 0} < 0,str _movingShots] call _check;
 ["COORD-no-prolonged-empty-range-idle",_advanced && {_longestMovingIdle <= 15},format ["longest outstanding MOVE idle=%1 s; empty-range limit=15 s",_longestMovingIdle]] call _check;

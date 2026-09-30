@@ -477,6 +477,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_unit in (_teams select 5)',fired)
         self.assertIn('Waldo_CortexQA_MovingShots',fired)
         self.assertIn('COORD-no-prolonged-empty-range-idle',qa)
+        self.assertIn('COORD-full-fire-team-physical-bounds',qa)
+        self.assertIn('COORD-no-engine-attack-overrides',qa)
+        self.assertIn('currentCommand _x == "ATTACK"',qa)
 
     def test_handover_visuals_do_not_keep_stale_rally_labels(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
