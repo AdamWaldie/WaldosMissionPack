@@ -400,6 +400,19 @@ class CortexContracts(unittest.TestCase):
         self.assertIn('missionNamespace setVariable ["Waldo_AIPass_NextJobDue", _earliest]', scheduler)
         self.assertIn('missionNamespace setVariable ["Waldo_AIPass_NextJobDue", -1]', stop)
 
+    def test_default_policy_enables_infantry_reactions_but_not_specialist_hazards(self):
+        config = (ROOT / 'MissionConfig' / 'aiConfig.sqf').read_text(encoding='utf-8')
+        for name in ['Waldo_AIPass_Surrender_Enable', 'Waldo_AIPass_Hearing_Enable']:
+            self.assertIn(f'["{name}", true]', config)
+        for name in [
+            'Waldo_AIPass_Artillery_Enable',
+            'Waldo_AIPass_CounterBattery_Enable',
+            'Waldo_AIPass_Airborne_Enable',
+            'Waldo_AIPass_AircraftFlares_Enable',
+            'Waldo_AIPass_AircraftBreak_Enable',
+        ]:
+            self.assertIn(f'["{name}", false]', config)
+
     def test_ai_settings_revision_is_complete_before_worker_changes(self):
         local = source('cortexSettingsLocal')
         self.assertIn('remoteExecutedOwner != 2', local)

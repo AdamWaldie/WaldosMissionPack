@@ -81,7 +81,7 @@ if (_current != _previous && {missionNamespace getVariable ["Waldo_AIPass_Debug"
 };
 if (_current != "BROKEN") exitWith {""};
 
-if ([_group,"Waldo_AIPass_Surrender_Enable", false] call Waldo_fnc_CortexFeatureEnabled && {_count <= (_profile get "surrenderSurvivors")}
+if ([_group,"Waldo_AIPass_Surrender_Enable", true] call Waldo_fnc_CortexFeatureEnabled && {_count <= (_profile get "surrenderSurvivors")}
     && {_enemies findIf {(_x select 3) < 60} >= 0}) then {
     private _leaderPos = getPosATL leader _group;
     private _side = side _group;

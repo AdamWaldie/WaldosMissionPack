@@ -193,7 +193,7 @@ private _contactDelay = if (_nearTier) then {["Waldo_AIPass_TickContact", 2] cal
 
 private _areaMode = _state getOrDefault ["areaInvestigation",""];
 if (_areaMode != "" && {(!([_group,"Waldo_AIPass_Investigate_Enable",true] call Waldo_fnc_CortexFeatureEnabled))
-    || {!([_group,["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_areaMode == "SOUND"),false] call Waldo_fnc_CortexFeatureEnabled)}}) then {
+    || {!([_group,["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_areaMode == "SOUND"),true] call Waldo_fnc_CortexFeatureEnabled)}}) then {
     [_group,_state] call Waldo_fnc_CortexRestoreCalm;
     _state deleteAt "areaInvestigation";
 };
@@ -283,7 +283,7 @@ switch (_state get "phase") do {
         if (!_ordered && {!_groupMovementOwned} && {!_lambsCombat} && {!(_state getOrDefault ["responding",false])} && {_enemies isEqualTo []} && {_area isNotEqualTo []}
             && {["Waldo_AIPass_Investigate_Enable",true] call _get} && {!([_state,"investigate"] call Waldo_fnc_CortexCooldown)}
             && {leader _group distance2D (_area select 0) <= (["Waldo_AIPass_Investigate_Range",300] call _get)}
-            && {[_group, ["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select ((_area select 3) == "SOUND"),false] call Waldo_fnc_CortexFeatureEnabled}) then {
+            && {[_group, ["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select ((_area select 3) == "SOUND"),true] call Waldo_fnc_CortexFeatureEnabled}) then {
             [_state,"investigate",120] call Waldo_fnc_CortexCooldown;
             private _target = _area select 0;
             [_group,_target getPos [30,_target getDir leader _group],25] call Waldo_fnc_CortexGroupMove;

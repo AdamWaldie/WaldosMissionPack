@@ -47,7 +47,7 @@ private _spec = [
     ["Waldo_AIPass_FireControl_Enable", "Fire control", "Close threats first, spread fire across visible enemies, disciplined suppression with a friendly-fire check.", "CHECKBOX", [], true],
     ["Waldo_AIPass_FireControl_MaxShootersPerTarget", "Shooters per target", "Extra shooters prefer another visible enemy once this many soldiers are assigned to one target. Immediate close threats still take priority.", "SLIDER", [1,12,0], 2],
     ["Waldo_AIPass_Morale_Enable", "Morale and retreat", "Squads under heavy losses and fire break and fall back under smoke.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_Surrender_Enable", "Surrender", "The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded).", "CHECKBOX", [], false],
+    ["Waldo_AIPass_Surrender_Enable", "Surrender", "One or two broken survivors surrender only when an enemy is within 60 m and no friendly squad is within 300 m (ACE Captives when loaded).", "CHECKBOX", [], true],
     ["Waldo_AIPass_GrenadeEvasion_Enable", "Grenade evasion", "AI move away from a live grenade they can see. Test before live use.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AntiArmour_Enable", "Anti-armour", "The best anti-tank gunner engages known armour, clear of backblast.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Vehicles_Enable", "Enable Cortex vehicle tactics", "Parent control for Cortex passenger dismount, remount and damaged-vehicle withdrawal. Convoy route control remains independent.", "CHECKBOX", [], true],
@@ -80,7 +80,7 @@ private _spec = [
     ["Waldo_Convoy_AvoidInfantry_Enable", "Convoy infantry avoidance", "Optional short-range friendly infantry corridor checks before driving.", "CHECKBOX", [], false],
     ["Waldo_Convoy_ContactHalt_Enable", "Convoy contact halts", "Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.", "CHECKBOX", [], true],
     ["Waldo_Convoy_Unload_Enable", "Convoy cargo unloading", "Allows WMP passenger unloading on halt. Operating crews remain aboard.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_Hearing_Enable", "Nearby gunfire investigation", "Optional FiredNear awareness within the engine event range. Records an uncertain area, never a target reveal. Disabled by default.", "CHECKBOX", [], false],
+    ["Waldo_AIPass_Hearing_Enable", "Nearby gunfire investigation", "Hostile FiredNear events create a throttled, approximate 50 m area for investigation, never a target reveal.", "CHECKBOX", [], true],
     // Squad behaviour
     ["Waldo_AIPass_BehaviourProfile", "Behaviour profile", "Tactics profile for every squad without a group or faction profile of its own. Skill values are not changed.", "COMBO", [_profiles, _profileLabels], ""],
     ["Waldo_AIPass_Aggression", "Aggression", "Scales how often squads flank, assault, advance, investigate and join coordinated assaults. Default 1.2 adds tactical initiative; 1 is the profile's own value, 0 never, 2 doubles the chance before clamping.", "SLIDER", [0, 2, 2], 1.2],

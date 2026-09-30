@@ -101,7 +101,7 @@
  * - Waldo_AIPass_VehicleRemount_Enable (MISSION MAKER): Reboard recorded passengers on a normal return to CALM. Default true.
  * - Waldo_AIPass_VehicleWithdraw_Enable (MISSION MAKER): Damaged vehicle smoke and withdrawal. Default true.
  * - Waldo_AIPass_CoverValidation_Enable (MISSION MAKER): Bounded footprint, slope and geometry validation for cover candidates. Default true.
- * - Waldo_AIPass_Hearing_Enable (MISSION MAKER): Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default false.
+ * - Waldo_AIPass_Hearing_Enable (MISSION MAKER): Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default true.
  * - Waldo_Convoy_MountedFire_Enable (MISSION MAKER): Mounted crew targeting under existing ROE. Default true.
  * - Waldo_Convoy_Cover_Enable (MISSION MAKER): Short passenger movement clear of vehicles after a halt, using cover during contact. Default true.
  * - Waldo_Convoy_ContactHalt_Enable (MISSION MAKER): Contact halt requests under the configured push-through rule. Default true.
@@ -333,7 +333,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_FireControl_MaxShootersPerTarget", 2], // COUNT: shooters per visible enemy before others switch.
         ["Waldo_AIPass_Morale_Enable", true], // BOOL: weighted morale; broken squads retreat under smoke.
         ["Waldo_AIPass_Morale_RetreatDistance", 200], // METRES: how far a broken squad falls back.
-        ["Waldo_AIPass_Surrender_Enable", false], // BOOL: last survivors of a broken, isolated squad surrender.
+        ["Waldo_AIPass_Surrender_Enable", true], // BOOL: last survivors of a broken, isolated squad surrender.
         ["Waldo_AIPass_GrenadeEvasion_Enable", true], // BOOL: move away from seen grenades.
         ["Waldo_AIPass_AntiArmour_Enable", true], // BOOL: best AT gunner engages known armour, clear of backblast.
         ["Waldo_AIPass_VehicleDismount_Enable", true], // Unloads capable passengers only when safely stopped on dry ground.
@@ -345,7 +345,7 @@ createHashMapFromArray [
         ["Waldo_Convoy_AvoidInfantry_Enable", false], // Optional short-range friendly infantry corridor checks before driving.
         ["Waldo_Convoy_ContactHalt_Enable", true], // Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.
         ["Waldo_Convoy_Unload_Enable", true], // Allows WMP passenger unloading on halt. Operating crews remain aboard.
-        ["Waldo_AIPass_Hearing_Enable", false], // Optional nearby gunfire area reports, never target reveals.
+        ["Waldo_AIPass_Hearing_Enable", true], // Nearby gunfire area reports, never target reveals.
         ["Waldo_AIPass_Vehicles_Enable", true], // BOOL: dismount under fire; damaged vehicles smoke and withdraw.
         ["Waldo_AIPass_ContactReports_Enable", true], // BOOL: share sightings by radio (jammable) or voice.
         ["Waldo_AIPass_ContactReports_Radius", 500], // METRES: radio report range.
