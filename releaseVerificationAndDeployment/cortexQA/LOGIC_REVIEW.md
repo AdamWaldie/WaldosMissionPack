@@ -487,3 +487,7 @@ Infantry withdrawal now releases the explicit `supportHeld` actors from both PAT
 Garrison and defence replacement-order release now distinguishes Cortex-owned `doStop` holds from
 newer direct commands. Combat-labelled owned holds rejoin the leader so a fresh group waypoint can
 move them; direct movement, boarding, actions, and scripts remain untouched.
+
+Blocked anti-armour backblast now creates one ten-second actor movement reservation. The relocation
+is not reissued every group tick, a newer destination cancels it, and coordinated bounds omit that
+single actor until the reservation expires. The rest of the squad remains free to move and engage.

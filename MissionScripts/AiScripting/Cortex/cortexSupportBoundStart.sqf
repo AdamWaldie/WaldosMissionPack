@@ -15,7 +15,12 @@ if (_roleName != "MOVE" || {_role isNotEqualTo (_group getVariable ["Waldo_Corte
 private _lease=_group getVariable ["Waldo_AIPass_SupportLease",[]];
 if (count _lease != 6 || {(_lease select 0) != _leaseToken} || {serverTime >= (_lease select 2)}) exitWith {false};
 private _final=_point distance2D (_lease select 5) < 2;
-private _fit=(units _group) select {local _x && {[_x] call Waldo_fnc_CortexCombatEffective} && {vehicle _x == _x} && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}};
+private _fit=(units _group) select {
+    private _actorMove=_x getVariable ["Waldo_Cortex_ActorMove",[]];
+    local _x && {[_x] call Waldo_fnc_CortexCombatEffective} && {vehicle _x == _x}
+        && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
+        && {count _actorMove != 3 || {time >= (_actorMove select 2)}}
+};
 if (count _fit < 4) exitWith {false};
 private _riflemen=_fit select {_x != leader _group && {!(([_x] call Waldo_fnc_CortexUnitRole) in ["MG","AT","LEADER"])}};
 private _first=_riflemen select [0,(floor (count _fit/2)) min count _riflemen];

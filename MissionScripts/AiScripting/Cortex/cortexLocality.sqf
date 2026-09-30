@@ -24,6 +24,7 @@ if (isNull _group) exitWith {};
         _unit setVariable ["Waldo_AIPass_GarrisonHandlerIds", nil];
         _unit setVariable ["Waldo_AIPass_GarrisonHandlers", nil];
         _unit setVariable ["Waldo_AIPass_DuckUntil", nil];
+        _unit setVariable ["Waldo_Cortex_ActorMove",nil];
 } forEach units _group;
 _group setVariable ["Waldo_AIPass_Epoch", (_group getVariable ["Waldo_AIPass_Epoch", 0]) + 1];
 _group setVariable ["Waldo_AIPass_State", nil];

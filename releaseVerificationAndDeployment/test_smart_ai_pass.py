@@ -320,7 +320,10 @@ class CortexContracts(unittest.TestCase):
 
     def test_backblast_blocks_shot_in_current_invocation(self):
         text = source('cortexAntiArmour')
-        self.assertRegex(text, r'if \(_blocked\) exitWith \{[^}]*_gunner doMove _spot;\s*false\s*\};')
+        blocked = text.split('if (_blocked) exitWith {', 1)[1].split('_gunner doTarget', 1)[0]
+        self.assertIn('_gunner doMove _spot', blocked)
+        self.assertIn('Waldo_Cortex_ActorMove', blocked)
+        self.assertRegex(blocked, r'false\s*\};\s*$')
         self.assertLess(text.index('if (_blocked) exitWith'), text.index('_gunner doFire'))
 
     def test_parachute_restores_original_damage_on_current_owner(self):

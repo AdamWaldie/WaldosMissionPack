@@ -727,6 +727,15 @@ class CortexOperations(unittest.TestCase):
         for guard in ['checkAIFeature "PATH"', 'checkAIFeature "MOVE"',
                       'Waldo_AIPass_Garrison', 'Waldo_AIPass_Defend', 'Waldo_AIPass_ClearBuilding']:
             self.assertLess(blocked.index(guard), blocked.index('_gunner doMove'))
+        self.assertIn('getOrDefault ["antiArmourRelocation",[]]',text)
+        self.assertIn('expectedDestination _relocating',text)
+        self.assertIn('setVariable ["Waldo_Cortex_ActorMove",["ANTI_ARMOUR"',text)
+        self.assertIn('_state set ["antiArmourRelocation"',text)
+        support=source('cortexSupportBoundStart')
+        self.assertIn('getVariable ["Waldo_Cortex_ActorMove",[]]',support)
+        self.assertIn('time >= (_actorMove select 2)',support)
+        for cleanup in [source('cortexRestoreCalm'),source('cortexLocality')]:
+            self.assertIn('setVariable ["Waldo_Cortex_ActorMove",nil]',cleanup)
 
     def test_calm_ends_drill_before_discarding_restoration_checkpoint(self):
         text = source('cortexRestoreCalm')

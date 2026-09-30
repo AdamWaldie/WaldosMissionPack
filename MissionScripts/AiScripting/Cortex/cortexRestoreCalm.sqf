@@ -88,6 +88,7 @@ if (!_yieldToExternal && {count _retreatModeLease == 2} && {combatMode _group ==
         if (!isNull _target && {assignedTarget _x == _target}) then {_x doTarget objNull};
         _x setVariable ["Waldo_AIPass_VehicleTarget",nil,true];
         _x setVariable ["Waldo_AIPass_TargetHold",nil];
+        _x setVariable ["Waldo_Cortex_ActorMove",nil];
     };
 } forEach units _group;
 if (!_yieldToExternal && {_state getOrDefault ["behaviourChanged", false]} && {behaviour _leader in ["COMBAT", "AWARE"]}) then {
@@ -119,7 +120,7 @@ if (!_allowRemount) then {
 {_state deleteAt _x} forEach [
     "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
-    "armourRequested", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "movementLease", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
+    "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "movementLease", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 _state set ["phase", "CALM"];

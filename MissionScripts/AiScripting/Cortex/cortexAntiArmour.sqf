@@ -6,7 +6,8 @@
  * launcher gunner with ammunition, least damage and least suppression is ordered to target and fire on
  * it, unless he is already engaging it. Before firing, the backblast area (4 m behind him) is
  * checked for walls and for friendly soldiers; if it is blocked he first moves to a covered spot
- * nearby. An order is held for 15 s. A squad with no anti-tank capability facing armour is handled by
+ * nearby under one ten-second actor reservation. A replacement destination cancels that relocation;
+ * it is never reissued every tick. An engagement order is held for 15 s. A squad with no anti-tank capability facing armour is handled by
  * morale (Waldo_fnc_CortexMorale), which can make it withdraw.
  * Locality and authority: call where the group is local.
  *
@@ -36,6 +37,22 @@ params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap
 if (isNull _group || {!local _group} || {!([_group] call Waldo_fnc_CortexIsEligible)}
     || {!([_group,"Waldo_AIPass_AntiArmour_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
     || {!(combatMode _group in ["YELLOW","RED"])}) exitWith {false};
+private _now = time;
+private _relocation = _state getOrDefault ["antiArmourRelocation",[]];
+private _relocationBlocks = false;
+if (count _relocation == 3) then {
+    _relocation params ["_relocating","_relocationSpot","_relocationUntil"];
+    private _stillOurs = alive _relocating && {local _relocating} && {group _relocating == _group}
+        && {((expectedDestination _relocating) select 0) distance2D _relocationSpot < 1};
+    if (_stillOurs && {_relocating distance2D _relocationSpot > 2} && {_now < _relocationUntil}) then {
+        _relocationBlocks = true;
+    } else {
+        _relocating setVariable ["Waldo_Cortex_ActorMove",nil];
+        _state deleteAt "antiArmourRelocation";
+        if (_now >= _relocationUntil || {!_stillOurs}) then {[_state,"antiArmourMove",10] call Waldo_fnc_CortexCooldown};
+    };
+};
+if (_relocationBlocks || {[_state,"antiArmourMove"] call Waldo_fnc_CortexCooldown}) exitWith {false};
 private _drill = _state getOrDefault ["drill",createHashMap];
 private _moving = if ((_drill getOrDefault ["stage",""]) in ["START","MOVE"]) then {
     _drill getOrDefault ["movers",_drill getOrDefault ["units",[]]]
@@ -53,7 +70,6 @@ private _armourIndex = _enemies findIf {
 if (_armourIndex < 0) exitWith {false};
 (_enemies select _armourIndex) params ["_enemyUnit", "_enemyPos"];
 private _armour = vehicle _enemyUnit;
-private _now = time;
 private _gunners = (units _group) select {
     ([_x] call Waldo_fnc_CortexCombatEffective) && {local _x} && {!(_x in _moving)} && {!(_x in _recovering)} && {unitCombatMode _x in ["YELLOW","RED"]} && {vehicle _x == _x} && {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)}
 };
@@ -79,6 +95,8 @@ if (_blocked && {!(_gunner checkAIFeature "PATH") || {!(_gunner checkAIFeature "
 if (_blocked) exitWith {
     private _spot = ([(getPosATL _gunner) getPos [6, (_enemyPos getDir _gunner) + selectRandom [-70, 70]], _enemyPos, 8, [], _group] call Waldo_fnc_CortexFindCover) select 0;
     _gunner doMove _spot;
+    _gunner setVariable ["Waldo_Cortex_ActorMove",["ANTI_ARMOUR",+_spot,_now+10]];
+    _state set ["antiArmourRelocation",[_gunner,+_spot,_now+10]];
     false
 };
 _gunner doTarget _armour;
