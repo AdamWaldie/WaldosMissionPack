@@ -1,6 +1,6 @@
 # Cortex work and acceptance status
 
-Updated 26 September 2026. PR 151 remains draft. The working tree contains uncommitted implementation and audit changes.
+Updated 30 September 2026. PR 151 remains draft. Current source checkpoints through `0a8f606` are committed and pushed. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
 
 | Requested work | Implementation | Recorded evidence / work remaining |
 |---|---|---|
@@ -189,3 +189,13 @@ Runtime 054758 wheeled-30 passed the full case: spacing [58,60]/60, maximum late
 
 
 Runtime 054758 wheeled-50 spacing also passed [60,60]/60, with no restarts. Tracked halt still fails: rear vehicle speed 29.84/30.12 km/h while forcedSpeed=0 and driver command STOP. Source explicitly clears setDriveOnPath on HALT before applying the stop; engine verification pending. Added runCoordinated.sqf natural contact/two-team rally/disabled hold/opposite-side physical assault, no lease injection. New coordinated suite is unexecuted. Regression 406 passed before the small explicit-path-clear addition.
+
+## 30 September: movement ownership and combat preservation
+
+The latest source-only checkpoints replace competing movement commands with explicit group and actor ownership. Support, flank, advance, assault, regroup and grenade evasion now preserve unrelated owners instead of clearing one another. Zeus replacement orders revoke the affected Cortex movement, and a responder whose requester leaves contact releases its support reservation without erasing a different manoeuvre.
+
+Combat is preserved across those transitions. Regroup no longer clears targets or forces every soldier to reform on a fixed timer. Flank recovery retains known targets while stragglers rejoin. Coordinated covering soldiers can temporarily leave a path-disabled hold to evade a live grenade, and the support controller respects that actor reservation. Single- and multi-squad routes use a wider sampled fire corridor and retain the selected side of a supporting squad's fire axis.
+
+The final assault now treats grenades as optional support rather than a phase gate. A failed, unavailable or cancelled throw cannot freeze the movement sequence. Completed flank and advance actions can proceed through approach, assault, clear-through and consolidation while covering elements continue to engage.
+
+These changes are covered by source contracts, the SQF validator, wiki checks and Zeus/script parity checks. They have not been run in a newly built Arma audit under the current no-launch instruction, so no new physical movement, combat-effectiveness or performance pass is claimed here.
