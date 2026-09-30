@@ -17,7 +17,8 @@
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
- * 2: reason <STRING> - COMPLETE, CLOSE, ABORT, LOSSES, STALLED, TIME_LIMIT, RELEASE, ZEUS, CALM, GRENADE_UNRESOLVED or RECOVERY_FAILED
+ * 2: reason <STRING> - COMPLETE, CLOSE, ABORT, LOSSES, STALLED, TIME_LIMIT, RELEASE, ZEUS, CALM,
+ *    ROE_CHANGED, SPEED_CHANGED, GRENADE_UNRESOLVED or RECOVERY_FAILED
  * Unresolved stragglers change COMPLETE/CLOSE to PARTIAL; main actors hold while stragglers rejoin.
  *
  * Return Value:
@@ -36,6 +37,10 @@ if (count _drill == 0) exitWith {};
 private _groupModeLease = _drill getOrDefault ["groupCombatMode",[]];
 if (count _groupModeLease == 2 && {combatMode _group == (_groupModeLease select 1)}) then {
     _group setCombatMode (_groupModeLease select 0);
+};
+private _groupSpeedLease = _drill getOrDefault ["groupSpeedMode",[]];
+if (count _groupSpeedLease == 2 && {speedMode _group == (_groupSpeedLease select 1)}) then {
+    _group setSpeedMode (_groupSpeedLease select 0);
 };
 {
     _x params ["_unit", "_feature"];

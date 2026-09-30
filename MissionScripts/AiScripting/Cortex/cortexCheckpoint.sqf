@@ -23,6 +23,8 @@ private _drill = _state getOrDefault ["drill", createHashMap];
 if (count _drill > 0) then {
     private _groupModeLease = _drill getOrDefault ["groupCombatMode",[]];
     if (_groupModeLease isNotEqualTo []) then {_saved pushBack ["restoreGroupCombatMode",+_groupModeLease]};
+    private _groupSpeedLease = _drill getOrDefault ["groupSpeedMode",[]];
+    if (_groupSpeedLease isNotEqualTo []) then {_saved pushBack ["restoreGroupSpeedMode",+_groupSpeedLease]};
     _saved pushBack ["restoreDisabled", (_drill getOrDefault ["disabled", []]) apply {+_x}];
     _saved pushBack ["restoreCombatModes",(_drill getOrDefault ["combatModes",[]]) apply {+_x}];
     _saved pushBack ["restoreCombatBehaviours",(_drill getOrDefault ["combatBehaviours",[]]) apply {+_x}];

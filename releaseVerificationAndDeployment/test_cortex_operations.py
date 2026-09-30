@@ -450,6 +450,18 @@ class CortexOperations(unittest.TestCase):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         self.assertIn('-combat-mode-restored', qa)
 
+    def test_tactical_bounds_use_an_owned_full_speed_lease(self):
+        step=source('cortexFlankStep')
+        self.assertIn('_drill set ["groupSpeedMode",[speedMode _group,"FULL"]]',step)
+        self.assertIn('_group setSpeedMode "FULL"',step)
+        self.assertIn('speedMode _group != (_groupSpeedLease select 1)',step)
+        self.assertIn('"SPEED_CHANGED" call _end',step)
+        for name in ['cortexFlankEnd','cortexLocality']:
+            cleanup=source(name)
+            self.assertIn('speedMode _group == (_groupSpeedLease select 1)',cleanup)
+            self.assertIn('_group setSpeedMode (_groupSpeedLease select 0)',cleanup)
+        self.assertIn('restoreGroupSpeedMode',source('cortexCheckpoint'))
+
     def test_coordinated_bound_uses_matching_role_objective_before_personal_contact(self):
         text = source('cortexFlankStep')
         self.assertIn('if (_support) then {+(_supportRole select 4)}', text)

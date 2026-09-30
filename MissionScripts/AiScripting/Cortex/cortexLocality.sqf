@@ -41,6 +41,10 @@ private _groupModeLease = _restore getOrDefault ["restoreGroupCombatMode",[]];
 if (count _groupModeLease == 2 && {combatMode _group == (_groupModeLease select 1)}) then {
     _group setCombatMode (_groupModeLease select 0);
 };
+private _groupSpeedLease = _restore getOrDefault ["restoreGroupSpeedMode",[]];
+if (count _groupSpeedLease == 2 && {speedMode _group == (_groupSpeedLease select 1)}) then {
+    _group setSpeedMode (_groupSpeedLease select 0);
+};
 {
     _x params ["_unit", "_feature"];
     if (local _unit) then {_unit enableAI _feature};

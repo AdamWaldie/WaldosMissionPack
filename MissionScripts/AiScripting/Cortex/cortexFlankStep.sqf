@@ -15,6 +15,9 @@
  * retain normal acquisition and provide fire. Movers watch the known threat direction.
  * COMBAT movers temporarily use per-unit AWARE with automatic combat switching suspended;
  * their previous behaviour is restored at halts, cancellation and ownership migration.
+ * The manoeuvre group receives a finite FULL-speed lease so inherited NORMAL or LIMITED travel
+ * does not make short tactical bounds crawl. Cleanup restores the prior speed only while Cortex
+ * still owns FULL; a later Zeus or script speed change cancels the drill and survives cleanup.
  * Bound handoff never issues doFollow: formation return competes with individual destinations.
  * No explicit attack target is assigned to movers, because that replaced bound destinations in live QA.
  * The lease never uses BLUE or disables firing. Same-frame BLUE/reset experiments did not reliably cancel stale
@@ -102,6 +105,15 @@ if (_groupModeLease isEqualTo [] && {combatMode _group == "RED"}) exitWith {
 };
 if (_groupModeLease isNotEqualTo [] && {combatMode _group != (_groupModeLease select 1)}) exitWith {
     "ROE_CHANGED" call _end
+};
+private _groupSpeedLease = _drill getOrDefault ["groupSpeedMode",[]];
+if (_groupSpeedLease isEqualTo [] && {speedMode _group != "FULL"}) then {
+    _drill set ["groupSpeedMode",[speedMode _group,"FULL"]];
+    _group setSpeedMode "FULL";
+    _groupSpeedLease = _drill get "groupSpeedMode";
+};
+if (_groupSpeedLease isNotEqualTo [] && {speedMode _group != (_groupSpeedLease select 1)}) exitWith {
+    "SPEED_CHANGED" call _end
 };
 private _supportToken=_drill getOrDefault ["supportToken",""];
 private _support=_supportToken != "";
