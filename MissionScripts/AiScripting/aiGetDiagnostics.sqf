@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Reports whether the WMP AI profile is active and whether ordinary AI groups currently owned by
  * headless clients have acknowledged profile adoption. Also reports the Cortex scheduler and
- * survivor-regroup counters, per-feature gates/tuning, bounded action/order snapshots and queue health
+ * survivor-regroup counters, per-feature gates/tuning, coordinated support outcomes,
+ * bounded action/order snapshots and queue health
  * for the server (headless-client private counters stay on those machines). This is independent of which scheduler moved
  * the groups: ACE Headless may be active while WMP's optional HC distributor is disabled.
  *
@@ -120,12 +121,13 @@ private _checks = [
         {_x getVariable ["Waldo_AIPass_ZeusWaypoints", false]} count _groups,
         {_x getVariable ["Waldo_AIPass_Exclude", false]} count _groups,
         missionNamespace getVariable ["Waldo_AIPass_ZeusHoldSeconds", 120]]],
-    ["ai", "cortex-support", if (!_passEnabled) then {"DISABLED"} else {"LOADED"}, format ["artillery=%1 counterBattery=%2 serverBatteries=%3 missions=%4 radars=%5 airborne=%6 drops=%7 flares=%8",
+    ["ai", "cortex-support", if (!_passEnabled) then {"DISABLED"} else {"LOADED"}, format ["artillery=%1 counterBattery=%2 serverBatteries=%3 missions=%4 radars=%5 airborne=%6 drops=%7 reactiveFlares=%8 attackRunFlares=%9",
         missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false], missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false],
         count (missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]), missionNamespace getVariable ["Waldo_AIPass_ArtilleryMissions", 0],
         count (missionNamespace getVariable ["Waldo_AIPass_CounterBatteryRadars", []]), missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false],
         missionNamespace getVariable ["Waldo_AIPass_AirborneDrops", 0],
-        missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false]]],
+        missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false],
+        missionNamespace getVariable ["Waldo_Cortex_AttackRunFlares_Enable", true]]],
     ["ai", "cortex-tuning", if (!_passEnabled) then {"DISABLED"} else {"LOADED"}, format ["profile=%1 aggression=%2 cohesion=%3 reaction=%4 artilleryRole=%5 counterBatteryMode=%6",
         [missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""], "FOLLOW"] select ((missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""]) == ""),
         missionNamespace getVariable ["Waldo_AIPass_Aggression", 1.2], missionNamespace getVariable ["Waldo_AIPass_Cohesion", 1],
@@ -237,6 +239,24 @@ private _queueHint=if (_cacheConsistent) then {
     "The scheduler deadline cache is missing or later than the earliest queued job. Restart Cortex or inspect queue mutation paths before trusting idle scheduling."
 };
 _checks pushBack ["ai","cortex-queue-health",_queueState,format ["serverJobs=%1 dueNow=%2 oldestDueSeconds=%3 staleOwnerJobs=%4 cachedNextDueSeconds=%5 earliestQueuedDueSeconds=%6 deadlineCacheConsistent=%7 fps=%8 budgetMs=%9 paused=%10. %11",count _queue,_overdue,_oldest,_staleOwners,if (_cachedNextDue < 0) then {-1} else {_cachedNextDue-time},if (_earliestQueued < 0) then {-1} else {_earliestQueued-time},_cacheConsistent,diag_fps,missionNamespace getVariable ["Waldo_AIPass_TickBudgetMs",1],[] call Waldo_fnc_CortexIsPaused,_queueHint]];
+// Coordinated work is server-owned, so expose the lease/turn state which an HC-only
+// group snapshot cannot explain. This is calculated only for an on-demand report.
+private _supportRequests=missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap];
+private _activeSupportBounds=0;
+private _supportFailures=0;
+private _retiredSupportTeams=0;
+{
+    private _request=_y;
+    if ((_request getOrDefault ["boundActive",[]]) isNotEqualTo []) then {_activeSupportBounds=_activeSupportBounds+1};
+    {_supportFailures=_supportFailures+_y} forEach (_request getOrDefault ["boundFailuresByToken",createHashMap]);
+    _retiredSupportTeams=_retiredSupportTeams+count (_request getOrDefault ["boundRetired",[]]);
+} forEach _supportRequests;
+_checks pushBack ["ai","cortex-coordination-health",if (_retiredSupportTeams > 0) then {"ERROR"} else {"LOADED"},format ["requests=%1 activeBounds=%2 recordedBoundFailures=%3 retiredTeams=%4. A NOT_READY result yields immediately; TIMEOUT or repeated failures identify a movement/controller fault rather than successful support.",count _supportRequests,_activeSupportBounds,_supportFailures,_retiredSupportTeams]];
+{
+    private _request=_supportRequests get _x;
+    private _requester=_request getOrDefault ["requester",grpNull];
+    _checks pushBack ["ai","cortex-coordination-"+_x,"LOADED",format ["requester=%1 leases=%2 active=%3 completed=%4 retired=%5 failuresByToken=%6 secondsRemaining=%7",if (isNull _requester) then {"NULL"} else {groupId _requester},count (_request getOrDefault ["leases",[]]),_request getOrDefault ["boundActive",[]],_request getOrDefault ["boundCompleted",[]],_request getOrDefault ["boundRetired",[]],_request getOrDefault ["boundFailuresByToken",createHashMap],((_request getOrDefault ["expiry",serverTime])-serverTime) max 0]];
+} forEach ((keys _supportRequests) select [0,20]);
 private _localGroups=_groups select {local _x && {_x getVariable ["Waldo_AIPass_Managed",false]}};
 _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot serverTime=%1; server-local managed groups=%2, sampled=%3 (limit 20); HC-owned groups=%4. HC private action/queue state is unavailable here, not zero. Stationary or PATH-disabled units may be covering; one snapshot cannot prove a stall.",serverTime,count _localGroups,(count _localGroups) min 20,count _hcGroups]];
 {
@@ -246,8 +266,8 @@ _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot server
     private _members=(units _group) select [0,8];
     _checks pushBack ["ai",format ["cortex-group-context-%1",netId _group],"LOADED",format ["group=%1 phaseAgeSeconds=%2 lastSeenAgeSeconds=%3 morale=%4 moraleState=%5 investigating=%6 searchMembers=%7 reinforcementResponding=%8 dismounted=%9 withdrawnVehicles=%10 disabledFeatures=%11 externalControl=%12. Ages are owner-local; unknown uses -1. Stored intentions are not physical completion.",groupId _group,if ("phaseStart" in _state) then {time-(_state get "phaseStart")} else {-1},if ("lastSeen" in _state) then {time-(_state get "lastSeen")} else {-1},_state getOrDefault ["morale",-1],_state getOrDefault ["moraleState","UNKNOWN"],_state getOrDefault ["areaInvestigation",""],count (_state getOrDefault ["searchTeam",[]]),_state getOrDefault ["responding",false],count (_state getOrDefault ["dismounted",[]]),count (_state getOrDefault ["withdrawn",[]]),_group getVariable ["Waldo_AIPass_DisabledFeatures",[]],_group getVariable ["Waldo_AI_ExternalControl",false]]];
     private _actors=_members apply {[_x,currentCommand _x,round speed _x,_x checkAIFeature "PATH",_x checkAIFeature "MOVE",behaviour _x,unitCombatMode _x]};
-    _checks pushBack ["ai",format ["cortex-group-%1",netId _group],"LOADED",format ["group=%1 owner=%2 phase=%3 drill=%4 stage=%5 bound=%6 recoveryActors=%7 excluded=%8 ZeusWaypoints=%9 ZeusHoldRemaining=%10 supportRole=%11; first 8 members [unit,command,km/h,PATH,MOVE,behaviour,ROE]=%12",
-        groupId _group,groupOwner _group,_state getOrDefault ["phase","UNKNOWN"],_drill getOrDefault ["type","NONE"],_drill getOrDefault ["stage","NONE"],_drill getOrDefault ["index",-1],count (_drill getOrDefault ["recovery",[]]),_group getVariable ["Waldo_AIPass_Exclude",false],_group getVariable ["Waldo_AIPass_ZeusWaypoints",false],((_group getVariable ["Waldo_AIPass_ZeusLocalUntil",time])-time) max 0,_group getVariable ["Waldo_Cortex_SupportRole",[]],_actors]];
+    _checks pushBack ["ai",format ["cortex-group-%1",netId _group],"LOADED",format ["group=%1 owner=%2 phase=%3 drill=%4 stage=%5 bound=%6 recoveryActors=%7 groupSpeed=%8 excluded=%9 ZeusWaypoints=%10 ZeusHoldRemaining=%11 supportRole=%12 supportResult=%13 supportAbort=%14; first 8 members [unit,command,km/h,PATH,MOVE,behaviour,ROE]=%15",
+        groupId _group,groupOwner _group,_state getOrDefault ["phase","UNKNOWN"],_drill getOrDefault ["type","NONE"],_drill getOrDefault ["stage","NONE"],_drill getOrDefault ["index",-1],count (_drill getOrDefault ["recovery",[]]),speedMode _group,_group getVariable ["Waldo_AIPass_Exclude",false],_group getVariable ["Waldo_AIPass_ZeusWaypoints",false],((_group getVariable ["Waldo_AIPass_ZeusLocalUntil",time])-time) max 0,_group getVariable ["Waldo_Cortex_SupportRole",[]],_group getVariable ["Waldo_Cortex_SupportBoundResult",[]],_group getVariable ["Waldo_Cortex_SupportAbort",[]],_actors]];
 } forEach (_localGroups select [0,20]);
 // Explicit orders publish assignments, so their physical distances can be inspected for any owner.
 private _orderedGroups=_groups select {(_x getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo [] || {(_x getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []} || {(_x getVariable ["Waldo_AIPass_ClearOrder",[]]) isNotEqualTo []} || {(_x getVariable ["Waldo_Cortex_ClearResult",[]]) isNotEqualTo []}};

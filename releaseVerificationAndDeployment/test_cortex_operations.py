@@ -739,6 +739,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('[_token,_role select 1,"NOT_READY"]',maintain)
         self.assertIn('_state set ["supportBoundSequence",_role select 1]',maintain)
 
+    def test_wmp_diagnostics_explain_coordinated_failures_and_flare_modes(self):
+        diagnostic=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        for marker in ['cortex-coordination-health','recordedBoundFailures=',
+                       'boundFailuresByToken','Waldo_Cortex_SupportBoundResult',
+                       'Waldo_Cortex_SupportAbort','groupSpeed=%8',
+                       'reactiveFlares=%8 attackRunFlares=%9',
+                       'Waldo_Cortex_AttackRunFlares_Enable']:
+            self.assertIn(marker,diagnostic)
+
     def test_bound_retry_is_finite_and_does_not_fabricate_progress(self):
         text = source('cortexFlankStep')
         retry = text.split('private _retry = _retries select _forEachIndex;')[1].split('if (_now-(_last select 3) > _timeout)')[0]
