@@ -944,8 +944,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('CBA_fnc_waitAndExecute',scoot)
         self.assertIn('_state set ["movementLease",["ARTILLERY_SCOOT",time+120]]',scoot)
         self.assertIn('[_vehicle,_scootToken] call Waldo_fnc_CortexArtilleryScoot',locality)
+        self.assertLess(locality.index('CortexRestoreCalm'),locality.index('CortexArtilleryScoot'))
         self.assertIn('if (!_groupMovementOwned && {!(_state getOrDefault ["responding", false])',tick)
         self.assertGreaterEqual(tick.count('!_groupMovementOwned'),3)
+
+    def test_support_cleanup_does_not_delete_a_newer_shared_movement_route(self):
+        maintain=source('cortexSupportMaintain')
+        self.assertIn('private _movementLeaseActive = count _movementLease == 2',maintain)
+        self.assertIn('if (!_movementLeaseActive && {_state getOrDefault ["responding",false]',maintain)
+        self.assertIn('if (!_movementLeaseActive) then {[_group] call Waldo_fnc_CortexGroupMoveClear}',maintain)
 
     def test_cover_stance_bounds_rays_and_rotates_units(self):
         text=source('cortexStance')

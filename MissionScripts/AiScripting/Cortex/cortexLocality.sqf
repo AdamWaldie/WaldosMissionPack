@@ -31,17 +31,6 @@ _group setVariable ["Waldo_AIPass_Managed", nil];
 {_group setVariable [_x, nil]} forEach ["Waldo_AIPass_GarrisonApplied", "Waldo_AIPass_DefendApplied", "Waldo_AIPass_ClearApplied"];
 _group setVariable ["Waldo_AIPass_Adopted", _gained];
 if (!_gained || {!local _group}) exitWith {};
-// A pending shoot-and-scoot request is durable, but its queued callback belonged to the old owner.
-// Resume it once on the new vehicle owner; the server token still authenticates the request.
-private _scootVehicles = [];
-{
-    private _vehicle = vehicle _x;
-    if (_vehicle != _x && {!(_vehicle in _scootVehicles)}) then {
-        _scootVehicles pushBack _vehicle;
-        private _scootToken = _vehicle getVariable ["Waldo_Cortex_ArtilleryScootToken",""];
-        if (_scootToken != "") then {[_vehicle,_scootToken] call Waldo_fnc_CortexArtilleryScoot};
-    };
-} forEach units _group;
 // Recovery is cancelled by adoption, not silently resumed from stale diagnostics.
 if ((_group getVariable ["Waldo_Cortex_DrillRecovery",[]]) isNotEqualTo []) then {
     _group setVariable ["Waldo_Cortex_DrillRecovery",["MIGRATED",[],-1],true];
@@ -79,6 +68,18 @@ if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) t
     _adopted set ["dismounted",_passengers];
     _adopted set ["onboardContactUntil",serverTime+30];
 };
+// A pending shoot-and-scoot request is durable, but its queued callback belonged to the old owner.
+// Resume it only after calm restoration has removed the old owner's waypoint and transient state;
+// otherwise that cleanup would immediately delete the newly resumed relocation.
+private _scootVehicles = [];
+{
+    private _vehicle = vehicle _x;
+    if (_vehicle != _x && {!(_vehicle in _scootVehicles)}) then {
+        _scootVehicles pushBack _vehicle;
+        private _scootToken = _vehicle getVariable ["Waldo_Cortex_ArtilleryScootToken",""];
+        if (_scootToken != "") then {[_vehicle,_scootToken] call Waldo_fnc_CortexArtilleryScoot};
+    };
+} forEach units _group;
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 // Clear stale remnant reservations and airborne jobs; the normal discovery path reassesses them.
 _group setVariable ["Waldo_AIPass_RegroupQueued", nil];

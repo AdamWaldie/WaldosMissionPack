@@ -467,3 +467,7 @@ uses it for shoot-and-scoot. A battery waits in bounded five-second steps if a m
 order already owns movement, then acquires the lease when free. Contact entry and investigation
 observe the lease even if vehicle tactics are disabled. The authenticated request token and deadline
 are public so a new group owner can resume a pending relocation after locality migration.
+
+Locality adoption restores and clears the old owner's transient state before it resumes an
+authenticated pending relocation. Support-reservation cleanup also checks the shared lease before
+deleting a route, so an expired rally cannot erase a newer vehicle or artillery movement.
