@@ -51,7 +51,14 @@ private _supportLease=_group getVariable ["Waldo_AIPass_SupportLease",[]];
 if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_supportLease select 0)}) then {
     [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 };
-{if (local _x) then {_x enableAI "PATH"}} forEach (_state getOrDefault ["supportHeld",[]]);
+{
+    if (local _x && {group _x == _group}) then {
+        _x enableAI "PATH";
+        // supportHeld is an explicit Cortex ownership record. A withdrawal replaces that
+        // hold with a group route, so every surviving member must rejoin the leader first.
+        _x doFollow _leader;
+    };
+} forEach (_state getOrDefault ["supportHeld",[]]);
 {_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
 if (!("baseAttack" in _state)) then {
     _state set ["baseAttack",attackEnabled _group];
@@ -73,6 +80,7 @@ if (behaviour _leader != "AWARE") then {
     _group setBehaviour "AWARE";
 };
 [_group, _point, 30] call Waldo_fnc_CortexGroupMove;
+_state set ["movementLease",["INFANTRY_WITHDRAW",time+120]];
 if (speedMode _group != "FULL") then {
     if !(_state getOrDefault ["speedChanged", false]) then {_state set ["baseSpeed", speedMode _group]};
     _state set ["speedChanged", true];

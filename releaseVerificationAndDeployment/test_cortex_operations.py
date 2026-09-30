@@ -913,6 +913,14 @@ class CortexOperations(unittest.TestCase):
         self.assertGreater(block.index('call Waldo_fnc_CortexRetreat'),block.index('switch (true)'))
         self.assertNotIn('default {[_group, _state] call Waldo_fnc_CortexRetreat}',block)
 
+    def test_infantry_withdrawal_releases_support_holds_and_owns_its_route(self):
+        retreat=source('cortexRetreat')
+        support=retreat.split('forEach (_state getOrDefault ["supportHeld",[]])',1)[0].rsplit('{',1)[-1]
+        self.assertIn('_x enableAI "PATH"',support)
+        self.assertIn('_x doFollow _leader',support)
+        self.assertIn('_state set ["movementLease",["INFANTRY_WITHDRAW",time+120]]',retreat)
+        self.assertLess(retreat.index('CortexGroupMove'),retreat.index('["INFANTRY_WITHDRAW",time+120]'))
+
     def test_vehicle_movement_owns_its_waypoint_until_physical_completion(self):
         vehicles=source('cortexVehicles')
         tick=source('cortexGroupTick')

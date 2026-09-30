@@ -479,3 +479,7 @@ holds. Newer direct movement, boarding, action, and scripted unit commands remai
 Cover stance selection now enforces its documented stationary-only contract. A soldier already
 moving for a bound, regroup, backblast clearance, or engine route keeps an engine-selected stance;
 Cortex samples cover only after speed falls below 1 km/h.
+
+Infantry withdrawal now releases the explicit `supportHeld` actors from both PATH locks and
+`doStop` before it issues the retreat route. The route acquires the shared movement lease as
+`INFANTRY_WITHDRAW`, preventing stale support cleanup or another tactic from replacing it.
