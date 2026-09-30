@@ -6,8 +6,10 @@
  * which Waldo_fnc_CortexFireControl uses to suppress. Up to half the squad (2-5 riflemen) becomes
  * the manoeuvre element. Candidate two-leg routes are sampled against the firing corridors from the
  * squad's own base of fire and nearby friendly squads to the objective. Cortex chooses a side and
- * width that stays outside those corridors; if neither side is safe the flank is cancelled rather
- * than sending troops across friendly fire. Each accepted leg is cut into bounds by
+ * width that stays outside those corridors. All six bounded candidates are scored once at start;
+ * fixed geometry samples reward terrain and solid objects which screen the manoeuvre from the
+ * objective. If neither side is safe the flank is cancelled rather than sending troops across
+ * friendly fire. Each accepted leg is cut into bounds by
  * Waldo_fnc_CortexPlanRoute. Where a leg crosses a road
  * (Waldo_AIPass_StreetCrossing_Enable), the route stops at the near edge, throws smoke and crosses in
  * one bound to the far edge. Legs over water switch to the other flank or cancel the drill. When the
@@ -137,16 +139,44 @@ private _crossesFireLane = {
 };
 private _toGroup = _enemyPos getDir _leader;
 private _legs = [];
+private _bestScore = 1e9;
+private _routeProtection = {
+    params ["_route"];
+    private _protected = 0;
+    private _enemyASL = (getPosASL _target) vectorAdd [0,0,1.4];
+    private _from = _start;
+    {
+        private _to = _x;
+        {
+            private _sample = [
+                (_from select 0)+((_to select 0)-(_from select 0))*_x,
+                (_from select 1)+((_to select 1)-(_from select 1))*_x,
+                0
+            ];
+            private _sampleASL = (AGLToASL _sample) vectorAdd [0,0,1.0];
+            private _rayStart = _enemyASL vectorAdd ((_enemyASL vectorFromTo _sampleASL) vectorMultiply 2);
+            if (terrainIntersectASL [_enemyASL,_sampleASL]
+                || {(lineIntersectsSurfaces [_rayStart,_sampleASL,_target,objNull,true,1,"FIRE","GEOM"]) isNotEqualTo []}) then {
+                _protected = _protected+1;
+            };
+        } forEach [0.25,0.5,0.75];
+        _from = _to;
+    } forEach _route;
+    _protected
+};
 {
     _x params ["_side","_wideAngle","_closeAngle"];
     private _wide = _enemyPos getPos [(_distance * 0.8) max 60, _toGroup + _side*_wideAngle];
     private _close = _enemyPos getPos [((_distance * 0.35) max 35) min 60, _toGroup + _side*_closeAngle];
     private _candidate = [_wide,_close];
-    if (!surfaceIsWater _wide && {!surfaceIsWater _close} && {!([_candidate] call _crossesFireLane)}) exitWith {_legs = _candidate};
-} forEach (selectRandom [
-    [[1,70,60],[-1,70,60],[1,90,75],[-1,90,75],[1,110,90],[-1,110,90]],
-    [[-1,70,60],[1,70,60],[-1,90,75],[1,90,75],[-1,110,90],[1,110,90]]
-]);
+    if (!surfaceIsWater _wide && {!surfaceIsWater _close} && {!([_candidate] call _crossesFireLane)}) then {
+        private _routeLength = (_start distance2D _wide)+(_wide distance2D _close);
+        // Each screened sample offsets 20 m of route length. The candidate/sample counts
+        // are fixed, so cover preference cannot become a hot scheduler loop.
+        private _score = _routeLength-20*([_candidate] call _routeProtection);
+        if (_score < _bestScore) then {_legs = _candidate; _bestScore = _score};
+    };
+} forEach [[1,70,60],[-1,70,60],[1,90,75],[-1,90,75],[1,110,90],[-1,110,90]];
 if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCooldown; false};
 
 private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_CortexPlanRoute;

@@ -616,8 +616,13 @@ class CortexOperations(unittest.TestCase):
         start = source('cortexFlankStart')
         for marker in ['private _supportOrigins = []', 'knowsAbout _target > 0.5',
                        'private _crossesFireLane = {', '_lateral < 18',
-                       '[1,110,90]', '!([_candidate] call _crossesFireLane)']:
+                       '[1,110,90]', '!([_candidate] call _crossesFireLane)',
+                       'private _routeProtection = {','forEach [0.25,0.5,0.75]',
+                       'terrainIntersectASL [_enemyASL,_sampleASL]',
+                       'lineIntersectsSurfaces [_rayStart,_sampleASL,_target,objNull',
+                       'private _score = _routeLength-20*([_candidate] call _routeProtection)']:
             self.assertIn(marker, start)
+        self.assertNotIn('selectRandom [',start)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
         self.assertIn('private _fireLaneCrossings=[0,0]',qa)
         self.assertIn('-no-support-fire-lane-crossing',qa)
