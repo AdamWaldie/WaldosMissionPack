@@ -184,6 +184,52 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
     deleteVehicle _house;
 } forEach [[2,"Land_i_House_Small_01_V1_F"],[6,"Land_i_House_Big_01_V1_F"],[12,"Land_i_House_Big_02_V1_F"]];
 
+// A casualty inside the clearing element must not strand the shared room queue. Use ten soldiers
+// so the production eight-worker cap leaves a genuine squad reserve available as a replacement.
+private _casualtyHouse=createVehicle ["Land_i_House_Big_01_V1_F",[6250,5800,0],[],0,"NONE"];
+_casualtyHouse enableSimulationGlobal true;
+private _casualtyGroup=createGroup [east,true];
+_casualtyGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_casualtyGroup setVariable ["acex_headless_blacklist",true,true];
+private _casualtyMembers=[];
+for "_i" from 0 to 9 do {
+    private _unit=_casualtyGroup createUnit ["O_Soldier_F",[6230+(_i mod 5)*4,5760-floor(_i/5)*4,0],[],0,"NONE"];
+    _unit setVariable ["acex_headless_blacklist",true,true];
+    _unit setVariable ["Waldo_CortexQA_Label",format ["CQB CASUALTY / soldier %1",_i+1],true];
+    _casualtyMembers pushBack _unit;
+};
+missionNamespace setVariable ["Waldo_CortexQA_Actors",_casualtyMembers,true];
+["CQB casualty reinforcement","The ten-person squad starts with four clearing pairs and exterior security. One clearing soldier becomes a real casualty. A surviving reserve must join the clear and physically move toward the building; the remaining room queue must stay active.",getPosATL _casualtyHouse] call _phase;
+private _casualtyAccepted=[_casualtyGroup,_casualtyHouse,createHashMapFromArray [["useLambs",false]]] call Waldo_fnc_CortexClearBuilding;
+["CLEAR-casualty-order-accepted",_casualtyAccepted] call _check;
+private _jobStarted=[{_casualtyGroup getVariable ["Waldo_AIPass_ClearBuilding",false]},15] call _wait;
+["CLEAR-casualty-job-started",_jobStarted] call _check;
+private _casualty=_casualtyMembers select 1;
+private _reserve=_casualtyMembers select 9;
+private _reserveStart=getPosATL _reserve;
+private _evidenceBefore=count (_casualtyGroup getVariable ["Waldo_Cortex_ClearReinforcements",[]]);
+_casualty setDamage 1;
+private _reinforced=[{
+    private _evidence=_casualtyGroup getVariable ["Waldo_Cortex_ClearReinforcements",[]];
+    count _evidence > _evidenceBefore
+        && {_evidence findIf {(_x param [1,""]) == netId _casualty && {(_x param [2,""]) == netId _reserve}} >= 0}
+},30] call _wait;
+["CLEAR-casualty-reserve-assigned",_reinforced,str (_casualtyGroup getVariable ["Waldo_Cortex_ClearReinforcements",[]])] call _check;
+private _replacementMoved=[{
+    alive _reserve
+        && {_reserve distance2D _reserveStart >= 8
+            || {(_casualtyHouse buildingPos -1) findIf {(getPosASL _reserve) vectorDistance (AGLToASL _x) <= 1.5} >= 0}}
+},60] call _wait;
+["CLEAR-casualty-reserve-physical-movement",_replacementMoved,format ["start=%1 actual=%2 command=%3 expected=%4",_reserveStart,getPosATL _reserve,currentCommand _reserve,expectedDestination _reserve]] call _check;
+private _continuing=(_casualtyGroup getVariable ["Waldo_AIPass_ClearBuilding",false])
+    || {((_casualtyGroup getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) in ["COMPLETE","INCOMPLETE"]};
+["CLEAR-casualty-controller-continues",_continuing] call _check;
+[_casualtyGroup] call Waldo_fnc_CortexClearRelease;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{deleteVehicle _x} forEach _casualtyMembers;
+deleteGroup _casualtyGroup;
+deleteVehicle _casualtyHouse;
+
 // Exercise door handling through the real clearance job, never by calling its helper directly.
 private _doorHouse=createVehicle ["Land_i_House_Small_01_V1_F",[6250,5800,0],[],0,"NONE"];
 _doorHouse enableSimulationGlobal true;

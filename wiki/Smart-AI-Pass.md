@@ -271,8 +271,13 @@ Orders are given to a specific squad from a script or from Zeus (**WMP Cortex**,
 [_group] call Waldo_fnc_CortexDefendRelease;
 ```
 
-**Clear building**: the leader holds outside while the rest work through every room. The order ends
-when every room is checked or after four minutes.
+**Clear building**: every available on-foot soldier, including the leader, can enter up to a bounded
+eight-soldier capacity. Each committed soldier independently claims the nearest unclaimed room and
+continues through further rooms. Extra soldiers form a casualty reserve. A reserve replaces a dead or
+incapacitated worker; routine rotation does not interrupt a working clear. A blocked entrance is tried
+through the building's other engine-defined entrances, and a blocked room returns to the shared queue
+for another soldier. The order ends only after rooms have been physically visited or attempted, then
+the clearing element exits before ordinary formation control resumes.
 
 ```sqf
 [group this, nearestBuilding this] call Waldo_fnc_CortexClearBuilding;
@@ -621,7 +626,7 @@ AI diagnostics include every Cortex checkbox gate with its current/default value
 
 These are read-only snapshots requested through the existing diagnostics flow, with no new recurring controller. Enabled settings are labelled LOADED rather than proof of activity. Stationary covering units are not automatically called stalled. HC-private action and queue state is unavailable in this server report; adoption records and engine ownership do not prove HC behaviour. Live validation of the new rows is pending.
 
-Each feature gate also includes its trigger/inspection guidance, related tuning `[label, current, default]`, and known required parent gates. An enabled child with a disabled required parent is UNCONFIGURED, not ACTIVE or an error. Convoy gates remain independent of Cortex master. Group context includes phase/last-seen age, morale, search/reinforcement intent and recorded dismounted/withdrawn actors. Queue health reports locally due jobs, oldest due age, stale owner epochs, FPS and budget; a single overdue sample does not establish starvation. These report-only additions require fresh live acceptance.
+Each feature permission includes expected physical evidence, related tuning `[label, current, default]`, and known prerequisites. A selected child with a disabled prerequisite is UNCONFIGURED, not ACTIVE or an error. The report does not call the setting itself a trigger. Convoy permissions remain independent of the Cortex master. Group context includes phase/last-seen age, morale, search/reinforcement intent and recorded dismounted/withdrawn actors. Queue health reports locally due jobs, oldest due age, stale owner epochs, FPS and budget; a single overdue sample does not establish starvation. These report-only additions require fresh live acceptance.
 
 Explicit defend, garrison and clear orders have separate bounded diagnostic rows, including group owner, public assignments, recorded clear result and actual member positions/distances. These rows also cover explicitly ordered groups outside automatic Cortex management. Unknown assignments use -1; arrival alone does not establish usable cover or a cleared interior.
 
@@ -637,9 +642,9 @@ Required live acceptance: moving plane and helicopter approach and departure, ac
 
 ### Building clearance recovery and current acceptance
 
-Clearance counts a room only after a soldier physically reaches its position. A soldier making progress is not failed merely because 25 seconds have elapsed. After 25 seconds without one metre of movement, Cortex retries that room, at most twice. An exhausted room remains incomplete while other room assignments continue; the overall 240-second deadline still applies. Dead, mounted, non-local or transferred members release their room reservations. Cleanup does not issue formation orders to members transferred to another group.
+Clearance counts a room only after a soldier physically reaches its position. Each committed soldier now owns an independent movement lane and draws from the shared room queue; the former point/support pairing that left half the element outside has been removed. A soldier making progress is not failed merely because 25 seconds have elapsed. After 25 seconds without one metre of movement, Cortex retries that room. An exhausted room remains incomplete while other workers continue. Dead, mounted, non-local or transferred members release their room reservations, and uncommitted members reinforce casualties. Cleanup does not issue formation orders to members transferred to another group.
 
-Building entry remains unresolved. Completed audit `20260929-184640` recorded 37 checks, nine findings and no SQF errors. The first house model failed independent movement controls; the second allowed individual direct entry but failed the three-person Cortex garrison and subsequent clearance. These results do not establish working CQB. Additive fresh-group clearance cases cover 2, 6 and 12 soldiers and record physical room visits separately from accepted orders. Live verification of the recovery changes is pending.
+Building entry remains unresolved. Completed audit `20260930-134211` confirmed that engine pathability varies by building model: direct movement and forced replanning worked on two of four comparison models, while building-attached waypoints failed on all four. Production garrison and clear orders still failed physical arrival. The saved fixes now try every usable entrance, stop door polling from resetting the stuck timer, use a finite garrison deadline, and give every committed clearing soldier an independent lane. Additive fresh-group clearance cases cover 2, 6 and 12 soldiers and record physical room visits separately from accepted orders. These saved changes require a rebuilt live audit before CQB can be accepted.
 
 
 The building audit markers identify engine building positions, not a verified room topology. Visiting every marker establishes traversal only; it does not establish successful combat clearance against defenders. Fresh two- and six-soldier cases in runtime `20260929-185445` each visited only one of four positions. Door interaction, later control protections and ordinary-waypoint handover additions were saved after that runtime launched and are not validated by it. Game validation resumed on 30 September in runtime `20260930-101931`; that run still records building-entry and clearance failures.

@@ -33,6 +33,18 @@ private _theme = [] call Waldo_fnc_UiTheme;
 private _group = _display ctrlCreate ["RscControlsGroup",-1];
 _group ctrlSetPosition [_x+_w*0.28,_y+_h*0.15,_w*0.69,_h*0.72]; _group ctrlCommit 0;
 private _editors = [];
+// A compiled mission can contain an older extension which appended the same setting twice.
+// Build one editor per authoritative key so repeated flags cannot produce two controls or two
+// conflicting values in the Apply payload.
+private _pageRows = [];
+private _seenKeys = createHashMap;
+{
+    private _key = _x select 0;
+    if !(_seenKeys getOrDefault [_key,false]) then {
+        _seenKeys set [_key,true];
+        _pageRows pushBack _x;
+    };
+} forEach ((_display getVariable "Cortex_Spec") select {(_x select 6) == _section});
 private _guide = switch (_section) do {
     case "GENERAL": {"MISSION-WIDE CONTROL<br/>Skill profiles change AI ability. Cortex behaviours enable the automatic tactics below. Convoy control is separate. Use purpose modules to command or configure a specific group or asset. Changes take effect only after Apply."};
     case "CONTACT": {"CONTACT &amp; AWARENESS<br/>Controls how eligible squads notice and respond to threats. Cortex behaviours must be enabled. Contact handling is required for contact-driven tactics; enabling a child option alone does not start them."};
@@ -80,7 +92,7 @@ private _rowY = _introH + _h*0.025;
     _helpControl ctrlSetPositionH _helpH; _helpControl ctrlCommit 0;
     _editors pushBack [_editor,_x];
     _rowY = _rowY + _h*0.12 + _helpH;
-} forEach ((_display getVariable "Cortex_Spec") select {(_x select 6) == _section});
+} forEach _pageRows;
 _display setVariable ["Cortex_Editors",_editors];
 _display setVariable ["Cortex_PageControls",[_group]];
 [_display,true] call Waldo_fnc_UiThemeApplyDisplayLocal;

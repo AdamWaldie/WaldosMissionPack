@@ -208,6 +208,7 @@
  * - Waldo_AIPass_Airborne_JumpInterval (ADVANCED): seconds between jumpers.
  * - Waldo_AIPass_Garrison_DynamicAO (MISSION MAKER): Dynamic AO garrisons duck under fire, watch outward and break at losses.
  * - Waldo_AIPass_Garrison_BreakFraction (ADVANCED): a garrison or defence line breaks when down to this share of its strength at the time of the order.
+ * - Waldo_Cortex_AttackRunFlares_Enable (MISSION MAKER): AI planes and helicopters with an assigned hostile target make finite countermeasure requests while closing on the attack run and again after passing their closest approach. This does not create ammunition or alter the flight path.
  * - Waldo_AIPass_AircraftFlares_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first.
  * - Waldo_AIPass_ProfileBehaviour (ADVANCED): behaviour per profile name, alongside AI Rebalance's skill
  *   values (which the pass never changes): flank, assault, advance, investigate and coordinated-assault

@@ -37,8 +37,8 @@ private _skillProfiles = ["LEGACY","MILITIA","LINE","VETERAN","ELITE"];
 private _skillNames = missionNamespace getVariable ["Waldo_AI_ProfileDisplayNames",createHashMap];
 private _skillLabels = _skillProfiles apply {_skillNames getOrDefault [_x,_x]};
 private _spec = [
-    ["Waldo_AIRebalance_Enable", "Skill profiles", "Apply the selected profile to local AI on every machine.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_Enable", "Cortex behaviours", "Enables automatic Cortex behaviours. Child switches remain independently selectable; convoy control is separate.", "CHECKBOX", [], true],
+    ["Waldo_AIRebalance_Enable", "Apply WMP skill profiles", "Master control for WMP skill adjustment. When enabled, the selected skill profile is applied by the machine that owns each AI unit.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Enable", "Enable Cortex automatic tactics", "Master control for Cortex actions and reactions. The purpose switches below choose which tactics Cortex may use; convoy control remains independent.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Regroup_Enable", "Survivor regroup", "Survivors of a destroyed squad walk to and join a nearby friendly squad.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Contact_Enable", "Contact handling", "Squads switch to combat on contact and return to their previous behaviour and waypoints afterwards. Needed by every combat option below.", "CHECKBOX", [], true],
     ["Waldo_AIPass_PostContact_Enable", "Post-contact search", "After contact is lost: hold, send two soldiers to check the last known position, regroup.", "CHECKBOX", [], true],
@@ -50,14 +50,14 @@ private _spec = [
     ["Waldo_AIPass_Surrender_Enable", "Surrender", "The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded).", "CHECKBOX", [], false],
     ["Waldo_AIPass_GrenadeEvasion_Enable", "Grenade evasion", "AI move away from a live grenade they can see. Test before live use.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AntiArmour_Enable", "Anti-armour", "The best anti-tank gunner engages known armour, clear of backblast.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_Vehicles_Enable", "Vehicle drills", "Infantry dismount under fire; damaged vehicles smoke and withdraw.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Vehicles_Enable", "Enable Cortex vehicle tactics", "Parent control for Cortex passenger dismount, remount and damaged-vehicle withdrawal. Convoy route control remains independent.", "CHECKBOX", [], true],
     ["Waldo_AIPass_ContactReports_Enable", "Contact reports", "Squads share sighted enemies by radio (blocked by jamming) or by voice.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Reinforce_Enable", "Reinforcement", "Idle nearby squads move up behind a squad in contact.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_Artillery_Enable", "Artillery support", "Explicitly assigned spotters request ranging fire from friendly AI artillery. Use the artillery setup modules first.", "CHECKBOX", [], false],
+    ["Waldo_AIPass_Artillery_Enable", "Enable spotter artillery support", "Parent control for spotter-requested support and retreat smoke missions. Explicitly assign a spotter and configure a friendly battery first.", "CHECKBOX", [], false],
     ["Waldo_AIPass_CounterBattery_Enable", "Counter-battery", "AI artillery answers enemy artillery whose position is known.", "CHECKBOX", [], false],
     ["Waldo_AIPass_Airborne_Enable", "Airborne insertion", "AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy.", "CHECKBOX", [], false],
-    ["Waldo_Cortex_AttackRunFlares_Enable", "Attack-run flares", "AI aircraft release two countermeasure requests on approach and departure from an assigned hostile target. Uses onboard ammunition; leaves flight paths unchanged.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_AircraftFlares_Enable", "Aircraft flares", "WMP gunships and Dynamic AA fighters fire flares at incoming missiles.", "CHECKBOX", [], false],
+    ["Waldo_Cortex_AttackRunFlares_Enable", "Proactive attack-run countermeasures", "AI aircraft expend countermeasures while approaching and leaving an assigned hostile target. This is based on attack-run geometry, not a detected missile.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_AircraftFlares_Enable", "Missile-threat countermeasures", "Supported WMP gunships and Dynamic AA fighters expend countermeasures after an incoming missile is detected.", "CHECKBOX", [], false],
     ["Waldo_AIPass_Investigate_Enable", "Investigation", "Squads send two riflemen to check enemies they know about but have not seen.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Assault_Enable", "Final assault", "A flank can finish with a grenade and a rush on the enemy position.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Advance_Enable", "Bounding advance", "Squads in a long firefight push a fire team towards their waypoint in covered bounds.", "CHECKBOX", [], true],
@@ -66,14 +66,14 @@ private _spec = [
     ["Waldo_AIPass_Stance_Enable", "Stance from cover", "Soldiers stand, kneel or go prone to match the cover in front of them.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AmmoShare_Enable", "Ammo sharing", "Soldiers down to their last magazine get one from a nearby squad-mate.", "CHECKBOX", [], true],
     ["Waldo_AIPass_VehicleGunnery_Enable", "Vehicle gunnery", "Gunners engage AT soldiers first, then armour; armour backs away from AT teams.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_ArtillerySmoke_Enable", "Artillery smoke", "A retreating squad gets an artillery smoke screen (needs Artillery support).", "CHECKBOX", [], true],
+    ["Waldo_AIPass_ArtillerySmoke_Enable", "Retreat artillery smoke mission", "Allows a retreating squad to request a non-lethal smoke screen. Requires Enable spotter artillery support and an eligible battery.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AircraftBreak_Enable", "Aircraft break-away", "WMP gunships and Dynamic AA fighters jink away from missile launches. Test first.", "CHECKBOX", [], false],
     ["Waldo_AIRebalance_Mode", "Lighting", "Automatic follows ambient darkness and equipped night vision. Day disables the extra penalty; Low light retains the legacy night profile.", "COMBO", [["AUTO","DAY","NIGHT"],["Automatic visibility","Daylight override","Low light (legacy)"]], "AUTO"],
-    ["Waldo_AIRebalance_Profile", "Skill profile", "Mission-configured WMP skill profile; independent of behaviour profile.", "COMBO", [_skillProfiles,_skillLabels], "LINE"],
+    ["Waldo_AIRebalance_Profile", "Selected WMP skill profile", "Skill values used when Apply WMP skill profiles is enabled. This is independent of the Cortex behaviour profile.", "COMBO", [_skillProfiles,_skillLabels], "LINE"],
     ["Waldo_AIPass_LambsMode", "LAMBS integration", "Split leaves in-contact tactics to LAMBS. WMP temporarily disables LAMBS group AI for managed squads.", "COMBO", [["SPLIT","WMP"],["Split by feature","WMP only"]], "SPLIT"],
-    ["Waldo_AIPass_VehicleDismount_Enable", "Vehicle contact dismount", "Unloads capable passengers only when safely stopped on dry ground.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_VehicleRemount_Enable", "Vehicle remount", "Allows safe conscious passengers to reboard after Smart AI contact. Convoy resume stays explicit.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_VehicleWithdraw_Enable", "Vehicle withdrawal", "Allows damaged vehicles to withdraw and use existing smoke.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleDismount_Enable", "Contact: dismount passengers", "Under Enable Cortex vehicle tactics, unloads capable passengers only when safely stopped on dry ground.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleRemount_Enable", "Contact: remount released passengers", "Under Enable Cortex vehicle tactics, allows safe conscious passengers to reboard after contact. A newer Zeus order cancels remount intent.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleWithdraw_Enable", "Damage: withdraw mobile vehicle", "Under Enable Cortex vehicle tactics, allows a damaged mobile vehicle to withdraw and use existing smoke.", "CHECKBOX", [], true],
     ["Waldo_AIPass_CoverValidation_Enable", "Additional cover checks", "Adds bounded slope and body clearance checks to shared cover selection.", "CHECKBOX", [], true],
     ["Waldo_Convoy_MountedFire_Enable", "Convoy mounted targeting", "WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.", "CHECKBOX", [], true],
     ["Waldo_Convoy_Cover_Enable", "Convoy dismount movement", "Moves dismounted passengers clear of vehicles; seeks cover during contact.", "CHECKBOX", [], true],
@@ -124,7 +124,7 @@ _spec apply {
     private _name = _x select 0;
     private _section = switch (true) do {
         case (_name find "Artillery" >= 0 || {_name find "CounterBattery" >= 0}): {"ARTILLERY"};
-        case (_name find "Airborne" >= 0 || {_name find "Aircraft" >= 0}): {"AIR"};
+        case (_name find "Airborne" >= 0 || {_name find "Aircraft" >= 0} || {_name find "AttackRunFlares" >= 0}): {"AIR"};
         case (_name find "Vehicle" >= 0 || {_name find "Convoy" >= 0}): {"VEHICLES"};
         case (_name find "Reinforce" >= 0 || {_name find "Coordinated" >= 0} || {_name find "ContactReports" >= 0} || {_name find "AmmoShare" >= 0}): {"SUPPORT"};
         case (_name find "Morale" >= 0 || {_name find "Retreat" >= 0} || {_name find "Surrender" >= 0} || {_name find "Regroup" >= 0}): {"MORALE"};

@@ -50,7 +50,7 @@ private _leader = leader _group;
                 _x setUnitPos (_x getVariable ["Waldo_AIPass_GarrisonStance", "AUTO"]);
             };
             _x doWatch objNull;
-            _x doFollow _leader;
+            if (_x != _leader) then {_x commandFollow _leader};
         };
     };
     _x setVariable ["Waldo_Cortex_GarrisonDuckStance",nil,true];
@@ -60,6 +60,7 @@ private _leader = leader _group;
     _x setVariable ["Waldo_AIPass_GarrisonStance", nil, true];
 } forEach units _group;
 _group setVariable ["Waldo_AIPass_Garrison", nil, true];
+_group setVariable ["Waldo_Cortex_GarrisonCandidates",nil,true];
 _group setVariable ["Waldo_AIPass_GarrisonApplied", nil];
 diag_log format ["[WMP CORTEX] %1 garrison released", _group];
 true

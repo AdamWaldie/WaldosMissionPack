@@ -72,9 +72,13 @@ if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
 if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
 if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
 if (_options getOrDefault ["inPlace", false]) then {
+    private _candidateAssignments=[];
     {
-        _x setVariable ["Waldo_AIPass_GarrisonPos", [getPosATL _x, _centre getDir _x], true];
+        private _assignment=[getPosATL _x, _centre getDir _x, objNull];
+        _candidateAssignments pushBack _assignment;
+        _x setVariable ["Waldo_AIPass_GarrisonPos", _assignment, true];
     } forEach _units;
+    _group setVariable ["Waldo_Cortex_GarrisonCandidates",_candidateAssignments,true];
 } else {
     private _candidates = [];
     {
@@ -86,10 +90,11 @@ if (_options getOrDefault ["inPlace", false]) then {
         } forEach (_building buildingPos -1);
     } forEach (nearestObjects [_centre, ["House", "Building"], _radius, true]);
     _candidates sort true;
+    private _candidateAssignments=_candidates apply {[_x select 3,(_x select 4) getDir (_x select 3),_x select 5]};
+    _group setVariable ["Waldo_Cortex_GarrisonCandidates",_candidateAssignments,true];
     {
-        if (_forEachIndex >= count _candidates) exitWith {};
-        private _entry = _candidates select _forEachIndex;
-        _x setVariable ["Waldo_AIPass_GarrisonPos", [_entry select 3, (_entry select 4) getDir (_entry select 3), _entry select 5], true];
+        if (_forEachIndex >= count _candidateAssignments) exitWith {};
+        _x setVariable ["Waldo_AIPass_GarrisonPos", _candidateAssignments select _forEachIndex, true];
     } forEach _units;
 };
 _group setVariable ["Waldo_AIPass_Garrison", [_centre, _radius, count _units], true];

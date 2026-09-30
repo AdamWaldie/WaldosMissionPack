@@ -2,16 +2,15 @@
  * Author: WaldoTheWarfighter
  * Orders an AI group to clear a building room by room.
  *
- * Teams of one or two use every available soldier. Larger teams leave the leader outside and form
- * up to four clearing pairs; remaining members provide exterior security. All pairs draw from one
- * low-floor-first room queue. A pair claims the nearest free room, stages through the closest real
- * building entrance, and exchanges point/support roles after each physical visit. The support soldier
- * holds the last cleared room or doorway instead of crowding the point soldier's path node. A blocked
- * entry is retried through another real entrance, while a blocked room returns to the shared queue for
- * another pair before it can be marked unreachable. A position is visited only when a soldier physically
- * reaches it within 1.5 m. A casualty or incapacitation in a clearing pair is replaced from the squad's
- * uncommitted exterior-security members; without a replacement, the survivor continues alone. Timeouts
- * never clear rooms.
+ * Every available soldier, including the leader, may join the clear up to the building's bounded entry
+ * capacity. Each interior worker owns one movement lane and draws the nearest unclaimed room from a
+ * shared low-floor-first queue. This avoids a support partner waiting outside while only one soldier
+ * attempts every room, and makes a large squad flow through the building instead of parking around it.
+ * Spare members above the entry capacity remain an actual reserve. A blocked entry is retried through
+ * another real entrance, while a blocked room returns to the shared queue for another worker before it
+ * can be marked unreachable. A position is visited only when a soldier physically reaches it within
+ * 1.5 m. A casualty or incapacitation is replaced from the uncommitted reserve; without a replacement,
+ * other active workers continue claiming the remaining rooms. Timeouts never clear rooms.
  * After all rooms are visited or attempted, the clearing element exits through the building entry
  * to an exterior release point before formation control is restored. This explicit egress avoids
  * abandoning soldiers on interior path nodes and provides the same entry-through-exit primitive used
@@ -69,7 +68,7 @@ private _positions = _building buildingPos -1;
 if (_positions isEqualTo []) exitWith {false};
 private _leader = leader _group;
 private _available = (units _group) select {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {vehicle _x == _x}};
-private _team = if (count _available <= 2) then {_available} else {_available select {_x != _leader}};
+private _team = +_available;
 if (_team isEqualTo []) exitWith {false};
 // A small building needs an entry element, not one soldier parked at every slot.
 // Leave spare squad members with their leader; bound interior workers by available space.
@@ -141,10 +140,10 @@ while {_remaining isNotEqualTo []} do {
     _routeOrder pushBack _positionIndex;
     _routeCursor=_positions select _positionIndex;
 };
-private _pairs=[];
-for "_index" from 0 to ((count _team)-1) step 2 do {_pairs pushBack (_team select [_index,2])};
-// Pairs claim from one shared queue. This prevents a blocked doorway or room from
-// freezing a fixed sector while the other pairs finish and wait outside.
+// One worker per lane lets every committed soldier enter and traverse rooms. A former two-person
+// point/support lane left half of each element outside and could stall the whole clear behind one
+// engine path. Workers still share claims and failure evidence, so they do not crowd one room.
+private _pairs=_team apply {[_x]};
 private _pairRoutes=_pairs apply {[]};
 private _pending=+_routeOrder;
 private _pairStates=[];
@@ -413,29 +412,9 @@ private _pairStates=[];
                         _previousPositionIndex=_positionIndex;
                         _cursor=_cursor+1;
                         _roomsCleared=_roomsCleared+1;
-                        // Rotate exterior security through the clearing element after two rooms.
-                        // This keeps a large squad dispersed without leaving the same soldiers outside
-                        // for the entire action. Casualty replacements retain priority above.
-                        if ((_roomsCleared mod 2) == 0 && {_reserves isNotEqualTo []}) then {
-                            private _replaceSlot=_moverIndex mod count _pair;
-                            private _outgoing=_pair select _replaceSlot;
-                            private _replacement=_reserves deleteAt 0;
-                            _pair set [_replaceSlot,_replacement];
-                            private _sourcePair=_pairs select _pairIndex;
-                            private _sourceSlot=_sourcePair find _outgoing;
-                            if (_sourceSlot >= 0) then {_sourcePair set [_sourceSlot,_replacement]};
-                            (_job get "team") pushBackUnique _replacement;
-                            (_job get "rotatedOut") pushBackUnique _outgoing;
-                            doStop _replacement;
-                            _replacement setUnitPos "MIDDLE";
-                            if (_outgoing != leader _group) then {
-                                _outgoing setUnitPos "AUTO";
-                                _outgoing commandFollow leader _group;
-                            };
-                            private _evidence=_group getVariable ["Waldo_Cortex_ClearReinforcements",[]];
-                            _evidence pushBack [serverTime,netId _outgoing,netId _replacement,_pairIndex,"ROTATE"];
-                            _group setVariable ["Waldo_Cortex_ClearReinforcements",_evidence,true];
-                        };
+                        // Reserves replace casualties only. Routine rotation previously pulled a
+                        // successful worker out mid-clear and introduced a new actor at the doorway,
+                        // creating pauses and exterior congestion without improving room coverage.
                         if (count _pair > 1) then {_moverIndex=(_moverIndex+1) mod count _pair};
                         _lastTarget=-1;
                         _retries=0;

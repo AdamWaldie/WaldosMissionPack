@@ -14,7 +14,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _seenKeys = createHashMap',opened)
         self.assertIn('_display setVariable ["Cortex_Spec",_spec]',opened)
         diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
-        self.assertIn('Trigger and proof:',diagnostics)
+        self.assertIn('Expected evidence:',diagnostics)
+        self.assertIn('not an action trigger or success result',diagnostics)
         self.assertNotIn('Trigger/inspection:',diagnostics)
         self.assertIn('private _seenTuningKeys=createHashMap',diagnostics)
         self.assertIn('_tuningSpec pushBack _x',diagnostics)
@@ -22,6 +23,22 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('UI-01b-canonical-settings',client)
         self.assertIn('UI-02b-unique-page-',client)
         self.assertIn('arrayIntersect _editorKeys',client)
+
+    def test_cortex_control_distinguishes_master_gates_from_feature_switches(self):
+        spec=source('cortexTuningSpec')
+        for label in [
+            'Apply WMP skill profiles',
+            'Enable Cortex automatic tactics',
+            'Enable Cortex vehicle tactics',
+            'Enable spotter artillery support',
+            'Proactive attack-run countermeasures',
+            'Missile-threat countermeasures',
+            'Selected WMP skill profile',
+        ]:
+            self.assertIn(label,spec)
+        self.assertIn('_name find "AttackRunFlares" >= 0',spec)
+        self.assertNotIn('"Skill profiles",',spec)
+        self.assertNotIn('"Cortex behaviours",',spec)
 
     def test_replacement_clear_retires_old_movement_after_validation(self):
         text=source('cortexClearBuilding')
@@ -106,21 +123,23 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('for "_exitIndex" from 0 to 15 do',text)
         self.assertIn('private _ranked=_entries apply',text)
 
-    def test_clearance_uses_multiple_pairs_and_continuous_room_routes(self):
+    def test_clearance_uses_independent_workers_and_continuous_room_routes(self):
         text=source('cortexClearBuilding')
-        self.assertIn('for "_index" from 0 to ((count _team)-1) step 2',text)
+        self.assertIn('private _pairs=_team apply {[_x]}',text)
+        self.assertIn('private _team = +_available',text)
         self.assertIn('private _entryCapacity = ((((count _positions) min 4) * 2) max 2) min 8',text)
         self.assertIn('private _pending=+_routeOrder',text)
         self.assertIn('private _pairRoutes=_pairs apply {[]}',text)
         self.assertIn('_cursor=_cursor+1',text)
 
-    def test_clearance_pairs_exchange_point_and_support_without_node_crowding(self):
+    def test_clearance_workers_claim_without_node_crowding(self):
         text=source('cortexClearBuilding')
         self.assertIn('private _point=_pair select (_moverIndex mod count _pair)',text)
         self.assertIn('private _supportTarget=[]',text)
-        self.assertIn('_moverIndex=(_moverIndex+1) mod count _pair',text)
         self.assertIn('_previousPositionIndex=_positionIndex',text)
         self.assertIn('private _unitTarget=if (_unit == _point',text)
+        self.assertIn('_failureThreshold=(count (_job get "pairs")) min 2 max 1',text)
+        self.assertNotIn('"ROTATE"',text)
 
     def test_clearance_reinforces_casualties_from_uncommitted_squad_members(self):
         text=source('cortexClearBuilding')
@@ -147,7 +166,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_reassignments < 2',apply)
         self.assertIn('_x setVariable ["Waldo_AIPass_GarrisonPos",_replacement,true]',apply)
         self.assertIn('!(_key in _attempted)',apply)
-        self.assertLess(apply.index('_job set ["deadline",(_job get "deadline") max (time+60)]'),apply.index('if (time > (_job get "deadline"))'))
+        self.assertIn('for "_index" from 0 to 31 do',apply)
+        self.assertIn('Garrison trying alternate entrance',apply)
+        self.assertIn('["deadline", time + 240]',apply)
+        self.assertNotIn('_job set ["deadline",(_job get "deadline") max (time+60)]',apply)
 
     def test_defence_recovery_uses_per_unit_physical_progress(self):
         text=source('cortexDefendApplyLocal')
@@ -184,6 +206,17 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('vectorDistance (AGLToASL _room) <= 1.5',cases)
         self.assertNotIn('setPos',cases)
         self.assertNotIn('call Waldo_fnc_CortexGarrison',cases)
+
+    def test_cqb_casualty_uses_real_reserve_and_physical_movement(self):
+        text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runBuildingComparison.sqf').read_text(encoding='utf-8')
+        case=text.split('// A casualty inside the clearing element',1)[1].split('// Exercise door handling',1)[0]
+        self.assertIn('for "_i" from 0 to 9 do',case)
+        self.assertIn('_casualty setDamage 1',case)
+        self.assertIn('Waldo_Cortex_ClearReinforcements',case)
+        self.assertIn('CLEAR-casualty-reserve-assigned',case)
+        self.assertIn('CLEAR-casualty-reserve-physical-movement',case)
+        self.assertNotIn('setPos',case)
+        self.assertNotIn('moveIn',case)
 
     def test_building_entry_controls_cover_four_distinct_models(self):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runBuildingComparison.sqf').read_text(encoding='utf-8').split('missionNamespace setVariable ["Waldo_CortexQA_Actors"',1)[0]
@@ -820,9 +853,12 @@ class CortexOperations(unittest.TestCase):
     def test_garrison_recovery_does_not_require_finished_move(self):
         text=source('cortexGarrisonApplyLocal')
         self.assertIn('time-_lastProgress >= 12',text)
-        self.assertIn('_retries < 3',text)
+        self.assertIn('_retries < 2',text)
         self.assertIn('setDestination [_target,"LEADER PLANNED",true]',text)
-        self.assertIn('_job set ["deadline",(_job get "deadline") max (time+60)]',text)
+        self.assertIn('private _nextEntry=_entryIndex+1',text)
+        self.assertIn('private _replacementEntries=',text)
+        self.assertNotIn('_job set ["deadline",(_job get "deadline") max (time+60)]',text)
+        self.assertNotIn('if (_openedDoor) then {_route set [3,time]',text)
         self.assertNotIn('unitReady _x',text)
 
     def test_building_comparison_is_additive_and_measures_arrival(self):

@@ -54,6 +54,10 @@
  * (at least two movers and 60 percent of the original element) may continue past blocked
  * actors. Separated actors receive at most six rejoin destinations, eight seconds apart.
  * Unresolved separation cannot produce COMPLETE; ownership changes cancel this local recovery.
+ * Casualties are reassessed only on this group job. A flank draws replacements from surviving
+ * uncommitted squad members. Advance and coordinated-bound fire teams first take unassigned
+ * survivors, then rebalance only when one team falls below two. A casualty during movement restarts
+ * the same bound so the surviving formation cannot inherit another soldier's destination.
  * Arguments:
  * 0: job <HASHMAP> - contains "group" and the matching "drillToken" (required)
  *
@@ -96,14 +100,80 @@ if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false])
     || {if (_support) then {!_supportValid} else {(_state getOrDefault ["phase",""]) != "CONTACT"}}
     || {!([_group] call Waldo_fnc_CortexIsEligible)}
     || {!([_group,_gate,true] call Waldo_fnc_CortexFeatureEnabled)}) exitWith {"ABORT" call _end};
-private _allUnits = _drill get "units";
-private _units = _allUnits select {[_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x} && {group _x == _group}};
-if (count _units < ((count _allUnits / 2) max 1)) exitWith {"LOSSES" call _end};
+// Rebuild depleted manoeuvre elements from the surviving squad inside this existing group job.
+// There is no casualty event handler or per-unit scheduler. A change during a live bound restarts
+// that bound from the same route point so spot indexes cannot drift after a casualty.
+private _ownedPathUnits=(_drill getOrDefault ["disabled",[]]) select {(_x select 1) == "PATH"} apply {_x select 0};
+private _fitSquad=(units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {local _x}
+    && {vehicle _x == _x} && {group _x == _group} && {_x checkAIFeature "MOVE"}
+    && {_x checkAIFeature "PATH" || {_x in _ownedPathUnits}}};
+private _teams=_drill getOrDefault ["teams",[]];
+private _desiredStrength=_drill getOrDefault ["desiredStrength",count (_drill get "units")];
+private _reinforcements=[];
+private _rankCandidates={
+    params ["_candidates"];
+    private _rifles=_candidates select {!(([_x] call Waldo_fnc_CortexUnitRole) in ["MG","AT","LEADER"])};
+    private _support=_candidates select {!(_x in _rifles) && {_x != leader _group}};
+    _rifles+_support+(_candidates select {_x == leader _group})
+};
+private _units=[];
+if (_teams isEqualTo []) then {
+    _units=(_drill get "units") select {_x in _fitSquad};
+    private _candidates=[_fitSquad-_units] call _rankCandidates;
+    while {count _units < _desiredStrength && {_candidates isNotEqualTo []}} do {
+        private _replacement=_candidates deleteAt 0;
+        _units pushBack _replacement;
+        _reinforcements pushBack ["MANOEUVRE",netId _replacement];
+    };
+} else {
+    _teams=_teams apply {_x select {_x in _fitSquad}};
+    private _assigned=[];
+    {_assigned append _x} forEach _teams;
+    private _candidates=[_fitSquad-_assigned] call _rankCandidates;
+    private _desiredSizes=_drill getOrDefault ["teamSizes",_teams apply {count _x}];
+    {
+        private _team=_x;
+        private _desired=_desiredSizes param [_forEachIndex,count _team];
+        while {count _team < _desired && {_candidates isNotEqualTo []}} do {
+            private _replacement=_candidates deleteAt 0;
+            _team pushBack _replacement;
+            _reinforcements pushBack [format ["TEAM_%1",_forEachIndex+1],netId _replacement];
+        };
+    } forEach _teams;
+    if (count _teams == 2) then {
+        private _first=_teams select 0;
+        private _second=_teams select 1;
+        if (count _first < 2 && {count _second > 2}) then {
+            private _replacement=_second deleteAt ((count _second)-1);
+            _first pushBack _replacement;
+            _reinforcements pushBack ["TEAM_1_REBALANCE",netId _replacement];
+        };
+        if (count _second < 2 && {count _first > 2}) then {
+            private _replacement=_first deleteAt ((count _first)-1);
+            _second pushBack _replacement;
+            _reinforcements pushBack ["TEAM_2_REBALANCE",netId _replacement];
+        };
+    };
+    {_units append _x} forEach _teams;
+    _units=_units arrayIntersect _units;
+    _drill set ["teams",_teams];
+};
+_drill set ["units",_units];
+if (_reinforcements isNotEqualTo []) then {
+    private _history=_group getVariable ["Waldo_Cortex_DrillReinforcements",[]];
+    _history pushBack [serverTime,_drill getOrDefault ["type",""],_drill getOrDefault ["index",-1],_reinforcements];
+    _group setVariable ["Waldo_Cortex_DrillReinforcements",_history,true];
+    if ((_drill getOrDefault ["stage",""]) == "MOVE") then {
+        _drill set ["stage","START"];
+        _drill set ["spots",[]];
+        _drill set ["boundStart",time];
+    };
+};
+if (count _units < ((ceil (_desiredStrength / 2)) max 1)) exitWith {"LOSSES" call _end};
 // Recovery stays in this existing bounded group job; no per-soldier loop is spawned.
 private _recovery = (_drill getOrDefault ["recovery",[]]) select {(_x select 0) in _units};
 private _recovering = _recovery apply {_x select 0};
 private _main = _units - _recovering;
-private _teams = _drill getOrDefault ["teams",[]];
 private _rejoined = [];
 if (_main isNotEqualTo []) then {
     {

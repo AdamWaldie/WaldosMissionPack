@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Lets a nearby soldier on an explicit building order open a recognised unlocked door.
+ * Lets an approaching soldier on an explicit building order open a recognised unlocked door.
  * Locality/authority: called only on the soldier owner; BIS door animation has global effect.
  * Repeat/JIP: two-second building cooldown bounds requests; engine door state persists for JIP.
  * Door model metadata is cached per building on each owner; locks are always read live.
@@ -36,7 +36,10 @@ private _requested=false;
     // Unknown door/lock conventions are left to their mod rather than guessed or unlocked.
     if (_lock isEqualTo 0 && {_building animationSourcePhase _source < 0.1}) then {
         private _position=_building modelToWorldWorld _memory;
-        if ((getPosASL _unit) vectorDistance _position <= 2.5) exitWith {
+        // Building pathfinding can discard a closed-door route six to twelve metres before
+        // the interaction point. Request the normal unlocked-door action during approach so
+        // reaching the threshold is not itself a prerequisite for making the route valid.
+        if ((getPosASL _unit) vectorDistance _position <= 12) exitWith {
             _building setVariable ["Waldo_Cortex_DoorRequestUntil",serverTime+2,true];
             [_building,_index,1] call BIS_fnc_door;
             _requested=true;

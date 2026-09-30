@@ -210,7 +210,7 @@ private _dependencies=createHashMapFromArray [
         private _related=(_tuningSpec select {(_x select 0) find (_prefix+"_") == 0 && {(_x select 3) != "CHECKBOX"}}) apply {[_x select 1,missionNamespace getVariable [_x select 0,_x select 5],_x select 5]};
         private _scope=if (_key find "Waldo_Convoy_" == 0) then {"Convoy owner; independent of Cortex master. Registry rows below."} else {"Owner-local execution; server counters do not include HC-private activity. Master, pause, group exclusions and compatibility can prevent automatic actions."};
         private _status=if (!_value) then {"DISABLED"} else {if (_blockedParents isNotEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}};
-        _checks pushBack ["ai","cortex-setting-"+_key,_status,format ["%1: configured=%2 default=%3; required gates=%4; related tuning [label,current,default]=%5. %6 Trigger and proof: %7 Enabled is not an execution or success result.",_label,_value,_default,_parentValues,_related,_scope,_featureNotes getOrDefault [_name,"Inspect the corresponding controller/profile rows; no dedicated activity counter is available for this option."]]];
+        _checks pushBack ["ai","cortex-setting-"+_key,_status,format ["%1: selected=%2 default=%3; prerequisites=%4; related tuning [label,current,default]=%5. %6 Expected evidence: %7 A selected switch only permits the feature; it is not an action trigger or success result.",_label,_value,_default,_parentValues,_related,_scope,_featureNotes getOrDefault [_name,"Inspect the corresponding controller/profile rows; no dedicated activity counter is available for this option."]]];
     };
 } forEach _tuningSpec;
 // Queue health is measured locally once per requested report, without executing or rescheduling jobs.

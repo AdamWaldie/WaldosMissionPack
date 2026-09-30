@@ -138,7 +138,17 @@ private _checks = [
     ["ai", "helicopter-deceleration", if (!_decelerationEnabled) then {"DISABLED"} else {if (count _decelerationLandingConflict > 0) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 tracked=%2 activelyCorrecting=%3 landingConflicts=%4 includeVTOL=%5", _decelerationEnabled, count _decelerationAircraft, count _decelerationActive, count _decelerationLandingConflict, missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL", false]]]
 ];
 // Shared tuning metadata supplies current values and defaults; feature notes explain execution prerequisites.
-private _tuningSpec=[] call Waldo_fnc_CortexTuningSpec;
+// Build diagnostics from the same canonical key set used by Cortex Control. This keeps a stale
+// mission extension from showing the same setting, gate and trigger explanation more than once.
+private _tuningSpec=[];
+private _seenTuningKeys=createHashMap;
+{
+    private _key=_x param [0,"",[""]];
+    if (_key != "" && {!(_seenTuningKeys getOrDefault [_key,false])}) then {
+        _seenTuningKeys set [_key,true];
+        _tuningSpec pushBack _x;
+    };
+} forEach ([] call Waldo_fnc_CortexTuningSpec);
 private _featureNotes=createHashMapFromArray [
     ["Regroup","Requires casualty survivors and a compatible nearby host; inspect living leader, travel before merge, and replacement-order ownership."],
     ["Contact","Uses natural engine knowledge. Check last-seen age and group phase; known enemies are not necessarily visible."],
@@ -187,7 +197,7 @@ private _dependencies=createHashMapFromArray [
     ["VehicleWithdraw",["Waldo_AIPass_Vehicles_Enable"]]
 ];
 {
-    _x params ["_key","_label","_help","_kind","","_default"];
+    _x params ["_key","_label","","_kind","","_default"];
     if (_kind == "CHECKBOX") then {
         private _value=missionNamespace getVariable [_key,_default];
         private _parts=_key splitString "_";
@@ -200,7 +210,7 @@ private _dependencies=createHashMapFromArray [
         private _related=(_tuningSpec select {(_x select 0) find (_prefix+"_") == 0 && {(_x select 3) != "CHECKBOX"}}) apply {[_x select 1,missionNamespace getVariable [_x select 0,_x select 5],_x select 5]};
         private _scope=if (_key find "Waldo_Convoy_" == 0) then {"Convoy owner; independent of Cortex master. Registry rows below."} else {"Owner-local execution; server counters do not include HC-private activity. Master, pause, group exclusions and compatibility can prevent automatic actions."};
         private _status=if (!_value) then {"DISABLED"} else {if (_blockedParents isNotEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}};
-        _checks pushBack ["ai","cortex-setting-"+_key,_status,format ["%1: configured=%2 default=%3; required gates=%4; tuning [label,current,default]=%5. %6 Trigger/inspection: %7 %8 Enabled is not an execution or success result.",_label,_value,_default,_parentValues,_related,_scope,_help,_featureNotes getOrDefault [_name,"Inspect the corresponding controller/profile rows; no dedicated activity counter is available for this option."]]];
+        _checks pushBack ["ai","cortex-setting-"+_key,_status,format ["%1: selected=%2 default=%3; prerequisites=%4; related tuning [label,current,default]=%5. %6 Expected evidence: %7 A selected switch only permits the feature; it is not an action trigger or success result.",_label,_value,_default,_parentValues,_related,_scope,_featureNotes getOrDefault [_name,"Inspect the corresponding controller/profile rows; no dedicated activity counter is available for this option."]]];
     };
 } forEach _tuningSpec;
 // Queue health is measured locally once per requested report, without executing or rescheduling jobs.
@@ -229,9 +239,19 @@ _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot server
         groupId _group,groupOwner _group,_state getOrDefault ["phase","UNKNOWN"],_drill getOrDefault ["type","NONE"],_drill getOrDefault ["stage","NONE"],_drill getOrDefault ["index",-1],count (_drill getOrDefault ["recovery",[]]),_group getVariable ["Waldo_AIPass_Exclude",false],_group getVariable ["Waldo_AIPass_ZeusWaypoints",false],((_group getVariable ["Waldo_AIPass_ZeusLocalUntil",time])-time) max 0,_group getVariable ["Waldo_Cortex_SupportRole",[]],_actors]];
 } forEach (_localGroups select [0,20]);
 // Explicit orders publish assignments, so their physical distances can be inspected for any owner.
-private _orderedGroups=_groups select {(_x getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo [] || {(_x getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []} || {(_x getVariable ["Waldo_AIPass_ClearOrder",[]]) isNotEqualTo []}};
+private _orderedGroups=_groups select {(_x getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo [] || {(_x getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []} || {(_x getVariable ["Waldo_AIPass_ClearOrder",[]]) isNotEqualTo []} || {(_x getVariable ["Waldo_Cortex_ClearResult",[]]) isNotEqualTo []}};
 {
     private _group=_x;
+    private _clearOrder=_group getVariable ["Waldo_AIPass_ClearOrder",[]];
+    private _clearResult=_group getVariable ["Waldo_Cortex_ClearResult",[]];
+    private _clearEvidence=if (_clearOrder isEqualTo []) then {
+        _group getVariable ["Waldo_Cortex_ClearEvidence",[]]
+    } else {
+        [_clearOrder param [1,[]],_clearOrder param [4,[]],_clearOrder param [5,[]],_clearOrder param [6,[]],_clearOrder param [2,serverTime],_clearOrder param [7,serverTime]]
+    };
+    if (_clearResult isNotEqualTo []) then {
+        _checks pushBack ["ai",format ["cortex-clearance-%1",netId _group],if ((_clearResult param [0,""]) == "INCOMPLETE") then {"ERROR"} else {"LOADED"},format ["group=%1 owner=%2 result=%3 visitedIndices=%4 exhaustedIndices=%5 retryCounts=%6 failedBy=%7 secondsRemaining=%8 secondsSinceProgress=%9. Position visits measure traversal, not hostile-room clearance. A finished failed order remains visible after its controller releases.",groupId _group,groupOwner _group,_clearResult,_clearEvidence param [0,[]],_clearEvidence param [1,[]],_clearEvidence param [2,[]],_clearEvidence param [3,[]],if (_clearEvidence isEqualTo []) then {-1} else {((_clearEvidence param [4,serverTime])-serverTime) max 0},if (_clearEvidence isEqualTo []) then {-1} else {(serverTime-(_clearEvidence param [5,serverTime])) max 0}]];
+    };
     private _positions=((units _group) select [0,8]) apply {
         private _slot=_x getVariable ["Waldo_AIPass_GarrisonPos",_x getVariable ["Waldo_AIPass_DefendPos",[]]];
         [_x,alive _x,if (_slot isEqualTo []) then {-1} else {_x distance (_slot select 0)},getPosATL _x]

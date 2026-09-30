@@ -93,7 +93,7 @@ if !([_group] call Waldo_fnc_CortexIsEligible) exitWith {
     if ([_group] call Waldo_fnc_CortexZeusHeld) then {
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
         if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
-        if (_group getVariable ["Waldo_AIPass_ClearBuilding", false]) then {[_group] call Waldo_fnc_CortexClearRelease};
+        if (_group getVariable ["Waldo_AIPass_ClearBuilding", false]) then {[_group,false] call Waldo_fnc_CortexClearRelease};
     };
     [20, 5] select ([_group] call Waldo_fnc_CortexZeusHeld)
 };
