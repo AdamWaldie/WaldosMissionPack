@@ -1324,6 +1324,17 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_AIPass_CoordinatedAssault_Enable',coordinated)
         self.assertIn('call _releaseSupport',coordinated)
 
+    def test_pending_remount_survives_locality_change_without_extending_deadline(self):
+        text=source('cortexLocality')
+        self.assertIn('private _remountIntent = _group getVariable ["Waldo_Cortex_Remount",[]]',text)
+        resume=text.split('// Restore semantic boarding intent',1)[1].split('// Rebuild semantic post-contact intent',1)[0]
+        self.assertIn('serverTime < (_remountIntent select 0)',resume)
+        self.assertIn('!([_group] call Waldo_fnc_CortexZeusHeld)',resume)
+        self.assertIn('assignedVehicle _unit == _vehicle',resume)
+        self.assertIn('local _unit',resume)
+        self.assertIn('[_remountIntent select 0,+_pendingRemount]',resume)
+        self.assertNotIn('serverTime+',resume)
+
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')
         finish=regroup.split('private _finish = {',1)[1].split('if (isNull _group',1)[0]

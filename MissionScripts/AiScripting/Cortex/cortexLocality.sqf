@@ -1,10 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Passenger, post-contact movement and active withdrawal intent survive migration without replaying
+ * Passenger, pending calm remount, post-contact movement and active withdrawal intent survive migration without replaying
  * old owner jobs. Invalidates old jobs, restores interrupted transient behaviour and resumes a
  * bounded investigation, search or withdrawal after WMP or ACE migration.
  * Locality/authority: current group owner unless stated otherwise below.
- * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim.
+ * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim. A calm
+ * remount keeps its original deadline and vehicle, and yields to Zeus or a newer assignment.
  * Combat-mode restoration checks the applied value before restoring, preserving newer ROE changes.
  * Arguments: 0: group <GROUP>, default grpNull; 1: gained locality <BOOL>, default false.
  * Return Value: Nothing unless a value is explicitly returned below.
@@ -15,6 +16,7 @@ params [["_group", grpNull, [grpNull]], ["_gained", false, [true]]];
 if (isNull _group) exitWith {};
 private _withdrawalIntent = _group getVariable ["Waldo_Cortex_WithdrawalIntent",[]];
 private _transitionIntent = _group getVariable ["Waldo_Cortex_TransitionIntent",[]];
+private _remountIntent = _group getVariable ["Waldo_Cortex_Remount",[]];
 [_group,true] call Waldo_fnc_CortexHearingLocal;
 {
         private _unit = _x;
@@ -75,6 +77,21 @@ if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) t
     private _adopted=[_group] call Waldo_fnc_CortexGroupState;
     _adopted set ["dismounted",_passengers];
     _adopted set ["onboardContactUntil",serverTime+30];
+};
+// Restore semantic boarding intent after old-owner cleanup, never its engine command. Preserve
+// the original deadline so repeated transfers cannot make remount immortal. A replacement vehicle
+// assignment or Zeus takeover wins and removes that actor from this attempt.
+if (count _remountIntent == 2 && {serverTime < (_remountIntent select 0)}
+    && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}) then {
+    private _pendingRemount = (_remountIntent select 1) select {
+        _x params ["_unit","_vehicle"];
+        alive _unit && {local _unit} && {group _unit == _group} && {alive _vehicle}
+            && {vehicle _unit == _unit}
+            && {isNull assignedVehicle _unit || {assignedVehicle _unit == _vehicle}}
+    };
+    if (_pendingRemount isNotEqualTo []) then {
+        _group setVariable ["Waldo_Cortex_Remount",[_remountIntent select 0,+_pendingRemount],true];
+    };
 };
 // Rebuild semantic post-contact intent, not the old owner's commands or callbacks. The original
 // deadline continues across migration, preventing transfer churn from extending an episode.
