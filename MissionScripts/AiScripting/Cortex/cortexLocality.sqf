@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Passenger restoration intent survives migration without issuing immediate boarding orders.
- * Invalidates old jobs and restores interrupted transient behaviour after WMP or ACE migration.
+ * Passenger and active withdrawal intent survive migration without replaying old owner jobs.
+ * Invalidates old jobs, restores interrupted transient behaviour and resumes a bounded withdrawal
+ * after WMP or ACE migration.
  * Locality/authority: current group owner unless stated otherwise below.
  * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim.
  * Combat-mode restoration checks the applied value before restoring, preserving newer ROE changes.
@@ -12,6 +13,7 @@
  */
 params [["_group", grpNull, [grpNull]], ["_gained", false, [true]]];
 if (isNull _group) exitWith {};
+private _withdrawalIntent = _group getVariable ["Waldo_Cortex_WithdrawalIntent",[]];
 [_group,true] call Waldo_fnc_CortexHearingLocal;
 {
         private _unit = _x;
@@ -72,6 +74,14 @@ if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) t
     private _adopted=[_group] call Waldo_fnc_CortexGroupState;
     _adopted set ["dismounted",_passengers];
     _adopted set ["onboardContactUntil",serverTime+30];
+};
+// The old owner's scheduled callbacks are invalid, but physical withdrawal intent is durable.
+// Resume only a structurally valid, unfinished episode and let the common retreat controller
+// reacquire all temporary settings. Its resume path does not repeat smoke or artillery effects.
+if (count _withdrawalIntent == 6 && {serverTime-(_withdrawalIntent select 3) < 120}
+    && {[_group] call Waldo_fnc_CortexIsEligible}) then {
+    private _adopted = [_group] call Waldo_fnc_CortexGroupState;
+    [_group,_adopted,_withdrawalIntent] call Waldo_fnc_CortexRetreat;
 };
 // A pending shoot-and-scoot request is durable, but its queued callback belonged to the old owner.
 // Resume it only after calm restoration has removed the old owner's waypoint and transient state;

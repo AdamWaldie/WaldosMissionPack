@@ -132,6 +132,7 @@ if (!_allowRemount) then {
     "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "movementLease", "retreatStart", "retreatTarget", "retreatProgress", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
 _group setVariable ["Waldo_Cortex_Withdrawal",nil,true];
+_group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 _state set ["phase", "CALM"];
 _state set ["phaseStart", time];

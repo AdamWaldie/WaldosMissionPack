@@ -1012,16 +1012,16 @@ class CortexOperations(unittest.TestCase):
         support=retreat.split('forEach (_state getOrDefault ["supportHeld",[]])',1)[0].rsplit('{',1)[-1]
         self.assertIn('_x enableAI "PATH"',support)
         self.assertIn('_x doFollow _leader',support)
-        self.assertIn('_state set ["movementLease",["INFANTRY_WITHDRAW",time+120]]',retreat)
-        self.assertLess(retreat.index('CortexGroupMove'),retreat.index('["INFANTRY_WITHDRAW",time+120]'))
+        self.assertIn('_state set ["movementLease",["INFANTRY_WITHDRAW",time+_remaining]]',retreat)
+        self.assertLess(retreat.index('CortexGroupMove'),retreat.index('["INFANTRY_WITHDRAW",time+_remaining]'))
 
     def test_infantry_withdrawal_requires_progress_and_replans_without_teleport(self):
         retreat=source('cortexRetreat')
         tick=source('cortexGroupTick')
         restore=source('cortexRestoreCalm')
-        for marker in ['set ["retreatStart",getPosATL _leader]',
+        for marker in ['set ["retreatStart",_origin]',
                        'set ["retreatTarget",_point]',
-                       'set ["retreatProgress",[time,0,0]]']:
+                       'set ["retreatProgress",[time,_bestTravel,_replans]]']:
             self.assertIn(marker,retreat)
         retreat_case=tick.split('case "RETREAT":')[1]
         for marker in ['_travel < 30','_now-_progressAt >= 15','_travel >= _bestTravel+3','_replans < 4',
@@ -1031,6 +1031,24 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('setPos',retreat_case)
         self.assertIn('"retreatStart", "retreatTarget", "retreatProgress"',restore)
         self.assertIn('setVariable ["Waldo_Cortex_Withdrawal",nil,true]',restore)
+
+    def test_infantry_withdrawal_resumes_across_locality_without_replaying_effects(self):
+        retreat=source('cortexRetreat')
+        locality=source('cortexLocality')
+        tick=source('cortexGroupTick')
+        restore=source('cortexRestoreCalm')
+        self.assertIn('Waldo_Cortex_WithdrawalIntent',retreat)
+        self.assertIn('[_origin,_point,_enemyPos,_startedAt,_replans,_bestTravel]',retreat)
+        self.assertIn('if (!_resuming) then {',retreat)
+        effects=retreat.split('if (!_resuming) then {',2)[2]
+        self.assertIn('CortexThrowGrenade',effects)
+        self.assertIn('CortexArtilleryFire',effects)
+        self.assertIn('private _withdrawalIntent',locality)
+        self.assertGreater(locality.index('CortexRetreat'),locality.index('CortexRestoreCalm'))
+        self.assertIn('[_group,_adopted,_withdrawalIntent] call Waldo_fnc_CortexRetreat',locality)
+        self.assertIn('_intent set [4,_replans]',tick)
+        self.assertIn('_intent set [5,_bestTravel]',tick)
+        self.assertIn('setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true]',restore)
 
     def test_replacement_orders_release_owned_garrison_and_defence_holds(self):
         for name,marker in [
