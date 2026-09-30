@@ -1019,6 +1019,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('"Waldo_AIPass_GrenadeEvasion_Enable",true] call Waldo_fnc_CortexFeatureEnabled',text)
         self.assertNotIn('CBA_fnc_waitAndExecute',text)
 
+    def test_grenade_evasion_temporarily_outranks_support_cover_hold(self):
+        grenade=source('cortexGrenadeCheck')
+        self.assertIn('private _supportHeld = _state getOrDefault ["supportHeld",[]]',grenade)
+        self.assertIn('_unit checkAIFeature "PATH" || {_unit in _supportHeld}',grenade)
+        self.assertIn('_unit enableAI "PATH"',grenade)
+        self.assertIn('_state set ["supportHeld",_supportHeld-[_unit]]',grenade)
+        maintain=source('cortexSupportMaintain')
+        self.assertIn('getVariable ["Waldo_Cortex_ActorMove",[]]',maintain)
+        self.assertIn('time >= (_actorMove select 2)',maintain)
+
     def test_tactical_drills_do_not_consume_reserved_actors(self):
         for name in ['cortexFlankStart','cortexAdvanceStart']:
             text=source(name)

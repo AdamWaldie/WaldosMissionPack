@@ -11,8 +11,10 @@
  * and moved into cover facing it where possible. One Cortex scheduler job per grenade checks every
  * reacting soldier six seconds later; no callback or scheduler is created per unit. Each escape
  * receives a six-second GRENADE_EVASION actor lease, so a tactical bound or anti-armour relocation
- * cannot overwrite it. Flank element members and actors with another live reservation are left to
- * their current task. Delayed regroup requires the same group, Zeus token, actor lease and evasion
+ * cannot overwrite it. A soldier held as part of a coordinated base of fire temporarily leaves that
+ * owned PATH hold, evades, then becomes eligible for the covering role again. Flank element members
+ * and actors with another live reservation are left to their current task. Delayed regroup requires
+ * the same group, Zeus token, actor lease and evasion
  * destination, an on-foot combat-effective soldier and no newer drill; soldiers held in place by a
  * garrison order (PATH disabled) cannot move and are skipped.
  * Locality and authority: scheduler job on the machine that received the event; orders go only to
@@ -72,9 +74,12 @@ private _regroupActors = [];
         _checkedGroups pushBack _group;
         _checkedResults pushBack ([_group] call Waldo_fnc_CortexIsEligible && {[_group,"Waldo_AIPass_GrenadeEvasion_Enable",true] call Waldo_fnc_CortexFeatureEnabled});
     };
-    private _drillUnits = ((_group getVariable ["Waldo_AIPass_State", createHashMap]) getOrDefault ["drill", createHashMap]) getOrDefault ["units", []];
+    private _state = _group getVariable ["Waldo_AIPass_State",createHashMap];
+    private _drillUnits = (_state getOrDefault ["drill", createHashMap]) getOrDefault ["units", []];
+    private _supportHeld = _state getOrDefault ["supportHeld",[]];
     private _actorMove = _unit getVariable ["Waldo_Cortex_ActorMove",[]];
-    if (local _unit && {!isPlayer _unit} && {[_unit] call Waldo_fnc_CortexCombatEffective} && {vehicle _unit == _unit} && {_unit checkAIFeature "PATH"}
+    if (local _unit && {!isPlayer _unit} && {[_unit] call Waldo_fnc_CortexCombatEffective} && {vehicle _unit == _unit}
+        && {_unit checkAIFeature "PATH" || {_unit in _supportHeld}}
         && {!(_unit in _drillUnits)} && {count _actorMove != 3 || {time >= (_actorMove select 2)}}
         && {_checkedResults select _groupIndex}) then {
         private _sees = _unit distance _grenade < 5 || {([objNull, "VIEW"] checkVisibility [eyePos _unit, _grenadeASL]) > 0.2};
@@ -82,6 +87,10 @@ private _regroupActors = [];
         if (_sees && {random 1 < _chance}) then {
             private _direction = (_grenadePos getDir _unit) + ((_reacted mod 3) - 1) * 35;
             private _spot = ([(getPosATL _unit) getPos [9, _direction], _grenadePos, 6, [], _group] call Waldo_fnc_CortexFindCover) select 0;
+            if (_unit in _supportHeld) then {
+                _unit enableAI "PATH";
+                _state set ["supportHeld",_supportHeld-[_unit]];
+            };
             _unit doMove _spot;
             _unit setVariable ["Waldo_Cortex_ActorMove",["GRENADE_EVASION",+_spot,time+6]];
             _reacted = _reacted + 1;

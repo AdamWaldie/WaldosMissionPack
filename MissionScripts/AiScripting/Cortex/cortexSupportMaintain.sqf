@@ -7,6 +7,8 @@
  * does not cancel an accepted reinforcement reservation.
  * A failed bound keeps its PATH holds until a new MOVE sequence or reservation release;
  * the old MOVE role must not release them on the next group tick.
+ * A live actor-level grenade evasion temporarily outranks the covering PATH hold; the next cover
+ * step reacquires that soldier only after the six-second safety move expires.
  * A MOVE role which cannot form two viable local teams reports NOT_READY immediately;
  * the server can yield the turn instead of waiting for its 180-second safety timeout.
  * On release, actors held by Cortex resume formation even when engine combat has
@@ -114,7 +116,9 @@ if (_coordinating) then {
         private _drill=_state getOrDefault ["drill",createHashMap];
         if ((_drill getOrDefault ["supportToken",""]) == _token) then {[_group,_state,"ABORT"] call Waldo_fnc_CortexFlankEnd};
         {
-            if (local _x && {vehicle _x == _x} && {[_x] call Waldo_fnc_CortexCombatEffective} && {_x checkAIFeature "PATH"}) then {
+            private _actorMove=_x getVariable ["Waldo_Cortex_ActorMove",[]];
+            if (local _x && {vehicle _x == _x} && {[_x] call Waldo_fnc_CortexCombatEffective}
+                && {_x checkAIFeature "PATH"} && {count _actorMove != 3 || {time >= (_actorMove select 2)}}) then {
                 doStop _x; _x disableAI "PATH"; _held pushBackUnique _x;
             };
         } forEach units _group;
