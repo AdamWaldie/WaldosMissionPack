@@ -26,6 +26,8 @@
  * preserve a live actor-level grenade-evasion or anti-armour move instead of issuing formation
  * commands over it. REGROUP only recalls separated members, never clears their combat targets,
  * and waits for a short owned actor move before declaring the squad cohesive.
+ * Disabling investigation or post-contact while its phase is active immediately uses the normal
+ * CALM restoration path; a runtime switch cannot leave old search movement alive until timeout.
  * A reinforcement responder whose requester returns to CALM rejects its server reservation and
  * releases only its SUPPORT_RALLY or COORDINATED_ASSAULT movement lease; no stale token survives.
  * CARELESS groups are left entirely to the mission maker.
@@ -57,7 +59,8 @@
  *
  * Review contract: Waypoint completion compares tagged indices with currentWaypoint; completed waypoints may remain in the engine list. This allows rally arrival and retreat completion to be detected.
  *
- * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
+ * Repeat/JIP: current feature gates and eligibility are rechecked, including active phase gates;
+ * owner jobs are retired on migration.
  * Arguments:
  * 0: job <HASHMAP> - contains "group"
  *
@@ -234,6 +237,21 @@ if (_areaMode != "" && {(!([_group,"Waldo_AIPass_Investigate_Enable",true] call 
     || {!([_group,["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_areaMode == "SOUND"),true] call Waldo_fnc_CortexFeatureEnabled)}}) then {
     [_group,_state] call Waldo_fnc_CortexRestoreCalm;
     _state deleteAt "areaInvestigation";
+};
+// Runtime switches are authoritative permissions, not start-only preferences. A feature
+// disabled while it owns an investigation or post-contact search must relinquish that work
+// immediately through the same cleanup used by a normal completion. This returns search
+// actors, clears only Cortex waypoints/settings and prevents a disabled phase lingering until
+// its ordinary timeout. CONTACT is deliberately unaffected: its independent behaviours are
+// gated where they run, while the core contact state remains responsible for handover.
+private _activePhase = _state getOrDefault ["phase","CALM"];
+private _phaseGateClosed = (_activePhase == "INVESTIGATE"
+        && {!(["Waldo_AIPass_Investigate_Enable",true] call _get)})
+    || {_activePhase in ["SECURITY","SEARCH","REGROUP"]
+        && {!(["Waldo_AIPass_PostContact_Enable",true] call _get)}};
+if (_phaseGateClosed) then {
+    [_group,_state] call Waldo_fnc_CortexRestoreCalm;
+    _activePhase = "CALM";
 };
 
 // Soldiers holding ground from a finished drill rejoin once the leader has caught up with them.

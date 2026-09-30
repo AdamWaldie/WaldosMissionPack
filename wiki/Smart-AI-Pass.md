@@ -94,6 +94,12 @@ touched.
 | Aircraft flares | `Waldo_AIPass_AircraftFlares_Enable` (off) | WMP gunships and Dynamic AA fighters fire flares when a missile is launched at them. |
 | Aircraft break-away | `Waldo_AIPass_AircraftBreak_Enable` (off) | The same aircraft jink sideways away from the launch, without changing their orbit or waypoints. The response is rejected below 30 m terrain clearance or when its projected one- or two-second path falls below that clearance. Lateral speed is bounded to 18 m/s; an aircraft already exceeding that lateral speed receives no additional impulse. |
 
+Investigation and post-contact switches are live permissions. Turning either off while it owns an
+active investigation, security hold, search or regroup immediately returns that group through the
+normal CALM cleanup. Search actors rejoin and Cortex-owned movement and settings are released; the
+group does not wait for the old phase timeout. CONTACT remains active because its individual
+behaviours have separate switches and the contact state owns the safe transition back to the mission.
+
 Aircraft reactions recheck owner locality, active/pause state, pilot health, explicit exclusions, included sides/factions and Zeus priority. Delayed flare bursts repeat these checks. WMP gunship/Dynamic AA ownership is expected here; it does not grant an exemption from explicit compatibility exclusions. The live aircraft QA is partial and not yet accepted across native-AI, low-altitude and ownership variants.
 
 ## Behaviour profiles

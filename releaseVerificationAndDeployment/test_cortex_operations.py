@@ -1295,6 +1295,20 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('doTarget objNull',regroup)
         self.assertNotIn('doWatch objNull',regroup)
 
+    def test_runtime_phase_gates_release_active_investigation_and_post_contact_work(self):
+        tick=source('cortexGroupTick')
+        gates=tick.split('// Runtime switches are authoritative permissions',1)[1].split('// Soldiers holding ground',1)[0]
+        self.assertIn('_activePhase == "INVESTIGATE"',gates)
+        self.assertIn('Waldo_AIPass_Investigate_Enable',gates)
+        for phase in ['SECURITY','SEARCH','REGROUP']:
+            self.assertIn(f'"{phase}"',gates)
+        self.assertIn('Waldo_AIPass_PostContact_Enable',gates)
+        self.assertIn('[_group,_state] call Waldo_fnc_CortexRestoreCalm',gates)
+        self.assertIn('_activePhase = "CALM"',gates)
+        restore=source('cortexRestoreCalm')
+        self.assertIn('_state getOrDefault ["searchTeam", []]',restore)
+        self.assertIn('[_group] call Waldo_fnc_CortexGroupMoveClear',restore)
+
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')
         finish=regroup.split('private _finish = {',1)[1].split('if (isNull _group',1)[0]
