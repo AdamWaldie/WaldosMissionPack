@@ -101,7 +101,7 @@ private _migrateTeam={
     {_x setVariable ["acex_headless_blacklist",false,true]} forEach _members;
     diag_log format ["WMP CORTEX QA COORD MIGRATION REQUEST: group=%1 members=%2 actualMembers=%3 target=%4",_g,_members apply {netId _x},(units _g) apply {netId _x},_owner];
     private _requested=[_g,_owner] call Waldo_fnc_HeadlessMigrateGroup;
-    private _adopted=[{groupOwner _g == _owner && {_members findIf {owner _x != _owner} < 0}},30] call _wait;
+    private _adopted=[{groupOwner _g == _owner && {(_members findIf {owner _x != _owner}) < 0}},30] call _wait;
     ["COORD-owner-"+_stage,_requested && {_adopted},str [groupOwner _g,_members apply {owner _x}]] call _check;
     _g setVariable ["Waldo_Headless_ExcludeGroup",true,true];
 };
@@ -119,7 +119,7 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors,true];
 ["Coordinated assault: rally first","The base squad must see the opponent naturally. Two helper squads start behind a concrete screen; each must physically reach its own separate rear rally area. Coordinated assault is disabled during this stage.",[1500,1460,0]] call _phase;
 private _blocked=_helpers findIf {
     private _rays=lineIntersectsSurfaces [eyePos _x,eyePos _enemy,_x,_enemy,true,-1,"VIEW","GEOM"];
-    _rays findIf {(_x select 2) in _walls || {(_x select 3) in _walls}} < 0
+    (_rays findIf {(_x select 2) in _walls || {(_x select 3) in _walls}}) < 0
 } < 0;
 ["COORD-helper-view-blocked",_blocked] call _check;
 private _nearestPlayer=1e9;
@@ -141,7 +141,7 @@ if (_exposeDuringRally) then {
     // Establish an observation direction without injecting enemy knowledge.
     {if (local _x) then {_x doWatch (getPosATL _enemy)}} forEach _helpers;
     ["Coordinated rally under observation","The screen has been removed after reservation. Helpers must naturally see the enemy and still finish the reserved rally. Contact must not silently cancel their movement.",[1500,1460,0]] call _phase;
-    private _seen=[{_teams findIf {leader (group (_x select 0)) knowsAbout _enemy < 1} < 0},30] call _wait;
+    private _seen=[{(_teams findIf {leader (group (_x select 0)) knowsAbout _enemy < 1}) < 0},30] call _wait;
     ["COORD-contact-rally-natural-sight",_reserved && {_seen},str (_helpers apply {[netId _x,getDir _x,_x knowsAbout _enemy,_x targetKnowledge _enemy]})] call _check;
 };
 private _prematureReady=false;
@@ -152,7 +152,7 @@ private _rallied=[{
         private _lease=_g getVariable ["Waldo_AIPass_SupportLease",[]];
         if (count _status == 4 && {count _lease == 6} && {(_status select 0) == (_lease select 0)}
             && {(_status select 1) >= 0} && {!(_status select 3)}
-            && {_x findIf {[_x] call Waldo_fnc_CortexCombatEffective && {_x distance2D (_lease select 3) > 45}} >= 0}) then {
+            && {(_x findIf {[_x] call Waldo_fnc_CortexCombatEffective && {_x distance2D (_lease select 3) > 45}}) >= 0}) then {
             _prematureReady=true;
         };
     } forEach _teams;
@@ -161,18 +161,18 @@ private _rallied=[{
         if (count _lease != 6) exitWith {true};
         private _area = _lease select 3;
         {_x setVariable ["Waldo_CortexQA_Target",_area,true]} forEach _x;
-        _x findIf {_x distance2D _area > 45} >= 0
+        (_x findIf {_x distance2D _area > 45}) >= 0
     } < 0
 },120] call _wait;
 ["COORD-no-premature-rally-readiness",!_prematureReady] call _check;
 ["COORD-two-teams-physical-rally",_rallied,str (_helpers apply {getPosATL _x})] call _check;
 private _rallyLeases = _teams apply {(group (_x select 0)) getVariable ["Waldo_AIPass_SupportLease",[]]};
-["COORD-distinct-rally-areas",_rallyLeases findIf {count _x != 6} < 0 && {
+["COORD-distinct-rally-areas",(_rallyLeases findIf {count _x != 6}) < 0 && {
     ((_rallyLeases select 0) select 3) distance2D ((_rallyLeases select 1) select 3) >= 109
 },str _rallyLeases] call _check;
 diag_log format ["WMP CORTEX QA COORD RALLY: requesterPhase=%1 helperStates=%2",_requester getVariable ["Waldo_AIPass_PublicPhase","NONE"],(_teams apply {private _g=group (_x select 0); [groupId _g,_g getVariable ["Waldo_AIPass_PublicPhase","NONE"],_g getVariable ["Waldo_AIPass_SupportLease",[]],_g getVariable ["Waldo_AIPass_SupportStatus",[]]]})];
 sleep 10;
-["COORD-disabled-no-objective-advance",_rallied && {_helpers findIf {_x distance2D _enemy < 100} < 0}] call _check;
+["COORD-disabled-no-objective-advance",_rallied && {(_helpers findIf {_x distance2D _enemy < 100}) < 0}] call _check;
 // The screen validates rally routing and sight isolation only. Leaving it in the assault
 // corridor made the two squads route around opposite ends of a 192 m wall, so the later
 // open-ground backtracking, idle and cohesion checks measured fixture geometry rather than
@@ -181,7 +181,7 @@ private _movementScreens=+_walls;
 {deleteVehicle _x} forEach _movementScreens;
 _walls=[];
 sleep 0.1;
-["COORD-assault-corridor-clear",_movementScreens findIf {!isNull _x} < 0,str (count _movementScreens)] call _check;
+["COORD-assault-corridor-clear",(_movementScreens findIf {!isNull _x}) < 0,str (count _movementScreens)] call _check;
 _enemy setUnitPos "AUTO";
 private _origins=_helpers apply {getPosATL _x};
 [createHashMapFromArray [["Waldo_AIPass_CoordinatedAssault_Enable",true],["Waldo_AIPass_FireControl_Enable",true]]] call Waldo_fnc_CortexTuning;
@@ -256,7 +256,7 @@ private _advanced=[{
                 if (_activeMoving >= 2) then {
                     _physicalMoverSamples set [_ti,(_physicalMoverSamples select _ti)+1];
                 };
-                if (_activeMoving > 0 && {_activeMovers findIf {currentCommand _x == "ATTACK"} >= 0}) then {
+                if (_activeMoving > 0 && {(_activeMovers findIf {currentCommand _x == "ATTACK"}) >= 0}) then {
                     _attackOverrideSamples set [_ti,(_attackOverrideSamples select _ti)+1];
                 };
             };
@@ -264,7 +264,7 @@ private _advanced=[{
             // This empty-range inactivity criterion is not a real-combat timing limit.
             if (count _role == 5 && {(_role select 2) == "MOVE"}) then {
                 private _idleKey=format ["%1:%2",_ti,_role select 1];
-                private _outstanding=_members findIf {_x distance2D (_role select 3) > 20} >= 0;
+                private _outstanding=(_members findIf {_x distance2D (_role select 3) > 20}) >= 0;
                 if (_moving == 0 && {_outstanding}) then {
                     private _since=_idleSince getOrDefault [_idleKey,diag_tickTime];
                     _idleSince set [_idleKey,_since];
@@ -300,14 +300,14 @@ private _advanced=[{
     _ok
 },600] call _wait;
 ["COORD-inter-squad-role-exchange",_roleSwitches >= 2,str _roleSwitches] call _check;
-["COORD-full-fire-team-physical-bounds",_physicalMoverSamples findIf {_x <= 0} < 0,str _physicalMoverSamples] call _check;
+["COORD-full-fire-team-physical-bounds",(_physicalMoverSamples findIf {_x <= 0}) < 0,str _physicalMoverSamples] call _check;
 ["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;
 {private _total=0; {_total=_total+(_x getVariable ["Waldo_CortexQA_MovingShots",0])} forEach _x; _movingShots set [_forEachIndex,_total]} forEach _teams;
-["COORD-movers-fire-during-travel",_movingShots findIf {_x <= 0} < 0,str _movingShots] call _check;
+["COORD-movers-fire-during-travel",(_movingShots findIf {_x <= 0}) < 0,str _movingShots] call _check;
 ["COORD-no-prolonged-empty-range-idle",_advanced && {_longestMovingIdle <= 15},format ["longest outstanding MOVE idle=%1 s; empty-range limit=15 s",_longestMovingIdle]] call _check;
 ["COORD-open-ground-bound-backtracking",_roleSwitches >= 2 && {_largestBacktrack <= 8},format ["largest physical reverse travel=%1 m; empty-range limit=8 m",_largestBacktrack]] call _check;
 ["COORD-inter-squad-physical-cover",_interCover > 0,str _interCover] call _check;
-["COORD-intra-squad-physical-cover",_intraCover findIf {_x == 0} < 0,str _intraCover] call _check;
+["COORD-intra-squad-physical-cover",(_intraCover findIf {_x == 0}) < 0,str _intraCover] call _check;
 ["COORD-both-teams-physical-advance",_rallied && {_advanced},str (_helpers apply {getPosATL _x})] call _check;
 // Report viable-element progress separately; never replace all-actor acceptance with it.
 // Four of six is the same rounded-up 60 percent threshold used by movement recovery.
@@ -321,7 +321,7 @@ private _viableCounts = [];
     } forEach _x;
     _viableCounts pushBack _arrivedCount;
 } forEach _teams;
-["COORD-two-viable-elements-advance",_rallied && {_viableCounts findIf {_x < 4} < 0},str _viableCounts] call _check;
+["COORD-two-viable-elements-advance",_rallied && {(_viableCounts findIf {_x < 4}) < 0},str _viableCounts] call _check;
 private _centres=_teams apply {
     private _team=_x;
     private _sum=0; {_sum=_sum+(getPosATL _x select 0)} forEach _team; _sum/count _team
@@ -340,9 +340,9 @@ private _sideApproach=true;
 private _baseHeld=true;
 {if (_x distance2D (_baseOrigins select _forEachIndex) >= 3) then {_baseHeld=false}} forEach _base;
 ["COORD-base-position-retained",_baseHeld] call _check;
-["COORD-base-actual-supporting-fire",_base findIf {(_x getVariable ["Waldo_CortexQA_Shots",0]) > 0} >= 0,str (_base apply {_x getVariable ["Waldo_CortexQA_Shots",0]})] call _check;
+["COORD-base-actual-supporting-fire",(_base findIf {(_x getVariable ["Waldo_CortexQA_Shots",0]) > 0}) >= 0,str (_base apply {_x getVariable ["Waldo_CortexQA_Shots",0]})] call _check;
 {
-    [format ["COORD-team-%1-actual-fire",_forEachIndex+1],_x findIf {(_x getVariable ["Waldo_CortexQA_Shots",0]) > 0} >= 0,str (_x apply {_x getVariable ["Waldo_CortexQA_Shots",0]})] call _check;
+    [format ["COORD-team-%1-actual-fire",_forEachIndex+1],(_x findIf {(_x getVariable ["Waldo_CortexQA_Shots",0]) > 0}) >= 0,str (_x apply {_x getVariable ["Waldo_CortexQA_Shots",0]})] call _check;
 } forEach _teams;
 [createHashMapFromArray [["Waldo_AIPass_CoordinatedAssault_Enable",false],["Waldo_AIPass_Reinforce_Enable",false]]] call Waldo_fnc_CortexTuning;
 ["Coordinated assault: disable and hand back","Support is now disabled. Both squads must release their support assignments and temporary orders, then physically follow fresh ordinary movement orders. The cyan trails show real travel.",[1500,1580,0]] call _phase;
@@ -352,7 +352,7 @@ private _released=[{
         private _status=_g getVariable ["Waldo_AIPass_SupportStatus",[]];
         !((_g getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo [])
             || {_status isNotEqualTo []}
-            || {(waypoints _g) findIf {waypointDescription _x == "WMP AI PASS"} >= 0}
+            || {((waypoints _g) findIf {waypointDescription _x == "WMP AI PASS"}) >= 0}
     } < 0
 },20] call _wait;
 ["COORD-disabled-release",_released] call _check;

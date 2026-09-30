@@ -392,6 +392,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('COORD-assault-corridor-clear',qa)
         self.assertIn('{deleteVehicle _x} forEach _movementScreens;',qa)
         self.assertLess(qa.index('COORD-assault-corridor-clear'),qa.index('Movement diagnostic: coordinated bounds'))
+        self.assertIn('(_x findIf {_x distance2D _area > 45}) >= 0',qa)
 
     def test_literal_qa_tuning_requests_have_transport_entries(self):
         import re
