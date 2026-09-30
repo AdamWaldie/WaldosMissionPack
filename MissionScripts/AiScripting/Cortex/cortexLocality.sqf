@@ -36,6 +36,10 @@ if ((_group getVariable ["Waldo_Cortex_DrillRecovery",[]]) isNotEqualTo []) then
     _group setVariable ["Waldo_Cortex_DrillRecovery",["MIGRATED",[],-1],true];
 };
 private _restore = createHashMapFromArray (_group getVariable ["Waldo_AIPass_Checkpoint", []]);
+private _groupModeLease = _restore getOrDefault ["restoreGroupCombatMode",[]];
+if (count _groupModeLease == 2 && {combatMode _group == (_groupModeLease select 1)}) then {
+    _group setCombatMode (_groupModeLease select 0);
+};
 {
     _x params ["_unit", "_feature"];
     if (local _unit) then {_unit enableAI _feature};

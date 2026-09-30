@@ -6,18 +6,19 @@
  * Bounds: each member gets his own spot, spread 5 m apart across the direction to the last known enemy position. WEDGE uses staggered rear ranks; other formations use a broad line. Ordinary
  * bounds, the final position and the assault position are snapped to cover facing the enemy
  * (Waldo_fnc_CortexFindCover); street crossings and the clearing rush are not. On movement bounds, final approaches and
- * street crossings, pursuit (TARGET) is suspended while automatic target selection,
- * weapon aiming and firing remain enabled. Automatic target acquisition is suspended for movers because the
- * engine otherwise replaces individual movement with ATTACK; the paired fire team and covering squad retain
- * normal acquisition and provide fire. Movers watch the known threat direction. RED movers temporarily use YELLOW
- * (fire at will without independent pursuit), restored at each halt or cancellation.
- * Other authored combat modes are unchanged; later external mode changes survive cleanup.
+ * street crossings, pursuit (TARGET) is suspended while weapon aiming and firing remain enabled.
+ * A RED group first receives a finite YELLOW movement lease: it remains fire-at-will, but the engine must keep
+ * formation instead of creating independent ATTACK subgroups that compete with the bounds. The lease begins one
+ * scheduler step before the first move, remains active for the whole manoeuvre, and is restored only if the group
+ * still has the value Cortex applied. A later Zeus, waypoint or script ROE change cancels the manoeuvre and survives
+ * cleanup. Automatic target acquisition is suspended only for movers; the paired fire team and covering squad
+ * retain normal acquisition and provide fire. Movers watch the known threat direction.
  * COMBAT movers temporarily use per-unit AWARE with automatic combat switching suspended;
  * their previous behaviour is restored at halts, cancellation and ownership migration.
  * Bound handoff never issues doFollow: formation return competes with individual destinations.
  * No explicit attack target is assigned to movers, because that replaced bound destinations in live QA.
- * Movement handoff never resets group combat mode: doing so also changes the covering
- * element and did not reliably cancel stale engine attack orders in live validation.
+ * The lease never uses BLUE or disables firing. Same-frame BLUE/reset experiments did not reliably cancel stale
+ * attack orders and briefly silenced the base of fire; they are intentionally not used.
  * Only features
  * that were on are switched off, and they are switched back on at every halt, so mission-maker
  * disableAI settings survive. A bound completes when every member is within 3 m of his spot, or after
@@ -88,6 +89,19 @@ if (_token == "" || {_token != (_drill getOrDefault ["token",""])}) exitWith {-1
 private _end = {
     [_group, _state, _this] call Waldo_fnc_CortexFlankEnd;
     -1
+};
+// RED explicitly permits independent pursuit. That engine-owned ATTACK state replaces
+// individual doMove destinations and was the common cause of stalled bounds in live QA.
+// YELLOW preserves fire-at-will while keeping the group in formation. Give the engine one
+// scheduler step to retire its pursuit subgroups before issuing the first owned destination.
+private _groupModeLease = _drill getOrDefault ["groupCombatMode",[]];
+if (_groupModeLease isEqualTo [] && {combatMode _group == "RED"}) exitWith {
+    _drill set ["groupCombatMode",["RED","YELLOW"]];
+    _group setCombatMode "YELLOW";
+    0.25
+};
+if (_groupModeLease isNotEqualTo [] && {combatMode _group != (_groupModeLease select 1)}) exitWith {
+    "ROE_CHANGED" call _end
 };
 private _supportToken=_drill getOrDefault ["supportToken",""];
 private _support=_supportToken != "";
@@ -338,12 +352,8 @@ private _issue = {
         };
         // An explicit doTarget turned these movers into stationary ATTACK actors in live QA.
         // Facing a threat must not install a competing attack destination.
-        // Keep fire-at-will, but suspend RED's independent pursuit during this bound.
-        // Record the value we own so a newer Zeus/mod ROE change survives cleanup.
-        if (unitCombatMode _unit == "RED") then {
-            _combatModes pushBack [_unit,"RED","YELLOW"];
-            _unit setUnitCombatMode "YELLOW";
-        };
+        // Group YELLOW owns disengagement for the finite manoeuvre. Do not restore RED
+        // between bounds: that recreates engine ATTACK subgroups before the next move.
         // Do not issue doFollow here. It starts native formation movement and can
         // survive the immediate doMove, pulling this element back toward its leader.
         _unit doTarget objNull;

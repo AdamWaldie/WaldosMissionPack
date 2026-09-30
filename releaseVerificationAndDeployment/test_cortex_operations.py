@@ -432,10 +432,15 @@ class CortexOperations(unittest.TestCase):
 
     def test_movement_roe_restores_only_the_owned_value(self):
         step = source('cortexFlankStep')
-        self.assertIn('if (unitCombatMode _unit == "RED")', step)
-        self.assertIn('_combatModes pushBack [_unit,"RED","YELLOW"]', step)
-        for name in ['cortexFlankStep', 'cortexFlankEnd', 'cortexLocality']:
-            self.assertIn('unitCombatMode _unit == _ownedMode', source(name))
+        self.assertIn('_drill set ["groupCombatMode",["RED","YELLOW"]]', step)
+        self.assertIn('_group setCombatMode "YELLOW"', step)
+        self.assertIn('combatMode _group != (_groupModeLease select 1)', step)
+        self.assertNotIn('_group setCombatMode "BLUE"', step)
+        for name in ['cortexFlankEnd', 'cortexLocality']:
+            self.assertIn('combatMode _group == (_groupModeLease select 1)', source(name))
+            self.assertIn('_group setCombatMode (_groupModeLease select 0)', source(name))
+        checkpoint=source('cortexCheckpoint')
+        self.assertIn('restoreGroupCombatMode',checkpoint)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         self.assertIn('-combat-mode-restored', qa)
 
@@ -467,11 +472,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('COORD-distinct-rally-areas', fixture)
         self.assertIn('_x distance2D _area > 45', fixture)
 
-    def test_movement_handoff_does_not_reset_covering_group_roe(self):
+    def test_movement_lease_preserves_fire_and_rejects_competing_roe(self):
         step=source('cortexFlankStep')
-        self.assertNotIn('_group setCombatMode',step)
         self.assertNotIn('call _clearAttack',step)
-        self.assertIn('_unit setUnitCombatMode "YELLOW"',step)
+        self.assertIn('_group setCombatMode "YELLOW"',step)
+        self.assertNotIn('_group setCombatMode "BLUE"',step)
+        self.assertIn('"ROE_CHANGED" call _end',step)
+        self.assertIn('combatMode _group != (_groupModeLease select 1)',step)
         stance=source('cortexStance')
         self.assertIn('in ["START","MOVE"]',stance)
         self.assertIn('+(_drill getOrDefault ["movers"',stance)
@@ -483,6 +490,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('abs speed _unit > 2',fired)
         self.assertIn('Waldo_Cortex_SupportTeams',fired)
         self.assertIn('_unit in (_teams select 5)',fired)
+        self.assertIn('COORD-moving-roe-fire-at-will-disengaged',qa)
+        self.assertIn('combatMode _g != "YELLOW"',qa)
+        self.assertIn('_movementRoeSamples',qa)
+        self.assertIn('_movementRoeViolations',qa)
         self.assertIn('Waldo_CortexQA_MovingShots',fired)
         self.assertIn('COORD-no-prolonged-empty-range-idle',qa)
         self.assertIn('COORD-full-fire-team-physical-bounds',qa)
@@ -567,7 +578,7 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_unit doFollow', issue)
         self.assertNotIn('setUnitCombatMode "BLUE"', issue)
         self.assertIn('_unit doMove _spot', issue)
-        self.assertIn('_combatModes pushBack [_unit,"RED","YELLOW"]', issue)
+        self.assertNotIn('_unit setUnitCombatMode "YELLOW"', issue)
 
     def test_cancelled_throw_does_not_block_assault_progression(self):
         throw = source('cortexThrowGrenade')
@@ -1178,7 +1189,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_now-(_last select 3) > _timeout',step)
         self.assertIn('_unit distance2D (_last select 2) >= 0.5',step)
         self.assertNotIn('_combatModes pushBack [_unit,"RED","BLUE"]',step)
-        self.assertNotIn('_group setCombatMode',step)
+        self.assertIn('_group setCombatMode "YELLOW"',step)
+        self.assertNotIn('_group setCombatMode "BLUE"',step)
         self.assertIn('_unit disableAI "AUTOTARGET"',step)
         self.assertIn('_disabled pushBack [_unit,"AUTOTARGET"]',step)
         self.assertIn('_disabled pushBack [_unit,"TARGET"]',step)

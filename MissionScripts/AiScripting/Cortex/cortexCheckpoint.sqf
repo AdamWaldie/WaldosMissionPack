@@ -21,6 +21,8 @@ private _saved = [];
 } forEach ["supportHeld", "baseAttack", "attackChanged", "baseBehaviour", "behaviourChanged", "hadContact", "baseSpeed", "speedChanged", "searchTeam", "holders", "dismounted"];
 private _drill = _state getOrDefault ["drill", createHashMap];
 if (count _drill > 0) then {
+    private _groupModeLease = _drill getOrDefault ["groupCombatMode",[]];
+    if (_groupModeLease isNotEqualTo []) then {_saved pushBack ["restoreGroupCombatMode",+_groupModeLease]};
     _saved pushBack ["restoreDisabled", (_drill getOrDefault ["disabled", []]) apply {+_x}];
     _saved pushBack ["restoreCombatModes",(_drill getOrDefault ["combatModes",[]]) apply {+_x}];
     _saved pushBack ["restoreCombatBehaviours",(_drill getOrDefault ["combatBehaviours",[]]) apply {+_x}];

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Ends a drill (flank or bounding advance). Restores owned combat-mode overrides only
+ * Ends a drill (flank or bounding advance). Restores owned unit and group combat-mode overrides only
  * while the current mode still matches the value Cortex applied; later external changes survive.
  *
  * Restores the leader attack-assignment setting and only the AI features the drill disabled. A drill that completed, or stopped because the
@@ -33,6 +33,10 @@
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_reason", "", [""]]];
 private _drill = _state getOrDefault ["drill", createHashMap];
 if (count _drill == 0) exitWith {};
+private _groupModeLease = _drill getOrDefault ["groupCombatMode",[]];
+if (count _groupModeLease == 2 && {combatMode _group == (_groupModeLease select 1)}) then {
+    _group setCombatMode (_groupModeLease select 0);
+};
 {
     _x params ["_unit", "_feature"];
     if (alive _unit && {local _unit}) then {_unit enableAI _feature};

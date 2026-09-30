@@ -207,6 +207,8 @@ private _intraCover=[0,0];
 private _movingShots=[0,0];
 private _physicalMoverSamples=[0,0];
 private _attackOverrideSamples=[0,0];
+private _movementRoeSamples=[0,0];
+private _movementRoeViolations=[0,0];
 private _idleSince=createHashMap;
 private _longestMovingIdle=0;
 private _movementRoleObserved=false;
@@ -272,6 +274,12 @@ private _movementWindowEnded=[{
                 private _state=_g getVariable ["Waldo_AIPass_State",createHashMap];
                 private _drill=_state getOrDefault ["drill",createHashMap];
                 private _stage=_drill getOrDefault ["stage",""];
+                if (_stage == "MOVE") then {
+                    _movementRoeSamples set [_ti,(_movementRoeSamples select _ti)+1];
+                    if (combatMode _g != "YELLOW") then {
+                        _movementRoeViolations set [_ti,(_movementRoeViolations select _ti)+1];
+                    };
+                };
                 private _destination=_role select 3;
                 private _unfinishedAttack=(_activeMovers findIf {
                     currentCommand _x == "ATTACK" && {_x distance2D _destination > 3}
@@ -343,6 +351,7 @@ private _advanced=true;
 ["COORD-movement-window-terminated",_movementWindowEnded,format ["roleObserved=%1 results=%2",_movementRoleObserved,_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportBoundResult",[]]}]] call _check;
 ["COORD-inter-squad-role-exchange",_roleSwitches >= 2,str _roleSwitches] call _check;
 ["COORD-full-fire-team-physical-bounds",(_physicalMoverSamples findIf {_x <= 0}) < 0,str _physicalMoverSamples] call _check;
+["COORD-moving-roe-fire-at-will-disengaged",(_movementRoeSamples findIf {_x <= 0}) < 0 && {(_movementRoeViolations select 0)+(_movementRoeViolations select 1) == 0},format ["samples=%1 violations=%2",_movementRoeSamples,_movementRoeViolations]] call _check;
 ["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;
 {private _total=0; {_total=_total+(_x getVariable ["Waldo_CortexQA_MovingShots",0])} forEach _x; _movingShots set [_forEachIndex,_total]} forEach _teams;
 ["COORD-movers-fire-during-travel",(_movingShots findIf {_x <= 0}) < 0,str _movingShots] call _check;
