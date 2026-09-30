@@ -12,8 +12,9 @@
  * Locality and authority: call where the group is local.
  *
  * Review contract: A blocked backblast causes only a relocation request. A later group step must recheck clearance before ordering the shot.
- * Active drill movers are not reassigned. Explicit holding/clearing orders and disabled
- * PATH/MOVE prevent relocation; stationary support actors may still engage if safe.
+ * Active actor reservations and every member of a tactical drill are not relocated. Explicit
+ * holding/clearing orders and disabled PATH/MOVE also prevent relocation; stationary support
+ * actors may still engage if their existing position has safe backblast.
  *
  * An opportunistic drill grenade thrower is not retargeted during its two-second action window;
  * the grenade never blocks the squad manoeuvre state.
@@ -71,7 +72,9 @@ if (_armourIndex < 0) exitWith {false};
 (_enemies select _armourIndex) params ["_enemyUnit", "_enemyPos"];
 private _armour = vehicle _enemyUnit;
 private _gunners = (units _group) select {
+    private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
     ([_x] call Waldo_fnc_CortexCombatEffective) && {local _x} && {!(_x in _moving)} && {!(_x in _recovering)} && {unitCombatMode _x in ["YELLOW","RED"]} && {vehicle _x == _x} && {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)}
+        && {count _actorMove != 3 || {_now >= (_actorMove select 2)}}
 };
 if (_gunners findIf {assignedTarget _x == _armour && {(_x getVariable ["Waldo_AIPass_TargetHold", -1]) > _now}} >= 0) exitWith {false};
 private _ranked = [];
@@ -89,6 +92,7 @@ private _blocked = (lineIntersectsSurfaces [_eye, _behind, _gunner, objNull, tru
     } >= 0};
 // Holding/clearing owns the destination even when the gunner may fire from it.
 if (_blocked && {!(_gunner checkAIFeature "PATH") || {!(_gunner checkAIFeature "MOVE")}
+    || {_gunner in (_drill getOrDefault ["units",[]])}
     || {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo []}
     || {(_group getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []}
     || {_group getVariable ["Waldo_AIPass_ClearBuilding",false]}}) exitWith {false};

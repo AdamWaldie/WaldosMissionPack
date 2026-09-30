@@ -10,6 +10,8 @@
  * behaviour profile's advanceChance roll must succeed. Two elements advance successively: riflemen
  * move first while the leader/support element covers, then hold while that element closes up.
  * Both elements must physically arrive before the next bound. Movers retain firing permission while the other element covers.
+ * Actors completing a short grenade-evasion or anti-armour relocation lease are omitted from both
+ * elements rather than having their destination replaced.
  * Group attack assignment remains enabled so the covering element can acquire and share targets;
  * only the current movers receive short, owned pursuit-feature leases in CortexFlankStep.
  * This is successive bounding overwatch, not alternating leapfrog or multi-squad coordination.
@@ -57,7 +59,12 @@ if (random 1 >= ([_group, "advanceChance"] call Waldo_fnc_CortexProfile)) exitWi
     [_state, "advance", 30] call Waldo_fnc_CortexCooldown;
     false
 };
-private _onFoot = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x} && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}};
+private _onFoot = (units _group) select {
+    private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
+    [_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x}
+        && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
+        && {count _actorMove != 3 || {time >= (_actorMove select 2)}}
+};
 private _riflemen = _onFoot select {_x != _leader && {!(([_x] call Waldo_fnc_CortexUnitRole) in ["MG", "AT", "LEADER"])}};
 private _candidates = [];
 {_candidates pushBack [_x distance2D _objective, _forEachIndex]} forEach _riflemen;

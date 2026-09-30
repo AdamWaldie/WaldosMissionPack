@@ -18,6 +18,8 @@
  * morale STEADY, a seen enemy between Waldo_AIPass_Flank_MinRange and MaxRange, no drill running, no
  * cooldown, and a roll against the group's behaviour profile flankChance (Waldo_fnc_CortexProfile; a
  * failed roll waits 30 s).
+ * Actors completing a short grenade-evasion or anti-armour relocation lease are omitted from the
+ * new element rather than having their destination replaced.
  * Locality and authority: call where the group is local. The drill runs as its own scheduler job.
  *
  * Repeat/JIP: a running drill, shared movement lease or cooldown refuses duplicate starts; owner
@@ -50,7 +52,11 @@ if ([_state, "flank"] call Waldo_fnc_CortexCooldown) exitWith {false};
 if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false};
 private _leader = leader _group;
 if (vehicle _leader != _leader) exitWith {false};
-private _onFoot = (units _group) select {alive _x && {local _x} && {vehicle _x == _x} && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}};
+private _onFoot = (units _group) select {
+    private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
+    alive _x && {local _x} && {vehicle _x == _x} && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
+        && {count _actorMove != 3 || {time >= (_actorMove select 2)}}
+};
 if (count _onFoot < (missionNamespace getVariable ["Waldo_AIPass_Flank_MinGroupSize", 6])) exitWith {false};
 if (count _onFoot / ((_group getVariable ["Waldo_AIPass_PeakSize", count _onFoot]) max 1) < 0.6) exitWith {false};
 private _targetIndex = _enemies findIf {
