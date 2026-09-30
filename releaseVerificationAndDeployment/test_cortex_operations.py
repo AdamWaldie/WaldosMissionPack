@@ -550,6 +550,17 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('"GRENADE_UNRESOLVED" call _end', step)
         self.assertIn('_drill set ["stage","PAUSE"]', step)
 
+    def test_flank_routes_avoid_friendly_support_fire_corridors(self):
+        start = source('cortexFlankStart')
+        for marker in ['private _supportOrigins = []', 'knowsAbout _target > 0.5',
+                       'private _crossesFireLane = {', '_lateral < 18',
+                       '[1,110,90]', '!([_candidate] call _crossesFireLane)']:
+            self.assertIn(marker, start)
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
+        self.assertIn('private _fireLaneCrossings=[0,0]',qa)
+        self.assertIn('-no-support-fire-lane-crossing',qa)
+        self.assertIn('_lateral < 18',qa)
+
     def test_previous_holders_cannot_follow_over_replacement_drill(self):
         text = source('cortexGroupTick')
         self.assertIn('_ownedMovers = _activeDrill getOrDefault ["units",[]]', text)

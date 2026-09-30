@@ -65,6 +65,7 @@ params ["_check","_phase","_wait"];
     private _coverEvents=[0,0];
     private _lastMover=-1;
     private _switches=0;
+    private _fireLaneCrossings=[0,0];
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors+[_enemy],true];
     [_prefix+": two squads","Both squads must physically manoeuvre against the same enemy, retain their members and finish cohesive. Cyan trails show travel. Moving/covering counts and actual shots show whether one squad supports the other; accepted drill flags do not pass.",[2250,1200,0]] call _phase;
     private _contact=[{_groups findIf {leader _x knowsAbout _enemy <= 1} < 0},40] call _wait;
@@ -95,6 +96,26 @@ params ["_check","_phase","_wait"];
                 _coverEvents set [_other,(_coverEvents select _other)+1];
                 if (_lastMover >= 0 && {_lastMover != _teamIndex}) then {_switches=_switches+1};
                 _lastMover=_teamIndex;
+                private _supportMembers=(_teams select _other) select {alive _x};
+                if (_supportMembers isNotEqualTo []) then {
+                    private _support=[0,0,0];
+                    {_support=_support vectorAdd getPosATL _x} forEach _supportMembers;
+                    _support=_support vectorMultiply (1/count _supportMembers);
+                    private _laneX=(getPosATL _enemy select 0)-(_support select 0);
+                    private _laneY=(getPosATL _enemy select 1)-(_support select 1);
+                    private _laneLength=sqrt (_laneX*_laneX+_laneY*_laneY);
+                    if (_laneLength > 40) then {
+                        private _crossing=(_teams select _teamIndex) findIf {
+                            private _position=getPosATL _x;
+                            private _pointX=(_position select 0)-(_support select 0);
+                            private _pointY=(_position select 1)-(_support select 1);
+                            private _along=(_pointX*_laneX+_pointY*_laneY)/_laneLength;
+                            private _lateral=abs (_pointX*_laneY-_pointY*_laneX)/_laneLength;
+                            _along > 20 && {_along < _laneLength-25} && {_lateral < 18}
+                        };
+                        if (_crossing >= 0) then {_fireLaneCrossings set [_teamIndex,(_fireLaneCrossings select _teamIndex)+1]};
+                    };
+                };
             };
         };
         sleep 2;
@@ -112,6 +133,9 @@ params ["_check","_phase","_wait"];
         [_prefix+format ["-squad-%1-physical-travel",_teamIndex+1],_contact && {(_peaks select [_teamIndex*6,6]) findIf {_x < 30} < 0},str (_peaks select [_teamIndex*6,6])] call _check;
         [_prefix+format ["-squad-%1-cohesion",_teamIndex+1],_members findIf {!alive _x || {group _x != _group} || {_x distance2D leader _group > 40}} < 0] call _check;
         [_prefix+format ["-squad-%1-covering-fire",_teamIndex+1],(_coverEvents select _teamIndex) > 0,str _coverEvents] call _check;
+        if (_mode == "FLANK") then {
+            [_prefix+format ["-squad-%1-no-support-fire-lane-crossing",_teamIndex+1],(_fireLaneCrossings select _teamIndex) == 0,str _fireLaneCrossings] call _check;
+        };
     } forEach _teams;
     if (_mode == "BOUND") then {[_prefix+"-observed-movement-fire-overlap",_switches >= 2,str [_switches,_coverEvents]] call _check};
     {deleteVehicle _x} forEach (_actors+[_enemy]);
