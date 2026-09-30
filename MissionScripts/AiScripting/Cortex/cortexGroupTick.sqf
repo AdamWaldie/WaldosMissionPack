@@ -222,6 +222,9 @@ if (_nearTier && {!_lambsCombat} && {(_state getOrDefault ["phase",""]) != "CONT
 };
 
 private _enterContact = {
+    // Retire a public post-contact continuation immediately. Waiting for the next checkpoint
+    // leaves a migration race where a new owner could rebuild an obsolete search over live contact.
+    _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
     _state deleteAt "areaInvestigation";
     _state set ["phase", "CONTACT"];
     _state set ["phaseStart", _now];

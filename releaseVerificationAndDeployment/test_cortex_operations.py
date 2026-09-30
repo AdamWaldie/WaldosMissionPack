@@ -586,6 +586,20 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('case "GRENADE": {', text)
         self.assertIn('private _teamPause=if (_support) then {0} else', text)
 
+    def test_coordinated_final_approach_flows_into_assault_without_second_chance_roll(self):
+        text=source('cortexFlankStep')
+        hold=text.split('case "HOLD":',1)[1]
+        assault=hold.split('private _assault =',1)[1].split('private _assaultDirection',1)[0]
+        self.assertIn('if (_support) then {_assaultRange = _assaultRange max 100}',hold)
+        self.assertIn('_support || {random 1 <',assault)
+        self.assertIn('_points pushBack [_approachPoint, "ASSAULT"]',hold)
+        self.assertIn('_points pushBack [_clearPoint, "CLEAR"]',hold)
+
+    def test_live_contact_immediately_retires_stale_transition_intent(self):
+        tick=source('cortexGroupTick')
+        enter=tick.split('private _enterContact = {',1)[1].split('};\nprivate _beginContact',1)[0]
+        self.assertIn('setVariable ["Waldo_Cortex_TransitionIntent",nil,true]',enter)
+
     def test_native_waypoint_return_uses_bounded_recovery_without_editing_waypoints(self):
         text = source('cortexFlankStep')
         guard = text.split('private _returnedToWaypoint =')[1].split('if (_now-(_last select 3) > _timeout)')[0]

@@ -597,11 +597,17 @@ switch (_drill get "stage") do {
                 };
             };
             if (_drill getOrDefault ["consolidating",false]) exitWith {_result = "COMPLETE" call _end};
+            // A responder accepted into a coordinated assault has already passed the requester's
+            // coordinated tactic roll. Its final approach must flow into the assault and clear-through
+            // instead of rolling a second independent chance and stopping on the flank. Screened
+            // coordinated approaches can finish at 85 m, so give them a small handover margin.
+            private _assaultRange = missionNamespace getVariable ["Waldo_AIPass_Assault_Range",80];
+            if (_support) then {_assaultRange = _assaultRange max 100};
             private _assault = !_assaulting
                 && {_assaultEnabled}
                 && {(_state getOrDefault ["moraleState", "STEADY"]) == "STEADY"}
-                && {_centroid distance2D _enemyPos <= (missionNamespace getVariable ["Waldo_AIPass_Assault_Range", 80])}
-                && {random 1 < ([_group, "assaultChance"] call Waldo_fnc_CortexProfile)};
+                && {_centroid distance2D _enemyPos <= _assaultRange}
+                && {_support || {random 1 < ([_group, "assaultChance"] call Waldo_fnc_CortexProfile)}};
             private _assaultDirection = _centroid getDir _enemyPos;
             private _clearPoint = _enemyPos getPos [20, _assaultDirection];
             // Leave room for 3 m arrival tolerance and up to 2 m cover adjustment
