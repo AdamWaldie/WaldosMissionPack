@@ -980,7 +980,8 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('set ["baseAttack",attackEnabled _group]',apply)
         self.assertNotIn('enableAttack false',source('cortexSupportBoundStart'))
         maintain=source('cortexSupportMaintain')
-        self.assertEqual(2, maintain.count('call _restoreAttack;'))
+        self.assertEqual(1, maintain.count('call _restoreAttack;'))
+        self.assertEqual(2, maintain.count('call _releaseSupport;'))
         self.assertIn('enableAttack (_state getOrDefault ["baseAttack",true])', maintain)
         self.assertIn('"baseAttack", "attackChanged"', source('cortexCheckpoint'))
         self.assertIn('enableAttack (_state getOrDefault ["baseAttack",true])', source('cortexRestoreCalm'))
@@ -1308,6 +1309,20 @@ class CortexOperations(unittest.TestCase):
         restore=source('cortexRestoreCalm')
         self.assertIn('_state getOrDefault ["searchTeam", []]',restore)
         self.assertIn('[_group] call Waldo_fnc_CortexGroupMoveClear',restore)
+
+    def test_support_gate_closure_rejects_server_token_and_clears_local_role(self):
+        text=source('cortexSupportMaintain')
+        release=text.split('private _releaseSupport={',1)[1].split('if (_lease isEqualTo []',1)[0]
+        self.assertIn('count _lease == 6',release)
+        self.assertIn('_token == (_lease select 0)',release)
+        self.assertIn('remoteExecCall ["Waldo_fnc_CortexSupportAck",2]',release)
+        for key in ['supportToken','responding','respondingTo','respondUntil','arrivedAt','assaulting']:
+            self.assertIn(f'"{key}"',release)
+        invalid=text.split('if (_lease isEqualTo []',1)[1].split('if (_state getOrDefault ["assaulting"',1)[0]
+        self.assertIn('call _releaseSupport',invalid)
+        coordinated=text.split('if (_state getOrDefault ["assaulting"',1)[1].split('// Contact can begin',1)[0]
+        self.assertIn('Waldo_AIPass_CoordinatedAssault_Enable',coordinated)
+        self.assertIn('call _releaseSupport',coordinated)
 
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')

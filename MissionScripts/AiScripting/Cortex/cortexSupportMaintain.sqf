@@ -17,6 +17,8 @@
  * Movement ownership uses SUPPORT_RALLY and COORDINATED_ASSAULT leases. Cleanup removes only those
  * lease types and checks that a rally waypoint is still pending, so a completed waypoint is not
  * mistaken for active movement and a newer feature route is never deleted.
+ * A live gate closure rejects the exact accepted token back to the server before clearing local
+ * state, so a stopped responder cannot retain a coordinated role or consume a support slot.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: group <GROUP>; 1: local state <HASHMAP>.
  * Return Value: Nothing.
@@ -46,9 +48,12 @@ private _restoreAttack={
     _state deleteAt "attackChanged"; _state deleteAt "baseAttack";
 };
 private _lease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
-if (_lease isEqualTo [] || {(_lease select 0) != _token} || {serverTime >= (_lease select 2)}
-    || {!([_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
-    || {!([_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) then {
+private _releaseSupport={
+    // Reject only the exact lease snapshot accepted by this owner. The server validates token,
+    // snapshot and sender again, making repeated cleanup and a racing replacement lease harmless.
+    if (count _lease == 6 && {_token == (_lease select 0)}) then {
+        [_group,_token,false,_lease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
+    };
     // Delete only this support assignment's route. A later withdrawal, vehicle
     // manoeuvre, artillery scoot or tactical drill survives stale support cleanup.
     if ((_supportOwnsMovement || {!_movementLeaseActive})
@@ -59,12 +64,14 @@ if (_lease isEqualTo [] || {(_lease select 0) != _token} || {serverTime >= (_lea
     call _restoreAttack;
     {_state deleteAt _x} forEach ["supportToken","responding","respondingTo","respondUntil","arrivedAt","assaulting"];
 };
+if (_lease isEqualTo [] || {(_lease select 0) != _token} || {serverTime >= (_lease select 2)}
+    || {!([_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
+    || {!([_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) then {
+    call _releaseSupport;
+};
 
 if (_state getOrDefault ["assaulting",false] && {!([_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) then {
-    if (_supportOwnsMovement || {!_movementLeaseActive}) then {[_group] call Waldo_fnc_CortexGroupMoveClear};
-    if (_supportOwnsMovement) then {_state deleteAt "movementLease"};
-    call _restoreAttack;
-    _state set ["assaulting",false]; _state set ["responding",false];
+    call _releaseSupport;
 };
 
 // Contact can begin before the rally is reached. Readiness must not depend on CALM.
