@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Measures two-squad flank and advance against a shared, naturally observed enemy.
+ * Measures two-squad flank and advance against a shared, naturally observed enemy squad.
  * Locality/authority: scheduled server owns disposable fixtures; no behaviour results are injected.
  * Repeat/JIP: fresh actors per case, public labels and targets for observers; caller restores settings.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>, required callbacks.
@@ -56,9 +56,15 @@ params ["_check","_phase","_wait"];
     _enemyGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
     _enemyGroup setVariable ["acex_headless_blacklist",true,true];
     _enemyGroup setCombatMode "YELLOW";
-    private _enemy=_enemyGroup createUnit ["B_Soldier_F",[2250,1360,0],[],0,"NONE"];
-    _enemy allowDamage false; _enemy disableAI "PATH"; _enemy setDir 180; _enemy setUnitPos "UP";
-    _enemy setVariable ["Waldo_CortexQA_Label","SHARED ENEMY OBJECTIVE",true];
+    _enemyGroup allowFleeing 0;
+    private _enemies=[];
+    for "_index" from 0 to 5 do {
+        private _enemy=_enemyGroup createUnit ["B_Soldier_F",[2215+_index*14,1360,0],[],0,"NONE"];
+        _enemy allowDamage false; _enemy disableAI "PATH"; _enemy setDir 180; _enemy setUnitPos "UP";
+        _enemy setVariable ["Waldo_CortexQA_Label",format ["SHARED ENEMY %1",_index+1],true];
+        _enemies pushBack _enemy;
+    };
+    private _enemy=_enemies select 2;
     private _origins=_actors apply {getPosATL _x};
     private _peaks=_actors apply {0};
     private _lastShots=[0,0];
@@ -68,14 +74,21 @@ params ["_check","_phase","_wait"];
     private _fireLaneCrossings=[0,0];
     private _drillSeen=[false,false];
     private _expectedDrill=["FLANK","ADVANCE"] select (_mode == "BOUND");
-    missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors+[_enemy],true];
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors+_enemies,true];
     [_prefix+": two squads","Both squads must physically manoeuvre against the same enemy, retain their members and finish cohesive. Cyan trails show travel. Moving/covering counts and actual shots show whether one squad supports the other; accepted drill flags do not pass.",[2250,1200,0]] call _phase;
     // Direction is established without revealing the target. Both sides remain armed,
     // invulnerable and free to exchange fire so the prerequisite is a real engagement.
     {_x doWatch (getPosATL _enemy)} forEach _actors;
-    _enemy doWatch (getPosATL leader (_groups select 0));
-    private _contact=[{_groups findIf {leader _x knowsAbout _enemy < 1} < 0},60] call _wait;
-    [_prefix+"-natural-contact",_contact] call _check;
+    {_x doWatch (getPosATL leader (_groups select (_forEachIndex mod 2)))} forEach _enemies;
+    private _contact=[{
+        private _allContact=true;
+        {
+            private _leader=leader _x;
+            if ((_enemies findIf {_leader knowsAbout _x >= 1}) < 0) then {_allContact=false};
+        } forEach _groups;
+        _allContact
+    },60] call _wait;
+    [_prefix+"-natural-contact",_contact,str (_groups apply {private _leader=leader _x; [_leader getDir _enemy,_enemies apply {_leader knowsAbout _x}]})] call _check;
     private _until=diag_tickTime+([0,180] select _contact);
     while {diag_tickTime < _until} do {
         private _movingCounts=[];
@@ -157,7 +170,7 @@ params ["_check","_phase","_wait"];
         };
     } forEach _teams;
     if (_mode == "BOUND") then {[_prefix+"-observed-movement-fire-overlap",(_drillSeen findIf {!_x}) < 0 && {_switches >= 2},str [_switches,_coverEvents,_drillSeen]] call _check};
-    {deleteVehicle _x} forEach (_actors+[_enemy]);
+    {deleteVehicle _x} forEach (_actors+_enemies);
     {deleteGroup _x} forEach (_groups+[_enemyGroup]);
     missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 } forEach ["FLANK","BOUND"];

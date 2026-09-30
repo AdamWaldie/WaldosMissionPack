@@ -601,6 +601,10 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(marker,qa)
         self.assertIn('_enemyGroup setCombatMode "YELLOW"',qa)
         self.assertIn('_enemy setUnitPos "UP"',qa)
+        self.assertIn('for "_index" from 0 to 5 do',qa)
+        self.assertIn('private _enemies=[]',qa)
+        self.assertIn('_enemies findIf {_leader knowsAbout _x >= 1}',qa)
+        self.assertIn('_actors+_enemies',qa)
 
     def test_coordinated_audit_ends_after_terminal_element_failures(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
