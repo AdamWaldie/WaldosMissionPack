@@ -606,6 +606,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_enemies findIf {_leader knowsAbout _x >= 1}',qa)
         self.assertIn('_actors+_enemies',qa)
 
+    def test_bounding_advance_default_reacts_before_native_waypoint_is_consumed(self):
+        config=(ROOT/'MissionConfig/aiConfig.sqf').read_text()
+        spec=source('cortexTuningSpec')
+        advance=source('cortexAdvanceStart')
+        self.assertIn('["Waldo_AIPass_Advance_MinContactSeconds", 5]',config)
+        self.assertIn('"Waldo_AIPass_Advance_MinContactSeconds", "Advance contact delay"',spec)
+        self.assertIn('"SLIDER", [0,300,0], 5]',spec)
+        self.assertIn('getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 5]',advance)
+
     def test_coordinated_audit_ends_after_terminal_element_failures(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
         for marker in ['private _movementRoleObserved=false',

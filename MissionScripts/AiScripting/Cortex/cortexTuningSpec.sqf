@@ -61,7 +61,7 @@ private _spec = [
     ["Waldo_AIPass_Investigate_Enable", "Investigation", "Squads send two riflemen to check enemies they know about but have not seen.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Assault_Enable", "Final assault", "A flank can finish with a grenade and a rush on the enemy position.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Advance_Enable", "Bounding advance", "Squads in a long firefight push a fire team towards their waypoint in covered bounds.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_Advance_MinContactSeconds", "Advance contact delay", "Seconds of contact before a bounding advance may begin. Other movement, knowledge and eligibility checks still apply.", "SLIDER", [0,300,0], 30],
+    ["Waldo_AIPass_Advance_MinContactSeconds", "Advance contact delay", "Seconds of confirmed contact before a bounding advance may begin. The default reacts quickly enough to take ownership before native waypoint travel consumes the manoeuvre; other movement, knowledge and eligibility checks still apply.", "SLIDER", [0,300,0], 5],
     ["Waldo_AIPass_CoordinatedAssault_Enable", "Coordinated assault", "Reinforcing squads assault from both sides while the squad in contact fires.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Stance_Enable", "Stance from cover", "Soldiers stand, kneel or go prone to match the cover in front of them.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AmmoShare_Enable", "Ammo sharing", "Soldiers down to their last magazine get one from a nearby squad-mate.", "CHECKBOX", [], true],

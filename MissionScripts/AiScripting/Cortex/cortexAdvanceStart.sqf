@@ -40,7 +40,7 @@ if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulti
 if (count (_state getOrDefault ["drill", createHashMap]) > 0) exitWith {false};
 if ([_state, "advance"] call Waldo_fnc_CortexCooldown) exitWith {false};
 if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false};
-if (time - (_state getOrDefault ["phaseStart", time]) < (missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 30])) exitWith {false};
+if (time - (_state getOrDefault ["phaseStart", time]) < (missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 5])) exitWith {false};
 private _leader = leader _group;
 if (vehicle _leader != _leader) exitWith {false};
 private _index = currentWaypoint _group;
