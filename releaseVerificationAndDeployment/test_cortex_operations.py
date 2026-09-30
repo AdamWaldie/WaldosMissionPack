@@ -1348,6 +1348,19 @@ class CortexOperations(unittest.TestCase):
         self.assertLess(resume.index('if (_transitionGateOpen'),resume.index('doMove'))
         self.assertIn('setVariable ["Waldo_Cortex_TransitionIntent",nil,true]',resume)
 
+    def test_delayed_counterbattery_and_scoot_recheck_live_owner_gates(self):
+        counter=source('cortexCounterBattery')
+        delayed=counter.split('params ["_vehicle", "_side", "_position", "_generation"]',1)[1]
+        self.assertIn('Waldo_AIPass_CounterBattery_Enable',delayed)
+        mission=source('cortexArtilleryMissionStep')
+        self.assertIn('setVariable ["Waldo_Cortex_ArtilleryScootPurpose",_mission get "purpose",true]',mission)
+        scoot=source('cortexArtilleryScoot')
+        for item in ['Waldo_Cortex_ArtilleryScootPurpose','Waldo_AIPass_Artillery_Enable',
+                     'Waldo_AIPass_CounterBattery_Enable','Waldo_AIPass_Artillery_ShootAndScoot',
+                     'Waldo_AIPass_CounterBattery_ShootAndScoot','call _clear; false']:
+            self.assertIn(item,scoot)
+        self.assertLess(scoot.index('missionNamespace getVariable [_scootSetting,true]'),scoot.index('CortexGroupMove'))
+
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')
         finish=regroup.split('private _finish = {',1)[1].split('if (isNull _group',1)[0]

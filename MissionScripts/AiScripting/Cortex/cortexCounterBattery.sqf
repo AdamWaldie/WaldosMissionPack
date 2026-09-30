@@ -37,7 +37,9 @@ private _sides = [];
         [{
             params ["_vehicle", "_side", "_position", "_generation"];
             if (_generation != (missionNamespace getVariable ["Waldo_AIPass_CounterGeneration", 0])) exitWith {};
-            if (isNull _vehicle || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])} || {[] call Waldo_fnc_CortexIsPaused}) exitWith {};
+            if (isNull _vehicle || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}
+                || {!(missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false])}
+                || {[] call Waldo_fnc_CortexIsPaused}) exitWith {};
             {
                 if (side group gunner _x == _side && {
                     [_x, _position, 30, "HE", missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Rounds", 4],

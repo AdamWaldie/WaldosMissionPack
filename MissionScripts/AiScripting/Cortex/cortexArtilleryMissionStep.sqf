@@ -61,6 +61,7 @@ if ((_mission get "burstsLeft") <= 0) exitWith {
         private _scootToken = _mission get "token";
         _battery setVariable ["Waldo_Cortex_ArtilleryScootToken",_scootToken,true];
         _battery setVariable ["Waldo_Cortex_ArtilleryScootDeadline",serverTime+120,true];
+        _battery setVariable ["Waldo_Cortex_ArtilleryScootPurpose",_mission get "purpose",true];
         [_battery,_scootToken] remoteExecCall ["Waldo_fnc_CortexArtilleryScoot", owner _battery];
     };
     call _finish

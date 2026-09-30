@@ -6,7 +6,8 @@
  * investigation, vehicle standoff or infantry manoeuvre from replacing the scoot waypoint.
  * Locality/authority: the server publishes the mission token; the current vehicle owner executes.
  * Repeat/JIP: the public token and deadline reject stale work and locality gain resumes a pending
- * request. The physical move is not replayed after completion.
+ * request. The public purpose selects the owning support/counter-battery feature and live scoot
+ * switch; closing either cancels the delayed relocation. The physical move is not replayed after completion.
  * Arguments: 0: battery <OBJECT>, default objNull; 1: mission token <STRING>, default "".
  * Return Value: Boolean - true when relocation started or remains pending.
  * Current callers: ArtilleryMissionStep and CortexLocality.
@@ -19,9 +20,17 @@ if (!local _battery) exitWith {false};
 private _clear = {
     _battery setVariable ["Waldo_Cortex_ArtilleryScootToken",nil,true];
     _battery setVariable ["Waldo_Cortex_ArtilleryScootDeadline",nil,true];
+    _battery setVariable ["Waldo_Cortex_ArtilleryScootPurpose",nil,true];
 };
+private _purpose=_battery getVariable ["Waldo_Cortex_ArtilleryScootPurpose",""];
+private _counter=_purpose == "COUNTER";
+private _feature=["Waldo_AIPass_Artillery_Enable","Waldo_AIPass_CounterBattery_Enable"] select _counter;
+private _scootSetting=["Waldo_AIPass_Artillery_ShootAndScoot","Waldo_AIPass_CounterBattery_ShootAndScoot"] select _counter;
 if (!canMove _battery || {isNull driver _battery} || {!([group driver _battery] call Waldo_fnc_CortexIsEligible)}
     || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])} || {[] call Waldo_fnc_CortexIsPaused}) exitWith {call _clear; false};
+if !(_purpose in ["SUPPORT","COUNTER"]
+    && {missionNamespace getVariable [_scootSetting,true]}
+    && {[group driver _battery,_feature,false] call Waldo_fnc_CortexFeatureEnabled}) exitWith {call _clear; false};
 private _group = group driver _battery;
 private _state = [_group] call Waldo_fnc_CortexGroupState;
 private _activeWaypoint = (waypoints _group) findIf {
