@@ -629,15 +629,27 @@ switch (_state get "phase") do {
             private _target = _state getOrDefault ["retreatTarget",getPosATL _leader];
             private _distance = ((_leader distance2D _target) max 80) min 250;
             private _away = if (count _enemyPos >= 2) then {_enemyPos getDir _leader} else {(getDir _leader)+180};
-            private _angle = [30,-30,60,-60] select (_replans mod 4);
-            private _candidate = (getPosATL _leader) getPos [_distance,_away+_angle];
-            if (surfaceIsWater _candidate) then {_candidate = (getPosATL _leader) getPos [_distance,_away-_angle]};
-            [_group,_candidate,30] call Waldo_fnc_CortexGroupMove;
-            _state set ["retreatTarget",_candidate];
-            _replans = _replans+1;
-            _progressAt = _now;
-            _bestTravel = _travel;
-            _moving = true;
+            private _origin=getPosATL _leader;
+            private _candidateRoutes=[];
+            {
+                private _candidate=_origin getPos [_distance,_away+_x];
+                // A confirmed obstruction must not select the same failed destination again.
+                if (_candidate distance2D _target >= 20) then {_candidateRoutes pushBack [_candidate]};
+            } forEach [30,-30,60,-60];
+            private _legs=if (count _enemyPos >= 2) then {
+                [_origin,_candidateRoutes,_enemyPos] call Waldo_fnc_CortexSelectAvenue
+            } else {
+                _candidateRoutes param [0,[]]
+            };
+            if (_legs isNotEqualTo []) then {
+                private _candidate=+(_legs select ((count _legs)-1));
+                [_group,_candidate,30] call Waldo_fnc_CortexGroupMove;
+                _state set ["retreatTarget",_candidate];
+                _replans = _replans+1;
+                _progressAt = _now;
+                _bestTravel = _travel;
+                _moving = true;
+            };
         };
         _state set ["retreatProgress",[_progressAt,_bestTravel,_replans]];
         private _intent = _group getVariable ["Waldo_Cortex_WithdrawalIntent",[]];

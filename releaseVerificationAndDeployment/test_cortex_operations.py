@@ -1141,7 +1141,8 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(marker,retreat)
         retreat_case=tick.split('case "RETREAT":')[1]
         for marker in ['_travel < 30','_now-_progressAt >= 15','_travel >= _bestTravel+3','_replans < 4',
-                       'select (_replans mod 4)','Waldo_fnc_CortexGroupMove',
+                       'forEach [30,-30,60,-60]','_candidate distance2D _target >= 20',
+                       'call Waldo_fnc_CortexSelectAvenue','Waldo_fnc_CortexGroupMove',
                        'Waldo_Cortex_Withdrawal']:
             self.assertIn(marker,retreat_case)
         self.assertNotIn('setPos',retreat_case)
