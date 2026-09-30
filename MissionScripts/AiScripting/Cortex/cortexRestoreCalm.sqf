@@ -26,8 +26,10 @@
  * 3: yield to external order <BOOL>, false; when true Cortex removes its owned controls and
  *    preserves identifiable replacement commands, behaviour and speed.
  * Repeat/JIP: removes only WMP transient orders and restores recorded values.
- * Explicitly tracked Cortex holds resume formation even if combat relabelled doStop
- * as ATTACK/FIRE. Commands which cannot be a combat-side effect of that hold survive.
+ * Explicitly tracked Cortex holds restore PATH and resume formation even if combat relabelled doStop
+ * as ATTACK/FIRE. Search teams never restore PATH because Cortex did not disable it for that action;
+ * ordinary cleanup ends their stale search move, while external takeover preserves a replacement
+ * MOVE or other command. Commands which cannot be a combat-side effect of a hold survive.
  * Pending remount intent is public for owner migration; GroupTick retries for up to 60 seconds.
  * Return Value:
  * Nothing
@@ -47,17 +49,18 @@ if (count (_state getOrDefault ["drill",createHashMap]) > 0) then {
     [_group,_state,"CALM"] call Waldo_fnc_CortexFlankEnd;
 };
 private _releaseOwnedHold={
-    params ["_unit"];
+    params ["_unit",["_restorePath",true],["_returnSearchTeam",false]];
     if (local _unit && {group _unit == _group}) then {
-        _unit enableAI "PATH";
+        if (_restorePath) then {_unit enableAI "PATH"};
         private _command=toUpperANSI currentCommand _unit;
-        if (_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]) then {
+        private _ownedHold=_command in ["","STOP","ATTACK","FIRE","SUPPRESS"];
+        if (_ownedHold || {_returnSearchTeam && {!_yieldToExternal}}) then {
             _unit doFollow leader _group;
         };
     };
 };
 {
-    [_x] call _releaseOwnedHold;
+    [_x,true,false] call _releaseOwnedHold;
 } forEach (_state getOrDefault ["supportHeld",[]]);
 _state deleteAt "supportHeld";
 _state deleteAt "supportBoundSequence";
@@ -74,9 +77,13 @@ if (!_yieldToExternal && {count _retreatModeLease == 2} && {combatMode _group ==
     _group setCombatMode (_retreatModeLease select 0);
 };
 [_group] call Waldo_fnc_CortexGroupMoveClear;
-// These units were detached by Cortex. Retire that ownership on every release,
+// Search movement never disables PATH. Do not enable a mission-disabled feature while
+// returning a search team. During an ordinary handback its Cortex MOVE is explicitly
+// retired; during a Zeus takeover a MOVE may already be the curator's replacement order.
+{if (alive _x) then {[_x,false,true] call _releaseOwnedHold}} forEach (_state getOrDefault ["searchTeam", []]);
+// Drill holders are explicit Cortex PATH holds. Retire that ownership on every release,
 // including Zeus takeover, while preserving a newer individual command.
-{if (alive _x) then {[_x] call _releaseOwnedHold}} forEach ((_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []]));
+{if (alive _x) then {[_x,true,false] call _releaseOwnedHold}} forEach (_state getOrDefault ["holders", []]);
 {
     if (local _x && {_x getVariable ["Waldo_AIPass_StanceSet", false]}) then {
         if (toUpperANSI (unitPos _x) == (_x getVariable ["Waldo_Cortex_AppliedStance",""])) then {_x setUnitPos "AUTO"};

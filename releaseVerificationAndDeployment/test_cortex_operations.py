@@ -539,13 +539,16 @@ class CortexOperations(unittest.TestCase):
     def test_calm_cleanup_releases_cortex_holds_without_overwriting_new_individual_orders(self):
         restore=source('cortexRestoreCalm')
         release_hold=restore.split('private _releaseOwnedHold={',1)[1].split('};\n{',1)[0]
-        self.assertIn('_unit enableAI "PATH"',release_hold)
+        self.assertIn('if (_restorePath) then {_unit enableAI "PATH"}',release_hold)
         self.assertIn('_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]',release_hold)
+        self.assertIn('_returnSearchTeam && {!_yieldToExternal}',release_hold)
         self.assertIn('_unit doFollow leader _group',release_hold)
         for external in ['MOVE','GET IN','GET OUT','ACTION','SCRIPTED']:
             self.assertNotIn(f'"{external}"',release_hold)
-        self.assertIn('forEach (_state getOrDefault ["supportHeld",[]])',restore)
-        self.assertIn('(_state getOrDefault ["searchTeam", []]) + (_state getOrDefault ["holders", []])',restore)
+        self.assertIn('[_x,true,false] call _releaseOwnedHold',restore)
+        self.assertIn('[_x,false,true] call _releaseOwnedHold',restore)
+        search_release=restore.split('forEach (_state getOrDefault ["searchTeam", []])',1)[0].rsplit('{if (alive _x)',1)[-1]
+        self.assertNotIn('enableAI "PATH"',search_release)
 
     def test_feature_fixtures_are_staged_and_dispatched(self):
         from check_cortex_coverage import audit
