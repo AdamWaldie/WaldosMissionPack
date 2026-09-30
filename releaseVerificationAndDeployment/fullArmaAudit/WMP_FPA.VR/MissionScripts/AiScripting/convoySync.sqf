@@ -19,7 +19,18 @@ private _previous = missionNamespace getVariable ["Waldo_Convoy_LocalRegistry", 
     if (_next < 0 || {(((_registry select _next) select 1) select 0) != (_configuration select 0)}) then {
         [_group, _configuration, true] call Waldo_fnc_ConvoyDismountLocal;
         private _keepCrew = if (_next < 0) then {[]} else {((_registry select _next) select 1) select 4};
-        [_group, true, _configuration select 7, _keepCrew] call Waldo_fnc_ConvoyReleaseLocal;
+        // Preserve navigation across same-owner halt/resume snapshots. Release clears
+        // local state, so saving only inside ConvoyTick is too late.
+        private _navigation = _group getVariable ["Waldo_Convoy_LocalState",createHashMap];
+        private _retainNavigation = _next >= 0 && {_keepCrew isEqualTo (_configuration select 4)};
+        if (_retainNavigation) then {
+            // A phase/speed update is not a release. Restoring formation and issuing doFollow
+            // here queues native movement immediately before the new HALT/path commands.
+            // Keep the existing ownership and seat state through this same-fleet transition.
+            _group setVariable ["Waldo_Convoy_LocalState",_navigation];
+        } else {
+            [_group, true, _configuration select 7, _keepCrew] call Waldo_fnc_ConvoyReleaseLocal;
+        };
         private _handler = _group getVariable ["Waldo_Convoy_LocalHandler", -1];
         if (_handler >= 0 && {(_group getVariable ["Waldo_Convoy_Restore", []]) isEqualTo []}) then {
             _group removeEventHandler ["Local", _handler];

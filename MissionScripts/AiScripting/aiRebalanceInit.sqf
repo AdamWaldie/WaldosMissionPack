@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Configures AI skill profiles once per machine and applies the selected profile to local AI.
+ * Repeat/JIP: one repeat-safe lighting worker refreshes ten registered local units per second;
+ * unchanged lighting/equipment causes no skill writes. Stop removes the worker; replay reinstalls it.
  *
  * Existing local AI are processed immediately. A CBA CAManBase init handler catches newly created
  * units, including Zeus placements, and a per-unit Local event handler reapplies the active profile
@@ -11,7 +13,7 @@
  * profile; each server or headless-client owner applies skills only to its local AI.
  *
  * Arguments:
- * 0: mode <STRING> - DAY or NIGHT
+ * 0: mode <STRING> - AUTO (default), DAY or NIGHT
  * 1: profile <STRING> - built-in or mission-defined profile key (default LINE)
  *
  * Return Value:
@@ -25,7 +27,7 @@
  */
 
 params [
-    ["_mode", "DAY", [""]],
+    ["_mode", "AUTO", [""]],
     ["_profile", "LINE", [""]]
 ];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
@@ -87,10 +89,33 @@ private _storedProfiles = missionNamespace getVariable ["Waldo_AI_Profiles", cre
 missionNamespace setVariable ["Waldo_AI_Profiles", _storedProfiles];
 
 _mode = toUpperANSI _mode;
+if !(_mode in ["AUTO","DAY","NIGHT"]) exitWith {false};
 _profile = toUpperANSI _profile;
 private _profiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
 if !(_profile in (keys _profiles)) exitWith {
-    if (isServer) then {diag_log format ["[WMP AI] Unknown profile '%1'; AI rebalance was not changed.", _profile]};
+    // One bounded owner-local worker. At most ten registered units are examined each second;
+// unchanged state does not write skills. No worker or scan is created per unit or group.
+if (isNil "Waldo_Cortex_LightingPFH") then {
+    Waldo_Cortex_LightingPFH = [{
+        private _units = missionNamespace getVariable ["Waldo_Cortex_LightingUnits",[]];
+        private _cursor = missionNamespace getVariable ["Waldo_Cortex_LightingCursor",0];
+        if (_cursor >= count _units) then {
+            _units = _units select {!isNull _x && {alive _x} && {local _x} && {!isPlayer _x}};
+            missionNamespace setVariable ["Waldo_Cortex_LightingUnits",_units];
+            _cursor = 0;
+        };
+        private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode","AUTO"];
+        private _dark = (getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold",5]);
+        for "_i" from _cursor to ((_cursor + 9) min ((count _units)-1)) do {
+            private _unit = _units select _i;
+            if (local _unit && {alive _unit} && {[_mode,_dark,hmd _unit] isNotEqualTo (_unit getVariable ["Waldo_Cortex_LightingSignature",[]])}) then {
+                [_unit] call Waldo_fnc_AIApplyProfile;
+            };
+        };
+        missionNamespace setVariable ["Waldo_Cortex_LightingCursor",_cursor+10];
+    },1] call CBA_fnc_addPerFrameHandler;
+};
+if (isServer) then {diag_log format ["[WMP AI] Unknown profile '%1'; AI rebalance was not changed.", _profile]};
     false
 };
 
@@ -144,12 +169,12 @@ if !(missionNamespace getVariable ["Waldo_AI_ACEHeadlessHandlerInstalled", false
             diag_log format ["[WMP AI] ACE HC adoption group=%1 previousOwner=%2 newOwner=%3 localUnits=%4 applied=%5 profile=%6/%7.",
                 _group, _previousOwner, _newOwner, {local _x} count units _group, _applied,
                 missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"],
-                missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]
+                missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"]
             ];
             if (_newOwner > 2) then {
                 [_group, _headlessEntity, _previousOwner, _newOwner, _applied,
                     missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"],
-                    missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]
+                    missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"]
                 ] remoteExecCall ["Waldo_fnc_AIHeadlessAdoptionResultServer", 2];
             };
         };
@@ -169,5 +194,27 @@ if (toUpperANSI (missionNamespace getVariable ["Waldo_AI_ApplyMode", "BOTH"]) !=
     } forEach allUnits;
 };
 
+// One bounded owner-local worker. At most ten registered units are examined each second;
+// unchanged state does not write skills. No worker or scan is created per unit or group.
+if (isNil "Waldo_Cortex_LightingPFH") then {
+    Waldo_Cortex_LightingPFH = [{
+        private _units = missionNamespace getVariable ["Waldo_Cortex_LightingUnits",[]];
+        private _cursor = missionNamespace getVariable ["Waldo_Cortex_LightingCursor",0];
+        if (_cursor >= count _units) then {
+            _units = _units select {!isNull _x && {alive _x} && {local _x} && {!isPlayer _x}};
+            missionNamespace setVariable ["Waldo_Cortex_LightingUnits",_units];
+            _cursor = 0;
+        };
+        private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode","AUTO"];
+        private _dark = (getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold",5]);
+        for "_i" from _cursor to ((_cursor + 9) min ((count _units)-1)) do {
+            private _unit = _units select _i;
+            if (local _unit && {alive _unit} && {[_mode,_dark,hmd _unit] isNotEqualTo (_unit getVariable ["Waldo_Cortex_LightingSignature",[]])}) then {
+                [_unit] call Waldo_fnc_AIApplyProfile;
+            };
+        };
+        missionNamespace setVariable ["Waldo_Cortex_LightingCursor",_cursor+10];
+    },1] call CBA_fnc_addPerFrameHandler;
+};
 if (isServer) then {diag_log format ["[WMP AI] %1 profile active in %2 mode.", _profile, _mode]};
 true

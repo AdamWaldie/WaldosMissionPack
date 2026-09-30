@@ -58,13 +58,13 @@ aircraft with an AI squad in cargo and give it waypoints towards the enemy (not 
 ## Orders (call where the group is local or on the server; need the pass running)
 
 ```sqf
-[group this, getPosATL this, 40] call Waldo_fnc_AIPassGarrison;          // garrison buildings within 40 m
-[group this, getMarkerPos "ridge", 45, 80] call Waldo_fnc_AIPassDefend;  // defence line facing 045, 80 m wide
-[_group] call Waldo_fnc_AIPassDefendRelease;
-[_group] call Waldo_fnc_AIPassGarrisonRelease;
-[group this, nearestBuilding this] call Waldo_fnc_AIPassClearBuilding;   // clear one building
-[group this] call Waldo_fnc_AIPassAirborneDrop;                        // passenger squad parachutes out now
-[this, west] call Waldo_fnc_AIPassRegisterRadar;                         // optional faster counter-battery acquisition
+[group this, getPosATL this, 40] call Waldo_fnc_CortexGarrison;          // garrison buildings within 40 m
+[group this, getMarkerPos "ridge", 45, 80] call Waldo_fnc_CortexDefend;  // defence line facing 045, 80 m wide
+[_group] call Waldo_fnc_CortexDefendRelease;
+[_group] call Waldo_fnc_CortexGarrisonRelease;
+[group this, nearestBuilding this] call Waldo_fnc_CortexClearBuilding;   // clear one building
+[group this] call Waldo_fnc_CortexAirborneDrop;                        // passenger squad parachutes out now
+[this, west] call Waldo_fnc_CortexRegisterRadar;                         // optional faster counter-battery acquisition
 ```
 
 `Waldo_AIPass_Garrison_DynamicAO = true` gives Dynamic AO garrisons the WMP garrison handling. With
@@ -80,18 +80,18 @@ on a unit or `group this`. `Waldo_AI_Exclude` excludes from every WMP AI change.
 
 ## Runtime and diagnostics
 
-Difficulty (set here, or live with the **AI Tuning** Zeus module / `Waldo_fnc_AIPassTuning`):
+Difficulty (set here, or live with the **AI Tuning** Zeus module / `Waldo_fnc_CortexTuning`):
 `Waldo_AIPass_BehaviourProfile` ("" follows AI Rebalance), `_Aggression`, `_Cohesion`, `_ReactionSpeed`
 (all 1 = normal), plus ranges, support, artillery, counter-battery and airborne numbers. Artillery
 support and counter-battery have separate switches and settings; per gun
-`[this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole;` (SUPPORT/COUNTER/BOTH).
+`[this, "COUNTER"] call Waldo_fnc_CortexSetArtilleryRole;` (SUPPORT/COUNTER/BOTH).
 
 Zeus: **WMP AI Control > AI Control** (every switch), **AI Tuning** (difficulty) and **AI Orders** (garrison, defend, release,
 clear, parachute out now for a squad in an aircraft, keep for Zeus, return to pass). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
-`-drills`, `-zeus`, `-support`, `-tuning`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
+`-drills`, `-zeus`, `-support`, `-tuning`, `-lambs`. RPT tag `[WMP CORTEX]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.
 
-Artillery spotters are assigned on the server with `[spotter1, true] call Waldo_fnc_AIPassSetSpotter`; false removes assignment. Opening HE aim exclusion defaults to 200 m plus 100 m buffer, with a 20 s warning pause after estimated impact. This is not an impact guarantee. Observation loss freezes the last support report and correction quality for the remaining finite bursts. The server coordinates shots across AI owners. Battery roles are server-authoritative. Headless restoration uses changed public checkpoints and ownership epochs; clear orders replay remaining progress/time. These paths require in-engine verification.
+Artillery spotters are assigned on the server with `[spotter1, true] call Waldo_fnc_CortexSetSpotter`; false removes assignment. Opening HE aim exclusion defaults to 200 m plus 100 m buffer, with a 20 s warning pause after estimated impact. This is not an impact guarantee. Observation loss freezes the last support report and correction quality for the remaining finite bursts. The server coordinates shots across AI owners. Battery roles are server-authoritative. Headless restoration uses changed public checkpoints and ownership epochs; clear orders replay remaining progress/time. These paths require in-engine verification.
 
 Dedicated artillery setup modules in WMP AI Control assign/remove the exact spotter, set the exact gun role, and register/update/remove an existing radar for a selected side. They preserve feature switches. AI Orders now contains tactical and exclusion controls only.

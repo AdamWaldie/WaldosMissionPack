@@ -21,6 +21,12 @@
 
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 missionNamespace setVariable ["Waldo_AI_RebalanceActive", false, isServer];
+if !(isNil "Waldo_Cortex_LightingPFH") then {
+    [Waldo_Cortex_LightingPFH] call CBA_fnc_removePerFrameHandler;
+    Waldo_Cortex_LightingPFH = nil;
+};
+missionNamespace setVariable ["Waldo_Cortex_LightingUnits",[]];
+missionNamespace setVariable ["Waldo_Cortex_LightingCursor",0];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_AIRebalance_Enable", false, true];
     [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];

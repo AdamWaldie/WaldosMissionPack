@@ -6,6 +6,20 @@ PR 151 remains draft pending in-engine acceptance. The review began at `1f88659`
 convoy changes and addresses the source-level integration blockers. It also reviews the newer
 remote `036942e` blocker fixes and reconciles their intent with the expanded implementation.
 
+## Current acceptance status
+
+The implementation is named Cortex throughout its function API and source directory. Ninety-nine `Waldo_fnc_Cortex...` functions replace the previous public names; legacy aliases retain existing mission calls. Configuration and state keys remain compatible.
+
+Cortex Control now combines feature switches and tuning in one window. Each page explains its purpose, requirements and setup. The window distinguishes saved state from pending changes. Purpose modules require an explicit eligible target, preserve an existing order when a new order cannot run, and report refusal reasons. Hand-back releases posted orders immediately. Server revision checks reject stale settings submissions.
+
+The dedicated audit `runtime-20260926-123545` completed its server and client suites with zero findings. It exercised infantry orders, adoption and acknowledged orders on both headless clients, server return, movement of all three convoy vehicles after controller startup, cargo unloading with crew retention, and a finite two-round artillery burst. The client exercised all eight pages, draft retention, Cancel, authoritative Apply and reservation cleanup. All 383 repository tests and ten static gates passed. These results do not establish mouse usability, every layout or the complete combat matrix.
+
+The ownership overlay now reads expected and observed owners from one snapshot and marks pending transfers separately. This addresses the transient mismatch display seen during the audit; a completed transfer still needs its owner acknowledgement.
+
+The expanded audit runtime-20260926-124153 passed real counter-battery acquisition and finite response checks both with and without radar. It failed CNV-08 destination halt and CNV-09 destination unloading. The focused runtime-20260926-124827 reproduced those failures with all three vehicles stopped short. Convoy recovery changes are undergoing a fresh focused run; neither failed run is accepted. The repository suite now has 387 passing tests, including four audit-report tests. Other engine coverage still required: ACE-initiated handoff, disconnect during pending work, joining client replay, moving and pinned ambushes, spotter loss and target relocation, exact ZEN target/settings handling, themes, aspect ratios and physical input. Mechanized overwatch, casualty assignment and prisoner recovery remain proposals, not implemented features.
+
+The sections below retain the implementation record. Earlier test counts describe earlier revisions.
+
 ## Changes and intent
 
 - **Artillery warning:** opening HE uses a deliberate 300 m offset plus report error. At most eight
@@ -97,7 +111,7 @@ The audit builder ran before scanners. Git whitespace validation passed. These c
 
 ## Remaining merge blockers: engine acceptance
 
-No Arma session was launched in this follow-up. Source fixes do not establish correct live behaviour.
+At this earlier review stage, no Arma session had been launched. The current acceptance status above supersedes that historical boundary.
 Use `launch_pr_review_audit.ps1`, default 3840x2160 and `-noBattlEye`, and require actual VR mission
 entry plus fresh RPT initialization evidence. Exercise:
 
@@ -117,7 +131,7 @@ entry plus fresh RPT initialization evidence. Exercise:
 
 Agent-driven launch permission is required by AGENTS.md: “Agent-driven launches write a disposable
 mission into the installed Arma directory and open a desktop application, so obtain the required
-permission.” That permission request remains pending. Static work proceeds independently.
+permission.” The user subsequently authorized launch, restart of the audit processes and automatic mission entry for Cortex audits.
 
 ## Dedicated Zeus AI controls
 
@@ -190,9 +204,80 @@ Merged main `d5e26d2` into the PR branch, retaining its logistics, ACE vehicle-s
 Resolved convoy conflicts in favour of the current-owner controller and exact-target Zeus workflow;
 combined the paradrop headers and retained typed Dynamic AO documentation. The combined palette has
 82 modules. The merged branch passed 369 repository tests, including 43 Smart AI/modularity contracts.
-Engine acceptance and the requested Control/Tuning consolidation remain outstanding.
+At this merge checkpoint, engine acceptance and Control/Tuning consolidation were outstanding. The current status above records the subsequent work.
 
 All ten static gates passed after the merge: 1,251 SQF files, 82 Zeus modules, wiki/configuration
 contracts, UI checks and performance regression. The performance scan remains at 95 findings
 (10 high, 85 medium), with no new high-severity recurring patterns. The audit fixture was rebuilt
-before scanners. No in-engine validation has been performed.
+before scanners. No in-engine validation had been performed at that checkpoint.
+
+### Runtime startup repair and revised controls
+
+The palette now combines AI Control and Tuning on eight purpose pages and splits infantry, airborne and group handover orders into focused modules (85 modules total). Complete ordered settings revisions precede local worker changes. Legacy positional controls share server validation. Disabling grenade evasion removes its projectile handler.
+
+The first dedicated audit with two headless clients exposed invalid `bitAnd` expressions in launcher capability and artillery ammunition selection, an executable override appended after the AI configuration return value, and player-loadout startup running on HCs. The configuration failure prevented the shared-ready flag and therefore the authoritative settings handshake. Repairs use numeric bit tests, keep the override in the shared data table, guard player startup with `hasInterface`, and report nil configuration returns without cascading an undefined-variable error. The validator now rejects `bitAnd`.
+
+The repaired source passed 372 regression tests. Live acceptance is being repeated against a rebuilt disposable mission; the original run is a failed test, not acceptance evidence.
+
+### Cortex custom control interface
+
+Replaced the settings-page dialog chain with Cortex Control: one modal window, purpose navigation, scrollable settings with inline help, pending edits across tabs, Apply changed values, and Cancel. It uses the existing named server validation and settings broadcasts; script identifiers stay compatible. ZEN now groups the shorter purpose-module names under WMP Cortex. The interface adds no per-frame or polling worker. Live visual and interaction acceptance remains outstanding.
+
+### Master shutdown cancels explicit orders
+
+The physical lifecycle audit reproduced a stale-order bug: soldiers obeyed an ordinary waypoint while
+Cortex was disabled, then travelled 64.154 m back toward their previous defence assignment after restart.
+Master shutdown now invokes the existing owner-local defence, garrison and clear-building releases.
+This clears public assignments and restores Cortex-owned restrictions before rediscovery can replay them.
+Completed merges and surrenders remain unchanged.
+
+Fresh runtime `20260927-073245` passed all five server-owned defence lifecycle checks, including physical
+ordinary movement while disabled, no stale-order return after restart (maximum marker distance 8.885 m),
+and physical arrival under a fresh defence order. Garrison shutdown, HC migration, JIP and explicit Zeus
+handover variants remain unaccepted. The original failed runtime `20260927-072844` is retained.
+Static regression: 412 tests passed, 1,257 SQF files with zero errors, 113 wiki pages and 85 Zeus modules.
+
+The additive lifecycle run `20260927-073840` repeated the original server case and added both WMP
+headless owners. Each owner executed real defence movement, cleared assignments on master shutdown,
+and accepted a fresh defence order after restart. Ordinary waypoint movement was checked after
+returning each squad to the server while disabled. Neither squad resurrected the old order. This
+covers WMP migration for this defence sequence; ACE-managed transfer, HC disconnect and JIP remain
+separate acceptance work.
+
+### Aircraft defence physical comparison
+
+Added a native-AI comparison alongside the existing enabled aircraft test. Both flights receive a
+real AA missile following natural acquisition. Runtime `20260927-074821` measured 0.217 m native
+versus 34.076 m Cortex departure from the event-time trajectory over two seconds; both retained crew
+and ground clearance. Native AI also released flares (five recorded events versus three enabled),
+so this proves the scoped evasive movement response, not the Cortex origin of the flare releases.
+The fixture sets the managed-aircraft eligibility marker; actual gunship-service creation, low-altitude
+refusal, ammunition exhaustion, owner changes and cancellation remain acceptance work.
+
+### Scheduler physical workload
+
+Runtime `20260927-075211` executed the pending twelve-squad scheduler fixture at the minimum 0.2 ms
+soft budget. All jobs began 0.167 seconds after submission, all soldiers physically covered the 80 m
+route and arrived within 0.95 m, and every job completed exactly once. The fixture uses cheap movement
+jobs: this verifies the server queue path but does not establish heavy-load performance, budget
+saturation, distant update tiers, FPS throttling or HC workload behaviour.
+
+### Coordinated assault live evidence — 27 September
+
+Runtime `20260927-081101` completed 21 checks with two failures and no SQF errors. Physical screening kept both helpers available; both rallied and then advanced around the obstacle on opposite sides. Not every soldier reached the 50 m objective radius, so coordinated assault remains unaccepted. Earlier fixture failures remain recorded. The next run reports individual travel, remaining distance, command and support lease state; side geometry is measured independently without relaxing arrival. Cross-owner, cancellation and route restoration still require live validation.
+
+Active reinforcement and coordinated-assault assignments now reject new independent flank/advance drills. The guards run before movement or attack-state mutation. This closes a source-confirmed competing-controller path; a combined-features live test is still required.
+
+Runtime `20260927-081755` confirms both valid assault leases and opposite-side movement, but two soldiers remained 63–66 m from the objective at the deadline. The finite assault destination now uses MOVE with a 10 m completion radius instead of an open-ended SAD waypoint with 20 m radius. Normal combat reactions remain enabled. This change requires a fresh live retest; the failed result is retained.
+
+The coordinated QA template now adds disable/release checks followed by at least 50 m of actual travel under new ordinary orders for every helper. Opposite-side validation also requires every helper to have advanced at least 60 m, preventing the initial rally layout alone from passing it. These added cases await a rebuilt live run.
+
+Runtime `20260927-082342` contradicts acceptance of the finite approach change: one squad arrived at 26–30 m, the other remained 71–127 m away with active MOVE commands and valid assault leases. Arrival remains failed. Cancellation and physical handover checks are added for the next run, without removing any earlier checks.
+
+Source review found that contact entry imposed COMBAT on active coordinated responders. It now leaves their behaviour to native combat reactions while the finite assault order is active; AUTOCOMBAT is not disabled. This targets forced whole-squad combat bounding during the approach and remains a candidate fix pending live verification.
+
+Runtime `20260927-082929` passed support assignment and temporary-waypoint cleanup after disable, but failed physical travel under fresh ordinary orders. Assault arrival and opposite-side geometry also failed. The test now demonstrates why cleanup flags alone are insufficient; the forced-COMBAT candidate will be checked against the same unchanged physical thresholds.
+
+Runtime `20260927-083701` passed coordinated arrival and opposite-side movement after removing forced COMBAT (all six travelled 166–182 m and reached within 50 m). Disable cleanup passed, but subsequent ordinary-order travel still failed. The server case remains; a separate-HC responder case using WMP migration is now added. Fresh ordinary orders are issued after return to server, so HC Zeus delivery is not claimed.
+
+Performance acceptance now explicitly targets at least 100 six-unit groups against matched Cortex-off workloads, including dedicated-server and WMP/ACE HC variants. The user confirmed the 5% median / 10% p95 overhead budget, with no stalled AI jobs. The current twelve single-unit scheduler test is explicitly insufficient; the scale matrix remains unimplemented and unverified. See `cortexQA/PERFORMANCE.md`.

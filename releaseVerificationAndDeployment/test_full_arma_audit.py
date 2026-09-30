@@ -901,6 +901,8 @@ class FullAuditTests(unittest.TestCase):
             bad = Path(directory) / "bad.sqf"
             bad.write_text("_control ctrlSetStyle 1;\n", encoding="utf-8")
             self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
+            bad.write_text("_flags bitAnd 4;\n", encoding="utf-8")
+            self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
             comment_only = Path(directory) / "comment.sqf"
             comment_only.write_text("// ctrlSetStyle is invalid\n", encoding="utf-8")
             self.assertEqual(SQF_VALIDATOR.check_sqf_syntax(str(comment_only)), 0)
@@ -1876,7 +1878,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_ImprovedHelicopterLanding_Active', tracker)
         self.assertIn('[_aircraft] call _isLandingOrder', tracker)
         self.assertIn('"LANDING_PRIORITY"', correction)
-        self.assertIn('_aircraft addForce [[0, 0, -(getMass _aircraft)', correction)
+        self.assertIn('_aircraft addForce [_change vectorMultiply getMass _aircraft', correction)
+        self.assertIn('_change set [2,-_deltaV]', correction)
+        self.assertIn('(_horizontal vectorDotProduct _toward) > 0', correction)
+        self.assertIn('min (_maximumAcceleration*_elapsed)', correction)
         self.assertIn('Waldo_HelicopterDeceleration_Active", false, true', landing)
         self.assertNotIn('setVelocity', correction)
         self.assertNotIn('flyInHeight', correction)
@@ -2262,7 +2267,9 @@ class FullAuditTests(unittest.TestCase):
             generated_server.index('["SERVER"] call Waldo_fnc_LoadFeatureConfigs;'),
         )
         pre_server = (mission / "auditPreInitServer.sqf").read_text(encoding="utf-8")
-        self.assertIn('"B_Parachute"', pre_server)
+        # Static-line insertion requires a vehicle, not the HALO backpack class.
+        self.assertIn('["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]', pre_server)
+        self.assertNotIn('["WALDO_STATIC_STATICCHUTE", "B_Parachute"', pre_server)
         self.assertIn('"Waldo_SafeStart_AutoStart", false', pre_server)
         self.assertIn('["Waldo_Economy_Preset", "MEDIUM", true]', pre_server)
         for side_catalog in ('["WEST", "NATO"]', '["EAST", "CSAT"]', '["GUER", "AAF"]'):
@@ -2931,7 +2938,10 @@ class FullAuditTests(unittest.TestCase):
             / "FullArmaAudit.VR"
             / "runClientAudit.sqf"
         ).read_text(encoding="utf-8")
-        self.assertIn('_coreCount == 52 && {_economyCount == 19}', client_audit)
+        self.assertIn('_coreCount == _expected && {_economyCount == 19}', client_audit)
+        self.assertIn('Waldo_Hazard_Enable', client_audit)
+        self.assertIn('Waldo_Headless_Enable', client_audit)
+        self.assertIn('private _expected=49;', client_audit)
 
     def test_party_actions_are_ace_first_with_vanilla_fallback(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
@@ -3621,7 +3631,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('addMissionEventHandler ["Draw3D"', overlay)
         self.assertNotIn('groupOwner _group', overlay)
         self.assertIn('Waldo_Headless_GroupOwnerSnapshot', overlay)
-        self.assertIn('groupOwner _x', snapshot)
+        self.assertIn('groupOwner _group', snapshot)
         self.assertNotIn('setVariable ["Waldo_Headless_GroupOwnerSnapshot"', snapshot)
         self.assertIn('Waldo_Headless_GroupOwnerSnapshot', snapshot_setter)
         self.assertIn('missionNamespace setVariable ["Waldo_Headless_Debug", false, true]', init_server)
@@ -3959,9 +3969,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_AI_ProfileDisplayNames", mission_config + runtime)
         self.assertIn("Waldo_AI_NightNVGMultipliers", apply_profile)
         self.assertIn("Waldo_AI_NightUnaidedMultipliers", apply_profile)
-        self.assertIn('if (hmd _unit != "")', apply_profile)
+        self.assertIn('"NVG" in getArray', apply_profile)
         self.assertIn("(_unit skill _x) *", apply_profile)
-        self.assertIn('["Waldo_AIRebalance_Mode", "DAY"]', mission_config)
+        self.assertIn('["Waldo_AIRebalance_Mode", "AUTO"]', mission_config)
         self.assertIn('["Waldo_AI_ApplyMode", "BOTH"]', mission_config)
         self.assertNotIn("Waldo_AI_Mode", mission_config + profile_init + apply_profile + runtime)
         self.assertNotIn('["Waldo_AI_Profile",', profile_init + apply_profile)

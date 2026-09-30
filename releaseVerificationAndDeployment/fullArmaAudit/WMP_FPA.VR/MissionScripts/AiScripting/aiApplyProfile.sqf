@@ -19,7 +19,7 @@
  * [_unit] call Waldo_fnc_AIApplyProfile;
  * Result: the eligible local AI receives the currently selected WMP skill layers.
  *
- * Current callers: AIRebalanceInit for existing/new AI and each unit's Local ownership handler.
+ * Current callers: AIRebalanceInit for existing/new AI, its bounded lighting worker and each unit's Local ownership handler.
  */
 
 params [["_unit", objNull, [objNull]]];
@@ -64,11 +64,13 @@ private _applySkills = {
 
 private _profiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
 private _profileKey = missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"];
-private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"];
+private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"];
 [_unit, _profiles getOrDefault [_profileKey, createHashMap]] call _applySkills;
 
 private _roleText = toUpperANSI (getText (configFile >> "CfgVehicles" >> typeOf _unit >> "textSingular"));
 private _role = [_roleText, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"] call BIS_fnc_filterString;
+
+private _hasNVG = "NVG" in getArray (configFile >> "CfgWeapons" >> hmd _unit >> "visionMode");
 
 // Preserve the established night combat tiers while correcting the old inverted NVG sensing values.
 if (_profileKey == "LEGACY" && {_mode == "NIGHT"}) then {
@@ -115,9 +117,9 @@ private _factionOverrides = missionNamespace getVariable ["Waldo_AI_FactionOverr
 private _roleOverrides = missionNamespace getVariable ["Waldo_AI_RoleOverrides", createHashMap];
 [_unit, _roleOverrides getOrDefault [_role, createHashMap]] call _applySkills;
 
-if (_mode == "NIGHT" && {(getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold", 5])}) then {
+if (_mode in ["AUTO","NIGHT"] && {(getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold", 5])}) then {
     if (_profileKey == "LEGACY") then {
-        private _spot = if (hmd _unit != "") then {
+        private _spot = if (_hasNVG) then {
             missionNamespace getVariable ["Waldo_AI_NightSpotWithNVG", 0.55]
         } else {
             missionNamespace getVariable ["Waldo_AI_NightSpotWithoutNVG", 0.12]
@@ -127,7 +129,7 @@ if (_mode == "NIGHT" && {(getLighting select 1) <= (missionNamespace getVariable
     } else {
         // Night profiles degrade the AI itself. Assigned NVG/HMD equipment offsets, but does not
         // completely remove, the low-light penalty. Mission makers can replace either map.
-        private _multipliers = if (hmd _unit != "") then {
+        private _multipliers = if (_hasNVG) then {
             missionNamespace getVariable ["Waldo_AI_NightNVGMultipliers", createHashMapFromArray [
                 ["aimingSpeed", 0.90], ["aimingAccuracy", 0.85], ["aimingShake", 0.90],
                 ["spotTime", 0.78], ["spotDistance", 0.75], ["commanding", 0.90],
@@ -159,4 +161,10 @@ if (_variance > 0) then {
         _unit setSkill [_x, ((_current + (_offsets select _forEachIndex)) max 0) min 1];
     } forEach _skillNames;
 };
+_unit setVariable ["Waldo_Cortex_LightingSignature", [
+    _mode, (getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold",5]), hmd _unit
+]];
+private _lightingUnits = missionNamespace getVariable ["Waldo_Cortex_LightingUnits",[]];
+_lightingUnits pushBackUnique _unit;
+missionNamespace setVariable ["Waldo_Cortex_LightingUnits",_lightingUnits];
 true

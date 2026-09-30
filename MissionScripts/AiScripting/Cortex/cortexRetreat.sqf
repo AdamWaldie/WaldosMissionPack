@@ -1,0 +1,96 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Pulls a broken squad back, away from the enemy, under smoke.
+ *
+ * The retreat point is Waldo_AIPass_Morale_RetreatDistance (scaled by the behaviour profile's
+ * retreatScale) from the leader, directly away from the last known enemy position, turning up to 60
+ * degrees either way to avoid water. The squad moves through an inserted waypoint
+ * (Waldo_fnc_CortexGroupMove) at FULL speed, so its own waypoints resume afterwards. Soldiers holding
+ * ground from a drill fall back with it. One soldier throws smoke towards the enemy, and with
+ * artillery support and Waldo_AIPass_ArtillerySmoke_Enable on, a friendly battery selected by the server across owners
+ * lays a smoke screen between the squad and the enemy, never within 50 m of friendlies. Any flank drill ends because the phase
+ * leaves CONTACT. Individual attack assignments are suspended and behaviour set to AWARE for
+ * withdrawal. Attack, behaviour and speed changes are recorded for CALM, release and ownership cleanup.
+ * Locality and authority: call where the group is local; server selects and dispatches supporting artillery.
+ * Repeat/JIP: caller phase prevents repeated entry; artillery mission tokens persist through owner changes.
+ *
+ * Arguments:
+ * 0: group <GROUP, default grpNull>
+ * 1: state <HASHMAP, default empty HashMap>
+ *
+ * Return Value:
+ * Boolean - true when the squad started retreating
+ *
+ * Example:
+ * [_group, _state] call Waldo_fnc_CortexRetreat;
+ * Result: the survivors fall back 200 m and regroup.
+ *
+ * Current caller: Waldo_fnc_CortexGroupTick.
+ */
+
+params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]]];
+private _leader = leader _group;
+private _enemyPos = _state getOrDefault ["enemyPos", []];
+if (count _enemyPos < 2) exitWith {false};
+private _distance = (missionNamespace getVariable ["Waldo_AIPass_Morale_RetreatDistance", 200]) * ([_group, "retreatScale"] call Waldo_fnc_CortexProfile);
+private _away = _enemyPos getDir _leader;
+private _point = [];
+{
+    private _candidate = (getPosATL _leader) getPos [_distance, _away + _x];
+    if (!surfaceIsWater _candidate) exitWith {_point = _candidate};
+} forEach [0, 30, -30, 60, -60];
+if (_point isEqualTo []) exitWith {false};
+// Finish any manoeuvre before acquiring its attack-setting restoration record.
+if (count (_state getOrDefault ["drill",createHashMap]) > 0) then {
+    [_group,_state,"RETREAT"] call Waldo_fnc_CortexFlankEnd;
+};
+// Withdrawals, calm restoration and external handovers retire the shared assignment.
+private _supportLease=_group getVariable ["Waldo_AIPass_SupportLease",[]];
+if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_supportLease select 0)}) then {
+    [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
+};
+{if (local _x) then {_x enableAI "PATH"}} forEach (_state getOrDefault ["supportHeld",[]]);
+{_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
+if (!("baseAttack" in _state)) then {
+    _state set ["baseAttack",attackEnabled _group];
+    _state set ["attackChanged",attackEnabled _group];
+};
+_group enableAttack false;
+// A withdrawal must leave individual attack manoeuvres and combat formation planning.
+// Normal weapon engagement remains available; calm/release restores captured settings.
+if (behaviour _leader != "AWARE") then {
+    if !(_state getOrDefault ["behaviourChanged",false]) then {_state set ["baseBehaviour",behaviour _leader]};
+    _state set ["behaviourChanged",true];
+    _group setBehaviour "AWARE";
+};
+[_group, _point, 30] call Waldo_fnc_CortexGroupMove;
+if (speedMode _group != "FULL") then {
+    if !(_state getOrDefault ["speedChanged", false]) then {_state set ["baseSpeed", speedMode _group]};
+    _state set ["speedChanged", true];
+    _group setSpeedMode "FULL";
+};
+{if (alive _x && {local _x}) then {_x doFollow _leader}} forEach (_state getOrDefault ["holders", []]);
+_state set ["holders", []];
+private _smokers = (units _group) select {alive _x && {local _x} && {vehicle _x == _x}};
+// Use one available carried smoke, rather than selecting a possibly empty carrier.
+{
+    if ([_x, _enemyPos, "SMOKE"] call Waldo_fnc_CortexThrowGrenade) exitWith {};
+} forEach _smokers;
+// A communicating retreating squad asks server-coordinated artillery for smoke; no radio item is required.
+if ((missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false]) && {[_group,"Waldo_AIPass_ArtillerySmoke_Enable", true] call Waldo_fnc_CortexFeatureEnabled}
+    && {[_leader] call Waldo_fnc_CortexCanTransmit}) then {
+    private _screen = _enemyPos getPos [((_enemyPos distance2D _leader) * 0.4) min 80, _enemyPos getDir _leader];
+    private _side = side _group;
+    private _friendlyNear = (_screen nearEntities [["CAManBase", "LandVehicle"], 50]) findIf {
+        private _otherSide = side group _x;
+        alive _x && {_otherSide == civilian || {_side getFriend _otherSide >= 0.6}}
+    } >= 0;
+    if (!_friendlyNear) then {
+        [objNull,_screen,0,"SMOKE",-1,-1,"SUPPORT",objNull,objNull,_group] call Waldo_fnc_CortexArtilleryFire;
+    };
+};
+_state set ["phase", "RETREAT"];
+_state set ["phaseStart", time];
+missionNamespace setVariable ["Waldo_AIPass_Retreats", (missionNamespace getVariable ["Waldo_AIPass_Retreats", 0]) + 1];
+if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP CORTEX] %1 RETREAT to %2", _group, _point]};
+true

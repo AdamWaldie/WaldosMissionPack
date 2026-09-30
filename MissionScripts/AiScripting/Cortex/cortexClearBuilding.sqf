@@ -1,0 +1,408 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Orders an AI group to clear a building room by room.
+ *
+ * Teams of one or two use every available soldier. Larger teams leave the leader outside and form
+ * up to three clearing pairs; remaining members provide exterior security. Building positions are
+ * ordered into a continuous nearest-neighbour route from the entrance and split into contiguous
+ * sectors. Within each pair, one point soldier advances while the other holds the previous room or
+ * an offset entry position; they exchange roles after each visited position. This prevents two AI
+ * from fighting over one exact path node while still moving the pair continuously through rooms. A position is visited only
+ * when a soldier physically reaches it within 1.5 m. Each pair has an independent progress watchdog,
+ * bounded forced replans and failure rotation. A casualty or incapacitation in a clearing pair is
+ * replaced from the squad's uncommitted exterior-security members; without a replacement, the
+ * surviving partner continues alone. Timeouts never clear rooms.
+ * After all rooms are visited or attempted, the clearing element exits through the building entry
+ * to an exterior release point before formation control is restored. This explicit egress avoids
+ * abandoning soldiers on interior path nodes and provides the same entry-through-exit primitive used
+ * by later movement actions. The order has a progress-renewed safety lease rather than a fixed performance deadline. The group is set to COMBAT for the clear, and its previous
+ * behaviour is restored afterwards. While clearing, the squad does not flank, retreat or search, and
+ * is not sent to reinforce others.
+ * With LAMBS Waypoints loaded and Waldo_AIPass_LambsMode "SPLIT", the order is handed to
+ * lambs_wp_fnc_taskCQB instead (disable with the "useLambs" option). The WMP clear needs the Smart AI
+ * Pass running (Waldo_AIPass_Enable); the LAMBS hand-over does not.
+ * Locality and authority: call where the group is local, or on the server, which forwards to the
+ * owner. Non-server, non-owner copies do nothing.
+ *
+ * Review contract: Local job generations prevent replaced jobs from issuing orders. Eligibility is checked before dispatch and on each step. Public visited and unreachable position indices, retry/failure evidence, progress-renewed deadline and original behaviour survive handover; local movement assignments are rebuilt.
+ *
+ * Arguments:
+ * 0: group <GROUP or OBJECT> - the group, or a unit in it
+ * 1: target <OBJECT or ARRAY> - the building, or a position (the nearest building is used)
+ * 2: options <HASHMAP> (optional) - useLambs (default true), radius for LAMBS (default 50)
+ *
+ * Return Value:
+ * Boolean - true when the order was applied or forwarded
+ *
+ * Example:
+ * [group this, nearestBuilding this] call Waldo_fnc_CortexClearBuilding;
+ * Result: an entry element attempts successive building positions; unreachable positions leave an INCOMPLETE result.
+ *
+ * Current callers: mission scripts and the AI Orders ZEN module.
+ */
+
+params [["_group", grpNull, [grpNull, objNull]], ["_target", objNull, [objNull, []]], ["_options", createHashMap, [createHashMap]]];
+if (_group isEqualType objNull) then {_group = group _group};
+if (isNull _group) exitWith {false};
+if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
+if (!local _group) exitWith {
+    if (isServer) then {[_group, _target, _options] remoteExecCall ["Waldo_fnc_CortexClearBuilding", groupOwner _group]; true} else {false};
+};
+if !([_group] call Waldo_fnc_CortexIsEligible) exitWith {false};
+private _building = if (_target isEqualType objNull) then {_target} else {nearestBuilding _target};
+if (isNull _building) exitWith {if (_options getOrDefault ["resume", false]) then {[_group] call Waldo_fnc_CortexClearRelease}; false};
+if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
+    && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "SPLIT"}) exitWith {
+    [_group,false] call Waldo_fnc_CortexReleaseGroup;
+    [_group] call Waldo_fnc_CortexClearRelease;
+    if ((_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
+    if ((_group getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
+    [_group, getPosATL _building, _options getOrDefault ["radius", 50]] spawn lambs_wp_fnc_taskCQB;
+    diag_log format ["[WMP CORTEX] %1 clear building handed to LAMBS (%2)", _group, typeOf _building];
+    true
+};
+if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
+    diag_log format ["[WMP CORTEX] %1 clear building refused: the Smart AI Pass is not running on this machine.", _group];
+    false
+};
+private _positions = _building buildingPos -1;
+if (_positions isEqualTo []) exitWith {false};
+private _leader = leader _group;
+private _available = (units _group) select {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {vehicle _x == _x}};
+private _team = if (count _available <= 2) then {_available} else {_available select {_x != _leader}};
+if (_team isEqualTo []) exitWith {false};
+// A small building needs an entry element, not one soldier parked at every slot.
+// Leave spare squad members with their leader; bound interior workers by available space.
+// Keeping fewer workers than positions lets each worker advance through successive positions.
+private _entryCapacity = ((((count _positions) min 3) * 2) max 2) min 6;
+_team = _team select [0,_entryCapacity];
+[_group,false] call Waldo_fnc_CortexReleaseGroup;
+if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
+if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
+private _previous = _group getVariable ["Waldo_AIPass_ClearOrder", []];
+private _resume = _options getOrDefault ["resume", false] && {_previous isNotEqualTo []} && {(_previous select 0) == _building};
+private _baseBehaviour = if (_previous isEqualTo []) then {behaviour _leader} else {_previous select 3};
+private _cleared = if (_resume) then {+(_previous select 1)} else {[]};
+private _unreachable = if (_resume) then {+(_previous param [4, []])} else {[]};
+private _retryCounts = if (_resume) then {+(_previous param [5, []])} else {[]};
+private _failedBy = if (_resume) then {+(_previous param [6, _positions apply {[]}])} else {_positions apply {[]}};
+if (count _failedBy != count _positions) then {_failedBy = _positions apply {[]}};
+private _lastProgressAt = if (_resume) then {_previous param [7,serverTime]} else {serverTime};
+private _deadline = if (_resume) then {_previous select 2} else {serverTime + 240};
+if (serverTime >= _deadline) exitWith {[_group] call Waldo_fnc_CortexClearRelease; false};
+// Replacing a clear must retire its engine movement orders as well as its queued job.
+// Validate the new building/team first; an invalid request must preserve the current order.
+// HC resume keeps the published progress/deadline rather than starting a new episode.
+if (!_resume && {_previous isNotEqualTo []}) then {[_group] call Waldo_fnc_CortexClearRelease};
+_group setVariable ["Waldo_AIPass_ClearOrder", [_building, _cleared, _deadline, _baseBehaviour, _unreachable, _retryCounts, _failedBy, _lastProgressAt], true];
+_group setVariable ["Waldo_AIPass_ClearApplied", true];
+_group setVariable ["Waldo_Cortex_ClearResult",["RUNNING",count _cleared,count _positions],true];
+_group setVariable ["Waldo_Cortex_ClearEvidence",nil,true];
+_group setVariable ["Waldo_Cortex_ClearReinforcements",[],true];
+private _generation = (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1;
+_group setVariable ["Waldo_AIPass_ClearGeneration", _generation];
+_group setVariable ["Waldo_AIPass_ClearBuilding", true, true];
+_group setBehaviour "COMBAT";
+private _entryRoute=_building buildingExit 0;
+if (_entryRoute isEqualTo [0,0,0]) then {_entryRoute=[]};
+// Build a stable continuous route rather than repeatedly choosing whichever marker is nearest
+// to each individual. This prevents criss-crossing and gives every pair a clear-through sector.
+private _routeOrder=[];
+private _remaining=[];
+for "_index" from 0 to ((count _positions)-1) do {_remaining pushBack _index};
+private _routeCursor=if (_entryRoute isEqualTo []) then {getPosATL _building} else {_entryRoute};
+while {_remaining isNotEqualTo []} do {
+    private _bestSlot=0;
+    private _bestDistance=1e9;
+    {
+        private _distance=_routeCursor distance2D (_positions select _x);
+        if (_distance < _bestDistance) then {_bestSlot=_forEachIndex; _bestDistance=_distance};
+    } forEach _remaining;
+    private _positionIndex=_remaining deleteAt _bestSlot;
+    _routeOrder pushBack _positionIndex;
+    _routeCursor=_positions select _positionIndex;
+};
+private _pairs=[];
+for "_index" from 0 to ((count _team)-1) step 2 do {_pairs pushBack (_team select [_index,2])};
+private _pairRoutes=[];
+private _routeOffset=0;
+private _routeBase=floor ((count _routeOrder)/(count _pairs));
+private _routeRemainder=(count _routeOrder) mod (count _pairs);
+for "_index" from 0 to ((count _pairs)-1) do {
+    private _routeCount=_routeBase+([0,1] select (_index < _routeRemainder));
+    _pairRoutes pushBack (_routeOrder select [_routeOffset,_routeCount]);
+    _routeOffset=_routeOffset+_routeCount;
+};
+private _pairStates=[];
+{_pairStates pushBack [0,_entryRoute isNotEqualTo [],_x apply {getPosATL _x},time,0,-1,time+(_forEachIndex*2),0,-1]} forEach _pairs;
+[{
+    params ["_job"];
+    private _group = _job get "group";
+    if (isNull _group || {!local _group}) exitWith {-1};
+    if ((_group getVariable ["Waldo_AIPass_ClearGeneration", -1]) != (_job get "generation")) exitWith {-1};
+    private _finish = {
+        _group setVariable ["Waldo_Cortex_ClearEvidence",[+(_job get "cleared"),+(_job get "unreachable"),+(_job get "retryCounts"),+(_job get "failedBy"),_job get "deadline",_job get "lastProgressAt"],true];
+        if (!isNull _group) then {
+            private _leader = leader _group;
+            {if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {_x != _leader}) then {_x commandFollow _leader}} forEach (_job get "team");
+            if (behaviour _leader == "COMBAT") then {_group setBehaviour (_job get "baseBehaviour")};
+            _group setVariable ["Waldo_AIPass_ClearBuilding", nil, true];
+            _group setVariable ["Waldo_Cortex_ClearEgress",nil,true];
+            _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
+            _group setVariable ["Waldo_AIPass_ClearApplied", nil];
+        };
+        private _result = ["INCOMPLETE","COMPLETE"] select (count (_job get "cleared") == count (_job get "positions") && {!(_job getOrDefault ["egressFailed",false])});
+        _group setVariable ["Waldo_Cortex_ClearResult",[_result,count (_job get "cleared"),count (_job get "positions")],true];
+        diag_log format ["[WMP CORTEX] %1 clear building %2 (%3 of %4 positions)",_group,_result,count (_job get "cleared"),count (_job get "positions")];
+        -1
+    };
+    if (isNull _group || {!local _group} || {!(_group getVariable ["Waldo_AIPass_ClearBuilding", false])}
+        || {!alive (_job get "building")} || {!(missionNamespace getVariable ["Waldo_AIPass_Active", false])}
+        || {!([_group] call Waldo_fnc_CortexIsEligible)}) exitWith {call _finish};
+    if ((_job getOrDefault ["phase","CLEAR"]) == "EGRESS") exitWith {
+        private _egressTarget=_job get "egressTarget";
+        private _active=(_job get "team") select {alive _x && {local _x} && {!isPlayer _x}
+            && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}};
+        private _arrived=_active findIf {_x distance2D _egressTarget > 5} < 0;
+        if (_arrived || {_active isEqualTo []} || {time >= (_job get "egressDeadline")}) then {
+            if (!_arrived && {_active isNotEqualTo []}) then {
+                _job set ["egressFailed",true];
+                diag_log format ["[WMP CORTEX] %1 clear egress incomplete (%2 still inside)",_group,{_x distance2D _egressTarget > 5} count _active];
+            };
+            call _finish
+        } else {
+            {
+                private _openedDoor=[_x,_job get "building"] call Waldo_fnc_CortexBuildingDoor;
+                if (_openedDoor || {currentCommand _x in ["","STOP"]} || {time >= (_job get "egressReissue")}) then {
+                    _x doMove _egressTarget;
+                    _x setDestination [_egressTarget,"LEADER PLANNED",true];
+                };
+            } forEach _active;
+            if (time >= (_job get "egressReissue")) then {_job set ["egressReissue",time+6]};
+            1.5
+        }
+    };
+    private _positions = _job get "positions";
+    private _cleared = _job get "cleared";
+    private _unreachable = _job get "unreachable";
+    private _assigned = _job get "assigned";
+    private _retryCounts = _job get "retryCounts";
+    private _failedBy = _job get "failedBy";
+    private _retryChanged = false;
+    private _pairs=_job get "pairs";
+    private _pairStates=_job get "pairStates";
+    // Refill casualties from soldiers that were deliberately left on exterior security. This is
+    // evaluated in the existing building job, so it adds no per-unit scheduler or event-handler cost.
+    private _reserved=[];
+    {_reserved append _x} forEach _pairs;
+    private _leader=leader _group;
+    private _reserves=(units _group) select {
+        alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
+        && {vehicle _x == _x} && {!(_x in _reserved)} && {_x != _leader}
+    };
+    if (_reserves isEqualTo [] && {alive _leader} && {local _leader} && {!isPlayer _leader}
+        && {lifeState _leader != "INCAPACITATED"} && {vehicle _leader == _leader} && {!(_leader in _reserved)}) then {
+        _reserves pushBack _leader;
+    };
+    {
+        private _pairIndex=_forEachIndex;
+        private _pair=_x;
+        private _state=_pairStates select _pairIndex;
+        for "_slot" from 0 to ((count _pair)-1) do {
+            private _member=_pair select _slot;
+            if ((!alive _member || {!local _member} || {isPlayer _member} || {lifeState _member == "INCAPACITATED"}
+                || {group _member != _group} || {vehicle _member != _member}) && {_reserves isNotEqualTo []}) then {
+                private _replacement=_reserves deleteAt 0;
+                _pair set [_slot,_replacement];
+                private _team=_job get "team";
+                _team pushBackUnique _replacement;
+                (_job get "assigned") pushBack [];
+                private _lastPositions=_state select 2;
+                _lastPositions set [_slot,getPosATL _replacement];
+                _state set [2,_lastPositions];
+                _state set [3,time];
+                _state set [4,0];
+                _state set [5,-1];
+                private _evidence=_group getVariable ["Waldo_Cortex_ClearReinforcements",[]];
+                _evidence pushBack [serverTime,netId _member,netId _replacement,_pairIndex,_slot];
+                _group setVariable ["Waldo_Cortex_ClearReinforcements",_evidence,true];
+                diag_log format ["[WMP CORTEX] Clear pair %1 reinforced: %2 replaced %3",_pairIndex,_replacement,_member];
+            };
+        };
+    } forEach _pairs;
+    // Release reservations before selection so another soldier can visit a casualty's room.
+    // Reassigned units belong to their new commander and must receive no further orders here.
+    private _activeWorkers=(_job get "team") select {alive _x && {local _x} && {!isPlayer _x}
+        && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}};
+    private _failureThreshold=(count (_job get "pairs")) min 2 max 1;
+    {
+        if (!alive _x || {!local _x} || {isPlayer _x} || {lifeState _x == "INCAPACITATED"} || {group _x != _group} || {vehicle _x != _x}) then {
+            _assigned set [_forEachIndex,[]];
+        };
+    } forEach (_job get "team");
+    private _now = time;
+    private _before = count _cleared;
+    private _unreachableBefore = count _unreachable;
+    // A worker may physically traverse another assigned position on the way to its own.
+    // Record that observed visit too; assignment ownership is not evidence of clearance.
+    {
+        private _visitor = _x;
+        if (alive _visitor && {local _visitor} && {!isPlayer _visitor}
+            && {lifeState _visitor != "INCAPACITATED"} && {group _visitor == _group}
+            && {vehicle _visitor == _visitor}) then {
+            private _actual = getPosASL _visitor;
+            {
+                if !(_forEachIndex in _cleared) then {
+                    if (_actual vectorDistance (AGLToASL _x) <= 1.5) then {
+                        _cleared pushBackUnique _forEachIndex;
+                        private _failedIndex = _unreachable find _forEachIndex;
+                        if (_failedIndex >= 0) then {_unreachable deleteAt _failedIndex};
+                        _failedBy set [_forEachIndex,[]];
+                    };
+                };
+            } forEach _positions;
+        };
+    } forEach (_job get "team");
+    private _pairRoutes=_job get "pairRoutes";
+    {
+        private _pairIndex=_forEachIndex;
+        private _pair=_x select {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}};
+        if (_pair isNotEqualTo []) then {
+            private _state=_pairStates select _pairIndex;
+            _state params ["_cursor","_approachingEntry","_lastPositions","_lastProgress","_retries","_lastTarget","_startAt","_moverIndex","_previousPositionIndex"];
+            if (_now >= _startAt) then {
+                private _route=_pairRoutes select _pairIndex;
+                while {_cursor < count _route && {(_route select _cursor) in (_cleared+_unreachable)}} do {_cursor=_cursor+1};
+                if (_cursor < count _route) then {
+                    private _positionIndex=_route select _cursor;
+                    private _entryTarget=_job get "entry";
+                    if (_approachingEntry && {_entryTarget isNotEqualTo []} && {_pair findIf {_x distance2D _entryTarget <= 3} >= 0}) then {
+                        _approachingEntry=false;
+                        _lastTarget=-1;
+                        _retries=0;
+                    };
+                    private _target=[_positions select _positionIndex,_entryTarget] select _approachingEntry;
+                    private _issue=_lastTarget != _positionIndex;
+                    private _point=_pair select (_moverIndex mod count _pair);
+                    private _supportTarget=[];
+                    if (count _pair > 1) then {
+                        _supportTarget=if (_approachingEntry) then {
+                            private _outward=(getPosATL (_job get "building")) getDir _entryTarget;
+                            _entryTarget getPos [3,_outward]
+                        } else {
+                            if (_previousPositionIndex >= 0) then {_positions select _previousPositionIndex} else {_entryTarget}
+                        };
+                        if (_supportTarget isEqualTo []) then {
+                            private _outward=(getPosATL (_job get "building")) getDir _target;
+                            _supportTarget=_target getPos [2.5,_outward];
+                        };
+                    };
+                    {
+                        private _unit=_x;
+                        private _openedDoor=[_unit,_job get "building"] call Waldo_fnc_CortexBuildingDoor;
+                        if (_issue || {_openedDoor}) then {
+                            private _started=_job get "started";
+                            if !(_unit in _started) then {doStop _unit; _started pushBack _unit};
+                            private _unitTarget=if (_unit == _point || {_supportTarget isEqualTo []}) then {_target} else {_supportTarget};
+                            _unit doMove _unitTarget;
+                            _unit setDestination [_unitTarget,"LEADER PLANNED",true];
+                        };
+                        _assigned set [(_job get "team") find _unit,[_positionIndex,_lastProgress,getPosATL _unit,_retries,_approachingEntry]];
+                    } forEach _pair;
+                    if (_issue) then {_lastTarget=_positionIndex; _lastProgress=_now; _lastPositions=_pair apply {getPosATL _x}};
+                    private _moved=false;
+                    {
+                        private _old=_lastPositions param [_forEachIndex,getPosATL _x];
+                        if (_x distance2D _old >= 1) then {_moved=true};
+                    } forEach _pair;
+                    if (_moved) then {
+                        _lastPositions=_pair apply {getPosATL _x};
+                        _lastProgress=_now;
+                        _job set ["deadline",(_job get "deadline") max (serverTime+120)];
+                        _job set ["lastProgressAt",serverTime];
+                    };
+                    if (_positionIndex in _cleared) then {
+                        _previousPositionIndex=_positionIndex;
+                        _cursor=_cursor+1;
+                        if (count _pair > 1) then {_moverIndex=(_moverIndex+1) mod count _pair};
+                        _lastTarget=-1;
+                        _retries=0;
+                        _lastProgress=_now;
+                    } else {
+                        private _commandEnded=_pair findIf {currentCommand _x in ["","STOP"]} >= 0;
+                        private _retryDelay=[25,6] select _commandEnded;
+                        if (_now-_lastProgress > _retryDelay) then {
+                            if (_retries < 3) then {
+                                {
+                                    private _unitTarget=if (_x == _point || {_supportTarget isEqualTo []}) then {_target} else {_supportTarget};
+                                    _x doMove _unitTarget;
+                                    _x setDestination [_unitTarget,"LEADER PLANNED",true];
+                                } forEach _pair;
+                                _retries=_retries+1;
+                                _lastProgress=_now;
+                                _retryCounts set [_positionIndex,(_retryCounts param [_positionIndex,0])+1];
+                            } else {
+                                private _pairId=format ["PAIR_%1",_pairIndex];
+                                private _failures=_failedBy select _positionIndex;
+                                _failures pushBackUnique _pairId;
+                                _failedBy set [_positionIndex,_failures];
+                                if (count _failures >= _failureThreshold) then {
+                                    _unreachable pushBackUnique _positionIndex;
+                                } else {
+                                    // Rotate an unresolved room to a different pair. The failed pair
+                                    // continues its sector instead of holding the whole clearance.
+                                    private _nextPair=(_pairIndex+1) mod count _pairRoutes;
+                                    (_pairRoutes select _nextPair) pushBackUnique _positionIndex;
+                                };
+                                _cursor=_cursor+1;
+                                _lastTarget=-1;
+                                _retries=0;
+                            };
+                            _retryChanged=true;
+                        };
+                    };
+                    _state set [0,_cursor]; _state set [1,_approachingEntry]; _state set [2,_lastPositions];
+                    _state set [3,_lastProgress]; _state set [4,_retries]; _state set [5,_lastTarget];
+                    _state set [7,_moverIndex]; _state set [8,_previousPositionIndex];
+                };
+            };
+        };
+    } forEach _pairs;
+    private _madeProgress=count _cleared != _before || {count _unreachable != _unreachableBefore};
+    if (_madeProgress) then {
+        // The total lease is a safety net, not a performance assumption. Genuine physical
+        // progress renews it so a busy server or delayed HC does not expire a working clear.
+        _job set ["lastProgressAt",serverTime];
+        _job set ["deadline",(_job get "deadline") max (serverTime+120)];
+    };
+    if (_madeProgress || {_retryChanged}) then {
+        _group setVariable ["Waldo_AIPass_ClearOrder", [_job get "building", +_cleared, _job get "deadline", _job get "baseBehaviour", +_unreachable, +_retryCounts, +_failedBy, _job get "lastProgressAt"], true];
+    };
+    if ((count _cleared + count _unreachable) >= count _positions || {serverTime > (_job get "deadline")} || {(_job get "team") findIf {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {group _x == _group} && {vehicle _x == _x}} < 0}) exitWith {
+        private _entry=_job get "entry";
+        if (_entry isEqualTo []) then {_entry=getPosATL (_job get "building")};
+        private _outward=(getPosATL (_job get "building")) getDir _entry;
+        private _egressTarget=_entry getPos [10,_outward];
+        _job set ["phase","EGRESS"];
+        _job set ["egressTarget",_egressTarget];
+        _job set ["egressDeadline",time+45];
+        _job set ["egressReissue",time];
+        {
+            if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
+                && {group _x == _group} && {vehicle _x == _x}) then {
+                _x doMove _egressTarget;
+                _x setDestination [_egressTarget,"LEADER PLANNED",true];
+            };
+        } forEach (_job get "team");
+        _group setVariable ["Waldo_Cortex_ClearEgress",["EGRESS",_egressTarget,serverTime],true];
+        1.5
+    };
+    1.5
+}, createHashMapFromArray [
+    ["group", _group], ["team", _team], ["started", []], ["positions", _positions], ["cleared", _cleared], ["building", _building], ["assigned", _team apply {[]}], ["unreachable",_unreachable], ["retryCounts",_retryCounts],
+    ["entry",_entryRoute], ["pairs",_pairs], ["pairRoutes",_pairRoutes], ["pairStates",_pairStates],
+    ["deadline", _deadline], ["baseBehaviour", _baseBehaviour], ["generation", _generation], ["failedBy",_failedBy], ["lastProgressAt",_lastProgressAt],
+    ["phase","CLEAR"],["egressTarget",[]],["egressDeadline",0],["egressReissue",0],["egressFailed",false]
+], 0] call Waldo_fnc_CortexQueueJob;
+diag_log format ["[WMP CORTEX] %1 clearing %2 (%3 positions, %4 soldiers)", _group, typeOf _building, count _positions, count _team];
+true

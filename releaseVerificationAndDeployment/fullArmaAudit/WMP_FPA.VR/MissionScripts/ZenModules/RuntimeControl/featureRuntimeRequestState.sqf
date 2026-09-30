@@ -8,7 +8,7 @@
  * Repeat/JIP: The client uses bounded retries until the complete snapshot arrives. An in-flight
  * flag prevents parallel local request loops during join.
  *
- * Arguments: None
+ * Arguments: 0: claimed owner <NUMBER>, default -1; supplied by the local request helper.
  * Return Value: Boolean - true when requested/queued
  *
  * Example: [] call Waldo_fnc_FeatureRuntimeRequestState;
@@ -52,7 +52,11 @@ if !(isServer) exitWith {
     true
 };
 
-private _targetOwner = remoteExecutedOwner;
+params [["_claimedOwner",-1,[0]]];
+private _targetOwner = [_claimedOwner] call Waldo_fnc_HeadlessResolveSender;
+if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {
+    diag_log format ["[WMP RUNTIME] Snapshot request owner=%1 ready=%2 players=%3 headless=%4", _targetOwner, missionNamespace getVariable ["Waldo_FeatureRuntimeStateReady",false], allPlayers apply {[typeOf _x,owner _x]}, (entities "HeadlessClient_F") apply {owner _x}];
+};
 if (_targetOwner <= 2) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_FeatureRuntimeStateReady", false]) exitWith {false};
 
@@ -91,9 +95,9 @@ private _names = [
         "Waldo_AIPass_PostContact_Enable", "Waldo_AIPass_Flank_Enable", "Waldo_AIPass_StreetCrossing_Enable",
         "Waldo_AIPass_FireControl_Enable", "Waldo_AIPass_Morale_Enable", "Waldo_AIPass_Surrender_Enable",
         "Waldo_AIPass_GrenadeEvasion_Enable", "Waldo_AIPass_AntiArmour_Enable", "Waldo_AIPass_Vehicles_Enable",
-        "Waldo_AIPass_AmmoCapabilityOverrides", "Waldo_AIPass_ContactReports_Enable", "Waldo_AIPass_Reinforce_Enable", "Waldo_AIPass_Artillery_Enable",
+        "Waldo_AIPass_SettingsRevision", "Waldo_AIPass_AmmoCapabilityOverrides", "Waldo_AIPass_ContactReports_Enable", "Waldo_AIPass_Reinforce_Enable", "Waldo_AIPass_Artillery_Enable",
         "Waldo_AIPass_CounterBattery_Enable", "Waldo_AIPass_Airborne_Enable",
-        "Waldo_AIPass_AircraftFlares_Enable", "Waldo_AIPass_LambsMode",
+        "Waldo_AIPass_AircraftFlares_Enable", "Waldo_Cortex_AttackRunFlares_Enable", "Waldo_AIPass_LambsMode",
         "Waldo_AIPass_Investigate_Enable", "Waldo_AIPass_Assault_Enable", "Waldo_AIPass_Advance_Enable", "Waldo_AIPass_CoordinatedAssault_Enable", "Waldo_AIPass_Stance_Enable", "Waldo_AIPass_AmmoShare_Enable", "Waldo_AIPass_VehicleGunnery_Enable", "Waldo_AIPass_ArtillerySmoke_Enable", "Waldo_AIPass_AircraftBreak_Enable",
         "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
         "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",
@@ -116,7 +120,7 @@ private _names = [
         "Waldo_Recovery_PackageClasses"
 ];
 // Smart AI Pass difficulty and tuning, from the same list the AI Tuning Zeus module uses.
-{_names pushBackUnique (_x select 0)} forEach ([] call Waldo_fnc_AIPassTuningSpec);
+{_names pushBackUnique (_x select 0)} forEach ([] call Waldo_fnc_CortexTuningSpec);
 private _snapshot = [];
 {
     private _value = missionNamespace getVariable [_x, nil];
@@ -125,5 +129,6 @@ private _snapshot = [];
 
 // Revalidate immediately before dispatch so a disconnected requester's owner id cannot be reused.
 if (isNull _requester || {owner _requester != _targetOwner}) exitWith {false};
+if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {diag_log format ["[WMP RUNTIME] Snapshot sent owner=%1 settings=%2",_targetOwner,count _snapshot]};
 [_snapshot, true] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", _targetOwner];
 true

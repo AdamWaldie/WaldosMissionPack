@@ -7,7 +7,7 @@
  * This wrapper installs no event handlers of its own.
  *
  * Arguments:
- * 0: mode <STRING> - DAY or NIGHT (default: DAY)
+ * 0: mode <STRING> - AUTO, DAY or NIGHT (default: AUTO)
  * 1: profile <STRING> - LEGACY, MILITIA, LINE, VETERAN, ELITE, compatibility aliases, or a custom profile key (default: LINE)
  *
  * Return Value:
@@ -21,7 +21,7 @@
  */
 
 params [
-    ["_mode", "DAY", [""]],
+    ["_mode", "AUTO", [""]],
     ["_profile", missionNamespace getVariable ["Waldo_AI_Profile", "LINE"], [""]]
 ];
 [_mode, _profile] call Waldo_fnc_AIRebalanceInit

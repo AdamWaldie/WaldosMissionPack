@@ -12,6 +12,7 @@
  * Result: One state request is sent to the server for a complete runtime snapshot.
  */
 
+if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {diag_log format ["[WMP RUNTIME] Local snapshot send owner=%1 remoteSender=%2 server=%3",clientOwner,remoteExecutedOwner,isServer]};
 if (isServer || {remoteExecutedOwner > 0}) exitWith {false};
-[] remoteExecCall ["Waldo_fnc_FeatureRuntimeRequestState", 2];
+[clientOwner] remoteExecCall ["Waldo_fnc_FeatureRuntimeRequestState", 2];
 true

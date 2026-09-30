@@ -25,6 +25,9 @@ if (_restore isNotEqualTo []) then {
         };
         {
             private _unit = _x;
+            if (local _unit && {_forget} && {((_unit getVariable ["Waldo_Convoy_PassengerRevision",[]]) param [0,grpNull]) == _group}) then {
+                _unit setVariable ["Waldo_Convoy_PassengerRevision",nil,true];
+            };
             private _target = _unit getVariable ["Waldo_Convoy_Target", objNull];
             if (local _unit && {!isPlayer _unit} && {!isNull _target}) then {
                 if (assignedTarget _unit == _target) then {_unit doTarget objNull};

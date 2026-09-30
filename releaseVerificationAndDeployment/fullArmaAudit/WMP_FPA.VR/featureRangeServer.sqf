@@ -771,11 +771,11 @@ if (isNull _curator) then {
     [] spawn {
         waitUntil {
             uiSleep 0.2;
-            (allPlayers findIf {isPlayer _x && {owner _x > 2}}) >= 0
+            (allPlayers findIf {isPlayer _x && {owner _x > 2} && {!(_x isKindOf "HeadlessClient_F")}}) >= 0
         };
         private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
         if (!isNull _curator) then {
-            private _unit = allPlayers select (allPlayers findIf {isPlayer _x && {owner _x > 2}});
+            private _unit = allPlayers select (allPlayers findIf {isPlayer _x && {owner _x > 2} && {!(_x isKindOf "HeadlessClient_F")}});
             [_unit] call Waldo_QA_fnc_assignCuratorServer;
         };
     };

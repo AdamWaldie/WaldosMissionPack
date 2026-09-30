@@ -29,8 +29,8 @@
  *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enable, Profile, Mode and include/exclude filters are intended choices. Profiles
- * are MILITIA, LINE, VETERAN or ELITE; LINE is the WMP default for editor and Zeus AI. Mode is DAY
- * or NIGHT. ApplyMode is BOTH, EXISTING or NEW. Side filters use WEST, EAST, GUER or CIV; faction
+ * are MILITIA, LINE, VETERAN or ELITE; LINE is the WMP default for editor and Zeus AI. Mode is AUTO (ambient darkness), DAY
+ * or NIGHT (legacy night profile). ApplyMode is BOTH, EXISTING or NEW. Side filters use WEST, EAST, GUER or CIV; faction
  * and class filters use config classnames. Empty include arrays mean unrestricted.
  * ADVANCED TUNING - SkillVariance, RestoreOnStop and every ImprovedHelicopterLanding numeric value
  * are control/safety parameters. Keep defaults unless a repeatable aircraft/terrain test requires
@@ -45,7 +45,7 @@
  * SETTING-BY-SETTING GUIDE - AI REBALANCE:
  * - Waldo_AIRebalance_Enable (MISSION MAKER): true applies WMP skill profiles; false leaves AI skills alone.
  * - Waldo_AIRebalance_Profile (MISSION MAKER): MILITIA, LINE, VETERAN or ELITE; LINE is the normal baseline.
- * - Waldo_AIRebalance_Mode (MISSION MAKER): DAY or NIGHT; NIGHT uses the deliberately lower low-light values.
+ * - Waldo_AIRebalance_Mode (MISSION MAKER): AUTO by default follows ambient darkness; DAY disables the extra penalty; NIGHT retains legacy night tiers.
  * - Waldo_AI_ApplyMode (MISSION MAKER): EXISTING, NEW or BOTH; choose which AI population receives the profile.
  * - Waldo_AI_RestoreOnStop (ADVANCED): true restores the skills WMP recorded when its handler is stopped.
  * - Waldo_AI_SkillVariance (ADVANCED): stable random offset chosen once per AI; 0 disables variation.
@@ -96,13 +96,14 @@
  * - Waldo_AI_ProfileDisplayNames (INFRASTRUCTURE): labels for diagnostics/UI; keys must match implementation IDs.
  *
  * SETTING-BY-SETTING GUIDE - MODULAR AI BEHAVIOURS:
+ * - Waldo_AIPass_AmmoCapabilityOverrides (ADVANCED): magazine class to an array containing "AT" and/or "AA". Empty map uses ammunition configuration.
  * - Waldo_AIPass_VehicleDismount_Enable (MISSION MAKER): Routine passenger dismounting during vehicle contact drills. Default true.
  * - Waldo_AIPass_VehicleRemount_Enable (MISSION MAKER): Reboard recorded passengers on a normal return to CALM. Default true.
  * - Waldo_AIPass_VehicleWithdraw_Enable (MISSION MAKER): Damaged vehicle smoke and withdrawal. Default true.
  * - Waldo_AIPass_CoverValidation_Enable (MISSION MAKER): Bounded footprint, slope and geometry validation for cover candidates. Default true.
  * - Waldo_AIPass_Hearing_Enable (MISSION MAKER): Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default false.
  * - Waldo_Convoy_MountedFire_Enable (MISSION MAKER): Mounted crew targeting under existing ROE. Default true.
- * - Waldo_Convoy_Cover_Enable (MISSION MAKER): Initial passenger cover movement after an ambush halt. Default true.
+ * - Waldo_Convoy_Cover_Enable (MISSION MAKER): Short passenger movement clear of vehicles after a halt, using cover during contact. Default true.
  * - Waldo_Convoy_ContactHalt_Enable (MISSION MAKER): Contact halt requests under the configured push-through rule. Default true.
  * - Waldo_Convoy_Unload_Enable (MISSION MAKER): Routine cargo unloading at arrival, manual stop and ambush halt. Default true.
  * - Waldo_Convoy_AvoidInfantry_Enable (MISSION MAKER): Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default false.
@@ -125,7 +126,7 @@
  * - Waldo_AIPass_Regroup_SearchRadius (ADVANCED): metres searched for a host squad.
  * - Waldo_AIPass_Regroup_MaxGroupSize (ADVANCED): a host may not exceed this size after the merge.
  * - Waldo_AIPass_Regroup_JoinDistance (ADVANCED): survivors join once this close to the host leader.
- * - Waldo_AIPass_Regroup_StuckSeconds (ADVANCED): no progress for this long joins them where they stand.
+ * - Waldo_AIPass_Regroup_StuckSeconds (ADVANCED): no progress for this long retries once, then aborts without merging at a distance.
  * - Waldo_AIPass_Regroup_TimeoutSeconds (ADVANCED): limit for finding a host and for walking to it.
  * - Waldo_AIPass_Regroup_SettleSeconds (ADVANCED): wait after a kill so simultaneous deaths settle.
  * - Waldo_AIPass_LambsMode (MISSION MAKER): only matters with LAMBS Danger loaded; SPLIT lets LAMBS keep in-contact unit tactics, WMP turns LAMBS group AI off for squads the pass manages.
@@ -150,7 +151,7 @@
  * - Waldo_AIPass_Flank_MaxRange (ADVANCED): enemies farther than this are not flanked.
  * - Waldo_AIPass_Flank_BoundDistance (ADVANCED): length of one bound in metres.
  * - Waldo_AIPass_Flank_BoundPause (ADVANCED): seconds of overwatch between bounds.
- * - Waldo_AIPass_Flank_BoundTimeout (ADVANCED): a bound ends after this many seconds even if not everyone arrived.
+ * - Waldo_AIPass_Flank_BoundTimeout (ADVANCED): seconds without two metres of progress before a bound aborts; absolute bound limit is four times this value. Never counts as arrival.
  * - Waldo_AIPass_Flank_Cooldown (ADVANCED): seconds before the same squad may flank again.
  * - Waldo_AIPass_StreetCrossing_Enable (MISSION MAKER): flanking elements stop at roads, throw smoke and cross in one bound.
  * - Waldo_AIPass_FireControl_Enable (MISSION MAKER): close threats first, fire spread across visible enemies, disciplined suppression.
@@ -159,7 +160,7 @@
  * - Waldo_AIPass_Morale_Enable (MISSION MAKER): squads under losses and fire break and fall back under smoke.
  * - Waldo_AIPass_Morale_RetreatDistance (ADVANCED): how far a broken squad falls back.
  * - Waldo_AIPass_Surrender_Enable (MISSION MAKER): the last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded).
- * - Waldo_AIPass_GrenadeEvasion_Enable (MISSION MAKER): AI move away from a live grenade they can see; off until tested in your setup.
+ * - Waldo_AIPass_GrenadeEvasion_Enable (MISSION MAKER): AI move away from a live grenade they can see; enabled by default, with live compatibility testing required.
  * - Waldo_AIPass_AntiArmour_Enable (MISSION MAKER): the best anti-tank gunner engages known armour, clear of backblast.
  * - Waldo_AIPass_Vehicles_Enable (MISSION MAKER): infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw.
  * - Waldo_AIPass_ContactReports_Enable (MISSION MAKER): squads share sighted enemies by radio (blocked by jamming) or by voice.
@@ -171,7 +172,7 @@
  * - Waldo_AIPass_Reinforce_MaxResponders (ADVANCED): responding squads per squad in contact.
  * - Difficulty (MISSION MAKER; all of these, and the support, artillery, counter-battery and airborne
  *   numbers below, can be changed during the mission with the AI Tuning Zeus module or
- *   Waldo_fnc_AIPassTuning):
+ *   Waldo_fnc_CortexTuning):
  *   - Waldo_AIPass_BehaviourProfile: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics mission-wide (group and faction profiles still win).
  *   - Waldo_AIPass_Aggression: scales flank, assault, advance, investigate and coordinated-assault chances (1 = the profile's own).
  *   - Waldo_AIPass_Cohesion: how much punishment squads take before morale breaks (1 = normal).
@@ -189,7 +190,7 @@
  * - Waldo_AIPass_Artillery_MaxError (ADVANCED): largest target position error accepted for a mission.
  * - Waldo_AIPass_Artillery_Cooldown (ADVANCED): seconds between missions called by one squad.
  * - Waldo_AIPass_Artillery_ShootAndScoot (ADVANCED): mobile batteries move 200-350 m after a support mission.
- * - Waldo_AIPass_Artillery_DefaultRole (MISSION MAKER): missions a battery takes unless you set its own role: SUPPORT (squads' calls only), COUNTER (counter-battery only) or BOTH. Per gun: [this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole; or the AI Orders Zeus module.
+ * - Waldo_AIPass_Artillery_DefaultRole (MISSION MAKER): missions a battery takes unless you set its own role: SUPPORT (squads' calls only), COUNTER (counter-battery only) or BOTH. Per gun: [this, "COUNTER"] call Waldo_fnc_CortexSetArtilleryRole; or the AI Orders Zeus module.
  * - Waldo_AIPass_CounterBattery_Enable (MISSION MAKER): AI artillery answers enemy artillery whose position is known.
  * - Waldo_AIPass_CounterBattery_Mode (MISSION MAKER): legacy compatibility setting; automatic firing-event acquisition always works, with radar reducing delay.
  * - Waldo_AIPass_CounterBattery_RadarRange (ADVANCED): detection range of a registered counter-battery radar.
@@ -199,7 +200,7 @@
  * - Waldo_AIPass_CounterBattery_MinFriendlyDistance (ADVANCED): no counter-battery fire when friendlies or civilians are this close to the enemy gun.
  * - Waldo_AIPass_CounterBattery_Interval (ADVANCED): seconds before the same enemy gun is answered again.
  * - Waldo_AIPass_CounterBattery_ShootAndScoot (ADVANCED): mobile batteries move 200-350 m after a counter-battery mission.
- * - Waldo_AIPass_Airborne_Enable (MISSION MAKER): AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. [group this] call Waldo_fnc_AIPassAirborneDrop orders a drop at any time.
+ * - Waldo_AIPass_Airborne_Enable (MISSION MAKER): AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. [group this] call Waldo_fnc_CortexAirborneDrop orders a drop at any time.
  * - Waldo_AIPass_Airborne_ApproachDistance (ADVANCED): within this distance of a known enemy the aircraft climbs to jump altitude.
  * - Waldo_AIPass_Airborne_DeployDistance (MISSION MAKER): the squad jumps once its aircraft is this close to a known enemy.
  * - Waldo_AIPass_Airborne_Altitude (ADVANCED): height above ground the aircraft climbs to for the drop.
@@ -234,10 +235,11 @@
 createHashMapFromArray [
     ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings", "AI Helicopter Deceleration", "Smart AI Pass"]],
     ["shared", [
+        ["Waldo_AIPass_AmmoCapabilityOverrides", createHashMap], // MAP: magazine class to ["AT"] / ["AA"] / ["AT","AA"] role overrides.
         // MISSION MAKER: AI population, profile and filtering policy.
         ["Waldo_AIRebalance_Enable", true],          // BOOL: true applies WMP skill profiles to eligible AI.
         ["Waldo_AIRebalance_Profile", "LINE"],      // STRING: MILITIA, LINE, VETERAN or ELITE.
-        ["Waldo_AIRebalance_Mode", "DAY"],          // STRING: DAY or NIGHT (low-light/NVG-aware skill variant).
+        ["Waldo_AIRebalance_Mode", "AUTO"],          // STRING: AUTO ambient-darkness/NVG aware; DAY override; NIGHT legacy variant.
         ["Waldo_AI_ApplyMode", "BOTH"],             // STRING: EXISTING, NEW or BOTH AI populations.
         ["Waldo_AI_RestoreOnStop", true],            // ADVANCED: restore captured vanilla/mission skills on stop.
         ["Waldo_AI_SkillVariance", 0],               // ADVANCED: one stable per-AI offset; 0 disables variation.
@@ -283,7 +285,7 @@ createHashMapFromArray [
         ["Waldo_HelicopterDeceleration_MaximumCorrectionSeconds", 4], // SECONDS: hard cap per correction event.
         ["Waldo_HelicopterDeceleration_Debug", false], // BOOL: detailed RPT acquire/release logging.
         // MISSION MAKER switches followed by ADVANCED Smart AI Pass scheduling and behaviour tuning.
-        ["Waldo_AIPass_Enable", false], // BOOL: master switch for the Smart AI Pass (server and headless clients only).
+        ["Waldo_AIPass_Enable", true], // BOOL: master switch for Cortex (server and headless clients only).
         ["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // ARRAY of WEST/EAST/GUER/CIV strings the pass may command.
         ["Waldo_AIPass_TickBudgetMs", 1], // MILLISECONDS: work allowed per 0.25 s scheduler tick; at least one job always runs.
         ["Waldo_AIPass_LowFpsThreshold", 25], // FPS: below this, behaviour steps are rescheduled half as often.
@@ -293,15 +295,15 @@ createHashMapFromArray [
         ["Waldo_AIPass_Regroup_SearchRadius", 400], // METRES: host squad search radius.
         ["Waldo_AIPass_Regroup_MaxGroupSize", 12], // COUNT: host size limit after the merge.
         ["Waldo_AIPass_Regroup_JoinDistance", 30], // METRES: survivors join the host inside this distance.
-        ["Waldo_AIPass_Regroup_StuckSeconds", 20], // SECONDS: without progress, survivors join where they stand.
+        ["Waldo_AIPass_Regroup_StuckSeconds", 20], // SECONDS: without progress, retry once then abort without a remote merge.
         ["Waldo_AIPass_Regroup_TimeoutSeconds", 120], // SECONDS: limit for finding a host and for walking to it.
         ["Waldo_AIPass_Regroup_SettleSeconds", 5], // SECONDS: delay after a kill before the remnant is assessed.
         ["Waldo_AIPass_BehaviourProfile", ""], // STRING: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics for every squad without its own.
-        ["Waldo_AIPass_Aggression", 1], // 0-2: scales how often squads flank, assault, advance, investigate and coordinate.
+        ["Waldo_AIPass_Aggression", 1.2], // 0-2: scales how often squads flank, assault, advance, investigate and coordinate.
         ["Waldo_AIPass_Cohesion", 1], // 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner.
         ["Waldo_AIPass_ReactionSpeed", 1], // 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often.
         ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads).
-        ["Waldo_AIPass_Debug", false], // BOOL: extra [WMP AI PASS] RPT lines for contact, flanks, morale and retreats.
+        ["Waldo_AIPass_Debug", false], // BOOL: extra [WMP CORTEX] RPT lines for contact, flanks, morale and retreats.
         ["Waldo_AIPass_EngageRange", 800], // METRES: enemies the leader knows about within this range are considered.
         ["Waldo_AIPass_NearRange", 1000], // METRES: squads this close to a player run at the near cadence.
         ["Waldo_AIPass_FarRange", 2500], // METRES: beyond this only the state ladder and morale run.
@@ -322,7 +324,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Flank_MaxRange", 400], // METRES: farther enemies are not flanked.
         ["Waldo_AIPass_Flank_BoundDistance", 40], // METRES: length of one bound (minimum 15).
         ["Waldo_AIPass_Flank_BoundPause", 4], // SECONDS: overwatch halt between bounds.
-        ["Waldo_AIPass_Flank_BoundTimeout", 25], // SECONDS: a bound ends after this even if not everyone arrived.
+        ["Waldo_AIPass_Flank_BoundTimeout", 25], // SECONDS without progress before abort; absolute bound limit is 4x. Never counts as arrival.
         ["Waldo_AIPass_Flank_Cooldown", 90], // SECONDS: before the same squad flanks again.
         ["Waldo_AIPass_StreetCrossing_Enable", true], // BOOL: flanks stop at roads, smoke, and cross in one bound.
         ["Waldo_AIPass_FireControl_Enable", true], // BOOL: close threats, fire distribution, disciplined suppression.
@@ -331,14 +333,14 @@ createHashMapFromArray [
         ["Waldo_AIPass_Morale_Enable", true], // BOOL: weighted morale; broken squads retreat under smoke.
         ["Waldo_AIPass_Morale_RetreatDistance", 200], // METRES: how far a broken squad falls back.
         ["Waldo_AIPass_Surrender_Enable", false], // BOOL: last survivors of a broken, isolated squad surrender.
-        ["Waldo_AIPass_GrenadeEvasion_Enable", false], // BOOL: move away from seen grenades; test in your setup first.
+        ["Waldo_AIPass_GrenadeEvasion_Enable", true], // BOOL: move away from seen grenades.
         ["Waldo_AIPass_AntiArmour_Enable", true], // BOOL: best AT gunner engages known armour, clear of backblast.
         ["Waldo_AIPass_VehicleDismount_Enable", true], // Unloads capable passengers only when safely stopped on dry ground.
         ["Waldo_AIPass_VehicleRemount_Enable", true], // Allows safe conscious passengers to reboard after Smart AI contact. Convoy resume stays explicit.
         ["Waldo_AIPass_VehicleWithdraw_Enable", true], // Allows damaged vehicles to withdraw and use existing smoke.
         ["Waldo_AIPass_CoverValidation_Enable", true], // Adds bounded slope and body clearance checks to shared cover selection.
         ["Waldo_Convoy_MountedFire_Enable", true], // WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.
-        ["Waldo_Convoy_Cover_Enable", true], // Issues the finite cover move after an ambush dismount.
+        ["Waldo_Convoy_Cover_Enable", true], // Moves dismounted passengers clear of vehicles; seeks cover during contact.
         ["Waldo_Convoy_AvoidInfantry_Enable", false], // Optional short-range friendly infantry corridor checks before driving.
         ["Waldo_Convoy_ContactHalt_Enable", true], // Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.
         ["Waldo_Convoy_Unload_Enable", true], // Allows WMP passenger unloading on halt. Operating crews remain aboard.
@@ -382,6 +384,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Airborne_JumpInterval", 1], // SECONDS: between jumpers.
         ["Waldo_AIPass_Garrison_DynamicAO", false], // BOOL: WMP garrison handling for Dynamic AO garrisons.
         ["Waldo_AIPass_Garrison_BreakFraction", 0.5], // 0-1: a garrison breaks at this share of its strength.
+        ["Waldo_Cortex_AttackRunFlares_Enable", true], // BOOL: finite countermeasure bursts approaching and leaving assigned attack targets.
         ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
         ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: behaviour per AI Rebalance profile name.
             ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.3], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
@@ -413,5 +416,3 @@ createHashMapFromArray [
         ]]
     ]]
 ]
-
-if (isNil "Waldo_AIPass_AmmoCapabilityOverrides") then {Waldo_AIPass_AmmoCapabilityOverrides = createHashMap};

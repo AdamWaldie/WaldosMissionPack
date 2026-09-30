@@ -39,7 +39,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP AI & Combat", "Dynamic AA - Create",
+["WMP Cortex", "Dynamic AA - Create",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAAZen;
@@ -47,7 +47,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconStaticAA_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP AI & Combat", "Dynamic AA - Remove Nearest",
+["WMP Cortex", "Dynamic AA - Remove Nearest",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAARemoveZen;
@@ -107,12 +107,15 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Air Operations", "Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
     ["WMP Air Operations", "Gunship - Set Orbit", "GUNSHIP_ORBIT", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
-    ["WMP AI Control", "AI Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
-    ["WMP AI Control", "AI Orders", "AI_ORDERS", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
-    ["WMP AI Control", "Artillery - Set Up Spotter", "AI_SPOTTER", "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"],
-    ["WMP AI Control", "Artillery - Set Battery Role", "AI_BATTERY", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
-    ["WMP AI Control", "Artillery - Set Up Radar", "AI_RADAR", "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"],
-    ["WMP AI Control", "AI Tuning", "AI_TUNING", "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"]
+    ["WMP Cortex", "Cortex Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
+    ["WMP Cortex", "Garrison Buildings", "AI_GARRISON", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
+    ["WMP Cortex", "Defend Position", "AI_DEFEND", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
+    ["WMP Cortex", "Clear Building", "AI_CLEAR", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
+    ["WMP Cortex", "Parachute Passengers", "AI_AIRBORNE", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
+    ["WMP Cortex", "Manage Group Control", "AI_GROUP", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
+    ["WMP Cortex", "Assign Artillery Spotter", "AI_SPOTTER", "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"],
+    ["WMP Cortex", "Configure Artillery Battery", "AI_BATTERY", "\A3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"],
+    ["WMP Cortex", "Configure Counter-battery Radar", "AI_RADAR", "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"]
 ];
 
 ["WMP Mission Tools", "Create Custom 3D Marker",
@@ -135,7 +138,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP AI & Combat", "Dynamic AO - Create",
+["WMP Cortex", "Dynamic AO - Create",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAOZen;
@@ -143,7 +146,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\nato\o_inf.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP AI & Combat", "Dynamic AO - Remove",
+["WMP Cortex", "Dynamic AO - Remove",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAORemoveZen;
@@ -253,7 +256,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\z\ACE\addons\fortify\ui\hammer_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP AI Control", "Convoy - Create Moving Group",
+["WMP Cortex", "Create Convoy",
     {
         diag_log format ["[WMP ZEN] invoked module=Spawn AI Convoy curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];

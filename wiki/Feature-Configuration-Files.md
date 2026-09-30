@@ -366,6 +366,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_HelicopterDeceleration_ControlInterval` | Seconds between impulses while correction is active. |
 | `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Hard timeout for one correction event. |
 | `Waldo_HelicopterDeceleration_Debug` | Adds acquire/release details to RPT while troubleshooting. |
+| `Waldo_AIPass_AmmoCapabilityOverrides` | Optional magazine-class map to role arrays containing `"AT"` and/or `"AA"`. Empty map uses ammunition configuration. |
 | `Waldo_AIPass_Enable` | Master switch for the [Smart AI Pass](Smart-AI-Pass). Default `false`. |
 | `Waldo_AIPass_IncludedSides` | Sides the pass may command. Default `["WEST", "EAST", "GUER"]`. |
 | `Waldo_AIPass_TickBudgetMs` | Milliseconds of pass work allowed per 0.25 s scheduler tick. |
@@ -376,7 +377,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Regroup_SearchRadius` | Host squad search radius in metres. |
 | `Waldo_AIPass_Regroup_MaxGroupSize` | Host size limit after the merge. |
 | `Waldo_AIPass_Regroup_JoinDistance` | Metres from the host leader at which a survivor joins. |
-| `Waldo_AIPass_Regroup_StuckSeconds` | Seconds without progress before survivors join where they stand. |
+| `Waldo_AIPass_Regroup_StuckSeconds` | Seconds without progress before one movement retry; a further stall aborts without merging at a distance. |
 | `Waldo_AIPass_Regroup_TimeoutSeconds` | Limit in seconds for finding a host and for walking to it. |
 | `Waldo_AIPass_Regroup_SettleSeconds` | Delay after a kill before the remnant is assessed. |
 | `Waldo_AIPass_LambsMode` | Only matters with LAMBS Danger loaded; SPLIT lets LAMBS keep in-contact unit tactics, WMP turns LAMBS group AI off for squads the pass manages. Default `"SPLIT"`. |
@@ -401,7 +402,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Flank_MaxRange` | Enemies farther than this are not flanked. Default `400`. |
 | `Waldo_AIPass_Flank_BoundDistance` | Length of one bound in metres. Default `40`. |
 | `Waldo_AIPass_Flank_BoundPause` | Seconds of overwatch between bounds. Default `4`. |
-| `Waldo_AIPass_Flank_BoundTimeout` | A bound ends after this many seconds even if not everyone arrived. Default `25`. |
+| `Waldo_AIPass_Flank_BoundTimeout` | Seconds without two metres of progress before an unfinished bound aborts. The absolute bound limit is four times this value. A timeout never counts as arrival. Default `25`. |
 | `Waldo_AIPass_Flank_Cooldown` | Seconds before the same squad may flank again. Default `90`. |
 | `Waldo_AIPass_StreetCrossing_Enable` | Flanking elements stop at roads, throw smoke and cross in one bound. Default `true`. |
 | `Waldo_AIPass_FireControl_Enable` | Close threats first, fire spread across visible enemies, disciplined suppression. Default `true`. |
@@ -418,7 +419,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_CoverValidation_Enable` | Bounded footprint, slope and geometry validation for cover candidates. Default `true`. |
 | `Waldo_AIPass_Hearing_Enable` | Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default `false`. |
 | `Waldo_Convoy_MountedFire_Enable` | Mounted crew targeting under existing ROE. Default `true`. |
-| `Waldo_Convoy_Cover_Enable` | Initial passenger cover movement after an ambush halt. Default `true`. |
+| `Waldo_Convoy_Cover_Enable` | Short passenger movement clear of vehicles after a halt, using cover during contact. Default `true`. |
 | `Waldo_Convoy_ContactHalt_Enable` | Contact halt requests under the configured push-through rule. Default `true`. |
 | `Waldo_Convoy_Unload_Enable` | Routine cargo unloading at arrival, manual stop and ambush halt. Default `true`. |
 | `Waldo_Convoy_AvoidInfantry_Enable` | Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default `false`. |
@@ -431,7 +432,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Reinforce_Radius` | How far away responding squads may be. Default `600`. |
 | `Waldo_AIPass_Reinforce_MaxResponders` | Responding squads per squad in contact. Default `2`. |
 | `Waldo_AIPass_BehaviourProfile` | Tactics profile for every squad without its own or its faction's; `""` follows the AI Rebalance profile. Live-tunable with the AI Tuning Zeus module, like every setting marked *(AI Tuning)* below. Default `""`. |
-| `Waldo_AIPass_Aggression` | *(AI Tuning)* Scales how often squads flank, assault, advance, investigate and coordinate. Default `1`. |
+| `Waldo_AIPass_Aggression` | *(AI Tuning)* Scales how often squads flank, assault, advance, investigate and coordinate. Default `1.2`. |
 | `Waldo_AIPass_Cohesion` | *(AI Tuning)* Above `1` squads take more before morale breaks, below `1` they break sooner. Default `1`. |
 | `Waldo_AIPass_ReactionSpeed` | *(AI Tuning)* Above `1` squads re-assess more often (more server time). Default `1`. |
 | `Waldo_AIPass_Artillery_DefaultRole` | *(AI Tuning)* Missions a gun takes without its own role: `SUPPORT`, `COUNTER` or `BOTH`. Default `"BOTH"`. |
@@ -482,7 +483,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_AmmoShare_Distance` | How close a squad-mate must be to hand over a magazine. Default `10`. |
 | `Waldo_AIPass_VehicleGunnery_Enable` | AI gunners engage anti-tank soldiers first, then armour; armour backs away from known AT teams. Default `true`. |
 | `Waldo_AIPass_Vehicles_StandoffDistance` | Distance armour tries to keep from known anti-tank soldiers. Default `250`. |
-| `Waldo_AIPass_ArtillerySmoke_Enable` | A retreating squad with a radio gets an artillery smoke screen; needs artillery support on and a battery with smoke. Default `true`. |
+| `Waldo_AIPass_ArtillerySmoke_Enable` | A retreating squad can request a smoke screen without an inventory radio; WMP jamming still applies. Requires artillery support and a same-side battery with smoke. The server selects across owners. Default `true`. |
 | `Waldo_AIPass_AircraftBreak_Enable` | WMP gunships and Dynamic AA fighters jink sideways away from a missile launch; test your aircraft first. Default `false`. |
 
 ## `airOperationsConfig.sqf`

@@ -22,12 +22,15 @@
 
 params [["_settings", [], [[]]]];
 if (!isServer) exitWith {[_settings] remoteExecCall ["Waldo_fnc_ImprovedHelicopterLandingConfigureServer", 2]; false};
-if (remoteExecutedOwner > 0) then {
-    private _index = allPlayers findIf {owner _x == remoteExecutedOwner};
-    private _caller = if (_index >= 0) then {allPlayers select _index} else {objNull};
-    if (isNull _caller || {isNull getAssignedCuratorLogic _caller}) exitWith {false};
+private _authorized = remoteExecutedOwner <= 0 || {remoteExecutedOwner == 2};
+if (!_authorized) then {
+    private _sender = remoteExecutedOwner;
+    _authorized = allPlayers findIf {owner _x == _sender && {!isNull getAssignedCuratorLogic _x}} >= 0;
 };
-if (count _settings < 11) exitWith {false};
+// Reject at function scope, before reading or broadcasting any requested settings.
+if (!_authorized) exitWith {false};
+if (count _settings != 11 || {!((_settings select 0) isEqualType true)}) exitWith {false};
+if ((_settings select [1,10]) findIf {!(_x isEqualType 0) || {!finite _x}} >= 0) exitWith {false};
 _settings params ["_enabled", "_minimumDistance", "_transitAltitude", "_glideRatio", "_treeRadius", "_treeBuffer", "_goAroundHeight", "_maxClimb", "_maxDescent", "_maxGoArounds", "_touchdownHold"];
 private _updates = [
     ["Waldo_ImprovedHelicopterLanding_Enable", _enabled],

@@ -8,6 +8,7 @@ import sys
 import argparse
 
 INVALID_RUNTIME_COMMANDS = {
+    "bitAnd": "not an Arma SQF runtime command; use a supported bit-mask test",
     # UI style is configured by the Rsc control class. Arma has no runtime
     # ctrlSetStyle SQF command; this previously passed delimiter checks and
     # failed only when the shared interaction display compiled in-game.

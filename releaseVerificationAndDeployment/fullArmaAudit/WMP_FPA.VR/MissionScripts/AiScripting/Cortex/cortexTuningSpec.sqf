@@ -1,0 +1,136 @@
+/*
+ * Author: WaldoTheWarfighter
+ * The list of Cortex difficulty and tuning settings that can be changed during a mission.
+ *
+ * One list feeds the AI Control and Tuning Zeus pages, the validation in Waldo_fnc_CortexTuning and the
+ * snapshot joining headless clients request, so the three cannot drift apart. Every setting is read
+ * live by the behaviours, so a change takes effect on each squad's next step. Defaults are the
+ * MissionConfig\aiConfig.sqf values.
+ * Locality and authority: read-only; callable anywhere.
+ *
+ * Repeat/JIP: read-only and repeat-safe; joining owners use this same list for their snapshot.
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Array of [variable, label, tooltip, kind, options, default, section]:
+ * - kind "SLIDER": options [min, max, decimals]
+ * - kind "CHECKBOX": options []
+ * - kind "COMBO": options [values, labels]
+ *
+ * Example:
+ * private _variables = ([] call Waldo_fnc_CortexTuningSpec) apply {_x select 0};
+ * Result: every tunable Cortex variable name.
+ *
+ * Current callers: Waldo_fnc_CortexTuning, Waldo_fnc_FeatureRuntimeZen (AI Control and Tuning) and
+ * Waldo_fnc_FeatureRuntimeRequestState.
+ */
+
+private _profiles = ["", "MILITIA", "LINE", "VETERAN", "ELITE"];
+private _profileLabels = ["Follow the AI Rebalance profile", "Militia", "Line", "Veteran", "Elite"];
+{
+    if !(_x in _profiles || {_x in ["LEGACY", "PUBLIC", "STANDARD"]}) then {_profiles pushBack _x; _profileLabels pushBack _x};
+} forEach keys (missionNamespace getVariable ["Waldo_AIPass_ProfileBehaviour", createHashMap]);
+
+private _skillProfiles = ["LEGACY","MILITIA","LINE","VETERAN","ELITE"];
+{if !(_x in ["PUBLIC","STANDARD"]) then {_skillProfiles pushBackUnique _x}} forEach keys (missionNamespace getVariable ["Waldo_AI_Profiles",createHashMap]);
+private _skillNames = missionNamespace getVariable ["Waldo_AI_ProfileDisplayNames",createHashMap];
+private _skillLabels = _skillProfiles apply {_skillNames getOrDefault [_x,_x]};
+private _spec = [
+    ["Waldo_AIRebalance_Enable", "Skill profiles", "Apply the selected profile to local AI on every machine.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Enable", "Cortex behaviours", "Enables automatic Cortex behaviours. Child switches remain independently selectable; convoy control is separate.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Regroup_Enable", "Survivor regroup", "Survivors of a destroyed squad walk to and join a nearby friendly squad.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Contact_Enable", "Contact handling", "Squads switch to combat on contact and return to their previous behaviour and waypoints afterwards. Needed by every combat option below.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_PostContact_Enable", "Post-contact search", "After contact is lost: hold, send two soldiers to check the last known position, regroup.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Flank_Enable", "Flanking", "Half the squad flanks in covered bounds while the rest suppresses.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_StreetCrossing_Enable", "Street crossing", "Flanking squads stop at roads, throw smoke and cross in one bound.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_FireControl_Enable", "Fire control", "Close threats first, spread fire across visible enemies, disciplined suppression with a friendly-fire check.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_FireControl_MaxShootersPerTarget", "Shooters per target", "Extra shooters prefer another visible enemy once this many soldiers are assigned to one target. Immediate close threats still take priority.", "SLIDER", [1,12,0], 2],
+    ["Waldo_AIPass_Morale_Enable", "Morale and retreat", "Squads under heavy losses and fire break and fall back under smoke.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Surrender_Enable", "Surrender", "The last one or two survivors of a broken, isolated squad surrender (ACE Captives when loaded).", "CHECKBOX", [], false],
+    ["Waldo_AIPass_GrenadeEvasion_Enable", "Grenade evasion", "AI move away from a live grenade they can see. Test before live use.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_AntiArmour_Enable", "Anti-armour", "The best anti-tank gunner engages known armour, clear of backblast.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Vehicles_Enable", "Vehicle drills", "Infantry dismount under fire; damaged vehicles smoke and withdraw.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_ContactReports_Enable", "Contact reports", "Squads share sighted enemies by radio (blocked by jamming) or by voice.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Reinforce_Enable", "Reinforcement", "Idle nearby squads move up behind a squad in contact.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Artillery_Enable", "Artillery support", "Explicitly assigned spotters request ranging fire from friendly AI artillery. Use the artillery setup modules first.", "CHECKBOX", [], false],
+    ["Waldo_AIPass_CounterBattery_Enable", "Counter-battery", "AI artillery answers enemy artillery whose position is known.", "CHECKBOX", [], false],
+    ["Waldo_AIPass_Airborne_Enable", "Airborne insertion", "AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy.", "CHECKBOX", [], false],
+    ["Waldo_Cortex_AttackRunFlares_Enable", "Attack-run flares", "AI aircraft release two countermeasure requests on approach and departure from an assigned hostile target. Uses onboard ammunition; leaves flight paths unchanged.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_AircraftFlares_Enable", "Aircraft flares", "WMP gunships and Dynamic AA fighters fire flares at incoming missiles.", "CHECKBOX", [], false],
+    ["Waldo_AIPass_Investigate_Enable", "Investigation", "Squads send two riflemen to check enemies they know about but have not seen.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Assault_Enable", "Final assault", "A flank can finish with a grenade and a rush on the enemy position.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Advance_Enable", "Bounding advance", "Squads in a long firefight push a fire team towards their waypoint in covered bounds.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Advance_MinContactSeconds", "Advance contact delay", "Seconds of contact before a bounding advance may begin. Other movement, knowledge and eligibility checks still apply.", "SLIDER", [0,300,0], 30],
+    ["Waldo_AIPass_CoordinatedAssault_Enable", "Coordinated assault", "Reinforcing squads assault from both sides while the squad in contact fires.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Stance_Enable", "Stance from cover", "Soldiers stand, kneel or go prone to match the cover in front of them.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_AmmoShare_Enable", "Ammo sharing", "Soldiers down to their last magazine get one from a nearby squad-mate.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleGunnery_Enable", "Vehicle gunnery", "Gunners engage AT soldiers first, then armour; armour backs away from AT teams.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_ArtillerySmoke_Enable", "Artillery smoke", "A retreating squad gets an artillery smoke screen (needs Artillery support).", "CHECKBOX", [], true],
+    ["Waldo_AIPass_AircraftBreak_Enable", "Aircraft break-away", "WMP gunships and Dynamic AA fighters jink away from missile launches. Test first.", "CHECKBOX", [], false],
+    ["Waldo_AIRebalance_Mode", "Lighting", "Automatic follows ambient darkness and equipped night vision. Day disables the extra penalty; Low light retains the legacy night profile.", "COMBO", [["AUTO","DAY","NIGHT"],["Automatic visibility","Daylight override","Low light (legacy)"]], "AUTO"],
+    ["Waldo_AIRebalance_Profile", "Skill profile", "Mission-configured WMP skill profile; independent of behaviour profile.", "COMBO", [_skillProfiles,_skillLabels], "LINE"],
+    ["Waldo_AIPass_LambsMode", "LAMBS integration", "Split leaves in-contact tactics to LAMBS. WMP temporarily disables LAMBS group AI for managed squads.", "COMBO", [["SPLIT","WMP"],["Split by feature","WMP only"]], "SPLIT"],
+    ["Waldo_AIPass_VehicleDismount_Enable", "Vehicle contact dismount", "Unloads capable passengers only when safely stopped on dry ground.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleRemount_Enable", "Vehicle remount", "Allows safe conscious passengers to reboard after Smart AI contact. Convoy resume stays explicit.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_VehicleWithdraw_Enable", "Vehicle withdrawal", "Allows damaged vehicles to withdraw and use existing smoke.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_CoverValidation_Enable", "Additional cover checks", "Adds bounded slope and body clearance checks to shared cover selection.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_MountedFire_Enable", "Convoy mounted targeting", "WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_Cover_Enable", "Convoy dismount movement", "Moves dismounted passengers clear of vehicles; seeks cover during contact.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_AvoidInfantry_Enable", "Convoy infantry avoidance", "Optional short-range friendly infantry corridor checks before driving.", "CHECKBOX", [], false],
+    ["Waldo_Convoy_ContactHalt_Enable", "Convoy contact halts", "Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_Unload_Enable", "Convoy cargo unloading", "Allows WMP passenger unloading on halt. Operating crews remain aboard.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Hearing_Enable", "Nearby gunfire investigation", "Optional FiredNear awareness within the engine event range. Records an uncertain area, never a target reveal. Disabled by default.", "CHECKBOX", [], false],
+    // Squad behaviour
+    ["Waldo_AIPass_BehaviourProfile", "Behaviour profile", "Tactics profile for every squad without a group or faction profile of its own. Skill values are not changed.", "COMBO", [_profiles, _profileLabels], ""],
+    ["Waldo_AIPass_Aggression", "Aggression", "Scales how often squads flank, assault, advance, investigate and join coordinated assaults. Default 1.2 adds tactical initiative; 1 is the profile's own value, 0 never, 2 doubles the chance before clamping.", "SLIDER", [0, 2, 2], 1.2],
+    ["Waldo_AIPass_Cohesion", "Cohesion", "How much punishment squads take before morale breaks. Above 1 they hold longer, below 1 they break sooner.", "SLIDER", [0.5, 2, 2], 1],
+    ["Waldo_AIPass_ReactionSpeed", "Reaction speed", "How often squads re-assess. Above 1 they react faster and use more server time; below 1 slower.", "SLIDER", [0.5, 2, 2], 1],
+    ["Waldo_AIPass_EngageRange", "Engagement range (m)", "Known enemies within this range of a squad leader are acted on.", "SLIDER", [200, 1500, 0], 800],
+    ["Waldo_AIPass_Flank_MaxRange", "Flank range (m)", "Enemies farther than this are not flanked.", "SLIDER", [100, 800, 0], 400],
+    ["Waldo_AIPass_Morale_RetreatDistance", "Retreat distance (m)", "How far a broken squad falls back.", "SLIDER", [50, 500, 0], 200],
+    ["Waldo_AIPass_ZeusHoldSeconds", "Zeus hold (s)", "How long Cortex leaves a squad alone after Zeus edits it or opens its attributes. Selecting a squad for inspection does not interrupt it.", "SLIDER", [0, 600, 0], 120],
+    // Support
+    ["Waldo_AIPass_ContactReports_Radius", "Radio report range (m)", "How far squads pass sightings by radio.", "SLIDER", [0, 1500, 0], 500],
+    ["Waldo_AIPass_Reinforce_Radius", "Reinforcement radius (m)", "How far away idle squads may be sent to help.", "SLIDER", [100, 2000, 0], 600],
+    ["Waldo_AIPass_Reinforce_MaxResponders", "Reinforcing squads", "Squads sent to help one squad in contact.", "SLIDER", [0, 5, 0], 2],
+    ["Waldo_AIPass_Artillery_Bursts", "Burst limit", "Maximum HE bursts per mission; smoke uses one burst.", "SLIDER", [1, 5, 0], 3],
+    ["Waldo_AIPass_Artillery_RoundInterval", "Within-burst interval (s)", "Minimum seconds between confirmed rounds inside one burst.", "SLIDER", [1, 15, 0], 2],
+    ["Waldo_AIPass_Artillery_LocationResetDistance", "New location distance (m)", "Reported movement in metres that resets opening offset and safety checks.", "SLIDER", [50, 500, 0], 150],
+    ["Waldo_AIPass_CounterBattery_RadarDelay", "Counter-battery: radar delay (s)", "Counter-battery acquisition seconds with radar coverage; capped by the normal delay.", "SLIDER", [1, 120, 0], 20],
+    // Artillery support
+    ["Waldo_AIPass_Artillery_Rounds", "Support: rounds per burst", "Rounds in each support burst. The burst limit caps the mission.", "SLIDER", [1, 10, 0], 3],
+    ["Waldo_AIPass_Artillery_MaxError", "Support: accuracy needed (m)", "Largest target position error a squad may call fire on. Lower means fewer, more accurate missions.", "SLIDER", [10, 200, 0], 50],
+    ["Waldo_AIPass_Artillery_Cooldown", "Support: cooldown (s)", "Cooldown after a finite support mission ends.", "SLIDER", [30, 600, 0], 120],
+    ["Waldo_AIPass_Artillery_MinFriendlyDistance", "Support: safety distance (m)", "No mission lands this close to friendlies or civilians.", "SLIDER", [50, 500, 0], 200],
+    ["Waldo_AIPass_Artillery_ShootAndScoot", "Support: shoot and scoot", "Mobile guns move after a support mission.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_Artillery_DefaultRole", "Default battery role", "Missions taken by guns without a role of their own.", "COMBO", [["BOTH", "SUPPORT", "COUNTER"], ["Support and counter-battery", "Support only", "Counter-battery only"]], "BOTH"],
+    ["Waldo_AIPass_Artillery_OpeningSafeDistance", "Opening safety distance (m)", "Minimum commanded opening aim distance from the reported target and living players. Player positions are rejection-only.", "SLIDER", [100, 500, 0], 200],
+    ["Waldo_AIPass_Artillery_OpeningBuffer", "Opening extra buffer (m)", "Additional room for ballistic spread and player movement. Live shells are not a guarantee of harmless impacts.", "SLIDER", [50, 300, 0], 100],
+    ["Waldo_AIPass_Artillery_WarningInterval", "Ranging warning interval (s)", "Minimum pause after estimated impact before the next burst.", "SLIDER", [10, 60, 0], 20],
+    // Counter-battery
+    ["Waldo_AIPass_CounterBattery_Rounds", "Counter-battery: rounds per burst", "Rounds in each counter-battery burst; ranging changes between bursts.", "SLIDER", [1, 10, 0], 4],
+    ["Waldo_AIPass_CounterBattery_Delay", "Counter-battery: delay (s)", "Acquisition delay without radar. Radar can shorten it.", "SLIDER", [1, 120, 0], 60],
+    ["Waldo_AIPass_CounterBattery_Interval", "Counter-battery: interval (s)", "Cooldown after the finite response ends; a new firing event is needed.", "SLIDER", [10, 600, 0], 60],
+    ["Waldo_AIPass_CounterBattery_MinFriendlyDistance", "Counter-battery: safety distance (m)", "No fire back when friendlies or civilians are this close to the enemy gun.", "SLIDER", [50, 500, 0], 200],
+    ["Waldo_AIPass_CounterBattery_ShootAndScoot", "Counter-battery: shoot and scoot", "Mobile guns move after a counter-battery mission.", "CHECKBOX", [], true],
+    // Airborne insertion
+    ["Waldo_AIPass_Airborne_DeployDistance", "Airborne: jump distance (m)", "AI passengers jump when their aircraft is this close to a known enemy.", "SLIDER", [200, 2000, 0], 700],
+    ["Waldo_AIPass_Airborne_Altitude", "Airborne: jump altitude (m)", "Height the aircraft climbs to for the drop.", "SLIDER", [150, 600, 0], 250],
+    ["Waldo_AIPass_Airborne_MinAltitude", "Airborne: lowest jump (m)", "Never jump lower than this.", "SLIDER", [80, 300, 0], 120]
+];
+// Section metadata keeps each switch beside its related tuning fields in one control module.
+_spec apply {
+    private _name = _x select 0;
+    private _section = switch (true) do {
+        case (_name find "Artillery" >= 0 || {_name find "CounterBattery" >= 0}): {"ARTILLERY"};
+        case (_name find "Airborne" >= 0 || {_name find "Aircraft" >= 0}): {"AIR"};
+        case (_name find "Vehicle" >= 0 || {_name find "Convoy" >= 0}): {"VEHICLES"};
+        case (_name find "Reinforce" >= 0 || {_name find "Coordinated" >= 0} || {_name find "ContactReports" >= 0} || {_name find "AmmoShare" >= 0}): {"SUPPORT"};
+        case (_name find "Morale" >= 0 || {_name find "Retreat" >= 0} || {_name find "Surrender" >= 0} || {_name find "Regroup" >= 0}): {"MORALE"};
+        case (_name find "Flank" >= 0 || {_name find "Advance" >= 0} || {_name find "Assault" >= 0} || {_name find "StreetCrossing" >= 0} || {_name find "CoverValidation" >= 0}): {"MOVEMENT"};
+        case (_name find "Contact_" >= 0 || {_name find "PostContact" >= 0} || {_name find "Investigate" >= 0} || {_name find "Hearing" >= 0} || {_name find "FireControl" >= 0} || {_name find "Grenade" >= 0} || {_name find "AntiArmour" >= 0} || {_name find "Stance" >= 0}): {"CONTACT"};
+        default {"GENERAL"};
+    };
+    _x + [_section]
+}

@@ -2,6 +2,8 @@
  * Author: WaldoTheWarfighter
  * Runs the full-pack audit cases that require a local player interface and real interaction context.
  *
+ * Locality/authority: scheduled interface-client checks; no server gameplay state is changed.
+ * Repeat/JIP: each run records fresh assertions for its current interface; completion is published.
  * Arguments: None.
  * Return Value: Nothing; records assertions through Waldo_QA_fnc_assert and publishes client completion.
  *
@@ -59,9 +61,15 @@ if (_suite in ["all", "core"]) then {
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/all-module-families", {
+        private _expected=49;
+        if (missionNamespace getVariable ["Waldo_Hazard_Enable",false]) then {_expected=_expected+2};
+        if (missionNamespace getVariable ["Waldo_Headless_Enable",false]) then {_expected=_expected+3};
+        // Conditional families register after shared configuration readiness.
+        private _deadline=diag_tickTime+10;
+        waitUntil {uiSleep 0.1; (missionNamespace getVariable ["Waldo_ZenModuleCount",0]) == _expected || {diag_tickTime >= _deadline}};
         private _coreCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
         private _economyCount = missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0];
-        ["core/zen/all-module-families", _coreCount == 52 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
+        ["core/zen/all-module-families", _coreCount == _expected && {_economyCount == 19}, [_coreCount, _economyCount, _expected]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/icons-present", {

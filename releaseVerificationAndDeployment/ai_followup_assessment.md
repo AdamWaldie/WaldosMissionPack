@@ -32,9 +32,9 @@ source and archive hashes remain in the temporary review material, outside the p
 
 ### Capability differs from tactical role
 
-`MissionScripts/AiScripting/SmartAIPass/aiPassUnitRole.sqf` returns LEADER before inspecting a
+`MissionScripts/AiScripting/Cortex/cortexUnitRole.sqf` returns LEADER before inspecting a
 launcher. Its launcher test returns AT without distinguishing anti-air ammunition from anti-armour
-ammunition. `aiPassReinforce.sqf` and `aiPassMorale.sqf` use this role result as capability evidence.
+ammunition. `cortexReinforce.sqf` and `cortexMorale.sqf` use this role result as capability evidence.
 Consequently a leader can carry usable AT without counting, while an AA-only soldier can count as AT.
 The loaded-magazine presence test also does not establish a positive round count.
 
@@ -48,7 +48,7 @@ leaders with launchers, incapacitated carriers, and inventory changes between se
 
 ### AI ownership currently limits cooperation
 
-`aiPassContactReport.sqf` only selects local receiving groups. `aiPassReinforce.sqf` only selects local
+`cortexContactReport.sqf` only selects local receiving groups. `cortexReinforce.sqf` only selects local
 responders and counts local commitments. This supports running on HCs but means assignment to different
 owners changes which squads can cooperate.
 
@@ -63,9 +63,9 @@ disconnect, target-report expiry, jamming changes and original waypoint restorat
 
 ### Passenger safety needs a shared contract
 
-`aiPassVehicles.sqf` orders general Smart AI cargo out based on nearby known threats without checking
+`cortexVehicles.sqf` orders general Smart AI cargo out based on nearby known threats without checking
 vehicle speed or water. `convoyCrewLocal.sqf` checks speed and consciousness but not whether dismounting
-would place passengers in water. `aiPassRestoreCalm.sqf` reboards surviving local passengers without an
+would place passengers in water. `cortexRestoreCalm.sqf` reboards surviving local passengers without an
 explicit ACE unconsciousness/life-state check. The general vehicle path is less guarded than the convoy.
 
 Use a shared passenger eligibility check for current seat, consciousness, operator control, ownership,
@@ -88,7 +88,7 @@ avoidance aid, not a guarantee against engine collisions. Do not scan every sold
 
 ### Better cover without a second controller
 
-`aiPassFindCover.sqf` already limits candidate objects to ten, rejects water and reserved positions,
+`cortexFindCover.sqf` already limits candidate objects to ten, rejects water and reserved positions,
 and tests obstruction from a believed threat. It does not explicitly validate slope, a full standing
 footprint or the walking route. A blocked firing ray also cannot guarantee ballistic protection.
 
@@ -136,3 +136,9 @@ Use the existing scheduler, bounded work per step, expiring reports and changed-
 The immediate value is fixing capability, passenger safety and cross-owner cooperation, then improving
 cover and vehicle/infantry separation. Broad CAS automation, medical replacement and another tactical
 controller would add overlap and risk before these foundations are proven. The follow-up implementation now adds capability and passenger checks, cross-owner reports and reserved support, bounded cover checks, optional hearing and optional convoy infantry avoidance. Each behaviour uses existing settings transport or an independent child switch. In-engine acceptance remains outstanding. Mechanized overwatch, casualty assignment and prisoner recovery remain proposals; no additional medical controller or treatment override was added.
+
+### Earlier archive and convoy review coverage
+
+Verified the earlier archive against its local extraction: 884 files, none missing or changed. Targeted code inspection covered scheduling, protected commands, building-entry logic and the separate convoy candidate's path creation, speed feedback and driver replacement. This is a targeted implementation review, not a claim that every line in every package was audited.
+
+The convoy review supports bounded path sampling, gap-based speed correction and retaining armed crew. Its replacement-driver routine creates a new group, copies waypoints, moves a crew member directly into the driver seat and sets CARELESS behaviour. That would discard WMP ownership and role contracts, so it is not adopted. The building-entry code's whole-population enemy checks and automatic grenade replenishment are also rejected. Existing WMP knowledge, inventory and owner checks remain authoritative. No source identifiers or imported implementation files are included in the release.

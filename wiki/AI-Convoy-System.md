@@ -17,7 +17,7 @@ Use a final MOVE waypoint for automatic arrival unloading. GETOUT orders also af
 crew through the engine, so they are unsuitable when drivers and gunners must stay aboard.
 
 ```sqf
-[convoyGroup] call Waldo_fnc_SimpleAiConvoy; // 30 km/h, 15 m, push through
+[convoyGroup] call Waldo_fnc_SimpleAiConvoy; // 30 km/h, 30 m, push through
 [convoyGroup, 25, 25, false] call Waldo_fnc_SimpleAiConvoy; // stop on contact
 [convoyGroup, 0] call Waldo_fnc_SimpleAiConvoy; // hold vehicles and dismount cargo
 [convoyGroup, 30, 20, true] call Waldo_fnc_SimpleAiConvoy; // explicitly resume
@@ -186,3 +186,15 @@ contact and dismount. Verify original settings after release and no duplicate or
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
+
+
+The default separation is now 30 m in both Zeus and the script API. Explicit
+mission values remain valid, including 15 m. Spacing is controlled by speed;
+the predecessor trail is no longer shortened to enforce the same gap a second
+time. Local halt/resume preserves its trail, while a new owner reacquires the
+predecessor using native following. These revisions require the current live
+continuity and stop/resume matrix to pass before acceptance.
+
+### Stalled movement and Zeus feedback
+
+Accepted halt transitions notify assigned Zeus players with the convoy name, reason and grid. Duplicate halt requests do not repeat the notification. After three unsuccessful movement retries, the next stalled check requests a persistent STALLED halt. This halt retains passengers and operating crew; it identifies the affected vehicle to Zeus. An explicit resume retries movement after the obstruction or order has been addressed. This does not guarantee passage through a roadblock and does not teleport vehicles or alter collisions. Individual obstacle recovery and live acceptance remain under test.

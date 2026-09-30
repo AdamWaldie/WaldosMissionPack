@@ -8,7 +8,7 @@
  * Runs only on curator interface clients. One Draw3D handler is stored and removed repeat-safely.
  * A true request is ignored unless both HC support and the authoritative debug state are enabled;
  * this prevents a stale JIP/module call from creating an overlay in an HC-disabled mission.
- * The renderer reads the server-published owner snapshot and HC registry every frame, so migrations
+ * The renderer reads requested and observed owners from one server snapshot; pending transfers are amber. It also reads the HC registry every frame, so migrations
  * appear without rebuilding the overlay. It may install before curator assignment: drawing begins
  * automatically as soon as this player receives Zeus, avoiding the initial-assignment race.
  * Locality and authority: interface-client presentation only. The server owns HC capability, debug
@@ -35,7 +35,6 @@ if (!_allowed) exitWith {
 private _handler = addMissionEventHandler ["Draw3D", {
     if (isNull getAssignedCuratorLogic player) exitWith {};
     private _clients = missionNamespace getVariable ["Waldo_Headless_Clients", []];
-    private _managed = missionNamespace getVariable ["Waldo_Headless_ManagedGroups", []];
     private _owners = missionNamespace getVariable ["Waldo_Headless_GroupOwnerSnapshot", []];
     {
         private _group = _x;
@@ -44,16 +43,17 @@ private _handler = addMissionEventHandler ["Draw3D", {
             private _ownerIndex = _owners findIf {(_x param [0, grpNull]) isEqualTo _group};
             private _owner = if (_ownerIndex >= 0) then {(_owners select _ownerIndex) param [1, -1]} else {-1};
             private _clientIndex = _clients findIf {(_x param [0, -1]) == _owner};
-            private _managedIndex = _managed findIf {(_x param [0, grpNull]) isEqualTo _group};
-            private _expected = if (_managedIndex >= 0) then {(_managed select _managedIndex) param [1, -1]} else {-1};
-            private _mismatch = _expected > 0 && {_expected != _owner};
+            private _record = if (_ownerIndex >= 0) then {_owners select _ownerIndex} else {[]};
+            private _expected = _record param [2,-1];
+            private _pending = _record param [3,false];
+            private _mismatch = !_pending && {_expected > 0} && {_expected != _owner};
             private _ownerLabel = if (_owner < 0) then {"OWNER PENDING"} else {if (_owner == 2) then {"SERVER"} else {
                 if (_clientIndex >= 0) then {(_clients select _clientIndex) param [1, format ["HC %1", _owner]]} else {format ["OWNER %1", _owner]}
             }};
-            private _stateLabel = if (_mismatch) then {format ["MISMATCH expected %1 / actual %2", _expected, _owner]} else {_ownerLabel};
-            private _colour = if (_mismatch) then {[1, 0.12, 0.12, 0.95]} else {
+            private _stateLabel = if (_pending) then {format ["TRANSFERRING | observed %1",_owner]} else {if (_mismatch) then {format ["MISMATCH expected %1 / actual %2", _expected, _owner]} else {_ownerLabel}};
+            private _colour = if (_pending) then {[1,0.9,0.2,0.95]} else {if (_mismatch) then {[1, 0.12, 0.12, 0.95]} else {
                 if (_owner == 2) then {[1, 0.62, 0.14, 0.9]} else {if (_clientIndex >= 0) then {[0.2, 0.65, 1, 0.9]} else {[1, 0.9, 0.2, 0.9]}}
-            };
+            }};
             private _position = (getPosASLVisual _leader) vectorAdd [0, 0, 2.2];
             drawIcon3D [
                 "\a3\ui_f\data\map\vehicleicons\iconvirtual_ca.paa", _colour, _position,

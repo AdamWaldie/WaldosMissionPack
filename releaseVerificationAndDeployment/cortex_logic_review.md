@@ -1,0 +1,26 @@
+# Cortex logic review — 26 September 2026
+
+This review is ongoing. Static inspection is not live acceptance.
+
+| Path | Finding | Change / acceptance |
+|---|---|---|
+| Garrison arrival | Horizontal-only distance could count a unit below its slot as arrived; timeout locked PATH even without arrival | Three-dimensional arrival required. Timeout records failure and does not lock PATH. |
+| Garrison movement | One direct move could be abandoned by the engine; no recovery was attempted | Reproduced twice with correct destinations and PATH enabled. Testing entrance staging and at most three throttled retries, only after an abandoned/stalled move. Not yet accepted. |
+| Explicit infantry orders | Starting an explicit order prevented new drills but did not retire an existing flank/advance or investigation | Restore transient movement before applying valid defence, garrison or clearing orders. Live transition test outstanding. |
+| External garrison/clearing handover | Previous WMP explicit orders could remain active while another controller received the group | Release prior WMP explicit and transient orders before handover. Integration retest outstanding. |
+| Failed garrison request | Clearing was released before runtime readiness refusal | Move cleanup after readiness validation; refuse without replacing the old order. |
+| Clearing timeout | Unvisited positions were added to the cleared list after 25 seconds | Only physical arrival marks a position cleared; timeout ends with INCOMPLETE and publishes an explicit result. Live retest outstanding. |
+| Repeated release | Release issued formation commands even when no matching Cortex assignment existed | No-op when neither group order nor unit assignments exist. |
+| Audit building | Mission-placed comparison inherited simulation disabled from the static fixture builder | Explicit simulation-enabled fixture and generated-mission assertion added. Previous comparison is not valid acceptance evidence. Runtime simulation confirmed true in runtime-20260926-135217; garrison and engine comparison still failed. Door-access comparison added without replacing those failures. |
+| Feature defaults | Master Cortex and artillery roles default off; contact and many tactics default on beneath the master | Audit explicitly enables required roles. Normal missions still need the master enabled. No blanket enabling of compatibility-sensitive features. |
+| Audit/UI settings | Test settings were restored before opening Control without a clear explanation | Guide now identifies live master/contact/regroup switches and explains post-test restoration. Fresh display validation outstanding. |
+| Audit assertions | Acceptance/assignments could pass while soldiers stood still | Added actual arrival and hold checks, exact fixture count/liveness, per-unit position/destination/command logs and destination markers. Defence movement observed on server and both HCs; garrison correctly failed. |
+| Convoy orders | Active fallback followed the group leader rather than the immediate predecessor | Bounded predecessor trails replace active formation-follow fallback. Column and corner passed; final arrival/contact retest outstanding. |
+
+The supplied source implementations were inspected directly for garrison assignment/maintenance and convoy path construction. They are comparison material, not proof of correctness or code to import wholesale. The mission implementation retains owner-local commands, explicit authority, bounded jobs and independent feature gates. No FSM replacement is introduced.
+
+Still reviewing: scheduler lifecycle and completed-order restart, capability filtering, explicit/automatic order arbitration, settings dependencies, headless loss/re-adoption, selected-object module payloads, finite fire state transitions, and cleanup when gates change.
+
+Combat audit at valid tactical range (runtime-20260926-141233) started both drills but did not complete movement. Two flank members reached their first spots; one remained at its start. Advance also stalled. Both now end STALLED without success counters. Testing retirement of prior explicit fire/formation commands before each bound; acceptance remains pending.
+
+The first combat fixture was about 9 km from the player and therefore outside the 2.5 km tactical range. Its failed starts are invalid behaviour evidence. The corrected fixture explicitly checks actual player distance.

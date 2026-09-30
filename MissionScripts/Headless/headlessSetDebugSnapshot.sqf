@@ -11,11 +11,11 @@
  * public mission state for current and joining curators.
  *
  * Arguments:
- * 0: ownership snapshot <ARRAY> - rows shaped `[group, network owner id]` (default []).
+ * 0: ownership snapshot <ARRAY> - rows shaped `[group, observed owner, requested owner, transfer pending]` (default []).
  *
  * Return Value: Boolean - true when a changed snapshot was published; false otherwise.
  * Current caller: Waldo_fnc_HeadlessPublishDebugSnapshot's server observer.
- * Example: [[_group, groupOwner _group]] call Waldo_fnc_HeadlessSetDebugSnapshot;
+ * Example: [[[_group, groupOwner _group, -1, false]]] call Waldo_fnc_HeadlessSetDebugSnapshot;
  * Result: Returns true and publishes a changed snapshot, or false for an equal snapshot or
  * a call outside the server.
  */

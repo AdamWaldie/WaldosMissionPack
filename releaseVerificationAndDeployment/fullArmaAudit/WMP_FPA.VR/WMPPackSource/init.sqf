@@ -136,7 +136,7 @@ if (Waldo_CorpseTraps_Enable) then {
     if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
     if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
         [
-            missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],
+            missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"],
             missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
         ] call Waldo_fnc_AITweak;
     };
@@ -144,7 +144,7 @@ if (Waldo_CorpseTraps_Enable) then {
     [] call Waldo_fnc_HelicopterDecelerationInit;
     // Smart AI Pass: the server starts it and replays the start to headless clients (JIP-safe).
     if (isServer && {missionNamespace getVariable ["Waldo_AIPass_Enable", false]}) then {
-        [] call Waldo_fnc_AIPassInit;
+        [] call Waldo_fnc_CortexInit;
     };
 };
 /*===========================================================================================================================*/

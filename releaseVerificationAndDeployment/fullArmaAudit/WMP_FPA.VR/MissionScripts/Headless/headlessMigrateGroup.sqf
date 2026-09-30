@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * The single funnel for every setGroupOwner call this rework performs. No other WMP script may call
  * setGroupOwner directly - every migration routes through here so Waldo_Headless_ManagedGroups stays
- * authoritative and diagnostics never drifts from the truth.
+ * authoritative and diagnostics never drifts from the truth. A refused migration leaves existing
+ * registry state intact because ownership has not changed. Repeated refusals have no side effects.
  *
  * Waldo_Headless_ManagedGroups only ever holds groups CURRENTLY assigned to a connected headless
  * client - a group returning to the server (or found dead/empty) is removed from the registry
@@ -76,9 +77,13 @@ private _serverOwned = _group getVariable ["Waldo_ServerOwnedFeature", false]
         || {_vehicle getVariable ["acex_headless_blacklist", false]}
     } >= 0};
 if (_targetOwner != 2 && {_serverOwned}) exitWith {
-    [] call _removeRegistryEntry;
+    // Refusal does not change ownership. Preserve any existing HC registry entry;
+    // only a successful server return or dead/empty-group cleanup removes it.
     private _reason = if ((units _group) findIf {(vehicle _x) isKindOf "Helicopter"} >= 0) then {"helicopter-flight-locality"} else {"server-owned-feature"};
-    diag_log format ["[WMP HEADLESS] Refused HC migration group=%1 target=%2 reason=%3.", _group, _targetOwner, _reason];
+    diag_log format ["[WMP HEADLESS] Refused HC migration group=%1 target=%2 reason=%3 groupFeature=%4 groupExcluded=%5 blockers=%6.",
+        _group, _targetOwner, _reason, _group getVariable ["Waldo_ServerOwnedFeature",false],
+        _group getVariable ["Waldo_Headless_ExcludeGroup",false],
+        (units _group) apply {private _v=vehicle _x; [netId _x,typeOf _v,_v getVariable ["Waldo_ServerOwnedFeature",false],_v getVariable ["acex_headless_blacklist",false]]}];
     ["MIGRATE_BLOCKED", format ["group=%1 target=%2 reason=%3", _group, _targetOwner, _reason]] call Waldo_fnc_HeadlessDebugLog;
     false
 };
@@ -120,6 +125,7 @@ if (_finalOwner == 2) then {
 
 private _revision = (missionNamespace getVariable ["Waldo_Headless_MigrationRevision", 0]) + 1;
 missionNamespace setVariable ["Waldo_Headless_MigrationRevision", _revision];
+_group setVariable ["Waldo_Headless_MigrationStartedAt", serverTime];
 _group setVariable ["Waldo_Headless_ExpectedAdoption", [_revision, _finalOwner], true];
 [_group, _previousOwner, _finalOwner, _revision] remoteExecCall ["Waldo_fnc_HeadlessAdoptGroupLocal", _finalOwner];
 diag_log format ["[WMP HEADLESS] Group %1 migrated from owner=%2 to owner=%3.", _group, _previousOwner, _finalOwner];

@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Installs the repeat-safe event-driven handlers for improved AI helicopter landings. It mirrors
  * the AI skill system: a CBA class-init event catches editor, Zeus and scripted helicopters, while
- * client and player machines. On the server, every non-UAV helicopter is excluded from automatic
+ * client and player machines. Parachutes are excluded before installing any flight controller or pin.
+ * On the server, every non-UAV helicopter is excluded from automatic
  * ACE/WMP headless-client transfer before its crew is considered for balancing. Dedicated testing
  * showed airborne helicopters losing stable flight immediately after an ACE `setGroupOwner`
  * transition, before this landing controller ever activated. Keeping the aircraft group on the
@@ -28,7 +29,7 @@ missionNamespace setVariable ["Waldo_ImprovedHelicopterLanding_HandlerInstalledL
 
 private _install = {
     params [["_helicopter", objNull, [objNull]]];
-    if (isNull _helicopter || {!(_helicopter isKindOf "Helicopter")} || {getNumber (configOf _helicopter >> "isUav") != 0}) exitWith {};
+    if (isNull _helicopter || {!(_helicopter isKindOf "Helicopter")} || {_helicopter isKindOf "ParachuteBase"} || {getNumber (configOf _helicopter >> "isUav") != 0}) exitWith {};
     // ACE Headless checks this public vehicle flag before every automatic transfer. Set it on the
     // aircraft itself so it is already effective when an empty helicopter receives crew later.
     // The server is authoritative for this compatibility boundary; clients only install locality

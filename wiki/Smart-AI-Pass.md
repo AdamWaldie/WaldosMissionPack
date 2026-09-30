@@ -1,8 +1,10 @@
-# Smart AI Pass
+# WMP Cortex
+
+Cortex functions use `Waldo_fnc_Cortex...`; their implementation is in `MissionScripts/AiScripting/Cortex/`. Older `Waldo_fnc_AIPass...` names remain compatibility aliases to the same implementation. Existing `Waldo_AIPass_...` configuration and state keys are retained for mission compatibility.
 
 > **Use this page when:** you want non-player AI squads to fight, move and support each other more sensibly without adding an AI mod.
 
-_Associated Files: `MissionConfig/aiConfig.sqf`; `MissionScripts/AiScripting/SmartAIPass/` (scheduler, eligibility, Zeus priority, group tick, profiles and every behaviour); `MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf` (AI Control and AI Orders dialogs); `initPlayerLocal.sqf` (Zeus watcher)_
+_Associated Files: `MissionConfig/aiConfig.sqf`; `MissionScripts/AiScripting/Cortex/` (scheduler, eligibility, Zeus priority, group tick, profiles and every behaviour); `MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf` (settings and purpose-based order dialogs); `initPlayerLocal.sqf` (Zeus watcher)_
 
 The Smart AI Pass improves how AI squads behave. [Waldo's AI Tuning](Waldos-AI-Tweak) changes how
 well they shoot and spot; this pass changes what they do. It covers every non-player AI group,
@@ -12,10 +14,11 @@ WMP implements these behaviours as mission scripts. Targeting uses engine knowle
 run on the AI owner. Restoration records preserve the values WMP needs when releasing its changes.
 These contracts still require in-engine acceptance.
 
-It is **off by default**, and every behaviour has its own switch.
+The Cortex master switch is **on by default** in the shipped configuration. Individual behaviour switches remain independently configurable.
 
-**Zeus always comes first.** The moment a curator selects a squad (or one of its soldiers), gives
-it any order, the pass steps back from that squad:
+**Zeus control takes priority.** Plain selection is observation and does not cancel an active
+behaviour. Waypoint and object edits, or opening attributes, mark the squad for owner-side release.
+The intended takeover coverage includes:
 - move and attack waypoints;
 - designating a target (a kill order);
 - moving it;
@@ -26,21 +29,21 @@ it any order, the pass steps back from that squad:
 The squad is left alone for `Waldo_AIPass_ZeusHoldSeconds` (default 120 s) after the last Zeus
 interaction. If Zeus gave it waypoints, it is left alone until it has finished them. The pass never
 removes or reorders a Zeus waypoint, and Zeus waypoints also cancel any WMP garrison, defence or clear
-order on that squad. Use **AI Orders** to keep a squad for Zeus permanently, or to hand it back. An
-order given through **AI Orders** (garrison, defend, clear, parachute out) counts as handing the squad
-to the pass: it clears the hold Zeus set by selecting the squad, and any earlier Zeus waypoints, so they
+order on that squad. Use **Manage Group Control** to keep a squad for Zeus permanently, or to hand it back. An
+order given through the purpose modules (garrison, defend, clear, parachute out) counts as handing the squad
+to the pass: it clears the previous Zeus hold and waypoint-hold flag, so they
 cannot refuse or cancel the order.
 
 ## Enable the pass
 
 1. Open `MissionConfig\aiConfig.sqf`.
-2. Change `Waldo_AIPass_Enable` from `false` to `true`.
+2. Cortex is enabled by default. Set `Waldo_AIPass_Enable` to `false` to disable it.
 3. Look at the behaviour switches (`Waldo_AIPass_<Behaviour>_Enable`). The combat behaviours are on
    by default. Artillery, counter-battery, airborne insertion, surrender, grenade evasion and
    aircraft flares are off until you turn them on.
 
 The server starts the pass and hands it to every headless client, including one that connects late.
-Zeus can change every switch during play from **AI Control**.
+Zeus can change every switch during play from **Cortex Control**.
 
 ## How a squad fights
 
@@ -68,28 +71,30 @@ touched.
 | Contact handling | `Waldo_AIPass_Contact_Enable` (on) | The state ladder above. Every combat behaviour needs it. |
 | Post-contact search | `Waldo_AIPass_PostContact_Enable` (on) | Security hold, two-man search, regroup. |
 | Investigation | `Waldo_AIPass_Investigate_Enable` (on) | The INVESTIGATE state above. |
-| Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. While bounding they do not stop to trade fire; on the final approach and assault they engage normally. The leader, machine gunners and AT gunners stay as the base of fire. The flanking team then holds the ground it took until the squad catches up. |
-| Final assault | `Waldo_AIPass_Assault_Enable` (on) | After a flank, if the enemy is within 80 m, one soldier throws a grenade (never near friendlies). The team then bounds to cover 12 m short of the enemy and rushes the position while the base of fire keeps suppressing. |
+| Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. Movers may fire while the stationary element covers; movement ownership prevents independent pursuit from replacing their bound. The leader, machine gunners and AT gunners stay as the base of fire. The flanking team holds while the covering element moves forward to consolidate; this also applies when no final assault is selected. |
+| Final assault | `Waldo_AIPass_Assault_Enable` (on) | After a flank or advance, an eligible nearby objective can trigger an approach 20 m short, an optional carried grenade with friendly-safety checks, then a clear-through 20 m beyond the fixed objective. The crossing waits for a confirmed grenade and its safety window; the covering element continues supporting. If the queued throw is explicitly cancelled before firing by its final checks, the assault continues without that grenade. An attempted throw whose outcome remains unknown still stops the drill safely. |
 | Bounding advance | `Waldo_AIPass_Advance_Enable` (on) | A squad that has been in a firefight for 30 s and still has a waypoint to reach pushes a fire team up to three covered bounds towards it, instead of stalling. |
-| Coordinated assault | `Waldo_AIPass_CoordinatedAssault_Enable` (on) | Once reinforcing squads reach their rally point, they assault the enemy from both sides while the squad in contact fires. |
+| Coordinated assault | `Waldo_AIPass_CoordinatedAssault_Enable` (on) | Once reinforcing squads rally, the server alternates moving and covering squads toward opposite approaches. Each moving squad uses successive fire-team bounds and can transition into the gated final assault. The original squad provides supporting fire. New combined bounds remain in live validation. |
 | Street crossing | `Waldo_AIPass_StreetCrossing_Enable` (on) | A flanking element stops at the road edge, throws smoke and crosses in one bound. |
 | Stance from cover | `Waldo_AIPass_Stance_Enable` (on) | Soldiers stand behind tall cover, kneel behind waist-high cover and go prone behind low cover. Stances you set yourself are left alone. |
 | Ammo sharing | `Waldo_AIPass_AmmoShare_Enable` (on) | A soldier down to his last magazine gets one from a squad-mate within 10 m who has plenty. |
 | Fire control | `Waldo_AIPass_FireControl_Enable` (on) | Soldiers deal with enemies within 20 m first and spread their fire across visible enemies. Machine gunners (and riflemen with ammunition to spare) suppress enemies that are known but hidden. Nobody is ordered to fire through friendlies or civilians. |
 | Morale and retreat | `Waldo_AIPass_Morale_Enable` (on) | Morale is driven by casualties, suppression, a lost leader, being outnumbered, and armour the squad cannot fight. Braver soldiers hold longer. A broken squad falls back 200 m under smoke. |
 | Surrender | `Waldo_AIPass_Surrender_Enable` (off) | The last one or two survivors of a broken, isolated squad drop their weapons and surrender. With ACE Captives loaded, players can take them prisoner. |
-| Grenade evasion | `Waldo_AIPass_GrenadeEvasion_Enable` (off) | AI move away from a live grenade they can see. Test it in your setup first (see Limitations). |
+| Grenade evasion | `Waldo_AIPass_GrenadeEvasion_Enable` (on) | AI move away from a live grenade they can see. Test it in your setup first (see Limitations). |
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
-| Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Infantry riding in the squad's vehicle get out under fire and get back in afterwards. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
+| Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Eligible cargo infantry, including a separate passenger squad, get out on known contact and reboard after contact ends. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
 | Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
 | Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass recent believed positions to nearby friendly squads for investigation, including squads on other owners. The range is 500 m through abstracted AI communications, or 35 m by voice. Radio jamming blocks the radio report. |
 | Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Candidates are considered by distance; when armour appears, one additional slot requires a soldier with usable AT ammunition. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help must pass WMP jamming checks. |
 | Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | Explicitly assigned spotters request finite HE ranging bursts from friendly artillery, including guns on another owner. Support corrections require observation and an unjammed report. Opening aim points avoid players; every shot checks friendlies and civilians. Mobile guns may relocate afterwards. |
-| Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
+| Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad requests a finite smoke screen from a same-side battery with smoke rounds. The server selects across owners; an inventory radio is not required, but jamming applies. Disabling requester smoke or parent artillery cancels remaining queued work. |
 | Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Acquires enemy firing locations, then fires finite ranging bursts. Radar reduces acquisition delay. |
 | Airborne insertion | `Waldo_AIPass_Airborne_Enable` (off) | AI squads riding in AI-flown helicopters or planes climb to jump altitude as they near an enemy they know about, then parachute out one at a time about 700 m away. Each soldier keeps his backpack. Once down they fight as a normal squad. Helicopters on an unload waypoint still land, and player-flown aircraft never trigger it. |
 | Aircraft flares | `Waldo_AIPass_AircraftFlares_Enable` (off) | WMP gunships and Dynamic AA fighters fire flares when a missile is launched at them. |
-| Aircraft break-away | `Waldo_AIPass_AircraftBreak_Enable` (off) | The same aircraft jink sideways away from the launch, without changing their orbit or waypoints. |
+| Aircraft break-away | `Waldo_AIPass_AircraftBreak_Enable` (off) | The same aircraft jink sideways away from the launch, without changing their orbit or waypoints. The response is rejected below 30 m terrain clearance or when its projected one- or two-second path falls below that clearance. Lateral speed is bounded to 18 m/s; an aircraft already exceeding that lateral speed receives no additional impulse. |
+
+Aircraft reactions recheck owner locality, active/pause state, pilot health, explicit exclusions, included sides/factions and Zeus priority. Delayed flare bursts repeat these checks. WMP gunship/Dynamic AA ownership is expected here; it does not grant an exemption from explicit compatibility exclusions. The live aircraft QA is partial and not yet accepted across native-AI, low-altitude and ownership variants.
 
 ## Behaviour profiles
 
@@ -113,17 +118,25 @@ A squad uses, in order:
 
 Edit `Waldo_AIPass_ProfileBehaviour` in `aiConfig.sqf` to change the numbers.
 
+### Vehicle crew and separate passenger squads
+
+Each passenger group's owner handles its own eligible cargo units. The group must know about a nearby enemy; merely sharing a vehicle does not inject the crew's knowledge. Routine unloading waits until the vehicle is stationary and safe. Drivers, commanders and operating gunners remain aboard. Only the group containing the effective vehicle commander may request vehicle withdrawal or gunnery.
+
+On a normal return to CALM, recorded passengers attempt to reboard the same vehicle for up to 60 seconds. New contact, an explicit order or a disabled remount feature cancels boarding. A newer assignment to a different vehicle retires the old remount attempt; cancellation only unassigns the original vehicle. Disabling Cortex contact dismount does not disable native Arma AI bailouts. Missing seats, vehicle loss or a failed attempt must not teleport passengers. WMP feature-owned vehicles, including active convoys, remain under their dedicated controller.
+
+Separate-group support is saved for PR #151 and has static regression coverage. Physical dismount/remount and cross-owner operation still require live acceptance. The audit retains native comparisons and both shared-group and separate-group layouts, adds stationary comparisons, and checks physical boarding into a replacement vehicle after another controller issues a new assignment. A native exit alone does not pass the Cortex-issued dismount check.
+
 ## Difficulty and tuning
 
 These settings set how hard the AI are without touching their skill values. Set them in
-`aiConfig.sqf` for the start of the mission, and change any of them during play with **WMP AI Control
-> AI Tuning** in Zeus. Changes reach the server and every headless client at once, including
+`aiConfig.sqf` for the start of the mission, and change any of them during play with **WMP Cortex
+> Cortex Control** in Zeus. Changes reach the server and every headless client at once, including
 headless clients that join later. Each squad uses them from its next step; nothing restarts.
 
 | Setting | Type | Default | Effect |
 |---|---|---|
 | `Waldo_AIPass_BehaviourProfile` | `""` | Tactics profile for every squad without its own or its faction's. Empty follows the AI Rebalance profile. |
-| `Waldo_AIPass_Aggression` | `1` | Scales how often squads flank, assault, advance, investigate and join coordinated assaults. `0` never, `2` twice as often. |
+| `Waldo_AIPass_Aggression` | `1.2` | Scales how often squads flank, assault, advance, investigate and join coordinated assaults. `0` never, `2` twice as often. |
 | `Waldo_AIPass_Cohesion` | `1` | How much punishment a squad takes before it breaks. Above `1` they hold longer. |
 | `Waldo_AIPass_ReactionSpeed` | `1` | How often squads re-assess. Above `1` they react faster and use more server time. |
 | `Waldo_AIPass_EngageRange` | `800` | Known enemies within this range (m) are acted on. |
@@ -139,11 +152,11 @@ headless clients that join later. Each squad uses them from its next step; nothi
 | `Waldo_AIPass_Artillery_Bursts`, `_RoundInterval`, `_LocationResetDistance` | `3`, `2`, `150` | HE burst cap; minimum spacing between rounds in seconds; reported relocation reset distance in metres. |
 | `Waldo_AIPass_Airborne_DeployDistance`, `_Altitude`, `_MinAltitude` | `700`, `250`, `120` | Airborne insertion. |
 
-The behaviour switches (which behaviours run at all) stay in **AI Control**. From a trigger or
+The behaviour switches (which behaviours run at all) share the same pages in **Cortex Control**. From a trigger or
 script:
 
 ```sqf
-[createHashMapFromArray [["Waldo_AIPass_Aggression", 1.5], ["Waldo_AIPass_Cohesion", 0.8]]] call Waldo_fnc_AIPassTuning;
+[createHashMapFromArray [["Waldo_AIPass_Aggression", 1.5], ["Waldo_AIPass_Cohesion", 0.8]]] call Waldo_fnc_CortexTuning;
 ```
 
 Only the settings above are accepted, and numbers are kept inside the same ranges as the Zeus
@@ -155,24 +168,26 @@ The two have separate switches (`Waldo_AIPass_Artillery_Enable`, `Waldo_AIPass_C
 and separate settings. Set roles on the server (or in an Eden init field, whose client calls are ignored). Each gun can also be limited to one job:
 
 ```sqf
-[this, "COUNTER"] call Waldo_fnc_AIPassSetArtilleryRole;   // gun's init field: counter-battery only
-[this, "SUPPORT"] call Waldo_fnc_AIPassSetArtilleryRole;   // squads' fire requests (and smoke) only
+[this, "COUNTER"] call Waldo_fnc_CortexSetArtilleryRole;   // gun's init field: counter-battery only
+[this, "SUPPORT"] call Waldo_fnc_CortexSetArtilleryRole;   // squads' fire requests (and smoke) only
 ```
 
-Guns without a role use `Waldo_AIPass_Artillery_DefaultRole`. In Zeus, **Artillery - Set Battery Role** applies the selected role to the exact gun. Counter-battery never fires when friendlies or civilians are within
+Guns without a role use `Waldo_AIPass_Artillery_DefaultRole`. In Zeus, **Configure Artillery Battery** applies the selected role to the exact gun. Counter-battery never fires when friendlies or civilians are within
 `Waldo_AIPass_CounterBattery_MinFriendlyDistance` of the enemy gun.
 
-Assign existing soldiers explicitly on the server, or select the soldier and use **Artillery - Set Up Spotter**. The group selector lists assigned spotter names. Assignment persists
+Assign existing soldiers explicitly on the server, or select the soldier and use **Assign Artillery Spotter**. The group selector lists assigned spotter names. Assignment persists
 until removed; it neither spawns nor equips anyone.
 
 ```sqf
-[spotter1, true] call Waldo_fnc_AIPassSetSpotter;
-[spotter1, false] call Waldo_fnc_AIPassSetSpotter; // remove assignment
+[spotter1, true] call Waldo_fnc_CortexSetSpotter;
+[spotter1, false] call Waldo_fnc_CortexSetSpotter; // remove assignment
 ```
 
 The soldier needs binoculars, recent target knowledge and a clear view. AI communications do not
 check inventory radios. WMP jamming still blocks a report. Assignment remains explicit, and the
 soldier watches the enemy and uses binoculars while reporting.
+
+Before the first round of each lethal HE burst, Cortex spawns four red smoke shells in a 25 m ring around the reported target and waits ten seconds. Later rounds in that burst do not repeat the warning. This applies to lethal support and counter-battery missions. Non-lethal smoke missions do not create red warning smoke or incur its ten-second delay. The warning marks the reported target, while opening HE ranging rounds retain their deliberately offset aim. Smoke is removed after sixty seconds. The server owns the warning phase, so transferring the gun to a headless client does not restart it. Eligibility and firing safety are checked again after the warning; a warning does not guarantee that the burst will proceed. This new warning path still requires live acceptance.
 
 Artillery fires finite bursts. Support defaults to three rounds per burst; counter-battery defaults
 to four. HE missions have a default cap of three bursts, configurable from one to five. Smoke uses
@@ -213,8 +228,7 @@ already in flight cannot be recalled.
 - The host is the nearest same-side infantry squad within `Waldo_AIPass_Regroup_SearchRadius`. The
   merged squad must stay within `Waldo_AIPass_Regroup_MaxGroupSize`.
 - Unconscious soldiers, protected service commands and explicit garrison/defend/clear orders prevent merging. Capacity is rechecked immediately before joining.
-- Survivors join once close to the host leader. If they get stuck or take too long, they join where
-  they stand.
+- Survivors join only once close to the host leader. A stalled move gets one retry; a second stall or the travel deadline ends the attempt without merging distant units.
 
 ### Counter-battery setup
 
@@ -223,8 +237,8 @@ Register an existing radar object for a supported side to shorten acquisition wi
 8 km radar range. Registration does not enable counter-battery or change the object's faction.
 
 ```sqf
-[radar1, west] call Waldo_fnc_AIPassRegisterRadar;
-[radar1, west, false] call Waldo_fnc_AIPassRegisterRadar; // remove
+[radar1, west] call Waldo_fnc_CortexRegisterRadar;
+[radar1, west, false] call Waldo_fnc_CortexRegisterRadar; // remove
 ```
 
 The old KNOWN/RADAR mode and RequireRadio settings remain compatibility entries; they no longer
@@ -232,7 +246,7 @@ gate automatic acquisition or inspect AI inventory.
 
 ## Orders
 
-Orders are given to a specific squad from a script or from Zeus (**WMP AI Control > AI Orders**).
+Orders are given to a specific squad from a script or from Zeus (**WMP Cortex**, using the appropriate purpose module).
 
 **Garrison** occupies the buildings around a point:
 - roofed and upper positions are taken first;
@@ -241,8 +255,8 @@ Orders are given to a specific squad from a script or from Zeus (**WMP AI Contro
   (`Waldo_AIPass_Garrison_BreakFraction`) or its morale breaks.
 
 ```sqf
-[group this, getPosATL this, 40] call Waldo_fnc_AIPassGarrison;   // garrison within 40 m
-[_group] call Waldo_fnc_AIPassGarrisonRelease;                    // let them move again
+[group this, getPosATL this, 40] call Waldo_fnc_CortexGarrison;   // garrison within 40 m
+[_group] call Waldo_fnc_CortexGarrisonRelease;                    // let them move again
 ```
 
 **Defend** forms a firing line across a facing direction:
@@ -253,15 +267,15 @@ Orders are given to a specific squad from a script or from Zeus (**WMP AI Contro
 - the line breaks at half strength or when morale breaks.
 
 ```sqf
-[group this, getMarkerPos "ridge", 45, 80] call Waldo_fnc_AIPassDefend;   // face 045, 80 m wide
-[_group] call Waldo_fnc_AIPassDefendRelease;
+[group this, getMarkerPos "ridge", 45, 80] call Waldo_fnc_CortexDefend;   // face 045, 80 m wide
+[_group] call Waldo_fnc_CortexDefendRelease;
 ```
 
 **Clear building**: the leader holds outside while the rest work through every room. The order ends
 when every room is checked or after four minutes.
 
 ```sqf
-[group this, nearestBuilding this] call Waldo_fnc_AIPassClearBuilding;
+[group this, nearestBuilding this] call Waldo_fnc_CortexClearBuilding;
 ```
 
 **Dynamic AO garrisons:** set `Waldo_AIPass_Garrison_DynamicAO` to `true` to give Dynamic AO's
@@ -278,8 +292,10 @@ the enemy position if they have none. To drop a squad at a moment you choose, fo
 trigger or the aircraft's waypoint On Activation:
 
 ```sqf
-[group this] call Waldo_fnc_AIPassAirborneDrop;   // "this" is one of the passengers
+[group this] call Waldo_fnc_CortexAirborneDrop;   // "this" is one of the passengers
 ```
+
+The static chute setting, `WALDO_STATIC_STATICCHUTE`, must name a vehicle derived from `ParachuteBase`. Cortex falls back to `NonSteerable_Parachute_F` for an unavailable class or a different object type, including a parachute backpack. Soldiers keep their original backpacks.
 
 This is separate from the player [Paradrop](Paradrop) feature. AI jumpers from Paradrop itself are
 taken over once they land (see Exclusions).
@@ -337,7 +353,7 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `Waldo_AIPass_Enable` | `false` | Master switch. `false` means no pass code runs anywhere. |
+| `Waldo_AIPass_Enable` | `true` | Master switch. `false` means no pass code runs anywhere. |
 | `Waldo_AIPass_IncludedSides` | `["WEST", "EAST", "GUER"]` | Sides the pass may command. |
 | `Waldo_AIPass_LambsMode` | `"SPLIT"` | Only matters with LAMBS loaded (see above). |
 | `Waldo_AIPass_FactionProfiles` | empty | Per-faction behaviour profile, for example OPF_F to ELITE. |
@@ -346,37 +362,30 @@ Difficulty settings are listed under [Difficulty and tuning](#difficulty-and-tun
 
 ## Zeus control
 
-- **WMP AI Control > AI Control** (formerly *AI Rebalance - Control*): skill profile, the Smart AI
-  Pass master switch, every behaviour switch and the LAMBS mode. Changes reach every machine,
-  including headless clients that join later.
-- **WMP AI Control > AI Tuning**: every difficulty and tuning setting in
-  [Difficulty and tuning](#difficulty-and-tuning), opening on the live values. Applying takes effect
-  on each squad's next step.
-- **WMP AI Control > AI Orders**: place it at a spot, pick a nearby AI group (a unit under the
-  module is listed first), and choose an order:
-  - garrison buildings here;
-  - defend a line here (width and facing);
-  - release a garrison, defence or clear-building order;
-  - clear the explicitly selected building (a missing target is rejected);
-  - parachute out now, for a squad riding as cargo in an AI-flown aircraft at least 120 m over land;
-  - keep the group for Zeus (exclude it from the pass);
-  - return it to the pass.
+- **Cortex Control** combines switches and values on eight purpose pages: General and profiles; Contact and investigation; Movement and cover; Reports and reinforcement; Morale and survivors; Vehicles and convoys; Artillery and counter-battery; Airborne and aircraft. Each page opens on current values and submits named settings. The server validates them and sends one complete revision before changing local workers. Older revisions cannot roll back a later update.
+- **Garrison Buildings** selects a nearby group and building-search radius.
+- **Defend Position** selects a nearby group, line width and facing.
+- **Clear Building** requires an explicitly selected building and a nearby group.
+- **Parachute Passengers** selects the passenger group; an AI-flown aircraft must be at least 120 m over land.
+- **Manage Group Control** releases a WMP garrison/defence/clear order, excludes a group for Zeus, or returns it to the pass. It does not remove separate per-feature exclusions or another controller's ownership flag.
 
-- **Artillery - Set Up Spotter**: select an existing AI soldier, then assign or remove its spotter role. No automatic equipment or spawns.
-- **Artillery - Set Battery Role**: select the exact artillery vehicle or mortar, including an empty gun, then choose support, counter-battery or both.
-- **Artillery - Set Up Radar**: select an existing vehicle or prop, choose the supported side and register/update or remove it. Object faction and supported side are independent.
-- **Convoy - Create Moving Group**: select a crewed AI land vehicle, then configure or stop its convoy.
+Purpose modules list nearby groups, with the explicitly selected unit's group first. They show only the fields relevant to that purpose. All are under **WMP Cortex**.
+
+- **Assign Artillery Spotter**: select an existing AI soldier, then assign or remove its spotter role. No automatic equipment or spawns.
+- **Configure Artillery Battery**: select the exact artillery vehicle or mortar, including an empty gun, then choose support, counter-battery or both.
+- **Configure Counter-battery Radar**: select an existing vehicle or prop, choose the supported side and register/update or remove it. Object faction and supported side are independent.
+- **Create Convoy**: select a crewed AI land vehicle, then configure or stop its convoy.
 
 For artillery setup: assign and equip a spotter with binoculars, set the battery role, then enable the Smart AI Pass
-and artillery in **AI Control**. Tune warning/safety settings in **AI Tuning**. Radar acceleration also needs the counter-battery switch. Setup helpers preserve the current switches.
+and artillery in **Cortex Control**. Tune warning/safety settings in **Cortex Control**. Radar acceleration also needs the counter-battery switch. Setup helpers preserve the current switches.
 
 Order success is reported after the current owner accepts it. Missing responses are reported as
 uncertain, rather than presented as successful execution.
 
 ## Independent behaviour controls
 
-The Smart AI master switch remains off by default. Child switches only apply while their parent
-feature is running. **WMP AI Control > AI Tuning** uses the same named settings as mission scripts;
+The Cortex master switch defaults on. Child switches only apply while their parent
+feature is running. **WMP Cortex > Cortex Control** uses the same named settings as mission scripts;
 the server validates changes and includes them in ordered settings replay for HCs and joining clients.
 Convoy controls apply to explicitly configured convoys independently of the Smart AI master switch.
 
@@ -388,7 +397,7 @@ Convoy controls apply to explicitly configured convoys independently of the Smar
 | `Waldo_AIPass_CoverValidation_Enable` | `true` | Validate cover footprint, slope and blocked line of sight. |
 | `Waldo_AIPass_Hearing_Enable` | `false` | Investigate nearby hostile gunfire reported by the engine to the squad leader. Also requires investigation. |
 | `Waldo_Convoy_MountedFire_Enable` | `true` | Direct operating weapon crews at known threats under their existing ROE. |
-| `Waldo_Convoy_Cover_Enable` | `true` | Initial passenger cover movement after an ambush halt. |
+| `Waldo_Convoy_Cover_Enable` | `true` | Short passenger movement clear of vehicles after a halt, using cover during contact. |
 | `Waldo_Convoy_ContactHalt_Enable` | `true` | Contact-driven halt requests under the existing push-through rule. |
 | `Waldo_Convoy_Unload_Enable` | `true` | Routine passenger unloading at arrival, manual stop and ambush halt. |
 | `Waldo_Convoy_AvoidInfantry_Enable` | `false` | Slow or stop for friendly infantry in the vehicle's immediate travel corridor. |
@@ -415,8 +424,10 @@ _patrol setVariable ["Waldo_AI_ExternalControl", false, true];
 `["ALL"]` excludes a group from automatic Smart AI and convoy commands. An exclusion can only remove
 permission; it cannot turn on a globally disabled feature. Separate convoy passenger and weapon-crew
 groups also apply their own unloading, cover and mounted-fire exclusions. Explicit garrison/defence
-orders retain their existing release workflow. Release an existing WMP order before handing that group
-to another controller. Cleanup may restore WMP-owned settings on the next worker step; give the new
+orders retain their existing release workflow for group-level exclusions. Turning the Cortex master
+switch off releases defence, garrison and clear-building orders on their current owner, including
+Cortex-owned movement restrictions. Turning it back on does not resume those cancelled orders.
+Release an existing WMP order before handing that group to another controller. Cleanup may restore WMP-owned settings on the next worker step; give the new
 controller its orders after that handover. Already fired shells and completed engine actions cannot
 be undone by changing a switch.
 
@@ -435,6 +446,22 @@ orders. Remounting also requires a movable vehicle and a free cargo seat. Effect
 surrender exclude unconscious, surrendered, captive and fleeing soldiers. ACE remains responsible for
 medical treatment and prisoner interactions.
 
+Convoy START adopts the seats of capable AI passengers already aboard, including passengers placed
+by script without an assignment. It does not board troops standing outside. During travel, convoy
+ownership excludes those passengers from general Cortex vehicle drills. Operating crew retain their
+seats. Explicit stop, route arrival and pinned-contact halt use the passenger-only unloading path.
+
+With `Waldo_Convoy_Cover_Enable` enabled, dismounted passengers receive a short move clear of the
+vehicles after any halt. During contact it seeks cover away from the reported threat; without verified
+cover it attempts a short dispersed position off the road. It performs at most two new searches per
+convoy and owner every five seconds. The order expires after 45 seconds, or ends on resume, release,
+external takeover or loss of eligibility. It preserves the passenger group's waypoints and adds no
+permanent perimeter task. If no suitable point is found, normal AI retains control.
+
+A travelling lead vehicle stalled short of an active MOVE waypoint retries its movement order after
+ten seconds without progress. This does not skip waypoint conditions, advance the route or teleport
+vehicles. Intentional spacing and pedestrian holds suppress the retry.
+
 A contact report carries up to three recent believed positions through the server. Delivery processes
 at most eight receiving groups every 0.5 seconds, expires after 15 seconds and rechecks eligibility,
 range, jamming and feature gates. A receiver retains the first position for at most 30 seconds and
@@ -446,7 +473,11 @@ request step. Each step runs no sooner than two seconds apart. A reservation las
 owner acknowledgement has a 15-second deadline. Owners wait up to five seconds for the matching state,
 then recheck current eligibility, capability, explicit orders and feature switches. Ownership changes
 redeliver the current reservation. Coordinated assault uses those same accepted reservations, avoiding
-another owner-local search that could double-book helpers.
+another owner-local search that could double-book helpers. While a squad is responding or assaulting,
+new independent flank and bounding-advance drills cannot take its movement control. Release clears
+that priority; emergency retreat and Zeus override retain their existing paths. Assault responders
+receive a finite approach waypoint. Contact entry does not impose COMBAT on them; native combat
+reactions remain available. Physical arrival is still under live validation and has failed recent QA.
 
 Optional hearing uses one tracked `FiredNear` handler on an eligible AI leader. It records a position
 rounded to a 50 m grid, at most once per ten seconds, with a 20-second expiry. Suppressed shots beyond
@@ -491,8 +522,9 @@ crowded corridor requests a stop. It changes the existing speed request without 
 
 ## Review corrections
 
-Zeus waypoint edits use the engine group/index event payload; waypoint deletion and selection use
-the waypoint-array payload. Garrison, defence and clear-building orders now reject groups that fail
+Zeus waypoint edits use the engine group/index event payload; waypoint deletion and attribute opening use
+the waypoint-array payload. Selection-only handlers were removed after a live audit showed that inspecting
+a retreating survivor cancelled its movement. Actual curator event coverage remains under live validation. Garrison, defence and clear-building orders now reject groups that fail
 the shared eligibility gate, including player squads and crews owned by other WMP features. Repeated
 garrison and defence placement invalidates older arrival jobs. Garrison release only restores PATH
 when the pass disabled it.
@@ -509,21 +541,29 @@ current owner. These changes have static regression coverage; their engine behav
 ## Remove or diagnose
 
 Mission diagnostics include rows under area `ai`:
-- `smart-ai-pass`: scheduler state, queued jobs, pause;
-- `smart-ai-pass-regroup`: regroups and units joined;
-- `smart-ai-pass-groups`: managed squads, squads in contact and retreating, garrisons, flanks,
+- `cortex`: scheduler state, queued jobs, pause;
+- `cortex-regroup`: regroups and units joined;
+- `cortex-groups`: managed squads, squads in contact and retreating, garrisons, flanks,
   retreats, surrenders, reinforcements, grenade reactions;
-- `smart-ai-pass-drills`: assaults, advances, investigations, coordinated assaults, magazines shared,
+- `cortex-drills`: assaults, advances, investigations, coordinated assaults, magazines shared,
   defences;
-- `smart-ai-pass-zeus`: squads held by Zeus, squads on Zeus waypoints, squads excluded;
-- `smart-ai-pass-support`: artillery, radars, airborne drops, flares;
-- `smart-ai-pass-tuning`: behaviour profile, aggression, cohesion, reaction speed, default battery
+- `cortex-zeus`: squads held by Zeus, squads on Zeus waypoints, squads excluded;
+- `cortex-support`: artillery, radars, airborne drops, flares;
+- `cortex-tuning`: behaviour profile, aggression, cohesion, reaction speed, default battery
   role and counter-battery mode;
-- `smart-ai-pass-lambs`: LAMBS detection and mode.
+- `cortex-lambs`: LAMBS detection and mode.
 
 Counters are for the server; headless-client squads are counted on their own machine. RPT lines
-are tagged `[WMP AI PASS]`. Set `Waldo_AIPass_Enable` to `false`, or untick **Smart AI Pass** in
+are tagged `[WMP CORTEX]`. Set `Waldo_AIPass_Enable` to `false`, or untick **Smart AI Pass** in
 Zeus, to remove it completely: every squad is handed back to its own orders.
+
+## Reinforcement readiness
+
+A reinforcement waypoint uses a 10 m completion radius. Cortex records rally readiness only when at least three combat-effective members are present and every combat-effective member is within 45 m of the reserved rally position. A deleted or completed waypoint alone does not establish arrival. The reservation token must still match the current assignment.
+
+During the coordinated assault move, Cortex temporarily disables autonomous individual attack orders so they do not compete with the assigned squad route. Normal weapon engagement remains available. The original attack-order setting is checkpointed for locality migration and restored when support expires, is revoked or is disabled.
+
+The tighter rally movement, physical readiness check and attack-order control require a fresh coordinated-assault audit. Previous failures remain recorded; this change does not establish assault arrival or handover acceptance.
 
 ## See also
 
@@ -535,3 +575,95 @@ Zeus, to remove it completely: every squad is handed back to its own orders.
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
+
+## Cortex Control window
+
+**WMP Cortex > Cortex Control** opens a dedicated modal window over Zeus. The left navigation groups settings by purpose; the right panel scrolls through switches, profiles and tuning with inline explanations. Existing mission variables and script functions retain their names for compatibility.
+
+Edits remain pending across pages. **Apply changes** submits only changed settings through the existing curator-authorised server validation. **Cancel** or Escape discards pending edits. If this client has received a newer settings revision while the window was open, Apply asks the curator to reopen it rather than overwriting that revision. The window itself starts no AI workers and creates no polling loop.
+
+The interface uses the shared WMP theme and notification-space reservation, releases its reservation on close, and reopens from current settings. Group orders and artillery/convoy setup remain separate purpose modules. This custom interface still requires in-engine layout, keyboard, Apply/Cancel and aspect-ratio validation; static checks alone do not establish usability.
+
+### Post-contact consolidation
+
+After security and search, eligible on-foot members receive orders to follow their leader. Cortex preserves the squad's existing waypoints and leaves explicit defence, garrison and building-clear orders in control. The gathering radius is 12 m plus 2 m per eligible member, capped at 30 m. Mounted, incapacitated and deliberately movement-disabled members are not pulled out of their existing roles.
+
+`Waldo_Cortex_Consolidation` reports `[state, gathered, eligible, furthestDistance]` on the group. States are `CONSOLIDATING`, `COHESIVE`, `INCOMPLETE` or `CONTACT`. The existing 30-second regroup deadline releases automatic control without describing scattered units as gathered. A renewed sighting returns to contact. Zeus waypoint orders cancel Cortex's temporary tasks and release explicit holding orders through their cleanup functions.
+
+Live acceptance is still pending for this change. The audit checks actual member spacing and subsequent travel to a Zeus-marked waypoint.
+
+### Automatic lighting skill adjustment
+
+Lighting defaults to **Automatic visibility** (`AUTO`). The profile applies its existing low-light multipliers when ambient light is at or below the darkness threshold (5 by default). Daylight restores the selected profile. `DAY` bypasses the extra darkness penalty; `NIGHT` preserves the legacy night-tier option. This is an ambient-light adjustment, not a complete visibility calculation for fog, walls or individual targets.
+
+Equipped HMD items qualify for the NVG layer only when their configuration includes NVG vision. This detects capability, not whether the unit has lowered the goggles. Flashlights receive no blanket skill bonus: the engine handles their illumination. Beam direction and target detection still need a live comparison.
+
+Each owner checks at most ten registered units per second and rewrites skills only on a lighting/equipment change. At 600 local AI, a complete refresh can take about 60 seconds. Locality adoption applies the profile immediately. Disabling skill adjustment removes the worker. Reapplication starts from the base profile, avoiding cumulative darkness penalties. These changes require fresh in-engine acceptance.
+
+
+### Combined fire-team bounds (in live validation)
+
+Reserved assault squads now receive explicit moving or covering roles from the server. One squad moves a bound of up to 35 metres while the other reserved squads cover. Inside the moving squad, riflemen move first, then cover the leader/support element as it closes. Roles rotate between squads after the physical bound completes. The last approach can enter the ordinary gated assault, grenade and clear-through sequence. An independent flank also brings its covering element forward when no final assault is selected.
+
+This uses the existing per-group movement jobs, retry limits and feature restoration. The coordinator examines at most six reserved squads every two seconds and broadcasts roles only when they change. A failed bound yields the turn and waits 30 seconds before retry; it is never counted as completed. The combined assignment has a finite ten-minute limit. Zeus takeover, withdrawal, feature disable and lease expiry release owned movement restrictions. HC adoption restores old restrictions before consuming the current role.
+
+These changes are not yet accepted in engine or at the 100-group performance target. The `coordinatedbounds` focus measures actual squad-role exchanges, movement with covering fire between squads, and movement with covering fire inside each squad. Tactical role labels explain intent; measured travel and shots establish behaviour. Earlier independent-squad overlap results do not prove coordinated overwatch.
+
+Combat acceptance also requires readable pressure and counterplay: use observed or reported positions, preserve uncertainty, avoid simultaneous uncontrolled charges, let suppression and casualties disrupt movement, and honour player roadblocks. No recovery may teleport actors. These are acceptance requirements, not claims that every behaviour currently satisfies them.
+
+### Movement tempo
+
+`Waldo_AIPass_Flank_BoundPause` controls fire-team handovers, final advance holds, coordinated bound handovers, clearing and consolidation (default 4 seconds). A standalone flank uses twice that pause to establish its final position. These holds begin after physical arrival. Grenade clearance retains its separate minimum eight-second wait and projectile check; reducing tactical pauses cannot bypass it. This timing revision still needs live comparison against the previous run.
+
+### On-demand diagnostic snapshots
+
+AI diagnostics include every Cortex checkbox gate with its current/default value, up to 20 server-local group snapshots (eight members each), 20 fire missions and 20 convoys. Group rows show phase, drill/stage, bound, recovery count, Zeus hold, support role, actual speed, current command, PATH/MOVE and rules of engagement. Fire rows show confirmed rounds, remaining bursts and pending/uncertain state; convoy rows show owner, phase and halt reason. Total counts and sampling limits are explicit.
+
+These are read-only snapshots requested through the existing diagnostics flow, with no new recurring controller. Enabled settings are labelled LOADED rather than proof of activity. Stationary covering units are not automatically called stalled. HC-private action and queue state is unavailable in this server report; adoption records and engine ownership do not prove HC behaviour. Live validation of the new rows is pending.
+
+Each feature gate also includes its trigger/inspection guidance, related tuning `[label, current, default]`, and known required parent gates. An enabled child with a disabled required parent is UNCONFIGURED, not ACTIVE or an error. Convoy gates remain independent of Cortex master. Group context includes phase/last-seen age, morale, search/reinforcement intent and recorded dismounted/withdrawn actors. Queue health reports locally due jobs, oldest due age, stale owner epochs, FPS and budget; a single overdue sample does not establish starvation. These report-only additions require fresh live acceptance.
+
+Explicit defend, garrison and clear orders have separate bounded diagnostic rows, including group owner, public assignments, recorded clear result and actual member positions/distances. These rows also cover explicitly ordered groups outside automatic Cortex management. Unknown assignments use -1; arrival alone does not establish usable cover or a cleared interior.
+
+Helicopter cruise-deceleration workers now carry an owner-local generation captured at scheduling. Ownership loss invalidates sleeping work; a rapid transfer back cannot revive it. Only the matching current owner clears correction state. This lifecycle correction has static regression coverage and still needs live migration acceptance. It does not resolve the excessive-climb result.
+
+
+### Attack-run countermeasures (awaiting live acceptance)
+
+`Waldo_Cortex_AttackRunFlares_Enable` defaults to true and independently enables approach/departure countermeasure requests for eligible AI planes and helicopters, including registered gunships and Dynamic AA aircraft. The owner samples aircraft motion once per second: approach requires an assigned hostile target within 1,500 m and closing movement; departure requires opening movement at least 100 m beyond the closest observed distance. Each leg requests two releases, one second apart. A 30-second cooldown prevents immediate repetition. Grounded aircraft, aircraft below 40 km/h, player pilots, drones, excluded groups and Zeus-held groups do not participate. No targets, waypoints, ammunition or velocity are injected. Missile-warning flares retain their separate setting.
+
+Required live acceptance: moving plane and helicopter approach and departure, actual countermeasure Fired events and ammunition consumption, disabled comparison, empty ammunition, Zeus interruption, target loss and HC ownership transfer. These cases are not yet verified.
+
+
+### Building clearance recovery and current acceptance
+
+Clearance counts a room only after a soldier physically reaches its position. A soldier making progress is not failed merely because 25 seconds have elapsed. After 25 seconds without one metre of movement, Cortex retries that room, at most twice. An exhausted room remains incomplete while other room assignments continue; the overall 240-second deadline still applies. Dead, mounted, non-local or transferred members release their room reservations. Cleanup does not issue formation orders to members transferred to another group.
+
+Building entry remains unresolved. Completed audit `20260929-184640` recorded 37 checks, nine findings and no SQF errors. The first house model failed independent movement controls; the second allowed individual direct entry but failed the three-person Cortex garrison and subsequent clearance. These results do not establish working CQB. Additive fresh-group clearance cases cover 2, 6 and 12 soldiers and record physical room visits separately from accepted orders. Live verification of the recovery changes is pending.
+
+
+The building audit markers identify engine building positions, not a verified room topology. Visiting every marker establishes traversal only; it does not establish successful combat clearance against defenders. Fresh two- and six-soldier cases in runtime `20260929-185445` each visited only one of four positions. Door interaction, later control protections and ordinary-waypoint handover additions were saved after that runtime launched and are not validated by it. Game validation resumed on 30 September in runtime `20260930-101931`; that run still records building-entry and clearance failures.
+
+
+### Clearance changes awaiting the next live build
+
+The current audit continues using its staged source. Subsequent saved changes include both soldiers in a two-person clearance team, preserve exhausted positions and retry budgets across owner migration, recover ended movement commands after six seconds without progress, and retain twenty-five seconds for active navigation. Formation is stopped once per worker rather than at every interior destination. Actual visits to other building positions count even when they are not the worker's assigned destination; an exhausted position is removed from that list only after a physical visit. None of these changes establishes reliable entry or combat clearance until a rebuilt audit verifies it.
+
+The audit now observes the same eligible workers and ASL distance threshold as production, while retaining independent position observations and all previous failures. Building positions are navigation samples rather than a room topology. Hostile-room clearance, engagement and doorway coordination still require separate acceptance evidence.
+
+
+### CQB validation, 30 September
+
+Completed runtime `20260930-101931`: 54 recorded checks, 19 server findings, zero client findings and zero recorded SQF errors. Building navigation, clearance traversal and ordinary-waypoint handover failed across fresh 2/6/12-person groups. The door lock and opening checks passed; physical entry after opening failed. CQB remains unaccepted.
+
+The next staged runtime, `20260930-104541`, includes small-team leader participation, a bounded entry element, fewer repeated STOP commands, faster recovery of ended commands, persistent retry/exhaustion checkpoints, physical incidental-visit accounting and movement reissue after door opening. Audit checks now additionally require successive-position travel and both two-person members participating. These are implementation candidates, not verified fixes. WMP diagnostics retains incomplete clearance results after controller cleanup.
+
+Completed rebuilt runtime `20260930-111120` recorded 58 checks, 22 server findings, zero client findings and zero SQF errors. The unlocked-door physical-entry check passed. Continuous traversal and subsequent ordinary movement still failed for the two-worker controller across 2/6/12-person fixtures; garrison and independent path comparisons also retained failures. This is the preserved baseline for the CQB redesign.
+
+The saved replacement forms up to three two-soldier clearing pairs while the leader and remaining members provide exterior security. It sorts building positions into a continuous route from the entrance, assigns balanced contiguous sectors, advances pairs immediately after observed visits and rotates an unresolved room to another pair. Physical progress renews the safety lease; scheduler delay alone does not consume a retry. Final retry and worker evidence remains available to WMP diagnostics after cleanup. This design is statically checked and still requires a rebuilt live run before acceptance.
+
+Completed runtime `20260930-114413` recorded 58 checks, 14 server findings, zero client findings and zero SQF errors. Fresh 6- and 12-person groups physically visited every building position; the two-person group visited two of four. All sizes exposed an end-state fault: some clearing soldiers remained inside after Cortex restored formation control, so a following ordinary waypoint did not move the whole squad. The unlocked door opened but its pair failed to cross in the allowed time. These failures remain acceptance blockers.
+
+The next saved revision alternates a point soldier and supporting partner instead of ordering both to the same path node. The supporting partner holds the preceding room or an offset entry position and the roles exchange after each physical visit. If a clearing soldier is killed or incapacitated, the existing building job fills that slot from uncommitted squad members; the leader is used only when no other reserve remains. The action now has a physical egress phase: clearing soldiers move through the doorway to an exterior release point before formation is restored, and an egress timeout makes the result incomplete. Garrison movement also retains a public pool of valid positions and gives a stalled soldier up to two free alternative assignments before recording failure. No recovery teleports a unit.
+
+The additive building matrix now compares native direct movement, a building-attached waypoint and forced replanning on four small/large and single/multi-storey house models. Production clearance separately runs 2-, 6- and 12-person groups against progressively larger buildings. Results are reported per model and force size because an engine-invalid path on one model does not prove or excuse Cortex behaviour on another. This revision passes focused static contracts and SQF validation but requires a rebuilt live run.

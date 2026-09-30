@@ -51,7 +51,7 @@ private _valid = true;
         _valid = false;
     } else {
         private _config = call compile preprocessFileLineNumbers _path;
-        if !(_config isEqualType createHashMap) then {
+        if (isNil "_config" || {!(_config isEqualType createHashMap)}) then {
             diag_log format ['[WMP CONFIG] %1 did not return a HASHMAP.', _path];
             _valid = false;
         } else {

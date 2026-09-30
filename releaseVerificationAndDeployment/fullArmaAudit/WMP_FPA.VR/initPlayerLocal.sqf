@@ -27,6 +27,9 @@ call compile preprocessFileLineNumbers "auditPreInitPlayerLocal.sqf";
 // to the server again (see Waldo_fnc_ClientInitPhaseEnd; set here too in case postInit runs later).
 missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
 
+// Headless clients also execute this event script; player loadouts and UI never belong to them.
+if (!hasInterface) exitWith {};
+
 /*
 PLAYER-LOCAL STARTUP
 These settings and activations exist only on machines with a player interface. Guarded defaults do
@@ -81,7 +84,7 @@ if (hasInterface) then {
 
     // Smart AI Pass: any Zeus command to an AI group (selection, waypoints, target designation, moves,
     // ZEN AI actions) holds that group so the pass never fights the curator for control.
-    [] call Waldo_fnc_AIPassZeusWatchLocal;
+    [] call Waldo_fnc_CortexZeusWatchLocal;
 
     // Pure-data configuration is local and synchronous; activation and JIP waits remain below.
     ["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;

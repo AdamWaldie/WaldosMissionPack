@@ -19,9 +19,15 @@
 params [["_snapshot", [], [[]]], ["_complete", false, [false]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 
+private _incoming = createHashMapFromArray _snapshot;
+private _aiRevision = _incoming getOrDefault ["Waldo_AIPass_SettingsRevision",-1];
+private _staleAI = _aiRevision < (missionNamespace getVariable ["Waldo_AIPass_SettingsApplied",-1]);
+private _aiNames = ([] call Waldo_fnc_CortexTuningSpec) apply {_x select 0};
+_aiNames append ["Waldo_AIPass_SettingsRevision","Waldo_AIPass_AmmoCapabilityOverrides"];
+
 {
     _x params [["_name", "", [""]], ["_value", nil]];
-    if (_name != "" && {!isNil "_value"}) then {
+    if (_name != "" && {!isNil "_value"} && {!(_staleAI && {_name in _aiNames})}) then {
         missionNamespace setVariable [_name, _value];
     };
 } forEach _snapshot;

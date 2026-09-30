@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1229,
+  "registeredFunctionCount": 1339,
   "runtimeFunctionCount": 383,
-  "functionCount": 1612,
+  "functionCount": 1722,
   "stations": [
     {
       "id": "control",
@@ -923,590 +923,1244 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_CortexInit",
+      "file": "MissionScripts/AiScripting/Cortex/cortexInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexStop",
+      "file": "MissionScripts/AiScripting/Cortex/cortexStop.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexIsEligible",
+      "file": "MissionScripts/AiScripting/Cortex/cortexIsEligible.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexIsPaused",
+      "file": "MissionScripts/AiScripting/Cortex/cortexIsPaused.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexQueueJob",
+      "file": "MissionScripts/AiScripting/Cortex/cortexQueueJob.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSchedulerTick",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSchedulerTick.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexRegroupOnKill",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRegroupOnKill.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexRegroupStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRegroupStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAirborneCheck",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirborneCheck.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAirborneDropStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirborneDropStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAirborneDrop",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirborneDrop.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexParachuteJump",
+      "file": "MissionScripts/AiScripting/Cortex/cortexParachuteJump.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSettingsLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSettingsLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexTuning",
+      "file": "MissionScripts/AiScripting/Cortex/cortexTuning.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexOrderReason",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderReason.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexControlOpenLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexControlOpenLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexControlPageLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexControlPageLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexTuningSpec",
+      "file": "MissionScripts/AiScripting/Cortex/cortexTuningSpec.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryRole",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryRole.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSetArtilleryRole",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSetArtilleryRole.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexReleaseFeatureCrew",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReleaseFeatureCrew.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAntiArmour",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAntiArmour.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCheckpoint",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCheckpoint.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexLocality",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLocality.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSetSpotter",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSetSpotter.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSpotterFix",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSpotterFix.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryObserve",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryObserve.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryReport",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryReport.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryAim",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryAim.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryAmmo",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryAmmo.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryMissionStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryMissionStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryShot",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryShot.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryScoot",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryScoot.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexClearRelease",
+      "file": "MissionScripts/AiScripting/Cortex/cortexClearRelease.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexOrderDispatch",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderDispatch.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexOrderLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexOrderResult",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderResult.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCounterObserve",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCounterObserve.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryFired",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryFired.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryRejected",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryRejected.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryFire",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryFire.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexArtilleryRequest",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryRequest.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCanTransmit",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCanTransmit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexBuildingDoor",
+      "file": "MissionScripts/AiScripting/Cortex/cortexBuildingDoor.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexClearBuilding",
+      "file": "MissionScripts/AiScripting/Cortex/cortexClearBuilding.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexReportServer",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReportServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexReportLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReportLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexHearingLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexHearingLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexContactReport",
+      "file": "MissionScripts/AiScripting/Cortex/cortexContactReport.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCooldown",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCooldown.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCounterBattery",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCounterBattery.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAttackRunFlares",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAttackRunFlares.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAircraftEligible",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAircraftEligible.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexDiscover",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDiscover.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFindCover",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFindCover.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFireControl",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFireControl.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFireCountermeasure",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFireCountermeasure.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFlankEnd",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFlankEnd.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFlankStart",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFlankStart.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFlankStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFlankStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGarrison",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGarrison.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGarrisonApplyLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGarrisonApplyLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGarrisonRelease",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGarrisonRelease.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGrenadeCheck",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGrenadeCheck.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGroupMove",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupMove.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGroupMoveClear",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupMoveClear.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGroupState",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupState.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexGroupTick",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupTick.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexKnowledge",
+      "file": "MissionScripts/AiScripting/Cortex/cortexKnowledge.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexLineOfFireClear",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLineOfFireClear.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexMorale",
+      "file": "MissionScripts/AiScripting/Cortex/cortexMorale.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexRegisterRadar",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRegisterRadar.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportServer",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportAssaultServer",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportAssaultServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportApply",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportApply.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportAck",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportAck.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportMaintain",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportMaintain.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportCoordinateStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportCoordinateStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSupportBoundStart",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportBoundStart.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexReinforce",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReinforce.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexReleaseGroup",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReleaseGroup.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexRestoreCalm",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRestoreCalm.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexRetreat",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRetreat.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSurrender",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSurrender.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexThrowGrenade",
+      "file": "MissionScripts/AiScripting/Cortex/cortexThrowGrenade.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexFeatureEnabled",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFeatureEnabled.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCombatEffective",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCombatEffective.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCapabilities",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCapabilities.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexPassengerReady",
+      "file": "MissionScripts/AiScripting/Cortex/cortexPassengerReady.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexInfantrySpeed",
+      "file": "MissionScripts/AiScripting/Cortex/cortexInfantrySpeed.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexUnitRole",
+      "file": "MissionScripts/AiScripting/Cortex/cortexUnitRole.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexOnboardContact",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOnboardContact.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexVehicles",
+      "file": "MissionScripts/AiScripting/Cortex/cortexVehicles.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAdvanceStart",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAdvanceStart.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAmmoShare",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAmmoShare.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCoordinatedAssault",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCoordinatedAssault.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexDefend",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefend.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexDefendApplyLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefendApplyLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexDefendRelease",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefendRelease.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexDefendStep",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefendStep.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexPlanRoute",
+      "file": "MissionScripts/AiScripting/Cortex/cortexPlanRoute.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexProfile",
+      "file": "MissionScripts/AiScripting/Cortex/cortexProfile.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexStance",
+      "file": "MissionScripts/AiScripting/Cortex/cortexStance.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexZeusHeld",
+      "file": "MissionScripts/AiScripting/Cortex/cortexZeusHeld.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexZeusMark",
+      "file": "MissionScripts/AiScripting/Cortex/cortexZeusMark.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexZeusWatchLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexZeusWatchLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_AIPassInit",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassInit.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexInit.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassStop",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassStop.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexStop.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassIsEligible",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassIsEligible.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexIsEligible.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassIsPaused",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassIsPaused.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexIsPaused.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassQueueJob",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassQueueJob.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexQueueJob.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSchedulerTick",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSchedulerTick.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSchedulerTick.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassRegroupOnKill",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRegroupOnKill.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRegroupOnKill.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassRegroupStep",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRegroupStep.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRegroupStep.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassAirborneCheck",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAirborneCheck.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirborneCheck.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassAirborneDropStep",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAirborneDropStep.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirborneDropStep.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassAirborneDrop",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAirborneDrop.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirborneDrop.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassParachuteJump",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassParachuteJump.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexParachuteJump.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassSettingsLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSettingsLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassTuning",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassTuning.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexTuning.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassTuningSpec",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassTuningSpec.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexTuningSpec.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryRole",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryRole.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryRole.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSetArtilleryRole",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSetArtilleryRole.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSetArtilleryRole.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassReleaseFeatureCrew",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassReleaseFeatureCrew.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReleaseFeatureCrew.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassAntiArmour",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAntiArmour.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAntiArmour.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCheckpoint",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCheckpoint.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCheckpoint.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassLocality",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassLocality.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLocality.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSetSpotter",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSetSpotter.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSetSpotter.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSpotterFix",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSpotterFix.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSpotterFix.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryObserve",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryObserve.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryObserve.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryReport",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryReport.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryReport.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryAim",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryAim.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryAim.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryAmmo",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryAmmo.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryAmmo.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryMissionStep",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryMissionStep.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryMissionStep.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryShot",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryShot.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryShot.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryScoot",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryScoot.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryScoot.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassClearRelease",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassClearRelease.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexClearRelease.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassOrderDispatch",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderDispatch.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderDispatch.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassOrderLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassOrderResult",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassOrderResult.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexOrderResult.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCounterObserve",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCounterObserve.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCounterObserve.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryFired",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryFired.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryFired.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryRejected",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryRejected.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryRejected.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryFire",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryFire.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryFire.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassArtilleryRequest",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassArtilleryRequest.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexArtilleryRequest.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCanTransmit",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCanTransmit.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCanTransmit.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassClearBuilding",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassClearBuilding.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexClearBuilding.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassReportServer",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassReportServer.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReportServer.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassReportLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassReportLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReportLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassHearingLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassHearingLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexHearingLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassContactReport",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassContactReport.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexContactReport.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCooldown",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCooldown.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCooldown.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCounterBattery",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCounterBattery.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCounterBattery.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassDiscover",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassDiscover.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDiscover.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFindCover",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFindCover.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFindCover.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFireControl",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFireControl.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFireControl.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFireCountermeasure",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFireCountermeasure.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFireCountermeasure.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFlankEnd",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFlankEnd.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFlankEnd.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFlankStart",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFlankStart.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFlankStart.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFlankStep",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFlankStep.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFlankStep.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGarrison",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGarrison.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGarrison.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGarrisonApplyLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGarrisonApplyLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGarrisonApplyLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGarrisonRelease",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGarrisonRelease.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGarrisonRelease.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGrenadeCheck",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGrenadeCheck.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGrenadeCheck.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGroupMove",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGroupMove.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupMove.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGroupMoveClear",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGroupMoveClear.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupMoveClear.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGroupState",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGroupState.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupState.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassGroupTick",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassGroupTick.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexGroupTick.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassKnowledge",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassKnowledge.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexKnowledge.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassLineOfFireClear",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassLineOfFireClear.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLineOfFireClear.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassMorale",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassMorale.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexMorale.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassRegisterRadar",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRegisterRadar.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRegisterRadar.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportServer",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportServer.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportServer.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportAssaultServer",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportAssaultServer.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportAssaultServer.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportStep",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportStep.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportStep.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportApply",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportApply.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportApply.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportAck",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportAck.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportAck.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSupportMaintain",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSupportMaintain.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSupportMaintain.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassReinforce",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassReinforce.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReinforce.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassReleaseGroup",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassReleaseGroup.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexReleaseGroup.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassRestoreCalm",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRestoreCalm.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRestoreCalm.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassRetreat",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRetreat.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexRetreat.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassSurrender",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSurrender.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSurrender.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassThrowGrenade",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassThrowGrenade.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexThrowGrenade.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassFeatureEnabled",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassFeatureEnabled.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexFeatureEnabled.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCombatEffective",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCombatEffective.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCombatEffective.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCapabilities",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCapabilities.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCapabilities.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassPassengerReady",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassPassengerReady.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexPassengerReady.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassInfantrySpeed",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassInfantrySpeed.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexInfantrySpeed.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassUnitRole",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassUnitRole.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexUnitRole.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassVehicles",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassVehicles.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexVehicles.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassAdvanceStart",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAdvanceStart.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAdvanceStart.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassAmmoShare",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAmmoShare.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAmmoShare.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassCoordinatedAssault",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassCoordinatedAssault.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCoordinatedAssault.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassDefend",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassDefend.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefend.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassDefendApplyLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassDefendApplyLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefendApplyLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassDefendRelease",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassDefendRelease.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefendRelease.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassDefendStep",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassDefendStep.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexDefendStep.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassPlanRoute",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassPlanRoute.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexPlanRoute.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassProfile",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassProfile.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexProfile.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassStance",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassStance.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexStance.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassZeusHeld",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassZeusHeld.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexZeusHeld.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassZeusMark",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassZeusMark.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexZeusMark.sqf",
       "station": "ai",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_AIPassZeusWatchLocal",
-      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassZeusWatchLocal.sqf",
+      "file": "MissionScripts/AiScripting/Cortex/cortexZeusWatchLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
@@ -1568,6 +2222,12 @@
       "name": "Waldo_fnc_HelicopterDecelerationCorrectLocal",
       "file": "MissionScripts/AiScripting/helicopterDecelerationCorrectLocal.sqf",
       "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessResolveSender",
+      "file": "MissionScripts/Headless/headlessResolveSender.sqf",
+      "station": "headless",
       "activation": "manual"
     },
     {

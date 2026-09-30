@@ -1,0 +1,233 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Compares physical building entry using independent engine commands across small and large,
+ * single- and multi-storey house models, then exercises production garrison and clearance.
+ * Locality/authority: scheduled dedicated-server audit; all actors are pinned to this owner.
+ * Repeat/JIP: disposable actors and houses are removed; observer state is public for joining clients.
+ * Arguments: check <CODE>, phase <CODE>, wait <CODE>; all required audit callbacks.
+ * Return: Nothing. Current callers: cortexQA/runServer.sqf.
+ * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQABuildings.sqf";
+ */
+params ["_check","_phase","_wait"];
+private _cases = [];
+private _actors = [];
+{
+    private _class = _x;
+    private _row = _forEachIndex;
+    {
+        private _method = _x;
+        private _house = createVehicle [_class,[6250+_forEachIndex*60,5800+_row*60,0],[],0,"NONE"];
+        _house enableSimulationGlobal true;
+        private _group = createGroup [east,true];
+        _group setVariable ["Waldo_AIPass_Exclude",true,true];
+        _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+        _group setVariable ["acex_headless_blacklist",true,true];
+        private _unit = _group createUnit ["O_Soldier_F",_house getPos [25,180],[],0,"NONE"];
+        _unit setVariable ["acex_headless_blacklist",true,true];
+        _unit allowDamage false;
+        private _target = (_house buildingPos -1) param [0,[]];
+        private _label = format ["%1 / model %2",_method,_row+1];
+        _unit setVariable ["Waldo_CortexQA_Label",_label,true];
+        _unit setVariable ["Waldo_CortexQA_Target",_target,true];
+        _actors pushBack _unit;
+        _cases pushBack [_group,_unit,_house,_target,_method,_label,false];
+    } forEach ["DIRECT","HOUSE-WAYPOINT","REPLAN"];
+} forEach ["Land_i_House_Small_03_V1_F","Land_i_House_Small_01_V1_F","Land_i_House_Big_01_V1_F","Land_i_House_Big_02_V1_F"];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors,true];
+["Building entry: independent comparisons","Twelve excluded soldiers compare direct movement, a building-attached waypoint and forced path replanning across small and large, single- and multi-storey houses. Cyan trails show actual movement; targets show remaining distance. Each model reports independently and does not replace the production clearance cases.",[6280,5890,0]] call _phase;
+{
+    _x params ["_group","_unit","_house","_target","_method","_label"];
+    private _valid = simulationEnabled _house && {simulationEnabled _unit} && {local _unit} && {_target isNotEqualTo []};
+    [format ["BUILD-%1-ready",_label],_valid] call _check;
+    if (_valid) then {
+        if (_method in ["DIRECT","REPLAN"]) then {doStop _unit; _unit doMove _target; if (_method == "REPLAN") then {_unit setDestination [_target,"LEADER PLANNED",true]}} else {
+            private _wp = _group addWaypoint [getPosATL _house,0];
+            _wp setWaypointType "MOVE";
+            _wp waypointAttachObject _house;
+            _wp setWaypointHousePosition 0;
+            _group setCurrentWaypoint _wp;
+        };
+    };
+} forEach _cases;
+private _deadline = time + 90;
+waitUntil {
+    sleep 2;
+    {
+        _x params ["_group","_unit","_house","_target","_method","_label"];
+        if (_target isNotEqualTo [] && {alive _unit} && {_unit distance _target <= 2}) then {_x set [6,true]};
+    } forEach _cases;
+    time >= _deadline || {_cases findIf {!(_x select 6)} < 0}
+};
+{
+    _x params ["_group","_unit","_house","_target","_method","_label","_arrived"];
+    [format ["BUILD-%1-arrival",_label],_arrived,format ["class=%1 owner=%2 simulation=%3 position=%4 target=%5 command=%6 expected=%7",typeOf _house,groupOwner _group,simulationEnabled _unit,getPosATL _unit,_target,currentCommand _unit,expectedDestination _unit]] call _check;
+} forEach _cases;
+sleep 15;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{_x params ["_group","_unit","_house"]; deleteVehicle _unit; deleteGroup _group; deleteVehicle _house} forEach _cases;
+
+// Add a production order test on the model that the independent direct-order control could enter.
+// The original model and all failed diagnostic results remain above.
+private _house=createVehicle ["Land_i_House_Small_01_V1_F",[6250,5800,0],[],0,"NONE"];
+_house enableSimulationGlobal true;
+private _group=createGroup [east,true];
+_group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_group setVariable ["acex_headless_blacklist",true,true];
+private _members=[];
+for "_i" from 0 to 2 do {
+    private _unit=_group createUnit ["O_Soldier_F",[6250+_i*3,5770,0],[],0,"NONE"];
+    _unit setVariable ["acex_headless_blacklist",true,true];
+    _unit setVariable ["Waldo_CortexQA_Label",format ["BUILDING ORDER %1",_i+1],true];
+    _members pushBack _unit;
+};
+missionNamespace setVariable ["Waldo_CortexQA_Actors",_members,true];
+["Garrison: second model","Three soldiers receive the real garrison order on the second house model. A successful single-position control does not establish that every position is reachable. Each must reach and hold its assigned three-dimensional slot. The first model's failure remains recorded.",getPosATL _house] call _phase;
+["GARRISON-model2-order",[_group,_house,20] call Waldo_fnc_CortexGarrison] call _check;
+private _arrived=[{
+    _members findIf {private _slot=_x getVariable ["Waldo_AIPass_GarrisonPos",[]]; !alive _x || {_slot isEqualTo []} || {_x distance (_slot select 0) > 2}} < 0
+},95] call _wait;
+["GARRISON-model2-physical-arrival",_arrived,str (_members apply {
+    [getPosATL _x,_x getVariable ["Waldo_AIPass_GarrisonPos",[]],currentCommand _x,expectedDestination _x,
+    _x checkAIFeature "PATH",_x checkAIFeature "MOVE",behaviour _x]
+})] call _check;
+sleep 8;
+["GARRISON-model2-physical-hold",_arrived && {_members findIf {private _slot=_x getVariable ["Waldo_AIPass_GarrisonPos",[]]; !alive _x || {_slot isEqualTo []} || {_x distance (_slot select 0) > 2}} < 0}] call _check;
+// A later explicit stance must survive cleanup even if building navigation failed.
+private _hadGarrison=(_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo [];
+{_x setUnitPos "DOWN"} forEach _members;
+["Garrison: preserve replacement stance","The soldiers have received an explicit prone stance. Releasing the garrison must preserve that later choice. This checks cleanup independently of the recorded building-arrival result; it does not simulate curator UI input.",getPosATL _house] call _phase;
+[_group] call Waldo_fnc_CortexGarrisonRelease;
+sleep 2;
+["GARRISON-release-preserves-later-stance",_hadGarrison && {_members findIf {!alive _x || {unitPos _x != "DOWN"}} < 0},str (_members apply {unitPos _x})] call _check;
+{_x setUnitPos "AUTO"} forEach _members;
+{private _exit=[6250+_forEachIndex*3,5770,0]; doStop _x; _x doMove _exit; _x setDestination [_exit,"LEADER PLANNED",true]} forEach _members;
+["CLEAR-outside-start",[{_members findIf {_x distance2D [6253,5770,0] > 8} < 0},45] call _wait] call _check;
+["Building clearance: room visits","The clearing team must physically visit every building position. Coloured markers show independently observed visits; an expired order cannot count as cleared.",getPosATL _house] call _phase;
+private _rooms=_house buildingPos -1;
+private _visits=_rooms apply {false};
+["CLEAR-order-accepted",[_group,_house] call Waldo_fnc_CortexClearBuilding] call _check;
+private _cleared=[{
+    {private _room=_x; if ((_members select [1,2]) findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_forEachIndex,true]}} forEach _rooms;
+    missionNamespace setVariable ["Waldo_CortexQA_Rooms",[_rooms,_visits],true];
+    // Room visits and controller completion are published on separate scheduler passes.
+    // Keep observing physical visits until the authoritative controller result arrives so
+    // a successful final room cannot be misreported as an incomplete handover race.
+    ((_group getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) in ["COMPLETE","INCOMPLETE"]
+},245] call _wait;
+["CLEAR-every-room-physically-visited",_cleared && {_visits findIf {!_x} < 0},str _visits] call _check;
+["CLEAR-completion-matches-visits",((_group getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) == "COMPLETE" && {_visits findIf {!_x} < 0}] call _check;
+sleep 12;
+[_group] call Waldo_fnc_CortexClearRelease;
+missionNamespace setVariable ["Waldo_CortexQA_Rooms",[],true];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{deleteVehicle _x} forEach _members; deleteGroup _group; deleteVehicle _house;
+
+// Fresh groups distinguish clearance defects from state left by a previous garrison.
+// Keep all original comparisons above, including their failures.
+{
+    _x params ["_size","_class"];
+    private _house=createVehicle [_class,[6250,5800,0],[],0,"NONE"];
+    _house enableSimulationGlobal true;
+    private _group=createGroup [east,true];
+    _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+    _group setVariable ["acex_headless_blacklist",true,true];
+    private _members=[];
+    for "_i" from 0 to (_size-1) do {
+        private _unit=_group createUnit ["O_Soldier_F",[6235+(_i mod 4)*4,5760-floor(_i/4)*4,0],[],0,"NONE"];
+        _unit setVariable ["acex_headless_blacklist",true,true];
+        _unit setVariable ["Waldo_CortexQA_Label",format ["FRESH CLEAR %1 / soldier %2",_size,_i+1],true];
+        _members pushBack _unit;
+    };
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",_members,true];
+    [format ["Fresh clearance: %1 soldiers / %2",_size,_class],"This fresh group has never garrisoned. Watch clearing pairs physically enter and continue through their assigned sector. The 2/6/12-person cases use progressively larger building models. Markers are navigation positions, not proof that a hostile room is safe. No test-side teleport, door opening or forced completion is applied.",getPosATL _house] call _phase;
+    private _rooms=_house buildingPos -1;
+    private _visits=_rooms apply {false};
+    private _clearingMembers=if (_size <= 2) then {+_members} else {_members select [1]};
+    private _memberVisits=_clearingMembers apply {[]};
+    private _accepted=[_group,_house,createHashMapFromArray [["useLambs",false]]] call Waldo_fnc_CortexClearBuilding;
+    [format ["CLEAR-fresh-%1-accepted",_size],_accepted] call _check;
+    [{
+        {private _room=_x; if (_clearingMembers findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_forEachIndex,true]}} forEach _rooms;
+        {
+            private _worker=_x;
+            private _seen=_memberVisits select _forEachIndex;
+            {if (alive _worker && {(getPosASL _worker) vectorDistance (AGLToASL _x) <= 1.5}) then {_seen pushBackUnique _forEachIndex}} forEach _rooms;
+        } forEach _clearingMembers;
+        missionNamespace setVariable ["Waldo_CortexQA_Rooms",[_rooms,_visits],true];
+        ((_group getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) in ["COMPLETE","INCOMPLETE"]
+    },245] call _wait;
+    private _physical=_rooms isNotEqualTo [] && {_visits findIf {!_x} < 0};
+    [format ["CLEAR-fresh-%1-physical-room-visits",_size],_physical,format ["visits=%1 units=%2",_visits,_members apply {[getPosATL _x,currentCommand _x,expectedDestination _x,_x checkAIFeature "PATH",_x checkAIFeature "MOVE",behaviour _x]}]] call _check;
+    [format ["CLEAR-fresh-%1-result-agrees",_size],_physical && {((_group getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) == "COMPLETE"}] call _check;
+    [format ["CLEAR-fresh-%1-successive-positions",_size],_memberVisits findIf {count _x >= 2} >= 0,str _memberVisits] call _check;
+    if (_size == 2) then {
+        ["CLEAR-fresh-2-both-participate",_memberVisits findIf {_x isEqualTo []} < 0,str _memberVisits] call _check;
+    };
+    // Exercise natural completion/failure cleanup before invoking any explicit release.
+    // A fresh ordinary waypoint must take control even when some rooms were unreachable.
+    private _destination=[6325,5770,0];
+    private _beforeMove=_members apply {getPosATL _x};
+    private _waypoint=_group addWaypoint [_destination,0];
+    _waypoint setWaypointType "MOVE";
+    _group setCurrentWaypoint _waypoint;
+    [format ["Clearance handover: %1 soldiers",_size],"After the recorded clearance result, the same soldiers must follow an ordinary waypoint away from the building. No cleanup function or movement reset is injected before this check.",_destination] call _phase;
+    private _moved=[{
+        _members findIf {!alive _x || {_x distance2D (_beforeMove select _forEachIndex) < 25} || {_x distance2D _destination > 18}} < 0
+    },90] call _wait;
+    [format ["CLEAR-fresh-%1-handover-physical",_size],_moved,str (_members apply {getPosATL _x})] call _check;
+    sleep 8;
+    [_group] call Waldo_fnc_CortexClearRelease;
+    missionNamespace setVariable ["Waldo_CortexQA_Rooms",[],true];
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+    {deleteVehicle _x} forEach _members;
+    deleteGroup _group;
+    deleteVehicle _house;
+} forEach [[2,"Land_i_House_Small_01_V1_F"],[6,"Land_i_House_Big_01_V1_F"],[12,"Land_i_House_Big_02_V1_F"]];
+
+// Exercise door handling through the real clearance job, never by calling its helper directly.
+private _doorHouse=createVehicle ["Land_i_House_Small_01_V1_F",[6250,5800,0],[],0,"NONE"];
+_doorHouse enableSimulationGlobal true;
+private _doorGroup=createGroup [east,true];
+_doorGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_doorGroup setVariable ["acex_headless_blacklist",true,true];
+private _doorMembers=[];
+for "_i" from 0 to 1 do {
+    private _unit=_doorGroup createUnit ["O_Soldier_F",[6250+_i*3,5770,0],[],0,"NONE"];
+    _unit setVariable ["acex_headless_blacklist",true,true];
+    _unit setVariable ["Waldo_CortexQA_Label",format ["DOOR ORDER %1",_i+1],true];
+    _doorMembers pushBack _unit;
+};
+missionNamespace setVariable ["Waldo_CortexQA_Actors",_doorMembers,true];
+private _doorSource="Door_1_sound_source";
+private _doorReady=isClass (configOf _doorHouse >> "AnimationSources" >> _doorSource)
+    && {_doorHouse animationSourcePhase _doorSource < 0.1}
+    && {(_doorHouse selectionPosition ["Door_1_trigger","Memory"]) isNotEqualTo [0,0,0]};
+["CLEAR-door-fixture-closed-recognised",_doorReady] call _check;
+_doorHouse setVariable ["bis_disabled_Door_1",1,true];
+["Clearance: locked entry","The real clearance order must not unlock the front door. This phase checks the actual door phase and lock variable; it does not count an accepted order as entry.",getPosATL _doorHouse] call _phase;
+private _doorAccepted=[_doorGroup,_doorHouse,createHashMapFromArray [["useLambs",false]]] call Waldo_fnc_CortexClearBuilding;
+["CLEAR-door-order-accepted",_doorAccepted] call _check;
+private _lockHeld=true;
+private _lockedUntil=time+35;
+waitUntil {
+    sleep 1;
+    if (_doorHouse animationSourcePhase _doorSource > 0.1 || {(_doorHouse getVariable ["bis_disabled_Door_1",0]) != 1}) then {_lockHeld=false};
+    time >= _lockedUntil
+};
+["CLEAR-door-lock-preserved",_doorReady && {_doorAccepted} && {_lockHeld}] call _check;
+// Changing the lock is the test stimulus; opening and entry must be performed by production.
+_doorHouse setVariable ["bis_disabled_Door_1",0,true];
+["Clearance: entry unlocked","The lock is now removed. Watch the same soldiers open the door and physically enter. The audit does not animate the door, teleport actors or reset their movement.",getPosATL _doorHouse] call _phase;
+private _doorOpened=[{_doorHouse animationSourcePhase _doorSource >= 0.8},45] call _wait;
+["CLEAR-door-unlocked-opens",_doorReady && {_doorOpened}] call _check;
+private _doorPositions=_doorHouse buildingPos -1;
+private _entered=[{_doorPositions findIf {
+    private _position=_x;
+    _doorMembers findIf {(getPosASL _x) vectorDistance (AGLToASL _position) <= 1.5} >= 0
+} >= 0},45] call _wait;
+["CLEAR-door-unlocked-physical-entry",_doorReady && {_doorOpened} && {_entered}] call _check;
+[_doorGroup] call Waldo_fnc_CortexClearRelease;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{deleteVehicle _x} forEach _doorMembers;
+deleteGroup _doorGroup;
+deleteVehicle _doorHouse;

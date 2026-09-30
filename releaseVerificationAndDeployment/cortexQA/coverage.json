@@ -1,0 +1,1048 @@
+{
+  "scope": "All declared aiConfig settings plus explicit infantry, convoy and UI behaviours. A procedure or mapped setting is not live acceptance.",
+  "required_variants": [
+    "enabled physical outcome",
+    "disabled before start",
+    "disabled during operation",
+    "order replacement and cancellation",
+    "repeated start and cleanup",
+    "server owner",
+    "WMP HC transfer",
+    "ACE HC transfer",
+    "HC disconnect",
+    "JIP observer",
+    "invalid or missing dependencies",
+    "minimum/default/maximum settings where supported",
+    "Zeus interruption during each action phase, cleanup and physical replacement-order execution"
+  ],
+  "cases": [
+    {
+      "id": "CORE",
+      "title": "Master, exclusions and ownership",
+      "setup": "Use ordinary, excluded, player-led, Zeus-controlled and feature-owned squads. Toggle Cortex and transfer ownership during movement.",
+      "expected": "Only eligible squads receive orders; disabled/excluded squads retain authored orders; old-owner jobs stop and one new owner resumes.",
+      "settings": [
+        "Waldo_AIPass_Enable",
+        "Waldo_AIPass_IncludedSides",
+        "Waldo_AIPass_LambsMode",
+        "Waldo_AIPass_ZeusHoldSeconds"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-032658: CORE MASTER/GROUP/UNIT/EXTERNAL/SIDE refusal and physical arrival passed.",
+        "runtime-20260927-094454: 53 lifecycle checks passed, zero SQF errors, server and client complete. Held-defence Zeus takeover and replacement arrival passed for server and two WMP HC variants after return to server. Added server mid-movement interruption, replacement arrival and 15-second no-resurrection checks passed. Real curator event delivery and interruption during every feature remain unverified; prior HC replacement failure retained."
+      ],
+      "automation": "runGates.sqf: five closed-gate refusal and no-movement checks, each followed by reopened physical arrival. All ten passed in runtime-20260927-032658. Player-led, Zeus and locality variants remain outstanding.",
+      "executable_sources": [
+        "runGates.sqf"
+      ]
+    },
+    {
+      "id": "SCHED",
+      "title": "Scheduler and distance tiers",
+      "setup": "Compare Cortex off/on at 25, 50, 100 and 150 groups, six AI per group, with identical fresh patrol/contact workloads. Repeat OFF/ON/ON/OFF on server-only and distributed HC ownership; collect frame-time distributions, queue age and physical response latency.",
+      "expected": "At least 100 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 100+ groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture is not scale acceptance.",
+      "settings": [
+        "Waldo_AIPass_Debug",
+        "Waldo_AIPass_DiscoveryInterval",
+        "Waldo_AIPass_FarRange",
+        "Waldo_AIPass_LowFpsThreshold",
+        "Waldo_AIPass_NearRange",
+        "Waldo_AIPass_ReactionSpeed",
+        "Waldo_AIPass_TickBudgetMs",
+        "Waldo_AIPass_TickContact",
+        "Waldo_AIPass_TickFar",
+        "Waldo_AIPass_TickMid",
+        "Waldo_AIPass_TickNear"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-075211: twelve server squads physically arrived within 0.95 m; all starts 0.167 seconds after submission; all completed once. Minimum 0.2 ms budget tested with cheap movement jobs, not saturation or heavy-load FPS.",
+        "runtime-20260927-085848: 100x6 server patrol OFF/ON/ON/OFF yielded median/p95 milliseconds 21/24, 21/25, 21/24, 21/24. All groups moved; all enabled groups managed and eligible. Maximum job overdue 6.511 seconds; combat response latency not established."
+      ],
+      "automation": "runScheduler.sqf: twelve production-queued squad movements at minimum soft budget, actual start latency, physical arrival and no duplicate completion. Server case executed; distance tiers, saturation, FPS throttling and HC workload variants remain outstanding. Server patrol scale pilot added in runPerformance.sqf: fresh 100x6 OFF/ON/ON/OFF arms, frame times, physical progress, managed/eligible group checks, baseline drift and 5% median/10% p95 gates. First server patrol run runtime-20260927-085848 passed all 13 performance checks; broader performance acceptance remains outstanding.",
+      "executable_sources": [
+        "runScheduler.sqf",
+        "runPerformance.sqf"
+      ]
+    },
+    {
+      "id": "PROFILE",
+      "title": "Behaviour profiles and aggression",
+      "setup": "Exercise each profile, faction override and group override; repeat with aggression zero and maximum.",
+      "expected": "Precedence is correct; zero prevents chance-based starts; skill values remain independent.",
+      "settings": [
+        "Waldo_AIPass_Aggression",
+        "Waldo_AIPass_BehaviourProfile",
+        "Waldo_AIPass_FactionProfiles",
+        "Waldo_AIPass_ProfileBehaviour"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        ".qa/pr-review-audit/runtime-20260927-115212/cortex-results.md"
+      ],
+      "automation": "runProfiles.sqf: precedence, aliases, fallbacks, aggression limits and skill preservation passed in runtime-20260927-115212. Tactical behaviour for every profile remains unverified.",
+      "executable_sources": [
+        "runProfiles.sqf"
+      ]
+    },
+    {
+      "id": "SKILL",
+      "title": "AI skill rebalance",
+      "setup": "Spawn eligible and filtered units before/after enabling; sample actual subskills, day/night variants and restoration.",
+      "expected": "Expected units receive configured skills once, variance remains stable, excluded/player units retain their values and stop restores captured values.",
+      "settings": [
+        "Waldo_AIRebalance_Enable",
+        "Waldo_AIRebalance_Profile",
+        "Waldo_AI_ApplyMode",
+        "Waldo_AI_ExcludedClasses",
+        "Waldo_AI_ExcludedFactions",
+        "Waldo_AI_IncludedFactions",
+        "Waldo_AI_IncludedSides",
+        "Waldo_AI_ProfileDisplayNames",
+        "Waldo_AI_RestoreOnStop",
+        "Waldo_AI_SkillVariance"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runMechanics.sqf: SKILL- engine aiming skill after profile change (partial variants; fresh live acceptance required)",
+      "executable_sources": [
+        "runMechanics.sqf"
+      ]
+    },
+    {
+      "id": "LAND",
+      "title": "Helicopter landing",
+      "setup": "Fly a crewed helicopter to real LAND/GETOUT waypoints over clear and obstructed terrain; delete/replace the waypoint in flight.",
+      "expected": "Aircraft physically approaches, touches down and holds; terrain clearance, bounded go-around and cleanup survive transfer/deletion.",
+      "settings": [
+        "Waldo_ImprovedHelicopterLanding_ControlInterval",
+        "Waldo_ImprovedHelicopterLanding_Enable",
+        "Waldo_ImprovedHelicopterLanding_FinalCommitDistance",
+        "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio",
+        "Waldo_ImprovedHelicopterLanding_GoAroundExitDistance",
+        "Waldo_ImprovedHelicopterLanding_GoAroundHeight",
+        "Waldo_ImprovedHelicopterLanding_GoAroundSpeed",
+        "Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance",
+        "Waldo_ImprovedHelicopterLanding_MaximumClimbRate",
+        "Waldo_ImprovedHelicopterLanding_MaximumDescentRate",
+        "Waldo_ImprovedHelicopterLanding_MaximumGoArounds",
+        "Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight",
+        "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance",
+        "Waldo_ImprovedHelicopterLanding_MinimumApproachSpeed",
+        "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
+        "Waldo_ImprovedHelicopterLanding_TouchdownRadius",
+        "Waldo_ImprovedHelicopterLanding_TransitAltitude",
+        "Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer",
+        "Waldo_ImprovedHelicopterLanding_TreeScanRadius",
+        "Waldo_ImprovedHelicopterLanding_TriggerDistance",
+        "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-041916: all ten LAND checks passed; server zero findings."
+      ],
+      "automation": "runLanding.sqf: malformed payload rejection without mutation, physical touchdown and hold, landing cancellation and real redirected flight. Passed server cases in runtime-20260927-041916. Terrain, boundary, JIP and ownership variants remain unverified.",
+      "executable_sources": [
+        "runLanding.sqf"
+      ]
+    },
+    {
+      "id": "DECEL",
+      "title": "Helicopter braking",
+      "setup": "Brake eligible helicopters and optional VTOL at high/low altitude, including rising terrain ahead.",
+      "expected": "Correction occurs only inside the configured envelope, remains bounded and releases; no correction for excluded airframes or unsafe clearance.",
+      "settings": [
+        "Waldo_HelicopterDeceleration_ControlInterval",
+        "Waldo_HelicopterDeceleration_Debug",
+        "Waldo_HelicopterDeceleration_Enable",
+        "Waldo_HelicopterDeceleration_IncludeVTOL",
+        "Waldo_HelicopterDeceleration_MaximumClimbRate",
+        "Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration",
+        "Waldo_HelicopterDeceleration_MaximumCorrectionSeconds",
+        "Waldo_HelicopterDeceleration_MinimumAltitude",
+        "Waldo_HelicopterDeceleration_MinimumAltitudeGain",
+        "Waldo_HelicopterDeceleration_MinimumNoseUp",
+        "Waldo_HelicopterDeceleration_MinimumSpeed",
+        "Waldo_HelicopterDeceleration_MinimumSpeedLoss",
+        "Waldo_HelicopterDeceleration_SampleInterval",
+        "Waldo_HelicopterDeceleration_TerrainClearance"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runDeceleration.sqf: disabled/enabled cruise and braking, actual speed reduction, peak climb, ground clearance, crew survival and authored-route retention. Includes comparable entry conditions and a ten-metre operational climb limit. Executable coverage exists; clean physical acceptance and owner variants remain outstanding.",
+      "executable_sources": [
+        "runDeceleration.sqf"
+      ]
+    },
+    {
+      "id": "REGROUP",
+      "title": "Survivor regroup",
+      "setup": "Create losses in a full squad near a compatible host, a deliberate two-person team and a full host.",
+      "expected": "Only eligible remnants merge; members physically approach or report documented timeout fallback; no oversized or incompatible host merge.",
+      "settings": [
+        "Waldo_AIPass_Regroup_Enable",
+        "Waldo_AIPass_Regroup_JoinDistance",
+        "Waldo_AIPass_Regroup_MaxGroupSize",
+        "Waldo_AIPass_Regroup_MaxRemnantSize",
+        "Waldo_AIPass_Regroup_MinimumPeakSize",
+        "Waldo_AIPass_Regroup_SearchRadius",
+        "Waldo_AIPass_Regroup_SettleSeconds",
+        "Waldo_AIPass_Regroup_StuckSeconds",
+        "Waldo_AIPass_Regroup_TimeoutSeconds"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runMechanics.sqf: real casualties, physical approach and merge. Runtime 165401 passed both with survivors reaching within 18 m of the host; living succession and movement were sampled. Earlier runtime 155107 stalled and remains recorded. Independent Zeus interruption currently running; repeat reliability and owner variants remain open.",
+      "executable_sources": [
+        "runMechanics.sqf"
+      ]
+    },
+    {
+      "id": "CONTACT",
+      "title": "Contact detection",
+      "setup": "Expose real enemies, then occlude them; compare live engine knowledge and Cortex phase.",
+      "expected": "Real sightings trigger contact; no omniscient acquisition; contact-off leaves explicit orders usable.",
+      "settings": [
+        "Waldo_AIPass_Contact_Enable",
+        "Waldo_AIPass_EngageRange"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runContact.sqf: real wall occlusion, no hidden acquisition, enemy walks into view, natural recent sighting and contact phase. Added, not live-verified. Gate, occlusion-after-contact and owner variants remain outstanding; runCombat.sqf retained. Added physical re-occlusion, last-seen ageing and natural reacquisition of the same opponent. Saved after runtime 155242; not live-executed.",
+      "executable_sources": [
+        "runContact.sqf",
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "POST",
+      "title": "Post-contact search",
+      "setup": "Let a contacted enemy leave sight, then reappear during security, search and regroup.",
+      "expected": "Correct sequence and timing; search team physically approaches last known position; renewed contact interrupts and cleanup restores orders.",
+      "settings": [
+        "Waldo_AIPass_PostContact_Enable",
+        "Waldo_AIPass_PostContact_LostSeconds",
+        "Waldo_AIPass_PostContact_RegroupSeconds",
+        "Waldo_AIPass_PostContact_SearchSeconds",
+        "Waldo_AIPass_PostContact_SecuritySeconds"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runMechanics.sqf: runtime-20260927-155107 passed physical consolidation, cohesive outcome, replacement-order arrival, cohesion and ten-second destination retention. Server fixture only; owner and interruption variants remain open. Additive runContact.sqf sequence records CONTACT/SECURITY/SEARCH/REGROUP/CALM, requires physical search approach, regroup cohesion and subsequent ordinary waypoint arrival. Saved only; live acceptance pending. No state injection or forced cleanup.",
+      "executable_sources": [
+        "runMechanics.sqf",
+        "runContact.sqf"
+      ]
+    },
+    {
+      "id": "FLANK",
+      "title": "Flanking bounds",
+      "setup": "Six-person squad faces a live enemy at eligible range; block one planned bound in a separate failure case.",
+      "expected": "Selected element physically reaches successive spots; base of fire remains; a blocked bound ends STALLED without completion credit.",
+      "settings": [
+        "Waldo_AIPass_Flank_BoundDistance",
+        "Waldo_AIPass_Flank_BoundPause",
+        "Waldo_AIPass_Flank_BoundTimeout",
+        "Waldo_AIPass_Flank_Cooldown",
+        "Waldo_AIPass_Flank_Enable",
+        "Waldo_AIPass_Flank_MaxRange",
+        "Waldo_AIPass_Flank_MinGroupSize",
+        "Waldo_AIPass_Flank_MinRange"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-130332 interim: ordinary RED FLANK ended STALLED at 13:16:01, moving shots [0,0,0,0,0,0]. YELLOW comparison passed movement, frontage, moving fire and assault position, but reached the 240-second deadline at MOVE index 7 without an ending. Neither manoeuvre accepted.",
+        "runtime-20260927-133856 complete: whole-group YELLOW comparisons completed only during late observation; original deadlines failed. RED-group comparisons stalled under ATTACK despite individual YELLOW. No general flank acceptance.",
+        "runtime-20260927-142945 first FLANK-NATIVE-FIRE ended STALLED; original and late physical consolidation failed. Combat-mode restoration passed with explicit matching expected/actual RED values after checked fixture initialization. Movement remains unaccepted."
+      ],
+      "automation": "runCombat.sqf: runtime-20260927-130332 ordinary RED flank ended STALLED and failed moving fire. YELLOW passed physical movement, frontage and moving fire but exceeded the completion deadline. Additive independent fire-control comparisons and late-completion diagnostic saved for retest.",
+      "executable_sources": [
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "CROSS",
+      "title": "Road crossing",
+      "setup": "Place the manoeuvre route across a real road with smoke available, unavailable and friendlies nearby.",
+      "expected": "Element reaches near edge, uses permitted smoke and crosses; unsafe throws and disabled crossing add no scripted behaviour.",
+      "settings": [
+        "Waldo_AIPass_StreetCrossing_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runCrossing.sqf: real engine-road prerequisite, disabled/enabled route comparison, natural contact, production crossing stage, actual smoke projectile and all-member far-side movement. Not executed. VR has no qualifying road and must fail the prerequisite; a real-road terrain run and owner/interruption variants remain outstanding.",
+      "executable_sources": [
+        "runCrossing.sqf"
+      ]
+    },
+    {
+      "id": "FIRE",
+      "title": "Fire distribution and suppression",
+      "setup": "Use multiple visible and recently obscured threats, BLUE/YELLOW/RED rules and varying suppressor limits.",
+      "expected": "Actual Fired events and assigned targets match limits and rules; suppression does not reveal hidden targets or continue after disable.",
+      "settings": [
+        "Waldo_AIPass_FireControl_Enable",
+        "Waldo_AIPass_FireControl_MaxShootersPerTarget",
+        "Waldo_AIPass_FireControl_MaxSuppressors"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runFireControl.sqf: FIRE-*; live retest pending",
+      "executable_sources": [
+        "runFireControl.sqf"
+      ]
+    },
+    {
+      "id": "MORALE",
+      "title": "Morale and withdrawal",
+      "setup": "Apply controlled casualties and real suppression, then allow recovery; compare cohesive and fragile profiles.",
+      "expected": "Broken squads physically withdraw and recover; intentional hold/clear ownership is respected and disabling restores changed controls.",
+      "settings": [
+        "Waldo_AIPass_Cohesion",
+        "Waldo_AIPass_Morale_Enable",
+        "Waldo_AIPass_Morale_RetreatDistance"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-095424: completed reactions audit had 29 checks and two failures, zero SQF errors. Physical retreat and surrender/disarm failed despite confirmed contact and five casualties. Diagnostic rerun runtime-20260927-100154 pending; neither behaviour accepted.",
+        "runReactions.sqf: runtime-20260927-111216 passed casualty succession, physical withdrawal over 30 m with increased threat separation, retained rifle and actual smoke projectile. Reactions completed 41 checks with zero findings or SQF errors. Server fixture only; medical, support, HC and boundary variants remain open."
+      ],
+      "automation": "runReactions.sqf: runtime-20260927-111216 passed casualty succession, physical withdrawal over 30 m with increased threat separation, retained rifle and actual smoke projectile. Reactions completed 41 checks with zero findings or SQF errors. Server fixture only; medical, support, HC and boundary variants remain open.",
+      "executable_sources": [
+        "runReactions.sqf"
+      ]
+    },
+    {
+      "id": "SURRENDER",
+      "title": "Surrender",
+      "setup": "Leave eligible broken isolated survivors, then repeat with nearby support and the feature off.",
+      "expected": "Only eligible survivors surrender; weapons/captive state match design and repeat handling does not duplicate actions.",
+      "settings": [
+        "Waldo_AIPass_Surrender_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-095424: completed reactions audit had 29 checks and two failures, zero SQF errors. Physical retreat and surrender/disarm failed despite confirmed contact and five casualties. Diagnostic rerun runtime-20260927-100154 pending; neither behaviour accepted.",
+        "runReactions.sqf: runtime-20260927-111216 passed real disarm, ground weapon inventory, ten-second captive hold and repeat without duplicate holder. Disabled surrender retained the rifle during real retreat. Server ACE fixture only; vanilla, medical, HC and support variants remain open."
+      ],
+      "automation": "runReactions.sqf: runtime-20260927-111216 passed real disarm, ground weapon inventory, ten-second captive hold and repeat without duplicate holder. Disabled surrender retained the rifle during real retreat. Server ACE fixture only; vanilla, medical, HC and support variants remain open.",
+      "executable_sources": [
+        "runReactions.sqf"
+      ]
+    },
+    {
+      "id": "GRENADE",
+      "title": "Grenade avoidance",
+      "setup": "Throw real nearby grenades with and without sight; include mounted, incapacitated and excluded units.",
+      "expected": "Eligible infantry physically leaves the danger area; no reaction to unknown or irrelevant projectiles and no permanent movement changes.",
+      "settings": [
+        "Waldo_AIPass_GrenadeEvasion_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runReactions.sqf: runtime-20260927-111216 passed physical escape, new 60 m movement after evasion, queued smoke cancellation on captivity and Zeus takeover, and handler disable. Medical, ownership and additional projectile variants remain open.",
+        "Runtime 200043: focused ADVANCE-GRENADE completed 38 checks with zero findings and zero SQF errors, including actual grenade, physical clear-through by both elements and fire while moving. Single server-owner run; wider variants remain pending."
+      ],
+      "automation": "runReactions.sqf: runtime-20260927-111216 passed physical escape, new 60 m movement after evasion, queued smoke cancellation on captivity and Zeus takeover, and handler disable. Medical, ownership and additional projectile variants remain open. Additive runReactions ASSAULT-DISABLED queued cancellation checks actual FiredMan count and unchanged inventory. runCombat grenade cases observe projectiles and physical hold/crossing; pending live acceptance.",
+      "executable_sources": [
+        "runReactions.sqf"
+      ]
+    },
+    {
+      "id": "AT",
+      "title": "Anti-armour and ammunition roles",
+      "setup": "Provide AT/AA/dual-role launchers and overrides against real vehicles, with a friendly in the backblast corridor.",
+      "expected": "Capable gunner engages the appropriate target; unsafe backblast and unsupported ammunition prevent the scripted shot.",
+      "settings": [
+        "Waldo_AIPass_AmmoCapabilityOverrides",
+        "Waldo_AIPass_AntiArmour_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runFireControl.sqf adds real visible-armour hold-fire and Cortex targeting plus actual launcher-shot checks. Not executed. Backblast obstruction, owner transfer and cancellation variants remain outstanding.",
+      "executable_sources": [
+        "runFireControl.sqf"
+      ]
+    },
+    {
+      "id": "VEH",
+      "title": "Vehicle engagement",
+      "setup": "Use mixed passenger/crew groups in contact, including feature-owned and player-controlled vehicles.",
+      "expected": "Only eligible mounted groups receive changes; parent gate disables all dependent behaviour and releases owned controls.",
+      "settings": [
+        "Waldo_AIPass_Vehicles_Enable",
+        "Waldo_AIPass_Vehicles_StandoffDistance"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-040456: server suite zero findings; natural detection, actual AT-directed shots, hold-fire, disabled stationary control, physical +60 m standoff and crew retention passed. Client completion missing, broader owner/disable variants unverified."
+      ],
+      "automation": "runGunnery.sqf: disabled stationary control and enabled physical AT standoff with crew retention. Server cases passed in runtime-20260927-040456; remaining variants unverified.",
+      "executable_sources": [
+        "runGunnery.sqf"
+      ]
+    },
+    {
+      "id": "DISMOUNT",
+      "title": "Contact passenger dismount",
+      "setup": "Bring moving, stopped, airborne and waterborne carriers into contact with mixed cargo, FFV and operating crew.",
+      "expected": "Only safe, capable passengers unload; drivers/gunners remain aboard and moving/airborne/water cases refuse unsafe exits.",
+      "settings": [
+        "Waldo_AIPass_VehicleDismount_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runVehicleDrills.sqf: runtime 165401 shared passengers exited with dismount disabled; fresh enabled shared exit had no Cortex dismount records. Separate squads failed natural-contact prerequisites and did not exit. Saved native-AI baselines and GetOut diagnostics distinguish engine exits from Cortex commands; unexecuted. No reliable acceptance yet.",
+      "executable_sources": [
+        "runVehicleDrills.sqf"
+      ]
+    },
+    {
+      "id": "REMOUNT",
+      "title": "Contact passenger remount",
+      "setup": "End contact after a valid dismount; move/delete/replace the carrier and incapacitate one passenger.",
+      "expected": "Only safe capable original passengers board valid available seats; no teleport, unwanted convoy resume or incapacitated boarding.",
+      "settings": [
+        "Waldo_AIPass_VehicleRemount_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runVehicleDrills.sqf: runtime 165401 shared and fresh shared remount failed after exits without Cortex records. Saved release guards now cancel public remount intent even without an owner-local state map. Physical Zeus replacement and migration cancellation remain untested.",
+      "executable_sources": [
+        "runVehicleDrills.sqf"
+      ]
+    },
+    {
+      "id": "WITHDRAW",
+      "title": "Damaged vehicle withdrawal",
+      "setup": "Damage a mobile armed vehicle under contact, with and without smoke ammunition.",
+      "expected": "Vehicle physically withdraws, uses only available smoke and restores controls; immobilized or deleted vehicles terminate safely.",
+      "settings": [
+        "Waldo_AIPass_VehicleWithdraw_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260929-181821: server fixture passed disabled stationary/no-smoke comparison, actual SmokeLauncher Fired event, physical withdrawal and retained crew. Turret scan now includes person paths. Does not prove HC migration, Zeus interruption or all vehicle classes."
+      ],
+      "automation": "runVehicleDrills.sqf WITHDRAW-*; movement passed, actual smoke failed Added same-vehicle disabled baseline, natural-contact prerequisite, no-smoke baseline and enabled physical retreat; saved, not yet live-validated.",
+      "executable_sources": [
+        "runVehicleDrills.sqf"
+      ]
+    },
+    {
+      "id": "COVER",
+      "title": "Cover selection and clearance",
+      "setup": "Offer walls, steep slopes, occupied spots, water and open ground to a moving element.",
+      "expected": "Chosen spots have usable clearance and appropriate facing; units physically reach them; bounded fallback remains available.",
+      "settings": [
+        "Waldo_AIPass_CoverValidation_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-041148: four COVER checks passed; server zero findings."
+      ],
+      "automation": "runCover.sqf: actual defence arrival, separate occupied positions and independent solid-wall ray check. Server cases passed in runtime-20260927-041148 after correcting the fixture ray height. Other geometry, owner and gate variants remain unverified. Added physical defence-release and replacement-waypoint travel check; saved, not yet live-validated.",
+      "executable_sources": [
+        "runCover.sqf"
+      ]
+    },
+    {
+      "id": "CNV-MOVE",
+      "title": "Mixed convoy path and spacing",
+      "setup": "Run tracked and wheeled leaders/followers through straight roads, corners, stops, route edits and a blocked leader.",
+      "expected": "Each traces its predecessor, maintains spacing and makes progress without wedge formation; recovery is bounded.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained",
+      "executable_sources": [
+        "runServer.sqf",
+        "runConvoyMatrix.sqf"
+      ]
+    },
+    {
+      "id": "CNV-FIRE",
+      "title": "Convoy weapon crew",
+      "setup": "Attack a moving mixed convoy from its flank under each fire rule.",
+      "expected": "Gunners remain mounted and actually engage valid known threats without stealing driver movement; disabled mode leaves targeting alone.",
+      "settings": [
+        "Waldo_Convoy_MountedFire_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf AMB-03 checks actual escort Fired events; AMB-07 retains operating crew. Direction, hold-fire and disable variants remain outstanding; no fresh acceptance.",
+      "executable_sources": [
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "CNV-COVER",
+      "title": "Convoy dismount positions",
+      "setup": "Unload passengers on manual halt, destination and pinned contact, with obstacles nearby.",
+      "expected": "Passengers physically move clear of vehicles and take valid available cover; no operating-crew dismount.",
+      "settings": [
+        "Waldo_Convoy_Cover_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf AMB-06 and CNV-09b measure actual travel clear of vehicles. Solid-cover geometry and threat-relative placement remain outstanding; no fresh acceptance.",
+      "executable_sources": [
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "CNV-AVOID",
+      "title": "Convoy infantry avoidance",
+      "setup": "Cross friendly infantry in front of a travelling vehicle, then move them away.",
+      "expected": "Vehicle yields inside the short corridor and resumes after clearance; disabled mode adds no WMP avoidance stop.",
+      "settings": [
+        "Waldo_Convoy_AvoidInfantry_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-041548: stop/hold failed; pedestrian clearance, continuing travel and no injury passed."
+      ],
+      "automation": "runConvoyAvoidance.sqf: physical yielding, walking clearance, resumed travel and no injury. Runtime 041548 failed stop/hold. Source now activates controller before observer delay and adds an occupied-corridor case plus minimum distance/stop diagnostics. Retest pending.",
+      "executable_sources": [
+        "runConvoyAvoidance.sqf"
+      ]
+    },
+    {
+      "id": "CNV-HALT",
+      "title": "Convoy contact drills",
+      "setup": "Fire on mobile and immobilized convoys, retaining the configured pinned delay.",
+      "expected": "Mobile convoy pushes through; pinned convoy halts/unloads only after delay; combat halt requires explicit resume.",
+      "settings": [
+        "Waldo_Convoy_ContactHalt_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf AMB-01/02/04/05 measures enemy shots, moving push-through, pinned halt and cargo exit. Roadblock, cancellation and all-owner variants remain outstanding; no fresh acceptance.",
+      "executable_sources": [
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "CNV-UNLOAD",
+      "title": "Convoy cargo lifecycle",
+      "setup": "Start with assigned and script-seated passengers; travel, halt, resume and reach the final waypoint.",
+      "expected": "Cargo stays aboard during travel and unloads at valid halts; crew stay mounted; disabled unload preserves seating.",
+      "settings": [
+        "Waldo_Convoy_Unload_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-034106: all 12 SEATS checks passed, including server travel, split WMP HC ownership, cargo-only halt and original-roster cleanup. ACE automatic transfer, disconnect and combat variants remain unverified."
+      ],
+      "automation": "runConvoySeats.sqf SEATS-*: same-group and separate-group cargo, actual travel exits, manual unload and operating-crew retention. runServer.sqf CNV/AMB covers arrival, contact and HC cargo. Latest seat run pending; other variants remain outstanding. Added tracked escort repetition of the complete seat and two-HC sequence; this new variant is pending live execution.",
+      "executable_sources": [
+        "runConvoySeats.sqf",
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "HEARING",
+      "title": "Gunfire area reports",
+      "setup": "Fire behind an occluder inside/outside hearing range with no line of sight.",
+      "expected": "Receivers get an uncertain area, not target reveal; response respects investigation gate and range.",
+      "settings": [
+        "Waldo_AIPass_Hearing_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runSupport.sqf: HEARING- actual Fired event and hearing delivery (partial variants; fresh live acceptance required) Added physical wall occlusion, real gunshot with hearing disabled, handler readiness and a fresh enabled shot. Saved changes need a fresh live run.",
+      "executable_sources": [
+        "runSupport.sqf"
+      ]
+    },
+    {
+      "id": "REPORT",
+      "title": "Contact sharing",
+      "setup": "Use observing and receiving squads with voice proximity, separated communication and active jamming.",
+      "expected": "Reports use permitted communication, preserve uncertainty and do not depend on a vanilla radio item.",
+      "settings": [
+        "Waldo_AIPass_ContactReports_Enable",
+        "Waldo_AIPass_ContactReports_Radius",
+        "Waldo_AIPass_ContactReports_RequireRadio",
+        "Waldo_AIPass_ContactReports_VoiceRange"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runSupport.sqf: REPORT- actual delivery and receiver travel (partial variants; fresh live acceptance required)",
+      "executable_sources": [
+        "runSupport.sqf"
+      ]
+    },
+    {
+      "id": "REINFORCE",
+      "title": "Reinforcement",
+      "setup": "Contact one squad near idle, busy, excluded and remotely owned friendlies.",
+      "expected": "Only eligible responders physically move to rally; request/acknowledgement and timeout release ownership cleanly.",
+      "settings": [
+        "Waldo_AIPass_Reinforce_Enable",
+        "Waldo_AIPass_Reinforce_MaxResponders",
+        "Waldo_AIPass_Reinforce_Radius"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runSupport.sqf: REINFORCE- physical rally and cancellation (partial variants; fresh live acceptance required)",
+      "executable_sources": [
+        "runSupport.sqf"
+      ]
+    },
+    {
+      "id": "ART",
+      "title": "Spotted artillery bursts",
+      "setup": "Assign a visible spotter and battery; observe real impacts over finite bursts, then lose the spotter or move the target.",
+      "expected": "Opening aim/impact safety is measured, corrections require observation, last report remains usable, bursts stop at configured count and relocation resets ranging.",
+      "settings": [
+        "Waldo_AIPass_Artillery_Bursts",
+        "Waldo_AIPass_Artillery_Cooldown",
+        "Waldo_AIPass_Artillery_DefaultRole",
+        "Waldo_AIPass_Artillery_Enable",
+        "Waldo_AIPass_Artillery_LocationResetDistance",
+        "Waldo_AIPass_Artillery_MaxError",
+        "Waldo_AIPass_Artillery_MinFriendlyDistance",
+        "Waldo_AIPass_Artillery_OpeningBuffer",
+        "Waldo_AIPass_Artillery_OpeningSafeDistance",
+        "Waldo_AIPass_Artillery_RoundInterval",
+        "Waldo_AIPass_Artillery_Rounds",
+        "Waldo_AIPass_Artillery_ShootAndScoot",
+        "Waldo_AIPass_Artillery_WarningInterval"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf ART-*; finite firing passed; impact safety variants pending Added lethal HE warning-ring, physical projectile count, actual first-shot delay and once-per-burst checks in runServer.sqf; unexecuted. Four red shells at 25 m and ten-second lead apply only to HE, including counter-battery. Cancellation, repeated HE bursts and owner migration still need full warning coverage.",
+      "executable_sources": [
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "CB",
+      "title": "Counter-battery",
+      "setup": "Fire a real enemy gun with no radar, covered radar and destroyed/out-of-range radar; relocate it between missions.",
+      "expected": "Measured acquisition is quicker with valid radar; finite bursts start off target at each new location and respect safety/cooldown.",
+      "settings": [
+        "Waldo_AIPass_CounterBattery_Delay",
+        "Waldo_AIPass_CounterBattery_Enable",
+        "Waldo_AIPass_CounterBattery_Interval",
+        "Waldo_AIPass_CounterBattery_MaxError",
+        "Waldo_AIPass_CounterBattery_MinFriendlyDistance",
+        "Waldo_AIPass_CounterBattery_Mode",
+        "Waldo_AIPass_CounterBattery_RadarDelay",
+        "Waldo_AIPass_CounterBattery_RadarRange",
+        "Waldo_AIPass_CounterBattery_Rounds",
+        "Waldo_AIPass_CounterBattery_ShootAndScoot"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf CB-*; real firing and radar delays passed; impact safety variants pending",
+      "executable_sources": [
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "AIRBORNE",
+      "title": "Parachute passengers",
+      "setup": "Fly AI cargo and operating crew toward known contact above/below minimum altitude.",
+      "expected": "Only eligible passengers jump at correct spacing and land; crew stay aboard, unsafe altitude refuses and transfer does not duplicate jumps.",
+      "settings": [
+        "Waldo_AIPass_Airborne_Altitude",
+        "Waldo_AIPass_Airborne_ApproachDistance",
+        "Waldo_AIPass_Airborne_DeployDistance",
+        "Waldo_AIPass_Airborne_Enable",
+        "Waldo_AIPass_Airborne_JumpInterval",
+        "Waldo_AIPass_Airborne_MinAltitude"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runAirborne.sqf: runtime 165401 normal and invalid-class fallback both deployed parachutes and landed alive with backpacks and operating crew retained. Normal post-landing movement passed (50.6/48.7 m). Fallback raw FAIL recorded 70.2/27.3 m travel with both inside the destination area: leader-relative destination made one route too short. Saved route now starts at least 65 m from every passenger; unexecuted. Automatic trigger, varied aircraft and owner/JIP variants remain open.",
+      "executable_sources": [
+        "runAirborne.sqf"
+      ]
+    },
+    {
+      "id": "GARRISON",
+      "title": "Garrison and dynamic AO",
+      "setup": "Use multiple placed and terrain-native buildings, floors, doors and blocked entries; repeat in-place Dynamic AO assignment.",
+      "expected": "Every assigned soldier physically reaches the correct slot/floor and holds; timeout reports failure, break/release restores only owned restrictions.",
+      "settings": [
+        "Waldo_AIPass_Garrison_BreakFraction",
+        "Waldo_AIPass_Garrison_DynamicAO"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "20260929-184640: physical garrison arrival and hold failed on model 2; independent direct/replan entry reached its first slot. Model 1 failed all independent methods. Unresolved."
+      ],
+      "automation": "runServer.sqf ORD-04*, runBuildingComparison.sqf; live physical arrival failed",
+      "executable_sources": [
+        "runServer.sqf",
+        "runBuildingComparison.sqf"
+      ]
+    },
+    {
+      "id": "FLARES",
+      "title": "Aircraft countermeasures",
+      "setup": "Launch real missiles at supported aircraft with and without countermeasure ammunition.",
+      "expected": "Actual countermeasure release responds to valid threats, uses finite ammunition and leaves unsupported/excluded aircraft alone.",
+      "settings": [
+        "Waldo_AIPass_AircraftFlares_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-074530: enabled case and client complete, 23 checks passed with zero SQF errors; real missile, flare and 33.7594 m departure. Does not establish causation without the newly added paired native comparison.",
+        "runtime-20260927-074821: paired real threats passed; native departure 0.216797 m versus Cortex 34.0758 m over two seconds. Native flare count 5 versus enabled 3: flare causation is NOT established. Server checks passed; client completion checked separately in runtime report. Service creation, ammo exhaustion and exclusion variants remain unaccepted."
+      ],
+      "automation": "runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
+      "executable_sources": [
+        "runAircraft.sqf"
+      ]
+    },
+    {
+      "id": "INVESTIGATE",
+      "title": "Known-area investigation",
+      "setup": "Provide a legitimate area report without a sighting at near/far distances and then reveal a real enemy.",
+      "expected": "Appropriate team/group physically investigates without perfect enemy knowledge; contact interrupts and timeout releases controls.",
+      "settings": [
+        "Waldo_AIPass_Investigate_Enable",
+        "Waldo_AIPass_Investigate_Range",
+        "Waldo_AIPass_Investigate_Seconds"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runSupport.sqf: INVESTIGATE- sound-led physical approach (partial variants; fresh live acceptance required)",
+      "executable_sources": [
+        "runSupport.sqf"
+      ]
+    },
+    {
+      "id": "ASSAULT",
+      "title": "Final assault",
+      "setup": "Complete a real flank into assault range with and without grenades/friendlies near the enemy.",
+      "expected": "After an eligible advance or flank, troops approach the reported objective, optionally deploy a carried grenade safely, clear through beyond the objective, and consolidate the covering element. Require physical travel and cohesion; flags, accepted orders and controller completion alone are insufficient. Zeus and gate changes must release owned state.",
+      "settings": [
+        "Waldo_AIPass_Assault_Enable",
+        "Waldo_AIPass_Assault_Range"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-130332 interim: YELLOW assault-position pass does not establish a completed assault; controller still MOVE index 7 at deadline. Ordinary RED flank stalled before assault.",
+        "runtime-20260927-142945 stages the new Advance/Flank approach, grenade hold, 20 m clear-through and flank support consolidation. Live outcomes pending; no acceptance from static checks.",
+        "Runtime 200043: focused ADVANCE-GRENADE completed 38 checks with zero findings and zero SQF errors, including actual grenade, physical clear-through by both elements and fire while moving. Single server-owner run; wider variants remain pending."
+      ],
+      "automation": "runCombat.sqf: actual approach proximity, physical crossing by each Advance element, complete squad/support consolidation, independent FiredMan grenade deployment and no movement into a live frag. FLANK-GRENADE, ADVANCE-GRENADE with a single first-element carrier, and FLANK-ZEUS-CONSOLIDATE are additive cases. All new stages await live acceptance in runtime 142945.",
+      "executable_sources": [
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "ADVANCE",
+      "title": "Bounding advance",
+      "setup": "Give a six-person squad a distant authored waypoint and real contact; isolate advance from flanking.",
+      "expected": "After the contact delay, a fire team physically bounds toward the waypoint while others engage; authored route survives.",
+      "settings": [
+        "Waldo_AIPass_Advance_Enable",
+        "Waldo_AIPass_Advance_MinContactSeconds"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-193231: normal combat advance completed 33 checks with four findings and zero SQF errors. Actual covering fire and fire while moving passed. Contact deadline, frontage, clear-through and completion failed; ending GRENADE_UNRESOLVED with a separated leader. A saved explicit queued-throw cancellation transition is not yet live-verified. No acceptance claimed.",
+        "Runtime 200043: focused ADVANCE-GRENADE completed 38 checks with zero findings and zero SQF errors, including actual grenade, physical clear-through by both elements and fire while moving. Single server-owner run; wider variants remain pending."
+      ],
+      "automation": "runCombat.sqf COMBAT-ADVANCE-*; server completion and proximity-stop passed",
+      "executable_sources": [
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "COORD",
+      "title": "Coordinated assault",
+      "setup": "Use two eligible responders on separate owners and a supported squad in real contact.",
+      "expected": "Responders physically rally then assault from distinct directions; rejection/loss/disable releases all leases.",
+      "settings": [
+        "Waldo_AIPass_CoordinatedAssault_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-075559: four coordinated-stage failures; helpers stayed at start. Fixture requester [1800,1800] was beyond default tactical range from the audit base. Relocated to [1500,1500] with explicit player-distance and natural-contact checks; corrected retest pending.",
+        "runtime-20260927-080336: range 2122.74 m and natural detection passed. One helper had an accepted lease and physically rallied/advanced; second entered CONTACT with no lease. Four two-team failures retained. Replaced TARGET/AUTOTARGET suppression with physical concrete occlusion and engine ray assertion; next retest pending.",
+        "runtime-20260927-081101: concrete occlusion, tactical range, natural contact, both physical rallies and disabled hold passed. Both squads advanced on opposite sides, but not every soldier reached the required 50 m objective radius; aggregate advance and its dependent side check failed. Report retained: 21 checks, zero SQF errors. Added per-soldier distance/command/lease diagnostics and independent side geometry assertion; no arrival threshold changed.",
+        "runtime-20260927-081755 completed server/client: 21 checks, one arrival failure, zero SQF errors. Opposite sides passed independently. Both leases remained assaulting; two soldiers were 63-66 m from objective. Finite MOVE with 10 m radius replaces SAD/20 m; responder-priority guards added to flank/advance. Fresh live retest pending.",
+        "runtime-20260927-082342: finite MOVE did not resolve arrival. One squad reached 26-30 m; the other remained 71-127 m away with MOVE commands and valid assault leases. Arrival failed; side geometry passed. Added disable/release and fresh-order physical-travel checks for next run.",
+        "runtime-20260927-082929: support disable removed leases/status/temporary orders, but physical fresh-order travel failed as well as assault arrival and opposite-side geometry. Source candidate removes forced COMBAT on active assault contact entry, preserving native AUTOCOMBAT. Retest pending.",
+        "runtime-20260927-083701: after removing forced COMBAT on assault contact entry, all six soldiers travelled 166-182 m and reached within 50 m on opposite sides. Disable cleanup passed; fresh ordinary-order travel still failed. Added identical separate-HC responder variant via WMP migration plus per-soldier handover diagnostics; next run pending.",
+        "runtime-20260927-084452 completed: 38 total checks, eight failures, zero SQF errors. Server assault arrival and fresh-order travel failed; HC variant also failed one ownership transfer, rally, disabled advance and side geometry. HC refusal was server-owned-feature; detailed boundary diagnostics added for next retest. Not accepted.",
+        "runtime-20260927-091514 completed: 38 checks, three failures, zero SQF errors. Physical rally passed server and separate-HC responders; HC assault arrival passed. Server assault arrival and both fresh-order handovers failed. Later autonomous attack-order suppression/restoration is not covered by this run.",
+        "runtime-20260927-181516: 34 checks, four findings, zero SQF errors; server and client complete. Physical rally, squad role exchange, inter/intra-squad covering fire passed; complete advance and both handovers failed. Natural sight during rally failed its prerequisite. Movement pursuit candidate is being retested in 183219; no acceptance claimed."
+      ],
+      "automation": "runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, two actual rallies, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. Added coordinatedbounds focus with contact-during-rally, physical role exchange and inter/intra-squad covering fire. Added TARGET/AUTOTARGET/PATH restoration comparison alongside unchanged physical handover requirements; newest restoration assertion awaits rebuilt live execution.",
+      "executable_sources": [
+        "runCoordinated.sqf"
+      ]
+    },
+    {
+      "id": "STANCE",
+      "title": "Cover stance",
+      "setup": "Fight behind low/high cover and on open ground with initial mission-set stances.",
+      "expected": "Stance follows actual cover while eligible; disable/release restores only Cortex changes.",
+      "settings": [
+        "Waldo_AIPass_Stance_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runReactions.sqf: STANCE- physical pose and disable restoration (partial variants; fresh live acceptance required)",
+      "executable_sources": [
+        "runReactions.sqf"
+      ]
+    },
+    {
+      "id": "AMMO",
+      "title": "Magazine sharing",
+      "setup": "Deplete a recipient beside compatible/incompatible donors inside/outside sharing distance.",
+      "expected": "Actual magazine inventories change conservatively with no duplication; unsuitable donors and disabled sharing do nothing.",
+      "settings": [
+        "Waldo_AIPass_AmmoShare_Distance",
+        "Waldo_AIPass_AmmoShare_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runMechanics.sqf: runtime-20260927-155107 passed disabled inventory, recipient gain, conserved total rounds and donor-funded transfer of a seven-round partial magazine. Additional inventories, ranges and ownership variants remain open.",
+      "executable_sources": [
+        "runMechanics.sqf"
+      ]
+    },
+    {
+      "id": "GUNNERY",
+      "title": "Vehicle threat priority",
+      "setup": "Present an armed vehicle with known AT infantry and other enemies at different ranges under each fire rule.",
+      "expected": "Real shots/targets follow permitted priority and standoff movement without dismounting operating crew.",
+      "settings": [
+        "Waldo_AIPass_VehicleGunnery_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-040456: server suite zero findings; natural detection, actual AT-directed shots, hold-fire, disabled stationary control, physical +60 m standoff and crew retention passed. Client completion missing, broader owner/disable variants unverified."
+      ],
+      "automation": "runGunnery.sqf: real projectile direction and AT target priority, BLUE hold-fire and cease-fire. Server cases passed in runtime-20260927-040456; remaining variants unverified. Transfer and feature-disable variants remain outstanding.",
+      "executable_sources": [
+        "runGunnery.sqf"
+      ]
+    },
+    {
+      "id": "ART-SMOKE",
+      "title": "Artillery smoke",
+      "setup": "Withdraw infantry with a smoke-capable battery, then repeat without ammunition or parent artillery enabled.",
+      "expected": "Real finite smoke mission screens withdrawal only when permitted; no accidental HE substitution.",
+      "settings": [
+        "Waldo_AIPass_ArtillerySmoke_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-052844: server smoke gates, Never Fire rejection, exactly two actual smoke rounds, both deployed payloads near target, and smoke-only HE refusal passed. HC and natural withdrawal variants remain pending."
+      ],
+      "automation": "runArtillerySmoke.sqf: real finite delivery, disabled gates, empty inventory and repeat cases retained. Red warning smoke is prohibited for non-lethal smoke support; initial and repeat no-warning assertions added. Runtime 172726 used superseded warning-on-smoke code and wrong EntityCreated observer; 41 checks, 10 findings, zero SQF errors, complete. Corrected ProjectileCreated observation and lethal-only behavior await fresh run.",
+      "executable_sources": [
+        "runArtillerySmoke.sqf"
+      ]
+    },
+    {
+      "id": "BREAK",
+      "title": "Aircraft evasive break",
+      "setup": "Fire real missiles at supported aircraft over safe and unsafe terrain envelopes.",
+      "expected": "Aircraft physically changes flight path within limits and returns controls; no effect when disabled or owner changes invalidate the job.",
+      "settings": [
+        "Waldo_AIPass_AircraftBreak_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-074530: enabled case and client complete, 23 checks passed with zero SQF errors; real missile, flare and 33.7594 m departure. Does not establish causation without the newly added paired native comparison.",
+        "runtime-20260927-074821: paired real threats passed; native departure 0.216797 m versus Cortex 34.0758 m over two seconds. Native flare count 5 versus enabled 3: flare causation is NOT established. Server checks passed; client completion checked separately in runtime report. Service creation, ammo exhaustion and exclusion variants remain unaccepted."
+      ],
+      "automation": "runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
+      "executable_sources": [
+        "runAircraft.sqf"
+      ]
+    },
+    {
+      "id": "DEFEND",
+      "title": "Defence orders",
+      "setup": "Assign line, facing and reserve orders, replace with garrison/clear and cancel during movement.",
+      "expected": "All assigned soldiers physically reach/hold positions; a new valid order cancels transient drills, and an invalid request preserves prior orders.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runServer.sqf ORD-02* and HC-03b*; server and WMP owner movement passed",
+      "executable_sources": [
+        "runServer.sqf"
+      ]
+    },
+    {
+      "id": "CLEAR",
+      "title": "Building clearance",
+      "setup": "Use enterable multi-room buildings with live enemies, blocked rooms and different owners.",
+      "expected": "Team physically visits required positions and engages; inaccessible rooms produce INCOMPLETE, never cleared-by-timeout.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "20260929-184640: only one of four room positions visited; clearance incomplete. Outside-start prerequisite also failed, so fresh-group cases are required."
+      ],
+      "automation": "runBuildingComparison.sqf: original room visits preserved; fresh 2/6/12-soldier clearance and ordinary-waypoint physical handover. Live enemies, terrain buildings, blocked-room recovery and owner/interruption variants remain incomplete.",
+      "executable_sources": [
+        "runBuildingComparison.sqf"
+      ]
+    },
+    {
+      "id": "UI",
+      "title": "Cortex UI and purpose modules",
+      "setup": "Operate every page/module through actual controls, apply invalid/stale payloads and reconnect a client.",
+      "expected": "Selected objects/settings match server results; explanatory gates, draft retention, cancellation and state replay are correct.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runClient.sqf UI-*; functional pass; mouse and layout acceptance pending",
+      "executable_sources": [
+        "runClient.sqf"
+      ]
+    },
+    {
+      "id": "LIFECYCLE",
+      "title": "Transfer, disconnect and JIP",
+      "setup": "During each active behaviour, transfer by WMP and ACE, disconnect its HC, then join a client.",
+      "expected": "One owner executes each action, restored controls match prior state, public results replay and jobs/handlers do not leak.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-072844: stale defence resurrection failed with 64.154 m drift after restart.",
+        "runtime-20260927-073245: master-stop release fix; all five server defence lifecycle checks and client checks passed, 18 total, zero SQF errors.",
+        "runtime-20260927-073840: server and two WMP headless owners passed physical defence start, owner-cleared shutdown, ordinary waypoint movement on server, no stale return and new physical defence order after returning to the selected owner. ACE transfers, disconnect and JIP untested.",
+        "runtime-20260927-090833 completed: 44 checks PASS, zero SQF errors. Server and both WMP HC variants physically started defence, released on master disable, followed ordinary orders and accepted new orders after restart. Both rejected HC-to-HC transfers preserved actual ownership and registry entries. ACE-owned migration, disconnect and JIP variants remain outstanding.",
+        "runtime-20260927-092754 completed: 50 checks, one failure, zero SQF errors. No-waypoint Zeus takeover cleared defence on server and both HCs. Replacement travel passed server/HC1 but failed after HC2 returned to server; soldiers moved toward an older position. Detailed waypoint/expected-destination/adoption diagnostics added; interruption acceptance remains incomplete.",
+        "runLifecycle.sqf: runtime-20260927-105913 completed 64 checks with zero findings or SQF errors. Disable/restart and Zeus replacement retained; moving leader casualty selected a living successor and physically continued on server, HC1 and HC2 without ownership change. ACE migration, disconnect, JIP, deletion and other action phases remain open."
+      ],
+      "automation": "runLifecycle.sqf: runtime-20260927-105913 completed 64 checks with zero findings or SQF errors. Disable/restart and Zeus replacement retained; moving leader casualty selected a living successor and physically continued on server, HC1 and HC2 without ownership change. ACE migration, disconnect, JIP, deletion and other action phases remain open.",
+      "executable_sources": [
+        "runLifecycle.sqf"
+      ]
+    },
+    {
+      "id": "MULTI-FLANK",
+      "title": "Multi-squad flank cohesion",
+      "setup": "Three six-man squads face a shared contact: one supports and two use separated flank approaches. Repeat across server/HC owners and interrupt one responder.",
+      "expected": "Both manoeuvre squads physically reach separate approach lanes while the base fires; no duplicate movement controller or cross-lane convergence. A blocked, depleted or Zeus-controlled team is released without cancelling unrelated squads.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runMultiManoeuvre.sqf: additive two six-person squads sharing a naturally detected enemy, per-member physical travel, final cohesion, actual covering shots while the other squad moves; bounding requires two observed squad-role switches. Wired into all/coordinated focus. Saved, unexecuted. This exposes missing coordination rather than asserting that independent squad drills are coordinated. Route complementarity, transitions, Zeus and owner variants remain open.",
+      "executable_sources": [
+        "runMultiManoeuvre.sqf"
+      ]
+    },
+    {
+      "id": "MULTI-BOUND",
+      "title": "Squad and multi-squad bounding overwatch",
+      "setup": "Exercise successive and alternating bounds with two elements per squad, then three full squads. Use real opponents and repeat with one mover blocked or its leader killed.",
+      "expected": "Mover and covering roles exchange only after physical arrival and readiness. Covering elements fire while movers advance; the formation closes up without every squad moving simultaneously or waiting forever.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runMultiManoeuvre.sqf: additive two six-person squads sharing a naturally detected enemy, per-member physical travel, final cohesion, actual covering shots while the other squad moves; bounding requires two observed squad-role switches. Wired into all/coordinated focus. Saved, unexecuted. This exposes missing coordination rather than asserting that independent squad drills are coordinated. Route complementarity, transitions, Zeus and owner variants remain open.",
+      "executable_sources": [
+        "runMultiManoeuvre.sqf"
+      ]
+    },
+    {
+      "id": "MULTI-WITHDRAW",
+      "title": "Multi-squad screened withdrawal",
+      "setup": "Three squads in contact withdraw to staged rear positions with real carried smoke. Interrupt one squad and repeat with casualties and a blocked route.",
+      "expected": "Covering squads remain effective while movers increase threat separation; roles alternate and surviving squads physically regroup. Smoke does not replace movement; no teleportation or stale reassignment after Zeus takeover.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runReactions.sqf: additive two-squad casualty-driven withdrawal, natural contact, every survivor travelling away, real smoke, retained groups/rifles and intra-squad cohesion. Saved, unexecuted. This baseline does not prove coordinated alternating overwatch, a shared rally, interruption or distributed-owner behaviour.",
+      "executable_sources": [
+        "runReactions.sqf"
+      ]
+    },
+    {
+      "id": "TRANSITIONS",
+      "title": "Combat action transitions",
+      "setup": "Observe bound, hold, assault preparation, actual grenade, clear and regroup; replace orders and toggle gates before and after every transition.",
+      "expected": "Physical completion, timed preparation and failure have distinct outcomes. A queued grenade or retired drill cannot affect a later action. Slow progress, no progress, controller deadline and QA observation deadline are distinguishable.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [
+        "runtime-20260927-193231: normal combat advance completed 33 checks with four findings and zero SQF errors. Actual covering fire and fire while moving passed. Contact deadline, frontage, clear-through and completion failed; ending GRENADE_UNRESOLVED with a separated leader. A saved explicit queued-throw cancellation transition is not yet live-verified. No acceptance claimed.",
+        "Runtime 200043: focused ADVANCE-GRENADE completed 38 checks with zero findings and zero SQF errors, including actual grenade, physical clear-through by both elements and fire while moving. Single server-owner run; wider variants remain pending."
+      ],
+      "automation": "runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Runtime-20260927-142945 completed with 96 server findings: several transition prerequisites were not reached. Multi-squad chaining and all interruption/ownership variants remain open.",
+      "executable_sources": [
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "LIGHTING",
+      "title": "Automatic darkness, night vision and illumination",
+      "setup": "Compare daylight and darkness with unaided AI, NVG-capable mod equipment, ordinary HMDs and active/inactive flashlights. Repeat equipment changes and ownership transfer. Use real opposing targets inside and outside the beam.",
+      "expected": "Automatic lighting follows ambient conditions without compounded penalties; NVG capability is classname independent; flashlights do not grant omnidirectional vision. Record actual acquisition and shots independently of skill values.",
+      "settings": [
+        "Waldo_AIRebalance_Mode"
+      ],
+      "status": "implemented_partial",
+      "automation": "runProfiles.sqf: direct-application darkness/NVG/day restoration and repeat checks passed in runtime-20260927-115212 (28 total checks, zero errors). Worker-only refresh added afterwards and unexecuted. Actual detection, flashlight, mod and ownership variants pending. Added owner-worker refresh after NVG removal/re-equipping without direct apply calls; saved, not yet live-validated.",
+      "live_evidence": [
+        ".qa/pr-review-audit/runtime-20260927-115212/cortex-results.md"
+      ],
+      "executable_sources": [
+        "runProfiles.sqf"
+      ]
+    },
+    {
+      "id": "DRILL-HANDOVER",
+      "title": "Moving flank and advance handed to Zeus",
+      "setup": "Natural contact starts FLANK-ZEUS and ADVANCE-ZEUS. Require 8 m actual travel before calling the production Zeus marker and replacing the route. Remove opponents to isolate handover travel.",
+      "expected": "Old movement restrictions restored, old job rejected, all six actors within 15 m of replacement destination, then no drift beyond 20 m for 15 seconds.",
+      "settings": [],
+      "status": "implemented_partial",
+      "automation": "runCombat.sqf: runtime-20260927-124426 passed physical interruption prerequisite, cleanup and retired-job rejection, but failed all-member replacement arrival and drift. New geometry diagnostics pending; actual curator event path remains unverified. Corrected replacement arrival to physical formation destinations and continuously sampled 15-second no-resurrection hold; historical point-radius failures remain recorded.",
+      "live_evidence": [
+        "runtime-20260927-124426: both manoeuvre handovers had leader arrival near 2 m and furthest followers near 22-23 m. Existing 15 m arrival and 20 m drift checks failed; thresholds unchanged. No complete handover acceptance.",
+        "runtime-20260927-133856: Flank and Advance replacement formation arrival passed; Flank formation stability passed. Retained fixed-radius failures and combat-mode restoration findings remain. Revised expected/actual mode diagnostics are staged in 142945."
+      ],
+      "executable_sources": [
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "DRILL-RECOVERY",
+      "title": "Bound continuation and straggler rejoin",
+      "setup": "FLANK-BLOCKED and ADVANCE-BLOCKED temporarily inhibit PATH on one mover for 45 seconds. No actor is teleported.",
+      "expected": "Track the blocked actor, preserve external movement inhibition, continue viable movers, then physically rejoin after stimulus release. Unresolved separation is not full completion.",
+      "settings": [],
+      "status": "implemented_partial",
+      "automation": "runCombat.sqf controlled PATH inhibition. Single blocked flank continuation/rejoin passed in 130332, but subsequent manoeuvre stalled. Advance, physical obstacles, multiple stragglers, leader separation and ownership variants remain unaccepted.",
+      "live_evidence": [
+        "runtime-20260927-130332 FLANK-BLOCKED: tracked straggler, continuation after separation, preserved PATH inhibition and physical rejoin passed. Full drill later ended STALLED at bound 1 with another actor 25.5 m short under ATTACK; moving-fire and assault checks failed. This proves only the controlled single-blockage scenario, not full manoeuvre or general obstacle recovery.",
+        "runtime-20260927-133856: blocked Flank continued with movement and fire and preserved PATH inhibition, but physical rejoin failed and final result was PARTIAL. This supersedes any inference of general recovery from earlier narrow passes."
+      ],
+      "executable_sources": [
+        "runCombat.sqf"
+      ]
+    },
+    {
+      "id": "ATTACK-FLARES",
+      "title": "Attack-run approach and departure flares",
+      "setup": "Fly an armed helicopter and plane towards an assigned hostile target, with separate enabled and disabled runs.",
+      "expected": "Actual countermeasure releases on approach and departure with finite ammunition, no flight-path intervention, and no releases for excluded or interrupted aircraft.",
+      "settings": [
+        "Waldo_Cortex_AttackRunFlares_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runAircraft.sqf adds paired moving helicopter/plane cases, Fired events tagged by leg, physical flight and ammunition checks. Empty ammunition, target replacement, Zeus interruption, owner migration and repeated-run acceptance remain outstanding.",
+      "executable_sources": [
+        "runAircraft.sqf"
+      ]
+    }
+  ]
+}

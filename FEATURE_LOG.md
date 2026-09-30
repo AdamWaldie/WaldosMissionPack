@@ -69,3 +69,11 @@ server-reserved reinforcement/assault, cover validation and independently disabl
 behaviours. Hearing and friendly-infantry convoy avoidance default off. Add runtime acceptance for
 reservation races, group opt-outs, live disable/cleanup, bridge unloading and mixed-owner passengers.
 Mechanized overwatch and casualty/prisoner assignment remain deferred pending engine validation.
+
+### AI controls and audit follow-up
+
+AI Control and Tuning now combines live feature switches and values on eight purpose pages. Garrison, defence, building clearing, airborne insertion and group handover have separate focused modules. Runtime edits use complete ordered settings revisions before owner-local worker changes; legacy positional calls share the same validation. Disabling grenade evasion removes its projectile handler. The disposable PR audit can launch up to two headless clients with dedicated slots and profiles; automatic WMP balancing is delayed so migration cases can be exercised deliberately.
+
+### Cortex custom control interface
+
+Replaced the settings-page dialog chain with Cortex Control: one modal window, purpose navigation, scrollable settings with inline help, pending edits across tabs, Apply changed values, and Cancel. It uses the existing named server validation and settings broadcasts; script identifiers stay compatible. ZEN now groups the shorter purpose-module names under WMP Cortex. The interface adds no per-frame or polling worker. Live visual and interaction acceptance remains outstanding.

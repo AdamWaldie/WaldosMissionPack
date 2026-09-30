@@ -223,16 +223,16 @@ evasion and aircraft flares default off.
 ["Waldo_AIPass_LambsMode", "SPLIT"],                      // SPLIT or WMP when LAMBS Danger is loaded
 ```
 
-**Zeus priority:** the pass never fights a curator for control. `Waldo_fnc_AIPassZeusWatchLocal`
+**Zeus priority:** the pass never fights a curator for control. `Waldo_fnc_CortexZeusWatchLocal`
 (installed from `initPlayerLocal.sqf`) adds curator event handlers on each Zeus player's own machine
 whenever the Zeus display opens (`zen_curatorDisplayLoaded`), because curator events fire only there.
 The handlers cover group and object selection, double-click, object edited, and waypoint
-placed/edited/deleted. They call `Waldo_fnc_AIPassZeusMark`, which publishes a hold as a
+placed/edited/deleted. They call `Waldo_fnc_CortexZeusMark`, which publishes a hold as a
 `[randomToken, seconds]` pair (`Waldo_AIPass_ZeusHold`, timed on the owner's own clock), plus
 `Waldo_AIPass_ZeusWaypoints` when Zeus changed waypoints. Target designation creates a DESTROY
 waypoint, so it is covered.
 
-`Waldo_fnc_AIPassZeusHeld`, checked inside `Waldo_fnc_AIPassIsEligible`, treats a group as held
+`Waldo_fnc_CortexZeusHeld`, checked inside `Waldo_fnc_CortexIsEligible`, treats a group as held
 until `Waldo_AIPass_ZeusHoldSeconds` have passed and any Zeus waypoints are finished. Eligibility
 also refuses:
 - remote-controlled members (`bis_fnc_moduleRemoteControl_owner`, used by vanilla and ZEN);
@@ -240,10 +240,10 @@ also refuses:
 
 A held group is released and skipped by every behaviour. Zeus waypoints also release WMP garrison,
 defence and clear orders on that group. Running drills, clear-building jobs and survivor regroups
-stop when their group becomes held. AI Orders EXCLUDE/RETURN set or clear `Waldo_AIPass_Exclude` and
+stop when their group becomes held. Group handover EXCLUDE/RETURN set or clear `Waldo_AIPass_Exclude` and
 cancel holds.
 
-**Behaviour profiles:** `Waldo_fnc_AIPassProfile` resolves, in order:
+**Behaviour profiles:** `Waldo_fnc_CortexProfile` resolves, in order:
 1. the group's `Waldo_AIPass_Profile`;
 2. `Waldo_AIPass_FactionProfiles`;
 3. the active `Waldo_AIRebalance_Profile`;
@@ -253,27 +253,27 @@ It then reads that profile's entry in `Waldo_AIPass_ProfileBehaviour`: flank, as
 investigate and coordinated-assault chances, morale thresholds, retreat scale and surrender size. The
 pass never calls `setSkill`; it only reads the courage and general skills.
 
-**Where it runs:** the server and headless clients only. `init.sqf` calls `Waldo_fnc_AIPassInit`
+**Where it runs:** the server and headless clients only. `init.sqf` calls `Waldo_fnc_CortexInit`
 on the server, which publishes `Waldo_AIPass_Enable` and replays itself to headless clients under
 the JIP key `Waldo_AIPass_RuntimeInit`. Player clients return immediately. Remote calls from
-anything other than the server are refused. `Waldo_fnc_AIPassStop` removes every handler and job and
-releases every managed group (`Waldo_fnc_AIPassReleaseGroup`). Surrenders, merges and explicit
+anything other than the server are refused. `Waldo_fnc_CortexStop` removes every handler and job and
+releases every managed group (`Waldo_fnc_CortexReleaseGroup`). Surrenders, merges and explicit
 garrison orders stay.
 
-**Scheduler:** one CBA per-frame handler per machine (0.25 s) runs `Waldo_fnc_AIPassSchedulerTick`
-over a machine-local job queue (`Waldo_fnc_AIPassQueueJob`). A job is code that takes a state
+**Scheduler:** one CBA per-frame handler per machine (0.25 s) runs `Waldo_fnc_CortexSchedulerTick`
+over a machine-local job queue (`Waldo_fnc_CortexQueueJob`). A job is code that takes a state
 hashmap and returns its next delay or -1. At least one due job runs per tick; others run only while
 `Waldo_AIPass_TickBudgetMs` remains. Jobs that ran rotate to the back of the queue. Below
 `Waldo_AIPass_LowFpsThreshold`, delays double. While `Waldo_ENDEX_Active` or
-`Waldo_SafeStart_Active` is set (`Waldo_fnc_AIPassIsPaused`), jobs are postponed rather than run.
+`Waldo_SafeStart_Active` is set (`Waldo_fnc_CortexIsPaused`), jobs are postponed rather than run.
 Jobs never sleep, never broadcast, and command only units local to their machine. New behaviours
 must go through this scheduler, not their own loops (the static performance audit only inspects
 `while` loops, so this is a design rule, not something CI enforces).
 
-**Discovery and group ticks:** `Waldo_fnc_AIPassDiscover` is a job that runs every
+**Discovery and group ticks:** `Waldo_fnc_CortexDiscover` is a job that runs every
 `Waldo_AIPass_DiscoveryInterval` seconds on each AI-owning machine. It:
 - caches player positions;
-- starts a `Waldo_fnc_AIPassGroupTick` job for each newly local, eligible group. This is how groups
+- starts a `Waldo_fnc_CortexGroupTick` job for each newly local, eligible group. This is how groups
   handed over by ACE or WMP Headless are adopted: the old owner's job retires when the group stops
   being local;
 - re-applies garrison orders after a locality change;
@@ -283,10 +283,10 @@ must go through this scheduler, not their own loops (the static performance audi
 - caches local eligible artillery;
 - installs `IncomingMissile` flare handlers on local WMP gunships and Dynamic AA fighters.
 
-Group state is a machine-local hashmap (`Waldo_fnc_AIPassGroupState`).
+Group state is a machine-local hashmap (`Waldo_fnc_CortexGroupState`).
 
 **Owner changes:** changed restoration data is published as `Waldo_AIPass_Checkpoint` after group
-scheduler jobs. `Waldo_fnc_AIPassLocality` invalidates old ownership epochs, removes local handlers,
+scheduler jobs. `Waldo_fnc_CortexLocality` invalidates old ownership epochs, removes local handlers,
 restores transient changes and lets discovery adopt the group. Clear-building orders retain the
 building, completed positions, `serverTime` deadline and original behaviour. Owner results pass
 through the server's token registry before Zeus receives success or uncertainty feedback.
@@ -301,84 +301,84 @@ through the server's token registry before Zeus receives success or uncertainty 
 Tick cadence follows distance to the nearest player (`TickContact`/`TickNear`/`TickMid`/`TickFar`).
 Beyond `Waldo_AIPass_FarRange` only the ladder and morale run.
 
-Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `getHideFrom` and
+Knowledge comes only from the engine (`Waldo_fnc_CortexKnowledge`): `targets`, `getHideFrom` and
 `targetKnowledge`. The pass never adds detection.
 
 **Movement rules** (these avoid the audited faults):
-- Whole-group moves use one inserted `MOVE` waypoint tagged "WMP AI PASS" (`Waldo_fnc_AIPassGroupMove`,
-  cleared by `Waldo_fnc_AIPassGroupMoveClear`), so the group's own waypoints resume. Group `move` is
+- Whole-group moves use one inserted `MOVE` waypoint tagged "WMP AI PASS" (`Waldo_fnc_CortexGroupMove`,
+  cleared by `Waldo_fnc_CortexGroupMoveClear`), so the group's own waypoints resume. Group `move` is
   never used.
 - The leader never gets `doMove` from a drill.
 - Features a drill disables (`TARGET`/`AUTOTARGET` on movement bounds and street crossings only; the
   final approach, assault and clear keep them on) are recorded only if they were on, and re-enabled exactly.
-- Behaviour and speed are restored only if the pass changed them (`Waldo_fnc_AIPassRestoreCalm`); a
+- Behaviour and speed are restored only if the pass changed them (`Waldo_fnc_CortexRestoreCalm`); a
   squad that was SAFE before a real firefight comes back AWARE.
 - `disableAI "FSM"` and group `move` are not used.
 
 **Behaviours:**
-- **Contact and post-contact:** the state ladder above (`Waldo_fnc_AIPassGroupTick`).
-- **Flanking** (`Waldo_fnc_AIPassFlankStart`/`FlankStep`/`FlankEnd`): base of fire (leader, MG, AT)
+- **Contact and post-contact:** the state ladder above (`Waldo_fnc_CortexGroupTick`).
+- **Flanking** (`Waldo_fnc_CortexFlankStart`/`FlankStep`/`FlankEnd`): base of fire (leader, MG, AT)
   plus a 2-5 rifleman element. The element takes two legs (wide at 70°, close at 60°), cut into bounds
-  by `Waldo_fnc_AIPassPlanRoute`. Each bound spot is snapped to cover (`Waldo_fnc_AIPassFindCover`,
+  by `Waldo_fnc_CortexPlanRoute`. Each bound spot is snapped to cover (`Waldo_fnc_CortexFindCover`,
   far side of the object's bounding radius, line-of-fire ray blocked, never under the object's own
   roof). A completed drill leaves its element holding ground ("holders"); holders rejoin when the
   leader comes within 30 m, at CALM, or on retreat. Other endings `doFollow` immediately.
 - **Final assault** (inside `FlankStep`): after the hold, a frag grenade
-  (`Waldo_fnc_AIPassThrowGrenade`, never near friendlies), then ASSAULT (covered, 12 m short) and
+  (`Waldo_fnc_CortexThrowGrenade`, never near friendlies), then ASSAULT (covered, 12 m short) and
   CLEAR bounds.
-- **Bounding advance** (`Waldo_fnc_AIPassAdvanceStart`): the same drill engine, up to three bounds
+- **Bounding advance** (`Waldo_fnc_CortexAdvanceStart`): the same drill engine, up to three bounds
   toward the current MOVE/SAD/DESTROY waypoint.
 - **Investigation:** the `INVESTIGATE` phase in the tick, for known-but-unseen enemies.
-- **Defence line** (`Waldo_fnc_AIPassDefend`/`DefendApplyLocal`/`DefendStep`/`DefendRelease`): the
+- **Defence line** (`Waldo_fnc_CortexDefend`/`DefendApplyLocal`/`DefendStep`/`DefendRelease`): the
   line and reserve are published per unit and re-applied by discovery; the reserve is committed once.
-- **Coordinated assault** (`Waldo_fnc_AIPassCoordinatedAssault`): arrived responders get SAD
+- **Coordinated assault** (`Waldo_fnc_CortexCoordinatedAssault`): arrived responders get SAD
   waypoints on alternate sides.
-- **Stance from cover** (`Waldo_fnc_AIPassStance`) and **ammo sharing** (`Waldo_fnc_AIPassAmmoShare`).
+- **Stance from cover** (`Waldo_fnc_CortexStance`) and **ammo sharing** (`Waldo_fnc_CortexAmmoShare`).
 - **Street crossing:** a leg that crosses a road (`isOnRoad`/`roadAt`/`getRoadInfo`, bridges
-  excluded) stops at the near edge, throws smoke (`Waldo_fnc_AIPassThrowGrenade`) and crosses in one
+  excluded) stops at the near edge, throws smoke (`Waldo_fnc_CortexThrowGrenade`) and crosses in one
   bound.
-- **Fire control** (`Waldo_fnc_AIPassFireControl`): close threats first; target distribution; MG-first
+- **Fire control** (`Waldo_fnc_CortexFireControl`): close threats first; target distribution; MG-first
   suppression of known-but-unseen enemies, requiring 2+ magazines and 60 rounds and a clear cone
-  (`Waldo_fnc_AIPassLineOfFireClear`).
-- **Morale** (`Waldo_fnc_AIPassMorale`): weighted pressure with courage offset; falls fast and
-  recovers slowly; STEADY/SHAKEN/BROKEN with hysteresis. BROKEN leads to `Waldo_fnc_AIPassRetreat`,
-  or to `Waldo_fnc_AIPassSurrender` (ACE Captives when loaded) if surrender is on and the squad is
+  (`Waldo_fnc_CortexLineOfFireClear`).
+- **Morale** (`Waldo_fnc_CortexMorale`): weighted pressure with courage offset; falls fast and
+  recovers slowly; STEADY/SHAKEN/BROKEN with hysteresis. BROKEN leads to `Waldo_fnc_CortexRetreat`,
+  or to `Waldo_fnc_CortexSurrender` (ACE Captives when loaded) if surrender is on and the squad is
   isolated.
-- **Anti-armour** (`Waldo_fnc_AIPassAntiArmour`): best launcher gunner, with a backblast check.
-- **Vehicles** (`Waldo_fnc_AIPassVehicles`): cargo infantry dismount under fire and remount at CALM;
-  a damaged vehicle smokes (`Waldo_fnc_AIPassFireCountermeasure`, which finds `cmlauncher` weapons)
+- **Anti-armour** (`Waldo_fnc_CortexAntiArmour`): best launcher gunner, with a backblast check.
+- **Vehicles** (`Waldo_fnc_CortexVehicles`): cargo infantry dismount under fire and remount at CALM;
+  a damaged vehicle smokes (`Waldo_fnc_CortexFireCountermeasure`, which finds `cmlauncher` weapons)
   and withdraws when fully mounted; gunner priority is AT infantry, then armour, then the rest;
   armour keeps a standoff distance from known AT teams.
-- **Grenade evasion** (`Waldo_fnc_AIPassGrenadeCheck`, from a `ProjectileCreated` handler installed
+- **Grenade evasion** (`Waldo_fnc_CortexGrenadeCheck`, from a `ProjectileCreated` handler installed
   only while enabled).
 - **Modularity**: independent vehicle/convoy child switches, per-group `Waldo_AIPass_DisabledFeatures` and `Waldo_AI_ExternalControl`. Hearing and convoy infantry avoidance default off. Capability reads live compatible ammunition; passenger checks are shared. Reinforcement uses server reservations and matching owner acknowledgements. See the Smart AI wiki for bounds and handover limits.
-- **Contact reports** (`Waldo_fnc_AIPassContactReport`): server-batched expiring position reports to current owners; no target reveal.
-- **Reinforcement** (`Waldo_fnc_AIPassReinforce`): responder cap; responders move to a rally point
+- **Contact reports** (`Waldo_fnc_CortexContactReport`): server-batched expiring position reports to current owners; no target reveal.
+- **Reinforcement** (`Waldo_fnc_CortexReinforce`): responder cap; responders move to a rally point
   behind the squad in contact. Candidates are considered by distance, and an extra AT-only request is made
   against armour. Garrison, defence-line and clear-building squads, aircrews, static-gun crews and
   artillery never respond.
-- **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): explicit equipped spotters, reported positions, displaced opening HE and observed corrections. Server mission tokens coordinate different owners. Finite bursts share an aim point, with corrections after estimated flight time and a warning pause. Each round requires an actual firing event; unknown results are quarantined. AI radio inventory is not required. A SMOKE mode screens retreats.
+- **Artillery** (`Waldo_fnc_CortexArtilleryRequest`/`ArtilleryFire`): explicit equipped spotters, reported positions, displaced opening HE and observed corrections. Server mission tokens coordinate different owners. Finite bursts share an aim point, with corrections after estimated flight time and a warning pause. Each round requires an actual firing event; unknown results are quarantined. AI radio inventory is not required. A SMOKE mode screens retreats.
 - **Convoys**: server registration with current-owner driving, native tracked destinations and bounded wheeled paths. Finite-route arrival or stop holds vehicles and dismounts cargo, including passenger firing seats; operating crew stay mounted. Existing push-through continues moving until pinned for 15 s; disabled means halt on contact. Armed crew engage known threats under existing ROE. Configure explicitly resumes; the fifth API boolean releases/restores the controller. Ordered halt/cargo/baseline snapshots support separate headless owners. Live mixed-vehicle/ambush acceptance remains outstanding.
-- **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): firing-event positions trigger acquisition after 60 s, reduced to 20 s by registered radar coverage. Radar is optional. Missions default to three bursts of four rounds; each newly reported location starts displaced, then subsequent bursts get closer. A reported move of 150 m resets ranging without extending the burst cap. Separate friendly standoff and shoot-and-scoot settings apply. Each gun's role (`Waldo_fnc_AIPassArtilleryRole`: SUPPORT,
-  COUNTER or BOTH, set with `Waldo_fnc_AIPassSetArtilleryRole` or `Waldo_AIPass_Artillery_DefaultRole`)
+- **Counter-battery** (`Waldo_fnc_CortexCounterBattery`, from `ArtilleryShellFired`): firing-event positions trigger acquisition after 60 s, reduced to 20 s by registered radar coverage. Radar is optional. Missions default to three bursts of four rounds; each newly reported location starts displaced, then subsequent bursts get closer. A reported move of 150 m resets ranging without extending the burst cap. Separate friendly standoff and shoot-and-scoot settings apply. Each gun's role (`Waldo_fnc_CortexArtilleryRole`: SUPPORT,
+  COUNTER or BOTH, set with `Waldo_fnc_CortexSetArtilleryRole` or `Waldo_AIPass_Artillery_DefaultRole`)
   decides which missions it takes.
-- **Airborne insertion** (`Waldo_fnc_AIPassAirborneCheck`, from the group tick;
-  `Waldo_fnc_AIPassAirborneDropStep`; `Waldo_fnc_AIPassParachuteJump`): Uses existing AI passengers. An eligible AI squad riding as cargo in an AI-flown aircraft climbs
+- **Airborne insertion** (`Waldo_fnc_CortexAirborneCheck`, from the group tick;
+  `Waldo_fnc_CortexAirborneDropStep`; `Waldo_fnc_CortexParachuteJump`): Uses existing AI passengers. An eligible AI squad riding as cargo in an AI-flown aircraft climbs
   to `Waldo_AIPass_Airborne_Altitude` within `_ApproachDistance` of an enemy it knows about, then
   jumps one soldier at a time within `_DeployDistance`, never below `_MinAltitude` or over water.
   Each jumper gets his own parachute vehicle, so backpacks are kept. Skipped for player-flown
   aircraft and helicopters on an unload/get-out waypoint. Landed squads with no waypoints of their
-  own get a SAD waypoint on the target. `Waldo_fnc_AIPassAirborneDrop` (and the AI Orders module)
+  own get a SAD waypoint on the target. `Waldo_fnc_CortexAirborneDrop` (and the Parachute Passengers module)
   drops a squad at once. Dynamic Paradrop is not used; it is the player feature.
 
-Radio-dependent calls (reports, reinforcement, artillery) go through `Waldo_fnc_AIPassCanTransmit`,
+Radio-dependent calls (reports, reinforcement, artillery) go through `Waldo_fnc_CortexCanTransmit`,
 so radio jamming (`Waldo_fnc_JammingFactor` ≥ 0.5) blocks them.
 
 **Orders:**
-- `Waldo_fnc_AIPassGarrison` / `Waldo_fnc_AIPassGarrisonRelease`: roofed and highest positions first,
+- `Waldo_fnc_CortexGarrison` / `Waldo_fnc_CortexGarrisonRelease`: roofed and highest positions first,
   PATH locked on arrival, ducking handlers, published per-unit positions for re-apply on a new owner,
   and a break at `Waldo_AIPass_Garrison_BreakFraction`.
-- `Waldo_fnc_AIPassClearBuilding`: position reservations, 25 s per position, 240 s overall.
+- `Waldo_fnc_CortexClearBuilding`: position reservations, 25 s per position, 240 s overall.
 
 Both forward from the server to the group owner. Both need the pass running, except when handed
 to LAMBS Waypoints in SPLIT mode.
@@ -387,7 +387,7 @@ to LAMBS Waypoints in SPLIT mode.
 Danger for groups without `lambs_danger_disableGroupAI`. `WMP` sets that variable on managed groups
 and restores it on release.
 
-**Eligibility:** `Waldo_fnc_AIPassIsEligible [group]` is the single exclusion gate for every
+**Eligibility:** `Waldo_fnc_CortexIsEligible [group]` is the single exclusion gate for every
 behaviour. It refuses:
 - groups containing a living player, or whose side is outside `Waldo_AIPass_IncludedSides`;
 - anything marked `Waldo_AI_Exclude` or `Waldo_AIPass_Exclude` (group or unit);
@@ -399,7 +399,7 @@ behaviour. It refuses:
 - anything failing the shared `Waldo_AI_IncludedFactions`/`ExcludedFactions`/`ExcludedClasses`
   filters.
 
-**Feature hand-over** (`Waldo_fnc_AIPassReleaseFeatureCrew`, run by discovery): Paradrop and Transport
+**Feature hand-over** (`Waldo_fnc_CortexReleaseFeatureCrew`, run by discovery): Paradrop and Transport
 Services never release the AI they pin, so the pass does it. A group tagged `Waldo_Paradrop_Jumped`
 (set by the static-line and HALO jump functions for AI jumpers) is released once every living member
 has landed. A group tagged `Waldo_TransportService_Vehicle` (set by `Waldo_fnc_TransportRegister`) is
@@ -416,8 +416,8 @@ individual behaviours.
 
 **Survivor regroup:**
 - **Trigger.** Kill-driven only. One `EntityKilled` mission handler per AI-owning machine forwards
-  deaths in locally owned groups to `Waldo_fnc_AIPassRegroupOnKill`, which records peak group
-  strength locally and queues `Waldo_fnc_AIPassRegroupStep`. Nothing polls living units and no
+  deaths in locally owned groups to `Waldo_fnc_CortexRegroupOnKill`, which records peak group
+  strength locally and queues `Waldo_fnc_CortexRegroupStep`. Nothing polls living units and no
   `FiredNear` handlers are added.
 - **Remnant test.** A remnant has `Waldo_AIPass_Regroup_MaxRemnantSize` living members or fewer, all
   on foot, and its group once reached `Waldo_AIPass_Regroup_MinimumPeakSize`. Deliberate small teams
@@ -429,25 +429,12 @@ individual behaviours.
   they stand. Unconscious ACE casualties are not moved.
 
 **Zeus:**
-- **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*): the master switch, every
-  behaviour switch and the LAMBS mode. `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case
-  publishes them, and they are in the joining-machine snapshot list.
-- **WMP AI & Combat > AI Tuning** (`AI_TUNING`): difficulty and tuning, applied live. The dialog is
-  built from `Waldo_fnc_AIPassTuningSpec` (one list for the dialog, validation and the joining-machine
-  snapshot) and applies through `Waldo_fnc_AIPassTuning`, which clamps and broadcasts the values. Keys:
-  `Waldo_AIPass_BehaviourProfile` (mission-wide profile, between faction and AI Rebalance in
-  `Waldo_fnc_AIPassProfile`), `Waldo_AIPass_Aggression` (scales the profile chance keys),
-  `Waldo_AIPass_Cohesion` (divides morale pressure), `Waldo_AIPass_ReactionSpeed` (divides the group
-  tick interval), plus ranges, support, artillery, counter-battery and airborne numbers.
-- **WMP AI & Combat > AI Orders** (`AI_ORDERS` / `AI_ORDER`): garrison, defend, release, clear
-  building, airborne, artillery role (support/counter-battery/both via
-  `Waldo_fnc_AIPassSetArtilleryRole`), exclude (keep for Zeus), return. Garrison, defend, clear and
-  airborne first clear the group's Zeus hold and Zeus-waypoint flag, since a Zeus order hands the group
-  to the pass. Orders run next frame, outside the curator's remote-exec context, because the order APIs
-  refuse remote senders other than the server.
+- **WMP Cortex > Cortex Control**: eight purpose pages combine switches and numeric/profile settings from `Waldo_fnc_CortexTuningSpec`. Named `AI_TUNING` payloads and the legacy positional `AI_CONFIG` adapter both use `Waldo_fnc_CortexTuning`. The server sends a complete monotonic revision to `Waldo_fnc_CortexSettingsLocal` before worker side effects. JIP uses the full runtime snapshot.
+- **Garrison Buildings**, **Defend Position**, **Clear Building**, **Parachute Passengers**, and **Manage Group Control** use `AI_GARRISON`, `AI_DEFEND`, `AI_CLEAR`, `AI_AIRBORNE`, `AI_GROUP` UI cases and the named `AI_ORDER` authority API. Only relevant controls appear. Exact building targets are required for clearing. Group handover does not clear independent feature exclusions or external ownership flags.
+- Artillery has separate exact-target spotter, battery-role and radar setup modules. Orders execute on the current owner after server validation and report acceptance or an uncertain acknowledgement.
 
 **Diagnostics:** rows `ai/smart-ai-pass`, `-regroup`, `-groups`, `-drills`, `-zeus`, `-support`, `-tuning` and `-lambs` in
-`Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP AI PASS]`. See `wiki/Smart-AI-Pass.md`.
+`Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP CORTEX]`. See `wiki/Smart-AI-Pass.md`.
 
 ### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
 
@@ -1747,7 +1734,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionInit/ElectronicWarfare/` — EMP burst (`Waldo_fnc_EMP`) and signal trackers / C-Track (`Waldo_fnc_Tracker`)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
-- `AiScripting/SmartAIPass/` — Smart AI Pass: budgeted server/HC scheduler, discovery sweep, central eligibility gate with Zeus priority, behaviour profiles, group state ladder, combat behaviours (flanking, final assault, bounding advance, street crossing, investigation, fire control, stance, morale, anti-armour, vehicles, grenade evasion, ammo sharing), support (contact reports, reinforcement, coordinated assault, artillery, counter-battery, airborne), orders (garrison, defend, clear building), survivor regroup
+- `AiScripting/Cortex/` — Smart AI Pass: budgeted server/HC scheduler, discovery sweep, central eligibility gate with Zeus priority, behaviour profiles, group state ladder, combat behaviours (flanking, final assault, bounding advance, street crossing, investigation, fire control, stance, morale, anti-armour, vehicles, grenade evasion, ammo sharing), support (contact reports, reinforcement, coordinated assault, artillery, counter-battery, airborne), orders (garrison, defend, clear building), survivor regroup
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
@@ -1955,7 +1942,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 ```
 
 **Registered modules** (all under "Waldos Mission Modules"; the runtime-control modules such as
-**AI Control** sit under "WMP AI & Combat"):
+**AI Control** sit under "WMP Cortex"):
 - Player Supply Crate → calls `Waldo_fnc_ZenSupplySpawner`
 - Field Hospital Crate → calls `Waldo_fnc_ZenMedicalSpawner`
 - Call Endex → `remoteExec ["Waldo_fnc_ENDEX", 0, true]`
@@ -1973,9 +1960,6 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 - Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
-- AI Control → `AI` case of `Waldo_fnc_FeatureRuntimeZen` (AI Rebalance profile plus every Smart AI Pass switch; applied by `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case)
-- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, defend, release, clear building, parachute out now for a squad riding an aircraft, artillery role for a group's guns, exclude or return for a nearby AI group; applied by the `AI_ORDER` case)
-- AI Tuning → `AI_TUNING` case of `Waldo_fnc_FeatureRuntimeZen` (Smart AI Pass difficulty and tuning built from `Waldo_fnc_AIPassTuningSpec`; applied live through `Waldo_fnc_AIPassTuning`)
 - Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
@@ -2102,4 +2086,4 @@ All functions follow `Waldo_fnc_FunctionName` (CamelCase after the prefix). Addi
 - Strings use either `"double"` or `'single'` quotes — both are valid in SQF; be consistent within a file.
 - Statements end with `;` — the validator checks for missing semicolons after closing `}`.
 
-AI behaviour controls use the WMP AI Control ZEN category: AI Control, AI Tuning, AI Orders, Artillery - Set Up Spotter, Artillery - Set Battery Role, Artillery - Set Up Radar, and Convoy - Create Moving Group. Artillery setup uses exact selected targets and authenticated server APIs; it does not enable features or equip/spawn units. Dynamic AO and Dynamic AA remain in WMP AI & Combat.
+AI behaviour controls use the WMP Cortex ZEN category: Cortex Control, Garrison Buildings, Defend Position, Clear Building, Parachute Passengers, Manage Group Control, Assign Artillery Spotter, Configure Artillery Battery, Configure Counter-battery Radar, and Create Convoy. Artillery setup uses exact selected targets and authenticated server APIs; it does not enable features or equip/spawn units. Dynamic AO and Dynamic AA share the WMP Cortex category.

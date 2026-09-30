@@ -2,14 +2,14 @@
  * Author: WaldoTheWarfighter
  * Publishes the server-only groupOwner result needed by the curator HC ownership overlay. Arma's
  * groupOwner command always returns 0 on clients, so interface machines must never query it
- * directly. While debug is enabled this maintains a small public `[group, owner]` snapshot. No
+ * directly. While debug is enabled this maintains a small public `[group, owner, expected owner, pending]` snapshot. No
  * worker or snapshot is retained while HC support or HC debug is disabled.
  *
  * Locality and repeat/JIP behaviour:
  * Server-only and repeat-safe. Each start/stop advances Waldo_Headless_DebugGeneration. A retiring
  * worker may clear state only while it still owns that generation, so a rapid off/on transition
  * cannot let an old worker erase the replacement. The public snapshot is available to JIP curators
- * and is broadcast only when ownership changes.
+ * and is broadcast only when ownership or transfer status changes.
  * Locality and authority: server-only. The server is the only machine that can read authoritative
  * groupOwner values and publish the resulting JIP snapshot; clients consume but never alter it.
  *
@@ -40,7 +40,18 @@ missionNamespace setVariable ["Waldo_Headless_DebugSnapshotWorkerActive", true];
         && {missionNamespace getVariable ["Waldo_Headless_Debug", false]}
         && {_generation == missionNamespace getVariable ["Waldo_Headless_DebugGeneration", -1]}
     } do {
-        private _snapshot = allGroups apply {[_x, groupOwner _x]};
+        private _managed = missionNamespace getVariable ["Waldo_Headless_ManagedGroups",[]];
+        private _snapshot = allGroups apply {
+            private _group = _x;
+            private _index = _managed findIf {(_x select 0) == _group};
+            private _expected = if (_index >= 0) then {(_managed select _index) select 1} else {-1};
+            private _adoption = _group getVariable ["Waldo_Headless_ExpectedAdoption",[]];
+            private _result = _group getVariable ["Waldo_Headless_LastAdoption",[]];
+            private _pending = count _adoption >= 2
+                && {serverTime - (_group getVariable ["Waldo_Headless_MigrationStartedAt",-100]) < 15}
+                && {count _result < 3 || {(_result select 0) != (_adoption select 0)}};
+            [_group,groupOwner _group,_expected,_pending]
+        };
         [_snapshot] call Waldo_fnc_HeadlessSetDebugSnapshot;
         uiSleep 1;
     };

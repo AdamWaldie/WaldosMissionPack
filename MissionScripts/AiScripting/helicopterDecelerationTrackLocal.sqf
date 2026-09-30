@@ -9,6 +9,7 @@
  *
  * Arguments:
  * 0: aircraft <OBJECT> - local AI helicopter (or VTOL when explicitly enabled).
+ * 1: ownership generation <NUMBER, -1 captures current generation for direct calls>.
  * Return Value: Nothing (scheduled tracker lifecycle).
  *
  * Example: [_helicopter] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
@@ -17,9 +18,10 @@
  * Current callers: Waldo_fnc_HelicopterDecelerationInit and its aircraft Local event handler.
  */
 
-params [["_aircraft", objNull, [objNull]]];
+params [["_aircraft", objNull, [objNull]], ["_generation",-1,[0]]];
 if (isNull _aircraft) exitWith {};
 
+if (_generation < 0) then {_generation=_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]};
 private _isLandingOrder = {
     params ["_vehicle"];
     private _pilot = currentPilot _vehicle;
@@ -43,8 +45,9 @@ private _sampleInterval = (missionNamespace getVariable ["Waldo_HelicopterDecele
 private _lastSpeed = abs speed _aircraft;
 private _lastAltitude = (getPosASL _aircraft) select 2;
 
-while {alive _aircraft && {local _aircraft}} do {
+while {alive _aircraft && {local _aircraft} && {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) == _generation}} do {
     uiSleep _sampleInterval;
+    if (!local _aircraft || {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) != _generation}) exitWith {};
     private _speed = abs speed _aircraft;
     private _altitudeASL = (getPosASL _aircraft) select 2;
     private _altitudeAGL = (getPosATL _aircraft) select 2;
@@ -53,6 +56,7 @@ while {alive _aircraft && {local _aircraft}} do {
         if (!isNil "ace_common_fnc_isAwake") then {[_pilot] call ace_common_fnc_isAwake} else {lifeState _pilot != "INCAPACITATED"}
     };
     private _eligible = missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false]
+        && {_aircraft isKindOf "Helicopter" || {(missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL",false]) && {_aircraft isKindOf "VTOL_Base_F"}}}
         && {!(_aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false])}
         && {!(_aircraft getVariable ["Waldo_HelicopterDeceleration_Active", false])}
         && {!(_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
@@ -77,14 +81,14 @@ while {alive _aircraft && {local _aircraft}} do {
             && {_altitudeGain >= (missionNamespace getVariable ["Waldo_HelicopterDeceleration_MinimumAltitudeGain", 0.5])}
             && {(vectorDir _aircraft select 2) >= (missionNamespace getVariable ["Waldo_HelicopterDeceleration_MinimumNoseUp", 0.02])}
         ) then {
-            [_aircraft, _speed, _altitudeASL, _isLandingOrder] spawn Waldo_fnc_HelicopterDecelerationCorrectLocal;
+            [_aircraft, _speed, _altitudeASL, _isLandingOrder, _generation] spawn Waldo_fnc_HelicopterDecelerationCorrectLocal;
         };
     };
     _lastSpeed = _speed;
     _lastAltitude = _altitudeASL;
 };
 
-if (!isNull _aircraft) then {
+if (!isNull _aircraft && {local _aircraft} && {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) == _generation}) then {
     _aircraft setVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false];
     _aircraft setVariable ["Waldo_HelicopterDeceleration_Active", false, true];
 };

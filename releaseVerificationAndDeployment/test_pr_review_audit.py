@@ -76,8 +76,9 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertEqual(4, mission_sqm.count("isPlayable=1;"))
             self.assertEqual(
                 mission_sqm.count('init="this allowDamage false; this enableSimulation false;";'),
-                manifest["staticFixtureCount"],
+                manifest["staticFixtureCount"] - 1,
             )
+            self.assertIn('text="qa_cortex_path_house";\n            init="this allowDamage false; this enableSimulation true;";', mission_sqm)
             fixture_names = re.findall(r'text="(qa_[^"]+)"', mission_sqm)
             self.assertEqual(len(fixture_names), len(set(fixture_names)))
 
@@ -195,7 +196,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
         self.assertIn('"-noPause"', launcher)
-        self.assertEqual(launcher.count('"-netlog"'), 2)
+        self.assertEqual(launcher.count('"-netlog"'), 3)
         self.assertIn("if ($serverReady) { break }", launcher)
 
     def test_server_runtime_waits_for_the_mod_loaded_audit_client(self):
@@ -1517,7 +1518,7 @@ class PrReviewAuditTests(unittest.TestCase):
         ):
             self.assertIn(control, zen)
         for category in (
-            "WMP Mission Flow", "WMP Logistics", "WMP AI & Combat", "WMP Electronic Warfare",
+            "WMP Mission Flow", "WMP Logistics", "WMP Cortex", "WMP Electronic Warfare",
             "WMP Environment", "WMP Air Operations", "WMP Mission Tools", "WMP Interface & QA",
         ):
             self.assertIn(category, modules)

@@ -1,0 +1,94 @@
+# Cortex lifecycle review
+
+Status: source review in progress; this is not whole-system live acceptance. Trigger, completion and migration contracts must be tested together. Sources below are relative to MissionScripts/AiScripting/Cortex unless stated otherwise.
+
+## Existing group flow
+
+| State/action | Trigger and start conditions | End and next action | Current ownership behaviour |
+|---|---|---|---|
+| CALM | Eligible local group discovered; master/contact gates open | Real recent knowledge enters CONTACT; usable report can enter INVESTIGATE | Locality resets local state and rediscovery reassesses |
+| INVESTIGATE | Valid area report and corresponding hearing/report/investigation gates | Direct contact interrupts; expiry or gate closure restores calm | Temporary movement is cleared during adoption; investigation is not resumed verbatim |
+| CONTACT | Recent enemy knowledge; current eligible living leader | Morale may retreat/surrender; lost contact enters SECURITY or restores calm | Enemy knowledge and local state are reacquired |
+| Flank / advance | CONTACT, feature/profile/actor/distance/cooldown requirements in start function | Physical bound arrival exchanges roles or advances index; COMPLETE, CLOSE, LOSSES, STALLED, TIME_LIMIT, ABORT and RELEASE are distinct endings | Checkpoint restores disabled capabilities and movers; current migration cancels the manoeuvre rather than resuming the bound |
+| SECURITY | No recent visible contact beyond configured loss interval | New contact interrupts; security delay selects search actors or enters REGROUP | Reassessed after adoption |
+| SEARCH | Security interval completed, suitable riflemen and remembered position | Arrival, no actors, contact or search expiry returns actors; CONTACT or REGROUP follows | Search-team restoration is checkpointed; search progress is not durable |
+| REGROUP | Search/retreat ends | Physical radius measures COHESIVE; deadline records INCOMPLETE; both release to CALM. New contact interrupts | Holders/settings are restored, but full consolidation progress is not replayed |
+| RETREAT | Morale result, usable enemy position and dry retreat candidate | Ends active drill first; temporary waypoint drives withdrawal. Waypoint completion or 120 s enters REGROUP; surrender can interrupt | Temporary waypoint and settings restored on migration; withdrawal intent is not currently durable |
+| SURRENDER | Morale outcome, gate and eligible local on-foot actor | Releases explicit and automatic orders, then hands captivity to ACE | Captivity is separate from normal manoeuvre state; transfer and release variants still require acceptance |
+| Explicit defend / garrison / clear | Valid owner-routed operator request and valid positions/building | Own release functions; Zeus takeover releases holding orders; rejected replacement should preserve prior order | Public assignments replay on adoption; clear resumes its public order through discovery |
+| Reinforcement / coordinated support | Server reservation and owner acknowledgement | Lease expiry, revocation, feature closure or requester completion clears owned movement/settings | Server lease remains authoritative; owner accepts current token; full tactical continuation requires QA |
+
+Sources: cortexGroupTick.sqf, cortexFlankStart.sqf, cortexAdvanceStart.sqf, cortexFlankStep.sqf, cortexFlankEnd.sqf, cortexRetreat.sqf, cortexSurrender.sqf, cortexOrderLocal.sqf, cortexSupportMaintain.sqf, cortexDiscover.sqf, cortexLocality.sqf, cortexCheckpoint.sqf.
+
+## Handover invariants to prove
+
+1. Validate the new action before invalidating a valid old order.
+2. Invalidate old jobs/callback tokens before they can affect the replacement.
+3. Release only settings, destinations, reservations and event handlers owned by the outgoing action.
+4. Publish enough intent for the new owner to continue or explicitly report cancellation. Never report a resumed action when it was only rediscovered.
+5. Apply the incoming order only after outgoing cleanup; delayed cleanup must not issue follow/stop/target commands over it.
+6. Distinguish physical completion, cancellation, failure and time expiry in results and Zeus feedback.
+7. Restore squad cohesion without overriding a newer Zeus order, explicit holding order, captivity, medical state or vehicle role.
+8. Preserve authored feature exclusions and AI capabilities; do not enable capabilities that Cortex did not disable.
+
+## Confirmed gaps and changes
+
+- Automatic drill, retreat and search migration is currently restore-and-reassess, not seamless continuation. WMP and ACE transfer/disconnect tests must prove the intended continuation policy for each action.
+- RestoreCalm previously cleared checkpoint data before a pending drill had necessarily restored disabled capabilities. It now ends the drill synchronously before clearing temporary waypoints/checkpoints. Static regression added; live transition/migration acceptance pending.
+- Retreat completion currently uses tagged waypoint progress or a 120-second limit. That transition does not itself prove physical withdrawal. Existing reaction QA measures movement, but the production end reason needs the same explicit distinction.
+- Contact can invoke fire control, stance, anti-armour and movement systems during the same tick. Fire control and stance exclude drill actors; anti-armour movement needs an explicit ownership review. Do not assume all concurrent actions respect the same actor reservation.
+- Zeus marking publishes a hold token; owner cleanup occurs on a subsequent tick. Real curator event delivery, new-order arrival and no stale command resurrection must be observed for every action phase.
+- SafeStart/ENDEX postpone scheduler jobs; that alone does not establish that already-issued engine movement has stopped. Pause semantics need explicit acceptance.
+
+## Remaining inventory
+
+Complete individual lifecycle rows and transition tests for artillery/spotters/counter-battery, convoy/cargo/armed crews/recovery, airborne insertion, aircraft flares/break-away/deceleration/landing, grenade evasion/throws, cover/stance/fire control/anti-armour, ammunition sharing, remounting, survivor merging, lighting/profile refresh and UI/settings replay. Keep coverage.json cases and existing visual fixtures; this review is additive.
+
+Required test dimensions: natural trigger, refused start, actual work, successful physical finish, timeout, blocked actor, casualty, gate closure, repeated start, replacement, Zeus intervention, WMP HC, ACE HC, disconnect, JIP and another module controlling the same actor. Each transition checks outgoing cleanup AND the incoming physical outcome.
+
+## Stuck and separated actors
+
+Required: bounded individual recovery, sufficient covering strength, continued movement by the viable element, straggler rejoin, and explicit fallback when too few actors remain. No teleport or false arrival. First saved layer reissues the unchanged destination at most twice, eight seconds apart, without resetting physical progress or overriding disabled PATH/MOVE. The subsequent recovery layer is described below; the physical blockage matrix remains unaccepted. Do not treat retries as full contingency support.
+
+Anti-armour now excludes current drill movers and refuses relocation from explicit holding/clearing assignments or disabled PATH/MOVE, while allowing safe stationary fire. Live interaction tests remain pending.
+
+## Additive combat handover fixtures
+
+FLANK-ZEUS and ADVANCE-ZEUS require 8 m physical movement before invoking the production Zeus marker. They check capability restoration, stale-job rejection and physical replacement travel. The original all-members-within-15-metre and 20-metre drift checks remain, alongside formation-aware checks requiring leader arrival, each soldier reaching its engine-assigned formation position, and stability for 15 seconds. Opponents are removed at replacement to isolate command ownership.
+
+Runtime 133856 passed replacement formation arrival for both cases and formation stability for Flank; the original fixed-radius findings remain recorded. These are direct-handler server cases, not proof of real curator event delivery, ongoing-fire handover or headless migration. FLANK-ZEUS-CONSOLIDATE additionally waits for the normal clear-through/consolidation transition and requires 8 metres of support-element travel before replacement. That new case is staged in runtime 142945 but has not yet completed.
+
+Remaining live operator checks must use actual Zeus orders during approach, grenade hold, clear-through and consolidation. Confirm the curator event reaches the owner, old restrictions are restored, replacement movement physically occurs, and no old job resumes. Repeat on WMP and ACE headless ownership and during owner disconnect. A direct function call cannot substitute for these UI and network checks.
+
+## Observable manoeuvre acceptance
+
+These are intended outcomes, not claims that current live tests pass.
+
+| Action | Observable work | Successful end |
+|---|---|---|
+| Advance | One element moves while another covers; roles exchange at bounds. Both elements retain useful frontage and may engage. | Whole squad advances through the intended bounds; separated actors are accounted for. |
+| Flank | Base engages while manoeuvre element moves laterally then approaches from an offset; broad threat-facing frontage. | Manoeuvre element physically occupies the flank; assault or consolidation follows explicitly. |
+| Assault | Covering fire, short approach and safe grenade use where appropriate; close and clear. | Physical occupation/clearance followed by consolidation, not merely last-waypoint acceptance. |
+| Building clear | Use a usable entrance, traverse assigned internal positions and engage. Retry another accessible approach when blocked. | Required positions reached; inaccessible rooms/buildings remain explicitly unresolved. |
+| Garrison | Occupy usable internal positions and observe/fire through useful sectors. | Assigned occupants are physically inside at correct elevations. |
+| Defend | Spread over a frontage, select usable cover and maintain observation/firing opportunities. | Occupy and hold positions; explicit replacement or withdrawal releases them. |
+| Withdraw | Move away from the threat with supporting fire and smoke where useful; stronger squads use covering elements. | Physical separation and regroup, with retained actors/weapons as applicable. |
+| Contact reaction | Orient to known danger, engage/use cover and select a compatible manoeuvre. | A deliberate follow-on action or post-contact transition; no competing movement loops. |
+| Investigate/search | Approach reported area using bounded knowledge; supported search actors rejoin. | Area search ends distinctly by arrival, contact, expiry or cancellation. |
+| Regroup | Actors close on the squad and resume its mission; stragglers stay accounted for. | Physical cohesion, or explicit incomplete recovery. |
+| Surrender | Stop fighting, release old manoeuvres and enter supported captivity. | Stable captive/disarmed state without stale combat work restarting. |
+| Convoy | Column following, occupants retained during travel, push-through while mobile; pinned cargo dismount with crew retained. | Intended stop/arrival with correct seat-role handling and useful Zeus feedback. |
+| Zeus replacement | Old action releases restrictions, then actors obey the replacement. | Physical replacement-order execution with no old-order resurrection. |
+
+Multi-squad variants require assigned supporting/manoeuvring squads, coordinated progress and a shared consolidation plan. They are not proved by a single-squad pass. QA cards must distinguish these intended manoeuvres from the narrower scenario currently being exercised.
+
+Recovery follow-up: saved controller now tracks stragglers, continues only with at least two actors and 60 percent of the original element, bounds rejoin attempts and reports PARTIAL when separation remains. Rejoining requires usable PATH/MOVE and occurs between movement stages, avoiding mid-bound insertion into obsolete slots. Controlled PATH-inhibition fixtures were added; physical geometry blockage, separated leaders, multiple blocked actors, migration and explicit fallback notifications remain pending.
+
+Movement ROE candidate: RED movers use YELLOW during each bound to retain firing without independent pursuit. At halt, release or ownership adoption, restore the original value only if the current value still matches the Cortex-applied override. Other authored modes and later external changes are preserved. Live acceptance remains pending.
+
+
+### Assault continuation and consolidation (saved candidate, live acceptance pending)
+
+Advance and Flank may enter assault after their final hold when enabled and the existing morale, range and aggression checks allow it. They approach the fixed reported objective, optionally throw a carried frag after arrival, wait for confirmed deployment and projectile clearance, then cross 20 metres beyond the objective. The direction remains fixed while crossing. An unresolved queued frag ends explicitly after thirty seconds rather than allowing the rush.
+
+After a flank clears through, its on-foot covering element moves forward to a line 12 metres beyond the objective while the assault element holds. Actual arrival and a ten-second hold precede completion. Advance has already brought both elements through. All stages remain part of the same owner-local drill: Zeus takeover, feature disable, eligibility loss and ownership migration use its existing cleanup. Stragglers cannot produce full completion. The physical-consolidation case measures the entire squad and support movement; implementation alone does not pass it.

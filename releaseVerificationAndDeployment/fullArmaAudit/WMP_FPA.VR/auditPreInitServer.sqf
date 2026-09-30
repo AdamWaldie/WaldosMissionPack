@@ -1,6 +1,10 @@
 /*
- * Server configuration applied before the real initServer.sqf.
- * Defaults in the release entry point preserve these explicit mission-maker values.
+ * Author: WaldoTheWarfighter
+ * Applies explicit full-pack audit configuration before the real initServer.sqf.
+ * Locality/authority: server only; shared audit configuration is published to clients and headless owners.
+ * Repeat/JIP: startup-only audit override; repeated invocation reapplies fixture settings, not live mission edits.
+ * Arguments: None. Return: Nothing. Current caller: staged audit initServer wrapper.
+ * Example: [] call compile preprocessFileLineNumbers "auditPreInitServer.sqf";
  */
 if (!isServer) exitWith {};
 missionNamespace setVariable [
@@ -9,7 +13,7 @@ missionNamespace setVariable [
     true
 ];
 if (!isNil "qa_player_1") then {(group qa_player_1) setGroupIdGlobal ["VIKING 2-3"]};
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "B_Parachute", true];
+missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true];
 // The audit range creates its fixtures after the real pack startup. Automatic
 // diagnostics would therefore report healthy-but-not-yet-configured stations.
 // Manual mode exposes an explicit console action; automated mode runs once the
