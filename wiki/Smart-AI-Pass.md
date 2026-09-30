@@ -501,6 +501,11 @@ crowded corridor requests a stop. It changes the existing speed request without 
 - One scheduler per machine with a soft budget checked between jobs. At least one due job runs
   each tick. A running job can exceed the budget, and scanning the queue costs more as it grows.
   The remaining jobs wait their turn in rotation. Steps are slowed when FPS is low.
+- Flank, advance and coordinated-bound controllers publish a heartbeat. Standalone drills renew a
+  90-second movement lease on every step. If a controller stays silent for 30 seconds, the group
+  tick ends it through the normal restoration path, including PATH,
+  AUTOCOMBAT, behaviour, ROE and speed. SafeStart and ENDEX give deferred jobs a 60-second grace
+  after resumption. This prevents a missing job or an expired fixed lease from leaving a squad inert.
 - How often a squad is stepped depends on its distance to the nearest player: every 2 s in contact
   nearby, up to every 20 s far away. Squads more than 2.5 km from every player only update their
   state and morale.
@@ -547,6 +552,8 @@ current owner. These changes have static regression coverage; their engine behav
 
 Mission diagnostics include rows under area `ai`:
 - `cortex`: scheduler state, queued jobs, pause;
+- `cortex-drill-health-*`: active drill heartbeat age, watchdog threshold, movement lease and
+  post-pause grace; an overdue controller is an error rather than a successful manoeuvre;
 - `cortex-regroup`: regroups and units joined;
 - `cortex-groups`: managed squads, squads in contact and retreating, garrisons, flanks,
   retreats, surrenders, reinforcements, grenade reactions;

@@ -60,6 +60,8 @@
  * Review contract: Every step rechecks full group eligibility and its behaviour switch. Existing jobs stop after exclusion, remote control or a live disable.
  *
  * Repeat/JIP: each job rechecks its drill token, locality and gates; completion publishes the real ending reason.
+ * Every authenticated step renews its heartbeat and standalone movement lease. GroupTick ends a silent
+ * controller through CortexFlankEnd, so scheduler loss cannot leave actors restricted indefinitely.
  * A stationary mover receives at most two route reissues per bound, eight seconds apart.
  * The same bounded retries also detect a return to the unchanged original group waypoint.
  * They never change that waypoint, and the eligibility check gives Zeus priority first.
@@ -139,6 +141,15 @@ if (!(missionNamespace getVariable ["Waldo_AIPass_Active", false])
     || {if (_support) then {!_supportValid} else {(_state getOrDefault ["phase",""]) != "CONTACT"}}
     || {!([_group] call Waldo_fnc_CortexIsEligible)}
     || {!([_group,_gate,true] call Waldo_fnc_CortexFeatureEnabled)}) exitWith {"ABORT" call _end};
+// This callback is the drill's liveness heartbeat. Standalone drills also renew their
+// movement ownership instead of relying on one fixed five-minute lease. GroupTick uses
+// the heartbeat to release every owned PATH/behaviour change if this job disappears or
+// scheduler pressure prevents it from running for a bounded interval.
+_drill set ["lastStep",time];
+private _movementLease=_state getOrDefault ["movementLease",[]];
+if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {
+    _state set ["movementLease",["TACTICAL_DRILL",time+90]];
+};
 // Rebuild depleted manoeuvre elements from the surviving squad inside this existing group job.
 // There is no casualty event handler or per-unit scheduler. A change during a live bound restarts
 // that bound from the same route point so spot indexes cannot drift after a casualty.

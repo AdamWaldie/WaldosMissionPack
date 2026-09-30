@@ -3,7 +3,7 @@
  * Reports whether the WMP AI profile is active and whether ordinary AI groups currently owned by
  * headless clients have acknowledged profile adoption. Also reports the Cortex scheduler and
  * survivor-regroup counters, per-feature gates/tuning, coordinated support outcomes,
- * bounded action/order snapshots and queue health
+ * active drill heartbeats, bounded action/order snapshots and queue health
  * for the server (headless-client private counters stay on those machines). This is independent of which scheduler moved
  * the groups: ACE Headless may be active while WMP's optional HC distributor is disabled.
  *
@@ -264,6 +264,15 @@ _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot server
     private _state=_group getVariable ["Waldo_AIPass_State",createHashMap];
     private _drill=_state getOrDefault ["drill",createHashMap];
     private _members=(units _group) select [0,8];
+    if (count _drill > 0) then {
+        private _lastStep=_drill getOrDefault ["lastStep",_drill getOrDefault ["started",time]];
+        private _heartbeatAge=(time-_lastStep) max 0;
+        private _watchdog=30;
+        private _resumeGrace=((missionNamespace getVariable ["Waldo_AIPass_ResumeGraceUntil",-1])-time) max 0;
+        private _movementLease=_state getOrDefault ["movementLease",[]];
+        private _healthy=_heartbeatAge <= _watchdog || {_resumeGrace > 0};
+        _checks pushBack ["ai",format ["cortex-drill-health-%1",netId _group],["ERROR","LOADED"] select _healthy,format ["group=%1 type=%2 stage=%3 token=%4 heartbeatAgeSeconds=%5 watchdogSeconds=%6 movementLease=%7 resumeGraceSeconds=%8. An overdue controller is released through common drill cleanup; a stored drill or waypoint is not completion evidence.",groupId _group,_drill getOrDefault ["type","UNKNOWN"],_drill getOrDefault ["stage","UNKNOWN"],_drill getOrDefault ["token",""],_heartbeatAge,_watchdog,_movementLease,_resumeGrace]];
+    };
     _checks pushBack ["ai",format ["cortex-group-context-%1",netId _group],"LOADED",format ["group=%1 phaseAgeSeconds=%2 lastSeenAgeSeconds=%3 morale=%4 moraleState=%5 investigating=%6 searchMembers=%7 reinforcementResponding=%8 dismounted=%9 withdrawnVehicles=%10 disabledFeatures=%11 externalControl=%12. Ages are owner-local; unknown uses -1. Stored intentions are not physical completion.",groupId _group,if ("phaseStart" in _state) then {time-(_state get "phaseStart")} else {-1},if ("lastSeen" in _state) then {time-(_state get "lastSeen")} else {-1},_state getOrDefault ["morale",-1],_state getOrDefault ["moraleState","UNKNOWN"],_state getOrDefault ["areaInvestigation",""],count (_state getOrDefault ["searchTeam",[]]),_state getOrDefault ["responding",false],count (_state getOrDefault ["dismounted",[]]),count (_state getOrDefault ["withdrawn",[]]),_group getVariable ["Waldo_AIPass_DisabledFeatures",[]],_group getVariable ["Waldo_AI_ExternalControl",false]]];
     private _actors=_members apply {[_x,currentCommand _x,round speed _x,_x checkAIFeature "PATH",_x checkAIFeature "MOVE",behaviour _x,unitCombatMode _x]};
     _checks pushBack ["ai",format ["cortex-group-%1",netId _group],"LOADED",format ["group=%1 owner=%2 phase=%3 drill=%4 stage=%5 bound=%6 recoveryActors=%7 groupSpeed=%8 excluded=%9 ZeusWaypoints=%10 ZeusHoldRemaining=%11 supportRole=%12 supportResult=%13 supportAbort=%14 withdrawal=[status,travel,replans]=%15; first 8 members [unit,command,km/h,PATH,MOVE,behaviour,ROE]=%16",

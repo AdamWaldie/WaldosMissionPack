@@ -1243,12 +1243,28 @@ class CortexOperations(unittest.TestCase):
         for name in ['cortexFlankStart','cortexAdvanceStart']:
             code=source(name)
             self.assertIn('getOrDefault ["movementLease",[]]',code)
-            self.assertIn('_state set ["movementLease",["TACTICAL_DRILL",time+300]]',code)
+            self.assertIn('["lastStep",time]',code)
+            self.assertIn('_state set ["movementLease",["TACTICAL_DRILL",time+90]]',code)
         self.assertIn('(_movementLease select 0) == "TACTICAL_DRILL"',end)
         self.assertIn('!_movementLeaseActive || {_supportOwnsMovement}',apply)
         self.assertIn('_state set ["movementLease",["SUPPORT_RALLY",time+(_expiry-serverTime)]]',apply)
         self.assertIn('_state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]]',apply)
         self.assertIn('case "SUPPORT_RALLY"',maintain)
+
+    def test_tactical_drill_scheduler_silence_restores_owned_ai_state(self):
+        step=source('cortexFlankStep')
+        tick=source('cortexGroupTick')
+        support=source('cortexSupportBoundStart')
+        scheduler=source('cortexSchedulerTick')
+        end=source('cortexFlankEnd')
+        self.assertIn('_drill set ["lastStep",time]',step)
+        self.assertIn('_state set ["movementLease",["TACTICAL_DRILL",time+90]]',step)
+        self.assertIn('["lastStep",time]',support)
+        self.assertIn('time-_lastDrillStep > _drillWatchdog',tick)
+        self.assertIn('[_group,_state,"SCHEDULER_STALLED"] call Waldo_fnc_CortexFlankEnd',tick)
+        self.assertIn('Waldo_AIPass_ResumeGraceUntil',tick)
+        self.assertIn('Waldo_AIPass_ResumeGraceUntil',scheduler)
+        self.assertIn('SCHEDULER_STALLED',end)
 
     def test_calm_requester_fully_releases_responder_reservation(self):
         tick=source('cortexGroupTick')

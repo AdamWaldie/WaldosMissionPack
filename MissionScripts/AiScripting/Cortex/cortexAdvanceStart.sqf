@@ -19,8 +19,9 @@
  *
  * Each start gives its queued step a unique drill token.
  * Repeat/JIP: a running drill, shared movement lease or cooldown refuses duplicate starts; owner
- * migration retires local jobs. A finite TACTICAL_DRILL lease makes direct fire-team movement
+ * migration retires local jobs. A rolling TACTICAL_DRILL lease makes direct fire-team movement
  * visible to reinforcement, vehicle and artillery behaviours until CortexFlankEnd releases it.
+ * The drill heartbeat lets GroupTick restore every owned engine setting if its scheduler job stalls.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -93,12 +94,12 @@ _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select 0) select 0],
     ["teams",[_element,_coverElement]],["teamSizes",[count _element,count _coverElement]],["teamTurn",0],
     ["type", "ADVANCE"], ["units", _onFoot], ["desiredStrength",count _onFoot], ["points", _points], ["index", 0], ["stage", "START"],
-    ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time],
+    ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time], ["lastStep",time],
     ["boundStart", time], ["pauseUntil", 0]
 ]];
 // Direct fire-team bounds are a group movement owner even though they do not
 // create a WMP waypoint. Other behaviours must wait until CortexFlankEnd releases it.
-_state set ["movementLease",["TACTICAL_DRILL",time+300]];
+_state set ["movementLease",["TACTICAL_DRILL",time+90]];
 [Waldo_fnc_CortexFlankStep, createHashMapFromArray [["group", _group],["drillToken",_token]], 0] call Waldo_fnc_CortexQueueJob;
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {
     diag_log format ["[WMP CORTEX] %1 ADVANCE element=%2 points=%3", _group, count _element, count _points];

@@ -25,7 +25,8 @@
  *
  * Repeat/JIP: a running drill, shared movement lease or cooldown refuses duplicate starts; owner
  * migration retires local jobs. Each start gives its queued step a unique drill token and publishes
- * a finite TACTICAL_DRILL lease so another feature cannot replace its direct actor movement.
+ * a rolling TACTICAL_DRILL lease so another feature cannot replace its direct actor movement.
+ * The drill heartbeat lets GroupTick restore every owned engine setting if its scheduler job stalls.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -231,11 +232,11 @@ _group setVariable ["Waldo_Cortex_DrillReinforcements",[],true];
 _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select _targetIndex) select 0],
     ["type", "FLANK"], ["units", _element], ["desiredStrength",count _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],
-    ["disabled", []], ["spots", []], ["started", time], ["boundStart", time], ["pauseUntil", 0]
+    ["disabled", []], ["spots", []], ["started", time], ["lastStep",time], ["boundStart", time], ["pauseUntil", 0]
 ]];
 // The drill moves selected actors directly rather than adding a group waypoint.
 // Publish that ownership so support, vehicles and artillery cannot replace it mid-bound.
-_state set ["movementLease",["TACTICAL_DRILL",time+300]];
+_state set ["movementLease",["TACTICAL_DRILL",time+90]];
 [Waldo_fnc_CortexFlankStep, createHashMapFromArray [["group", _group],["drillToken",_token]], 0] call Waldo_fnc_CortexQueueJob;
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {
     diag_log format ["[WMP CORTEX] %1 FLANK element=%2 points=%3 crossings=%4", _group, count _element, count _points, {(_x select 1) == "CROSS_NEAR"} count _points];

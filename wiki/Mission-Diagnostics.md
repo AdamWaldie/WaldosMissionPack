@@ -89,6 +89,12 @@ Each interface client reports:
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 
+For each sampled server-local Cortex group with an active flank, advance or coordinated bound,
+`cortex-drill-health-*` reports the scheduler heartbeat age, its bounded watchdog threshold, the
+current movement lease and any SafeStart/ENDEX resumption grace. An overdue heartbeat is `ERROR`.
+The owner restores its temporary AI restrictions through the common drill cleanup path; the row does
+not infer success from a waypoint, flag or stored order.
+
 **Related, but not a diagnostic check:** `initPlayerLocal.sqf` also calls
 `Waldo_fnc_AceSetNameRespawnBindingRepair` after CBA/ACE initialise, patching a real ACE 3.21.1 bug
 rather than merely reporting it - ACE's own respawn hook forwarded the engine's `[unit, corpse]`

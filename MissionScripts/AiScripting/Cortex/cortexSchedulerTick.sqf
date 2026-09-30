@@ -10,7 +10,8 @@
  * the complete group queue four times per second. Due processing still traverses the queue once and
  * jobs move to the back, so no group is starved when the budget is always spent. When the machine's FPS is below
  * Waldo_AIPass_LowFpsThreshold, rescheduling delays are doubled. While ENDEX or SafeStart is
- * active, due jobs are postponed by five seconds and never run.
+ * active, due jobs are postponed by five seconds and never run. The pause refreshes a one-minute
+ * resumption grace used by tactical-drill watchdogs, so deferred work is not mistaken for starvation.
  * Locality and authority: machine-local. It performs no world scans. Changed restoration checkpoints are published after group jobs.
  *
  * Review contract: The scheduler is machine-local and repeat-driven by CBA. Its budget is soft: it cannot interrupt a running SQF job and still traverses the full queue.
@@ -45,6 +46,10 @@ private _start = diag_tickTime;
 private _budget = ((missionNamespace getVariable ["Waldo_AIPass_TickBudgetMs", 1]) max 0.2) / 1000;
 private _slow = diag_fps < (missionNamespace getVariable ["Waldo_AIPass_LowFpsThreshold", 25]);
 private _paused = [] call Waldo_fnc_CortexIsPaused;
+// Deferred tactical jobs must not look starved immediately after a deliberate SafeStart or
+// ENDEX pause. Refreshing this grace deadline while paused gives every owner queue one minute
+// after play resumes to execute its existing drill callback.
+if (_paused) then {missionNamespace setVariable ["Waldo_AIPass_ResumeGraceUntil",_now+60]};
 private _processed = 0;
 private _next = [];
 private _rescheduled = [];

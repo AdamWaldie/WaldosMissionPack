@@ -51,6 +51,9 @@
  * different externally assigned posture instead of unconditionally resetting it.
  * Locality and authority: runs as a scheduler job on the group owner. When the group stops being
  * local the job retires and the new owner's discovery sweep starts a fresh one.
+ * A running tactical drill has a separate scheduler heartbeat. If it stays silent for 30 seconds,
+ * this owner ends it through common cleanup and restores its engine leases.
+ * SafeStart and ENDEX provide a one-minute resumption grace instead of causing a false stall.
  *
  * Review contract: Waypoint completion compares tagged indices with currentWaypoint; completed waypoints may remain in the engine list. This allows rally arrival and retreat completion to be detected.
  *
@@ -130,6 +133,21 @@ if (_airborneDelay >= 0) exitWith {_airborneDelay};
 
 private _state = [_group] call Waldo_fnc_CortexGroupState;
 [_group,_state] call Waldo_fnc_CortexSupportMaintain;
+// The drill controller is a separate scheduled job. If it is lost or starved, leaving the
+// drill HashMap in place blocks replacement tactics and can leave Cortex-owned PATH,
+// AUTOCOMBAT, behaviour and ROE leases active indefinitely. End through the common cleanup
+// path after a bounded silence. SafeStart/ENDEX continually extend ResumeGraceUntil, so a
+// deliberately paused mission gets one minute for its deferred job to resume first.
+private _activeDrill=_state getOrDefault ["drill",createHashMap];
+if (count _activeDrill > 0) then {
+    private _lastDrillStep=_activeDrill getOrDefault ["lastStep",_activeDrill getOrDefault ["started",time]];
+    private _drillWatchdog=30;
+    private _resumeGrace=missionNamespace getVariable ["Waldo_AIPass_ResumeGraceUntil",-1];
+    if (time-_lastDrillStep > _drillWatchdog && {time >= _resumeGrace}) then {
+        [_group,_state,"SCHEDULER_STALLED"] call Waldo_fnc_CortexFlankEnd;
+        _activeDrill=createHashMap;
+    };
+};
 private _movementLease = _state getOrDefault ["movementLease",[]];
 private _movementOwner = _movementLease param [0,""];
 private _groupMovementOwned = count _movementLease == 2 && {time < (_movementLease select 1)} && {
@@ -221,7 +239,6 @@ if (_areaMode != "" && {(!([_group,"Waldo_AIPass_Investigate_Enable",true] call 
 // Soldiers holding ground from a finished drill rejoin once the leader has caught up with them.
 // A previous completed bound must not issue doFollow over a replacement drill.
 // Transfer these actors out of old holding ownership before considering reunion.
-private _activeDrill = _state getOrDefault ["drill",createHashMap];
 private _ownedMovers = _activeDrill getOrDefault ["units",[]];
 private _holders = (_state getOrDefault ["holders", []]) select {alive _x && {local _x} && {group _x == _group} && {!(_x in _ownedMovers)}};
 _state set ["holders",_holders];
