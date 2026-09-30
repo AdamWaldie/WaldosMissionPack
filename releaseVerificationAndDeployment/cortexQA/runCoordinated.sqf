@@ -204,8 +204,10 @@ private _physicalMoverSamples=[0,0];
 private _attackOverrideSamples=[0,0];
 private _idleSince=createHashMap;
 private _longestMovingIdle=0;
+private _movementRoleObserved=false;
+private _retiredSince=-1;
 private _shotCounts=_helpers apply {_x getVariable ["Waldo_CortexQA_Shots",0]};
-private _advanced=[{
+private _movementWindowEnded=[{
     if (diag_tickTime-_lastSample >= 1) then {
         _lastSample=diag_tickTime;
         private _movingTeams=[];
@@ -216,6 +218,7 @@ private _advanced=[{
             private _g=group (_members select 0);
             private _role=_g getVariable ["Waldo_Cortex_SupportRole",[]];
             private _fireTeams=_g getVariable ["Waldo_Cortex_SupportTeams",[]];
+            if (count _role == 5) then {_movementRoleObserved=true};
             private _moving=0; private _firing=0; private _coverShots=0;
             {
                 private _i=_ti*6+_forEachIndex;
@@ -307,10 +310,32 @@ private _advanced=[{
                     _x checkAIFeature "PATH",behaviour _x,unitCombatMode _x]}];
         } forEach _teams;
     };
-    private _ok=true;
-    {if (!alive _x || {_x distance2D (_origins select _forEachIndex) < 60} || {_x distance2D _enemy > 50}) then {_ok=false}} forEach _helpers;
-    _ok
+    private _allArrived=true;
+    {if (!alive _x || {_x distance2D (_origins select _forEachIndex) < 60} || {_x distance2D _enemy > 50}) then {_allArrived=false}} forEach _helpers;
+    if (_allArrived) exitWith {true};
+    // Once both independently isolated manoeuvre elements have explicitly retired as
+    // stalled, more waiting only measures native post-release combat wandering. Give
+    // the public role/result state a short settling period, then report the unchanged
+    // physical failures instead of holding the audit open for the full ten minutes.
+    private _allRetired=_movementRoleObserved && {
+        (_teams findIf {
+            private _g=group (_x select 0);
+            private _role=_g getVariable ["Waldo_Cortex_SupportRole",[]];
+            private _result=_g getVariable ["Waldo_Cortex_SupportBoundResult",[]];
+            count _role == 5 || {count _result < 3} || {!((_result select 2) in ["STALLED","TIME_LIMIT"])}
+        }) < 0
+    };
+    if (_allRetired) then {
+        if (_retiredSince < 0) then {_retiredSince=diag_tickTime};
+    } else {
+        _retiredSince=-1;
+    };
+    _retiredSince >= 0 && {diag_tickTime-_retiredSince >= 5}
 },600] call _wait;
+["COORD-tactical-role-observed",_movementRoleObserved] call _check;
+private _advanced=true;
+{if (!alive _x || {_x distance2D (_origins select _forEachIndex) < 60} || {_x distance2D _enemy > 50}) then {_advanced=false}} forEach _helpers;
+["COORD-movement-window-terminated",_movementWindowEnded,format ["roleObserved=%1 results=%2",_movementRoleObserved,_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportBoundResult",[]]}]] call _check;
 ["COORD-inter-squad-role-exchange",_roleSwitches >= 2,str _roleSwitches] call _check;
 ["COORD-full-fire-team-physical-bounds",(_physicalMoverSamples findIf {_x <= 0}) < 0,str _physicalMoverSamples] call _check;
 ["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;

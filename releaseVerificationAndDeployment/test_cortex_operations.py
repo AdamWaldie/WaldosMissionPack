@@ -573,6 +573,26 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('-no-support-fire-lane-crossing',qa)
         self.assertIn('_lateral < 18',qa)
 
+    def test_multi_manoeuvre_audit_requires_real_drills_and_contact(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
+        for marker in ['private _drillSeen=[false,false]',
+                       'private _expectedDrill=["FLANK","ADVANCE"]',
+                       '-both-tactical-drills-observed',
+                       '([0,180] select _contact)',
+                       '_drillSeen select _teamIndex']:
+            self.assertIn(marker,qa)
+        self.assertIn('_enemyGroup setCombatMode "YELLOW"',qa)
+        self.assertIn('_enemy setUnitPos "UP"',qa)
+
+    def test_coordinated_audit_ends_after_terminal_element_failures(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
+        for marker in ['private _movementRoleObserved=false',
+                       'private _retiredSince=-1',
+                       'in ["STALLED","TIME_LIMIT"]',
+                       'COORD-tactical-role-observed',
+                       'COORD-movement-window-terminated']:
+            self.assertIn(marker,qa)
+
     def test_previous_holders_cannot_follow_over_replacement_drill(self):
         text = source('cortexGroupTick')
         self.assertIn('_ownedMovers = _activeDrill getOrDefault ["units",[]]', text)

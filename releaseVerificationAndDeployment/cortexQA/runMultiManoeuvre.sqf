@@ -55,9 +55,9 @@ params ["_check","_phase","_wait"];
     _enemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
     _enemyGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
     _enemyGroup setVariable ["acex_headless_blacklist",true,true];
-    _enemyGroup setCombatMode "BLUE";
+    _enemyGroup setCombatMode "YELLOW";
     private _enemy=_enemyGroup createUnit ["B_Soldier_F",[2250,1360,0],[],0,"NONE"];
-    _enemy allowDamage false; _enemy disableAI "PATH"; _enemy setDir 180;
+    _enemy allowDamage false; _enemy disableAI "PATH"; _enemy setDir 180; _enemy setUnitPos "UP";
     _enemy setVariable ["Waldo_CortexQA_Label","SHARED ENEMY OBJECTIVE",true];
     private _origins=_actors apply {getPosATL _x};
     private _peaks=_actors apply {0};
@@ -66,22 +66,34 @@ params ["_check","_phase","_wait"];
     private _lastMover=-1;
     private _switches=0;
     private _fireLaneCrossings=[0,0];
+    private _drillSeen=[false,false];
+    private _expectedDrill=["FLANK","ADVANCE"] select (_mode == "BOUND");
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors+[_enemy],true];
     [_prefix+": two squads","Both squads must physically manoeuvre against the same enemy, retain their members and finish cohesive. Cyan trails show travel. Moving/covering counts and actual shots show whether one squad supports the other; accepted drill flags do not pass.",[2250,1200,0]] call _phase;
-    private _contact=[{_groups findIf {leader _x knowsAbout _enemy <= 1} < 0},40] call _wait;
+    // Direction is established without revealing the target. Both sides remain armed,
+    // invulnerable and free to exchange fire so the prerequisite is a real engagement.
+    {_x doWatch (getPosATL _enemy)} forEach _actors;
+    _enemy doWatch (getPosATL leader (_groups select 0));
+    private _contact=[{_groups findIf {leader _x knowsAbout _enemy < 1} < 0},60] call _wait;
     [_prefix+"-natural-contact",_contact] call _check;
-    private _until=diag_tickTime+180;
+    private _until=diag_tickTime+([0,180] select _contact);
     while {diag_tickTime < _until} do {
         private _movingCounts=[];
         private _shotDeltas=[];
+        private _drillActive=[];
         {
             private _teamIndex=_forEachIndex;
+            private _state=(_groups select _teamIndex) getVariable ["Waldo_AIPass_State",createHashMap];
+            private _drill=_state getOrDefault ["drill",createHashMap];
+            private _ownsDrill=(_drill getOrDefault ["type",""]) == _expectedDrill;
+            if (_ownsDrill) then {_drillSeen set [_teamIndex,true]};
+            _drillActive pushBack _ownsDrill;
             private _moving={abs speed _x > 2} count _x;
             private _shots=0;
             {
                 private _index=_teamIndex*6+_forEachIndex;
                 private _travel=_x distance2D (_origins select _index);
-                _peaks set [_index,(_peaks select _index) max _travel];
+                if (_ownsDrill) then {_peaks set [_index,(_peaks select _index) max _travel]};
                 _shots=_shots+(_x getVariable ["Waldo_CortexQA_MultiShots",0]);
                 _x setVariable ["Waldo_CortexQA_Label",format ["%1 squad %2 | travel %3 m | moving %4/6 | shots %5",_mode,_teamIndex+1,round _travel,_moving,_x getVariable ["Waldo_CortexQA_MultiShots",0]],true];
                 _x setVariable ["Waldo_CortexQA_Target",getPosATL _enemy,true];
@@ -92,7 +104,7 @@ params ["_check","_phase","_wait"];
         } forEach _teams;
         for "_teamIndex" from 0 to 1 do {
             private _other=1-_teamIndex;
-            if ((_movingCounts select _teamIndex) >= 3 && {(_movingCounts select _other) <= 1} && {(_shotDeltas select _other) > 0}) then {
+            if ((_drillActive select _teamIndex) && {(_movingCounts select _teamIndex) >= 2} && {(_movingCounts select _other) <= 1} && {(_shotDeltas select _other) > 0}) then {
                 _coverEvents set [_other,(_coverEvents select _other)+1];
                 if (_lastMover >= 0 && {_lastMover != _teamIndex}) then {_switches=_switches+1};
                 _lastMover=_teamIndex;
@@ -118,8 +130,15 @@ params ["_check","_phase","_wait"];
                 };
             };
         };
+        // End promptly after both real drills have published a terminal result. Ordinary
+        // post-drill waypoint movement must not accumulate more Cortex evidence.
+        if ((_drillSeen findIf {!_x}) < 0 && {(_groups findIf {
+            private _state=_x getVariable ["Waldo_AIPass_State",createHashMap];
+            count (_state getOrDefault ["drill",createHashMap]) > 0
+        }) < 0}) then {_until=0};
         sleep 2;
     };
+    [_prefix+"-both-tactical-drills-observed",(_drillSeen findIf {!_x}) < 0,str [_expectedDrill,_drillSeen]] call _check;
     {
         private _teamIndex=_forEachIndex;
         private _members=_x;
@@ -130,14 +149,14 @@ params ["_check","_phase","_wait"];
             _prefix,_teamIndex+1,_state getOrDefault ["phase","NONE"],_drill getOrDefault ["type","NONE"],
             _drill getOrDefault ["stage","NONE"],_drill getOrDefault ["index",-1],count (_drill getOrDefault ["points",[]]),
             _group getVariable ["Waldo_Cortex_DrillResult",[]],_group getVariable ["Waldo_Cortex_DrillFailure",[]]];
-        [_prefix+format ["-squad-%1-physical-travel",_teamIndex+1],_contact && {(_peaks select [_teamIndex*6,6]) findIf {_x < 30} < 0},str (_peaks select [_teamIndex*6,6])] call _check;
+        [_prefix+format ["-squad-%1-physical-travel",_teamIndex+1],_contact && {_drillSeen select _teamIndex} && {(_peaks select [_teamIndex*6,6]) findIf {_x < 30} < 0},str (_peaks select [_teamIndex*6,6])] call _check;
         [_prefix+format ["-squad-%1-cohesion",_teamIndex+1],_members findIf {!alive _x || {group _x != _group} || {_x distance2D leader _group > 40}} < 0] call _check;
-        [_prefix+format ["-squad-%1-covering-fire",_teamIndex+1],(_coverEvents select _teamIndex) > 0,str _coverEvents] call _check;
+        [_prefix+format ["-squad-%1-covering-fire",_teamIndex+1],(_drillSeen select _teamIndex) && {(_coverEvents select _teamIndex) > 0},str _coverEvents] call _check;
         if (_mode == "FLANK") then {
-            [_prefix+format ["-squad-%1-no-support-fire-lane-crossing",_teamIndex+1],(_fireLaneCrossings select _teamIndex) == 0,str _fireLaneCrossings] call _check;
+            [_prefix+format ["-squad-%1-no-support-fire-lane-crossing",_teamIndex+1],(_drillSeen select _teamIndex) && {(_fireLaneCrossings select _teamIndex) == 0},str _fireLaneCrossings] call _check;
         };
     } forEach _teams;
-    if (_mode == "BOUND") then {[_prefix+"-observed-movement-fire-overlap",_switches >= 2,str [_switches,_coverEvents]] call _check};
+    if (_mode == "BOUND") then {[_prefix+"-observed-movement-fire-overlap",(_drillSeen findIf {!_x}) < 0 && {_switches >= 2},str [_switches,_coverEvents,_drillSeen]] call _check};
     {deleteVehicle _x} forEach (_actors+[_enemy]);
     {deleteGroup _x} forEach (_groups+[_enemyGroup]);
     missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
