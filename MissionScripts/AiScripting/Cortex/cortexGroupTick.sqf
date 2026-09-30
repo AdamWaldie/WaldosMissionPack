@@ -379,6 +379,7 @@ switch (_state get "phase") do {
             (_enemy isKindOf "Tank" || {_enemy isKindOf "Wheeled_APC_F"}) && {(_x select 2) <= 60} && {(_x select 3) <= 800}
         } >= 0}];
         if (_nearTier) then {
+            private _vehicleOwnsMovement = false;
             {
                 if (local _x && {!(_x getVariable ["Waldo_AIPass_Spotter", false])} && {binocular _x != ""} && {currentWeapon _x == binocular _x} && {primaryWeapon _x != ""}) then {
                     _x selectWeapon (primaryWeapon _x);
@@ -388,7 +389,9 @@ switch (_state get "phase") do {
                 if (["Waldo_AIPass_FireControl_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexFireControl};
                 if (["Waldo_AIPass_Stance_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexStance};
                 if (["Waldo_AIPass_AntiArmour_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexAntiArmour};
-                if (["Waldo_AIPass_Vehicles_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexVehicles};
+                if (["Waldo_AIPass_Vehicles_Enable", true] call _get) then {
+                    _vehicleOwnsMovement = [_group, _state, _enemies] call Waldo_fnc_CortexVehicles;
+                };
                 if ((["Waldo_AIPass_ContactReports_Enable", true] call _get) && {_now - (_state getOrDefault ["lastReport", -1e6]) >= 20}) then {
                     [_group, _state, _visible] call Waldo_fnc_CortexContactReport;
                 };
@@ -398,8 +401,8 @@ switch (_state get "phase") do {
             // Select one movement owner. A coordinated assault keeps this requester as the
             // base of fire while its responders manoeuvre; it must be decided before a local
             // flank or advance can acquire the same group's movement state.
-            private _coordinatedOwnsMovement = false;
-            if (!_ordered && {["Waldo_AIPass_CoordinatedAssault_Enable", true] call _get}) then {
+            private _coordinatedOwnsMovement = _vehicleOwnsMovement;
+            if (!_ordered && {!_vehicleOwnsMovement} && {["Waldo_AIPass_CoordinatedAssault_Enable", true] call _get}) then {
                 _coordinatedOwnsMovement = [_group, _state] call Waldo_fnc_CortexCoordinatedAssault;
             };
             if (!_ordered && {!_coordinatedOwnsMovement} && {!_lambsCombat}) then {
@@ -413,7 +416,8 @@ switch (_state get "phase") do {
             };
             if (["Waldo_AIPass_AmmoShare_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexAmmoShare};
         };
-        if (_now - (_state getOrDefault ["lastSeen", _now]) > (["Waldo_AIPass_PostContact_LostSeconds", 30] call _get)) then {
+        if ((_state getOrDefault ["phase",""]) == "CONTACT"
+            && {_now - (_state getOrDefault ["lastSeen", _now]) > (["Waldo_AIPass_PostContact_LostSeconds", 30] call _get)}) then {
             if (["Waldo_AIPass_PostContact_Enable", true] call _get) then {
                 _state set ["phase", "SECURITY"];
                 _state set ["phaseStart", _now];

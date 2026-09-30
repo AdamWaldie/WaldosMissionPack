@@ -119,7 +119,7 @@ if (!_allowRemount) then {
 {_state deleteAt _x} forEach [
     "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
-    "armourRequested", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
+    "armourRequested", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "vehicleMovement", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 _state set ["phase", "CALM"];

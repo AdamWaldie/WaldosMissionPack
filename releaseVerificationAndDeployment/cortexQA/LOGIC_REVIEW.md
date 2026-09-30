@@ -448,3 +448,12 @@ The CONTACT transition previously treated release of a garrison or defence order
 retreat, and performed no action at all for a building-clear order. Those branches now release the
 previous movement owner and then call the common physical retreat transition. Surrender remains the
 higher-priority terminal reaction.
+
+# Vehicle movement ownership
+
+Vehicle withdrawal and anti-tank standoff both use the same temporary group-waypoint mechanism as
+investigation, support and retreat. Previously a damaged vehicle could receive a withdrawal and then
+replace it with standoff in the same evaluation; coordinated or local infantry movement could replace
+that waypoint on the next scheduler tick. Vehicle tactics now report movement ownership, persist it
+while their physical waypoint is unfinished, give withdrawal priority over standoff and block other
+Cortex movement acquisition. Gunnery and the other contact layers continue normally.

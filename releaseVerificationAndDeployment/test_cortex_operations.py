@@ -784,7 +784,7 @@ class CortexOperations(unittest.TestCase):
     def test_coordinated_assault_owns_requester_movement_before_local_tactics(self):
         tick=source('cortexGroupTick')
         coordinated=source('cortexCoordinatedAssault')
-        self.assertLess(tick.index('private _coordinatedOwnsMovement = false'),tick.index('call Waldo_fnc_CortexFlankStart'))
+        self.assertLess(tick.index('private _coordinatedOwnsMovement = _vehicleOwnsMovement'),tick.index('call Waldo_fnc_CortexFlankStart'))
         self.assertIn('if (!_ordered && {!_coordinatedOwnsMovement} && {!_lambsCombat})',tick)
         self.assertIn('private _localTacticStarted = false',tick)
         self.assertIn('if (!_localTacticStarted && {["Waldo_AIPass_Advance_Enable", true] call _get})',tick)
@@ -912,6 +912,21 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(1,block.count('call Waldo_fnc_CortexRetreat'))
         self.assertGreater(block.index('call Waldo_fnc_CortexRetreat'),block.index('switch (true)'))
         self.assertNotIn('default {[_group, _state] call Waldo_fnc_CortexRetreat}',block)
+
+    def test_vehicle_movement_owns_its_waypoint_until_physical_completion(self):
+        vehicles=source('cortexVehicles')
+        tick=source('cortexGroupTick')
+        restore=source('cortexRestoreCalm')
+        self.assertIn('getOrDefault ["vehicleMovement",[]]',vehicles)
+        self.assertIn('waypointDescription _x == "WMP AI PASS"',vehicles)
+        self.assertIn('exitWith {true}',vehicles)
+        self.assertIn('_state set ["vehicleMovement",["WITHDRAW",time+120]]',vehicles)
+        self.assertIn('_state set ["vehicleMovement",["STANDOFF",time+60]]',vehicles)
+        self.assertIn('if (!_movementOwned && {_state getOrDefault ["phase",""] == "CONTACT"}',vehicles)
+        self.assertIn('private _coordinatedOwnsMovement = _vehicleOwnsMovement',tick)
+        self.assertIn('!_vehicleOwnsMovement',tick)
+        self.assertIn('(_state getOrDefault ["phase",""]) == "CONTACT"',tick)
+        self.assertIn('"vehicleMovement"',restore)
 
     def test_cover_stance_bounds_rays_and_rotates_units(self):
         text=source('cortexStance')

@@ -21,6 +21,9 @@
  * else, nearest first, held for 8 s. A fully mounted tank or APC that knows of an anti-tank soldier
  * within 60% of Waldo_AIPass_Vehicles_StandoffDistance backs off to that distance, at most once a
  * minute, through an inserted waypoint.
+ * A withdrawal or standoff owns group movement until its tagged waypoint completes or its bounded
+ * lease expires. Other Cortex manoeuvres may continue their combat layers but cannot replace that
+ * movement. A withdrawal outranks standoff inside the same evaluation.
  * Vehicles owned by other WMP features never reach this function (Waldo_fnc_CortexIsEligible).
  * Locality and authority: call where the group is local.
  *
@@ -31,7 +34,7 @@
  * 2: enemies <ARRAY> - from Waldo_fnc_CortexKnowledge
  *
  * Return Value:
- * Nothing
+ * Boolean - true while vehicle withdrawal or standoff owns group movement
  *
  * Example:
  * [_group, _state, _enemies] call Waldo_fnc_CortexVehicles;
@@ -41,7 +44,17 @@
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
-if (_enemies isEqualTo []) exitWith {};
+private _vehicleMove = _state getOrDefault ["vehicleMovement",[]];
+private _activeVehicleMove = false;
+if (_vehicleMove isNotEqualTo []) then {
+    _activeVehicleMove = ((waypoints _group) findIf {
+        (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
+    } >= 0) && {time < (_vehicleMove select 1)};
+    if (!_activeVehicleMove) then {_state deleteAt "vehicleMovement"};
+};
+if (_activeVehicleMove) exitWith {true};
+if (_enemies isEqualTo []) exitWith {false};
+private _movementOwned = false;
 private _vehicles = [];
 {
     private _vehicle = vehicle _x;
@@ -104,6 +117,8 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             private _away = (getPosATL _vehicle) getPos [300, _enemyPos getDir _vehicle];
             if (!surfaceIsWater _away) then {
                 [_group, _away, 40] call Waldo_fnc_CortexGroupMove;
+                _state set ["vehicleMovement",["WITHDRAW",time+120]];
+                _movementOwned = true;
                 _state set ["phase", "RETREAT"];
                 _state set ["phaseStart", time];
             };
@@ -143,14 +158,18 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             (_x select 0) isKindOf "CAManBase" && {(_x select 2) <= 30} && {(_vehicle distance2D (_x select 1)) < _standoff * 0.6}
             && {"AT" in ([_x select 0] call Waldo_fnc_CortexCapabilities)}
         };
-        if (_atIndex >= 0 && {_vehicle isKindOf "Tank" || {_vehicle isKindOf "Wheeled_APC_F"}} && {canMove _vehicle}
+        if (!_movementOwned && {_state getOrDefault ["phase",""] == "CONTACT"} && {_atIndex >= 0}
+            && {_vehicle isKindOf "Tank" || {_vehicle isKindOf "Wheeled_APC_F"}} && {canMove _vehicle}
             && {(units _group) findIf {alive _x && {vehicle _x == _x}} < 0} && {!([_state, "standoff"] call Waldo_fnc_CortexCooldown)}) then {
             private _atPos = (_enemies select _atIndex) select 1;
             private _away = (getPosATL _vehicle) getPos [(_standoff - (_vehicle distance2D _atPos)) max 60, _atPos getDir _vehicle];
             if (!surfaceIsWater _away) then {
                 [_group, _away, 30] call Waldo_fnc_CortexGroupMove;
+                _state set ["vehicleMovement",["STANDOFF",time+60]];
+                _movementOwned = true;
                 [_state, "standoff", 60] call Waldo_fnc_CortexCooldown;
             };
         };
     };
 } forEach _vehicles;
+_movementOwned
