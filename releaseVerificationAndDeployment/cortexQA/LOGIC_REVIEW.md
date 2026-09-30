@@ -475,3 +475,7 @@ deleting a route, so an expired rally cannot erase a newer vehicle or artillery 
 Remnant regroup now records every soldier it stops for the merge. Completion, timeout, feature
 disablement, locality invalidation, and Zeus takeover release only Cortex-owned combat-labelled
 holds. Newer direct movement, boarding, action, and scripted unit commands remain authoritative.
+
+Cover stance selection now enforces its documented stationary-only contract. A soldier already
+moving for a bound, regroup, backblast clearance, or engine route keeps an engine-selected stance;
+Cortex samples cover only after speed falls below 1 km/h.

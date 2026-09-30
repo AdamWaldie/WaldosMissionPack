@@ -968,6 +968,7 @@ class CortexOperations(unittest.TestCase):
 
     def test_cover_stance_bounds_rays_and_rotates_units(self):
         text=source('cortexStance')
+        self.assertIn('{abs speed _unit < 1}',text)
         self.assertIn('if (_sampled >= 2) exitWith {}', text)
         self.assertIn('set ["stanceCursor",(_index+1) mod _count]', text)
         self.assertIn('setVariable ["Waldo_AIPass_StanceAt", _now + 10]', text)

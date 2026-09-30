@@ -60,7 +60,7 @@ for "_offset" from 0 to (_count-1) do {
         _unit setVariable ["Waldo_AIPass_StanceSet",nil,true];
         _unit setVariable ["Waldo_Cortex_AppliedStance",nil,true];
     };
-    if (alive _unit && {local _unit} && {vehicle _unit == _unit} && {!(_unit in _drillUnits)}
+    if (alive _unit && {local _unit} && {vehicle _unit == _unit} && {abs speed _unit < 1} && {!(_unit in _drillUnits)}
         && {(_unit getVariable ["Waldo_AIPass_GarrisonPos", []]) isEqualTo []}
         && {_now >= (_unit getVariable ["Waldo_AIPass_StanceAt", -1])}
         && {_currentStance == "AUTO" || {_unit getVariable ["Waldo_AIPass_StanceSet", false]}}) then {
