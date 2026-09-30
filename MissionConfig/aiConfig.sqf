@@ -174,7 +174,7 @@
  *   numbers below, can be changed during the mission with the AI Tuning Zeus module or
  *   Waldo_fnc_CortexTuning):
  *   - Waldo_AIPass_BehaviourProfile: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics mission-wide (group and faction profiles still win).
- *   - Waldo_AIPass_Aggression: scales flank, assault, advance, investigate and coordinated-assault chances (1 = the profile's own).
+ *   - Waldo_AIPass_Aggression: scales flank, assault grenade preparation, advance, investigate and coordinated-assault chances (1 = the profile's own).
  *   - Waldo_AIPass_Cohesion: how much punishment squads take before morale breaks (1 = normal).
  *   - Waldo_AIPass_ReactionSpeed: how often squads re-assess (1 = normal; higher costs more server time).
  * - Waldo_AIPass_Artillery_Enable (MISSION MAKER): squads call fire from friendly AI artillery on well-located enemies only.

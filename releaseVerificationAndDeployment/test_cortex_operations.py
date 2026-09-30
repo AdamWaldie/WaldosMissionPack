@@ -608,12 +608,14 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('case "GRENADE": {', text)
         self.assertIn('private _teamPause=if (_support) then {0} else', text)
 
-    def test_coordinated_final_approach_flows_into_assault_without_second_chance_roll(self):
+    def test_successful_manoeuvre_flows_into_assault_without_second_chance_roll(self):
         text=source('cortexFlankStep')
         hold=text.split('case "HOLD":',1)[1]
         assault=hold.split('private _assault =',1)[1].split('private _assaultDirection',1)[0]
         self.assertIn('if (_support) then {_assaultRange = _assaultRange max 100}',hold)
-        self.assertIn('_support || {random 1 <',assault)
+        self.assertNotIn('random 1',assault)
+        self.assertIn('_drill set ["assaultGrenade",random 1 <',hold)
+        self.assertIn('if (_drill getOrDefault ["assaultGrenade",false])',text)
         self.assertIn('_points pushBack [_approachPoint, "ASSAULT"]',hold)
         self.assertIn('_points pushBack [_clearPoint, "CLEAR"]',hold)
 

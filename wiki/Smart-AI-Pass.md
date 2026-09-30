@@ -72,7 +72,7 @@ touched.
 | Post-contact search | `Waldo_AIPass_PostContact_Enable` (on) | Security hold, two-man search, regroup. |
 | Investigation | `Waldo_AIPass_Investigate_Enable` (on) | The INVESTIGATE state above. |
 | Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. Movers may fire while the stationary element covers; movement ownership prevents independent pursuit from replacing their bound. The leader, machine gunners and AT gunners stay as the base of fire. The flanking team holds while the covering element moves forward to consolidate; this also applies when no final assault is selected. |
-| Final assault | `Waldo_AIPass_Assault_Enable` (on) | After a completed flank or advance, an eligible nearby objective can trigger an approach 20 m short, an optional safe carried grenade, then a clear-through 20 m beyond the fixed objective. The grenade supports the crossing but never gates movement: the queued throw rechecks ammunition, feature state, Zeus ownership and friendly safety, and the assault continues if it cannot be thrown. The covering element keeps supporting until consolidation. |
+| Final assault | `Waldo_AIPass_Assault_Enable` (on) | After a completed flank or advance, an eligible nearby objective transitions into an approach 20 m short, an optional safe carried grenade, then a clear-through 20 m beyond the fixed objective. Cortex does not make a second random roll after the manoeuvre succeeds. The profile's assault percentage controls optional grenade preparation; the grenade supports the crossing but never gates movement. The queued throw rechecks ammunition, feature state, Zeus ownership and friendly safety, and the assault continues if it cannot be thrown. The covering element keeps supporting until consolidation. |
 | Bounding advance | `Waldo_AIPass_Advance_Enable` (on) | A squad that has been in a firefight for the configured minimum (five seconds by default) and still has a waypoint to reach advances in successive covered fire-team bounds instead of stalling. One element covers while the other moves, then the roles exchange. A completed attempt has a separate 20-second repeat delay; it no longer inherits the 90-second wide-flank delay. |
 | Coordinated assault | `Waldo_AIPass_CoordinatedAssault_Enable` (on) | Once reinforcing squads reach separate rally areas, the server alternates moving and covering squads. Routes remain separated, favour screened approaches and stay on a safe side of the supporting fire axis. Each moving squad uses successive fire-team bounds and can transition into the final assault and clear-through. The original squad provides supporting fire. New combined bounds remain in live validation. |
 | Street crossing | `Waldo_AIPass_StreetCrossing_Enable` (on) | A flanking element stops at the road edge, throws smoke and crosses in one bound. |
@@ -102,7 +102,7 @@ The pass reads the same profile names as [Waldo's AI Tuning](Waldos-AI-Tweak) (M
 VETERAN, ELITE; LEGACY behaves like LINE). Skill profiles set how well AI shoot and spot, and the
 pass never changes them. Behaviour profiles set how willing a squad is to fight smart:
 
-| Profile | Flank | Assault | Breaks at | Retreats | Surrenders at |
+| Profile | Flank | Assault grenade | Breaks at | Retreats | Surrenders at |
 |---|---|---|---|---|---|
 | MILITIA | 30% | 20% | early | 1.5x further | 3 survivors |
 | LINE | 50% | 40% | normal | normal | 2 survivors |

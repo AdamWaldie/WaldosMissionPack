@@ -5,7 +5,7 @@
  * Behaviour profiles sit alongside AI Rebalance's skill profiles and use the same names (MILITIA,
  * LINE, VETERAN, ELITE, LEGACY), so choosing a WMP opposition profile changes how squads decide as
  * well as how well they shoot. Skill values are never changed here; this only answers
- * "how willing is this squad to flank, assault or hold". Resolution order:
+ * "how willing is this squad to flank, prepare an assault or hold". Resolution order:
  * 1. the group variable Waldo_AIPass_Profile (a mission maker's per-group choice);
  * 2. Waldo_AIPass_FactionProfiles (a map of CfgFactionClasses name to profile) for the leader's faction;
  * 3. Waldo_AIPass_BehaviourProfile, the mission-wide tuning choice ("" to follow AI Rebalance);
@@ -16,7 +16,9 @@
  * key, capped at 1.
  * Missing keys in a mission-edited profile fall back to LINE's values, and an unknown profile name
  * uses LINE.
- * Keys: flankChance, assaultChance, advanceChance, investigateChance, coordinatedChance (0-1 rolls),
+ * Keys: flankChance, advanceChance, investigateChance and coordinatedChance are 0-1 tactic rolls;
+ * assaultChance is the 0-1 chance of preparing an eligible assault with a safe carried grenade,
+ * while the enabled assault transition itself remains deterministic after a successful manoeuvre.
  * moraleShaken and moraleBroken (morale thresholds), retreatScale (multiplies
  * Waldo_AIPass_Morale_RetreatDistance), surrenderSurvivors (largest squad that may surrender).
  * Locality and authority: read-only; callable anywhere.

@@ -36,8 +36,10 @@
  * Coordinated bounds already have a covering squad: fire-team and final handoffs add no
  * fixed pause. Arrival, normal scheduler cadence and the server role handoff still apply.
  * Final assault (Waldo_AIPass_Assault_Enable): after a flank or advance hold,
- * if the enemy is believed within Waldo_AIPass_Assault_Range of the element, morale is STEADY and the
- * behaviour profile's assaultChance roll succeeds, the element first reaches its assault position before one member may throw a fragmentation grenade
+ * if the enemy is believed within Waldo_AIPass_Assault_Range of the element and morale is STEADY,
+ * the whole viable element reaches its assault position and clears through. The behaviour profile's
+ * assaultChance controls optional grenade preparation, not whether an enabled, successful manoeuvre
+ * arbitrarily abandons its assault transition. One member may throw a fragmentation grenade
  * (Waldo_fnc_CortexThrowGrenade, never near friendlies). The approach uses a covered spot
  * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. A queued frag is an opportunistic action: its own next-frame safety check may cancel it, but deployment never gates the assault or aborts movement. The assault axis stays fixed through the crossing; water destinations are rejected.
  * Consolidation: a flank brings its covering element forward even when no final assault
@@ -551,12 +553,14 @@ switch (_drill get "stage") do {
                     private _throwers = _fit select {_x distance2D _objective <= 40};
                     private _thrower = objNull;
                     private _queued = false;
-                    {
-                        if ([_x,_objective,"FRAG"] call Waldo_fnc_CortexThrowGrenade) exitWith {
-                            _thrower = _x;
-                            _queued = true;
-                        };
-                    } forEach _throwers;
+                    if (_drill getOrDefault ["assaultGrenade",false]) then {
+                        {
+                            if ([_x,_objective,"FRAG"] call Waldo_fnc_CortexThrowGrenade) exitWith {
+                                _thrower = _x;
+                                _queued = true;
+                            };
+                        } forEach _throwers;
+                    };
                     // Grenades support the assault; they do not own its state transition.
                     // Reserve the actor briefly for the next-frame throw, then continue the
                     // ordinary tactical pause whether the throw succeeds, cancels or migrates.
@@ -628,8 +632,7 @@ switch (_drill get "stage") do {
             private _assault = !_assaulting
                 && {_assaultEnabled}
                 && {(_state getOrDefault ["moraleState", "STEADY"]) == "STEADY"}
-                && {_centroid distance2D _enemyPos <= _assaultRange}
-                && {_support || {random 1 < ([_group, "assaultChance"] call Waldo_fnc_CortexProfile)}};
+                && {_centroid distance2D _enemyPos <= _assaultRange};
             private _assaultDirection = _centroid getDir _enemyPos;
             private _clearPoint = _enemyPos getPos [20, _assaultDirection];
             // Leave room for 3 m arrival tolerance and up to 2 m cover adjustment
@@ -641,6 +644,7 @@ switch (_drill get "stage") do {
                 _drill set ["assaulting", true];
                 _drill set ["assaultObjective",+_enemyPos];
                 _drill set ["assaultDirection",_assaultDirection];
+                _drill set ["assaultGrenade",random 1 < ([_group,"assaultChance"] call Waldo_fnc_CortexProfile)];
                 _points pushBack [_approachPoint, "ASSAULT"];
                 _points pushBack [_clearPoint, "CLEAR"];
                 missionNamespace setVariable ["Waldo_AIPass_Assaults", (missionNamespace getVariable ["Waldo_AIPass_Assaults", 0]) + 1];
