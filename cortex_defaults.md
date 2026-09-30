@@ -1,8 +1,10 @@
 # Cortex and AI configuration defaults
 
-Verified against MissionConfig/aiConfig.sqf on 26 September 2026. These are shipped configuration defaults, before mission or Zeus overrides. Audit scenarios temporarily change values and restore them afterwards.
+Verified against MissionConfig/aiConfig.sqf and the Cortex Control specification on 30 September 2026. These are shipped configuration defaults, before mission or Zeus overrides. Audit scenarios temporarily change values and restore them afterwards.
 
-Cortex is disabled by default. AI skill profiles and improved helicopter landings are independently enabled. Convoy options apply when a convoy is explicitly started. Enabled subfeatures still require their parent feature and applicable setup.
+Cortex automatic tactics are enabled by default. AI skill profiles and improved helicopter landings are independently enabled. Convoy options apply when a convoy is explicitly started. Enabled subfeatures still require their parent feature and applicable setup.
+
+The deliberately opt-in features are artillery support, counter-battery, airborne insertion, missile-threat countermeasures, aircraft break-away, helicopter deceleration, Dynamic AO garrison integration, and convoy friendly-infantry avoidance. Each can expend ammunition, move or dismount assets, change aircraft motion, depend on another system, or add a short-range vehicle scan. Their disabled default prevents an ordinary mission from acquiring those side effects merely by loading WMP; it does not disable the core Cortex contact, movement, morale, reaction, vehicle, stance, gunnery, hearing, investigation, reinforcement, assault, or coordination behaviours.
 
 Existing Waldo_AIPass_* setting keys remain for mission compatibility; the public AI functions use Waldo_fnc_Cortex*.
 
@@ -60,7 +62,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_HelicopterDeceleration_ControlInterval` | `0.02` | SECONDS: active correction cadence. |
 | `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | `4` | SECONDS: hard cap per correction event. |
 | `Waldo_HelicopterDeceleration_Debug` | `false` | BOOL: detailed RPT acquire/release logging. |
-| `Waldo_AIPass_Enable` | `false` | BOOL: master switch for the Smart AI Pass (server and headless clients only). |
+| `Waldo_AIPass_Enable` | `true` | BOOL: master switch for Cortex automatic tactics (server and headless clients only). |
 | `Waldo_AIPass_IncludedSides` | `["WEST", "EAST", "GUER"]` | ARRAY of WEST/EAST/GUER/CIV strings the pass may command. |
 | `Waldo_AIPass_TickBudgetMs` | `1` | MILLISECONDS: work allowed per 0.25 s scheduler tick; at least one job always runs. |
 | `Waldo_AIPass_LowFpsThreshold` | `25` | FPS: below this, behaviour steps are rescheduled half as often. |
@@ -74,7 +76,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Regroup_TimeoutSeconds` | `120` | SECONDS: limit for finding a host and for walking to it. |
 | `Waldo_AIPass_Regroup_SettleSeconds` | `5` | SECONDS: delay after a kill before the remnant is assessed. |
 | `Waldo_AIPass_BehaviourProfile` | `""` | STRING: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics for every squad without its own. |
-| `Waldo_AIPass_Aggression` | `1` | 0-2: scales how often squads flank, assault, advance, investigate and coordinate. |
+| `Waldo_AIPass_Aggression` | `1.2` | 0-2: scales how often squads flank, assault, advance, investigate and coordinate. |
 | `Waldo_AIPass_Cohesion` | `1` | 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner. |
 | `Waldo_AIPass_ReactionSpeed` | `1` | 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often. |
 | `Waldo_AIPass_LambsMode` | `"SPLIT"` | STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads). |
@@ -107,8 +109,8 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_FireControl_MaxShootersPerTarget` | `2` | COUNT: shooters per visible enemy before others switch. |
 | `Waldo_AIPass_Morale_Enable` | `true` | BOOL: weighted morale; broken squads retreat under smoke. |
 | `Waldo_AIPass_Morale_RetreatDistance` | `200` | METRES: how far a broken squad falls back. |
-| `Waldo_AIPass_Surrender_Enable` | `false` | BOOL: last survivors of a broken, isolated squad surrender. |
-| `Waldo_AIPass_GrenadeEvasion_Enable` | `false` | BOOL: move away from seen grenades; test in your setup first. |
+| `Waldo_AIPass_Surrender_Enable` | `true` | BOOL: last survivors of a broken, isolated squad surrender. |
+| `Waldo_AIPass_GrenadeEvasion_Enable` | `true` | BOOL: move away from seen grenades. |
 | `Waldo_AIPass_AntiArmour_Enable` | `true` | BOOL: best AT gunner engages known armour, clear of backblast. |
 | `Waldo_AIPass_VehicleDismount_Enable` | `true` | Unloads capable passengers only when safely stopped on dry ground. |
 | `Waldo_AIPass_VehicleRemount_Enable` | `true` | Allows safe conscious passengers to reboard after Smart AI contact. Convoy resume stays explicit. |
@@ -119,7 +121,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_Convoy_AvoidInfantry_Enable` | `false` | Optional short-range friendly infantry corridor checks before driving. |
 | `Waldo_Convoy_ContactHalt_Enable` | `true` | Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available. |
 | `Waldo_Convoy_Unload_Enable` | `true` | Allows WMP passenger unloading on halt. Operating crews remain aboard. |
-| `Waldo_AIPass_Hearing_Enable` | `false` | Optional nearby gunfire area reports, never target reveals. |
+| `Waldo_AIPass_Hearing_Enable` | `true` | Nearby gunfire creates throttled approximate investigation reports, never target reveals. |
 | `Waldo_AIPass_Vehicles_Enable` | `true` | BOOL: dismount under fire; damaged vehicles smoke and withdraw. |
 | `Waldo_AIPass_ContactReports_Enable` | `true` | BOOL: share sightings by radio (jammable) or voice. |
 | `Waldo_AIPass_ContactReports_Radius` | `500` | METRES: radio report range. |
@@ -159,6 +161,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Airborne_JumpInterval` | `1` | SECONDS: between jumpers. |
 | `Waldo_AIPass_Garrison_DynamicAO` | `false` | BOOL: WMP garrison handling for Dynamic AO garrisons. |
 | `Waldo_AIPass_Garrison_BreakFraction` | `0.5` | 0-1: a garrison breaks at this share of its strength. |
+| `Waldo_Cortex_AttackRunFlares_Enable` | `true` | BOOL: finite countermeasure requests while eligible AI aircraft approach and leave assigned attack targets. |
 | `Waldo_AIPass_AircraftFlares_Enable` | `false` | BOOL: WMP gunships and Dynamic AA fighters flare at missiles. |
 | `Waldo_AIPass_FactionProfiles` | `createHashMap` | MAP: CfgFactionClasses name to behaviour profile, for example OPF_F to ELITE. |
 | `Waldo_AIPass_ZeusHoldSeconds` | `120` | SECONDS: the pass leaves a group alone this long after Zeus selects or edits it. |
@@ -168,7 +171,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Assault_Enable` | `true` | BOOL: a flank can finish with a grenade and a rush on the enemy position. |
 | `Waldo_AIPass_Assault_Range` | `80` | METRES: the enemy must be this close to the flanking element to assault. |
 | `Waldo_AIPass_Advance_Enable` | `true` | BOOL: pinned squads with somewhere to go push a team forward in bounds. |
-| `Waldo_AIPass_Advance_MinContactSeconds` | `30` | SECONDS: in contact before an advance is considered. |
+| `Waldo_AIPass_Advance_MinContactSeconds` | `5` | SECONDS: confirmed contact before an advance is considered. |
 | `Waldo_AIPass_CoordinatedAssault_Enable` | `true` | BOOL: reinforcing squads assault together while the first squad fires. |
 | `Waldo_AIPass_Stance_Enable` | `true` | BOOL: stance chosen from the height of the cover in front. |
 | `Waldo_AIPass_AmmoShare_Enable` | `true` | BOOL: soldiers low on magazines get one from a squad-mate. |

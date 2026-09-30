@@ -40,6 +40,28 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('"Skill profiles",',spec)
         self.assertNotIn('"Cortex behaviours",',spec)
 
+    def test_cortex_control_spec_has_one_canonical_row_per_setting(self):
+        import re
+        spec=source('cortexTuningSpec')
+        keys=re.findall(r'^\s*\["(Waldo_[A-Za-z0-9_]+)"\s*,',spec,re.MULTILINE)
+        self.assertGreater(len(keys),40)
+        duplicates=sorted({key for key in keys if keys.count(key)>1})
+        self.assertEqual([],duplicates)
+
+    def test_published_cortex_defaults_match_current_core_switches(self):
+        import re
+        defaults=(ROOT/'cortex_defaults.md').read_text(encoding='utf-8')
+        config=(ROOT/'MissionConfig/aiConfig.sqf').read_text(encoding='utf-8')
+        shipped=dict(re.findall(r'^\s*\["(Waldo_[^"]+)",\s*(.+?)\],(?:\s*//.*)?$',config,re.MULTILINE))
+        published=dict(re.findall(r'^\| `([^`]+)` \| `([^`]+)` \|',defaults,re.MULTILINE))
+        self.assertGreater(len(shipped),100)
+        self.assertEqual([],sorted(set(shipped)-set(published)))
+        self.assertEqual({}, {key:(value.strip(),published[key]) for key,value in shipped.items() if published[key] != value.strip()})
+        for key in ['Waldo_AIPass_CounterBattery_Enable','Waldo_AIPass_CounterBattery_RadarRange',
+                    'Waldo_AIPass_CounterBattery_Delay','Waldo_AIPass_CounterBattery_RadarDelay',
+                    'Waldo_AIPass_CounterBattery_Rounds']:
+            self.assertIn(key,published)
+
     def test_replacement_clear_retires_old_movement_after_validation(self):
         text=source('cortexClearBuilding')
         marker='if (!_resume && {_previous isNotEqualTo []}) then {[_group] call Waldo_fnc_CortexClearRelease};'
@@ -701,6 +723,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_unit setCombatBehaviour "AWARE"', step)
         self.assertIn('_disabled pushBack [_unit,"AUTOCOMBAT"]', step)
         self.assertIn('_combatBehaviours pushBack [_unit,"COMBAT","AWARE"]', step)
+        self.assertNotIn('_unit disableAI "TARGET"',step)
+        self.assertNotIn('_unit disableAI "AUTOTARGET"',step)
         self.assertIn('"restoreCombatBehaviours"', source("cortexCheckpoint"))
         for name in ["cortexFlankStep", "cortexFlankEnd", "cortexLocality"]:
             self.assertIn('behaviour _unit == _owned', source(name))
@@ -1219,8 +1243,9 @@ class CortexOperations(unittest.TestCase):
         for name in ['cortexFlankStart','cortexAdvanceStart','cortexSupportApply','cortexSupportBoundStart']:
             self.assertNotIn('_group enableAttack false',source(name))
         step=source('cortexFlankStep')
-        for feature in ['TARGET','AUTOTARGET','AUTOCOMBAT']:
-            self.assertIn(f'_unit disableAI "{feature}"',step)
+        for feature in ['TARGET','AUTOTARGET']:
+            self.assertNotIn(f'_unit disableAI "{feature}"',step)
+        self.assertIn('_unit disableAI "AUTOCOMBAT"',step)
 
     def test_every_ai_setting_has_an_acceptance_case(self):
         import re, json
@@ -1492,9 +1517,12 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_combatModes pushBack [_unit,"RED","BLUE"]',step)
         self.assertIn('_group setCombatMode "YELLOW"',step)
         self.assertNotIn('_group setCombatMode "BLUE"',step)
-        self.assertIn('_unit disableAI "AUTOTARGET"',step)
-        self.assertIn('_disabled pushBack [_unit,"AUTOTARGET"]',step)
-        self.assertIn('_disabled pushBack [_unit,"TARGET"]',step)
+        self.assertNotIn('_unit disableAI "AUTOTARGET"',step)
+        self.assertNotIn('_disabled pushBack [_unit,"AUTOTARGET"]',step)
+        fire=source('cortexFireControl')
+        self.assertIn('private _movingMembers = _eligible arrayIntersect _drillUnits',fire)
+        self.assertIn('} forEach (_members + _movingMembers);',fire)
+        self.assertNotIn('_disabled pushBack [_unit,"TARGET"]',step)
         for capability in ['WEAPONAIM', 'FIREWEAPON']:
             self.assertNotIn(f'_unit disableAI "{capability}"',step)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()

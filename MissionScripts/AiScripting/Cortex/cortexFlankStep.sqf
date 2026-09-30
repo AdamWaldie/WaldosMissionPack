@@ -6,13 +6,16 @@
  * Bounds: each member gets his own spot, spread 5 m apart across the direction to the last known enemy position. WEDGE uses staggered rear ranks; other formations use a broad line. Ordinary
  * bounds, the final position and the assault position are snapped to cover facing the enemy
  * (Waldo_fnc_CortexFindCover); street crossings and the clearing rush are not. On movement bounds, final approaches and
- * street crossings, pursuit (TARGET) is suspended while weapon aiming and firing remain enabled.
+ * street crossings, group-level RED pursuit is replaced by a finite YELLOW lease, but individual
+ * TARGET and AUTOTARGET remain enabled. Movers therefore keep acquiring and engaging visible threats
+ * while their owned destination remains authoritative. Only AUTOCOMBAT is suspended so the engine
+ * cannot replace the finite AWARE move with a new COMBAT movement plan.
  * A RED group first receives a finite YELLOW movement lease: it remains fire-at-will, but the engine must keep
  * formation instead of creating independent ATTACK subgroups that compete with the bounds. The lease begins one
  * scheduler step before the first move, remains active for the whole manoeuvre, and is restored only if the group
  * still has the value Cortex applied. A later Zeus, waypoint or script ROE change cancels the manoeuvre and survives
- * cleanup. Automatic target acquisition is suspended only for movers; the paired fire team and covering squad
- * retain normal acquisition and provide fire. Movers watch the known threat direction.
+ * cleanup. Movers retain automatic target acquisition and may fire while moving; the paired fire team and covering
+ * squad still provide deliberate supporting fire. Movers watch the known threat direction.
  * COMBAT movers temporarily use per-unit AWARE with automatic combat switching suspended;
  * their previous behaviour is restored at halts, cancellation and ownership migration.
  * The manoeuvre group receives a finite FULL-speed lease so inherited NORMAL or LIMITED travel
@@ -339,21 +342,10 @@ private _issue = {
             if (_cover distance2D _spot <= 2 && {_spots findIf {_cover distance2D _x < 2} < 0}) then {_spot = _cover};
         };
         _spots pushBack _spot;
-        // Automatic target selection alone does not stop leader-assigned pursuit.
-        // Keep the moving actor's bound authoritative without disabling its weapons.
-        if (_unit checkAIFeature "TARGET") then {
-            _unit disableAI "TARGET";
-            _disabled pushBack [_unit,"TARGET"];
-        };
-        // AUTOTARGET can create an ATTACK command even while TARGET is disabled.
-        // That left only one member of a three-soldier fire team moving in live QA.
-        // The covering elements retain acquisition and fire; movers regain it at the halt.
-        if (_unit checkAIFeature "AUTOTARGET") then {
-            _unit disableAI "AUTOTARGET";
-            _disabled pushBack [_unit,"AUTOTARGET"];
-        };
-        // Only the moving element leaves autonomous combat movement. Weapon aiming and
-        // firing remain enabled; the covering element keeps its combat behaviour.
+        // Keep TARGET and AUTOTARGET available. The group-level YELLOW lease prevents
+        // RED pursuit subgroups, while these features let a moving soldier continue to
+        // acquire and engage threats instead of becoming an inert path follower.
+        // Only autonomous combat movement is suspended for the finite owned move.
         if (_unit checkAIFeature "AUTOCOMBAT") then {
             _unit disableAI "AUTOCOMBAT";
             _disabled pushBack [_unit,"AUTOCOMBAT"];
@@ -362,15 +354,12 @@ private _issue = {
             _combatBehaviours pushBack [_unit,"COMBAT","AWARE"];
             _unit setCombatBehaviour "AWARE";
         };
-        // An explicit doTarget turned these movers into stationary ATTACK actors in live QA.
-        // Facing a threat must not install a competing attack destination.
         // Group YELLOW owns disengagement for the finite manoeuvre. Do not restore RED
         // between bounds: that recreates engine ATTACK subgroups before the next move.
         // Do not issue doFollow here. It starts native formation movement and can
         // survive the immediate doMove, pulling this element back toward its leader.
-        _unit doTarget objNull;
-        // Clear the covering element's assigned target before giving its next movement role.
-        _unit doWatch objNull;
+        // Preserve the actor's target. Clearing it every bound created a visible pause
+        // and made the movement element repeatedly reacquire the same contact.
         doStop _unit;
         _unit doWatch _enemyPos;
         _unit doMove _spot;
@@ -436,8 +425,8 @@ switch (_drill get "stage") do {
                         && {(_retry select 0) < 2} && {_unit checkAIFeature "PATH"}
                         && {_unit checkAIFeature "MOVE"}) then {
                         // Replan the same destination; do not move the actor or waive arrival.
-                            _unit doWatch objNull;
-                        _unit doTarget objNull;
+                        // Reissue only the movement destination. Target ownership is
+                        // independent and must survive a path recovery attempt.
                         _unit doMove (_spots select _forEachIndex);
                         _retry set [0,(_retry select 0)+1];
                         _retry set [1,_now];

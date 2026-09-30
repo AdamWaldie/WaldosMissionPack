@@ -114,7 +114,7 @@
  * groups and units owned by other WMP features (Gunship, Transport Services, Paradrop, Dynamic AA,
  * AI Convoy, dialogue speakers, drones) are always excluded. Dynamic AO groups are included.
  * Per-unit or per-group opt-out: _group setVariable ["Waldo_AIPass_Exclude", true, true];
- * - Waldo_AIPass_Enable (MISSION MAKER): master switch; false means no pass code runs anywhere.
+ * - Waldo_AIPass_Enable (MISSION MAKER): master switch; true by default. False means no pass code runs anywhere.
  * - Waldo_AIPass_IncludedSides (MISSION MAKER): sides the pass may command; CIV is left out by default.
  *   The shared Waldo_AI_IncludedFactions/ExcludedFactions/ExcludedClasses filters above also apply.
  * - Waldo_AIPass_TickBudgetMs (ADVANCED): milliseconds of work allowed per scheduler tick (0.25 s).
