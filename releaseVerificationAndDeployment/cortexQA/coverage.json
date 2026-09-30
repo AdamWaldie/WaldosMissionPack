@@ -743,7 +743,8 @@
       "expected": "After the contact delay, a fire team physically bounds toward the waypoint while others engage; authored route survives.",
       "settings": [
         "Waldo_AIPass_Advance_Enable",
-        "Waldo_AIPass_Advance_MinContactSeconds"
+        "Waldo_AIPass_Advance_MinContactSeconds",
+        "Waldo_AIPass_Advance_Cooldown"
       ],
       "status": "implemented_partial",
       "live_evidence": [

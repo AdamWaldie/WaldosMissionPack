@@ -689,9 +689,18 @@ class CortexOperations(unittest.TestCase):
         spec=source('cortexTuningSpec')
         advance=source('cortexAdvanceStart')
         self.assertIn('["Waldo_AIPass_Advance_MinContactSeconds", 5]',config)
+        self.assertIn('["Waldo_AIPass_Advance_Cooldown", 20]',config)
         self.assertIn('"Waldo_AIPass_Advance_MinContactSeconds", "Advance contact delay"',spec)
         self.assertIn('"SLIDER", [0,300,0], 5]',spec)
+        self.assertIn('"Waldo_AIPass_Advance_Cooldown", "Advance repeat delay"',spec)
+        self.assertIn('"SLIDER", [0,180,0], 20]',spec)
         self.assertIn('getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 5]',advance)
+
+    def test_advance_uses_its_own_shorter_repeat_cooldown(self):
+        end=source('cortexFlankEnd')
+        self.assertIn('["Waldo_AIPass_Flank_Cooldown", "Waldo_AIPass_Advance_Cooldown"] select (_type == "ADVANCE")',end)
+        self.assertIn('[90, 20] select (_type == "ADVANCE")',end)
+        self.assertIn('getVariable [_cooldownName, _cooldownDefault]',end)
 
     def test_coordinated_audit_ends_after_terminal_element_failures(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()

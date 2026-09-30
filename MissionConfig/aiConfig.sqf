@@ -224,6 +224,7 @@
  * - Waldo_AIPass_Assault_Range (ADVANCED): the enemy must be believed this close to the flanking element before an assault.
  * - Waldo_AIPass_Advance_Enable (MISSION MAKER): squads in a long firefight that still have a waypoint to reach push a fire team forward in covered bounds.
  * - Waldo_AIPass_Advance_MinContactSeconds (ADVANCED): seconds in contact before a bounding advance is considered.
+ * - Waldo_AIPass_Advance_Cooldown (ADVANCED): seconds before a squad may begin another bounding advance.
  * - Waldo_AIPass_CoordinatedAssault_Enable (MISSION MAKER): squads that came to reinforce assault the enemy from both sides while the squad in contact fires.
  * - Waldo_AIPass_Stance_Enable (MISSION MAKER): soldiers stand, kneel or go prone to match the cover in front of them.
  * - Waldo_AIPass_AmmoShare_Enable (MISSION MAKER): soldiers down to their last magazine get one from a nearby squad-mate with plenty.
@@ -403,6 +404,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Assault_Range", 80], // METRES: the enemy must be this close to the flanking element to assault.
         ["Waldo_AIPass_Advance_Enable", true], // BOOL: pinned squads with somewhere to go push a team forward in bounds.
         ["Waldo_AIPass_Advance_MinContactSeconds", 5], // SECONDS: confirmed contact before an advance is considered.
+        ["Waldo_AIPass_Advance_Cooldown", 20], // SECONDS: after an advance ends before the squad may start another.
         ["Waldo_AIPass_CoordinatedAssault_Enable", true], // BOOL: reinforcing squads assault together while the first squad fires.
         ["Waldo_AIPass_Stance_Enable", true], // BOOL: stance chosen from the height of the cover in front.
         ["Waldo_AIPass_AmmoShare_Enable", true], // BOOL: soldiers low on magazines get one from a squad-mate.

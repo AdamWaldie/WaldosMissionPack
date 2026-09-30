@@ -10,7 +10,8 @@
  * group, or release) orders members to follow the leader again at once. A failed coordinated
  * bound instead holds its gained ground until the next server sequence; it must not regroup
  * backwards before a retry. PATH holds transfer to supportHeld for normal release/migration.
- * The drill's cooldown starts. Cleanup releases a TACTICAL_DRILL movement lease only; a newer
+ * The drill's type-specific cooldown starts: advances may resume sooner than wide flanks. Cleanup
+ * releases a TACTICAL_DRILL movement lease only; a newer
  * withdrawal, vehicle, artillery or coordinated-assault owner survives a delayed drill callback.
  * Locality and authority: call where the group is local.
  *
@@ -114,7 +115,9 @@ private _movementLease = _state getOrDefault ["movementLease",[]];
 if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {
     _state deleteAt "movementLease";
 };
-[_state, toLowerANSI _type, missionNamespace getVariable ["Waldo_AIPass_Flank_Cooldown", 90]] call Waldo_fnc_CortexCooldown;
+private _cooldownName = ["Waldo_AIPass_Flank_Cooldown", "Waldo_AIPass_Advance_Cooldown"] select (_type == "ADVANCE");
+private _cooldownDefault = [90, 20] select (_type == "ADVANCE");
+[_state, toLowerANSI _type, missionNamespace getVariable [_cooldownName, _cooldownDefault]] call Waldo_fnc_CortexCooldown;
 if (_reason == "COMPLETE") then {
     private _counter = ["Waldo_AIPass_FlanksCompleted", "Waldo_AIPass_AdvancesCompleted"] select (_type == "ADVANCE");
     missionNamespace setVariable [_counter, (missionNamespace getVariable [_counter, 0]) + 1];

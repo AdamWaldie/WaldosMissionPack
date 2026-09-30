@@ -478,6 +478,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Assault_Range` | The enemy must be believed this close to the flanking element before an assault. Default `80`. |
 | `Waldo_AIPass_Advance_Enable` | Squads in a long firefight that still have a waypoint to reach push a fire team forward in covered bounds. Default `true`. |
 | `Waldo_AIPass_Advance_MinContactSeconds` | Seconds of confirmed contact before a bounding advance is considered. Default `5`, so Cortex can take ownership before native waypoint travel consumes the manoeuvre. |
+| `Waldo_AIPass_Advance_Cooldown` | Seconds after an advance ends before the same squad may begin another. Default `20`; the separate flank delay remains `90`. |
 | `Waldo_AIPass_CoordinatedAssault_Enable` | Squads that came to reinforce assault the enemy from both sides while the squad in contact fires. Default `true`. |
 | `Waldo_AIPass_Stance_Enable` | Soldiers stand, kneel or go prone to match the cover in front of them. Default `true`. |
 | `Waldo_AIPass_AmmoShare_Enable` | Soldiers down to their last magazine get one from a nearby squad-mate with plenty. Default `true`. |
