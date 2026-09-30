@@ -13,8 +13,9 @@
  *   120 s). Within 150 m, two riflemen check the believed position while the rest watch it; a small
  *   squad, or any farther contact, has the whole squad move up together. It ends after
  *   Waldo_AIPass_Investigate_Seconds or on arrival, back in CALM.
- * CONTACT -> SECURITY after Waldo_AIPass_PostContact_LostSeconds without a sighting (or straight back
- *   to CALM when post-contact is off).
+ * CONTACT -> SECURITY after Waldo_AIPass_PostContact_LostSeconds without a sighting and after any
+ *   bounded flank, advance or coordinated assault has finished (or straight back to CALM when
+ *   post-contact is off). Temporary occlusion therefore cannot revoke an active manoeuvre.
  * SECURITY (hold) -> SEARCH (two riflemen check the last known enemy position) -> REGROUP (wait for
  *   the squad to close up) -> CALM, which restores the recorded behaviour and speed (a squad that
  *   was SAFE before a real firefight returns AWARE).
@@ -423,7 +424,14 @@ switch (_state get "phase") do {
             };
             if (["Waldo_AIPass_AmmoShare_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexAmmoShare};
         };
-        if ((_state getOrDefault ["phase",""]) == "CONTACT"
+        // Smoke, terrain and buildings can briefly hide a target while a bounded manoeuvre is still
+        // making physical progress. Post-contact may take ownership only after that manoeuvre has
+        // completed or explicitly aborted; each drill/support lease already has its own finite timeout.
+        private _manoeuvreActive = count (_state getOrDefault ["drill",createHashMap]) > 0
+            || {_state getOrDefault ["assaulting",false]}
+            || {_state getOrDefault ["responding",false]};
+        if (!_manoeuvreActive
+            && {(_state getOrDefault ["phase",""]) == "CONTACT"}
             && {_now - (_state getOrDefault ["lastSeen", _now]) > (["Waldo_AIPass_PostContact_LostSeconds", 30] call _get)}) then {
             if (["Waldo_AIPass_PostContact_Enable", true] call _get) then {
                 _state set ["phase", "SECURITY"];
@@ -520,7 +528,38 @@ switch (_state get "phase") do {
         if ((["Waldo_AIPass_Morale_Enable", true] call _get)
             && {([_group, _state, _enemies] call Waldo_fnc_CortexMorale) == "SURRENDER"}) exitWith {[_group] call Waldo_fnc_CortexSurrender};
         private _moving = (waypoints _group) findIf {(_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}} >= 0;
-        if (!_moving || {_now - (_state get "phaseStart") > 120}) then {
+        private _start = _state getOrDefault ["retreatStart",getPosATL _leader];
+        private _travel = _leader distance2D _start;
+        private _progress = _state getOrDefault ["retreatProgress",[_now,0,0]];
+        _progress params ["_progressAt","_bestTravel","_replans"];
+        // Only net withdrawal counts. Sideways or back-and-forth motion must not keep a
+        // broken route alive forever merely because the actor crossed a three-metre circle.
+        if (_travel >= _bestTravel+3) then {
+            _progressAt = _now;
+            _bestTravel = _travel;
+        };
+        private _shortWithdrawal = !_moving && {_travel < 30};
+        private _stalled = _moving && {_now-_progressAt >= 15};
+        if ((_shortWithdrawal || {_stalled}) && {_replans < 4}) then {
+            private _enemyPos = _state getOrDefault ["enemyPos",[]];
+            private _target = _state getOrDefault ["retreatTarget",getPosATL _leader];
+            private _distance = ((_leader distance2D _target) max 80) min 250;
+            private _away = if (count _enemyPos >= 2) then {_enemyPos getDir _leader} else {(getDir _leader)+180};
+            private _angle = [30,-30,60,-60] select (_replans mod 4);
+            private _candidate = (getPosATL _leader) getPos [_distance,_away+_angle];
+            if (surfaceIsWater _candidate) then {_candidate = (getPosATL _leader) getPos [_distance,_away-_angle]};
+            [_group,_candidate,30] call Waldo_fnc_CortexGroupMove;
+            _state set ["retreatTarget",_candidate];
+            _replans = _replans+1;
+            _progressAt = _now;
+            _bestTravel = _travel;
+            _moving = true;
+        };
+        _state set ["retreatProgress",[_progressAt,_bestTravel,_replans]];
+        private _timedOut = _now - (_state get "phaseStart") > 120;
+        private _status = if (_timedOut) then {"INCOMPLETE"} else {["MOVING","WITHDRAWN"] select (!_moving && {_travel >= 30})};
+        _group setVariable ["Waldo_Cortex_Withdrawal",[_status,round _travel,_replans],true];
+        if ((!_moving && {_travel >= 30}) || {_timedOut}) then {
             [_group] call Waldo_fnc_CortexGroupMoveClear;
             _state set ["phase", "REGROUP"];
             _state set ["phaseStart", _now];

@@ -71,7 +71,9 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
 };
 {_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
 private _leader = leader _group;
-if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
+// Zeus may deliberately replace Cortex's disabled autonomous-attack state while taking over.
+// The external handover owns that setting, just as it owns replacement movement and ROE.
+if (!_yieldToExternal && {_state getOrDefault ["attackChanged",false]}) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
 private _retreatModeLease = _state getOrDefault ["retreatCombatMode",[]];
 if (!_yieldToExternal && {count _retreatModeLease == 2} && {combatMode _group == (_retreatModeLease select 1)}) then {
     _group setCombatMode (_retreatModeLease select 0);
@@ -127,8 +129,9 @@ if (!_allowRemount) then {
 {_state deleteAt _x} forEach [
     "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
-    "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "movementLease", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
+    "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "movementLease", "retreatStart", "retreatTarget", "retreatProgress", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
+_group setVariable ["Waldo_Cortex_Withdrawal",nil,true];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 _state set ["phase", "CALM"];
 _state set ["phaseStart", time];

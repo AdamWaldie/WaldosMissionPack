@@ -102,7 +102,7 @@ if (_hold) then {
 if (_supportToken != "") then {
     _group setVariable ["Waldo_Cortex_SupportBoundResult",[_supportToken,_drill get "supportSequence",_reason],true];
 } else {
-    if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
+    if (_reason != "ZEUS" && {_state getOrDefault ["attackChanged",false]}) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
     _state deleteAt "attackChanged";
     _state deleteAt "baseAttack";
 };

@@ -11,7 +11,9 @@
  * lays a smoke screen between the squad and the enemy, never within 50 m of friendlies. Any flank drill ends because the phase
  * leaves CONTACT. Individual attack assignments are suspended and behaviour set to AWARE for
  * withdrawal. A RED group temporarily uses YELLOW: it keeps firing, but the engine may no longer
- * replace the retreat waypoint with independent pursuit. Attack, combat mode, behaviour and speed
+ * replace the retreat waypoint with independent pursuit. GroupTick measures physical travel; a
+ * vanished waypoint or 15 seconds without progress replans around the obstruction at a different
+ * angle, without teleporting anyone. Attack, combat mode, behaviour and speed
  * changes are recorded for CALM, release and ownership cleanup. A later Zeus ROE change is preserved.
  * Locality and authority: call where the group is local; server selects and dispatches supporting artillery.
  * Repeat/JIP: caller phase prevents repeated entry; artillery mission tokens persist through owner changes.
@@ -81,6 +83,10 @@ if (behaviour _leader != "AWARE") then {
 };
 [_group, _point, 30] call Waldo_fnc_CortexGroupMove;
 _state set ["movementLease",["INFANTRY_WITHDRAW",time+120]];
+_state set ["retreatStart",getPosATL _leader];
+_state set ["retreatTarget",_point];
+_state set ["retreatProgress",[time,0,0]];
+_group setVariable ["Waldo_Cortex_Withdrawal",["MOVING",0,0],true];
 if (speedMode _group != "FULL") then {
     if !(_state getOrDefault ["speedChanged", false]) then {_state set ["baseSpeed", speedMode _group]};
     _state set ["speedChanged", true];

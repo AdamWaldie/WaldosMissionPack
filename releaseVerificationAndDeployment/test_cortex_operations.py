@@ -744,6 +744,7 @@ class CortexOperations(unittest.TestCase):
         for marker in ['cortex-coordination-health','recordedBoundFailures=',
                        'boundFailuresByToken','Waldo_Cortex_SupportBoundResult',
                        'Waldo_Cortex_SupportAbort','groupSpeed=%8',
+                       'withdrawal=[status,travel,replans]=%15',
                        'reactiveFlares=%8 attackRunFlares=%9',
                        'Waldo_Cortex_AttackRunFlares_Enable']:
             self.assertIn(marker,diagnostic)
@@ -822,6 +823,15 @@ class CortexOperations(unittest.TestCase):
         arrival=maintain.split('// Contact can begin before the rally is reached.')[1]
         self.assertNotIn('"CALM"', arrival)
         self.assertIn('"supportToken"', arrival)
+
+    def test_post_contact_waits_for_bounded_manoeuvre_owner(self):
+        text=source('cortexGroupTick')
+        transition=text.split('// Smoke, terrain and buildings can briefly hide a target')[1].split('case "SECURITY"')[0]
+        self.assertIn('count (_state getOrDefault ["drill",createHashMap]) > 0',transition)
+        self.assertIn('_state getOrDefault ["assaulting",false]',transition)
+        self.assertIn('_state getOrDefault ["responding",false]',transition)
+        self.assertIn('if (!_manoeuvreActive',transition)
+        self.assertLess(transition.index('if (!_manoeuvreActive'),transition.index('Waldo_AIPass_PostContact_LostSeconds'))
 
     def test_empty_coordinated_dispatch_does_not_consume_engagement(self):
         server=source('cortexSupportAssaultServer')
@@ -912,6 +922,12 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('"baseAttack", "attackChanged"', source('cortexCheckpoint'))
         self.assertIn('enableAttack (_state getOrDefault ["baseAttack",true])', source('cortexRestoreCalm'))
 
+    def test_zeus_handover_preserves_replacement_attack_setting(self):
+        restore=source('cortexRestoreCalm')
+        flank_end=source('cortexFlankEnd')
+        self.assertIn('if (!_yieldToExternal && {_state getOrDefault ["attackChanged",false]})',restore)
+        self.assertIn('if (_reason != "ZEUS" && {_state getOrDefault ["attackChanged",false]})',flank_end)
+
     def test_zeus_takeover_releases_explicit_orders_without_waypoint(self):
         text=source('cortexGroupTick').split('if !([_group] call Waldo_fnc_CortexIsEligible)')[1].split('// Survivor regroup')[0]
         self.assertIn('if ([_group] call Waldo_fnc_CortexZeusHeld) then', text)
@@ -993,6 +1009,23 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_x doFollow _leader',support)
         self.assertIn('_state set ["movementLease",["INFANTRY_WITHDRAW",time+120]]',retreat)
         self.assertLess(retreat.index('CortexGroupMove'),retreat.index('["INFANTRY_WITHDRAW",time+120]'))
+
+    def test_infantry_withdrawal_requires_progress_and_replans_without_teleport(self):
+        retreat=source('cortexRetreat')
+        tick=source('cortexGroupTick')
+        restore=source('cortexRestoreCalm')
+        for marker in ['set ["retreatStart",getPosATL _leader]',
+                       'set ["retreatTarget",_point]',
+                       'set ["retreatProgress",[time,0,0]]']:
+            self.assertIn(marker,retreat)
+        retreat_case=tick.split('case "RETREAT":')[1]
+        for marker in ['_travel < 30','_now-_progressAt >= 15','_travel >= _bestTravel+3','_replans < 4',
+                       'select (_replans mod 4)','Waldo_fnc_CortexGroupMove',
+                       'Waldo_Cortex_Withdrawal']:
+            self.assertIn(marker,retreat_case)
+        self.assertNotIn('setPos',retreat_case)
+        self.assertIn('"retreatStart", "retreatTarget", "retreatProgress"',restore)
+        self.assertIn('setVariable ["Waldo_Cortex_Withdrawal",nil,true]',restore)
 
     def test_replacement_orders_release_owned_garrison_and_defence_holds(self):
         for name,marker in [
