@@ -2,8 +2,8 @@
  * Author: WaldoTheWarfighter
  * Pending remounts yield to a replacement vehicle assignment; cleanup only cancels the original seat order.
  * Runs one Cortex step for one locally owned group: reads the situation, moves it along the
- * group state ladder and calls each enabled behaviour. Dead-leader succession selects a living,
- * conscious local successor by rank before leader-dependent tactics; living leaders are preserved.
+ * group state ladder and calls each enabled behaviour. Casualty succession selects a living,
+ * conscious local successor by rank before leader-dependent tactics; combat-effective leaders are preserved.
  *
  * State ladder with post-contact search and hysteresis:
  * CALM -> CONTACT when an enemy was seen in the last 10 s.
@@ -102,10 +102,10 @@ if !([_group] call Waldo_fnc_CortexIsEligible) exitWith {
 // Survivor regroup owns a remnant while it is being merged.
 if (_group getVariable ["Waldo_AIPass_RegroupQueued", false]) exitWith {5};
 // Resolve casualty succession before reading leader knowledge or issuing group orders.
-// Only eligible, locally owned AI groups reach this point. Preserve every living
-// leader; do not replace an unconscious leader whose medical recovery is pending.
+// Only eligible, locally owned AI groups reach this point. An incapacitated leader cannot drive
+// withdrawal, bounds or contact state, so appoint an acting leader instead of waiting for recovery.
 private _leader = leader _group;
-if ((isNull _leader || {!alive _leader}) && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
+if ((isNull _leader || {!([_leader] call Waldo_fnc_CortexCombatEffective)}) && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
     private _successors = _alive select {local _x && {[_x] call Waldo_fnc_CortexCombatEffective}};
     if (_successors isNotEqualTo []) then {
         private _successor = _successors select 0;
@@ -114,8 +114,8 @@ if ((isNull _leader || {!alive _leader}) && {[_group,"Waldo_AIPass_Contact_Enabl
         _leader = leader _group;
     };
 };
-// Never drive leader-dependent tactics through a corpse while succession settles.
-if (isNull _leader || {!alive _leader}) exitWith {5};
+// Never drive leader-dependent tactics through an incapacitated actor while succession settles.
+if (isNull _leader || {!([_leader] call Waldo_fnc_CortexCombatEffective)}) exitWith {5};
 if (behaviour _leader == "CARELESS") exitWith {10};
 // Airborne insertion owns a squad while it rides an aircraft or is parachuting down.
 if (_group getVariable ["Waldo_AIPass_Dropping", false]) exitWith {3};

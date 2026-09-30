@@ -10,13 +10,14 @@ def source(name):
     return re.sub(r'^/\*.*?\*/\s*', '', (BASE / f'{name}.sqf').read_text(encoding='utf-8-sig'), flags=re.S)
 
 class CortexContracts(unittest.TestCase):
-    def test_dead_leader_recovery_respects_authority_and_existing_leaders(self):
+    def test_incapacitated_leader_recovery_respects_authority_and_effective_leaders(self):
         text = source('cortexGroupTick')
         recovery = text.index('_group selectLeader _successor')
         self.assertLess(text.index('if (!local _group'), recovery)
         self.assertLess(text.index('call Waldo_fnc_CortexIsEligible'), recovery)
-        self.assertIn('if ((isNull _leader || {!alive _leader}) && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then', text)
+        self.assertIn('if ((isNull _leader || {!([_leader] call Waldo_fnc_CortexCombatEffective)}) && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then', text)
         self.assertIn('local _x && {[_x] call Waldo_fnc_CortexCombatEffective}', text)
+        self.assertIn('if (isNull _leader || {!([_leader] call Waldo_fnc_CortexCombatEffective)}) exitWith {5};', text)
         effective = source('cortexCombatEffective')
         for exclusion in ['INCAPACITATED', 'ACE_isUnconscious', 'captive _unit', 'ace_captives_isSurrendering', 'ace_captives_isHandcuffed']:
             self.assertIn(exclusion, effective)

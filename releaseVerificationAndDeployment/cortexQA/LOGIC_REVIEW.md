@@ -1,5 +1,9 @@
 # Cortex logic review
 
+## Incapacitated leader succession (2026-09-30)
+
+Leader-dependent tactics previously selected a successor only after the current leader died. An ACE-unconscious or engine-incapacitated leader therefore remained the source for knowledge, position and movement decisions, allowing withdrawal, reinforcement and manoeuvre to wait indefinitely. The group tick now promotes the highest-ranking local combat-effective member whenever the current leader cannot act, and rechecks the replacement before running leader-dependent logic. This is statically covered and awaits the next permitted in-engine casualty run.
+
 This is an open defect and acceptance register, not a completion certificate.
 
 ## Tactical movement ownership
