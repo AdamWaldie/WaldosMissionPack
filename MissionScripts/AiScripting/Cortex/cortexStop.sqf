@@ -131,5 +131,6 @@ private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (miss
 } forEach _jobs;
 missionNamespace setVariable ["Waldo_AIPass_Jobs", []];
 missionNamespace setVariable ["Waldo_AIPass_PendingJobs", []];
+missionNamespace setVariable ["Waldo_AIPass_NextJobDue", -1];
 missionNamespace setVariable ["Waldo_AIPass_DiscoveryQueued", false];
 diag_log "[WMP CORTEX] Stopped.";

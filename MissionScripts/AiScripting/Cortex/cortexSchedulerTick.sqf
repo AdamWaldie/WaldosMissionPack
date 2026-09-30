@@ -6,8 +6,9 @@
  * headless clients only). At least one due job runs on each tick; the rest run only while
  * Waldo_AIPass_TickBudgetMs remains. Jobs that do not fit wait for the next tick, which keeps
  * new jobs from starting after the budget is spent. A running job cannot be pre-empted and can
- * exceed the budget; queue traversal also scales with queue length. Jobs move to the back of the
- * queue, so no group is starved when the budget is always spent. When the machine's FPS is below
+ * exceed the budget. An earliest-due cache makes idle callbacks constant-time instead of traversing
+ * the complete group queue four times per second. Due processing still traverses the queue once and
+ * jobs move to the back, so no group is starved when the budget is always spent. When the machine's FPS is below
  * Waldo_AIPass_LowFpsThreshold, rescheduling delays are doubled. While ENDEX or SafeStart is
  * active, due jobs are postponed by five seconds and never run.
  * Locality and authority: machine-local. It performs no world scans. Changed restoration checkpoints are published after group jobs.
@@ -29,13 +30,17 @@
 if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {};
 private _jobs = missionNamespace getVariable ["Waldo_AIPass_Jobs", []];
 private _pending = missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []];
+private _now = time;
+if (_pending isEqualTo [] && {_now < (missionNamespace getVariable ["Waldo_AIPass_NextJobDue", -1])}) exitWith {};
 if (_pending isNotEqualTo []) then {
     _jobs append _pending;
     missionNamespace setVariable ["Waldo_AIPass_PendingJobs", []];
 };
-if (_jobs isEqualTo []) exitWith {missionNamespace setVariable ["Waldo_AIPass_Jobs", []]};
+if (_jobs isEqualTo []) exitWith {
+    missionNamespace setVariable ["Waldo_AIPass_Jobs", []];
+    missionNamespace setVariable ["Waldo_AIPass_NextJobDue", -1];
+};
 
-private _now = time;
 private _start = diag_tickTime;
 private _budget = ((missionNamespace getVariable ["Waldo_AIPass_TickBudgetMs", 1]) max 0.2) / 1000;
 private _slow = diag_fps < (missionNamespace getVariable ["Waldo_AIPass_LowFpsThreshold", 25]);
@@ -43,10 +48,12 @@ private _paused = [] call Waldo_fnc_CortexIsPaused;
 private _processed = 0;
 private _next = [];
 private _rescheduled = [];
+private _earliest = -1;
 {
     _x params ["_dueAt", "_job", "_state"];
     if (_dueAt > _now || {_processed > 0 && {diag_tickTime - _start >= _budget}}) then {
         _next pushBack _x;
+        if (_earliest < 0 || {_dueAt < _earliest}) then {_earliest = _dueAt};
     } else {
         _processed = _processed + 1;
         private _group = _state getOrDefault ["group", grpNull];
@@ -56,9 +63,12 @@ private _rescheduled = [];
         if (!isNil "_delay" && {_delay isEqualType 0} && {_delay >= 0}) then {
             if (_slow && {!_paused}) then {_delay = _delay * 2};
             _rescheduled pushBack [_now + _delay, _job, _state];
+            private _rescheduledAt = _now + _delay;
+            if (_earliest < 0 || {_rescheduledAt < _earliest}) then {_earliest = _rescheduledAt};
         };
     };
 } forEach _jobs;
 // Jobs that just ran move behind those still waiting, so a full budget rotates fairly.
 _next append _rescheduled;
 missionNamespace setVariable ["Waldo_AIPass_Jobs", _next];
+missionNamespace setVariable ["Waldo_AIPass_NextJobDue", _earliest];

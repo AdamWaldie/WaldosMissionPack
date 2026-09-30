@@ -387,6 +387,18 @@ class CortexContracts(unittest.TestCase):
                     mismatches.append(f'{path.relative_to(ROOT)}: {name} uses {value.lower()}, configured {defaults[name]}')
         self.assertEqual([], mismatches, '\n'.join(mismatches))
 
+    def test_scheduler_skips_idle_queue_until_the_next_job_is_due(self):
+        queue = source('cortexQueueJob')
+        scheduler = source('cortexSchedulerTick')
+        stop = source('cortexStop')
+        self.assertIn('Waldo_AIPass_NextJobDue', queue)
+        self.assertIn('_dueAt < _nextDue', queue)
+        idle_gate = 'if (_pending isEqualTo [] && {_now < (missionNamespace getVariable ["Waldo_AIPass_NextJobDue", -1])}) exitWith {};'
+        self.assertIn(idle_gate, scheduler)
+        self.assertLess(scheduler.index(idle_gate), scheduler.index('forEach _jobs'))
+        self.assertIn('missionNamespace setVariable ["Waldo_AIPass_NextJobDue", _earliest]', scheduler)
+        self.assertIn('missionNamespace setVariable ["Waldo_AIPass_NextJobDue", -1]', stop)
+
     def test_ai_settings_revision_is_complete_before_worker_changes(self):
         local = source('cortexSettingsLocal')
         self.assertIn('remoteExecutedOwner != 2', local)
