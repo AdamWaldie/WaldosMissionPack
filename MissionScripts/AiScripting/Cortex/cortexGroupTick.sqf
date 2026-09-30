@@ -22,7 +22,12 @@
  * RETREAT (morale broken or a damaged vehicle withdrawing) -> REGROUP. A garrison, defence or
  * building-clear order is released before the same retreat transition; releasing the prior order
  * alone never counts as withdrawal.
- * Any sighting during SECURITY, SEARCH or REGROUP returns the group to CONTACT.
+ * Any sighting during SECURITY, SEARCH or REGROUP returns the group to CONTACT. State handovers
+ * preserve a live actor-level grenade-evasion or anti-armour move instead of issuing formation
+ * commands over it. REGROUP only recalls separated members, never clears their combat targets,
+ * and waits for a short owned actor move before declaring the squad cohesive.
+ * A reinforcement responder whose requester returns to CALM rejects its server reservation and
+ * releases only its SUPPORT_RALLY or COORDINATED_ASSAULT movement lease; no stale token survives.
  * CARELESS groups are left entirely to the mission maker.
  * Waldo_AIPass_ReactionSpeed (AI Tuning) divides the step interval, so squads re-assess faster or slower.
  * A squad riding as cargo in an AI-flown aircraft is handled by airborne insertion instead
@@ -143,6 +148,10 @@ private _groupMovementOwned = count _movementLease == 2 && {time < (_movementLea
 };
 if (!_groupMovementOwned && {_movementLease isNotEqualTo []}) then {_state deleteAt "movementLease"};
 private _now = time;
+private _hasLiveActorMove = {
+    private _actorMove = _this getVariable ["Waldo_Cortex_ActorMove",[]];
+    count _actorMove == 3 && {_now < (_actorMove select 2)}
+};
 private _get = {
     _this params ["_name", "_fallback"];
     if (_fallback isEqualType true) then {[_group, _name, _fallback] call Waldo_fnc_CortexFeatureEnabled} else {missionNamespace getVariable _this}
@@ -252,7 +261,12 @@ private _beginContact = {
         _state set ["behaviourChanged", false];
         _state set ["speedChanged", false];
     };
-    {if (alive _x && {local _x}) then {_x doFollow _leader}} forEach (_state getOrDefault ["searchTeam", []]);
+    {
+        private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
+        if (alive _x && {local _x} && {count _actorMove != 3 || {_now >= (_actorMove select 2)}}) then {
+            _x doFollow _leader
+        };
+    } forEach (_state getOrDefault ["searchTeam", []]);
     _state set ["searchTeam", []];
     if (!_groupMovementOwned && {!(_state getOrDefault ["responding", false])} && {!(_state getOrDefault ["assaulting", false])}) then {[_group] call Waldo_fnc_CortexGroupMoveClear};
     call _enterContact;
@@ -285,8 +299,23 @@ switch (_state get "phase") do {
             };
             if (isNull _requester || {({alive _x} count units _requester) == 0} || {_requesterPhase == "CALM"}
                 || {_now > (_state getOrDefault ["respondUntil", 0])}) then {
-                [_group] call Waldo_fnc_CortexGroupMoveClear;
-                {_state deleteAt _x} forEach ["responding", "respondingTo", "arrivedAt", "assaulting"];
+                private _supportLease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
+                private _supportToken = _state getOrDefault ["supportToken",""];
+                if (count _supportLease == 6 && {_supportToken == (_supportLease select 0)}) then {
+                    [_group,_supportToken,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
+                };
+                private _ownedMovement = _state getOrDefault ["movementLease",[]];
+                if (count _ownedMovement == 2
+                    && {(_ownedMovement select 0) in ["SUPPORT_RALLY","COORDINATED_ASSAULT"]}) then {
+                    [_group] call Waldo_fnc_CortexGroupMoveClear;
+                    _state deleteAt "movementLease";
+                    _movementLease = [];
+                    _groupMovementOwned = false;
+                };
+                {_state deleteAt _x} forEach [
+                    "supportHeld","supportBoundSequence","supportToken","responding","respondingTo",
+                    "respondUntil","arrivedAt","assaulting"
+                ];
             } else {
                 // Arrival is measured by SupportMaintain in every contact phase.
             };
@@ -356,8 +385,12 @@ switch (_state get "phase") do {
             || {_team isEqualTo [] && {!_moving}}
             || {_now - (_state get "phaseStart") > (["Waldo_AIPass_Investigate_Seconds", 60] call _get)};
         if (_done) then {
-            {if (local _x) then {_x doWatch objNull}} forEach _alive;
-            [_group, _state] call Waldo_fnc_CortexRestoreCalm;
+            if (_alive findIf {_x call _hasLiveActorMove} >= 0) then {
+                _delay = 2;
+            } else {
+                {if (local _x) then {_x doWatch objNull}} forEach _alive;
+                [_group, _state] call Waldo_fnc_CortexRestoreCalm;
+            };
         } else {
             _delay = 3;
         };
@@ -484,7 +517,7 @@ switch (_state get "phase") do {
             || {_team findIf {_x distance2D _searchPos > 15} < 0}
             || {_now - (_state get "phaseStart") > (["Waldo_AIPass_PostContact_SearchSeconds", 45] call _get)};
         if (_done) then {
-            {_x doFollow _leader} forEach _team;
+            {_x doFollow _leader} forEach (_team select {!(_x call _hasLiveActorMove)});
             _state set ["searchTeam", []];
             if (_visible isNotEqualTo []) then {call _beginContact} else {
                 _state set ["phase", "REGROUP"];
@@ -510,11 +543,14 @@ switch (_state get "phase") do {
             local _x && {vehicle _x == _x} && {lifeState _x != "INCAPACITATED"}
                 && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
         };
-        // Preserve authored waypoints; following the leader allows the squad to resume its route.
+        private _reserved = _members select {_x call _hasLiveActorMove};
+        // Preserve authored waypoints and combat targets. Recall only a separated member; repeatedly
+        // clearing targets and reissuing formation commands made cohesive squads stop fighting and
+        // oscillate around their leader while Cortex waited for the next state transition.
         if (_now - (_state getOrDefault ["consolidateIssued", -1e6]) >= 8) then {
             {
-                if (_x != _leader) then {_x doWatch objNull; _x doTarget objNull; _x doFollow _leader};
-            } forEach _members;
+                if (_x != _leader && {_x distance2D _leader > 8}) then {_x doFollow _leader};
+            } forEach (_members - _reserved);
             _state set ["consolidateIssued", _now];
             _state set ["holders", []];
         };
@@ -522,7 +558,7 @@ switch (_state get "phase") do {
         private _gathered = {_x distance2D _leader <= _radius} count _members;
         private _furthest = 0;
         {_furthest = _furthest max (_x distance2D _leader)} forEach _members;
-        private _closed = _gathered == count _members;
+        private _closed = _reserved isEqualTo [] && {_gathered == count _members};
         private _expired = _now - (_state get "phaseStart") > (["Waldo_AIPass_PostContact_RegroupSeconds", 30] call _get);
         private _status = if (_closed) then {"COHESIVE"} else {["CONSOLIDATING", "INCOMPLETE"] select _expired};
         private _snapshot = [_status, _gathered, count _members, round _furthest];

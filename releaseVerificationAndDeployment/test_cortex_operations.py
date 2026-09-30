@@ -1219,6 +1219,35 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]]',apply)
         self.assertIn('case "SUPPORT_RALLY"',maintain)
 
+    def test_calm_requester_fully_releases_responder_reservation(self):
+        tick=source('cortexGroupTick')
+        calm=tick.split('case "CALM": {',1)[1].split('if (_visible isNotEqualTo [])',1)[0]
+        self.assertIn('remoteExecCall ["Waldo_fnc_CortexSupportAck",2]',calm)
+        self.assertIn('["SUPPORT_RALLY","COORDINATED_ASSAULT"]',calm)
+        self.assertIn('_state deleteAt "movementLease"',calm)
+        for key in ['supportToken','responding','respondingTo','respondUntil','arrivedAt','assaulting']:
+            self.assertIn(f'"{key}"',calm)
+
+    def test_live_actor_escape_survives_contact_transition(self):
+        tick=source('cortexGroupTick')
+        begin=tick.split('private _beginContact = {',1)[1].split('switch (_state get "phase")',1)[0]
+        self.assertIn('getVariable ["Waldo_Cortex_ActorMove",[]]',begin)
+        self.assertIn('count _actorMove != 3 || {_now >= (_actorMove select 2)}',begin)
+        self.assertLess(begin.index('count _actorMove'),begin.index('_x doFollow _leader'))
+
+    def test_post_contact_transitions_do_not_churn_combat_or_actor_moves(self):
+        tick=source('cortexGroupTick')
+        self.assertIn('private _hasLiveActorMove = {',tick)
+        search=tick.split('case "SEARCH": {',1)[1].split('case "REGROUP": {',1)[0]
+        self.assertIn('_team select {!(_x call _hasLiveActorMove)}',search)
+        regroup=tick.split('case "REGROUP": {',1)[1].split('case "RETREAT": {',1)[0]
+        self.assertIn('private _reserved = _members select {_x call _hasLiveActorMove}',regroup)
+        self.assertIn('_members - _reserved',regroup)
+        self.assertIn('_x distance2D _leader > 8',regroup)
+        self.assertIn('_reserved isEqualTo []',regroup)
+        self.assertNotIn('doTarget objNull',regroup)
+        self.assertNotIn('doWatch objNull',regroup)
+
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')
         finish=regroup.split('private _finish = {',1)[1].split('if (isNull _group',1)[0]
