@@ -52,9 +52,10 @@ if (_vehicleMove isNotEqualTo []) then {
     } >= 0) && {time < (_vehicleMove select 1)};
     if (!_activeVehicleMove) then {_state deleteAt "vehicleMovement"};
 };
-if (_activeVehicleMove) exitWith {true};
-if (_enemies isEqualTo []) exitWith {false};
-private _movementOwned = false;
+// Movement ownership blocks only another destination. Reporting, dismount handling and
+// gunnery remain composable for the duration of the physical move.
+private _movementOwned = _activeVehicleMove;
+if (_enemies isEqualTo []) exitWith {_movementOwned};
 private _vehicles = [];
 {
     private _vehicle = vehicle _x;

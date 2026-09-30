@@ -457,3 +457,7 @@ replace it with standoff in the same evaluation; coordinated or local infantry m
 that waypoint on the next scheduler tick. Vehicle tactics now report movement ownership, persist it
 while their physical waypoint is unfinished, give withdrawal priority over standoff and block other
 Cortex movement acquisition. Gunnery and the other contact layers continue normally.
+
+The ownership check is deliberately not an early return from vehicle handling: it blocks only a new
+destination. Target selection, firing, onboard reports and passenger handling still run during the
+move.
