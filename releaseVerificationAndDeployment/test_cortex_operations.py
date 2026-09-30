@@ -1332,8 +1332,21 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('!([_group] call Waldo_fnc_CortexZeusHeld)',resume)
         self.assertIn('assignedVehicle _unit == _vehicle',resume)
         self.assertIn('local _unit',resume)
+        self.assertIn('Waldo_AIPass_Vehicles_Enable',resume)
+        self.assertIn('Waldo_AIPass_VehicleRemount_Enable',resume)
         self.assertIn('[_remountIntent select 0,+_pendingRemount]',resume)
         self.assertNotIn('serverTime+',resume)
+
+    def test_locality_adoption_rechecks_transition_feature_gates_before_moving(self):
+        text=source('cortexLocality')
+        resume=text.split('// Rebuild semantic post-contact intent',1)[1].split('// The old owner',1)[0]
+        gate=resume.split('private _transitionGateOpen',1)[1].split('if (_transitionGateOpen',1)[0]
+        self.assertIn('Waldo_AIPass_Investigate_Enable',gate)
+        self.assertIn('Waldo_AIPass_ContactReports_Enable',gate)
+        self.assertIn('Waldo_AIPass_Hearing_Enable',gate)
+        self.assertIn('Waldo_AIPass_PostContact_Enable',gate)
+        self.assertLess(resume.index('if (_transitionGateOpen'),resume.index('doMove'))
+        self.assertIn('setVariable ["Waldo_Cortex_TransitionIntent",nil,true]',resume)
 
     def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
         regroup=source('cortexRegroupStep')

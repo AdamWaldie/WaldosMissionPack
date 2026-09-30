@@ -45,6 +45,7 @@ Sources: cortexGroupTick.sqf, cortexFlankStart.sqf, cortexAdvanceStart.sqf, cort
 - Investigation and post-contact switches are now live permissions. Closing either gate during its active phase uses the ordinary restoration path immediately, instead of allowing search movement and changed settings to survive until a timeout. Static cleanup coverage is present; live UI switching remains pending.
 - Reinforcement, Contact and Coordinated Assault gate closures reject the exact accepted support token to the server before local role and movement cleanup. This prevents a stopped responder retaining a dead role or consuming a support slot until lease expiry. Token, snapshot and sender validation make repeated or racing cleanup harmless; live cross-owner closure remains pending.
 - A calm remount now survives group-locality migration as semantic passenger/vehicle intent. Adoption first retires old-owner commands, then restores only living, local, still-unassigned passengers against the original deadline. Zeus and a newer vehicle assignment win; repeated migration cannot extend the attempt. Cross-owner boarding remains pending live acceptance.
+- Locality adoption now rechecks the current Investigation, report/hearing, Post-contact, Vehicles and Remount gates before it rebuilds any semantic movement intent. A closed gate clears the durable transition instead of issuing a stale move for one scheduler interval. Static ordering coverage is present; physical migration with live setting changes remains pending.
 
 ## Remaining inventory
 

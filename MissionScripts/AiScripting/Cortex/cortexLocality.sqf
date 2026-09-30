@@ -83,14 +83,17 @@ if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) t
 // assignment or Zeus takeover wins and removes that actor from this attempt.
 if (count _remountIntent == 2 && {serverTime < (_remountIntent select 0)}
     && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}) then {
-    private _pendingRemount = (_remountIntent select 1) select {
-        _x params ["_unit","_vehicle"];
-        alive _unit && {local _unit} && {group _unit == _group} && {alive _vehicle}
-            && {vehicle _unit == _unit}
-            && {isNull assignedVehicle _unit || {assignedVehicle _unit == _vehicle}}
-    };
-    if (_pendingRemount isNotEqualTo []) then {
-        _group setVariable ["Waldo_Cortex_Remount",[_remountIntent select 0,+_pendingRemount],true];
+    if ([_group,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+        && {[_group,"Waldo_AIPass_VehicleRemount_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
+        private _pendingRemount = (_remountIntent select 1) select {
+            _x params ["_unit","_vehicle"];
+            alive _unit && {local _unit} && {group _unit == _group} && {alive _vehicle}
+                && {vehicle _unit == _unit}
+                && {isNull assignedVehicle _unit || {assignedVehicle _unit == _vehicle}}
+        };
+        if (_pendingRemount isNotEqualTo []) then {
+            _group setVariable ["Waldo_Cortex_Remount",[_remountIntent select 0,+_pendingRemount],true];
+        };
     };
 };
 // Rebuild semantic post-contact intent, not the old owner's commands or callbacks. The original
@@ -99,7 +102,16 @@ if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
     && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}
     && {_withdrawalIntent isEqualTo []}) then {
     _transitionIntent params ["_transitionPhase","_target","_startedAt","_deadline","_areaMode","_savedTeam"];
-    if (_transitionPhase in ["INVESTIGATE","SEARCH"] && {count _target >= 2}) then {
+    private _transitionGateOpen = switch (_transitionPhase) do {
+        case "INVESTIGATE": {
+            private _sourceGate = ["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_areaMode == "SOUND");
+            [_group,"Waldo_AIPass_Investigate_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+                && {_areaMode == "" || {[_group,_sourceGate,true] call Waldo_fnc_CortexFeatureEnabled}}
+        };
+        case "SEARCH": {[_group,"Waldo_AIPass_PostContact_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+        default {false};
+    };
+    if (_transitionGateOpen && {_transitionPhase in ["INVESTIGATE","SEARCH"]} && {count _target >= 2}) then {
         private _adopted = [_group] call Waldo_fnc_CortexGroupState;
         private _leader = leader _group;
         private _team = _savedTeam select {alive _x && {group _x == _group} && {local _x} && {vehicle _x == _x}};
@@ -126,6 +138,8 @@ if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
         _adopted set ["searchTeam",_team];
         if (_areaMode != "") then {_adopted set ["areaInvestigation",_areaMode]};
         _group setVariable ["Waldo_Cortex_TransitionIntent",[_transitionPhase,+_target,_startedAt,_deadline,_areaMode,+_team],true];
+    } else {
+        _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
     };
 } else {
     _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
