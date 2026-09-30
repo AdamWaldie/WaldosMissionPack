@@ -385,15 +385,28 @@ switch (_state get "phase") do {
                 if (["Waldo_AIPass_Stance_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexStance};
                 if (["Waldo_AIPass_AntiArmour_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexAntiArmour};
                 if (["Waldo_AIPass_Vehicles_Enable", true] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexVehicles};
-                if (!_ordered && {["Waldo_AIPass_Flank_Enable", true] call _get}) then {[_group, _state, _enemies] call Waldo_fnc_CortexFlankStart};
-                if (!_ordered && {["Waldo_AIPass_Advance_Enable", true] call _get}) then {[_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart};
                 if ((["Waldo_AIPass_ContactReports_Enable", true] call _get) && {_now - (_state getOrDefault ["lastReport", -1e6]) >= 20}) then {
                     [_group, _state, _visible] call Waldo_fnc_CortexContactReport;
                 };
             };
             if (["Waldo_AIPass_Artillery_Enable", false] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexArtilleryRequest};
             if (!_ordered && {["Waldo_AIPass_Reinforce_Enable", true] call _get}) then {[_group, _state] call Waldo_fnc_CortexReinforce};
-            if (["Waldo_AIPass_CoordinatedAssault_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexCoordinatedAssault};
+            // Select one movement owner. A coordinated assault keeps this requester as the
+            // base of fire while its responders manoeuvre; it must be decided before a local
+            // flank or advance can acquire the same group's movement state.
+            private _coordinatedOwnsMovement = false;
+            if (!_ordered && {["Waldo_AIPass_CoordinatedAssault_Enable", true] call _get}) then {
+                _coordinatedOwnsMovement = [_group, _state] call Waldo_fnc_CortexCoordinatedAssault;
+            };
+            if (!_ordered && {!_coordinatedOwnsMovement} && {!_lambsCombat}) then {
+                private _localTacticStarted = false;
+                if (["Waldo_AIPass_Flank_Enable", true] call _get) then {
+                    _localTacticStarted = [_group, _state, _enemies] call Waldo_fnc_CortexFlankStart;
+                };
+                if (!_localTacticStarted && {["Waldo_AIPass_Advance_Enable", true] call _get}) then {
+                    [_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart;
+                };
+            };
             if (["Waldo_AIPass_AmmoShare_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexAmmoShare};
         };
         if (_now - (_state getOrDefault ["lastSeen", _now]) > (["Waldo_AIPass_PostContact_LostSeconds", 30] call _get)) then {

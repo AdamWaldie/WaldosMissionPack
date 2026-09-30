@@ -778,8 +778,30 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_sent > 0) then {_job set ["assaultIssued",true];', server)
         requester=source('cortexCoordinatedAssault')
         self.assertIn('if (_status select 3) then {_acknowledged = true}', requester)
-        self.assertIn('if (_acknowledged) exitWith {_state set ["coordinated",true]; 0}', requester)
+        self.assertIn('if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true}', requester)
         self.assertIn('[_state,"coordinated",10] call Waldo_fnc_CortexCooldown', requester)
+
+    def test_coordinated_assault_owns_requester_movement_before_local_tactics(self):
+        tick=source('cortexGroupTick')
+        coordinated=source('cortexCoordinatedAssault')
+        self.assertLess(tick.index('private _coordinatedOwnsMovement = false'),tick.index('call Waldo_fnc_CortexFlankStart'))
+        self.assertIn('if (!_ordered && {!_coordinatedOwnsMovement} && {!_lambsCombat})',tick)
+        self.assertIn('private _localTacticStarted = false',tick)
+        self.assertIn('if (!_localTacticStarted && {["Waldo_AIPass_Advance_Enable", true] call _get})',tick)
+        self.assertIn('_state set ["coordinatedPendingUntil",time+15]',coordinated)
+        self.assertIn('if (time < _pendingUntil) exitWith {true}',coordinated)
+        self.assertIn('"coordinatedPendingUntil"',source('cortexRestoreCalm'))
+
+    def test_coordinated_selection_uses_bounded_server_responder_index(self):
+        coordinated=source('cortexCoordinatedAssault')
+        server=source('cortexSupportServer')
+        step=source('cortexSupportStep')
+        self.assertNotIn('allGroups',coordinated)
+        self.assertIn('Waldo_Cortex_SupportResponders',coordinated)
+        self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",[],true]',server)
+        self.assertIn('private _responders = _kept apply {[_x select 0,_x select 1]}',step)
+        self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",_responders,true]',step)
+        self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",nil,true]',step)
 
     def test_combined_roles_use_owned_fire_team_drills_and_restore_holds(self):
         coordinator=source('cortexSupportCoordinateStep')

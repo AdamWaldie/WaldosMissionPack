@@ -2,6 +2,25 @@
 
 This is an open defect and acceptance register, not a completion certificate.
 
+## Tactical movement ownership
+
+Source review after runtime `20260930-182028` found that the contact tick selected a local flank or
+advance before asking whether an acknowledged reinforcement package should become a coordinated
+assault. The requester could therefore own a local drill while also acting as the coordinated base of
+fire, producing crossed routes, role churn and return-to-formation movement.
+
+Coordinated assault now has first refusal over movement. An acknowledged or dispatched coordination
+keeps the requester in its base-of-fire role through a finite pending lease; local flank and advance
+remain available only when no coordinated package forms. Flank and advance are also selected
+sequentially, so one contact tick has one movement owner. Fire control, stance, anti-armour, smoke,
+ammo sharing and casualty replacement remain layered behaviours and do not become movement owners.
+
+The prior requester-side `allGroups` scan has also been removed from the contact cadence. The server
+support job publishes only the at-most-six responders already reserved for that requester, and clears
+the index with the reservation. This prevents coordinated selection from growing quadratically at the
+100-group performance target. Static acceptance is 151 focused Cortex tests and 1,262 validated SQF
+files. A rebuilt live run remains required and is deliberately deferred while game launches are paused.
+
 ## Confirmed casualty defect
 
 Runtime `runtime-20260927-101803` records a dead group leader throughout the retreat observation, a living survivor following a nearby FORMATION PLANNED destination, and an active retreat waypoint farther away. No Zeus hold was active. The server failed physical retreat and surrender.
