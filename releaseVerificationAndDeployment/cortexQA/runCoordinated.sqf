@@ -156,14 +156,19 @@ private _rallied=[{
             _prematureReady=true;
         };
     } forEach _teams;
-    (_teams findIf {
-        private _lease = (group (_x select 0)) getVariable ["Waldo_AIPass_SupportLease",[]];
-        if (count _lease != 6) exitWith {true};
-        private _area = _lease select 3;
-        {_x setVariable ["Waldo_CortexQA_Target",_area,true]} forEach _x;
-        private _outside = _x findIf {_x distance2D _area > 45};
-        _outside >= 0
-    }) < 0
+    private _allRallied=true;
+    {
+        private _team=_x;
+        private _lease = (group (_team select 0)) getVariable ["Waldo_AIPass_SupportLease",[]];
+        if (count _lease != 6) then {
+            _allRallied=false;
+        } else {
+            private _area = _lease select 3;
+            {_x setVariable ["Waldo_CortexQA_Target",_area,true]} forEach _team;
+            if ((_team findIf {_x distance2D _area > 45}) >= 0) then {_allRallied=false};
+        };
+    } forEach _teams;
+    _allRallied
 },120] call _wait;
 ["COORD-no-premature-rally-readiness",!_prematureReady] call _check;
 ["COORD-two-teams-physical-rally",_rallied,str (_helpers apply {getPosATL _x})] call _check;

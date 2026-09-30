@@ -394,10 +394,12 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('COORD-assault-corridor-clear',qa)
         self.assertIn('{deleteVehicle _x} forEach _movementScreens;',qa)
         self.assertLess(qa.index('COORD-assault-corridor-clear'),qa.index('Movement diagnostic: coordinated bounds'))
-        self.assertIn('private _outside = _x findIf {_x distance2D _area > 45};',qa)
-        self.assertIn('_outside >= 0',qa)
-        self.assertIn('(_teams findIf {',qa)
-        self.assertIn('    }) < 0\n},120] call _wait;',qa)
+        self.assertIn('private _allRallied=true;',qa)
+        self.assertIn('private _team=_x;',qa)
+        self.assertIn('if ((_team findIf {_x distance2D _area > 45}) >= 0)',qa)
+        self.assertIn('_allRallied',qa)
+        rally=qa.split('private _rallied=[{',1)[1].split('},120] call _wait;',1)[0]
+        self.assertNotIn('(_teams findIf {',rally)
 
     def test_literal_qa_tuning_requests_have_transport_entries(self):
         import re
