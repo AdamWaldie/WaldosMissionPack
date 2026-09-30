@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Passenger and active withdrawal intent survive migration without replaying old owner jobs.
- * Invalidates old jobs, restores interrupted transient behaviour and resumes a bounded withdrawal
- * after WMP or ACE migration.
+ * Passenger, post-contact movement and active withdrawal intent survive migration without replaying
+ * old owner jobs. Invalidates old jobs, restores interrupted transient behaviour and resumes a
+ * bounded investigation, search or withdrawal after WMP or ACE migration.
  * Locality/authority: current group owner unless stated otherwise below.
  * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim.
  * Combat-mode restoration checks the applied value before restoring, preserving newer ROE changes.
@@ -14,6 +14,7 @@
 params [["_group", grpNull, [grpNull]], ["_gained", false, [true]]];
 if (isNull _group) exitWith {};
 private _withdrawalIntent = _group getVariable ["Waldo_Cortex_WithdrawalIntent",[]];
+private _transitionIntent = _group getVariable ["Waldo_Cortex_TransitionIntent",[]];
 [_group,true] call Waldo_fnc_CortexHearingLocal;
 {
         private _unit = _x;
@@ -74,6 +75,43 @@ if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) t
     private _adopted=[_group] call Waldo_fnc_CortexGroupState;
     _adopted set ["dismounted",_passengers];
     _adopted set ["onboardContactUntil",serverTime+30];
+};
+// Rebuild semantic post-contact intent, not the old owner's commands or callbacks. The original
+// deadline continues across migration, preventing transfer churn from extending an episode.
+if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
+    && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}
+    && {_withdrawalIntent isEqualTo []}) then {
+    _transitionIntent params ["_transitionPhase","_target","_startedAt","_deadline","_areaMode","_savedTeam"];
+    if (_transitionPhase in ["INVESTIGATE","SEARCH"] && {count _target >= 2}) then {
+        private _adopted = [_group] call Waldo_fnc_CortexGroupState;
+        private _leader = leader _group;
+        private _team = _savedTeam select {alive _x && {group _x == _group} && {local _x} && {vehicle _x == _x}};
+        if (_transitionPhase == "SEARCH" && {_team isEqualTo []}) then {
+            private _riflemen = (units _group) select {alive _x && {local _x} && {_x != _leader} && {vehicle _x == _x} && {([_x] call Waldo_fnc_CortexUnitRole) == "RIFLE"}};
+            _team = _riflemen select [0,2];
+            // Casualties may leave no separate search pair. Keep the physical check alive with
+            // the leader instead of treating migration as successful completion.
+            if (_team isEqualTo [] && {alive _leader} && {local _leader} && {vehicle _leader == _leader}) then {_team = [_leader]};
+        };
+        if (_team isNotEqualTo []) then {
+            {_x doMove (_target getPos [4+_forEachIndex*4,random 360])} forEach _team;
+        } else {
+            [_group,_target getPos [30,_target getDir _leader],25] call Waldo_fnc_CortexGroupMove;
+        };
+        _adopted set ["baseBehaviour",behaviour _leader];
+        _adopted set ["baseSpeed",speedMode _group];
+        _adopted set ["behaviourChanged",false];
+        _adopted set ["speedChanged",false];
+        if (behaviour _leader == "SAFE") then {_group setBehaviour "AWARE"; _adopted set ["behaviourChanged",true]};
+        _adopted set ["phase",_transitionPhase];
+        _adopted set ["phaseStart",time-((serverTime-_startedAt) max 0)];
+        _adopted set ["enemyPos",+_target];
+        _adopted set ["searchTeam",_team];
+        if (_areaMode != "") then {_adopted set ["areaInvestigation",_areaMode]};
+        _group setVariable ["Waldo_Cortex_TransitionIntent",[_transitionPhase,+_target,_startedAt,_deadline,_areaMode,+_team],true];
+    };
+} else {
+    _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
 };
 // The old owner's scheduled callbacks are invalid, but physical withdrawal intent is durable.
 // Resume only a structurally valid, unfinished episode and let the common retreat controller

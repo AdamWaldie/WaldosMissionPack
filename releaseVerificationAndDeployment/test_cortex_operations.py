@@ -1050,6 +1050,21 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_intent set [6,_bestTravel]',tick)
         self.assertIn('setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true]',restore)
 
+    def test_post_contact_movement_resumes_across_locality_with_original_deadline(self):
+        checkpoint=source('cortexCheckpoint')
+        locality=source('cortexLocality')
+        restore=source('cortexRestoreCalm')
+        for marker in ['Waldo_Cortex_TransitionIntent','["INVESTIGATE","SEARCH"]','_startedAt+_duration','searchTeam']:
+            self.assertIn(marker,checkpoint)
+        self.assertIn('serverTime < (_transitionIntent select 3)',locality)
+        self.assertIn('_withdrawalIntent isEqualTo []',locality)
+        self.assertIn('CortexZeusHeld',locality)
+        self.assertIn('_adopted set ["phaseStart",time-((serverTime-_startedAt) max 0)]',locality)
+        self.assertIn('CortexGroupMove',locality)
+        self.assertIn('doMove',locality)
+        self.assertNotIn('CBA_fnc_waitAndExecute',locality)
+        self.assertIn('setVariable ["Waldo_Cortex_TransitionIntent",nil,true]',restore)
+
     def test_vehicle_withdrawal_records_and_resumes_physical_progress(self):
         vehicles=source('cortexVehicles')
         locality=source('cortexLocality')

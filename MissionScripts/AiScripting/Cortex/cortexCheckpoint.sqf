@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Publishes only restoration data that changed after an unscheduled AI job.
+ * Publishes restoration data and bounded post-contact movement intent after an unscheduled AI job.
  * Locality/authority: current group owner unless stated otherwise below.
  * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim.
  * Arguments: 0: group <GROUP>, default grpNull.
@@ -36,6 +36,25 @@ if (_saved isNotEqualTo (_group getVariable ["Waldo_AIPass_Checkpoint", []])) th
 
 private _phase = _state getOrDefault ["phase","CALM"];
 if (_phase != (_group getVariable ["Waldo_AIPass_PublicPhase",""])) then {_group setVariable ["Waldo_AIPass_PublicPhase",_phase,true]};
+
+// Engine MOVE commands are local to their issuing owner. Preserve the small amount of
+// semantic state needed to rebuild an unfinished investigation or search after migration;
+// never serialize a scheduled callback or claim that an accepted command completed.
+private _transitionIntent = [];
+if (_phase in ["INVESTIGATE","SEARCH"]) then {
+    private _target = _state getOrDefault ["enemyPos",[]];
+    if (count _target >= 2) then {
+        private _duration = missionNamespace getVariable [
+            ["Waldo_AIPass_PostContact_SearchSeconds","Waldo_AIPass_Investigate_Seconds"] select (_phase == "INVESTIGATE"),
+            [45,60] select (_phase == "INVESTIGATE")
+        ];
+        private _startedAt = serverTime-((time-(_state getOrDefault ["phaseStart",time])) max 0);
+        _transitionIntent = [_phase,+_target,_startedAt,_startedAt+_duration,_state getOrDefault ["areaInvestigation",""],+(_state getOrDefault ["searchTeam",[]])];
+    };
+};
+if (_transitionIntent isNotEqualTo (_group getVariable ["Waldo_Cortex_TransitionIntent",[]])) then {
+    _group setVariable ["Waldo_Cortex_TransitionIntent",_transitionIntent,true];
+};
 
 private _token = _state getOrDefault ["supportToken",""];
 private _arrived = _state getOrDefault ["arrivedAt",-1];
