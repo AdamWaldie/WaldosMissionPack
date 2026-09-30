@@ -57,13 +57,22 @@ private _crossesSupportLane={
         && {count _status == 4} && {(_status select 0) == _token} && {(_status select 1) >= 0} && {_status select 2}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
         private _rally=+(_lease select 3);
+        private _rallyX=(_rally select 0)-(_supportOrigin select 0);
+        private _rallyY=(_rally select 1)-(_supportOrigin select 1);
+        private _rallySide=if (_laneLength > 0) then {(_laneX*_rallyY-_laneY*_rallyX)/_laneLength} else {0};
         private _attack=[];
         private _bestScore=1e9;
         {
             _x params ["_radius","_offset"];
             private _candidate=_enemy getPos [_radius,(_enemy getDir leader _requester)+_offset];
+            private _candidateX=(_candidate select 0)-(_supportOrigin select 0);
+            private _candidateY=(_candidate select 1)-(_supportOrigin select 1);
+            private _candidateSide=if (_laneLength > 0) then {(_laneX*_candidateY-_laneY*_candidateX)/_laneLength} else {0};
+            // A helper which already rallied clear of the support axis stays on that
+            // side. Crossing behind or through the base of fire is not a flank route.
+            private _sameSide=abs _rallySide < 22 || {_candidateSide*_rallySide > 0};
             private _separated=_approaches findIf {_x distance2D _candidate < 35} < 0;
-            if (!surfaceIsWater _candidate && {_separated} && {!([_rally,_candidate] call _crossesSupportLane)}) then {
+            if (_sameSide && {!surfaceIsWater _candidate} && {_separated} && {!([_rally,_candidate] call _crossesSupportLane)}) then {
                 private _score=_rally distance2D _candidate;
                 if (_score < _bestScore) then {_attack=_candidate; _bestScore=_score};
             };
