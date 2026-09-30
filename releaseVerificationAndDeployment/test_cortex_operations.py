@@ -344,6 +344,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('server-owner-retained',text)
         self.assertIn('local gunner _counterGun',text)
 
+    def test_cortex_stop_invalidates_delayed_vehicle_actions(self):
+        stop=source('cortexStop')
+        self.assertIn('} forEach vehicles;',stop)
+        for variable in ['Waldo_Cortex_ArtilleryScootToken','Waldo_Cortex_ArtilleryScootDeadline','Waldo_Cortex_ArtilleryScootPurpose','Waldo_Cortex_AttackFlarePhase','Waldo_Cortex_AttackFlareCooldown']:
+            self.assertIn('setVariable ["'+variable+'",nil,true]',stop)
+        self.assertIn('old CBA callback cannot become valid again after a quick restart',stop)
+
     def test_ai_diagnostics_feature_depth_and_queue_scope(self):
         diagnostic=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
         for feature in ['Regroup','Contact','PostContact','Flank','StreetCrossing','FireControl','Morale','Surrender','GrenadeEvasion','AntiArmour','Vehicles','ContactReports','Reinforce','Artillery','CounterBattery','Airborne','AircraftFlares','Investigate','Assault','Advance','CoordinatedAssault','Stance','AmmoShare','VehicleGunnery','ArtillerySmoke','AircraftBreak','VehicleDismount','VehicleRemount','VehicleWithdraw','CoverValidation','Hearing','MountedFire','Cover','AvoidInfantry','ContactHalt','Unload']:
