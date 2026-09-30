@@ -471,3 +471,7 @@ are public so a new group owner can resume a pending relocation after locality m
 Locality adoption restores and clears the old owner's transient state before it resumes an
 authenticated pending relocation. Support-reservation cleanup also checks the shared lease before
 deleting a route, so an expired rally cannot erase a newer vehicle or artillery movement.
+
+Remnant regroup now records every soldier it stops for the merge. Completion, timeout, feature
+disablement, locality invalidation, and Zeus takeover release only Cortex-owned combat-labelled
+holds. Newer direct movement, boarding, action, and scripted unit commands remain authoritative.

@@ -954,6 +954,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (!_movementLeaseActive && {_state getOrDefault ["responding",false]',maintain)
         self.assertIn('if (!_movementLeaseActive) then {[_group] call Waldo_fnc_CortexGroupMoveClear}',maintain)
 
+    def test_remnant_regroup_releases_only_its_owned_unit_holds(self):
+        regroup=source('cortexRegroupStep')
+        finish=regroup.split('private _finish = {',1)[1].split('if (isNull _group',1)[0]
+        self.assertIn('_state getOrDefault ["held",[]]',finish)
+        self.assertIn('currentCommand _x',finish)
+        self.assertIn('["","STOP","ATTACK","FIRE","SUPPRESS"]',finish)
+        self.assertIn('_x doFollow (leader group _x)',finish)
+        self.assertIn('_state set ["held",+_movers]',regroup)
+        self.assertIn('_held deleteAt (_held find _x)',regroup)
+        self.assertNotIn('"MOVE"',finish)
+        self.assertNotIn('"GET IN"',finish)
+
     def test_cover_stance_bounds_rays_and_rotates_units(self):
         text=source('cortexStance')
         self.assertIn('if (_sampled >= 2) exitWith {}', text)

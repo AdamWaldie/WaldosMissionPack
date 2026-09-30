@@ -342,9 +342,14 @@ class CortexContracts(unittest.TestCase):
 
     def test_completed_waypoints_are_not_pending(self):
         text = source('cortexGroupTick')
-        # Investigation and retreat still check pending waypoints; rally uses physical arrival.
-        self.assertEqual(2, text.count('(_x select 1) >= currentWaypoint _group'))
-        self.assertIn('_fit findIf {_x distance2D (_lease select 3) > 45} < 0', source('cortexSupportMaintain'))
+        maintain = source('cortexSupportMaintain')
+        # Every temporary-route ownership check accepts only the current or a later waypoint.
+        # The number grows as new movement owners adopt the shared contract, so do not freeze it.
+        self.assertGreaterEqual(text.count('(_x select 1) >= currentWaypoint _group'), 3)
+        self.assertIn('(_x select 1) >= currentWaypoint _group', maintain)
+        self.assertNotIn('(_x select 1) < currentWaypoint _group', text + maintain)
+        # Rally readiness remains physical and is never inferred from a pending waypoint.
+        self.assertIn('_fit findIf {_x distance2D (_lease select 3) > 45} < 0', maintain)
 
     def test_tuning_dialog_server_and_jip_share_spec(self):
         runtime = ROOT / 'MissionScripts' / 'ZenModules' / 'RuntimeControl'
