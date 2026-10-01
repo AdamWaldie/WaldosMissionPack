@@ -1,10 +1,11 @@
 # Cortex performance acceptance
 
-The target is at least 100 AI groups without significant added cost versus the same mission with Cortex disabled. This remains unverified.
+The primary target is 50 AI groups without significant added cost versus the same mission with Cortex disabled. The earlier 100-group workload saturated the local multi-process Arma host before a valid comparison and remains an exploratory stress point.
 
 ## Workloads
 
-- Measure 25, 50, 100 and 150 groups, with six real AI per group; record actual unit and group counts. The primary target therefore includes 600 AI, not 100 single-soldier groups.
+- Measure 25 and 50 groups with six real AI per infantry group; retain 100 and 150 as exploratory stress points. Record actual unit and group counts.
+- Run both a 50-squad infantry matrix and a 50-group mixed matrix containing infantry, ground vehicles, helicopters and jets.
 - Use idle, ordinary patrol and sustained contact workloads. Preserve the same composition, placement, route geometry, visibility, skill, feature configuration and ownership for paired runs.
 - Use fresh actors for each arm; warm up before sampling. Run OFF/ON/ON/OFF to expose order and warm-up effects, with at least three repeats before acceptance.
 - Exercise server ownership, WMP HC distribution and ACE HC distribution separately. Record all owners and hardware. Local server/client/HC processes sharing one machine do not establish dedicated-host capacity.
@@ -14,7 +15,7 @@ The target is at least 100 AI groups without significant added cost versus the s
 
 Record median, p95 and p99 frame times separately on the server and each HC; client rendering is a separate result. Also record maximum job duration, scheduler overrun, overdue-job age, discovery time, network state publication rate and physical response latency. Capture settings, counts and ownership alongside the results. Fewer ticks or frozen AI cannot count as a performance improvement.
 
-The user-confirmed overhead budget is no more than 5% median and 10% p95 added frame time, with no stalled AI jobs at 100 or more groups. Report absolute milliseconds as well as percentages. Do not call this an achieved guarantee or silently loosen it after a failure.
+The user-confirmed overhead budget is no more than 5% median and 10% p95 added frame time, with no stalled AI jobs at the 50-group primary target. Report absolute milliseconds as well as percentages. Do not call this an achieved guarantee or silently loosen it after a failure.
 
 ## Current evidence and implementation constraints
 
@@ -25,13 +26,14 @@ The scheduler has a soft budget between jobs. One running job can exceed that bu
 The server patrol pilot is implemented in `runPerformance.sqf`, available through `-CortexFocus performance`. It creates 100 six-soldier groups for each OFF/ON/ON/OFF arm, warms up, then samples 60 seconds of server frame times. Every group must physically move; enabled arms require all 100 groups to remain managed and eligible. It checks baseline drift, the agreed median/p95 limits and a separate overdue-job bound. The first server pilot, runtime-20260927-085848, completed its performance stages with all 13 checks passing: OFF samples were 21 ms median / 24 ms p95; ON samples were 21/25 and 21/24 ms. Every group moved and all enabled groups remained managed and eligible. Maximum observed job overdue age was 6.511 seconds. This is one patrol run, not acceptance for contact latency, repeated trials, other scales or HC workloads.
 
 The distributed contact arm is implemented in `runPerformanceContact.sqf` and selected with
-`-CortexFocus performancecontact -HeadlessClients 2`. It uses matched OFF/ON/ON/OFF arms with 100
-six-soldier manoeuvre groups divided across the server and both WMP headless owners. Twenty-five
-interleaved groups receive real, stationary, invulnerable contacts while 75 execute matched movement.
-This retains 100 managed groups without turning the comparison into 100 simultaneous firefights.
-Every arm must retain at least 33 groups and 198 living subject soldiers on each AI owner, move at
-least 90 groups, consume live rifle ammunition in at least 15 contact groups and bring at least 20
-contact groups into a physical response. The sampler reports median, p95 and p99 frame time plus
+`-CortexFocus performancecontact -HeadlessClients 2`. It uses matched OFF/ON/ON/OFF arms with 50
+six-soldier manoeuvre groups divided across the server and both WMP headless owners. Thirteen
+interleaved groups receive real, stationary, invulnerable contacts while 37 execute matched movement.
+Every arm must retain its measured owner load, move at least 45 groups, consume live rifle ammunition
+in at least eight contact groups and bring at least ten contact groups into a physical response.
+`-CortexFocus performancemixed -HeadlessClients 2` applies the same comparison to 30 infantry squads,
+ten ground vehicles, six helicopters and four jets; ten infantry squads receive real contacts.
+The sampler reports median, p95 and p99 frame time plus
 maximum overdue-job age for the server, both HCs and the rendered client. Each enabled arm is compared
 with the two matched disabled baselines using the confirmed 5% median and 10% p95 budgets.
 

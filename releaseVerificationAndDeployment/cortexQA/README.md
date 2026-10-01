@@ -140,6 +140,8 @@ The coordinated-assault focus retains its server case and then repeats with the 
 
 Use `-CortexAudit -CortexFocus performance` for the server patrol OFF/ON/ON/OFF comparison: 100 groups of six soldiers in each arm. Acceptance limits are 5% added median and 10% added p95 frame time; missing movement, unmanaged groups or overdue jobs fail independently. This pilot is not evidence for HC performance or combat workloads. See [the performance plan](PERFORMANCE.md) for the full acceptance matrix.
 
+Use `-CortexFocus performancecontact -HeadlessClients 2` for the primary 50-squad infantry comparison. Use `-CortexFocus performancemixed -HeadlessClients 2` for the separate 50-group combined-force comparison: 30 infantry squads, ten ground vehicles, six helicopters and four jets. Both run OFF/ON/ON/OFF, require physical work and actual fire, sample the server, both HCs and the rendered client, and apply the 5% median / 10% p95 budget only when every arm is comparable.
+
 The lifecycle focus also includes refused HC-to-HC transfer cases. Once a squad is on an HC, the fixture temporarily excludes it from migration, requests the other HC, and requires both the original actual ownership and exactly one matching WMP ownership record to remain. Existing disable, physical movement and restart checks follow. These refusal cases passed in the completed 2026-09-27 lifecycle runs; they do not establish ACE-managed transfer coverage.
 
 ### Zeus interruption coverage

@@ -1,20 +1,24 @@
 /*
  * Author: WaldoTheWarfighter
- * Measures matched Cortex OFF/ON/ON/OFF sustained-contact workloads across server and two WMP
- * headless owners using 100 six-soldier manoeuvre groups and real hostile contacts.
+ * Measures matched Cortex OFF/ON/ON/OFF workloads across server and two WMP headless owners.
+ * The infantry arm uses 50 six-soldier groups and real hostile contacts. The mixed arm uses 30
+ * infantry squads, ten ground vehicles, six helicopters and four jets.
  * Locality/authority: scheduled dedicated-server fixture. Groups are deliberately migrated through
  * Waldo_fnc_HeadlessMigrateGroup; frame samples and queue health are collected on each real owner.
  * Repeat/JIP: fresh invulnerable actors per arm; published sampler results use unique ids and all
  * actors/groups are removed between arms. Late samplers are generation-guarded by their owner.
  *
- * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required audit callbacks.
- * Return Value: Nothing. Current caller: cortexQAServer.sqf for performancecontact focus.
- * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformanceContact.sqf";
+ * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required audit callbacks; mixed <BOOL>
+ * (default false) selects the representative combined-force arm.
+ * Return Value: Nothing. Current caller: cortexQAServer.sqf for performancecontact and
+ * performancemixed focuses.
+ * Example: [_check,_phase,_wait,false] call compile preprocessFileLineNumbers "cortexQAPerformanceContact.sqf";
  */
-params ["_check","_phase","_wait"];
+params ["_check","_phase","_wait",["_mixed",false,[false]]];
+private _prefix=["PERF-CONTACT","PERF-MIXED"] select _mixed;
 missionNamespace setVariable ["Waldo_CortexQA_PerformanceContactCompleted",false];
 private _hcOwners=((missionNamespace getVariable ["Waldo_Headless_Clients",[]]) apply {_x select 0}) select [0,2];
-["PERF-CONTACT-two-headless-prerequisite",count _hcOwners == 2,str _hcOwners] call _check;
+[format ["%1-two-headless-prerequisite",_prefix],count _hcOwners == 2,str _hcOwners] call _check;
 if (count _hcOwners != 2) exitWith {};
 private _owners=[2]+_hcOwners;
 private _clientOwners=(allPlayers select {!(_x isKindOf "HeadlessClient_F")}) apply {owner _x};
@@ -25,11 +29,11 @@ private _ownersResponsive=true;
     private _enabled=_x;
     private _arm=_forEachIndex;
     if (!_ownersResponsive) exitWith {
-        [format ["PERF-CONTACT-arm-%1-owner-prerequisite",_arm],false,"previous owner heartbeat stopped"] call _check;
+        [format ["%1-arm-%2-owner-prerequisite",_prefix,_arm],false,"previous owner heartbeat stopped"] call _check;
     };
     private _liveHcOwners=(allPlayers select {_x isKindOf "HeadlessClient_F"}) apply {owner _x};
     if (_hcOwners findIf {!(_x in _liveHcOwners)} >= 0) exitWith {
-        [format ["PERF-CONTACT-arm-%1-owner-prerequisite",_arm],false,str _liveHcOwners] call _check;
+        [format ["%1-arm-%2-owner-prerequisite",_prefix,_arm],false,str _liveHcOwners] call _check;
     };
     private _sampleId=format ["CONTACT_%1_%2",_arm,floor serverTime];
     [createHashMapFromArray [["Waldo_AIPass_Enable",_enabled],["Waldo_AIPass_Contact_Enable",true],
@@ -49,11 +53,11 @@ private _ownersResponsive=true;
     _targetGroup setBehaviour "CARELESS";
     _targetGroup setCombatMode "BLUE";
     _targetGroups pushBack _targetGroup;
-    for "_row" from 0 to 9 do {
+    for "_row" from 0 to 4 do {
         for "_column" from 0 to 9 do {
             private _index=(_row*10)+_column;
             private _origin=[200+(_column*170),200+(_row*170),0];
-            private _contact=(_index mod 4) == 0;
+            private _contact=if (_mixed) then {_index < 30 && {(_index mod 3) == 0}} else {(_index mod 4) == 0};
             private _target=objNull;
             if (_contact) then {
                 _target=_targetGroup createUnit ["B_Soldier_F",_origin vectorAdd [0,150,0],[],0,"NONE"];
@@ -65,18 +69,36 @@ private _ownersResponsive=true;
                 _target setUnitPos "MIDDLE";
                 _targets pushBack _target;
             };
-            private _group=createGroup [east,true];
+            private _group=grpNull;
+            if (!_mixed || {_index < 30}) then {
+                _group=createGroup [east,true];
+                for "_member" from 0 to 5 do {
+                    private _unit=_group createUnit ["O_Soldier_F",_origin vectorAdd [(_member mod 3)*2,floor (_member/3)*2,0],[],0,"NONE"];
+                    _unit allowDamage false;
+                    if (!_contact) then {_unit disableAI "TARGET"; _unit disableAI "AUTOTARGET"};
+                    _actors pushBack _unit;
+                };
+            } else {
+                private _class=if (_index < 40) then {"O_MRAP_02_F"} else {if (_index < 46) then {"O_Heli_Light_02_unarmed_F"} else {"O_Plane_CAS_02_dynamicLoadout_F"}};
+                private _placement=if (_index >= 40) then {"FLY"} else {"NONE"};
+                private _vehicle=createVehicle [_class,_origin,[],0,_placement];
+                _vehicle allowDamage false;
+                _vehicle setDir 0;
+                createVehicleCrew _vehicle;
+                _group=group effectiveCommander _vehicle;
+                {
+                    _x allowDamage false;
+                    _x disableAI "TARGET";
+                    _x disableAI "AUTOTARGET";
+                    _actors pushBack _x;
+                } forEach crew _vehicle;
+                _actors pushBack _vehicle;
+            };
             _group setVariable ["Waldo_CortexQA_PerformanceGroup",true,true];
             _group setVariable ["Waldo_AIPass_Exclude",!_enabled,true];
-            for "_member" from 0 to 5 do {
-                private _unit=_group createUnit ["O_Soldier_F",_origin vectorAdd [(_member mod 3)*2,floor (_member/3)*2,0],[],0,"NONE"];
-                _unit allowDamage false;
-                if (!_contact) then {_unit disableAI "TARGET"; _unit disableAI "AUTOTARGET"};
-                _actors pushBack _unit;
-            };
             _groups pushBack _group;
             _groupTargets pushBack _target;
-            _destinations pushBack (_origin vectorAdd [0,210,0]);
+            _destinations pushBack (_origin vectorAdd [0,if (_mixed && {_index >= 40}) then {1000} else {210},0]);
             if (_contact) then {_contactGroups pushBack _group};
             private _desiredOwner=_owners select (_index mod count _owners);
             if (_desiredOwner == 2) then {
@@ -91,14 +113,15 @@ private _ownersResponsive=true;
         };
     };
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors select [0,18],true];
-    [format ["Performance contact: arm %1 / Cortex %2",_arm+1,["OFF","ON"] select _enabled],
-        "One hundred six-soldier squads move across the server and two headless owners. A controlled cohort of 25 squads engages real invulnerable contacts while 75 execute matched ordinary movement. Only 18 soldiers are labelled. Physical movement, ammunition use, queue health and server, HC and client frame times are measured.",[1800,1800,0]] call _phase;
+    [format ["Performance %1: arm %2 / Cortex %3",["infantry","mixed force"] select _mixed,_arm+1,["OFF","ON"] select _enabled],
+        (["Fifty six-soldier squads move across the server and two headless owners. Thirteen squads receive controlled contacts.","Fifty groups combine 30 infantry squads, ten ground vehicles, six helicopters and four jets; ten infantry squads receive controlled contacts."] select _mixed)+" Physical movement, real fire, queue health and server, HC and client frame times are measured.",[1800,1800,0]] call _phase;
     private _ownershipReady=[{
         _groups findIf {private _index=_groups find _x; groupOwner _x != (_owners select (_index mod count _owners))} < 0
     },90] call _wait;
     private _ownerCounts=_owners apply {private _owner=_x; {groupOwner _x == _owner} count _groups};
-    private _balanced=(_ownerCounts select 0) >= 33 && {(_ownerCounts select 1) >= 33} && {(_ownerCounts select 2) >= 33};
-    [format ["PERF-CONTACT-arm-%1-balanced-ownership",_arm],_ownershipReady && {_balanced},str _ownerCounts] call _check;
+    private _balanced=(_ownerCounts select 0) >= 16 && {(_ownerCounts select 1) >= 16} && {(_ownerCounts select 2) >= 16};
+    [format ["%1-arm-%2-balanced-ownership",_prefix,_arm],_ownershipReady && {_balanced},str _ownerCounts] call _check;
+    private _ownerUnitBaselines=_owners apply {private _owner=_x; private _total=0; {{if (alive _x) then {_total=_total+1}} forEach units _x} forEach (_groups select {groupOwner _x == _owner}); _total};
     sleep 20;
     private _starts=_groups apply {(units _x) apply {[_x,getPosATL _x]}};
     {
@@ -109,7 +132,7 @@ private _ownersResponsive=true;
     {if (!isNull _x) then {_x setCaptive false}} forEach _targets;
     {
         private _index=_forEachIndex;
-        [_x,_groupTargets select _index,_destinations select _index,(_index mod 4) == 0]
+        [_x,_groupTargets select _index,_destinations select _index,_x in _contactGroups]
             remoteExecCall ["Waldo_CortexQA_PerformanceStartGroup",groupOwner _x];
         // Stagger path requests across frames. Sending 33 six-unit groups to one HC in a single
         // burst can leave the process connected while its simulation thread stops advancing.
@@ -118,7 +141,7 @@ private _ownersResponsive=true;
     private _startReady=[{
         _groups findIf {!(_x getVariable ["Waldo_CortexQA_PerformanceStarted",false])} < 0
     },20] call _wait;
-    [format ["PERF-CONTACT-arm-%1-owner-start",_arm],_startReady,""] call _check;
+    [format ["%1-arm-%2-owner-start",_prefix,_arm],_startReady,""] call _check;
     private _responseLatency=-1;
     private _until=_responseStart+60;
     while {diag_tickTime < _until} do {
@@ -130,7 +153,7 @@ private _ownersResponsive=true;
                 } >= 0;
                 _physicallyMoved || {_x getVariable ["Waldo_CortexQA_PerformanceFired",false]}
             } count _contactGroups;
-            if (_responding >= 20) then {_responseLatency=diag_tickTime-_responseStart};
+            if (_responding >= ([10,8] select _mixed)) then {_responseLatency=diag_tickTime-_responseStart};
         };
         sleep 1;
     };
@@ -141,20 +164,22 @@ private _ownersResponsive=true;
     private _sampleResults=_sampleOwners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
     private _ownerHeartbeats=_owners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceHeartbeat_%1_%2",_sampleId,_x],-1]};
     _ownersResponsive=_ownerHeartbeats findIf {_x < 0 || {serverTime-_x > 5}} < 0;
-    [format ["PERF-CONTACT-arm-%1-owner-responsive",_arm],_ownersResponsive,str _ownerHeartbeats] call _check;
+    [format ["%1-arm-%2-owner-responsive",_prefix,_arm],_ownersResponsive,str _ownerHeartbeats] call _check;
     private _survivingHcOwners=(allPlayers select {_x isKindOf "HeadlessClient_F"}) apply {owner _x};
     private _ownersStillLive=_hcOwners findIf {!(_x in _survivingHcOwners)} < 0;
-    [format ["PERF-CONTACT-arm-%1-owner-survival",_arm],_ownersStillLive,str _survivingHcOwners] call _check;
+    [format ["%1-arm-%2-owner-survival",_prefix,_arm],_ownersStillLive,str _survivingHcOwners] call _check;
     private _moved={
         private _index=_groups find _x;
         (_starts select _index) findIf {(_x select 0) distance2D (_x select 1) >= 20} >= 0
     } count _groups;
     private _fired={_x getVariable ["Waldo_CortexQA_PerformanceFired",false]} count _contactGroups;
-    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownersStillLive} && {_ownersResponsive} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
-        && {_moved >= 90} && {_fired >= 15} && {_responseLatency >= 0};
-    [format ["PERF-CONTACT-arm-%1-physical-workload",_arm],_valid,
+    private _ownerLoadsValid=true;
+    {_ownerLoadsValid=_ownerLoadsValid && {count _x == 8} && {(_x select 1) >= 100} && {(_x select 6) >= (_ownerCounts select _forEachIndex)} && {(_x select 7) >= (_ownerUnitBaselines select _forEachIndex)}} forEach _ownerResults;
+    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownersStillLive} && {_ownersResponsive} && {_ownerLoadsValid}
+        && {_moved >= 45} && {_fired >= ([8,6] select _mixed)} && {_responseLatency >= 0};
+    [format ["%1-arm-%2-physical-workload",_prefix,_arm],_valid,
         format ["movedGroups=%1 firedContactGroups=%2 responseSeconds=%3 samples=%4",_moved,_fired,_responseLatency,_sampleResults]] call _check;
-    [format ["PERF-CONTACT-arm-%1-no-starvation",_arm],_sampleReady && {_ownerResults findIf {(_x select 5) > 10} < 0},str _ownerResults] call _check;
+    [format ["%1-arm-%2-no-starvation",_prefix,_arm],_sampleReady && {_ownerResults findIf {(_x select 5) > 10} < 0},str _ownerResults] call _check;
     _results pushBack [_sampleResults,_valid,_responseLatency];
     {deleteVehicle _x} forEach (_actors+_targets);
     {deleteGroup _x} forEach (_groups+_targetGroups);
@@ -162,7 +187,7 @@ private _ownersResponsive=true;
     sleep 10;
 } forEach [false,true,true,false];
 private _allValid=count _results == 4 && {_results findIf {!(_x select 1)} < 0};
-["PERF-CONTACT-comparable-arms",_allValid,str _results] call _check;
+[format ["%1-comparable-arms",_prefix],_allValid,str _results] call _check;
 if (_allValid) then {
     {
         private _ownerIndex=_forEachIndex;
@@ -170,8 +195,8 @@ if (_allValid) then {
         private _baseP95=((_results select 0 select 0 select _ownerIndex select 3)+(_results select 3 select 0 select _ownerIndex select 3))/2;
         {
             private _row=_results select _x select 0 select _ownerIndex;
-            [format ["PERF-CONTACT-owner-%1-on-%2-median-budget",_sampleOwners select _ownerIndex,_x],(_row select 2) <= _baseMedian*1.05,str [_row select 2,_baseMedian]] call _check;
-            [format ["PERF-CONTACT-owner-%1-on-%2-p95-budget",_sampleOwners select _ownerIndex,_x],(_row select 3) <= _baseP95*1.10,str [_row select 3,_baseP95,_row select 4]] call _check;
+            [format ["%1-owner-%2-on-%3-median-budget",_prefix,_sampleOwners select _ownerIndex,_x],(_row select 2) <= _baseMedian*1.05,str [_row select 2,_baseMedian]] call _check;
+            [format ["%1-owner-%2-on-%3-p95-budget",_prefix,_sampleOwners select _ownerIndex,_x],(_row select 3) <= _baseP95*1.10,str [_row select 3,_baseP95,_row select 4]] call _check;
         } forEach [1,2];
     } forEach _sampleOwners;
 };

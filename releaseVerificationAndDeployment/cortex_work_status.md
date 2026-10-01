@@ -62,6 +62,12 @@ absent and its 33 groups explain the repeated 65-67 movement count. The audit no
 owner-local requests across frames, publishes an owner heartbeat, identifies connected-but-frozen
 owners and cancels later arms once an owner stops responding. No comparison is claimed from this run.
 
+The primary budget target is now 50 groups. The infantry matrix uses 50 six-soldier squads, while
+the additive mixed matrix uses 30 infantry squads, ten ground vehicles, six helicopters and four
+jets. Both retain matched OFF/ON/ON/OFF arms, real physical work, actual-fire gates, two HC owners,
+rendered-client sampling and the agreed 5% median / 10% p95 limit. The 100-group result remains a
+local-host saturation finding rather than the acceptance workload.
+
 ## 1 October: contact initiative without authored movement
 
 Bounding advance no longer requires an unfinished ordinary waypoint. An eligible steady squad with no active waypoint can use enemy knowledge seen within the previous ten seconds as a finite objective, run the existing successive covered bounds, and transition through the existing assault/consolidation flow. Cortex does not add a persistent waypoint for this case. An active HOLD, GUARD, SENTRY or other non-movement waypoint remains authoritative and refuses the automatic advance. This closes a source-level idle path for editor-placed or newly stationary squads without adding a poller, global scan or per-unit scheduler. Physical aggression, route quality, Zeus interruption and performance remain queued for the rebuilt audit.

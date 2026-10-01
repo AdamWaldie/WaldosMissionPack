@@ -90,6 +90,16 @@ Waldo_CortexQA_PerformanceStartGroup = {
             };
         }];
     } forEach units _group;
+    private _vehicles=[];
+    {
+        private _vehicle=vehicle _x;
+        if (_vehicle != _x) then {_vehicles pushBackUnique _vehicle};
+    } forEach units _group;
+    {
+        _x engineOn true;
+        if (_x isKindOf "Helicopter") then {_x flyInHeight 90};
+        if (_x isKindOf "Plane") then {_x flyInHeight 250};
+    } forEach _vehicles;
     if (_contact && {!isNull _target}) then {
         _group reveal [_target,4];
         _group setBehaviour "COMBAT";

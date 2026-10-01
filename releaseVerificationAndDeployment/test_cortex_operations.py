@@ -642,14 +642,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('cortexQALighting.sqf',launcher)
         distributed=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceContact.sqf').read_text()
         owner_sampler=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceOwner.sqf').read_text()
-        for marker in ['PERF-CONTACT-two-headless-prerequisite','PERF-CONTACT-comparable-arms',
+        for marker in ['["PERF-CONTACT","PERF-MIXED"]','two-headless-prerequisite','comparable-arms',
                        'balanced-ownership','physical-workload','median-budget','p95-budget',
                        'Waldo_CortexQA_PerformanceContactCompleted']:
             self.assertIn(marker,distributed)
         self.assertIn('private _contactGroups=[];',distributed)
         self.assertIn('(_index mod 4) == 0',distributed)
-        self.assertIn('_fired >= 15',distributed)
-        self.assertIn('_responding >= 20',distributed)
+        self.assertIn('_fired >= ([8,6] select _mixed)',distributed)
+        self.assertIn('_responding >= ([10,8] select _mixed)',distributed)
+        self.assertIn('for "_row" from 0 to 4',distributed)
+        self.assertIn('"O_MRAP_02_F"',distributed)
+        self.assertIn('"O_Heli_Light_02_unarmed_F"',distributed)
+        self.assertIn('"O_Plane_CAS_02_dynamicLoadout_F"',distributed)
         self.assertIn('Waldo_CortexQA_PerformanceStarted',distributed)
         self.assertIn('Waldo_CortexQA_PerformanceFired',distributed)
         self.assertIn('owner-prerequisite',distributed)
@@ -671,7 +675,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('PerformanceHeartbeat_',owner_sampler)
         self.assertIn('serverTime,true',owner_sampler)
         self.assertIn('performancecontact',launcher)
+        self.assertIn('performancemixed',launcher)
+        self.assertIn('PERF-MIXED-run-completed',server_runner)
         self.assertIn('cortexQAPerformanceOwner.sqf',launcher)
+        self.assertIn('flyInHeight 90',owner_sampler)
+        self.assertIn('flyInHeight 250',owner_sampler)
 
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')
