@@ -778,6 +778,24 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('-no-support-fire-lane-crossing',qa)
         self.assertIn('_lateral < 18',qa)
 
+    def test_avenue_can_leave_own_fire_lane_but_cannot_reenter(self):
+        selector=source('cortexSelectAvenue')
+        for requirement in ['private _laneStates','starts inside corridor','_sample distance2D _start > 60',
+                            '_laneState set [1,true]','if (_insideLiveLane) then {_valid=false}']:
+            self.assertIn(requirement,selector)
+        self.assertLess(selector.index('_laneState set [1,true]'),
+                        selector.rindex('if (_insideLiveLane) then {_valid=false}'))
+
+    def test_flank_refusals_explain_trigger_failures_without_polling(self):
+        flank=source('cortexFlankStart')
+        for reason in ['SUPPORT_OWNS_MOVEMENT','MOVEMENT_LEASE','MORALE','INSUFFICIENT_ACTORS',
+                       'NO_TARGET_IN_RANGE','NO_MANOEUVRE_ELEMENT','NO_SAFE_AVENUE']:
+            self.assertIn(reason,flank)
+        self.assertIn('Waldo_Cortex_TacticalRefusal',flank)
+        self.assertNotIn('CBA_fnc_addPerFrameHandler',flank)
+        diagnostic=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text()
+        self.assertIn('cortex-tactical-refusal-',diagnostic)
+
     def test_manoeuvres_share_one_bounded_avenue_selector(self):
         selector=source('cortexSelectAvenue')
         functions=(ROOT/'MissionScripts/WaldosFunctions.sqf').read_text(encoding='utf-8')
@@ -1589,8 +1607,10 @@ class CortexOperations(unittest.TestCase):
     def test_support_movement_has_priority_over_new_drills(self):
         for name in ['cortexFlankStart', 'cortexAdvanceStart']:
             text = source(name)
-            guard = 'if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {false};'
+            guard = 'if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {'
             self.assertIn(guard, text)
+            if name == 'cortexFlankStart':
+                self.assertIn('SUPPORT_OWNS_MOVEMENT', text)
             self.assertNotIn('_group enableAttack false',text)
 
     def test_assault_contact_does_not_force_combat_mode(self):

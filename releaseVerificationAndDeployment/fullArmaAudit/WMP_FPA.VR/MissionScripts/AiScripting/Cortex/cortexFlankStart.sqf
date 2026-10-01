@@ -47,29 +47,37 @@
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
+private _refuse={
+    params ["_reason",["_detail",[]]];
+    private _previous=_group getVariable ["Waldo_Cortex_TacticalRefusal",[]];
+    if ((_previous param [0,""]) != "FLANK" || {(_previous param [1,""]) != _reason}) then {
+        _group setVariable ["Waldo_Cortex_TacticalRefusal",["FLANK",_reason,serverTime,_detail],true];
+    };
+    false
+};
 // A live support assignment owns group movement until release; do not split its
 // responders into a competing local drill when they acquire contact.
-if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {false};
+if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {["SUPPORT_OWNS_MOVEMENT"] call _refuse};
 private _movementLease = _state getOrDefault ["movementLease",[]];
-if (count _movementLease == 2 && {time < (_movementLease select 1)}) exitWith {false};
-if (count (_state getOrDefault ["drill", createHashMap]) > 0) exitWith {false};
-if ([_state, "flank"] call Waldo_fnc_CortexCooldown) exitWith {false};
-if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false};
+if (count _movementLease == 2 && {time < (_movementLease select 1)}) exitWith {["MOVEMENT_LEASE",_movementLease] call _refuse};
+if (count (_state getOrDefault ["drill", createHashMap]) > 0) exitWith {["DRILL_ACTIVE"] call _refuse};
+if ([_state, "flank"] call Waldo_fnc_CortexCooldown) exitWith {["COOLDOWN"] call _refuse};
+if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {["MORALE",[_state getOrDefault ["moraleState","UNKNOWN"]]] call _refuse};
 private _leader = leader _group;
-if (vehicle _leader != _leader) exitWith {false};
+if (vehicle _leader != _leader) exitWith {["LEADER_MOUNTED"] call _refuse};
 private _onFoot = (units _group) select {
     private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
     alive _x && {local _x} && {vehicle _x == _x} && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
         && {count _actorMove != 3 || {time >= (_actorMove select 2)}}
 };
-if (count _onFoot < (missionNamespace getVariable ["Waldo_AIPass_Flank_MinGroupSize", 6])) exitWith {false};
-if (count _onFoot / ((_group getVariable ["Waldo_AIPass_PeakSize", count _onFoot]) max 1) < 0.6) exitWith {false};
+if (count _onFoot < (missionNamespace getVariable ["Waldo_AIPass_Flank_MinGroupSize", 6])) exitWith {["INSUFFICIENT_ACTORS",[count _onFoot]] call _refuse};
+if (count _onFoot / ((_group getVariable ["Waldo_AIPass_PeakSize", count _onFoot]) max 1) < 0.6) exitWith {["CASUALTY_STRENGTH",[count _onFoot,_group getVariable ["Waldo_AIPass_PeakSize",count _onFoot]]] call _refuse};
 private _targetIndex = _enemies findIf {
     (_x select 2) <= 15
     && {(_x select 3) >= (missionNamespace getVariable ["Waldo_AIPass_Flank_MinRange", 60])}
     && {(_x select 3) <= (missionNamespace getVariable ["Waldo_AIPass_Flank_MaxRange", 400])}
 };
-if (_targetIndex < 0) exitWith {false};
+if (_targetIndex < 0) exitWith {["NO_TARGET_IN_RANGE",[_enemies apply {_x select [2,2]}]] call _refuse};
 private _target = (_enemies select _targetIndex) select 0;
 private _enemyPos = (_enemies select _targetIndex) select 1;
 private _distance = (_enemies select _targetIndex) select 3;
@@ -78,7 +86,7 @@ private _candidates = [];
 {_candidates pushBack [_x distance2D _leader, _forEachIndex]} forEach _riflemen;
 _candidates sort true;
 private _size = ((floor (count _onFoot / 2)) min 5) min count _candidates;
-if (_size < 2) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCooldown; false};
+if (_size < 2) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCooldown; ["NO_MANOEUVRE_ELEMENT",[count _riflemen]] call _refuse};
 private _element = (_candidates select [0, _size]) apply {_riflemen select (_x select 1)};
 
 private _start = [0, 0, 0];
@@ -131,7 +139,7 @@ private _avenueCandidates=[];
     _avenueCandidates pushBack [_wide,_close];
 } forEach [[1,70,60],[-1,70,60],[1,90,75],[-1,90,75],[1,110,90],[-1,110,90]];
 private _legs=[_start,_avenueCandidates,_enemyPos,_supportOrigins,_target] call Waldo_fnc_CortexSelectAvenue;
-if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCooldown; false};
+if (_legs isEqualTo []) exitWith {[_state, "flank", 30] call Waldo_fnc_CortexCooldown; ["NO_SAFE_AVENUE",[_start,_enemyPos,_supportOrigins]] call _refuse};
 
 private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
 
@@ -150,6 +158,7 @@ _state set ["drill", createHashMapFromArray [
     ["disabled", []], ["spots", []], ["started", time], ["lastStep",time], ["boundStart", time], ["pauseUntil", 0]
 ]];
 [_group,_state get "drill","START","FLANK_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
+_group setVariable ["Waldo_Cortex_TacticalRefusal",nil,true];
 // The drill moves selected actors directly rather than adding a group waypoint.
 // Publish that ownership so support, vehicles and artillery cannot replace it mid-bound.
 _state set ["movementLease",["TACTICAL_DRILL",time+90]];

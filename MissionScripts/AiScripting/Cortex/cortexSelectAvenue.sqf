@@ -3,7 +3,10 @@
  * Selects one bounded, terrain-aware avenue from a small caller-supplied candidate set.
  *
  * Each candidate is an ordered array of ATL leg endpoints. The selector rejects water and routes
- * which enter a supporting element's 30 m live-fire corridor. Three fixed samples per leg score
+ * which enter a supporting element's 30 m live-fire corridor. A manoeuvre element which begins
+ * inside its own supporting squad's corridor may depart laterally for at most 60 m of route; once
+ * clear it may not re-enter. This distinguishes a necessary departure from crossing friendly fire.
+ * Three fixed samples per leg score
  * terrain/solid ballistic screening separately from visual concealment; concealment receives a
  * smaller benefit and is never described as cover. Route length keeps the result purposeful.
  * Candidate and sample counts are capped, so this runs once when an operation starts rather than
@@ -52,6 +55,17 @@ private _bestScore=1e12;
     private _concealed=0;
     private _screenSamples=0;
     private _from=_start;
+    // [starts inside corridor, has cleared corridor]. State persists across every leg in this
+    // candidate so a route cannot leave the lane and later cross back through it.
+    private _laneStates=_supportOrigins apply {
+        private _laneX=(_threat select 0)-(_x select 0);
+        private _laneY=(_threat select 1)-(_x select 1);
+        private _laneLength=sqrt (_laneX*_laneX+_laneY*_laneY);
+        private _startLateral=if (_laneLength > 0) then {
+            abs ((((_start select 0)-(_x select 0))*_laneY-((_start select 1)-(_x select 1))*_laneX)/_laneLength)
+        } else {1e6};
+        [_startLateral < 30,false]
+    };
     if (_valid) then {
         {
             private _to=_x;
@@ -70,6 +84,7 @@ private _bestScore=1e12;
                 if (_sample distance2D _start > 10) then {
                     {
                         private _support=_x;
+                        private _laneState=_laneStates select _forEachIndex;
                         private _laneX=(_threat select 0)-(_support select 0);
                         private _laneY=(_threat select 1)-(_support select 1);
                         private _laneLength=sqrt (_laneX*_laneX+_laneY*_laneY);
@@ -82,8 +97,21 @@ private _bestScore=1e12;
                             private _along=(_pointX*_laneX+_pointY*_laneY)/_laneLength;
                             private _lateral=abs (_pointX*_laneY-_pointY*_laneX)/_laneLength;
                             private _pointSide=(_laneX*_pointY-_laneY*_pointX)/_laneLength;
-                            if (_along > 10 && {_along < _laneLength-10} && {_lateral < 30}) exitWith {_valid=false};
-                            if (abs _startSide >= 30 && {abs _pointSide >= 10} && {_pointSide*_startSide < 0}) exitWith {_valid=false};
+                            private _insideLiveLane=_along > 10 && {_along < _laneLength-10} && {_lateral < 30};
+                            if (_laneState select 0) then {
+                                if !(_laneState select 1) then {
+                                    if (_lateral >= 30) then {
+                                        _laneState set [1,true];
+                                    } else {
+                                        if (_sample distance2D _start > 60) then {_valid=false};
+                                    };
+                                } else {
+                                    if (_insideLiveLane) then {_valid=false};
+                                };
+                            } else {
+                                if (_insideLiveLane) then {_valid=false};
+                                if (abs _startSide >= 30 && {abs _pointSide >= 10} && {_pointSide*_startSide < 0}) then {_valid=false};
+                            };
                         };
                     } forEach _supportOrigins;
                 };
