@@ -3,21 +3,21 @@
  * Returns the behaviour profile values that apply to a group.
  *
  * Behaviour profiles sit alongside AI Rebalance's skill profiles and use the same names (MILITIA,
- * LINE, VETERAN, ELITE, LEGACY), so choosing a WMP opposition profile changes how squads decide as
- * well as how well they shoot. Skill values are never changed here; this only answers
- * "how willing is this squad to flank, prepare an assault or hold". Resolution order:
+ * LINE, VETERAN, ELITE, LEGACY), so choosing a WMP opposition profile changes morale and optional
+ * preparation details as well as how well squads shoot. Skill values are never changed here;
+ * live orders, contact geometry and safe avenues choose movement rather than this profile. Resolution order:
  * 1. the group variable Waldo_AIPass_Profile (a mission maker's per-group choice);
  * 2. Waldo_AIPass_FactionProfiles (a map of CfgFactionClasses name to profile) for the leader's faction;
  * 3. Waldo_AIPass_BehaviourProfile, the mission-wide tuning choice ("" to follow AI Rebalance);
  * 4. Waldo_AIRebalance_Profile, the active AI Rebalance profile (PUBLIC and STANDARD map to MILITIA
  *    and LINE);
  * 5. LINE.
- * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales every
- * tactical-weight key, capped at 1.
+ * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales chance
+ * keys, capped at 1. Legacy movement keys are still resolved only for configuration compatibility.
  * Missing keys in a mission-edited profile fall back to LINE's values, and an unknown profile name
  * uses LINE.
- * Keys: flankChance and advanceChance are relative local-manoeuvre preferences (zero excludes that
- * option); coordinatedChance is a positive participation gate once support has assembled;
+ * Legacy keys flankChance, advanceChance and coordinatedChance remain readable for mission/config
+ * compatibility but no longer assign a squad a movement pattern or block shared-contact action;
  * investigateChance remains a 0-1 post-contact search roll;
  * assaultChance is the 0-1 chance of preparing an eligible assault with a safe carried grenade,
  * while the enabled assault transition itself remains deterministic after a successful manoeuvre.
@@ -33,10 +33,10 @@
  * HashMap or Number - the resolved profile, or one value from it
  *
  * Example:
- * private _chance = [_group, "flankChance"] call Waldo_fnc_CortexProfile;
- * Result: 0.3 for a MILITIA squad, 0.7 for an ELITE one with the shipped table.
+ * private _chance = [_group, "assaultChance"] call Waldo_fnc_CortexProfile;
+ * Result: the chance of optional grenade preparation, not permission to begin moving.
  *
- * Current callers: flank, advance, assault, investigate, coordinated assault, morale and retreat.
+ * Current callers: assault preparation, investigation, morale and retreat.
  */
 
 params [["_group", grpNull, [grpNull]], ["_key", "", [""]]];

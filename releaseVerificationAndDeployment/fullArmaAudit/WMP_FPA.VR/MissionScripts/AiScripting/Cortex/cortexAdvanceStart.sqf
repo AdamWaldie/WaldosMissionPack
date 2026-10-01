@@ -9,7 +9,7 @@
  * with no active waypoint must have fresh enemy knowledge that provides a finite contact objective.
  * Active HOLD, GUARD, SENTRY and other authored waypoint types are never replaced. The nearest known
  * enemy must be at least 60 m away, morale must be STEADY and no drill may be running.
- * Waldo_fnc_CortexTacticalStart applies advanceChance as a relative preference before calling this
+ * Waldo_fnc_CortexTacticalStart prefers this action for a live authored forward order and calls this
  * deterministic viability/start function. A bounded avenue selector compares the
  * direct route with four offset two-leg routes and samples screening once when the drill starts.
  * Two elements advance successively: riflemen

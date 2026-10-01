@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "suite": "all",
-  "mode": "manual",
-  "packVersion": "4.9.1",
+  "mode": "automated",
+  "packVersion": "4.9.2",
   "releaseEntries": [
     "MissionScripts",
     "MissionConfig",
@@ -19,7 +19,7 @@
   "physicalRange": true,
   "physicalRangePreStaged": true,
   "nestedPlayableLoadoutFixture": true,
-  "staticFixtureCount": 158,
+  "staticFixtureCount": 160,
   "rangeScripts": [
     "auditPreInit.sqf",
     "auditPreInitServer.sqf",

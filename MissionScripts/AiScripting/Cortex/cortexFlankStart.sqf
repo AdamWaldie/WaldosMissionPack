@@ -19,9 +19,9 @@
  * element reaches its flanking position it may go on to a final assault (Waldo_fnc_CortexFlankStep).
  * Gates: infantry squad of at least Waldo_AIPass_Flank_MinGroupSize with 60% of its peak strength,
  * morale STEADY, a seen enemy between Waldo_AIPass_Flank_MinRange and MaxRange, no drill running, no
- * cooldown. Waldo_fnc_CortexTacticalStart applies the group's flankChance as a relative preference
- * before calling this deterministic viability/start function, so a failed random roll cannot idle an
- * otherwise capable squad.
+ * cooldown. Waldo_fnc_CortexTacticalStart chooses from the live authored-order/contact context and
+ * calls this deterministic viability/start function, so a profile or failed random roll cannot idle
+ * an otherwise capable squad.
  * Actors completing a short grenade-evasion or anti-armour relocation lease are omitted from the
  * new element rather than having their destination replaced.
  * Locality and authority: call where the group is local. The drill runs as its own scheduler job.

@@ -25,7 +25,8 @@ if (!isServer || {isNull _requester} || {([_replyOwner,groupOwner _requester] ca
     || {!([_requester] call Waldo_fnc_CortexIsEligible)}
     || {!([_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
     || {count _enemy != 3} || {_enemy findIf {!(_x isEqualType 0)} >= 0} || {leader _requester distance2D _enemy > 400}) exitWith {};
-private _job = (missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap]) getOrDefault [netId _requester,createHashMap];
+private _requests = missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap];
+private _job = _requests getOrDefault [netId _requester,createHashMap];
 if (count _job == 0 || {_job getOrDefault ["assaultIssued",false]} || {serverTime >= (_job get "expiry")}) exitWith {};
 private _sent = 0;
 _job set ["assaultEnemy",+_enemy];
@@ -84,9 +85,8 @@ private _dispatched=[];
     };
 } forEach (_job get "leases");
 
-// A rejected/empty dispatch remains retryable; no movement was reserved. Once at least one
-// responder is moving, release every late or route-rejected reservation. Its owner observes the
-// missing lease and restores normal autonomous behaviour on the next group tick.
+// Once at least one responder is moving, release every late or route-rejected reservation. Its
+// owner observes the missing lease and restores normal autonomous behaviour on the next group tick.
 if (_sent > 0) then {
     {
         _x params ["_helper","_token"];
@@ -102,4 +102,20 @@ if (_sent > 0) then {
     _requester setVariable ["Waldo_Cortex_SupportResponders",_dispatched apply {[_x select 0,_x select 1]},true];
     _job set ["assaultIssued",true];
     [_job,_dispatched] call Waldo_fnc_CortexSupportCoordinateStep;
+} else {
+    // Route geometry is evaluated from live positions. If no accepted responder has a safe avenue,
+    // do not leave those squads in an invisible rally/planning state until the five-minute request
+    // expires. Retire the request now so every group can immediately resume its own contact drill.
+    {
+        _x params ["_helper","_token"];
+        private _lease=_helper getVariable ["Waldo_AIPass_SupportLease",[]];
+        if (count _lease == 6 && {(_lease select 0) == _token}) then {
+            _helper setVariable ["Waldo_AIPass_SupportLease",nil,true];
+            _helper setVariable ["Waldo_Cortex_SupportRole",nil,true];
+        };
+    } forEach (_job get "leases");
+    _job set ["leases",[]];
+    _job set ["expiry",serverTime];
+    _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+    _requests deleteAt (_job get "key");
 };

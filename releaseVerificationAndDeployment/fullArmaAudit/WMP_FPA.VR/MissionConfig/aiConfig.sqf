@@ -391,7 +391,7 @@ createHashMapFromArray [
         ["Waldo_Cortex_AttackRunFlares_Enable", true], // BOOL: finite countermeasure bursts approaching and leaving assigned attack targets.
         ["Waldo_Cortex_AirAttack_Enable", true], // BOOL: threat-aware finite aircraft attack patterns with safe Zeus handover.
         ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
-        ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: behaviour per AI Rebalance profile name.
+        ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: morale/preparation per profile; legacy movement keys are compatibility-only.
             ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.7], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
             ["LINE", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
             ["LEGACY", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],

@@ -5,8 +5,12 @@
  * Repeat/JIP: at most five seconds waiting for ordered state; stale tokens never issue movement.
  * A support update may replace its own lease, but never an active withdrawal, vehicle route,
  * artillery scoot or local tactical drill.
- * Rally uses a finite MOVE and SUPPORT_RALLY lease. Assault hands a COORDINATED_ASSAULT lease to server-assigned squad roles and
- * owner-local successive fire-team bounds; it does not issue a competing whole-squad waypoint.
+ * When coordinated assault is enabled, accepting a shared contact does not first issue a rally
+ * waypoint: the squad keeps its current posture during the short acknowledgement exchange and the
+ * server dispatches an avenue from its live position. Rally movement is retained for reinforcement
+ * when coordinated assault is explicitly disabled. Assault hands a COORDINATED_ASSAULT lease to
+ * server-assigned squad roles and owner-local successive fire-team bounds; it does not issue a
+ * competing whole-squad waypoint.
  * During assault, each bound leases pursuit features only from its current moving fire team.
  * The covering fire team and other squads retain native target sharing and engagement.
  * In LAMBS SPLIT mode, the finite support lease temporarily pauses LAMBS group manoeuvres for the
@@ -53,6 +57,8 @@ private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!
     && {_fit findIf {private _v = vehicle _x; _v isKindOf "Air" || {_v isKindOf "StaticWeapon"} || {getNumber (configOf _v >> "artilleryScanner") == 1}} < 0}
     && {!_needAT || {_fit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
 private _attackAllowed = _attack isNotEqualTo [] && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _directCoordinationPending = _attack isEqualTo []
+    && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 if (_okay) then {
     _okay = [_group,"SUPPORT",true,_expiry] call Waldo_fnc_CortexLambsLease;
 };
@@ -61,8 +67,10 @@ if (_okay && {!_same || {_attackAllowed && {!(_state getOrDefault ["assaulting",
         [_group] call Waldo_fnc_CortexGroupMoveClear;
         _state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]];
     } else {
-        [_group,_rally,10,"MOVE"] call Waldo_fnc_CortexGroupMove;
-        _state set ["movementLease",["SUPPORT_RALLY",time+(_expiry-serverTime)]];
+        if (!_directCoordinationPending) then {
+            [_group,_rally,10,"MOVE"] call Waldo_fnc_CortexGroupMove;
+            _state set ["movementLease",["SUPPORT_RALLY",time+(_expiry-serverTime)]];
+        };
     };
     _state set ["assaulting",_attackAllowed];
     _state set ["responding",true]; _state set ["respondingTo",_requester];

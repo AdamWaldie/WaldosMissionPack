@@ -1059,14 +1059,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('in ["START","MOVE"]', text)
         self.assertIn('Waldo_fnc_CortexCombatEffective', text)
 
-    def test_stragglers_remain_tracked_and_cannot_count_as_complete(self):
+    def test_stragglers_remain_tracked_after_live_element_quorum(self):
         step = source('cortexFlankStep')
         self.assertIn('count (_units - _blocked) >= 2', step)
         self.assertIn('ceil (count _originalElement * 0.6)', step)
         self.assertIn('_teams select (_drill getOrDefault ["teamTurn",0])', step)
         self.assertIn('_teams findIf {_actor in _x}', step)
         self.assertIn('(_teams select _teamIndex) select {_x in _main}', step)
-        self.assertNotIn('ceil (count _units * 0.6)', step)
+        self.assertIn('ceil (count _units * 0.6)', step)
         self.assertIn('_attempts < 6', step)
         self.assertIn('_units = _units - _recovering', step)
         end = source('cortexFlankEnd')
@@ -1218,13 +1218,21 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('call Waldo_fnc_CortexSetPhase',repair)
         self.assertNotIn('setVariable ["Waldo_AIPass_PublicPhase"',checkpoint)
 
-    def test_empty_coordinated_dispatch_does_not_consume_engagement(self):
+    def test_empty_coordinated_dispatch_releases_planning_hold_immediately(self):
         server=source('cortexSupportAssaultServer')
         self.assertIn('if (_sent > 0) then {', server)
         self.assertIn('_job set ["assaultIssued",true]', server)
+        empty=server.split('// Route geometry is evaluated from live positions.',1)[1]
+        self.assertIn('_job set ["expiry",serverTime]',empty)
+        self.assertIn('_requests deleteAt (_job get "key")',empty)
+        self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",nil,true]',empty)
+        self.assertIn('_helper setVariable ["Waldo_AIPass_SupportLease",nil,true]',empty)
+        self.assertNotIn('remains retryable',server)
         requester=source('cortexCoordinatedAssault')
         self.assertIn('if (_status select 3) then {_acknowledged = true}', requester)
         self.assertIn('if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true}', requester)
+        self.assertIn('time < _pendingUntil && {_publicResponders isNotEqualTo []}',requester)
+        self.assertIn('_pendingUntil > 0 && {_publicResponders isEqualTo []}',requester)
         self.assertIn('[_state,"coordinated",10] call Waldo_fnc_CortexCooldown', requester)
 
     def test_coordinated_assault_dispatches_from_accepted_shared_contact(self):
@@ -1239,6 +1247,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('[leader _helper] call Waldo_fnc_CortexCanTransmit',server)
         self.assertIn('[leader _x] call Waldo_fnc_CortexCanTransmit',source('cortexSupportServer'))
         self.assertIn('[leader _group] call Waldo_fnc_CortexCanTransmit',source('cortexSupportApply'))
+        self.assertIn('private _directCoordinationPending = _attack isEqualTo []',source('cortexSupportApply'))
+        self.assertIn('if (!_directCoordinationPending) then {',source('cortexSupportApply'))
         self.assertIn('private _dispatched=[]',server)
         self.assertIn('_job set ["leases",_dispatched]',server)
         self.assertIn('_helper setVariable ["Waldo_AIPass_SupportLease",nil,true]',server)
@@ -1250,7 +1260,7 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('([90,-90] select (_sent mod 2 == 1))',server)
         self.assertNotIn('private _crossesSupportLane=',server)
         self.assertIn('call Waldo_fnc_CortexSelectAvenue',server)
-        self.assertIn('[_rally,_candidateRoutes,_enemy,[_supportOrigin]]',server)
+        self.assertIn('[_routeOrigin,_candidateRoutes,_enemy,[_supportOrigin]]',server)
         self.assertIn('_lateral < 30',selector)
         self.assertIn('private _rallySide=',server)
         self.assertIn('private _desiredSide=',server)
@@ -1272,26 +1282,28 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('["Waldo_AIPass_Flank_Enable", true] call _get',tick)
         self.assertIn('["Waldo_AIPass_Advance_Enable", true] call _get',tick)
         self.assertIn('_state set ["coordinatedPendingUntil",time+15]',coordinated)
-        self.assertIn('if (time < _pendingUntil) exitWith {true}',coordinated)
+        self.assertIn('if (time < _pendingUntil && {_publicResponders isNotEqualTo []}) exitWith {true}',coordinated)
         self.assertIn('"coordinatedPendingUntil"',source('cortexRestoreCalm'))
 
-    def test_tactical_profile_weights_choose_action_instead_of_idleness(self):
+    def test_live_context_chooses_action_instead_of_profile_or_idleness(self):
         selector=source('cortexTacticalStart')
         flank=source('cortexFlankStart')
         advance=source('cortexAdvanceStart')
         coordinated=source('cortexCoordinatedAssault')
-        self.assertIn('private _totalWeight = _flankWeight + _advanceWeight',selector)
-        self.assertIn('random _totalWeight < _flankWeight',selector)
-        self.assertIn('if (!_started && {_advanceWeight > 0})',selector)
-        self.assertIn('if (!_started && {_flankWeight > 0})',selector)
+        self.assertIn('private _hasForwardOrder = _waypointIndex < count waypoints _group',selector)
+        self.assertIn('private _preferFlank = _flankEnabled && {!_advanceEnabled || {!_hasForwardOrder}}',selector)
+        self.assertIn('if (!_started && {_advanceEnabled})',selector)
+        self.assertIn('if (!_started && {_flankEnabled})',selector)
+        self.assertNotIn('CortexProfile',selector)
+        self.assertNotIn('random _totalWeight',selector)
         self.assertEqual(2,selector.count('call Waldo_fnc_CortexFlankStart'))
         self.assertEqual(2,selector.count('call Waldo_fnc_CortexAdvanceStart'))
         self.assertNotIn('random 1 >= ([_group, "flankChance"]',flank)
         self.assertNotIn('random 1 >= ([_group, "advanceChance"]',advance)
-        self.assertIn('([_group, "coordinatedChance"] call Waldo_fnc_CortexProfile) <= 0',coordinated)
+        self.assertNotIn('coordinatedChance',coordinated)
         self.assertNotIn('random 1 >= ([_group, "coordinatedChance"]',coordinated)
 
-    def test_shipped_profiles_change_tactical_style_without_disabling_fallback(self):
+    def test_shipped_profiles_retain_legacy_movement_keys_for_configuration_compatibility(self):
         config=(ROOT/'MissionConfig/aiConfig.sqf').read_text(encoding='utf-8')
         for profile,flank,advance in [
             ('MILITIA','0.3','0.7'),

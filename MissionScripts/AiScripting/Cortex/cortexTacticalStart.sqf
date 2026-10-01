@@ -1,19 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Selects and starts one viable local infantry manoeuvre for a squad in contact.
+ * Selects and starts one viable local infantry manoeuvre from the squad's live tactical context.
  *
- * Flank and advance profile values are relative preferences, not independent permission rolls.
- * A positive enabled preference enters the selection; zero excludes that manoeuvre. When both are
- * available, one bounded random draw chooses which is tried first and the other is an immediate
- * fallback if the preferred manoeuvre cannot satisfy its own actor, range, route or cooldown gates.
- * This prevents a capable squad from idling because two unrelated chance rolls both failed while
- * preserving profile differences in tactical style. The selector creates no scheduler or per-unit
- * loop; the selected start function owns any finite drill it creates.
+ * An active forward MOVE, SAD or DESTROY order prefers a bounded advance because that manoeuvre
+ * preserves the authored objective. A squad without such an order prefers a flank against its live
+ * contact. The other enabled manoeuvre is tried immediately when the preferred one cannot satisfy
+ * its actor, range, avenue, cooldown or safety gates. Behaviour profiles do not assign squads a
+ * fixed movement pattern and no random permission roll can leave a capable squad idle. Feature
+ * switches remain the explicit mission-maker controls. The selector adds no scheduler, terrain
+ * scan or per-unit loop; the selected start function owns the finite movement it creates.
  *
  * Locality and authority: call only where the group is local. It reads the current server-published
- * feature gates and behaviour profile, then delegates to owner-local start functions.
+ * feature gates and the live authored order/contact context, then delegates to owner-local starts.
  * Repeat/JIP: start functions reject active leases, drills and cooldowns, so repeated calls are safe.
- * Profile and feature changes apply on the next group tick; no state is replayed to JIP clients.
+ * Feature and order changes apply on the next group tick; no state is replayed to JIP clients.
  *
  * Arguments:
  * 0: group <GROUP> - local infantry group in contact
@@ -29,7 +29,7 @@
  *
  * Example:
  * private _started = [_group, _state, _enemies, true, true] call Waldo_fnc_CortexTacticalStart;
- * Result: Cortex prefers a profile-weighted flank or advance and immediately tries the other viable
+ * Result: Cortex follows the live objective/contact context and immediately tries the other viable
  * manoeuvre if the first cannot start.
  */
 
@@ -42,23 +42,22 @@ params [
 ];
 if (isNull _group || {!local _group}) exitWith {false};
 
-private _flankWeight = [0, [_group, "flankChance"] call Waldo_fnc_CortexProfile] select _flankEnabled;
-private _advanceWeight = [0, [_group, "advanceChance"] call Waldo_fnc_CortexProfile] select _advanceEnabled;
-private _totalWeight = _flankWeight + _advanceWeight;
-if (_totalWeight <= 0) exitWith {false};
-
-private _preferFlank = if (_advanceWeight <= 0) then {true} else {
-    if (_flankWeight <= 0) then {false} else {random _totalWeight < _flankWeight}
-};
+if (!_flankEnabled && {!_advanceEnabled}) exitWith {false};
+private _waypointIndex = currentWaypoint _group;
+private _hasForwardOrder = _waypointIndex < count waypoints _group
+    && {waypointDescription [_group,_waypointIndex] != "WMP AI PASS"}
+    && {waypointType [_group,_waypointIndex] in ["MOVE","SAD","DESTROY"]}
+    && {leader _group distance2D waypointPosition [_group,_waypointIndex] > 80};
+private _preferFlank = _flankEnabled && {!_advanceEnabled || {!_hasForwardOrder}};
 private _started = false;
 if (_preferFlank) then {
     _started = [_group, _state, _enemies] call Waldo_fnc_CortexFlankStart;
-    if (!_started && {_advanceWeight > 0}) then {
+    if (!_started && {_advanceEnabled}) then {
         _started = [_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart;
     };
 } else {
     _started = [_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart;
-    if (!_started && {_flankWeight > 0}) then {
+    if (!_started && {_flankEnabled}) then {
         _started = [_group, _state, _enemies] call Waldo_fnc_CortexFlankStart;
     };
 };

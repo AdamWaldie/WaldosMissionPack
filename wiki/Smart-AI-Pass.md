@@ -136,22 +136,27 @@ per-frame or per-unit monitor.
 
 Aircraft reactions recheck owner locality, active/pause state, pilot health, explicit exclusions, included sides/factions and Zeus priority. Delayed flare bursts repeat these checks and carry an owner-local generation token. Handler replacement, locality migration and Cortex stop/restart advance or replace that token, so a countermeasure queued by an earlier run cannot fire under a later run. WMP gunship/Dynamic AA ownership is expected here; it does not grant an exemption from explicit compatibility exclusions. The live aircraft QA is partial and not yet accepted across native-AI, low-altitude and ownership variants.
 
-## Behaviour profiles
+## Behaviour and morale profiles
 
 The pass reads the same profile names as [Waldo's AI Tuning](Waldos-AI-Tweak) (MILITIA, LINE,
 VETERAN, ELITE; LEGACY behaves like LINE). Skill profiles set how well AI shoot and spot, and the
-pass never changes them. Behaviour profiles set how a squad prefers to fight. Flank and advance
-values are relative weights: Cortex tries the preferred viable manoeuvre first and immediately falls
-back to the other, rather than rolling twice and leaving the squad idle. Zero excludes an option.
-Once requested support squads have assembled, a positive coordinated value launches the prepared
-assault without another random rejection. Assault grenade and investigation values remain chances:
+pass never changes them. Profiles tune morale, investigation and optional preparation details; they
+do not assign a squad a fixed movement style. In live contact Cortex derives advance or flank from
+the current objective, contact geometry, available actors and safe avenues, then tries the other
+enabled manoeuvre immediately if the preferred action is not viable. Communicating nearby squads
+join a coordinated action from their current positions without waiting for an assembly timer or
+rally movement. Legacy `flankChance`, `advanceChance` and `coordinatedChance` keys remain accepted so
+older mission configuration does not break, but they no longer select or veto movement.
 
-| Profile | Flank weight | Advance weight | Coordinated participation | Assault grenade | Breaks at | Retreats | Surrenders at |
-|---|---:|---:|---:|---:|---|---|---|
-| MILITIA | 0.3 | 0.7 | 0.2 | 20% | early | 1.5x further | 3 survivors |
-| LINE | 0.5 | 0.6 | 0.4 | 40% | normal | normal | 2 survivors |
-| VETERAN | 0.7 | 0.5 | 0.5 | 55% | late | 0.8x | 1 survivor |
-| ELITE | 0.9 | 0.4 | 0.6 | 70% | very late | 0.7x | 1 survivor |
+Assault-grenade preparation and investigation remain inexpensive chances. Neither is a prerequisite
+for movement or completion:
+
+| Profile | Assault grenade | Investigation | Breaks at | Retreats | Surrenders at |
+|---|---:|---:|---|---|---|
+| MILITIA | 20% | 40% | early | 1.5x further | 3 survivors |
+| LINE | 40% | 60% | normal | normal | 2 survivors |
+| VETERAN | 55% | 75% | late | 0.8x | 1 survivor |
+| ELITE | 70% | 85% | very late | 0.7x | 1 survivor |
 
 A squad uses, in order:
 1. its own profile (`(group this) setVariable ["Waldo_AIPass_Profile", "ELITE", true];`);
