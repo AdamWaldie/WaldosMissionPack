@@ -98,6 +98,42 @@ if (_lambsLoaded) then {
     ["LAMBS-true-baseline-restored",_leased && {_released} && {_group getVariable ["lambs_danger_disableGroupAI",false]}] call _check;
     _group setVariable ["lambs_danger_disableGroupAI",false,true];
 
+    // A lease is public durable intent. Move its live group to a real HC, renew/release on the new
+    // owner, and return it to the server before the Zeus arm. This catches old-owner callbacks and
+    // a release implementation which only works on the authority that first acquired the lease.
+    private _hcOwners=((missionNamespace getVariable ["Waldo_Headless_Clients",[]]) apply {_x select 0}) select [0,1];
+    ["LAMBS-loaded-headless-prerequisite",count _hcOwners == 1,str _hcOwners] call _check;
+    if (count _hcOwners == 1) then {
+        private _hcOwner=_hcOwners select 0;
+        _leased=[_group,"QA",true,serverTime+120] call Waldo_fnc_CortexLambsLease;
+        private _leaseBefore=_group getVariable ["Waldo_Cortex_LambsLease",[]];
+        private _leaseBeforeExpiry=_leaseBefore param [2,-1];
+        _group setVariable ["Waldo_Headless_ExcludeGroup",false,true];
+        {_x setVariable ["acex_headless_blacklist",false,true]} forEach _units;
+        private _migrationRequested=[_group,_hcOwner] call Waldo_fnc_HeadlessMigrateGroup;
+        private _adopted=[{groupOwner _group == _hcOwner && {_units findIf {owner _x != _hcOwner} < 0}},30] call _wait;
+        ["LAMBS-lease-survives-headless-adoption",_leased && {_migrationRequested} && {_adopted}
+            && {(_group getVariable ["Waldo_Cortex_LambsLease",[]]) isEqualTo _leaseBefore}
+            && {_group getVariable ["lambs_danger_disableGroupAI",false]},str [groupOwner _group,_group getVariable ["Waldo_Cortex_LambsLease",[]]]] call _check;
+
+        [_group,"QA",true,serverTime+180] remoteExecCall ["Waldo_fnc_CortexLambsLease",_hcOwner];
+        private _renewed=[{
+            private _lease=_group getVariable ["Waldo_Cortex_LambsLease",[]];
+            count _lease == 3 && {(_lease select 0) == "QA"} && {(_lease select 2) > _leaseBeforeExpiry}
+        },15] call _wait;
+        ["LAMBS-new-owner-renews-lease",_renewed,str (_group getVariable ["Waldo_Cortex_LambsLease",[]])] call _check;
+        [_group,"QA",false] remoteExecCall ["Waldo_fnc_CortexLambsLease",_hcOwner];
+        private _ownerReleased=[{(_group getVariable ["Waldo_Cortex_LambsLease",[]]) isEqualTo []
+            && {!(_group getVariable ["lambs_danger_disableGroupAI",true])}},15] call _wait;
+        ["LAMBS-new-owner-restores-baseline",_ownerReleased] call _check;
+
+        private _returnRequested=[_group,2] call Waldo_fnc_HeadlessMigrateGroup;
+        private _returned=[{groupOwner _group == 2 && {_units findIf {owner _x != 2} < 0}},30] call _wait;
+        ["LAMBS-returned-to-server",_returnRequested && {_returned},str [groupOwner _group,_units apply {owner _x}]] call _check;
+        _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+        {_x setVariable ["acex_headless_blacklist",true,true]} forEach _units;
+    };
+
     _leased=[_group,"QA",true,serverTime+120] call Waldo_fnc_CortexLambsLease;
     private _handoverStart=_units apply {getPosATL _x};
     private _cortexDestination=[2670,2470,0];

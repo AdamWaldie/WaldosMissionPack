@@ -616,6 +616,7 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn(' reveal ',crossing.split('*/',1)[1])
         lambs=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLambs.sqf').read_text()
         for marker in ['LAMBS-fallback-physical-arrival','LAMBS-active-tactic-keeps-ownership',
+                       'LAMBS-lease-survives-headless-adoption','LAMBS-new-owner-restores-baseline',
                        'LAMBS-zeus-replacement-physical-arrival','LAMBS-zeus-clean-release']:
             self.assertIn(marker,lambs)
         launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text()

@@ -362,9 +362,9 @@ features that SQF cannot reproduce reliably. LAMBS CQB's forced-position recover
 adopted because Cortex must never teleport a stuck soldier.
 
 Compatibility acceptance requires two fresh full-pack runs of the dedicated `lambs` focus: one
-without optional LAMBS mods and one with `-IncludeLambs`. The first requires physical Cortex movement
+without optional LAMBS mods and one with `-IncludeLambs -HeadlessClients 2`. The first requires physical Cortex movement
 and a sustained hold. The second also requires busy-group refusal, exact lease-baseline restoration
-and physical execution of a Zeus replacement order with no old-route resurrection. Static source
+across a real HC adoption/release, and physical execution of a Zeus replacement order with no old-route resurrection. Static source
 checks alone do not establish that either handover works in Arma.
 
 WMP calls the installed LAMBS public interface; it does not bundle LAMBS source. LAMBS_Danger's

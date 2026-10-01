@@ -91,9 +91,9 @@ Feature cases: **57**. Required variant categories: **13**.
 
 ### LAMBS - LAMBS coexistence and Cortex fallback
 
-**Expected:** Without LAMBS, Cortex physically moves and holds the whole squad with no upstream dependency. With LAMBS loaded, Cortex never steals queued or active LAMBS movement, finite leases restore both false and true group baselines, Zeus interruption releases the lease, and every soldier physically follows the replacement order without old-route resurrection.
+**Expected:** Without LAMBS, Cortex physically moves and holds the whole squad with no upstream dependency. With LAMBS loaded, Cortex never steals queued or active LAMBS movement, finite leases restore both false and true group baselines, a new HC owner renews and releases the same public lease, Zeus interruption releases ownership, and every soldier physically follows the replacement order without old-route resurrection.
 
-**Automation and open work:** runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, baseline restoration and Zeus handover. The launcher now supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs. Saved and statically validated; both live arms remain required.
+**Automation and open work:** runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Saved and statically validated; both live arms remain required.
 
 ### SCHED - Scheduler and distance tiers
 
