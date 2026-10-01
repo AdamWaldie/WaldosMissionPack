@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Exercises cover stance, live grenade evasion and casualty-driven retreat/surrender.
+ * Exercises cover stance, live grenade evasion and casualty-driven retreat/surrender, including
+ * the terminal CONTACT -> RETREAT -> REGROUP and CONTACT -> CALM/SURRENDER handovers.
  * Locality/authority: scheduled dedicated-server audit, with server-pinned disposable actors.
  * Repeat/JIP: fresh actors per case; settings restored by the calling audit; observer data is public.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>, required callbacks.
@@ -236,7 +237,7 @@ call _cleanup;
 
 {
     private _surrender=_x;
-    [createHashMapFromArray [["Waldo_AIPass_Contact_Enable",true],["Waldo_AIPass_Morale_Enable",true],["Waldo_AIPass_Surrender_Enable",_surrender],["Waldo_AIPass_Cohesion",0.5]]] call Waldo_fnc_CortexTuning;
+    [createHashMapFromArray [["Waldo_AIPass_Contact_Enable",true],["Waldo_AIPass_Morale_Enable",true],["Waldo_AIPass_Surrender_Enable",_surrender],["Waldo_AIPass_Cohesion",0.5],["Waldo_AIPass_Morale_RetreatDistance",80]]] call Waldo_fnc_CortexTuning;
     _group=[east] call _newGroup;
     private _squad=[];
     for "_i" from 0 to 5 do {
@@ -297,6 +298,13 @@ call _cleanup;
         private _holders=nearestObjects [_survivor,["GroundWeaponHolder"],8];
         private _weaponOnGround=_holders findIf {_originalWeapon in ((getWeaponCargo _x) select 0)} >= 0;
         ["SURRENDER-disarm-and-capture",_contact && {_disarmed} && {_weaponOnGround}] call _check;
+        private _surrenderTransition=(_group getVariable ["Waldo_Cortex_PhaseTransitions",[]]) findIf {
+            (_x param [1,""]) == "CONTACT" && {(_x param [2,""]) == "CALM"}
+                && {(_x param [3,""]) == "SURRENDER"}
+        };
+        ["SURRENDER-terminal-transition",_disarmed && {_surrenderTransition >= 0}
+            && {(_group getVariable ["Waldo_AIPass_PublicPhase",""]) == "CALM"},
+            str (_group getVariable ["Waldo_Cortex_PhaseTransitions",[]])] call _check;
         private _surrenderPosition=getPosATL _survivor;
         private _stable=_disarmed;
         for "_sample" from 1 to 10 do {
@@ -314,6 +322,14 @@ call _cleanup;
         ["Retreat: physical withdrawal","The survivor must move at least 30 m away from the threat, retaining the rifle. A retreat flag or waypoint does not pass.",_origin] call _phase;
         private _withdrawn=[{call _sampleMorale; _survivor distance2D _origin >= 30 && {_survivor distance2D _enemy > (_origin distance2D _enemy)+25}},75] call _wait;
         ["MORALE-physical-retreat",_contact && {_withdrawn},str getPosATL _survivor] call _check;
+        private _retreatHandover=[{
+            (_group getVariable ["Waldo_Cortex_PhaseTransitions",[]]) findIf {
+                (_x param [1,""]) == "RETREAT" && {(_x param [2,""]) == "REGROUP"}
+                    && {(_x param [3,""]) == "WITHDRAWAL_COMPLETE"}
+            } >= 0
+        },90] call _wait;
+        ["RETREAT-regroup-transition",_withdrawn && {_retreatHandover},
+            str (_group getVariable ["Waldo_Cortex_PhaseTransitions",[]])] call _check;
         ["SURRENDER-disabled-keeps-weapon",primaryWeapon _survivor == _originalWeapon] call _check;
         ["RETREAT-real-smoke-projectile",(_survivor getVariable ["Waldo_CortexQA_SmokeThrows",[]]) isNotEqualTo [],str (_survivor getVariable ["Waldo_CortexQA_SmokeThrows",[]])] call _check;
     };

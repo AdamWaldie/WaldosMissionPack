@@ -1613,6 +1613,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('LIFE-zeus-transition-reason',lifecycle)
         self.assertIn('Waldo_Cortex_PhaseTransition',lifecycle)
 
+    def test_reaction_audit_requires_terminal_retreat_and_surrender_handoffs(self):
+        reactions=(ROOT/'releaseVerificationAndDeployment/cortexQA/runReactions.sqf').read_text()
+        self.assertIn('SURRENDER-terminal-transition',reactions)
+        self.assertIn('RETREAT-regroup-transition',reactions)
+        self.assertIn('(_x param [1,""]) == "CONTACT"',reactions)
+        self.assertIn('(_x param [3,""]) == "SURRENDER"',reactions)
+        self.assertIn('(_x param [1,""]) == "RETREAT"',reactions)
+        self.assertIn('(_x param [2,""]) == "REGROUP"',reactions)
+        self.assertIn('(_x param [3,""]) == "WITHDRAWAL_COMPLETE"',reactions)
+
     def test_support_gate_closure_rejects_server_token_and_clears_local_role(self):
         text=source('cortexSupportMaintain')
         release=text.split('private _releaseSupport={',1)[1].split('if (_lease isEqualTo []',1)[0]
