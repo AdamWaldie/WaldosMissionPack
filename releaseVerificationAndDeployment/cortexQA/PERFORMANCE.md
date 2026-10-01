@@ -60,6 +60,13 @@ groups back to the server and invalidating the comparison. The audit now paces i
 transfers, verifies both expected headless clients before and after every arm, and refuses to publish
 a matrix unless all four arms finish with their original owners alive.
 
+Runtime `runtime-20261001-120528` completed all four arms but found a softer owner failure. Headless
+client 2 remained connected while its simulation stopped advancing after the first simultaneous
+activation burst. Its sampler never returned, its 33 groups did not move, and the later arms reached
+only 65-67 moving groups. No native/Cortex comparison is valid from this run. The rebuilt fixture
+now staggers owner-local path requests across frames, publishes an owner heartbeat, fails a
+connected-but-unresponsive owner explicitly and cancels the remaining arms after that loss.
+
 The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
 measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage
 alongside them.

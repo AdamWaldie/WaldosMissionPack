@@ -56,6 +56,12 @@ groups back to the server and invalidating the comparison. The saved matrix now 
 ownership transfers, requires both expected headless clients before and after each arm, and refuses
 to publish partial OFF/ON/ON/OFF results.
 
+Runtime `20261001-120528` then completed all four arms with both HCs still connected, but HC2's
+simulation had stopped advancing after the first simultaneous path-request burst. Its result was
+absent and its 33 groups explain the repeated 65-67 movement count. The audit now staggers those
+owner-local requests across frames, publishes an owner heartbeat, identifies connected-but-frozen
+owners and cancels later arms once an owner stops responding. No comparison is claimed from this run.
+
 ## 1 October: contact initiative without authored movement
 
 Bounding advance no longer requires an unfinished ordinary waypoint. An eligible steady squad with no active waypoint can use enemy knowledge seen within the previous ten seconds as a finite objective, run the existing successive covered bounds, and transition through the existing assault/consolidation flow. Cortex does not add a persistent waypoint for this case. An active HOLD, GUARD, SENTRY or other non-movement waypoint remains authoritative and refuses the automatic advance. This closes a source-level idle path for editor-placed or newly stationary squads without adding a poller, global scan or per-unit scheduler. Physical aggression, route quality, Zeus interruption and performance remain queued for the rebuilt audit.

@@ -20,9 +20,13 @@ private _owners=[2]+_hcOwners;
 private _clientOwners=(allPlayers select {!(_x isKindOf "HeadlessClient_F")}) apply {owner _x};
 private _sampleOwners=(_owners+_clientOwners) arrayIntersect (_owners+_clientOwners);
 private _results=[];
+private _ownersResponsive=true;
 {
     private _enabled=_x;
     private _arm=_forEachIndex;
+    if (!_ownersResponsive) exitWith {
+        [format ["PERF-CONTACT-arm-%1-owner-prerequisite",_arm],false,"previous owner heartbeat stopped"] call _check;
+    };
     private _liveHcOwners=(allPlayers select {_x isKindOf "HeadlessClient_F"}) apply {owner _x};
     if (_hcOwners findIf {!(_x in _liveHcOwners)} >= 0) exitWith {
         [format ["PERF-CONTACT-arm-%1-owner-prerequisite",_arm],false,str _liveHcOwners] call _check;
@@ -107,6 +111,9 @@ private _results=[];
         private _index=_forEachIndex;
         [_x,_groupTargets select _index,_destinations select _index,(_index mod 4) == 0]
             remoteExecCall ["Waldo_CortexQA_PerformanceStartGroup",groupOwner _x];
+        // Stagger path requests across frames. Sending 33 six-unit groups to one HC in a single
+        // burst can leave the process connected while its simulation thread stops advancing.
+        sleep 0.05;
     } forEach _groups;
     private _startReady=[{
         _groups findIf {!(_x getVariable ["Waldo_CortexQA_PerformanceStarted",false])} < 0
@@ -132,6 +139,9 @@ private _results=[];
     },20] call _wait;
     private _ownerResults=_owners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
     private _sampleResults=_sampleOwners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
+    private _ownerHeartbeats=_owners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceHeartbeat_%1_%2",_sampleId,_x],-1]};
+    _ownersResponsive=_ownerHeartbeats findIf {_x < 0 || {serverTime-_x > 5}} < 0;
+    [format ["PERF-CONTACT-arm-%1-owner-responsive",_arm],_ownersResponsive,str _ownerHeartbeats] call _check;
     private _survivingHcOwners=(allPlayers select {_x isKindOf "HeadlessClient_F"}) apply {owner _x};
     private _ownersStillLive=_hcOwners findIf {!(_x in _survivingHcOwners)} < 0;
     [format ["PERF-CONTACT-arm-%1-owner-survival",_arm],_ownersStillLive,str _survivingHcOwners] call _check;
@@ -140,7 +150,7 @@ private _results=[];
         (_starts select _index) findIf {(_x select 0) distance2D (_x select 1) >= 20} >= 0
     } count _groups;
     private _fired={_x getVariable ["Waldo_CortexQA_PerformanceFired",false]} count _contactGroups;
-    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownersStillLive} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
+    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownersStillLive} && {_ownersResponsive} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
         && {_moved >= 90} && {_fired >= 15} && {_responseLatency >= 0};
     [format ["PERF-CONTACT-arm-%1-physical-workload",_arm],_valid,
         format ["movedGroups=%1 firedContactGroups=%2 responseSeconds=%3 samples=%4",_moved,_fired,_responseLatency,_sampleResults]] call _check;

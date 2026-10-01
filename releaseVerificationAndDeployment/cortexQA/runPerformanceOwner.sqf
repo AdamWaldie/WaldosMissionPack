@@ -6,7 +6,8 @@
  * pre-init. Waldo_CortexQA_PerformanceSampleOwner samples only groups local to that machine.
  * Repeat/JIP: replacing a sample removes the earlier EachFrame handler and advances a generation;
  * a late completion cannot publish over a newer run. Results are published once for the server
- * audit runner. This disposable helper is never staged outside the generated QA mission.
+ * audit runner. A public owner heartbeat distinguishes an attached HC from one whose simulation
+ * thread has stopped advancing. This disposable helper is never staged outside the generated QA mission.
  *
  * Arguments to Waldo_CortexQA_PerformanceSampleOwner:
  * 0: sample id <STRING>
@@ -30,16 +31,19 @@ Waldo_CortexQA_PerformanceSampleOwner = {
     private _generation=(missionNamespace getVariable ["Waldo_CortexQA_PerformanceGeneration",0])+1;
     missionNamespace setVariable ["Waldo_CortexQA_PerformanceGeneration",_generation];
     missionNamespace setVariable ["Waldo_CortexQA_PerformanceFrameSamples",[]];
+    private _heartbeatKey=format ["Waldo_CortexQA_PerformanceHeartbeat_%1_%2",_sampleId,clientOwner];
+    missionNamespace setVariable [_heartbeatKey,serverTime,true];
     private _handler=addMissionEventHandler ["EachFrame",{
         private _samples=missionNamespace getVariable ["Waldo_CortexQA_PerformanceFrameSamples",[]];
         if (count _samples < 180000) then {_samples pushBack (diag_deltaTime*1000)};
     }];
     missionNamespace setVariable ["Waldo_CortexQA_PerformanceFrameHandler",_handler];
-    [_sampleId,_duration,_generation,clientOwner] spawn {
-        params ["_sampleId","_duration","_generation","_sampleOwner"];
+    [_sampleId,_duration,_generation,clientOwner,_heartbeatKey] spawn {
+        params ["_sampleId","_duration","_generation","_sampleOwner","_heartbeatKey"];
         private _maxOverdue=0;
         private _until=diag_tickTime+_duration;
         while {diag_tickTime < _until && {(missionNamespace getVariable ["Waldo_CortexQA_PerformanceGeneration",-1]) == _generation}} do {
+            missionNamespace setVariable [_heartbeatKey,serverTime,true];
             {
                 _maxOverdue=_maxOverdue max (time-(_x param [0,time]));
             } forEach (missionNamespace getVariable ["Waldo_AIPass_Jobs",[]]);
@@ -62,6 +66,7 @@ Waldo_CortexQA_PerformanceSampleOwner = {
         {_localUnits=_localUnits+({alive _x} count units _x)} forEach _localGroups;
         private _result=[_sampleOwner,_count,[0.5] call _percentile,[0.95] call _percentile,
             [0.99] call _percentile,_maxOverdue,count _localGroups,_localUnits];
+        missionNamespace setVariable [_heartbeatKey,serverTime,true];
         missionNamespace setVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_sampleOwner],_result,true];
         missionNamespace setVariable ["Waldo_CortexQA_PerformanceFrameSamples",nil];
     };

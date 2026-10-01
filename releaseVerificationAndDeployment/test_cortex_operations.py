@@ -654,8 +654,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_CortexQA_PerformanceFired',distributed)
         self.assertIn('owner-prerequisite',distributed)
         self.assertIn('owner-survival',distributed)
+        self.assertIn('owner-responsive',distributed)
+        self.assertIn('PerformanceHeartbeat_',distributed)
         self.assertIn('count _results == 4',distributed)
-        self.assertIn('sleep 0.05',distributed)
+        self.assertGreaterEqual(distributed.count('sleep 0.05'),2)
         self.assertIn('(units _x) apply {[_x,getPosATL _x]}',distributed)
         self.assertNotIn('_leader ammo (primaryWeapon _leader)',distributed)
         self.assertIn('forEach _sampleOwners',distributed)
@@ -666,6 +668,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('addEventHandler ["FiredMan"',owner_sampler)
         for marker in ['diag_deltaTime*1000','Waldo_CortexQA_PerformanceGroup','[0.99] call _percentile']:
             self.assertIn(marker,owner_sampler)
+        self.assertIn('PerformanceHeartbeat_',owner_sampler)
+        self.assertIn('serverTime,true',owner_sampler)
         self.assertIn('performancecontact',launcher)
         self.assertIn('cortexQAPerformanceOwner.sqf',launcher)
 
