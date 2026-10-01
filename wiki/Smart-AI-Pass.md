@@ -336,14 +336,22 @@ When LAMBS Danger is loaded, `Waldo_AIPass_LambsMode` decides who owns movement:
 
   WMP keeps the state ladder, post-contact search, morale, retreat, surrender, reinforcement,
   artillery and airborne drops. When a responder accepts a Cortex reinforcement rally or coordinated
-  assault, a finite public lease sets `lambs_danger_disableGroupAI` for that responder only. Completion,
-  rejection, expiry, locality migration, Zeus takeover and Cortex shutdown restore the exact value
-  seen before the lease. The requester's base of fire stays under LAMBS. Garrison and clear-building
+  assault, Cortex first checks LAMBS' own queued/running tactic, forced-movement and explicit-waypoint
+  ownership markers. A busy LAMBS group is left alone and the responder request is rejected so another
+  group can be selected. Once LAMBS is clear, a finite public lease sets
+  `lambs_danger_disableGroupAI` for that responder only. Completion, rejection, expiry, locality
+  migration, Zeus takeover and Cortex shutdown restore the exact value seen before the lease. The
+  requester's base of fire stays under LAMBS. Garrison and clear-building
   orders are handed to LAMBS Waypoints when it is loaded. A group a mission maker has already set to
   `lambs_danger_disableGroupAI` retains that choice after Cortex releases it.
 - `WMP` (shown as **Cortex only**): WMP runs everything and turns LAMBS group AI off for the squads it
   manages. LAMBS group AI is turned back on when the pass stops or releases the squad. The three
   config companions are unaffected.
+
+This handover was checked against the locally installed Workshop build of LAMBS 2.6.2.1. That build
+sets `lambs_danger_isExecutingTactic` before scheduling its delayed flank or assault callback, so the
+busy check covers both queued and already-running group tactics without a new polling loop. Its
+Turrets, Suppression and RPG packages are config-only and remain active.
 
 WMP calls the installed LAMBS public interface; it does not bundle LAMBS source. LAMBS_Danger's
 GPLv2 license includes an additional condition which forbids modified or derivative versions from

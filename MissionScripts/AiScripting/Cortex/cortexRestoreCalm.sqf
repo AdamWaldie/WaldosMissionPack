@@ -31,6 +31,7 @@
  * ordinary cleanup ends their stale search move, while external takeover preserves a replacement
  * MOVE or other command. Commands which cannot be a combat-side effect of a hold survive.
  * Pending remount intent is public for owner migration; GroupTick retries for up to 60 seconds.
+ * Any finite LAMBS movement handover is released before its local support token is erased.
  * Return Value:
  * Nothing
  *
@@ -69,6 +70,7 @@ private _supportLease=_group getVariable ["Waldo_AIPass_SupportLease",[]];
 if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_supportLease select 0)}) then {
     [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 };
+[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
 {_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
 private _leader = leader _group;
 // Zeus may deliberately replace Cortex's disabled autonomous-attack state while taking over.

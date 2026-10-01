@@ -29,7 +29,8 @@
  * Disabling investigation or post-contact while its phase is active immediately uses the normal
  * CALM restoration path; a runtime switch cannot leave old search movement alive until timeout.
  * A reinforcement responder whose requester returns to CALM rejects its server reservation and
- * releases only its SUPPORT_RALLY or COORDINATED_ASSAULT movement lease; no stale token survives.
+ * releases only its SUPPORT_RALLY or COORDINATED_ASSAULT movement lease and its matching LAMBS
+ * movement handover; no stale token survives.
  * CARELESS groups are left entirely to the mission maker.
  * Waldo_AIPass_ReactionSpeed (AI Tuning) divides the step interval, so squads re-assess faster or slower.
  * A squad riding as cargo in an AI-flown aircraft is handled by airborne insertion instead
@@ -347,6 +348,7 @@ switch (_state get "phase") do {
                     _movementLease = [];
                     _groupMovementOwned = false;
                 };
+                [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
                 {_state deleteAt _x} forEach [
                     "supportHeld","supportBoundSequence","supportToken","responding","respondingTo",
                     "respondUntil","arrivedAt","assaulting"

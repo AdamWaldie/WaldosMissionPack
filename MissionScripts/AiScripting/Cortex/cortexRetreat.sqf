@@ -21,6 +21,7 @@
  * Locality and authority: call where the group is local; server selects and dispatches supporting artillery.
  * Repeat/JIP: caller phase prevents repeated entry. A public movement intent lets a new group owner
  * resume the same bounded withdrawal without repeating smoke or artillery effects.
+ * A withdrawal releases an earlier coordinated-support LAMBS movement handover before replacing it.
  *
  * Arguments:
  * 0: group <GROUP, default grpNull>
@@ -65,6 +66,7 @@ private _supportLease=_group getVariable ["Waldo_AIPass_SupportLease",[]];
 if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_supportLease select 0)}) then {
     [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 };
+[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
 {
     if (local _x && {group _x == _group}) then {
         _x enableAI "PATH";

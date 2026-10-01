@@ -107,6 +107,12 @@ private _lambsTurrets = isClass (configFile >> "CfgPatches" >> "lambs_turrets");
 private _lambsSuppression = isClass (configFile >> "CfgPatches" >> "lambs_suppression");
 private _lambsRpg = isClass (configFile >> "CfgPatches" >> "lambs_rpg");
 private _lambsMovementLeases = {_x getVariable ["Waldo_Cortex_LambsLease", []] isNotEqualTo []} count _groups;
+private _lambsBusyGroups = {
+    private _currentTactic = _x getVariable ["lambs_main_currentTactic", ""];
+    (_x getVariable ["lambs_danger_isExecutingTactic", false])
+        || {(_currentTactic isEqualType "") && {(toLowerANSI _currentTactic) find "task" == 0}}
+        || {(units _x) findIf {_x getVariable ["lambs_danger_forceMove", false]} >= 0}
+} count _groups;
 private _checks = [
     ["ai", "cortex", _passState, [format ["enabled=%1 serverActive=%2 serverJobs=%3 paused=%4 includedSides=%5", _passEnabled, _passActive, _passJobs, [] call Waldo_fnc_CortexIsPaused, missionNamespace getVariable ["Waldo_AIPass_IncludedSides", []]], _passHint] call Waldo_fnc_DiagnosticFoldHint],
     ["ai", "cortex-regroup", if (_passEnabled && {_regroupEnabled}) then {"LOADED"} else {"DISABLED"}, format ["enabled=%1 serverRegroupsCompleted=%2 serverUnitsJoined=%3", _regroupEnabled, missionNamespace getVariable ["Waldo_AIPass_RegroupsCompleted", 0], missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]]],
@@ -140,7 +146,7 @@ private _checks = [
         missionNamespace getVariable ["Waldo_AIPass_Aggression", 1.2], missionNamespace getVariable ["Waldo_AIPass_Cohesion", 1],
         missionNamespace getVariable ["Waldo_AIPass_ReactionSpeed", 1], missionNamespace getVariable ["Waldo_AIPass_Artillery_DefaultRole", "BOTH"],
         missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"]]],
-    ["ai", "cortex-lambs", if (_lambsDanger || {_lambsWaypoints} || {_lambsTurrets} || {_lambsSuppression} || {_lambsRpg}) then {"ACTIVE"} else {"UNAVAILABLE"}, format ["danger=%1 waypoints=%2 turrets=%3 suppression=%4 rpg=%5 mode=%6 scopedMovementLeases=%7; config companions remain active in every mode", _lambsDanger, _lambsWaypoints, _lambsTurrets, _lambsSuppression, _lambsRpg, missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"], _lambsMovementLeases]],
+    ["ai", "cortex-lambs", if (_lambsDanger || {_lambsWaypoints} || {_lambsTurrets} || {_lambsSuppression} || {_lambsRpg}) then {"ACTIVE"} else {"UNAVAILABLE"}, format ["danger=%1 waypoints=%2 turrets=%3 suppression=%4 rpg=%5 mode=%6 scopedMovementLeases=%7 lambsOwnedGroups=%8 busyLeaseRefusals=%9; config companions remain active in every mode", _lambsDanger, _lambsWaypoints, _lambsTurrets, _lambsSuppression, _lambsRpg, missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"], _lambsMovementLeases, _lambsBusyGroups, missionNamespace getVariable ["Waldo_Cortex_LambsBusyRefusals", 0]]],
     ["ai", "ai-profile", if (_enabled) then {"ACTIVE"} else {"DISABLED"}, format ["profile=%1 mode=%2 serverActive=%3", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"], missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]]],
     ["ai", "ai-headless-adoption", if (!_enabled) then {"DISABLED"} else {if (count _missing > 0) then {"ERROR"} else {if (count _hcGroups > 0) then {"ACTIVE"} else {"UNCONFIGURED"}}}, format ["connectedHCs=%1 hcOwnedGroups=%2 missingVerifiedAdoption=%3", count _hcOwners, count _hcGroups, count _missing]],
     ["ai", "improved-helicopter-landing", if !(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]) then {"DISABLED"} else {if (count _staleLanding > 0 || {count _groupedLanding > 0}) then {"ERROR"} else {if (count _activeLanding > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["helicopters=%1 movementOwned=%2 activeControllers=%3 staleGroundAnchors=%4 groupedControllers=%5", count _helicopters, count _orphanedMovementControl, count _activeLanding, count _staleLanding, count _groupedLanding]],

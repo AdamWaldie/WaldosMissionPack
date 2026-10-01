@@ -44,7 +44,14 @@ private _movementLeaseActive = count _movementLease == 2 && {time < (_movementLe
 };
 private _supportOwnsMovement = _movementLeaseActive && {_movementOwner in ["SUPPORT_RALLY","COORDINATED_ASSAULT"]};
 private _token = _state getOrDefault ["supportToken",""];
-if (_token == "") exitWith {};
+if (_token == "") exitWith {
+    // A locality/checkpoint loss can leave the public movement lease after the local support token.
+    // There is no remaining Cortex assignment to own movement, so return it immediately.
+    private _lambsLease = _group getVariable ["Waldo_Cortex_LambsLease",[]];
+    if (count _lambsLease == 3 && {(_lambsLease select 0) == "SUPPORT"}) then {
+        [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
+    };
+};
 private _restoreAttack={
     if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
     _state deleteAt "attackChanged"; _state deleteAt "baseAttack";

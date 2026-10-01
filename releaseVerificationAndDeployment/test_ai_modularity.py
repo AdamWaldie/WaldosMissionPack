@@ -117,13 +117,19 @@ class AIModularityContracts(unittest.TestCase):
         self.assertIn('Waldo_fnc_CortexFeatureEnabled',src('cortexArtilleryShot'))
     def test_lambs_handover_is_scoped_and_restores_prior_state(self):
         lease = src('cortexLambsLease')
-        for contract in ['Waldo_Cortex_LambsLease','lambs_danger_disableGroupAI','_baseline','serverTime','Waldo_AIPass_LambsDisabledByPass']:
+        for contract in ['Waldo_Cortex_LambsLease','lambs_danger_disableGroupAI','_baseline','serverTime','Waldo_AIPass_LambsDisabledByPass',
+                         'lambs_danger_isExecutingTactic','lambs_danger_forceMove','lambs_main_currentTactic','Waldo_Cortex_LambsBusyRefusals']:
             self.assertIn(contract,lease)
+        self.assertLess(lease.index('lambs_danger_isExecutingTactic'),lease.index('setVariable ["lambs_danger_disableGroupAI", true'))
         self.assertIn('CortexLambsLease',(ROOT/'MissionScripts/WaldosFunctions.sqf').read_text(encoding='utf-8'))
         apply = src('cortexSupportApply')
         maintain = src('cortexSupportMaintain')
         self.assertIn('[_group,"SUPPORT",true,_expiry] call Waldo_fnc_CortexLambsLease',apply)
         self.assertIn('[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease',maintain)
+        self.assertIn('(_lambsLease select 0) == "SUPPORT"',maintain)
+        self.assertIn('[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease',src('cortexRestoreCalm'))
+        self.assertIn('[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease',src('cortexRetreat'))
+        self.assertIn('[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease',src('cortexGroupTick'))
         self.assertIn('[_group,"",false] call Waldo_fnc_CortexLambsLease',src('cortexReleaseGroup'))
         self.assertIn('serverTime >= (_lambsLease select 2)',src('cortexDiscover'))
         self.assertIn('Waldo_AIPass_LambsBaseline',src('cortexDiscover'))

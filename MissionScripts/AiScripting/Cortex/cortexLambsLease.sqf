@@ -9,8 +9,10 @@
  * unnecessary there. LAMBS_Turrets, LAMBS_Suppression and LAMBS_RPG are config layers and are never
  * disabled by this function.
  * Repeat/JIP: reacquiring the same owner renews its deadline without changing the saved baseline;
- * another owner is refused until release or expiry. Release restores only the state captured by
- * Cortex and leaves the blanket WMP-mode switch in force. Repeated release is harmless.
+ * another owner is refused until release or expiry. A fresh lease is also refused while the
+ * installed LAMBS controller has a queued/active group tactic, forced unit movement or explicit
+ * LAMBS waypoint task. Release restores only the state captured by Cortex and leaves the blanket
+ * WMP-mode switch in force. Repeated release is harmless.
  *
  * Arguments:
  * 0: group <GROUP>
@@ -19,7 +21,8 @@
  * 3: expires <NUMBER> - serverTime deadline (optional, default serverTime + 30)
  *
  * Return Value:
- * Boolean - true when ownership was acquired/released, false for invalid locality or a competing owner
+ * Boolean - true when ownership was acquired/released, false for invalid locality, a competing
+ * owner or movement which LAMBS already owns
  *
  * Current callers: CortexSupportApply, CortexSupportMaintain, CortexDiscover and CortexReleaseGroup.
  *
@@ -47,6 +50,28 @@ if (_acquire) exitWith {
     private _same = count _lease == 3 && {(_lease select 0) == _owner};
     private _expired = count _lease == 3 && {serverTime >= (_lease select 2)};
     if (_lease isNotEqualTo [] && {!_same} && {!_expired}) exitWith {false};
+
+    // LAMBS 2.6.2.1 publishes isExecutingTactic before its delayed flank/assault callback. Testing
+    // it here therefore covers both queued and running tactics. forceMove covers unit/group actions;
+    // task* identifies explicit LAMBS Waypoint ownership. Do not clear any of these upstream states.
+    private _lambsTactic = _group getVariable ["lambs_main_currentTactic", ""];
+    private _lambsWaypointTask = _lambsTactic isEqualType "" && {
+        (toLowerANSI _lambsTactic) find "task" == 0
+    };
+    private _lambsForcedMovement = (units _group) findIf {
+        _x getVariable ["lambs_danger_forceMove", false]
+    } >= 0;
+    private _lambsBusy = _group getVariable ["lambs_danger_isExecutingTactic", false]
+        || {_lambsForcedMovement}
+        || {_lambsWaypointTask};
+    if (!_same && {_lambsBusy}) exitWith {
+        missionNamespace setVariable [
+            "Waldo_Cortex_LambsBusyRefusals",
+            (missionNamespace getVariable ["Waldo_Cortex_LambsBusyRefusals", 0]) + 1
+        ];
+        false
+    };
+
     private _baseline = if (_same) then {_lease select 1} else {
         if (_expired) then {_lease select 1} else {_group getVariable ["lambs_danger_disableGroupAI", false]}
     };
