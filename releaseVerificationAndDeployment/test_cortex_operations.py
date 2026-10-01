@@ -70,6 +70,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn(expected,diagnostics)
         self.assertNotIn('missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"]',diagnostics)
 
+    def test_diagnostics_master_fallbacks_match_enabled_defaults(self):
+        config=(ROOT/'MissionConfig/aiConfig.sqf').read_text(encoding='utf-8')
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        for key in ['Waldo_AIRebalance_Enable','Waldo_AIPass_Enable']:
+            self.assertIn(f'["{key}", true]',config)
+            self.assertIn(f'missionNamespace getVariable ["{key}", true]',diagnostics)
+            self.assertNotIn(f'missionNamespace getVariable ["{key}", false]',diagnostics)
+
     def test_replacement_clear_retires_old_movement_after_validation(self):
         text=source('cortexClearBuilding')
         marker='if (!_resume && {_previous isNotEqualTo []}) then {[_group] call Waldo_fnc_CortexClearRelease};'

@@ -25,7 +25,7 @@
 
 if !(isServer) exitWith {["ai", []] call Waldo_fnc_DiagnosticFeatureReport};
 private _groups = allGroups;
-private _enabled = missionNamespace getVariable ["Waldo_AIRebalance_Enable", false];
+private _enabled = missionNamespace getVariable ["Waldo_AIRebalance_Enable", true];
 private _hcOwners = (entities "HeadlessClient_F") apply {owner _x};
 private _hcGroups = _groups select {
     groupOwner _x in _hcOwners
@@ -95,7 +95,7 @@ private _decelerationActive = _decelerationAircraft select {
 private _decelerationLandingConflict = _decelerationActive select {
     _x getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
 };
-private _passEnabled = missionNamespace getVariable ["Waldo_AIPass_Enable", false];
+private _passEnabled = missionNamespace getVariable ["Waldo_AIPass_Enable", true];
 private _passActive = missionNamespace getVariable ["Waldo_AIPass_Active", false];
 private _passJobs = count (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + count (missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []]);
 private _passState = if (!_passEnabled) then {"DISABLED"} else {if (_passActive && {!isNil {missionNamespace getVariable "Waldo_AIPass_SchedulerHandle"}}) then {"ACTIVE"} else {"ERROR"}};
