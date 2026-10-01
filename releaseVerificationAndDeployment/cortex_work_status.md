@@ -274,6 +274,11 @@ The canonical full-pack launcher now supports `-CortexFocus lambs` and an explic
 
 The standalone arm requires every soldier to physically move to and hold an assigned defence position. The loaded arm additionally refuses queued/running LAMBS tactics, forced movement and LAMBS waypoint tasks; checks false and true baseline restoration; transfers the public lease to a real headless-client owner for renewal and release; returns the group to the server; then interrupts a live Cortex lease with Zeus and requires every soldier to execute the ordinary replacement waypoint without route resurrection. `Waldo_AIPass_LambsMode` now has its own 57th coverage case.
 
+The first rebuilt standalone attempt at `runtime-20261001-105254` is invalid evidence: the audit's
+arrival predicate omitted parentheses around `findIf`, producing repeated SQF type errors before an
+outcome could be observed. The predicate and every matching comparison in the fixture are corrected,
+covered by a regression assertion and queued for an immediate clean rerun.
+
 Static validation passed 268 focused Cortex tests, all 1,265 SQF files, all 113 wiki pages, all 85 Zeus/script parity checks, the executable 57-case/165-setting coverage audit, and `git diff --check`. Arma remained closed; both paired live arms are queued and neither is claimed accepted.
 
 ## 1 October: dedicated lighting and equipment audit

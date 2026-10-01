@@ -51,12 +51,12 @@ private _fallbackDestination=[2600,2470,0];
 private _starts=_units apply {getPosATL _x};
 private _accepted=[_group,_fallbackDestination,0,14] call Waldo_fnc_CortexDefend;
 private _arrived=[{
-    _units findIf {
+    (_units findIf {
         !alive _x || {(_x getVariable ["Waldo_AIPass_DefendPos",[]]) isEqualTo []}
             || {_x distance2D (_x getVariable ["Waldo_AIPass_DefendPos",[]]) > 5}
-    } < 0
+    }) < 0
 },90] call _wait;
-private _travelled=_units findIf {_x distance2D (_starts select _forEachIndex) < 35} < 0;
+private _travelled=(_units findIf {_x distance2D (_starts select _forEachIndex) < 35}) < 0;
 ["LAMBS-fallback-physical-arrival",_accepted && {_arrived} && {_travelled},str (_units apply {getPosATL _x})] call _check;
 private _maxHoldDrift=0;
 for "_sample" from 1 to 5 do {sleep 1; {_maxHoldDrift=_maxHoldDrift max (_x distance2D (_x getVariable ["Waldo_AIPass_DefendPos",getPosATL _x]))} forEach _units};
@@ -111,7 +111,7 @@ if (_lambsLoaded) then {
         _group setVariable ["Waldo_Headless_ExcludeGroup",false,true];
         {_x setVariable ["acex_headless_blacklist",false,true]} forEach _units;
         private _migrationRequested=[_group,_hcOwner] call Waldo_fnc_HeadlessMigrateGroup;
-        private _adopted=[{groupOwner _group == _hcOwner && {_units findIf {owner _x != _hcOwner} < 0}},30] call _wait;
+        private _adopted=[{groupOwner _group == _hcOwner && {(_units findIf {owner _x != _hcOwner}) < 0}},30] call _wait;
         ["LAMBS-lease-survives-headless-adoption",_leased && {_migrationRequested} && {_adopted}
             && {(_group getVariable ["Waldo_Cortex_LambsLease",[]]) isEqualTo _leaseBefore}
             && {_group getVariable ["lambs_danger_disableGroupAI",false]},str [groupOwner _group,_group getVariable ["Waldo_Cortex_LambsLease",[]]]] call _check;
@@ -128,7 +128,7 @@ if (_lambsLoaded) then {
         ["LAMBS-new-owner-restores-baseline",_ownerReleased] call _check;
 
         private _returnRequested=[_group,2] call Waldo_fnc_HeadlessMigrateGroup;
-        private _returned=[{groupOwner _group == 2 && {_units findIf {owner _x != 2} < 0}},30] call _wait;
+        private _returned=[{groupOwner _group == 2 && {(_units findIf {owner _x != 2}) < 0}},30] call _wait;
         ["LAMBS-returned-to-server",_returnRequested && {_returned},str [groupOwner _group,_units apply {owner _x}]] call _check;
         _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
         {_x setVariable ["acex_headless_blacklist",true,true]} forEach _units;
@@ -139,7 +139,7 @@ if (_lambsLoaded) then {
     private _cortexDestination=[2670,2470,0];
     [_group,_cortexDestination,5] call Waldo_fnc_CortexGroupMove;
     ["LAMBS: Zeus interrupts Cortex ownership","The squad must start the leased eastward move. Zeus then replaces it with a south-west ordinary waypoint; every soldier must follow and Cortex must not resurrect its old route.",_cortexDestination] call _phase;
-    private _started=[{_units findIf {_x distance2D (_handoverStart select _forEachIndex) < 10} < 0},35] call _wait;
+    private _started=[{(_units findIf {_x distance2D (_handoverStart select _forEachIndex) < 10}) < 0},35] call _wait;
     ["LAMBS-zeus-handover-stimulus",_leased && {_started}] call _check;
     [_group,true] call Waldo_fnc_CortexZeusMark;
     private _replacement=[2540,2425,0];
@@ -148,7 +148,7 @@ if (_lambsLoaded) then {
     _wp setWaypointCompletionRadius 4;
     _group setCurrentWaypoint _wp;
     {_x setVariable ["Waldo_CortexQA_Target",_replacement,true]; _x doFollow leader _group} forEach _units;
-    private _replacementReached=[{_units findIf {!alive _x || {_x distance2D _replacement > 12}} < 0},90] call _wait;
+    private _replacementReached=[{(_units findIf {!alive _x || {_x distance2D _replacement > 12}}) < 0},90] call _wait;
     ["LAMBS-zeus-replacement-physical-arrival",_started && {_replacementReached},str (_units apply {getPosATL _x})] call _check;
     private _maxDrift=0;
     for "_sample" from 1 to 12 do {sleep 1; {_maxDrift=_maxDrift max (_x distance2D _replacement)} forEach _units};

@@ -619,6 +619,8 @@ class CortexOperations(unittest.TestCase):
                        'LAMBS-lease-survives-headless-adoption','LAMBS-new-owner-restores-baseline',
                        'LAMBS-zeus-replacement-physical-arrival','LAMBS-zeus-clean-release']:
             self.assertIn(marker,lambs)
+        self.assertIn('(_units findIf {\n        !alive _x',lambs)
+        self.assertIn('}) < 0\n},90] call _wait;',lambs)
         launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text()
         self.assertIn('[switch]$IncludeLambs',launcher)
         self.assertIn('@LAMBS_Danger.fsm',launcher)
