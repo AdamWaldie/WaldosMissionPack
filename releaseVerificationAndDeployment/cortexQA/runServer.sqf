@@ -440,7 +440,7 @@ if (_focus in ["all","features","convoyseats","extensions"]) then {[_check,_phas
 if (_focus in ["all","features","avoidance"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAAvoidance.sqf"};
 if (_focus in ["all","features","deceleration"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQADeceleration.sqf"};
 if (_focus in ["all","features","aircraft"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAAircraft.sqf"};
-if (_focus in ["all","features","lifecycle"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALifecycle.sqf"};
+if (_focus in ["all","features","lifecycle","stateflows"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALifecycle.sqf"};
 if (_focus in ["all","features","lambs"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALambs.sqf"};
 if (_focus in ["all","features","performance"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformance.sqf"};
 if (_focus == "performancecontact") then {
@@ -478,7 +478,7 @@ if (_focus in ["all","features","mechanics","airborne"]) then {
     private _fallbackPhase={params ["_title","_instructions","_position"]; ["Invalid chute fallback: "+_title,"Configured B_Parachute is a backpack. Cortex must select a real parachute vehicle. "+_instructions,_position] call _airborneBasePhase};
     [_fallbackCheck,_fallbackPhase,_wait,"B_Parachute"] call compile preprocessFileLineNumbers "cortexQAAirborne.sqf";
 };
-if (_focus in ["all","features","mechanics","vehicles"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAVehicles.sqf"};
+if (_focus in ["all","features","mechanics","vehicles","stateflows"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAVehicles.sqf"};
 if (_focus in ["all","features","mechanics","fire"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAFire.sqf"};
 // Long multi-squad comparisons run last so they cannot delay unrelated feature coverage.
 if (_focus == "coordinatedbounds") then {[_check,_phase,_wait,[],true] call compile preprocessFileLineNumbers "cortexQACoordinated.sqf"};

@@ -1465,6 +1465,10 @@ class CortexOperations(unittest.TestCase):
             'VEHICLE_OWNERSHIP_RESUME',
         ]:
             self.assertIn(marker,audit)
+        launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text(encoding='utf-8')
+        server=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text(encoding='utf-8')
+        self.assertIn('"stateflows"',launcher)
+        self.assertEqual(server.count('"stateflows"'),2)
 
     def test_mounted_survivors_withdraw_instead_of_selecting_impossible_surrender(self):
         morale=source('cortexMorale')
