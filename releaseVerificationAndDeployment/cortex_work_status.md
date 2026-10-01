@@ -1,6 +1,10 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `c3e4264` are pushed, with later coordinated-tempo work recorded below until its next checkpoint. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
+Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `5212697` are pushed, with the contact-initiative work below awaiting its next checkpoint. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
+
+## 1 October: contact initiative without authored movement
+
+Bounding advance no longer requires an unfinished ordinary waypoint. An eligible steady squad with no active waypoint can use enemy knowledge seen within the previous ten seconds as a finite objective, run the existing successive covered bounds, and transition through the existing assault/consolidation flow. Cortex does not add a persistent waypoint for this case. An active HOLD, GUARD, SENTRY or other non-movement waypoint remains authoritative and refuses the automatic advance. This closes a source-level idle path for editor-placed or newly stationary squads without adding a poller, global scan or per-unit scheduler. Physical aggression, route quality, Zeus interruption and performance remain queued for the rebuilt audit.
 
 | Requested work | Implementation | Recorded evidence / work remaining |
 |---|---|---|

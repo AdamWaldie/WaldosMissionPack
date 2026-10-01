@@ -5,8 +5,10 @@
  *
  * Uses bounded fire-team movement so that it cannot freeze or
  * undo itself. The squad must have been in CONTACT for Waldo_AIPass_Advance_MinContactSeconds, its
- * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, the nearest
- * known enemy must be at least 60 m away, morale must be STEADY and no drill may be running.
+ * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, or a squad
+ * with no active waypoint must have fresh enemy knowledge that provides a finite contact objective.
+ * Active HOLD, GUARD, SENTRY and other authored waypoint types are never replaced. The nearest known
+ * enemy must be at least 60 m away, morale must be STEADY and no drill may be running.
  * Waldo_fnc_CortexTacticalStart applies advanceChance as a relative preference before calling this
  * deterministic viability/start function. A bounded avenue selector compares the
  * direct route with four offset two-leg routes and samples screening once when the drill starts.
@@ -35,7 +37,7 @@
  *
  * Example:
  * [_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart;
- * Result: a pinned squad advances two elements successively towards its objective.
+ * Result: a pinned squad advances two elements successively towards its authored or fresh-contact objective.
  *
  * Support integration: active reinforcement/assault responders decline new drills until released.
  * Current caller: Waldo_fnc_CortexTacticalStart.
@@ -53,12 +55,23 @@ if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false
 if (time - (_state getOrDefault ["phaseStart", time]) < (missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 5])) exitWith {false};
 private _leader = leader _group;
 if (vehicle _leader != _leader) exitWith {false};
-private _index = currentWaypoint _group;
-if (_index >= count waypoints _group) exitWith {false};
-if (waypointDescription [_group, _index] == "WMP AI PASS" || {!(waypointType [_group, _index] in ["MOVE", "SAD", "DESTROY"])}) exitWith {false};
-private _objective = waypointPosition [_group, _index];
-if (_leader distance2D _objective <= 80) exitWith {false};
 if (_enemies isEqualTo [] || {((_enemies select 0) select 3) < 60}) exitWith {false};
+private _index = currentWaypoint _group;
+private _hasAuthoredObjective = _index < count waypoints _group;
+if (_hasAuthoredObjective && {
+    waypointDescription [_group, _index] == "WMP AI PASS"
+    || {!(waypointType [_group, _index] in ["MOVE", "SAD", "DESTROY"])}
+}) exitWith {false};
+// A group whose ordinary movement order has completed should not become inert in a live firefight.
+// Use only fresh engine knowledge and keep the objective inside this finite drill; do not manufacture
+// a persistent waypoint that would outlive contact or compete with a later Zeus order.
+if (!_hasAuthoredObjective && {((_enemies select 0) select 2) > 10}) exitWith {false};
+private _objective = if (_hasAuthoredObjective) then {
+    waypointPosition [_group, _index]
+} else {
+    (_enemies select 0) select 1
+};
+if (_leader distance2D _objective <= 80) exitWith {false};
 private _onFoot = (units _group) select {
     private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
     [_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x}

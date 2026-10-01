@@ -736,6 +736,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('"SLIDER", [0,180,0], 20]',spec)
         self.assertIn('getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 5]',advance)
 
+    def test_bounding_advance_uses_fresh_contact_when_no_waypoint_remains(self):
+        advance=source('cortexAdvanceStart')
+        self.assertIn('private _hasAuthoredObjective = _index < count waypoints _group',advance)
+        self.assertIn('if (_hasAuthoredObjective && {',advance)
+        self.assertIn('!(waypointType [_group, _index] in ["MOVE", "SAD", "DESTROY"])',advance)
+        self.assertIn('if (!_hasAuthoredObjective && {((_enemies select 0) select 2) > 10})',advance)
+        self.assertIn('(_enemies select 0) select 1',advance)
+        self.assertNotIn('if (_index >= count waypoints _group) exitWith {false}',advance)
+
     def test_advance_uses_its_own_shorter_repeat_cooldown(self):
         end=source('cortexFlankEnd')
         self.assertIn('["Waldo_AIPass_Flank_Cooldown", "Waldo_AIPass_Advance_Cooldown"] select (_type == "ADVANCE")',end)
