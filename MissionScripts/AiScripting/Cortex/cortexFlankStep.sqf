@@ -63,7 +63,8 @@
  * Every authenticated step renews its heartbeat and standalone movement lease. GroupTick ends a silent
  * controller through CortexFlankEnd, so scheduler loss cannot leave actors restricted indefinitely.
  * A stationary mover receives at most two route reissues per bound, eight seconds apart.
- * The same bounded retries also detect a return to the unchanged original group waypoint.
+ * The same bounded retries also detect a return to an unchanged original group waypoint when one
+ * actually exists. Contact advances with no authored waypoint keep an empty snapshot.
  * They never change that waypoint, and the eligibility check gives Zeus priority first.
  * Retries never reset the physical-progress clock or count as arrival. A viable majority
  * (at least two movers and 60 percent of the original element) may continue past blocked
@@ -411,7 +412,11 @@ private _issue = {
         _unit doMove _spot;
     } forEach _units;
     private _waypointIndex = currentWaypoint _group;
-    _drill set ["boundWaypoint",[_waypointIndex,waypointPosition [_group,_waypointIndex]]];
+    private _waypointSnapshot = [];
+    if (_waypointIndex < count waypoints _group) then {
+        _waypointSnapshot = [_waypointIndex,waypointPosition [_group,_waypointIndex]];
+    };
+    _drill set ["boundWaypoint",_waypointSnapshot];
     _drill set ["spots", _spots];
     _drill set ["movers", +_units];
     private _progress = [];

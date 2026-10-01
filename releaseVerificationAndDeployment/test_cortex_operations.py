@@ -738,12 +738,16 @@ class CortexOperations(unittest.TestCase):
 
     def test_bounding_advance_uses_fresh_contact_when_no_waypoint_remains(self):
         advance=source('cortexAdvanceStart')
+        step=source('cortexFlankStep')
         self.assertIn('private _hasAuthoredObjective = _index < count waypoints _group',advance)
         self.assertIn('if (_hasAuthoredObjective && {',advance)
         self.assertIn('!(waypointType [_group, _index] in ["MOVE", "SAD", "DESTROY"])',advance)
         self.assertIn('if (!_hasAuthoredObjective && {((_enemies select 0) select 2) > 10})',advance)
         self.assertIn('(_enemies select 0) select 1',advance)
         self.assertNotIn('if (_index >= count waypoints _group) exitWith {false}',advance)
+        self.assertIn('private _waypointSnapshot = []',step)
+        self.assertIn('if (_waypointIndex < count waypoints _group) then {',step)
+        self.assertIn('["boundWaypoint",_waypointSnapshot]',step)
 
     def test_advance_uses_its_own_shorter_repeat_cooldown(self):
         end=source('cortexFlankEnd')
