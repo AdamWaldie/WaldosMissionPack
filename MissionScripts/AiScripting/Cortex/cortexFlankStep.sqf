@@ -9,7 +9,10 @@
  * street crossings, group-level RED pursuit is replaced by a finite YELLOW lease, but individual
  * TARGET and AUTOTARGET remain enabled. Movers therefore keep acquiring and engaging visible threats
  * while their owned destination remains authoritative. Only AUTOCOMBAT is suspended so the engine
- * cannot replace the finite AWARE move with a new COMBAT movement plan.
+ * cannot replace the finite AWARE move with a new COMBAT movement plan. If a live ATTACK command still
+ * replaces an individual destination, the controller clears that actor's target and reissues the owned
+ * spot at most twice per bound. This is a narrow recovery for a measured engine override, not a blanket
+ * targeting disable; other movers and every stationary fire element continue engaging.
  * A RED group first receives a finite YELLOW movement lease: it remains fire-at-will, but the engine must keep
  * formation instead of creating independent ATTACK subgroups that compete with the bounds. The lease begins one
  * scheduler step before the first move, remains active for the whole manoeuvre, and is restored only if the group
@@ -423,6 +426,7 @@ private _issue = {
     {_progress pushBack [_x distance2D (_spots select _forEachIndex),_now,getPosATL _x,_now]} forEach _units;
     _drill set ["progress",_progress];
     _drill set ["retries",_units apply {[0,_now]}];
+    _drill set ["pursuitResets",_units apply {0}];
     _drill set ["disabled", _disabled];
     _drill set ["combatModes",_combatModes];
     _drill set ["combatBehaviours",_combatBehaviours];
@@ -443,6 +447,7 @@ switch (_drill get "stage") do {
         private _timeout = missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout",25];
         private _progress = _drill get "progress";
         private _retries = _drill getOrDefault ["retries",_movers apply {[0,_now]}];
+        private _pursuitResets = _drill getOrDefault ["pursuitResets",_movers apply {0}];
         {
             private _unit = _x;
             if (alive _unit && {_unit in _units}) then {
@@ -457,6 +462,23 @@ switch (_drill get "stage") do {
                     };
                 } else {
                     _arrived = false;
+                    private _spot = _spots select _forEachIndex;
+                    private _expected = (expectedDestination _unit) select 0;
+                    private _pursuitResetCount = _pursuitResets select _forEachIndex;
+                    // Live dedicated QA proved that YELLOW can retain a pre-existing native ATTACK
+                    // plan whose destination is hundreds of metres from the owned bound. Reissuing
+                    // doMove alone does not dislodge it. Clear only that actor's target, only while
+                    // the engine destination demonstrably disagrees with Cortex, and cap the repair.
+                    if (currentCommand _unit == "ATTACK"
+                        && {_expected distance2D _spot > 15}
+                        && {_pursuitResetCount < 2}) then {
+                        _unit doTarget objNull;
+                        _unit doWatch _enemyPos;
+                        _unit doMove _spot;
+                        _pursuitResetCount = _pursuitResetCount + 1;
+                        _pursuitResets set [_forEachIndex,_pursuitResetCount];
+                        diag_log format ["[WMP CORTEX] Native pursuit reset group=%1 unit=%2 bound=%3 attempt=%4 expectedOffset=%5",_group,netId _unit,_drill get "index",_pursuitResetCount,_expected distance2D _spot];
+                    };
                     private _last = _progress select _forEachIndex;
                     if ((_last select 0)-_remaining >= 0.5) then {_last set [0,_remaining]; _last set [1,_now]};
                     // A valid obstacle detour can temporarily increase target distance.
@@ -487,6 +509,7 @@ switch (_drill get "stage") do {
                 };
             };
         } forEach _movers;
+        _drill set ["pursuitResets",_pursuitResets];
         private _originalElement = if (_teams isEqualTo []) then {_allUnits} else {_teams select (_drill getOrDefault ["teamTurn",0])};
         private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;
         private _quorumReady = !_arrived

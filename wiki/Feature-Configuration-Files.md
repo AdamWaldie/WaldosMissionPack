@@ -405,7 +405,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Flank_BoundTimeout` | Seconds without two metres of progress before an unfinished bound aborts. The absolute bound limit is four times this value. A timeout never counts as arrival. Default `25`. |
 | `Waldo_AIPass_Flank_Cooldown` | Seconds before the same squad may flank again. Default `90`. |
 | `Waldo_AIPass_StreetCrossing_Enable` | Flanking elements stop at roads, throw smoke and cross in one bound. Default `true`. |
-| `Waldo_AIPass_FireControl_Enable` | Close threats first, fire spread across visible enemies, disciplined suppression. Default `true`. |
+| `Waldo_AIPass_FireControl_Enable` | Close threats first, fire spread across visible enemies, and staggered alternating suppression. One eligible suppressor is ordered at a time; squads receive separate phase offsets. Default `true`. |
 | `Waldo_AIPass_FireControl_MaxSuppressors` | Soldiers allowed to suppress at the same time. Default `2`. |
 | `Waldo_AIPass_FireControl_MaxShootersPerTarget` | Shooters on one visible enemy before extra shooters switch targets. Default `2`. |
 | `Waldo_AIPass_Morale_Enable` | Squads under losses and fire break and fall back under smoke. Default `true`. |

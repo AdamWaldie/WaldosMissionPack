@@ -172,7 +172,7 @@ private _featureNotes=createHashMapFromArray [
     ["PostContact","Requires lost contact; inspect phase age, search members and return to the authored route."],
     ["Flank","Requires eligible contact and a viable movement element. Inspect drill stage/bound, covering roles and actual commands; elapsed time alone is not a stall."],
     ["StreetCrossing","Requires a manoeuvre crossing an engine road; inspect approach/crossing stages, smoke inventory and far-side travel."],
-    ["FireControl","Requires known threats and permitted ROE. Assigned targets are not shots; check BLUE mode, ammunition and friendly obstruction."],
+    ["FireControl","Requires known threats and permitted ROE. Ordered suppression alternates within a squad and uses a separate phase per squad; assigned targets are not shots. Check BLUE mode, ammunition and friendly obstruction."],
     ["Morale","Uses casualties, pressure and leader state; inspect morale value/state and physical retreat, not only RETREAT phase."],
     ["Surrender","Requires broken isolated survivors and surrender enabled; check captive state and real weapon removal. ACE captivity is optional."],
     ["GrenadeEvasion","Requires a qualifying live projectile and eligible observer. Check projectile handler, movement ownership and evasion release."],

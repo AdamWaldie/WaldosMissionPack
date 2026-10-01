@@ -48,7 +48,7 @@ private _spec = [
     ["Waldo_AIPass_PostContact_RegroupSeconds", "Regroup limit (s)", "Maximum time for surviving squad members to close up before Cortex releases control.", "SLIDER", [10,120,0], 30],
     ["Waldo_AIPass_Flank_Enable", "Flanking", "Half the squad flanks in covered bounds while the rest suppresses.", "CHECKBOX", [], true],
     ["Waldo_AIPass_StreetCrossing_Enable", "Street crossing", "Flanking squads stop at roads, throw smoke and cross in one bound.", "CHECKBOX", [], true],
-    ["Waldo_AIPass_FireControl_Enable", "Fire control", "Close threats first, spread fire across visible enemies, disciplined suppression with a friendly-fire check.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_FireControl_Enable", "Fire control", "Close threats first, spread fire across visible enemies, and alternate suppression inside each squad. Squads use separate firing phases and check for friendlies before an ordered burst.", "CHECKBOX", [], true],
     ["Waldo_AIPass_FireControl_MaxShootersPerTarget", "Shooters per target", "Extra shooters prefer another visible enemy once this many soldiers are assigned to one target. Immediate close threats still take priority.", "SLIDER", [1,12,0], 2],
     ["Waldo_AIPass_Morale_Enable", "Morale and retreat", "Squads under heavy losses and fire break and fall back under smoke.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Surrender_Enable", "Surrender", "One or two broken survivors surrender only when an enemy is within 60 m and no friendly squad is within 300 m (ACE Captives when loaded).", "CHECKBOX", [], true],

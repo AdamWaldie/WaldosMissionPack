@@ -983,6 +983,26 @@ class CortexOperations(unittest.TestCase):
             self.assertIn('behaviour _unit == _owned', source(name))
             self.assertIn('_unit setCombatBehaviour _previous', source(name))
 
+    def test_native_attack_destination_override_gets_bounded_actor_only_recovery(self):
+        step = source("cortexFlankStep")
+        self.assertIn('currentCommand _unit == "ATTACK"', step)
+        self.assertIn('_expected distance2D _spot > 15', step)
+        self.assertIn('_pursuitResetCount < 2', step)
+        recovery = step.split('// Live dedicated QA proved that YELLOW', 1)[1].split('private _last =', 1)[0]
+        for order in ['_unit doTarget objNull', '_unit doWatch _enemyPos', '_unit doMove _spot']:
+            self.assertIn(order, recovery)
+        self.assertNotIn('enableAttack false', recovery)
+
+    def test_suppressive_fire_talks_inside_squad_and_desynchronises_squads(self):
+        fire = source("cortexFireControl")
+        for token in ['Waldo_AIPass_NextSuppress', '0.25 + random 2',
+                      'Waldo_AIPass_SuppressCursor', '_now + 2.5 + random 1.5']:
+            self.assertIn(token, fire)
+        suppression = fire.split('// Disciplined suppression', 1)[1]
+        self.assertIn('if (_issued) exitWith {}', suppression)
+        self.assertIn('_cursor + 1', suppression)
+        self.assertGreaterEqual(fire.count('_group setVariable ["Waldo_AIPass_NextSuppress",nil]'), 2)
+
     def test_recovery_qa_measures_continuation_after_separation(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         event=qa.split('if (!_observedRecovery && {_blockedActor in _recoveryActors}) then {')[1].split('};')[0]

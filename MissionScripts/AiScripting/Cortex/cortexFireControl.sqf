@@ -9,7 +9,11 @@
  * A switched soldier keeps his target for 6 s, so orders do not flicker.
  * Suppression: at an enemy that is known but not currently seen (last seen 3-30 s ago), or at the
  * drill's enemy while a flank is running, up to Waldo_AIPass_FireControl_MaxSuppressors soldiers
- * (machine gunners first) fire suppressively. A suppressor needs at least two magazines and 60 rounds
+ * (machine gunners first) fire suppressively. One eligible suppressor is ordered at a time; the group
+ * rotates through its candidates at a 2.5-4 s interval. The first order receives a 0.25-2.25 s
+ * per-group phase offset, so separate squads do not produce an uncanny global volley. This models
+ * alternating or "talking" fire inside an element while leaving unrelated elements asynchronous.
+ * A suppressor needs at least two magazines and 60 rounds
  * for his weapon, must not himself be heavily suppressed, and must have a clear line of fire
  * (Waldo_fnc_CortexLineOfFireClear keeps friendlies, including the flanking element, and civilians out
  * of the cone). Each suppressor rests 8 s between bursts. Flank element members are left alone.
@@ -51,7 +55,12 @@ if (count _role == 5 && {count _lease == 6}
     && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
     _reported = +(_role select 4);
 };
-if (_enemies isEqualTo [] && {_reported isEqualTo []}) exitWith {0};
+if (_enemies isEqualTo [] && {_reported isEqualTo []}) exitWith {
+    // A later contact receives a fresh phase rather than inheriting an overdue
+    // window which would make every group fire together on reacquisition.
+    _group setVariable ["Waldo_AIPass_NextSuppress",nil];
+    0
+};
 if (!(combatMode _group in ["YELLOW","RED"])) exitWith {0};
 private _now = time;
 private _drill = _state getOrDefault ["drill", createHashMap];
@@ -140,25 +149,40 @@ if (_suppressPos isNotEqualTo []) then {
     private _targetASL = ATLToASL _suppressPos;
     private _limit = missionNamespace getVariable ["Waldo_AIPass_FireControl_MaxSuppressors", 2];
     private _active = {(_x getVariable ["Waldo_AIPass_LastSuppress", -1e6]) > _now - 8} count _members;
-    private _ranked = [];
-    {_ranked pushBack [[1, 0] select (([_x] call Waldo_fnc_CortexUnitRole) == "MG"), _forEachIndex]} forEach _members;
-    _ranked sort true;
-    {
-        if (_active >= _limit) exitWith {};
-        private _unit = _members select (_x select 1);
-        if ((_unit getVariable ["Waldo_AIPass_LastSuppress", -1e6]) <= _now - 8 && {getSuppression _unit < 0.5}) then {
-            private _weapon = primaryWeapon _unit;
-            private _compatible = compatibleMagazines _weapon;
-            private _spare = (magazinesAmmo _unit) select {(_x select 0) in _compatible};
-            private _rounds = _unit ammo _weapon;
-            {_rounds = _rounds + (_x select 1)} forEach _spare;
-            if (count _spare >= 2 && {_rounds >= 60} && {[_unit, _targetASL] call Waldo_fnc_CortexLineOfFireClear}) then {
-                _unit doSuppressiveFire _targetASL;
-                _unit setVariable ["Waldo_AIPass_LastSuppress", _now];
-                _active = _active + 1;
-                _orders = _orders + 1;
+    private _nextWindow = _group getVariable ["Waldo_AIPass_NextSuppress",-1];
+    if (_nextWindow < 0) then {
+        _nextWindow = _now + 0.25 + random 2;
+        _group setVariable ["Waldo_AIPass_NextSuppress",_nextWindow];
+    };
+    if (_now >= _nextWindow && {_active < _limit}) then {
+        private _ranked = [];
+        {_ranked pushBack [[1, 0] select (([_x] call Waldo_fnc_CortexUnitRole) == "MG"), _forEachIndex]} forEach _members;
+        _ranked sort true;
+        private _cursor = (_group getVariable ["Waldo_AIPass_SuppressCursor",0]) mod (count _ranked max 1);
+        private _ordered = (_ranked select [_cursor]) + (_ranked select [0,_cursor]);
+        private _issued = false;
+        {
+            if (_issued) exitWith {};
+            private _unit = _members select (_x select 1);
+            if ((_unit getVariable ["Waldo_AIPass_LastSuppress", -1e6]) <= _now - 8 && {getSuppression _unit < 0.5}) then {
+                private _weapon = primaryWeapon _unit;
+                private _compatible = compatibleMagazines _weapon;
+                private _spare = (magazinesAmmo _unit) select {(_x select 0) in _compatible};
+                private _rounds = _unit ammo _weapon;
+                {_rounds = _rounds + (_x select 1)} forEach _spare;
+                if (count _spare >= 2 && {_rounds >= 60} && {[_unit, _targetASL] call Waldo_fnc_CortexLineOfFireClear}) then {
+                    _unit doSuppressiveFire _targetASL;
+                    _unit setVariable ["Waldo_AIPass_LastSuppress", _now];
+                    _group setVariable ["Waldo_AIPass_SuppressCursor",(_cursor + 1) mod count _ranked];
+                    _group setVariable ["Waldo_AIPass_NextSuppress",_now + 2.5 + random 1.5];
+                    _issued = true;
+                    _orders = _orders + 1;
+                };
             };
-        };
-    } forEach _ranked;
+        } forEach _ordered;
+        if (!_issued) then {_group setVariable ["Waldo_AIPass_NextSuppress",_now + 1]};
+    };
+} else {
+    _group setVariable ["Waldo_AIPass_NextSuppress",nil];
 };
 _orders
