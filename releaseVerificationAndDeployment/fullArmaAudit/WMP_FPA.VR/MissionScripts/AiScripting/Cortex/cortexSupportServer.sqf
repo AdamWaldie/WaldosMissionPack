@@ -2,6 +2,7 @@
  * Author: WaldoTheWarfighter
  * Creates a bounded cross-owner reinforcement request or upgrades its remaining capacity for armour.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
+ * Publishes a bounded responder index on the requester so its owner never scans every group.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, []; 2: AT required <BOOL>, false.
  * Return Value: Nothing.
@@ -36,6 +37,9 @@ private _job = createHashMapFromArray [["requester",_requester],["key",_key],["s
     ["rallyDirection",(getPosATL leader _requester) getDir _enemy],
     ["expiry",serverTime+300],["rally",(getPosATL leader _requester) getPos [80,_enemy getDir leader _requester]],
     ["candidates",_candidates],["cursor",0],["leases",[]]];
+// Publish only this request's bounded responder index. Requester owners consume it
+// without scanning allGroups on every contact tick.
+_requester setVariable ["Waldo_Cortex_SupportResponders",[],true];
 _requests set [_key,_job];
 missionNamespace setVariable ["Waldo_AIPass_SupportRequests",_requests];
 [Waldo_fnc_CortexSupportStep,_job,1] call Waldo_fnc_CortexQueueJob;

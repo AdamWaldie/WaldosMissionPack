@@ -10,18 +10,22 @@
  * - re-applies garrison orders on the new owner after a locality change, because disableAI and
  *   event handlers are stored per machine;
  * - optionally applies WMP garrison handling to Dynamic AO garrison groups;
- * - in LAMBS "WMP" mode, turns LAMBS group AI off for managed groups (restored on release);
+ * - reconciles blanket WMP-mode and finite SPLIT-mode LAMBS movement ownership;
  * - caches locally owned, eligible artillery for fire support and counter-battery;
  * - re-applies defence-line orders after a locality change;
  * - hands landed paratroopers and dismounted crews of a lost transport to the pass
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
  * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
  *   WMP gunships and Dynamic AA fighters.
+ * - queues proactive attack-run flare sampling only for a currently eligible, crewed AI aircraft;
+ *   empty, player, UAV and excluded aircraft are reconsidered on later sweeps without job churn.
  * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
  *
  * Review contract: Live LAMBS mode changes apply to already managed groups. The restoration marker is public so a new owner can return LAMBS control; aircraft event IDs are tracked for stop cleanup.
  *
  * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
+ * Missile-warning bursts carry an owner-local generation token, so handler replacement, locality
+ * migration or a stop/restart cannot revive countermeasures queued by an earlier Cortex run.
  * Arguments:
  * 0: job <HASHMAP> - unused
  *
@@ -81,12 +85,28 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
         };
         private _eligible = [_group] call Waldo_fnc_CortexIsEligible;
         if ((!_lambsWmpMode || {!_eligible}) && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
-            _group setVariable ["lambs_danger_disableGroupAI", false, true];
+            _group setVariable ["lambs_danger_disableGroupAI", _group getVariable ["Waldo_AIPass_LambsBaseline", false], true];
             _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
+            _group setVariable ["Waldo_AIPass_LambsBaseline", nil, true];
         };
-        if (_lambsWmpMode && {_eligible} && {!(_group getVariable ["lambs_danger_disableGroupAI", false])}) then {
+        if (_lambsWmpMode && {_eligible} && {!(_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false])}) then {
+            private _scopedLease = _group getVariable ["Waldo_Cortex_LambsLease", []];
+            private _baseline = if (count _scopedLease == 3) then {_scopedLease select 1} else {
+                _group getVariable ["lambs_danger_disableGroupAI", false]
+            };
+            _group setVariable ["Waldo_AIPass_LambsBaseline", _baseline, true];
             _group setVariable ["lambs_danger_disableGroupAI", true, true];
             _group setVariable ["Waldo_AIPass_LambsDisabledByPass", true, true];
+        };
+        private _lambsLease = _group getVariable ["Waldo_Cortex_LambsLease", []];
+        if (_lambsLease isNotEqualTo []) then {
+            if (serverTime >= (_lambsLease select 2)) then {
+                [_group,"",false] call Waldo_fnc_CortexLambsLease;
+            } else {
+                // A live mode change may have just removed the blanket switch. Renewing the same
+                // scoped owner reasserts exclusive movement without changing its saved baseline.
+                [_group,_lambsLease select 0,true,_lambsLease select 2] call Waldo_fnc_CortexLambsLease;
+            };
         };
         if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_CortexIsEligible}) then {
             _group setVariable ["Waldo_AIPass_Managed", true];
@@ -116,7 +136,12 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
         private _vehicle = _x;
         if (isServer && {alive _vehicle} && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {_allArtillery pushBack _vehicle};
         if (local _vehicle && {alive _vehicle}) then {
-            if (_wantAttackFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_Cortex_AttackFlareJob",false])}) then {
+            private _pilot = driver _vehicle;
+            private _attackFlareEligible = _wantAttackFlares && {_vehicle isKindOf "Air"}
+                && {!isNull _pilot} && {alive _pilot} && {!isPlayer _pilot} && {!unitIsUAV _vehicle}
+                && {[group _pilot,"Waldo_Cortex_AttackRunFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+                && {[group _pilot] call Waldo_fnc_CortexIsEligible || {[_vehicle] call Waldo_fnc_CortexAircraftEligible}};
+            if (_attackFlareEligible && {!(_vehicle getVariable ["Waldo_Cortex_AttackFlareJob",false])}) then {
                 _vehicle setVariable ["Waldo_Cortex_AttackFlareJob",true];
                 [Waldo_fnc_CortexAttackRunFlares,createHashMapFromArray [["aircraft",_vehicle]],1] call Waldo_fnc_CortexQueueJob;
             };
@@ -127,20 +152,28 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
             if (_wantFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_AIPass_FlaresInstalled", false])}
                 && {!isNil {_vehicle getVariable "Waldo_Gunship_Id"} || {!isNil {_vehicle getVariable "Waldo_DynamicAA_SystemId"}}}) then {
                 _vehicle setVariable ["Waldo_AIPass_FlaresInstalled", true];
+                // The value is intentionally owner-local. A newly installed owner handler advances it,
+                // permanently invalidating callbacks left by an earlier handler on this machine.
+                _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",
+                    (_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1];
                 private _handler = _vehicle addEventHandler ["IncomingMissile", {
                     params ["_vehicle", "", "_shooter"];
                     if !([_vehicle] call Waldo_fnc_CortexAircraftEligible) exitWith {};
                     if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
                     _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
                     if ([group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled) then {
+                        private _generation=(_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1;
+                        _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",_generation];
                         for "_burst" from 0 to 2 do {
                             [{
-                                if ([_this] call Waldo_fnc_CortexAircraftEligible
-                                    && {[group driver _this,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled}
+                                params ["_vehicle","_generation"];
+                                if ((_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",-1]) == _generation
+                                    && {[_vehicle] call Waldo_fnc_CortexAircraftEligible}
+                                    && {[group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled}
                                     ) then {
-                                    [_this] call Waldo_fnc_CortexFireCountermeasure;
+                                    [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
                                 };
-                            }, _vehicle, _burst * 0.4] call CBA_fnc_waitAndExecute;
+                            }, [_vehicle,_generation], _burst * 0.4] call CBA_fnc_waitAndExecute;
                         };
                     };
                     // Break-away: one sideways jink away from the shooter, without touching

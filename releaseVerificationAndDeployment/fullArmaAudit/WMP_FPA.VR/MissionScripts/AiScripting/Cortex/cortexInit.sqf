@@ -3,7 +3,9 @@
  * Starts the Smart AI Pass on this machine if it owns AI: the server or a headless client.
  *
  * Installs, once per machine:
- * - one CBA per-frame handler (0.25 s) that runs Waldo_fnc_CortexSchedulerTick;
+ * - one CBA per-frame handler that runs Waldo_fnc_CortexSchedulerTick. The due-time cache makes
+ *   idle frames constant-time; due work gets one budgeted opportunity per rendered/simulated frame
+ *   instead of being capped at four heavy jobs per second;
  * - one EntityKilled mission handler that passes kills in locally owned groups to survivor regroup;
  * - the Waldo_fnc_CortexDiscover sweep job, which brings local groups under the pass;
  * - a ProjectileCreated handler for grenade evasion, only while Waldo_AIPass_GrenadeEvasion_Enable is
@@ -14,6 +16,8 @@
  * optional handlers when their switches have been turned on since the last call. Player clients return immediately and pay nothing. Each
  * behaviour has its own Waldo_AIPass_<Behaviour>_Enable switch in MissionConfig\aiConfig.sqf, and
  * Waldo_fnc_CortexIsEligible keeps player groups and other WMP features' units out.
+ * LAMBS_Danger, Waypoints, Turrets, Suppression and RPG are detected without becoming hard
+ * dependencies. Only Danger participates in movement ownership; the config-only companions remain active.
  * Locality and authority: the server publishes Waldo_AIPass_Enable and replays this call to
  * headless clients through the JIP key Waldo_AIPass_RuntimeInit. Remote calls from anything other
  * than the server are refused. A headless client waits for the feature-runtime snapshot first.
@@ -61,7 +65,7 @@ if (isServer) then {
 };
 
 if (isNil {missionNamespace getVariable "Waldo_AIPass_SchedulerHandle"}) then {
-    missionNamespace setVariable ["Waldo_AIPass_SchedulerHandle", [{[] call Waldo_fnc_CortexSchedulerTick}, 0.25] call CBA_fnc_addPerFrameHandler];
+    missionNamespace setVariable ["Waldo_AIPass_SchedulerHandle", [{[] call Waldo_fnc_CortexSchedulerTick}, 0] call CBA_fnc_addPerFrameHandler];
 };
 if (isNil {missionNamespace getVariable "Waldo_AIPass_KilledHandler"}) then {
     missionNamespace setVariable ["Waldo_AIPass_KilledHandler", addMissionEventHandler ["EntityKilled", {
@@ -74,11 +78,11 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_KilledHandler"}) then {
     }]];
 };
 
-if (!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", false]) && {!isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"}}) then {
+if (!(missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", true]) && {!isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"}}) then {
     removeMissionEventHandler ["ProjectileCreated", missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"];
     missionNamespace setVariable ["Waldo_AIPass_ProjectileHandler", nil];
 };
-if (isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"} && {missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", false]}) then {
+if (isNil {missionNamespace getVariable "Waldo_AIPass_ProjectileHandler"} && {missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable", true]}) then {
     missionNamespace setVariable ["Waldo_AIPass_ProjectileHandler", addMissionEventHandler ["ProjectileCreated", {
         params ["_projectile"];
         if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {};
@@ -103,6 +107,11 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_ArtilleryHandler"}) then {
     }]];
 };
 missionNamespace setVariable ["Waldo_AIPass_LambsDangerLoaded", isClass (configFile >> "CfgPatches" >> "lambs_danger")];
+// The companion packages are config layers. Record them for diagnostics, but never disable them
+// when Cortex takes movement ownership from LAMBS_Danger.
+missionNamespace setVariable ["Waldo_Cortex_LambsTurretsLoaded", isClass (configFile >> "CfgPatches" >> "lambs_turrets")];
+missionNamespace setVariable ["Waldo_Cortex_LambsSuppressionLoaded", isClass (configFile >> "CfgPatches" >> "lambs_suppression")];
+missionNamespace setVariable ["Waldo_Cortex_LambsRpgLoaded", isClass (configFile >> "CfgPatches" >> "lambs_rpg")];
 {
     if (local _x) then {
         _x setVariable ["Waldo_AIPass_PeakSize", (_x getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _x)];

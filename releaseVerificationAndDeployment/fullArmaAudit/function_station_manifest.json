@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1339,
+  "registeredFunctionCount": 1343,
   "runtimeFunctionCount": 383,
-  "functionCount": 1722,
+  "functionCount": 1726,
   "stations": [
     {
       "id": "control",
@@ -1049,6 +1049,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_CortexLambsLease",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLambsLease.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_CortexAntiArmour",
       "file": "MissionScripts/AiScripting/Cortex/cortexAntiArmour.sqf",
       "station": "ai",
@@ -1493,6 +1499,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_CortexTacticalStart",
+      "file": "MissionScripts/AiScripting/Cortex/cortexTacticalStart.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_CortexAdvanceStart",
       "file": "MissionScripts/AiScripting/Cortex/cortexAdvanceStart.sqf",
       "station": "ai",
@@ -1537,6 +1549,12 @@
     {
       "name": "Waldo_fnc_CortexPlanRoute",
       "file": "MissionScripts/AiScripting/Cortex/cortexPlanRoute.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSelectAvenue",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSelectAvenue.sqf",
       "station": "ai",
       "activation": "manual"
     },
@@ -2083,6 +2101,12 @@
     {
       "name": "Waldo_fnc_AIPassVehicles",
       "file": "MissionScripts/AiScripting/Cortex/cortexVehicles.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassTacticalStart",
+      "file": "MissionScripts/AiScripting/Cortex/cortexTacticalStart.sqf",
       "station": "ai",
       "activation": "manual"
     },

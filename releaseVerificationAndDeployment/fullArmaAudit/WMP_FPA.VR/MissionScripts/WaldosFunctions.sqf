@@ -190,6 +190,7 @@ class CfgFunctions
             class CortexArtilleryRole {file = "MissionScripts\AiScripting\Cortex\cortexArtilleryRole.sqf";};
             class CortexSetArtilleryRole {file = "MissionScripts\AiScripting\Cortex\cortexSetArtilleryRole.sqf";};
             class CortexReleaseFeatureCrew {file = "MissionScripts\AiScripting\Cortex\cortexReleaseFeatureCrew.sqf";};
+            class CortexLambsLease {file = "MissionScripts\AiScripting\Cortex\cortexLambsLease.sqf";};
             class CortexAntiArmour {file = "MissionScripts\AiScripting\Cortex\cortexAntiArmour.sqf";};
             class CortexCheckpoint {file = "MissionScripts\AiScripting\Cortex\cortexCheckpoint.sqf";};
             class CortexLocality {file = "MissionScripts\AiScripting\Cortex\cortexLocality.sqf";};
@@ -264,6 +265,7 @@ class CfgFunctions
             class CortexUnitRole {file = "MissionScripts\AiScripting\Cortex\cortexUnitRole.sqf";};
             class CortexOnboardContact {file = "MissionScripts\AiScripting\Cortex\cortexOnboardContact.sqf";};
             class CortexVehicles {file = "MissionScripts\AiScripting\Cortex\cortexVehicles.sqf";};
+            class CortexTacticalStart {file = "MissionScripts\AiScripting\Cortex\cortexTacticalStart.sqf";};
             class CortexAdvanceStart {file = "MissionScripts\AiScripting\Cortex\cortexAdvanceStart.sqf";};
             class CortexAmmoShare {file = "MissionScripts\AiScripting\Cortex\cortexAmmoShare.sqf";};
             class CortexCoordinatedAssault {file = "MissionScripts\AiScripting\Cortex\cortexCoordinatedAssault.sqf";};
@@ -272,6 +274,7 @@ class CfgFunctions
             class CortexDefendRelease {file = "MissionScripts\AiScripting\Cortex\cortexDefendRelease.sqf";};
             class CortexDefendStep {file = "MissionScripts\AiScripting\Cortex\cortexDefendStep.sqf";};
             class CortexPlanRoute {file = "MissionScripts\AiScripting\Cortex\cortexPlanRoute.sqf";};
+            class CortexSelectAvenue {file = "MissionScripts\AiScripting\Cortex\cortexSelectAvenue.sqf";};
             class CortexProfile {file = "MissionScripts\AiScripting\Cortex\cortexProfile.sqf";};
             class CortexStance {file = "MissionScripts\AiScripting\Cortex\cortexStance.sqf";};
             class CortexZeusHeld {file = "MissionScripts\AiScripting\Cortex\cortexZeusHeld.sqf";};
@@ -364,6 +367,7 @@ class CfgFunctions
             class AIPassInfantrySpeed {file = "MissionScripts\AiScripting\Cortex\cortexInfantrySpeed.sqf";};
             class AIPassUnitRole {file = "MissionScripts\AiScripting\Cortex\cortexUnitRole.sqf";};
             class AIPassVehicles {file = "MissionScripts\AiScripting\Cortex\cortexVehicles.sqf";};
+            class AIPassTacticalStart {file = "MissionScripts\AiScripting\Cortex\cortexTacticalStart.sqf";};
             class AIPassAdvanceStart {file = "MissionScripts\AiScripting\Cortex\cortexAdvanceStart.sqf";};
             class AIPassAmmoShare {file = "MissionScripts\AiScripting\Cortex\cortexAmmoShare.sqf";};
             class AIPassCoordinatedAssault {file = "MissionScripts\AiScripting\Cortex\cortexCoordinatedAssault.sqf";};

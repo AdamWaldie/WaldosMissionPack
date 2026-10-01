@@ -6,7 +6,8 @@
  * control interaction holds it for Waldo_AIPass_ZeusHoldSeconds (default 120): opening attributes,
  * moving a unit, or editing its waypoints. Plain selection does not cancel behaviour, allowing
  * curators to inspect active squads. Dependent jobs stop issuing commands once the hold reaches
- * their owner. Assignment cleanup occurs on the next owner scheduler tick. A waypoint placed or
+ * their owner. The marker immediately asks the current group owner to release Cortex state, avoiding
+ * a scheduler-delay race with the curator's replacement order. A waypoint placed or
  * moved by Zeus (including the DESTROY
  * waypoint created by designating a target) also holds the group until it has finished every waypoint
  * Zeus gave it.
@@ -38,4 +39,11 @@ _group setVariable ["Waldo_AIPass_ZeusMarkedAt", time];
 _group setVariable ["Waldo_AIPass_ZeusHold", [random 1e6, missionNamespace getVariable ["Waldo_AIPass_ZeusHoldSeconds", 120]], true];
 if (_waypoints && {!(_group getVariable ["Waldo_AIPass_ZeusWaypoints", false])}) then {
     _group setVariable ["Waldo_AIPass_ZeusWaypoints", true, true];
+};
+// Publish the hold before cleanup so CortexReleaseGroup recognises an external takeover and
+// restores only Cortex-owned state without replacing the curator's movement, behaviour or speed.
+if (local _group) then {
+    [_group,false] call Waldo_fnc_CortexReleaseGroup;
+} else {
+    [_group,false] remoteExecCall ["Waldo_fnc_CortexReleaseGroup",groupOwner _group];
 };

@@ -5,16 +5,28 @@
  *
  * Uses bounded fire-team movement so that it cannot freeze or
  * undo itself. The squad must have been in CONTACT for Waldo_AIPass_Advance_MinContactSeconds, its
- * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, the nearest
- * known enemy must be at least 60 m away, morale must be STEADY, no drill may be running, and the
- * behaviour profile's advanceChance roll must succeed. Two elements advance successively: riflemen
+ * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, or a squad
+ * with no active waypoint must have fresh enemy knowledge that provides a finite contact objective.
+ * Active HOLD, GUARD, SENTRY and other authored waypoint types are never replaced. The nearest known
+ * enemy must be at least 60 m away, morale must be STEADY and no drill may be running.
+ * Waldo_fnc_CortexTacticalStart applies advanceChance as a relative preference before calling this
+ * deterministic viability/start function. A bounded avenue selector compares the
+ * direct route with four offset two-leg routes and samples screening once when the drill starts.
+ * Two elements advance successively: riflemen
  * move first while the leader/support element covers, then hold while that element closes up.
  * Both elements must physically arrive before the next bound. Movers retain firing permission while the other element covers.
+ * Actors completing a short grenade-evasion or anti-armour relocation lease are omitted from both
+ * elements rather than having their destination replaced.
+ * Group attack assignment remains enabled so the covering element can acquire and share targets;
+ * only the current movers receive short, owned pursuit-feature leases in CortexFlankStep.
  * This is successive bounding overwatch, not alternating leapfrog or multi-squad coordination.
  * Locality and authority: call where the group is local.
  *
  * Each start gives its queued step a unique drill token.
- * Repeat/JIP: a running drill or cooldown refuses duplicate starts; owner migration retires local jobs.
+ * Repeat/JIP: a running drill, shared movement lease or cooldown refuses duplicate starts; owner
+ * migration retires local jobs. A rolling TACTICAL_DRILL lease makes direct fire-team movement
+ * visible to reinforcement, vehicle and artillery behaviours until CortexFlankEnd releases it.
+ * The drill heartbeat lets GroupTick restore every owned engine setting if its scheduler job stalls.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
@@ -25,33 +37,47 @@
  *
  * Example:
  * [_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart;
- * Result: a pinned squad advances two elements successively towards its objective.
+ * Result: a pinned squad advances two elements successively towards its authored or fresh-contact objective.
  *
  * Support integration: active reinforcement/assault responders decline new drills until released.
- * Current caller: Waldo_fnc_CortexGroupTick.
+ * Current caller: Waldo_fnc_CortexTacticalStart.
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
 // A live support assignment owns group movement until release; do not split its
 // responders into a competing local drill when they acquire contact.
 if (_state getOrDefault ["responding", false] || {_state getOrDefault ["assaulting", false]}) exitWith {false};
+private _movementLease = _state getOrDefault ["movementLease",[]];
+if (count _movementLease == 2 && {time < (_movementLease select 1)}) exitWith {false};
 if (count (_state getOrDefault ["drill", createHashMap]) > 0) exitWith {false};
 if ([_state, "advance"] call Waldo_fnc_CortexCooldown) exitWith {false};
 if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false};
-if (time - (_state getOrDefault ["phaseStart", time]) < (missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 30])) exitWith {false};
+if (time - (_state getOrDefault ["phaseStart", time]) < (missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds", 5])) exitWith {false};
 private _leader = leader _group;
 if (vehicle _leader != _leader) exitWith {false};
-private _index = currentWaypoint _group;
-if (_index >= count waypoints _group) exitWith {false};
-if (waypointDescription [_group, _index] == "WMP AI PASS" || {!(waypointType [_group, _index] in ["MOVE", "SAD", "DESTROY"])}) exitWith {false};
-private _objective = waypointPosition [_group, _index];
-if (_leader distance2D _objective <= 80) exitWith {false};
 if (_enemies isEqualTo [] || {((_enemies select 0) select 3) < 60}) exitWith {false};
-if (random 1 >= ([_group, "advanceChance"] call Waldo_fnc_CortexProfile)) exitWith {
-    [_state, "advance", 30] call Waldo_fnc_CortexCooldown;
-    false
+private _index = currentWaypoint _group;
+private _hasAuthoredObjective = _index < count waypoints _group;
+if (_hasAuthoredObjective && {
+    waypointDescription [_group, _index] == "WMP AI PASS"
+    || {!(waypointType [_group, _index] in ["MOVE", "SAD", "DESTROY"])}
+}) exitWith {false};
+// A group whose ordinary movement order has completed should not become inert in a live firefight.
+// Use only fresh engine knowledge and keep the objective inside this finite drill; do not manufacture
+// a persistent waypoint that would outlive contact or compete with a later Zeus order.
+if (!_hasAuthoredObjective && {((_enemies select 0) select 2) > 10}) exitWith {false};
+private _objective = if (_hasAuthoredObjective) then {
+    waypointPosition [_group, _index]
+} else {
+    (_enemies select 0) select 1
 };
-private _onFoot = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x} && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}};
+if (_leader distance2D _objective <= 80) exitWith {false};
+private _onFoot = (units _group) select {
+    private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
+    [_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x}
+        && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
+        && {count _actorMove != 3 || {time >= (_actorMove select 2)}}
+};
 private _riflemen = _onFoot select {_x != _leader && {!(([_x] call Waldo_fnc_CortexUnitRole) in ["MG", "AT", "LEADER"])}};
 private _candidates = [];
 {_candidates pushBack [_x distance2D _objective, _forEachIndex]} forEach _riflemen;
@@ -66,12 +92,21 @@ private _start = [0, 0, 0];
 _start = _start vectorMultiply (1 / count _element);
 private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
 private _goal = _start getPos [((_start distance2D _objective) - 20) min (_bound * 3), _start getDir _objective];
-if (surfaceIsWater _goal) exitWith {[_state, "advance", 30] call Waldo_fnc_CortexCooldown; false};
-private _points = [_start, [_goal], "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
-// Keep engine leader attack assignments from replacing individual movement bounds.
-_state set ["baseAttack",attackEnabled _group];
-_state set ["attackChanged",attackEnabled _group];
-if (attackEnabled _group) then {_group enableAttack false};
+private _routeDistance=_start distance2D _goal;
+private _axis=_start getDir _goal;
+private _midDistance=_routeDistance*0.55;
+private _offset=((_routeDistance*0.25) max 20) min 55;
+private _candidateRoutes=[[_goal]];
+{
+    private _screen=(_start getPos [_midDistance,_axis]) getPos [_offset,_axis+_x];
+    _candidateRoutes pushBack [_screen,_goal];
+} forEach [90,-90,55,-55];
+private _legs=[_start,_candidateRoutes,(_enemies select 0) select 1,[],(_enemies select 0) select 0]
+    call Waldo_fnc_CortexSelectAvenue;
+if (_legs isEqualTo []) exitWith {[_state, "advance", 30] call Waldo_fnc_CortexCooldown; false};
+private _points = [_start, _legs, "FINAL", _group] call Waldo_fnc_CortexPlanRoute;
+// Do not suppress the whole squad's attack assignment. CortexFlankStep protects only
+// the current moving element while the paired element continues native engagement.
 private _serial = (missionNamespace getVariable ["Waldo_Cortex_DrillSerial",0]) + 1;
 missionNamespace setVariable ["Waldo_Cortex_DrillSerial",_serial];
 private _token = format ["%1:%2",clientOwner,_serial];
@@ -82,9 +117,12 @@ _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select 0) select 0],
     ["teams",[_element,_coverElement]],["teamSizes",[count _element,count _coverElement]],["teamTurn",0],
     ["type", "ADVANCE"], ["units", _onFoot], ["desiredStrength",count _onFoot], ["points", _points], ["index", 0], ["stage", "START"],
-    ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time],
+    ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time], ["lastStep",time],
     ["boundStart", time], ["pauseUntil", 0]
 ]];
+// Direct fire-team bounds are a group movement owner even though they do not
+// create a WMP waypoint. Other behaviours must wait until CortexFlankEnd releases it.
+_state set ["movementLease",["TACTICAL_DRILL",time+90]];
 [Waldo_fnc_CortexFlankStep, createHashMapFromArray [["group", _group],["drillToken",_token]], 0] call Waldo_fnc_CortexQueueJob;
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {
     diag_log format ["[WMP CORTEX] %1 ADVANCE element=%2 points=%3", _group, count _element, count _points];

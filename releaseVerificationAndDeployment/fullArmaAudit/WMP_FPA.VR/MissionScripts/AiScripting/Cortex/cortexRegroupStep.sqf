@@ -15,7 +15,8 @@
  * more than 25 m. If survivors make no progress for Waldo_AIPass_Regroup_StuckSeconds, or the
  * timeout passes, the move is retried once and then abandoned without a remote merge. If the host
  * becomes invalid, the step returns to EVALUATE.
- * An external takeover retires the merge without issuing movement or follow orders.
+ * An external takeover retires the merge and releases only Cortex-owned STOP/ATTACK/FIRE holds.
+ * A newer direct movement, boarding, action or scripted command is preserved.
  * Hosts on other machines are never used, so a merge never moves a unit's locality.
  * Unconscious ACE casualties stay where they are.
  * Locality and authority: runs on the group owner's scheduler. doMove and joinSilent are issued for
@@ -39,6 +40,15 @@ params [["_state", createHashMap, [createHashMap]]];
 private _group = _state getOrDefault ["group", grpNull];
 private _finish = {
     if (!isNull _group) then {
+        {
+            if (alive _x && {local _x}) then {
+                private _command = toUpperANSI currentCommand _x;
+                if (_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]) then {
+                    _x doFollow (leader group _x);
+                };
+            };
+        } forEach (_state getOrDefault ["held",[]]);
+        _state set ["held",[]];
         _group setVariable ["Waldo_AIPass_RegroupQueued", nil];
         _group setVariable ["Waldo_AIPass_RegroupHost", nil];
     };
@@ -99,6 +109,7 @@ if (_phase == "EVALUATE") exitWith {
     };
     private _target = getPosATL leader _host;
     {doStop _x; _x doMove _target} forEach _movers;
+    _state set ["held",+_movers];
     _group setVariable ["Waldo_AIPass_RegroupHost", _host];
     _state set ["phase", "MOVE"];
     _state set ["host", _host];
@@ -132,6 +143,9 @@ private _joined = _movers select {_x distance2D _hostLeader <= _joinDistance};
 if (count _joined > _capacity) then {_joined resize _capacity};
 if (_joined isNotEqualTo []) then {
     _joined joinSilent _host;
+    private _held = _state getOrDefault ["held",[]];
+    {_held deleteAt (_held find _x)} forEach (_joined select {_x in _held});
+    _state set ["held",_held];
     missionNamespace setVariable ["Waldo_AIPass_RegroupJoined", (missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]) + count _joined];
 };
 private _remaining = _movers - _joined;

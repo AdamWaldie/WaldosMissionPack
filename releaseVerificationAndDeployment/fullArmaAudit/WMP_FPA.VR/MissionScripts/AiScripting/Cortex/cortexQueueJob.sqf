@@ -5,7 +5,8 @@
  * A job is code that takes one state HASHMAP and returns the number of seconds until it should run
  * again, or -1 when it has finished. Jobs never sleep: the scheduler runs them unscheduled inside a
  * per-tick time budget. New jobs wait in a pending list that the next tick merges, so a job may
- * safely queue another job while it runs.
+ * safely queue another job while it runs. The earliest queued due time is cached so the 0.25-second
+ * scheduler callback can return without walking every group while all work is still waiting.
  * Locality and authority: machine-local. Jobs and their state are never broadcast.
  *
  * Arguments:
@@ -27,5 +28,8 @@ params [["_job", {}, [{}]], ["_state", createHashMap, [createHashMap]], ["_delay
 private _group = _state getOrDefault ["group", grpNull];
 if (!isNull _group) then {_state set ["ownerEpoch", _group getVariable ["Waldo_AIPass_Epoch", 0]]};
 private _pending = missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []];
-_pending pushBack [time + (_delay max 0), _job, _state];
+private _dueAt = time + (_delay max 0);
+_pending pushBack [_dueAt, _job, _state];
 missionNamespace setVariable ["Waldo_AIPass_PendingJobs", _pending];
+private _nextDue = missionNamespace getVariable ["Waldo_AIPass_NextJobDue", -1];
+if (_nextDue < 0 || {_dueAt < _nextDue}) then {missionNamespace setVariable ["Waldo_AIPass_NextJobDue", _dueAt]};

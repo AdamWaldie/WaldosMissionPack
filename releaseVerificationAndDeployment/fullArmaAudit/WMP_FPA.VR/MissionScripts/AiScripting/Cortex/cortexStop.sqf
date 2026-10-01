@@ -15,6 +15,9 @@
  * Repeat/JIP: Repeat calls clear pending startup and abandoned jobs. Owner-local release clears
  * public defence/garrison assignments and restores only Cortex-owned movement restrictions.
  * Restart and ownership adoption cannot replay cancelled orders; tracked aircraft handlers are removed.
+ * Public delayed artillery-relocation tokens and attack-run presentation state are invalidated.
+ * Owner-local missile-warning generations are advanced before handlers are removed; an
+ * old CBA callback cannot become valid again after a quick restart.
  *
  * Arguments: None.
  *
@@ -40,6 +43,18 @@ if (isServer) then {
         _battery setVariable ["Waldo_AIPass_BusyUntil", nil, true];
     } forEach (missionNamespace getVariable ["Waldo_AIPass_FireMissions", createHashMap]);
     missionNamespace setVariable ["Waldo_AIPass_FireMissions", createHashMap];
+    // Stop is a rare administrative action, so one bounded-by-world vehicle pass is preferable to
+    // maintaining another runtime registry. Clearing the public token makes every already queued
+    // shoot-and-scoot callback fail its first identity check, including after Cortex restarts.
+    {
+        _x setVariable ["Waldo_Cortex_ArtilleryScootToken",nil,true];
+        _x setVariable ["Waldo_Cortex_ArtilleryScootDeadline",nil,true];
+        _x setVariable ["Waldo_Cortex_ArtilleryScootPurpose",nil,true];
+        if (_x isKindOf "Air") then {
+            _x setVariable ["Waldo_Cortex_AttackFlarePhase",nil,true];
+            _x setVariable ["Waldo_Cortex_AttackFlareCooldown",nil,true];
+        };
+    } forEach vehicles;
     [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
     if (remoteExecutedOwner == 0) then {
         [] remoteExecCall ["Waldo_fnc_CortexStop", -2];
@@ -52,6 +67,8 @@ missionNamespace setVariable ["Waldo_AIPass_InitPending", false];
 {
     private _handler = _x getVariable ["Waldo_AIPass_FlaresHandler", -1];
     if (_handler >= 0) then {_x removeEventHandler ["IncomingMissile", _handler]};
+    _x setVariable ["Waldo_Cortex_FlareBurstGeneration",
+        (_x getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1];
     _x setVariable ["Waldo_AIPass_FlaresHandler", nil];
     _x setVariable ["Waldo_AIPass_FlaresInstalled", nil];
 } forEach (missionNamespace getVariable ["Waldo_AIPass_FlareVehicles", []]);
@@ -131,5 +148,6 @@ private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (miss
 } forEach _jobs;
 missionNamespace setVariable ["Waldo_AIPass_Jobs", []];
 missionNamespace setVariable ["Waldo_AIPass_PendingJobs", []];
+missionNamespace setVariable ["Waldo_AIPass_NextJobDue", -1];
 missionNamespace setVariable ["Waldo_AIPass_DiscoveryQueued", false];
 diag_log "[WMP CORTEX] Stopped.";

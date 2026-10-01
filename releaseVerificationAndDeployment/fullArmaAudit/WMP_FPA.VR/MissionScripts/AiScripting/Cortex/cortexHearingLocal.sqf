@@ -12,7 +12,7 @@ params [["_group",grpNull,[grpNull]],["_cleanup",false,[true]]];
 private _tracked = _group getVariable ["Waldo_AIPass_HearingHandler",[]];
 private _leader = leader _group;
 private _enabled = !_cleanup && {local _group} && {alive _leader} && {!isPlayer _leader}
-    && {[_group] call Waldo_fnc_CortexIsEligible} && {[_group,"Waldo_AIPass_Hearing_Enable",false] call Waldo_fnc_CortexFeatureEnabled};
+    && {[_group] call Waldo_fnc_CortexIsEligible} && {[_group,"Waldo_AIPass_Hearing_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 if (_tracked isNotEqualTo [] && {!_enabled || {(_tracked select 0) != _leader}}) then {
     (_tracked select 0) removeEventHandler ["FiredNear",_tracked select 1];
     _group setVariable ["Waldo_AIPass_HearingHandler",nil]; _tracked = [];
@@ -23,7 +23,7 @@ private _handler = _leader addEventHandler ["FiredNear",{
     private _group = group _observer;
     if (!local _observer || {isNull _firer} || {!alive _observer} || {!(missionNamespace getVariable ["Waldo_AIPass_Active",false])}
         || {[] call Waldo_fnc_CortexIsPaused} || {!([_group] call Waldo_fnc_CortexIsEligible)}
-        || {!([_group,"Waldo_AIPass_Hearing_Enable",false] call Waldo_fnc_CortexFeatureEnabled)}
+        || {!([_group,"Waldo_AIPass_Hearing_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
         || {(side _group) getFriend (side group _firer) >= 0.6}
         || {serverTime < (_group getVariable ["Waldo_AIPass_HearingDue",0])}) exitWith {};
     private _items = weaponsItems _firer;

@@ -16,7 +16,7 @@ if (_revision < (missionNamespace getVariable ["Waldo_AIPass_SettingsRevision",0
 {missionNamespace setVariable [_x select 0,_x select 1]} forEach _updates;
 missionNamespace setVariable ["Waldo_AIPass_SettingsRevision",_revision];
 missionNamespace setVariable ["Waldo_AIPass_SettingsApplied",_revision];
-private _effects = [missionNamespace getVariable ["Waldo_AIRebalance_Enable",true],missionNamespace getVariable ["Waldo_AIRebalance_Mode","AUTO"],missionNamespace getVariable ["Waldo_AIRebalance_Profile","LINE"],missionNamespace getVariable ["Waldo_AIPass_Enable",false],missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable",false]];
+private _effects = [missionNamespace getVariable ["Waldo_AIRebalance_Enable",true],missionNamespace getVariable ["Waldo_AIRebalance_Mode","AUTO"],missionNamespace getVariable ["Waldo_AIRebalance_Profile","LINE"],missionNamespace getVariable ["Waldo_AIPass_Enable",false],missionNamespace getVariable ["Waldo_AIPass_GrenadeEvasion_Enable",true]];
 private _previous = missionNamespace getVariable ["Waldo_AIPass_SettingsEffects",[]];
 if (_previous isEqualTo [] || {(_previous select [0,3]) isNotEqualTo (_effects select [0,3])}) then {
     if (_effects select 0) then {[_effects select 1,_effects select 2] call Waldo_fnc_AIRebalanceInit} else {[] call Waldo_fnc_AIRebalanceStop};

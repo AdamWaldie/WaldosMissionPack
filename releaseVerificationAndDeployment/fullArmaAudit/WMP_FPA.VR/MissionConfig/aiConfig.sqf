@@ -101,7 +101,7 @@
  * - Waldo_AIPass_VehicleRemount_Enable (MISSION MAKER): Reboard recorded passengers on a normal return to CALM. Default true.
  * - Waldo_AIPass_VehicleWithdraw_Enable (MISSION MAKER): Damaged vehicle smoke and withdrawal. Default true.
  * - Waldo_AIPass_CoverValidation_Enable (MISSION MAKER): Bounded footprint, slope and geometry validation for cover candidates. Default true.
- * - Waldo_AIPass_Hearing_Enable (MISSION MAKER): Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default false.
+ * - Waldo_AIPass_Hearing_Enable (MISSION MAKER): Coarse nearby-gunfire reports for eligible squad leaders; requires investigation. Default true.
  * - Waldo_Convoy_MountedFire_Enable (MISSION MAKER): Mounted crew targeting under existing ROE. Default true.
  * - Waldo_Convoy_Cover_Enable (MISSION MAKER): Short passenger movement clear of vehicles after a halt, using cover during contact. Default true.
  * - Waldo_Convoy_ContactHalt_Enable (MISSION MAKER): Contact halt requests under the configured push-through rule. Default true.
@@ -114,10 +114,10 @@
  * groups and units owned by other WMP features (Gunship, Transport Services, Paradrop, Dynamic AA,
  * AI Convoy, dialogue speakers, drones) are always excluded. Dynamic AO groups are included.
  * Per-unit or per-group opt-out: _group setVariable ["Waldo_AIPass_Exclude", true, true];
- * - Waldo_AIPass_Enable (MISSION MAKER): master switch; false means no pass code runs anywhere.
+ * - Waldo_AIPass_Enable (MISSION MAKER): master switch; true by default. False means no pass code runs anywhere.
  * - Waldo_AIPass_IncludedSides (MISSION MAKER): sides the pass may command; CIV is left out by default.
  *   The shared Waldo_AI_IncludedFactions/ExcludedFactions/ExcludedClasses filters above also apply.
- * - Waldo_AIPass_TickBudgetMs (ADVANCED): milliseconds of work allowed per scheduler tick (0.25 s).
+ * - Waldo_AIPass_TickBudgetMs (ADVANCED): milliseconds of work allowed on a frame with due jobs.
  * - Waldo_AIPass_LowFpsThreshold (ADVANCED): below this machine FPS, behaviour steps run half as often.
  * - Waldo_AIPass_Regroup_Enable (MISSION MAKER): survivors of a destroyed squad join a nearby friendly squad.
  * - Waldo_AIPass_Regroup_MaxRemnantSize (ADVANCED): a group this small or smaller counts as a remnant.
@@ -129,7 +129,7 @@
  * - Waldo_AIPass_Regroup_StuckSeconds (ADVANCED): no progress for this long retries once, then aborts without merging at a distance.
  * - Waldo_AIPass_Regroup_TimeoutSeconds (ADVANCED): limit for finding a host and for walking to it.
  * - Waldo_AIPass_Regroup_SettleSeconds (ADVANCED): wait after a kill so simultaneous deaths settle.
- * - Waldo_AIPass_LambsMode (MISSION MAKER): only matters with LAMBS Danger loaded; SPLIT lets LAMBS keep in-contact unit tactics, WMP turns LAMBS group AI off for squads the pass manages.
+ * - Waldo_AIPass_LambsMode (MISSION MAKER): only matters with LAMBS Danger loaded; SPLIT keeps its FSM active except during finite Cortex-owned responder movement, while WMP gives Cortex full group control. Config-only LAMBS companions remain active.
  * - Waldo_AIPass_Debug (TROUBLESHOOTING): logs contact, flank, morale and retreat events to RPT.
  * - Waldo_AIPass_EngageRange (ADVANCED): range in metres within which known enemies are considered.
  * - Waldo_AIPass_NearRange (ADVANCED): squads this close to a player are stepped every TickNear seconds.
@@ -174,7 +174,8 @@
  *   numbers below, can be changed during the mission with the AI Tuning Zeus module or
  *   Waldo_fnc_CortexTuning):
  *   - Waldo_AIPass_BehaviourProfile: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics mission-wide (group and faction profiles still win).
- *   - Waldo_AIPass_Aggression: scales flank, assault, advance, investigate and coordinated-assault chances (1 = the profile's own).
+ *   - Waldo_AIPass_Aggression: scales local-manoeuvre preferences, optional assault preparation,
+ *     post-contact investigation and coordinated-assault participation (1 = the profile's own).
  *   - Waldo_AIPass_Cohesion: how much punishment squads take before morale breaks (1 = normal).
  *   - Waldo_AIPass_ReactionSpeed: how often squads re-assess (1 = normal; higher costs more server time).
  * - Waldo_AIPass_Artillery_Enable (MISSION MAKER): squads call fire from friendly AI artillery on well-located enemies only.
@@ -224,6 +225,7 @@
  * - Waldo_AIPass_Assault_Range (ADVANCED): the enemy must be believed this close to the flanking element before an assault.
  * - Waldo_AIPass_Advance_Enable (MISSION MAKER): squads in a long firefight that still have a waypoint to reach push a fire team forward in covered bounds.
  * - Waldo_AIPass_Advance_MinContactSeconds (ADVANCED): seconds in contact before a bounding advance is considered.
+ * - Waldo_AIPass_Advance_Cooldown (ADVANCED): seconds before a squad may begin another bounding advance.
  * - Waldo_AIPass_CoordinatedAssault_Enable (MISSION MAKER): squads that came to reinforce assault the enemy from both sides while the squad in contact fires.
  * - Waldo_AIPass_Stance_Enable (MISSION MAKER): soldiers stand, kneel or go prone to match the cover in front of them.
  * - Waldo_AIPass_AmmoShare_Enable (MISSION MAKER): soldiers down to their last magazine get one from a nearby squad-mate with plenty.
@@ -288,7 +290,7 @@ createHashMapFromArray [
         // MISSION MAKER switches followed by ADVANCED Smart AI Pass scheduling and behaviour tuning.
         ["Waldo_AIPass_Enable", true], // BOOL: master switch for Cortex (server and headless clients only).
         ["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // ARRAY of WEST/EAST/GUER/CIV strings the pass may command.
-        ["Waldo_AIPass_TickBudgetMs", 1], // MILLISECONDS: work allowed per 0.25 s scheduler tick; at least one job always runs.
+        ["Waldo_AIPass_TickBudgetMs", 1], // MILLISECONDS: work allowed on a frame with due jobs; at least one due job always runs.
         ["Waldo_AIPass_LowFpsThreshold", 25], // FPS: below this, behaviour steps are rescheduled half as often.
         ["Waldo_AIPass_Regroup_Enable", true], // BOOL: survivors of a destroyed squad regroup with a nearby friendly squad.
         ["Waldo_AIPass_Regroup_MaxRemnantSize", 2], // COUNT: living members at or below this make a remnant.
@@ -300,10 +302,10 @@ createHashMapFromArray [
         ["Waldo_AIPass_Regroup_TimeoutSeconds", 120], // SECONDS: limit for finding a host and for walking to it.
         ["Waldo_AIPass_Regroup_SettleSeconds", 5], // SECONDS: delay after a kill before the remnant is assessed.
         ["Waldo_AIPass_BehaviourProfile", ""], // STRING: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics for every squad without its own.
-        ["Waldo_AIPass_Aggression", 1.2], // 0-2: scales how often squads flank, assault, advance, investigate and coordinate.
+        ["Waldo_AIPass_Aggression", 1.2], // 0-2: scales manoeuvre preference/participation and optional tactical actions; zero excludes them.
         ["Waldo_AIPass_Cohesion", 1], // 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner.
         ["Waldo_AIPass_ReactionSpeed", 1], // 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often.
-        ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads).
+        ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (shared ownership with finite movement handover) or WMP (Cortex group control). Turrets/Suppression/RPG remain active.
         ["Waldo_AIPass_Debug", false], // BOOL: extra [WMP CORTEX] RPT lines for contact, flanks, morale and retreats.
         ["Waldo_AIPass_EngageRange", 800], // METRES: enemies the leader knows about within this range are considered.
         ["Waldo_AIPass_NearRange", 1000], // METRES: squads this close to a player run at the near cadence.
@@ -333,7 +335,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_FireControl_MaxShootersPerTarget", 2], // COUNT: shooters per visible enemy before others switch.
         ["Waldo_AIPass_Morale_Enable", true], // BOOL: weighted morale; broken squads retreat under smoke.
         ["Waldo_AIPass_Morale_RetreatDistance", 200], // METRES: how far a broken squad falls back.
-        ["Waldo_AIPass_Surrender_Enable", false], // BOOL: last survivors of a broken, isolated squad surrender.
+        ["Waldo_AIPass_Surrender_Enable", true], // BOOL: last survivors of a broken, isolated squad surrender.
         ["Waldo_AIPass_GrenadeEvasion_Enable", true], // BOOL: move away from seen grenades.
         ["Waldo_AIPass_AntiArmour_Enable", true], // BOOL: best AT gunner engages known armour, clear of backblast.
         ["Waldo_AIPass_VehicleDismount_Enable", true], // Unloads capable passengers only when safely stopped on dry ground.
@@ -345,7 +347,7 @@ createHashMapFromArray [
         ["Waldo_Convoy_AvoidInfantry_Enable", false], // Optional short-range friendly infantry corridor checks before driving.
         ["Waldo_Convoy_ContactHalt_Enable", true], // Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.
         ["Waldo_Convoy_Unload_Enable", true], // Allows WMP passenger unloading on halt. Operating crews remain aboard.
-        ["Waldo_AIPass_Hearing_Enable", false], // Optional nearby gunfire area reports, never target reveals.
+        ["Waldo_AIPass_Hearing_Enable", true], // Nearby gunfire area reports, never target reveals.
         ["Waldo_AIPass_Vehicles_Enable", true], // BOOL: dismount under fire; damaged vehicles smoke and withdraw.
         ["Waldo_AIPass_ContactReports_Enable", true], // BOOL: share sightings by radio (jammable) or voice.
         ["Waldo_AIPass_ContactReports_Radius", 500], // METRES: radio report range.
@@ -388,11 +390,11 @@ createHashMapFromArray [
         ["Waldo_Cortex_AttackRunFlares_Enable", true], // BOOL: finite countermeasure bursts approaching and leaving assigned attack targets.
         ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
         ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: behaviour per AI Rebalance profile name.
-            ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.3], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
-            ["LINE", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.5], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
-            ["LEGACY", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.5], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
-            ["VETERAN", createHashMapFromArray [["flankChance", 0.6], ["assaultChance", 0.55], ["advanceChance", 0.6], ["investigateChance", 0.75], ["coordinatedChance", 0.5], ["moraleShaken", 0.45], ["moraleBroken", 0.22], ["retreatScale", 0.8], ["surrenderSurvivors", 1]]],
-            ["ELITE", createHashMapFromArray [["flankChance", 0.7], ["assaultChance", 0.7], ["advanceChance", 0.7], ["investigateChance", 0.85], ["coordinatedChance", 0.6], ["moraleShaken", 0.4], ["moraleBroken", 0.18], ["retreatScale", 0.7], ["surrenderSurvivors", 1]]]
+            ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.7], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
+            ["LINE", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
+            ["LEGACY", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
+            ["VETERAN", createHashMapFromArray [["flankChance", 0.7], ["assaultChance", 0.55], ["advanceChance", 0.5], ["investigateChance", 0.75], ["coordinatedChance", 0.5], ["moraleShaken", 0.45], ["moraleBroken", 0.22], ["retreatScale", 0.8], ["surrenderSurvivors", 1]]],
+            ["ELITE", createHashMapFromArray [["flankChance", 0.9], ["assaultChance", 0.7], ["advanceChance", 0.4], ["investigateChance", 0.85], ["coordinatedChance", 0.6], ["moraleShaken", 0.4], ["moraleBroken", 0.18], ["retreatScale", 0.7], ["surrenderSurvivors", 1]]]
         ]],
         ["Waldo_AIPass_FactionProfiles", createHashMap], // MAP: CfgFactionClasses name to behaviour profile, for example OPF_F to ELITE.
         ["Waldo_AIPass_ZeusHoldSeconds", 120], // SECONDS: the pass leaves a group alone this long after Zeus selects or edits it.
@@ -402,7 +404,8 @@ createHashMapFromArray [
         ["Waldo_AIPass_Assault_Enable", true], // BOOL: a flank can finish with a grenade and a rush on the enemy position.
         ["Waldo_AIPass_Assault_Range", 80], // METRES: the enemy must be this close to the flanking element to assault.
         ["Waldo_AIPass_Advance_Enable", true], // BOOL: pinned squads with somewhere to go push a team forward in bounds.
-        ["Waldo_AIPass_Advance_MinContactSeconds", 30], // SECONDS: in contact before an advance is considered.
+        ["Waldo_AIPass_Advance_MinContactSeconds", 5], // SECONDS: confirmed contact before an advance is considered.
+        ["Waldo_AIPass_Advance_Cooldown", 20], // SECONDS: after an advance ends before the squad may start another.
         ["Waldo_AIPass_CoordinatedAssault_Enable", true], // BOOL: reinforcing squads assault together while the first squad fires.
         ["Waldo_AIPass_Stance_Enable", true], // BOOL: stance chosen from the height of the cover in front.
         ["Waldo_AIPass_AmmoShare_Enable", true], // BOOL: soldiers low on magazines get one from a squad-mate.

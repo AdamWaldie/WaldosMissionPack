@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Ends a drill (flank or bounding advance). Restores owned combat-mode overrides only
+ * Ends a drill (flank or bounding advance). Restores owned unit and group combat-mode overrides only
  * while the current mode still matches the value Cortex applied; later external changes survive.
  *
  * Restores the leader attack-assignment setting and only the AI features the drill disabled. A drill that completed, or stopped because the
@@ -10,14 +10,17 @@
  * group, or release) orders members to follow the leader again at once. A failed coordinated
  * bound instead holds its gained ground until the next server sequence; it must not regroup
  * backwards before a retry. PATH holds transfer to supportHeld for normal release/migration.
- * The drill's cooldown starts.
+ * The drill's type-specific cooldown starts: advances may resume sooner than wide flanks. Cleanup
+ * releases a TACTICAL_DRILL movement lease only; a newer
+ * withdrawal, vehicle, artillery or coordinated-assault owner survives a delayed drill callback.
  * Locality and authority: call where the group is local.
  *
  * Repeat/JIP: an empty drill is a no-op; the ending reason is published for observers and JIP.
  * Arguments:
  * 0: group <GROUP>
  * 1: state <HASHMAP>
- * 2: reason <STRING> - COMPLETE, CLOSE, ABORT, LOSSES, STALLED, TIME_LIMIT, RELEASE, CALM, GRENADE_UNRESOLVED or RECOVERY_FAILED
+ * 2: reason <STRING> - COMPLETE, CLOSE, ABORT, LOSSES, STALLED, TIME_LIMIT, RELEASE, ZEUS, CALM,
+ *    ROE_CHANGED, SPEED_CHANGED, GRENADE_UNRESOLVED, RECOVERY_FAILED or SCHEDULER_STALLED
  * Unresolved stragglers change COMPLETE/CLOSE to PARTIAL; main actors hold while stragglers rejoin.
  *
  * Return Value:
@@ -33,6 +36,14 @@
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_reason", "", [""]]];
 private _drill = _state getOrDefault ["drill", createHashMap];
 if (count _drill == 0) exitWith {};
+private _groupModeLease = _drill getOrDefault ["groupCombatMode",[]];
+if (count _groupModeLease == 2 && {combatMode _group == (_groupModeLease select 1)}) then {
+    _group setCombatMode (_groupModeLease select 0);
+};
+private _groupSpeedLease = _drill getOrDefault ["groupSpeedMode",[]];
+if (count _groupSpeedLease == 2 && {speedMode _group == (_groupSpeedLease select 1)}) then {
+    _group setSpeedMode (_groupSpeedLease select 0);
+};
 {
     _x params ["_unit", "_feature"];
     if (alive _unit && {local _unit}) then {_unit enableAI _feature};
@@ -85,20 +96,28 @@ if (_hold) then {
     _state set ["holders", _holders];
 } else {
     private _leader = leader _group;
-    {_x doFollow _leader} forEach _members;
+    // Zeus has already supplied the replacement movement. Restore Cortex-owned
+    // feature switches above, but do not replace that order with formation return.
+    if (_reason != "ZEUS") then {{_x doFollow _leader} forEach _members};
 };
 };
 if (_supportToken != "") then {
     _group setVariable ["Waldo_Cortex_SupportBoundResult",[_supportToken,_drill get "supportSequence",_reason],true];
 } else {
-    if (_state getOrDefault ["attackChanged",false]) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
+    if (_reason != "ZEUS" && {_state getOrDefault ["attackChanged",false]}) then {_group enableAttack (_state getOrDefault ["baseAttack",true])};
     _state deleteAt "attackChanged";
     _state deleteAt "baseAttack";
 };
 private _type = _drill getOrDefault ["type", "FLANK"];
 _group setVariable ["Waldo_Cortex_DrillResult",[_type,_reason,time],true];
 _state deleteAt "drill";
-[_state, toLowerANSI _type, missionNamespace getVariable ["Waldo_AIPass_Flank_Cooldown", 90]] call Waldo_fnc_CortexCooldown;
+private _movementLease = _state getOrDefault ["movementLease",[]];
+if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {
+    _state deleteAt "movementLease";
+};
+private _cooldownName = ["Waldo_AIPass_Flank_Cooldown", "Waldo_AIPass_Advance_Cooldown"] select (_type == "ADVANCE");
+private _cooldownDefault = [90, 20] select (_type == "ADVANCE");
+[_state, toLowerANSI _type, missionNamespace getVariable [_cooldownName, _cooldownDefault]] call Waldo_fnc_CortexCooldown;
 if (_reason == "COMPLETE") then {
     private _counter = ["Waldo_AIPass_FlanksCompleted", "Waldo_AIPass_AdvancesCompleted"] select (_type == "ADVANCE");
     missionNamespace setVariable [_counter, (missionNamespace getVariable [_counter, 0]) + 1];

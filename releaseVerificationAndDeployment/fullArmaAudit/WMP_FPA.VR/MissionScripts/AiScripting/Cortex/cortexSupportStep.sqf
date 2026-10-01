@@ -3,6 +3,7 @@
  * Maintains at most six reserved responders and examines at most eight candidates per request step.
  * Assigns each responder a distinct 45 m rally area, with at least 110 m between centres.
  * Six bounded candidate areas lie behind the requester; the nearest unused dry area is chosen.
+ * Publishes only the request's at-most-six responder identities for owner-side tactical selection.
  * This separation is not terrain-aware approach routing. No shared-point fallback is used.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
@@ -43,7 +44,11 @@ private _kept = [];
     };
 } forEach _leases;
 _job set ["leases",_kept];
-if (!_valid) exitWith {_requests deleteAt (_job get "key"); -1};
+if (!_valid) exitWith {
+    _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+    _requests deleteAt (_job get "key");
+    -1
+};
 private _candidates = _job get "candidates";
 private _cursor = _job get "cursor";
 for "_i" from 1 to 8 do {
@@ -82,6 +87,14 @@ for "_i" from 1 to 8 do {
 };
 _job set ["cursor",_cursor];
 _job set ["leases",_kept];
-if (_cursor >= count _candidates && {_kept isEqualTo []}) exitWith {_requests deleteAt (_job get "key"); -1};
+private _responders = _kept apply {[_x select 0,_x select 1]};
+if (_responders isNotEqualTo (_requester getVariable ["Waldo_Cortex_SupportResponders",[]])) then {
+    _requester setVariable ["Waldo_Cortex_SupportResponders",_responders,true];
+};
+if (_cursor >= count _candidates && {_kept isEqualTo []}) exitWith {
+    _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+    _requests deleteAt (_job get "key");
+    -1
+};
 [_job,_kept] call Waldo_fnc_CortexSupportCoordinateStep;
 2

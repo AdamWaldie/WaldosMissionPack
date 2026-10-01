@@ -5,18 +5,22 @@
  * Behaviour profiles sit alongside AI Rebalance's skill profiles and use the same names (MILITIA,
  * LINE, VETERAN, ELITE, LEGACY), so choosing a WMP opposition profile changes how squads decide as
  * well as how well they shoot. Skill values are never changed here; this only answers
- * "how willing is this squad to flank, assault or hold". Resolution order:
+ * "how willing is this squad to flank, prepare an assault or hold". Resolution order:
  * 1. the group variable Waldo_AIPass_Profile (a mission maker's per-group choice);
  * 2. Waldo_AIPass_FactionProfiles (a map of CfgFactionClasses name to profile) for the leader's faction;
  * 3. Waldo_AIPass_BehaviourProfile, the mission-wide tuning choice ("" to follow AI Rebalance);
  * 4. Waldo_AIRebalance_Profile, the active AI Rebalance profile (PUBLIC and STANDARD map to MILITIA
  *    and LINE);
  * 5. LINE.
- * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales every chance
- * key, capped at 1.
+ * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales every
+ * tactical-weight key, capped at 1.
  * Missing keys in a mission-edited profile fall back to LINE's values, and an unknown profile name
  * uses LINE.
- * Keys: flankChance, assaultChance, advanceChance, investigateChance, coordinatedChance (0-1 rolls),
+ * Keys: flankChance and advanceChance are relative local-manoeuvre preferences (zero excludes that
+ * option); coordinatedChance is a positive participation gate once support has assembled;
+ * investigateChance remains a 0-1 post-contact search roll;
+ * assaultChance is the 0-1 chance of preparing an eligible assault with a safe carried grenade,
+ * while the enabled assault transition itself remains deterministic after a successful manoeuvre.
  * moraleShaken and moraleBroken (morale thresholds), retreatScale (multiplies
  * Waldo_AIPass_Morale_RetreatDistance), surrenderSurvivors (largest squad that may surrender).
  * Locality and authority: read-only; callable anywhere.
@@ -51,7 +55,7 @@ _name = toUpperANSI _name;
 if (_name == "PUBLIC") then {_name = "MILITIA"};
 if (_name == "STANDARD") then {_name = "LINE"};
 private _defaults = createHashMapFromArray [
-    ["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.5], ["investigateChance", 0.6],
+    ["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6],
     ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]
 ];
 private _line = _table getOrDefault ["LINE", createHashMap];

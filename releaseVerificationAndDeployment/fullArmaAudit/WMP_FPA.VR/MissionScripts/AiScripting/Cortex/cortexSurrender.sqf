@@ -27,7 +27,7 @@
 params [["_group", grpNull, [grpNull]]];
 if (isNull _group || {!local _group}
     || {!([_group] call Waldo_fnc_CortexIsEligible)}
-    || {!([_group,"Waldo_AIPass_Surrender_Enable",false] call Waldo_fnc_CortexFeatureEnabled)}) exitWith {0};
+    || {!([_group,"Waldo_AIPass_Surrender_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) exitWith {0};
 if ((units _group) findIf {local _x && {vehicle _x == _x} && {[_x] call Waldo_fnc_CortexCombatEffective}} < 0) exitWith {0};
 // Release movement and stance ownership before ACE starts its surrender state.
 // Otherwise the next ineligible-group cleanup can overwrite the captive's posture.

@@ -16,9 +16,11 @@
  * The pass adds no detection. A live coordinated role may suppress its reported position
  * without assigning an unseen object target; all normal fire safety and ammo limits apply.
  * Locality and authority: call where the group is local; all orders are local-argument commands.
- * A pending drill grenade thrower is not retargeted during the GRENADE stage.
+ * An opportunistic drill grenade thrower is not retargeted during its two-second action window;
+ * the grenade never blocks the squad manoeuvre state.
  * Repeat/JIP: checks current ownership, eligibility and gates on every call. START/MOVE
- * actors and recovering stragglers are excluded; this function creates no JIP actions.
+ * actors may receive only the immediate close-threat order; distribution and suppression
+ * remain with stationary elements. Recovering stragglers are excluded. This function creates no JIP actions.
  *
  * Arguments:
  * 0: group <GROUP>
@@ -60,15 +62,17 @@ private _drillUnits = if ((_drill getOrDefault ["teams",[]]) isEqualTo []) then 
     if ((_drill getOrDefault ["stage",""]) in ["START","MOVE"]) then {_drill getOrDefault ["movers",_drill getOrDefault ["units",[]]]} else {[]}
 };
 // Rejoining actors still own movement, even while the main element pauses.
-// The grenade stage owns this actor until deployment is resolved. Other
-// stationary soldiers remain available for covering fire and anti-armour work.
-if ((_drill getOrDefault ["stage",""]) == "GRENADE") then {
+// An opportunistic grenade reserves only its thrower for the short next-frame
+// action window; it never blocks the squad's manoeuvre state.
+if (_now < (_drill getOrDefault ["grenadeActionUntil",-1])) then {
     _drillUnits = +_drillUnits;
     _drillUnits pushBackUnique (_drill getOrDefault ["grenadeThrower",objNull]);
 };
 private _recovering = (_drill getOrDefault ["recovery",[]]) apply {_x select 0};
-private _members = (units _group) select {([_x] call Waldo_fnc_CortexCombatEffective) && {local _x} && {unitCombatMode _x in ["YELLOW","RED"]} && {vehicle _x == _x} && {!(_x in _drillUnits)} && {!(_x in _recovering)} && {primaryWeapon _x != ""}};
-if (_members isEqualTo []) exitWith {0};
+private _eligible = (units _group) select {([_x] call Waldo_fnc_CortexCombatEffective) && {local _x} && {unitCombatMode _x in ["YELLOW","RED"]} && {vehicle _x == _x} && {!(_x in _recovering)} && {primaryWeapon _x != ""}};
+private _members = _eligible - _drillUnits;
+private _movingMembers = _eligible arrayIntersect _drillUnits;
+if (_members isEqualTo [] && {_movingMembers isEqualTo []}) exitWith {0};
 private _orders = 0;
 private _held = {(_this getVariable ["Waldo_AIPass_TargetHold", -1]) > _now};
 
@@ -87,7 +91,7 @@ private _held = {(_this getVariable ["Waldo_AIPass_TargetHold", -1]) > _now};
         _unit setVariable ["Waldo_AIPass_TargetHold", _now + 6];
         _orders = _orders + 1;
     };
-} forEach _members;
+} forEach (_members + _movingMembers);
 
 // Target distribution across visible enemies.
 private _visible = (_enemies select {(_x select 2) <= 3}) apply {_x select 0};

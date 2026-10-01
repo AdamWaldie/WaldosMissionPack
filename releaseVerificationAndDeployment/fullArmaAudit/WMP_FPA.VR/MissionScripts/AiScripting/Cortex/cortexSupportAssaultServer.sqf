@@ -2,6 +2,12 @@
  * Author: WaldoTheWarfighter
  * Updates accepted reinforcement reservations with a finite coordinated assault destination.
  * Locality/authority: requester owner asks; server validates its existing leases; helper owners execute.
+ * Each helper keeps the side of the support-to-enemy axis on which it rallied. Candidate approach
+ * points remain separated, then Waldo_fnc_CortexSelectAvenue rejects routes entering the requester's
+ * 30 m firing corridor or changing sides. The shared bounded scorer distinguishes terrain/solid
+ * ballistic screening from visual concealment. It runs once per dispatch, not per tick or soldier.
+ * Responders which missed the finite assembly window are released when at least one arrived squad
+ * receives an approach. They resume autonomous combat instead of keeping a ten-minute rally lease.
  * Repeat/JIP: one assault per request; the updated durable lease revalidates on HC migration.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, [].
  * 2: reply owner <NUMBER>, default -1; HC callers supply clientOwner.
@@ -21,6 +27,12 @@ private _sent = 0;
 _job set ["assaultEnemy",+_enemy];
 // Allow finite fire-team bounds rather than a single sprint before lease expiry.
 _job set ["expiry",serverTime+600];
+private _supportOrigin=getPosATL leader _requester;
+private _laneX=(_enemy select 0)-(_supportOrigin select 0);
+private _laneY=(_enemy select 1)-(_supportOrigin select 1);
+private _laneLength=sqrt (_laneX*_laneX+_laneY*_laneY);
+private _approaches=[];
+private _dispatched=[];
 {
     _x params ["_helper","_token","","","_accepted"];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
@@ -28,15 +40,52 @@ _job set ["expiry",serverTime+600];
     if (_accepted == "ACCEPTED" && {count _lease == 6} && {(_lease select 0) == _token}
         && {count _status == 4} && {(_status select 0) == _token} && {(_status select 1) >= 0} && {_status select 2}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
-        private _attack = _enemy getPos [25,(_enemy getDir leader _requester)+([90,-90] select (_sent mod 2 == 1))];
-        if (!surfaceIsWater _attack) then {
+        private _rally=+(_lease select 3);
+        private _rallyX=(_rally select 0)-(_supportOrigin select 0);
+        private _rallyY=(_rally select 1)-(_supportOrigin select 1);
+        private _rallySide=if (_laneLength > 0) then {(_laneX*_rallyY-_laneY*_rallyX)/_laneLength} else {0};
+        private _candidateRoutes=[];
+        {
+            _x params ["_radius","_offset"];
+            private _candidate=_enemy getPos [_radius,(_enemy getDir leader _requester)+_offset];
+            private _candidateX=(_candidate select 0)-(_supportOrigin select 0);
+            private _candidateY=(_candidate select 1)-(_supportOrigin select 1);
+            private _candidateSide=if (_laneLength > 0) then {(_laneX*_candidateY-_laneY*_candidateX)/_laneLength} else {0};
+            private _sameSide=abs _rallySide < 30 || {_candidateSide*_rallySide > 0};
+            private _separated=_approaches findIf {_x distance2D _candidate < 35} < 0;
+            if (_sameSide && {!surfaceIsWater _candidate} && {_separated}) then {
+                _candidateRoutes pushBack [_candidate];
+            };
+        } forEach [[45,90],[85,90],[65,135],[45,-90],[85,-90],[65,-135]];
+        private _selected=[_rally,_candidateRoutes,_enemy,[_supportOrigin]] call Waldo_fnc_CortexSelectAvenue;
+        private _attack=if (_selected isEqualTo []) then {[]} else {+(_selected select ((count _selected)-1))};
+        if (_attack isNotEqualTo []) then {
+            _approaches pushBack +_attack;
             _lease = +_lease; _lease set [2,_job get "expiry"]; _lease set [5,_attack];
             _helper setVariable ["Waldo_AIPass_SupportLease",_lease,true];
             [_helper,_lease] remoteExecCall ["Waldo_fnc_CortexSupportLocal",groupOwner _helper];
+            _dispatched pushBack _x;
             _sent = _sent+1;
         };
     };
 } forEach (_job get "leases");
 
-// A rejected/empty dispatch remains retryable; no movement was reserved.
-if (_sent > 0) then {_job set ["assaultIssued",true]; [_job,_job get "leases"] call Waldo_fnc_CortexSupportCoordinateStep};
+// A rejected/empty dispatch remains retryable; no movement was reserved. Once at least one
+// responder is moving, release every late or route-rejected reservation. Its owner observes the
+// missing lease and restores normal autonomous behaviour on the next group tick.
+if (_sent > 0) then {
+    {
+        _x params ["_helper","_token"];
+        if (_dispatched findIf {(_x select 0) == _helper && {(_x select 1) == _token}} < 0) then {
+            private _lease=_helper getVariable ["Waldo_AIPass_SupportLease",[]];
+            if (count _lease == 6 && {(_lease select 0) == _token}) then {
+                _helper setVariable ["Waldo_AIPass_SupportLease",nil,true];
+                _helper setVariable ["Waldo_Cortex_SupportRole",nil,true];
+            };
+        };
+    } forEach (_job get "leases");
+    _job set ["leases",_dispatched];
+    _requester setVariable ["Waldo_Cortex_SupportResponders",_dispatched apply {[_x select 0,_x select 1]},true];
+    _job set ["assaultIssued",true];
+    [_job,_dispatched] call Waldo_fnc_CortexSupportCoordinateStep;
+};
