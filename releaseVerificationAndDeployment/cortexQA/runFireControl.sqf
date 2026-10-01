@@ -26,6 +26,7 @@ private _shooters=[];
 for "_i" from 0 to 3 do {
     private _unit=_group createUnit ["O_Soldier_F",[2100+_i*4,1100,0],[],0,"NONE"];
     _unit allowDamage false; _unit disableAI "PATH";
+    _unit setUnitCombatMode "BLUE";
     _unit setVariable ["acex_headless_blacklist",true,true];
     _unit setVariable ["Waldo_CortexQA_Label",format ["FIRE CONTROL %1",_i+1],true];
     _unit addEventHandler ["FiredMan",{
@@ -102,10 +103,15 @@ for "_g" from 0 to 2 do {
     _suppressionGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
     _suppressionGroup setVariable ["acex_headless_blacklist",true,true];
     _suppressionGroup setCombatMode "BLUE";
+    private _origin=[2040+_g*60,1300,0];
+    private _axis=_origin vectorFromTo [2100,1355,0];
+    private _lateral=[-(_axis select 1),_axis select 0,0];
     for "_i" from 0 to 2 do {
-        private _unit=_suppressionGroup createUnit ["O_Soldier_F",[2040+_g*60+_i*3,1300,0],[],0,"NONE"];
+        private _position=_origin vectorAdd (_lateral vectorMultiply ((_i-1)*4));
+        private _unit=_suppressionGroup createUnit ["O_Soldier_F",_position,[],0,"NONE"];
         _unit allowDamage false;
         _unit disableAI "PATH";
+        _unit setUnitCombatMode "BLUE";
         _unit setVariable ["acex_headless_blacklist",true,true];
         _unit setVariable ["Waldo_CortexQA_SuppressOrders",[]];
         _unit setVariable ["Waldo_CortexQA_SuppressShots",[]];
@@ -174,18 +180,20 @@ private _orderedByGroup=_suppressionGroups apply {
     _events
 };
 private _rotated=_orderedByGroup findIf {count _x < 2} < 0;
-private _firstOrders=_orderedByGroup apply {_x param [0,-1]};
-private _staggered=_firstOrders findIf {_x < 0} < 0 && {
-    private _earliest=selectMin _firstOrders;
-    private _latest=selectMax _firstOrders;
-    _latest-_earliest >= 0.1
+private _comparableRounds=selectMin (_orderedByGroup apply {count _x});
+private _roundSpreads=[];
+for "_round" from 0 to (_comparableRounds-1) do {
+    private _times=_orderedByGroup apply {_x select _round};
+    _roundSpreads pushBack ((selectMax _times)-(selectMin _times));
 };
+// A first reaction may legitimately share one frame. Repeated global lockstep is the defect.
+private _staggered=_comparableRounds >= 2 && {_roundSpreads findIf {_x >= 0.15} >= 0};
 private _actualSuppression=_suppressionGroups findIf {
     private _group=_x;
     (units _group) findIf {(_x getVariable ["Waldo_CortexQA_SuppressShots",[]]) isNotEqualTo []} < 0
 } < 0;
 ["FIRE-talking-guns-rotated-suppressors",_rotated,str _orderedByGroup] call _check;
-["FIRE-squads-not-global-volley",_staggered,str _firstOrders] call _check;
+["FIRE-squads-not-global-volley",_staggered,str _roundSpreads] call _check;
 ["FIRE-multi-squad-actual-suppression",_actualSuppression,str (_suppressionShooters apply {count (_x getVariable ["Waldo_CortexQA_SuppressShots",[]])})] call _check;
 {[_x] call Waldo_fnc_CortexReleaseGroup} forEach _suppressionGroups;
 {deleteVehicle _x} forEach (_suppressionShooters+[_suppressionEnemy]+_suppressionScreen);

@@ -600,8 +600,9 @@ crowded corridor requests a stop. It changes the existing speed request without 
   AUTOCOMBAT, behaviour, ROE and speed. SafeStart and ENDEX give deferred jobs a 60-second grace
   after resumption. This prevents a missing job or an expired fixed lease from leaving a squad inert.
 - How often a squad is stepped depends on its distance to the nearest player: every 2 s in contact
-  nearby, up to every 20 s far away. Squads more than 2.5 km from every player only update their
-  state and morale.
+  nearby, up to every 20 s far away. A zero-mean variation of up to 0.35 s prevents groups repeatedly
+  thinking and firing on the same frame without adding another job. Squads more than 2.5 km from every
+  player only update their state and morale.
 - Uses engine knowledge and expiring reported positions. Optional nearby-gunfire investigation adds a coarse sound report without revealing the shooter.
 - Restoration checkpoints broadcast only when their contents change. Clear-building progress and orders have durable replay state.
 - Artillery uses cached guns/spotters, one observer request per burst and at most eight opening aim candidates. Counter-battery uses firing-event snapshots; its legacy observer helper is not needed for automatic acquisition.

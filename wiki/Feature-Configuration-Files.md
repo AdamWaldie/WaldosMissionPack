@@ -389,6 +389,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_TickNear` | Seconds between steps within NearRange. Default `4`. |
 | `Waldo_AIPass_TickMid` | Seconds between steps within FarRange. Default `8`. |
 | `Waldo_AIPass_TickFar` | Seconds between steps beyond FarRange. Default `20`. |
+| Cortex group cadence | Each interval receives an internal zero-mean variation of up to `0.35` seconds so groups do not repeatedly think and fire on the same scheduler frame. This adds no job or setting. |
 | `Waldo_AIPass_DiscoveryInterval` | Seconds between discovery sweeps for newly local AI groups. Default `10`. |
 | `Waldo_AIPass_Contact_Enable` | Contact handling and the state ladder; every combat behaviour below needs it. Default `true`. |
 | `Waldo_AIPass_PostContact_Enable` | After contact is lost: hold, search the last known enemy position, regroup. Default `true`. |

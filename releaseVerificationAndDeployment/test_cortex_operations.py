@@ -1014,6 +1014,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_x doTarget objNull; _x doWatch objNull',qa)
         self.assertNotIn('call Waldo_fnc_CortexFireControl',qa)
 
+    def test_group_ticks_use_low_cost_zero_mean_jitter(self):
+        tick=source("cortexGroupTick")
+        self.assertIn('private _cadence = _delay / _reaction;',tick)
+        self.assertIn('(_cadence + random 0.7 - 0.35) max 0.5',tick)
+        self.assertIn('adding no scheduler job or polling loop',tick)
+        self.assertNotIn('Waldo_fnc_CortexQueueJob, createHashMapFromArray [["group", _group]',tick)
+
     def test_recovery_qa_measures_continuation_after_separation(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         event=qa.split('if (!_observedRecovery && {_blockedActor in _recoveryActors}) then {')[1].split('};')[0]
