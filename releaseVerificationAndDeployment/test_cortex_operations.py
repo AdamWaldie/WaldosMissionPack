@@ -2300,6 +2300,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('count _phaseHistory <= 32',text)
         self.assertNotIn('call Waldo_fnc_CortexRestoreCalm',text)
 
+    def test_combat_start_failure_reports_independent_tactical_refusals(self):
+        text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
+        self.assertIn('Waldo_Cortex_FlankRefusal',text)
+        self.assertIn('Waldo_Cortex_AdvanceRefusal',text)
+        self.assertIn('getOrDefault ["movementLease",[]]',text)
+        self.assertIn('[_prefix+"-started",_started,str _startRefusal]',text)
+
     def test_calm_cleanup_retires_onboard_contact_deadline(self):
         text=source('cortexRestoreCalm')
         cleanup=text[text.index('{_state deleteAt _x} forEach [',text.index('private _boarding')):]
