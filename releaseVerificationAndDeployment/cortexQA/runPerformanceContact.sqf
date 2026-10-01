@@ -23,6 +23,10 @@ private _results=[];
 {
     private _enabled=_x;
     private _arm=_forEachIndex;
+    private _liveHcOwners=(allPlayers select {_x isKindOf "HeadlessClient_F"}) apply {owner _x};
+    if (_hcOwners findIf {!(_x in _liveHcOwners)} >= 0) exitWith {
+        [format ["PERF-CONTACT-arm-%1-owner-prerequisite",_arm],false,str _liveHcOwners] call _check;
+    };
     private _sampleId=format ["CONTACT_%1_%2",_arm,floor serverTime];
     [createHashMapFromArray [["Waldo_AIPass_Enable",_enabled],["Waldo_AIPass_Contact_Enable",true],
         ["Waldo_AIPass_Regroup_Enable",true],["Waldo_AIPass_LambsMode","SPLIT"]]] call Waldo_fnc_CortexTuning;
@@ -76,7 +80,10 @@ private _results=[];
             } else {
                 [_group,_desiredOwner] call Waldo_fnc_HeadlessMigrateGroup;
             };
-            sleep 0.01;
+            // Arma creates every group on the server before ownership transfer. A short pacing
+            // interval avoids presenting the engine allocator with 66 near-simultaneous six-unit
+            // migrations while still keeping fixture assembly outside the measured window.
+            sleep 0.05;
         };
     };
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors select [0,18],true];
@@ -125,12 +132,15 @@ private _results=[];
     },20] call _wait;
     private _ownerResults=_owners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
     private _sampleResults=_sampleOwners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
+    private _survivingHcOwners=(allPlayers select {_x isKindOf "HeadlessClient_F"}) apply {owner _x};
+    private _ownersStillLive=_hcOwners findIf {!(_x in _survivingHcOwners)} < 0;
+    [format ["PERF-CONTACT-arm-%1-owner-survival",_arm],_ownersStillLive,str _survivingHcOwners] call _check;
     private _moved={
         private _index=_groups find _x;
         (_starts select _index) findIf {(_x select 0) distance2D (_x select 1) >= 20} >= 0
     } count _groups;
     private _fired={_x getVariable ["Waldo_CortexQA_PerformanceFired",false]} count _contactGroups;
-    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
+    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownersStillLive} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
         && {_moved >= 90} && {_fired >= 15} && {_responseLatency >= 0};
     [format ["PERF-CONTACT-arm-%1-physical-workload",_arm],_valid,
         format ["movedGroups=%1 firedContactGroups=%2 responseSeconds=%3 samples=%4",_moved,_fired,_responseLatency,_sampleResults]] call _check;
@@ -141,7 +151,7 @@ private _results=[];
     missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
     sleep 10;
 } forEach [false,true,true,false];
-private _allValid=_results findIf {!(_x select 1)} < 0;
+private _allValid=count _results == 4 && {_results findIf {!(_x select 1)} < 0};
 ["PERF-CONTACT-comparable-arms",_allValid,str _results] call _check;
 if (_allValid) then {
     {

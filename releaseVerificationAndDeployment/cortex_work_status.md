@@ -49,6 +49,13 @@ warm-up baseline, and shots were counted only from leaders. The saved fixture no
 soldier's start before owner-local activation and records a group's first real FiredMan event on the
 group owner. No budget pass is claimed pending a rebuilt matrix.
 
+Runtime `20261001-115539` confirmed that the corrected fixture performs real work: 99 of 100
+groups moved, 18 of 25 contact groups fired and the first observed response took 29.552 seconds.
+One headless client then crashed inside the Arma allocator during the first arm, transferring its 33
+groups back to the server and invalidating the comparison. The saved matrix now paces initial
+ownership transfers, requires both expected headless clients before and after each arm, and refuses
+to publish partial OFF/ON/ON/OFF results.
+
 ## 1 October: contact initiative without authored movement
 
 Bounding advance no longer requires an unfinished ordinary waypoint. An eligible steady squad with no active waypoint can use enemy knowledge seen within the previous ten seconds as a finite objective, run the existing successive covered bounds, and transition through the existing assault/consolidation flow. Cortex does not add a persistent waypoint for this case. An active HOLD, GUARD, SENTRY or other non-movement waypoint remains authoritative and refuses the automatic advance. This closes a source-level idle path for editor-placed or newly stationary squads without adding a poller, global scan or per-unit scheduler. Physical aggression, route quality, Zeus interruption and performance remain queued for the rebuilt audit.

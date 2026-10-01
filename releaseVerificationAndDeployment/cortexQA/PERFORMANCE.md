@@ -53,6 +53,13 @@ travel, while its firing count inspected squad leaders rather than all six soldi
 now starts owner-local work only after baselines are captured and records the first real FiredMan
 event from any group member. A fresh run is required; no percentage pass is claimed from this matrix.
 
+Runtime `runtime-20261001-115539` exercised the corrected physical workload: 99 of 100 groups moved,
+18 of 25 contact groups produced real fire and the first observed response took 29.552 seconds. One
+headless client then suffered an Arma engine access violation during the first arm, migrating its 33
+groups back to the server and invalidating the comparison. The audit now paces initial ownership
+transfers, verifies both expected headless clients before and after every arm, and refuses to publish
+a matrix unless all four arms finish with their original owners alive.
+
 The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
 measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage
 alongside them.
