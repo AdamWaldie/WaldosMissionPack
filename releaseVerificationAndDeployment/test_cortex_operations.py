@@ -703,6 +703,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('player setCaptive true',guide)
         self.assertIn('addMissionEventHandler ["EntityRespawned"',guide)
 
+    def test_audit_visualisation_has_a_bounded_render_cost(self):
+        guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text(encoding='utf-8')
+        for marker in ['positionCameraToWorld [0,0,0]','private _renderDistance=2500',
+                       'if (count _actors > 12) then {_actors resize 12}',
+                       '_position distance (_track select (count _track-1)) > 2',
+                       'if (count _track > 48) then {_track deleteRange [0,count _track-48]}',
+                       'distance2D _cameraPosition <= _renderDistance']:
+            self.assertIn(marker,guide)
+        self.assertNotIn('if (count _track > 90) then {_track deleteAt 0}',guide)
+
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')
         self.assertIn('private _teamPause=if (_support) then {0} else', text)

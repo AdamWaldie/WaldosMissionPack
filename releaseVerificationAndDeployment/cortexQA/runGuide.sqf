@@ -4,7 +4,8 @@
  * Locality/authority: interface only; reads server-published audit state and protects the local
  * observer so combat cannot invalidate rendered-client measurements; never changes fixture AI.
  * Repeat/JIP: one observer per client; an obsolete respawn handler is removed before installation,
- * and controls are rebuilt when the game/Zeus display changes.
+ * controls are rebuilt when the game/Zeus display changes, and audit-only tracks are capped at
+ * twelve actors and forty-eight samples so the visual aid cannot dominate the measured workload.
  * Arguments: None. Return: Nothing (scheduled script).
  * Current callers: staged Cortex audit client. Example: [] execVM "cortexQAGuide.sqf";
  */
@@ -34,6 +35,8 @@ missionNamespace setVariable ["Waldo_CortexQA_GuideReady",true,true];
 missionNamespace setVariable ["Waldo_CortexQA_Tracks",createHashMap];
 // Audit-only markers show each destination without changing the units or their orders.
 private _draw = addMissionEventHandler ["Draw3D",{
+    private _cameraPosition=positionCameraToWorld [0,0,0];
+    private _renderDistance=2500;
     private _group = missionNamespace getVariable ["Waldo_CortexQA_Infantry",grpNull];
     {
         private _slot = _x getVariable ["Waldo_AIPass_GarrisonPos",_x getVariable ["Waldo_AIPass_DefendPos",[]]];
@@ -47,7 +50,9 @@ private _draw = addMissionEventHandler ["Draw3D",{
     } forEach units _group;
     {
         private _track = _y;
-        for "_i" from 1 to (count _track-1) do {drawLine3D [(_track select (_i-1)) vectorAdd [0,0,0.12],(_track select _i) vectorAdd [0,0,0.12],[0.1,1,1,0.8]]};
+        if (_track isNotEqualTo [] && {(_track select (count _track-1)) distance2D _cameraPosition <= _renderDistance}) then {
+            for "_i" from 1 to (count _track-1) do {drawLine3D [(_track select (_i-1)) vectorAdd [0,0,0.12],(_track select _i) vectorAdd [0,0,0.12],[0.1,1,1,0.8]]};
+        };
     } forEach (missionNamespace getVariable ["Waldo_CortexQA_Tracks",createHashMap]);
     {
         private _label=_x getVariable ["Waldo_CortexQA_Label",typeOf _x];
@@ -102,7 +107,9 @@ private _draw = addMissionEventHandler ["Draw3D",{
             _text=format ["%1 | %2 km/h | altitude %3 m | climb %4 m | correction %5",_label,round speed _x,_decel select 0,_decel select 1,if (_decel select 3) then {"ACTIVE"} else {["not observed","completed"] select (_decel select 2)}];
         };
         drawIcon3D ["",[0.2,1,1,1],(getPosATL _x) vectorAdd [0,0,2.3],0,0,0,_text,2,0.028,"RobotoCondensed"];
-    } forEach (missionNamespace getVariable ["Waldo_CortexQA_Actors",[]]);
+    } forEach ((missionNamespace getVariable ["Waldo_CortexQA_Actors",[]]) select {
+        !isNull _x && {_x distance2D _cameraPosition <= _renderDistance}
+    });
     private _rooms=missionNamespace getVariable ["Waldo_CortexQA_Rooms",[]];
     if (_rooms isNotEqualTo []) then {
         {private _visited=(_rooms select 1) select _forEachIndex; drawIcon3D ["\a3\ui_f\data\map\markers\military\objective_ca.paa",[[1,0.7,0,1],[0.2,1,0.3,1]] select _visited,_x vectorAdd [0,0,0.5],0.7,0.7,0,format ["Building position %1 | %2",_forEachIndex+1,["not visited","physical visit"] select _visited],2,0.03,"RobotoCondensed"]} forEach (_rooms select 0);
@@ -202,6 +209,8 @@ while {true} do {
         if (_combat isNotEqualTo []) then {_actors append units (_combat select 0)};
         _actors append (missionNamespace getVariable ["Waldo_CortexQA_Actors",[]]);
         _actors append (missionNamespace getVariable ["Waldo_CortexQA_ConvoyVehicles",[]]);
+        _actors = (_actors select {!isNull _x}) arrayIntersect _actors;
+        if (count _actors > 12) then {_actors resize 12};
         private _tracks = missionNamespace getVariable ["Waldo_CortexQA_Tracks",createHashMap];
         private _keys = _actors apply {netId _x};
         {if !(_x in _keys) then {_tracks deleteAt _x}} forEach keys _tracks;
@@ -209,8 +218,8 @@ while {true} do {
             private _key=netId _x;
             private _track=_tracks getOrDefault [_key,[]];
             private _position=getPosATL _x;
-            if (_track isEqualTo [] || {_position distance (_track select (count _track-1)) > 0.5}) then {_track pushBack _position};
-            if (count _track > 90) then {_track deleteAt 0};
+            if (_track isEqualTo [] || {_position distance (_track select (count _track-1)) > 2}) then {_track pushBack _position};
+            if (count _track > 48) then {_track deleteRange [0,count _track-48]};
             _tracks set [_key,_track];
         } forEach _actors;
     };
