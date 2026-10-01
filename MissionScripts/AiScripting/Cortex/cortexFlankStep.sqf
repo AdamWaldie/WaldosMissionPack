@@ -32,6 +32,9 @@
  * that were on are switched off, and they are switched back on at every halt, so mission-maker
  * disableAI settings survive. A bound completes when every member is within 3 m of his spot, or after
  * six seconds when at least two soldiers and 60 percent of the assigned element have physically arrived.
+ * A remaining soldier who is still making physical progress receives up to six additional seconds to
+ * finish the bound. This short, progress-driven grace avoids turning an active mover into a recovery
+ * chase while never holding the element for an actor who has actually stopped.
  * Remaining actors become bounded recovery stragglers and keep moving toward their element; they are
  * never counted as arrived or teleported. Each arrival holds PATH until the next bound, preventing formation return. Waldo_AIPass_Flank_BoundTimeout limits stationary time; four times that value is the absolute bound limit. Stationary movement ends as STALLED; the absolute limit ends as TIME_LIMIT, never arrival. Halts last
  * Waldo_AIPass_Flank_BoundPause seconds (also after clearing and consolidation),
@@ -512,9 +515,16 @@ switch (_drill get "stage") do {
         _drill set ["pursuitResets",_pursuitResets];
         private _originalElement = if (_teams isEqualTo []) then {_allUnits} else {_teams select (_drill getOrDefault ["teamTurn",0])};
         private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;
+        private _boundAge = _now - (_drill get "boundStart");
+        private _lateMovers = _units - _arrivedUnits;
+        private _lateMoverProgressing = _lateMovers findIf {
+            private _progressIndex = _movers find _x;
+            _progressIndex >= 0 && {_now - ((_progress select _progressIndex) select 3) <= 3}
+        } >= 0;
         private _quorumReady = !_arrived
-            && {_now - (_drill get "boundStart") >= 6}
-            && {count _arrivedUnits >= _minimumArrivals};
+            && {_boundAge >= 6}
+            && {count _arrivedUnits >= _minimumArrivals}
+            && {!_lateMoverProgressing || {_boundAge >= 12}};
         if (_quorumReady) then {
             private _stragglers = _units - _arrivedUnits;
             {

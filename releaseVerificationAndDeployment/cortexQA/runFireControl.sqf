@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Exercises infantry hold-fire and actual multi-target firing through the live Cortex scheduler.
+ * Exercises infantry hold-fire, actual multi-target firing and naturally staggered multi-squad
+ * suppression through the live Cortex scheduler.
  * Locality/authority: scheduled server with server-pinned fixtures; real fired events are observed.
  * Repeat/JIP: creates fresh actors and deletes them; public labels support joining observers.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>, required callbacks.
@@ -88,6 +89,99 @@ sleep 12;
 [_group] call Waldo_fnc_CortexReleaseGroup;
 {deleteVehicle _x} forEach (_shooters+_targets);
 deleteGroup _group; deleteGroup _enemyGroup;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+
+// Three independent squads acquire the same visible enemy, then retain its last known position after
+// it disappears. The production group ticks must choose and rotate suppressors without a test-injected
+// order. This observer samples existing public state only; it adds no runtime scheduler or coordination.
+private _suppressionGroups=[];
+private _suppressionShooters=[];
+for "_g" from 0 to 2 do {
+    private _suppressionGroup=createGroup [east,true];
+    _suppressionGroup setGroupIdGlobal [format ["Cortex QA TALK %1",_g+1]];
+    _suppressionGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+    _suppressionGroup setVariable ["acex_headless_blacklist",true,true];
+    _suppressionGroup setCombatMode "BLUE";
+    for "_i" from 0 to 2 do {
+        private _unit=_suppressionGroup createUnit ["O_Soldier_F",[2040+_g*60+_i*3,1300,0],[],0,"NONE"];
+        _unit allowDamage false;
+        _unit disableAI "PATH";
+        _unit setVariable ["acex_headless_blacklist",true,true];
+        _unit setVariable ["Waldo_CortexQA_SuppressOrders",[]];
+        _unit setVariable ["Waldo_CortexQA_SuppressShots",[]];
+        _unit setVariable ["Waldo_CortexQA_Label",format ["SQUAD %1 / SHOOTER %2 | waiting",_g+1,_i+1],true];
+        _unit addEventHandler ["FiredMan",{
+            params ["_unit"];
+            private _shots=_unit getVariable ["Waldo_CortexQA_SuppressShots",[]];
+            _shots pushBack time;
+            _unit setVariable ["Waldo_CortexQA_SuppressShots",_shots,true];
+        }];
+        _suppressionShooters pushBack _unit;
+    };
+    _suppressionGroups pushBack _suppressionGroup;
+};
+private _suppressionEnemyGroup=createGroup [west,true];
+_suppressionEnemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+_suppressionEnemyGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_suppressionEnemyGroup setVariable ["acex_headless_blacklist",true,true];
+_suppressionEnemyGroup setCombatMode "BLUE";
+private _suppressionEnemy=_suppressionEnemyGroup createUnit ["B_Soldier_F",[2100,1355,0],[],0,"NONE"];
+_suppressionEnemy allowDamage false;
+_suppressionEnemy disableAI "PATH";
+_suppressionEnemy setVariable ["acex_headless_blacklist",true,true];
+_suppressionEnemy setVariable ["Waldo_CortexQA_Label","SHARED ENEMY / visible acquisition",true];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",_suppressionShooters+[_suppressionEnemy],true];
+["Fire control: independent squad cadence","Three stationary squads first acquire the same visible enemy while holding fire. The enemy then disappears. Watch each squad rotate individual suppressors at its own lightly random cadence; cyan labels show production orders and actual shot times. A synchronized three-squad volley fails.",[2100,1325,0]] call _phase;
+private _allContact=[{
+    _suppressionGroups findIf {
+        ((_x getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]) != "CONTACT"
+    } < 0
+},40] call _wait;
+["FIRE-multi-squad-natural-contact",_allContact,str (_suppressionGroups apply {(_x getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]})] call _check;
+hideObjectGlobal _suppressionEnemy;
+{_x setCombatMode "RED"} forEach _suppressionGroups;
+private _deadline=time+35;
+waitUntil {
+    {
+        private _unit=_x;
+        private _last=_unit getVariable ["Waldo_AIPass_LastSuppress",-1];
+        private _orders=_unit getVariable ["Waldo_CortexQA_SuppressOrders",[]];
+        if (_last >= 0 && {_orders isEqualTo [] || {_last > (_orders select ((count _orders)-1))}}) then {
+            _orders pushBack _last;
+            _unit setVariable ["Waldo_CortexQA_SuppressOrders",_orders,true];
+        };
+        private _groupNumber=(_suppressionGroups find (group _unit))+1;
+        _unit setVariable ["Waldo_CortexQA_Label",format ["SQUAD %1 | orders %2 | shots %3 | last %4",_groupNumber,count _orders,count (_unit getVariable ["Waldo_CortexQA_SuppressShots",[]]),if (_last < 0) then {"none"} else {_last toFixed 1}],true];
+    } forEach _suppressionShooters;
+    private _readyGroups={
+        private _group=_x;
+        count ((units _group) select {(_x getVariable ["Waldo_CortexQA_SuppressOrders",[]]) isNotEqualTo []}) >= 2
+    } count _suppressionGroups;
+    _readyGroups == 3 || {time >= _deadline}
+};
+private _orderedByGroup=_suppressionGroups apply {
+    private _events=[];
+    {_events append (_x getVariable ["Waldo_CortexQA_SuppressOrders",[]])} forEach units _x;
+    _events sort true;
+    _events
+};
+private _rotated=_orderedByGroup findIf {count _x < 2} < 0;
+private _firstOrders=_orderedByGroup apply {_x param [0,-1]};
+private _staggered=_firstOrders findIf {_x < 0} < 0 && {
+    private _earliest=selectMin _firstOrders;
+    private _latest=selectMax _firstOrders;
+    _latest-_earliest >= 0.1
+};
+private _actualSuppression=_suppressionGroups findIf {
+    private _group=_x;
+    (units _group) findIf {(_x getVariable ["Waldo_CortexQA_SuppressShots",[]]) isNotEqualTo []} < 0
+} < 0;
+["FIRE-talking-guns-rotated-suppressors",_rotated,str _orderedByGroup] call _check;
+["FIRE-squads-not-global-volley",_staggered,str _firstOrders] call _check;
+["FIRE-multi-squad-actual-suppression",_actualSuppression,str (_suppressionShooters apply {count (_x getVariable ["Waldo_CortexQA_SuppressShots",[]])})] call _check;
+{[_x] call Waldo_fnc_CortexReleaseGroup} forEach _suppressionGroups;
+{deleteVehicle _x} forEach (_suppressionShooters+[_suppressionEnemy]);
+{deleteGroup _x} forEach (_suppressionGroups+[_suppressionEnemyGroup]);
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 
 // Separate live AT fixture: real visible armour, clear rear arc and finite ammunition.

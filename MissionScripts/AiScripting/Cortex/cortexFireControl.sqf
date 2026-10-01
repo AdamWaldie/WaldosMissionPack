@@ -11,7 +11,7 @@
  * drill's enemy while a flank is running, up to Waldo_AIPass_FireControl_MaxSuppressors soldiers
  * (machine gunners first) fire suppressively. One eligible suppressor is ordered at a time; the group
  * rotates through its candidates at a 2.5-4 s interval. The first order receives a 0.25-2.25 s
- * per-group phase offset, so separate squads do not produce an uncanny global volley. This models
+ * short per-group random delay, so separate squads do not produce an uncanny global volley. This models
  * alternating or "talking" fire inside an element while leaving unrelated elements asynchronous.
  * A suppressor needs at least two magazines and 60 rounds
  * for his weapon, must not himself be heavily suppressed, and must have a clear line of fire

@@ -1002,6 +1002,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_issued) exitWith {}', suppression)
         self.assertIn('_cursor + 1', suppression)
         self.assertGreaterEqual(fire.count('_group setVariable ["Waldo_AIPass_NextSuppress",nil]'), 2)
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runFireControl.sqf').read_text()
+        for token in ['FIRE-talking-guns-rotated-suppressors',
+                      'FIRE-squads-not-global-volley',
+                      'FIRE-multi-squad-actual-suppression',
+                      'Waldo_CortexQA_SuppressOrders',
+                      'Waldo_CortexQA_SuppressShots']:
+            self.assertIn(token,qa)
+        self.assertIn('hideObjectGlobal _suppressionEnemy',qa)
+        self.assertNotIn('call Waldo_fnc_CortexFireControl',qa)
 
     def test_recovery_qa_measures_continuation_after_separation(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
@@ -2313,7 +2322,11 @@ class CortexOperations(unittest.TestCase):
     def test_bound_progresses_on_physical_role_quorum_and_recovers_laggards(self):
         step=source('cortexFlankStep')
         self.assertIn('private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;',step)
-        self.assertIn('_now - (_drill get "boundStart") >= 6',step)
+        self.assertIn('private _boundAge = _now - (_drill get "boundStart");',step)
+        self.assertIn('private _lateMoverProgressing = _lateMovers findIf',step)
+        self.assertIn('_now - ((_progress select _progressIndex) select 3) <= 3',step)
+        self.assertIn('_boundAge >= 6',step)
+        self.assertIn('!_lateMoverProgressing || {_boundAge >= 12}',step)
         self.assertIn('count _arrivedUnits >= _minimumArrivals',step)
         self.assertIn('private _stragglers = _units - _arrivedUnits;',step)
         self.assertIn('_recovery pushBack [_straggler,0,_now]',step)
