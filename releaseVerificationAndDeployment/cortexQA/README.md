@@ -161,7 +161,7 @@ Runtime `20260927-101028` completed 34 checks with two failures and zero SQF err
 
 ## Breadth-first acceptance pass
 
-Establish a usable baseline across all 57 cases in `coverage.json` before further tuning individual manoeuvres. Preserve existing tests and failures. A baseline requires a visible physical outcome, feature-off behaviour, safe cancellation and repeat cleanup; full ownership and integration acceptance remains a separate required pass.
+Establish a usable baseline across all 58 cases in `coverage.json` before further tuning individual manoeuvres. Preserve existing tests and failures. A baseline requires a visible physical outcome, feature-off behaviour, safe cancellation and repeat cleanup; full ownership and integration acceptance remains a separate required pass.
 
 The launcher also accepts independent `-CortexFocus support`, `airborne`, `vehicles` and `fire` runs. These execute the existing support, parachute, vehicle-reaction and fire-control procedures separately. They remain included in `mechanics` and `all`; no coverage is removed. Each run retains server/client completion reporting and the visual guide.
 

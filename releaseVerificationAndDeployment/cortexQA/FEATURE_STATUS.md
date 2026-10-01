@@ -56,8 +56,8 @@ Feature cases: **58**. Required variant categories: **13**.
 | CLEAR - Building clearance | 0 | `runBuildingComparison.sqf` | 1 | implemented_partial |
 | UI - Cortex UI and purpose modules | 0 | `runClient.sqf` | 0 | implemented_partial |
 | LIFECYCLE - Transfer, disconnect and JIP | 0 | `runLifecycle.sqf` | 6 | implemented_partial |
-| MULTI-FLANK - Multi-squad flank cohesion | 0 | `runMultiManoeuvre.sqf` | 0 | implemented_partial |
-| MULTI-BOUND - Squad and multi-squad bounding overwatch | 0 | `runMultiManoeuvre.sqf` | 0 | implemented_partial |
+| MULTI-FLANK - Multi-squad flank cohesion | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
+| MULTI-BOUND - Squad and multi-squad bounding overwatch | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
 | MULTI-WITHDRAW - Multi-squad screened withdrawal | 0 | `runReactions.sqf` | 0 | implemented_partial |
 | TRANSITIONS - Combat action transitions | 0 | `runCombat.sqf` | 2 | implemented_partial |
 | LIGHTING - Automatic darkness, night vision and illumination | 1 | `runProfiles.sqf`, `runLighting.sqf` | 1 | implemented_partial |
@@ -382,13 +382,13 @@ Feature cases: **58**. Required variant categories: **13**.
 
 **Expected:** Both manoeuvre squads physically reach separate approach lanes while the base fires; no duplicate movement controller or cross-lane convergence. A blocked, depleted or Zeus-controlled team is released without cancelling unrelated squads.
 
-**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads sharing a naturally detected enemy, per-member physical travel, final cohesion, actual covering shots while the other squad moves; bounding requires two observed squad-role switches. Wired into all/coordinated focus. Saved, unexecuted. This exposes missing coordination rather than asserting that independent squad drills are coordinated. Route complementarity, transitions, Zeus and owner variants remain open.
+**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent before relying on natural detection. It measures per-member physical travel, final cohesion, actual covering shots and support-lane crossing while the other squad moves. Bounding requires two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.
 
 ### MULTI-BOUND - Squad and multi-squad bounding overwatch
 
 **Expected:** Mover and covering roles exchange only after physical arrival and readiness. Covering elements fire while movers advance; the formation closes up without every squad moving simultaneously or waiting forever.
 
-**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads sharing a naturally detected enemy, per-member physical travel, final cohesion, actual covering shots while the other squad moves; bounding requires two observed squad-role switches. Wired into all/coordinated focus. Saved, unexecuted. This exposes missing coordination rather than asserting that independent squad drills are coordinated. Route complementarity, transitions, Zeus and owner variants remain open.
+**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent, establish natural contact, and only then receive the physical MOVE objective that Cortex uses to start bounding. It measures per-member travel, final cohesion, actual covering shots and two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.
 
 ### MULTI-WITHDRAW - Multi-squad screened withdrawal
 

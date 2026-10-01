@@ -60,8 +60,9 @@ really changes, so it does not flicker between them.
 | REGROUP | The squad closes up, then returns to CALM with its previous behaviour, speed and waypoints. A squad that was SAFE before a real firefight comes back AWARE. |
 | RETREAT | Morale broke, or a damaged vehicle is pulling back. The squad falls back under smoke, then regroups. |
 
-A new sighting at any point sends the squad back to CONTACT. Squads you set to CARELESS are never
-touched.
+A new sighting during CALM, INVESTIGATE, SECURITY, SEARCH or REGROUP sends the squad to CONTACT.
+A squad already executing RETREAT continues its bounded withdrawal under contact and may still
+surrender if its situation deteriorates. Squads you set to CARELESS are never touched.
 
 ### State handovers
 
