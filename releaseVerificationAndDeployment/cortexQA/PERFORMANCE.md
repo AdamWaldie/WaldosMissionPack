@@ -20,19 +20,28 @@ The user-confirmed overhead budget is no more than 5% median and 10% p95 added f
 
 The existing twelve-group scheduler fixture demonstrates cheap queued movement and retirement only. Its actors have one soldier each and are excluded from normal Cortex discovery. It does not benchmark a hundred active Cortex groups.
 
-The scheduler has a soft budget between jobs. One running job can exceed that budget. While every queued job is waiting, the scheduler now uses a cached earliest deadline and returns without traversing the queue; WMP diagnostics compares that cache with the real earliest queued job and reports a consistency error if the cache could delay work. Due-job processing still traverses the queue, so large jobs and repeated group/world scans need measured limits; the configured millisecond budget and idle fast path are not proof of bounded frame cost.
+The scheduler has a soft budget between jobs. One running job can exceed that budget. While every queued job is waiting, the scheduler uses a cached earliest deadline and returns without traversing the queue; WMP diagnostics compares that cache with the real earliest queued job and reports a consistency error if the cache could delay work. Due work now gets an opportunity every frame. This removes the earlier four-heavy-jobs-per-second ceiling while preserving the idle fast path and per-frame budget. Due-job processing still traverses the queue, so large jobs and repeated group/world scans need measured limits; the configured millisecond budget and idle fast path are not proof of bounded frame cost.
 
 The server patrol pilot is implemented in `runPerformance.sqf`, available through `-CortexFocus performance`. It creates 100 six-soldier groups for each OFF/ON/ON/OFF arm, warms up, then samples 60 seconds of server frame times. Every group must physically move; enabled arms require all 100 groups to remain managed and eligible. It checks baseline drift, the agreed median/p95 limits and a separate overdue-job bound. The first server pilot, runtime-20260927-085848, completed its performance stages with all 13 checks passing: OFF samples were 21 ms median / 24 ms p95; ON samples were 21/25 and 21/24 ms. Every group moved and all enabled groups remained managed and eligible. Maximum observed job overdue age was 6.511 seconds. This is one patrol run, not acceptance for contact latency, repeated trials, other scales or HC workloads.
 
 The distributed contact arm is implemented in `runPerformanceContact.sqf` and selected with
 `-CortexFocus performancecontact -HeadlessClients 2`. It uses matched OFF/ON/ON/OFF arms with 100
-six-soldier manoeuvre groups divided across the server and both WMP headless owners. Real, stationary,
-invulnerable opponents produce sustained contact without casualty drift. Every arm must retain at
-least 33 groups and 198 living subject soldiers on each owner, move at least 90 groups, consume live
-rifle ammunition in at least 60 groups and bring at least 90 groups into a physical response. The
-owner-local sampler reports median, p95 and p99 frame time plus maximum overdue-job age. Each enabled
-arm is compared with the two matched disabled baselines using the confirmed 5% median and 10% p95
-budgets. This arm is saved and statically checked but has not yet run in Arma.
+six-soldier manoeuvre groups divided across the server and both WMP headless owners. Twenty-five
+interleaved groups receive real, stationary, invulnerable contacts while 75 execute matched movement.
+This retains 100 managed groups without turning the comparison into 100 simultaneous firefights.
+Every arm must retain at least 33 groups and 198 living subject soldiers on each AI owner, move at
+least 90 groups, consume live rifle ammunition in at least 15 contact groups and bring at least 20
+contact groups into a physical response. The sampler reports median, p95 and p99 frame time plus
+maximum overdue-job age for the server, both HCs and the rendered client. Each enabled arm is compared
+with the two matched disabled baselines using the confirmed 5% median and 10% p95 budgets.
+
+Runtime `runtime-20261001-111812` deliberately failed closed. Its original 100-simultaneous-contact
+fixture fell from a user-observed 14 FPS to 8 FPS, so none of its arms met the 90 moving / 60 firing
+comparability gate. Native arms moved 63 and 68 groups and fired 40 and 44; Cortex arms moved 61 and
+53 and fired 48 and 35. Cortex arms also exposed 5.7-13.0 seconds of overdue work while native arms
+reported zero. The run is evidence of both fixture saturation and a scheduler throughput defect; it
+is not a performance-budget pass. The controlled-contact fixture and per-frame scheduler require a
+fresh paired run without LAMBS (vanilla versus Cortex) and with LAMBS (LAMBS versus SPLIT mode).
 
 The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
 measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage

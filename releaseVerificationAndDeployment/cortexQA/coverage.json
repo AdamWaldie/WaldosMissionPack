@@ -45,8 +45,11 @@
         "Waldo_AIPass_LambsMode"
       ],
       "status": "implemented_partial",
-      "live_evidence": [],
-      "automation": "runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Saved and statically validated; both live arms remain required.",
+      "live_evidence": [
+        "runtime-20261001-110329: standalone 3840x2160 arm completed with zero findings and no observed SQF errors; Cortex physically moved and held the complete squad without LAMBS present.",
+        "runtime-20261001-111118: installed LAMBS suite plus two real WMP HCs completed with zero findings and zero SQF errors. Active tactic, forceMove and LAMBS waypoint ownership were refused; false and true baselines restored; a live lease survived HC adoption and restored on the new owner; Zeus replacement movement completed after clean release."
+      ],
+      "automation": "runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Both core 3840x2160 arms passed; ACE HC distribution, disconnect, JIP and broader terrain/mod combinations remain outstanding.",
       "executable_sources": [
         "runLambs.sqf"
       ]
@@ -72,9 +75,10 @@
       "status": "implemented_partial",
       "live_evidence": [
         "runtime-20260927-075211: twelve server squads physically arrived within 0.95 m; all starts 0.167 seconds after submission; all completed once. Minimum 0.2 ms budget tested with cheap movement jobs, not saturation or heavy-load FPS.",
-        "runtime-20260927-085848: 100x6 server patrol OFF/ON/ON/OFF yielded median/p95 milliseconds 21/24, 21/25, 21/24, 21/24. All groups moved; all enabled groups managed and eligible. Maximum job overdue 6.511 seconds; combat response latency not established."
+        "runtime-20260927-085848: 100x6 server patrol OFF/ON/ON/OFF yielded median/p95 milliseconds 21/24, 21/25, 21/24, 21/24. All groups moved; all enabled groups managed and eligible. Maximum job overdue 6.511 seconds; combat response latency not established.",
+        "runtime-20261001-111812: original distributed 100x6 simultaneous-contact arm failed closed. User observed 14 FPS falling to 8 FPS; no arm met workload comparability. Native arms moved 63/68 groups and fired 40/44; Cortex arms moved 61/53 and fired 48/35. Cortex owner queues reached 5.7-13.0 seconds overdue versus zero when disabled. This is a saturation and scheduler-throughput finding, not a budget pass."
       ],
-      "automation": "runScheduler.sqf covers twelve production-queued squad movements at minimum soft budget. runPerformance.sqf supplies the completed server-only 100x6 patrol pilot. runPerformanceContact.sqf adds a matched OFF/ON/ON/OFF sustained-contact arm with 100 six-soldier manoeuvre groups distributed across the server and two real WMP headless owners; runPerformanceOwner.sqf records owner-local median, p95 and p99 frame time, queue age and actor counts while the server requires physical movement, ammunition use and response latency. The distributed contact arm is saved but not yet run.",
+      "automation": "runScheduler.sqf covers twelve production-queued squad movements at minimum soft budget. runPerformance.sqf supplies the completed server-only 100x6 patrol pilot. runPerformanceContact.sqf now runs matched OFF/ON/ON/OFF with 100 six-soldier groups distributed across the server and two HCs, 25 controlled contact groups and 75 movement groups. runPerformanceOwner.sqf records server, HC and rendered-client median/p95/p99 frame time, queue age and actor counts. Running without LAMBS compares vanilla with Cortex; -IncludeLambs compares LAMBS alone with Cortex plus LAMBS SPLIT. The per-frame scheduler correction and controlled-contact arm require fresh acceptance.",
       "executable_sources": [
         "runScheduler.sqf",
         "runPerformance.sqf",

@@ -2,12 +2,13 @@
  * Author: WaldoTheWarfighter
  * Runs due Smart AI Pass jobs on this machine with a soft time budget between jobs.
  *
- * Called by one CBA per-frame handler every 0.25 seconds on each AI-owning machine (server and
- * headless clients only). At least one due job runs on each tick; the rest run only while
+ * Called by one CBA handler every frame on each AI-owning machine (server and headless clients
+ * only). The cached deadline makes frames with no due work constant-time. At least one due job runs
+ * on a due frame; the rest run only while
  * Waldo_AIPass_TickBudgetMs remains. Jobs that do not fit wait for the next tick, which keeps
  * new jobs from starting after the budget is spent. A running job cannot be pre-empted and can
  * exceed the budget. An earliest-due cache makes idle callbacks constant-time instead of traversing
- * the complete group queue four times per second. Due processing still traverses the queue once and
+ * the complete group queue. Due processing still traverses the queue once and
  * jobs move to the back, so no group is starved when the budget is always spent. When the machine's FPS is below
  * Waldo_AIPass_LowFpsThreshold, rescheduling delays are doubled. While ENDEX or SafeStart is
  * active, due jobs are postponed by five seconds and never run. The pause refreshes a one-minute

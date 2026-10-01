@@ -8,8 +8,8 @@ Feature cases: **57**. Required variant categories: **13**.
 | Feature | Settings | Runnable suites | Evidence records | Status |
 | --- | ---: | --- | ---: | --- |
 | CORE - Master, exclusions and ownership | 3 | `runGates.sqf` | 2 | implemented_partial |
-| LAMBS - LAMBS coexistence and Cortex fallback | 1 | `runLambs.sqf` | 0 | implemented_partial |
-| SCHED - Scheduler and distance tiers | 11 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 2 | implemented_partial |
+| LAMBS - LAMBS coexistence and Cortex fallback | 1 | `runLambs.sqf` | 2 | implemented_partial |
+| SCHED - Scheduler and distance tiers | 11 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
 | PROFILE - Behaviour profiles and aggression | 4 | `runProfiles.sqf` | 1 | implemented_partial |
 | SKILL - AI skill rebalance | 10 | `runMechanics.sqf` | 0 | implemented_partial |
 | LAND - Helicopter landing | 21 | `runLanding.sqf` | 1 | implemented_partial |
@@ -93,13 +93,13 @@ Feature cases: **57**. Required variant categories: **13**.
 
 **Expected:** Without LAMBS, Cortex physically moves and holds the whole squad with no upstream dependency. With LAMBS loaded, Cortex never steals queued or active LAMBS movement, finite leases restore both false and true group baselines, a new HC owner renews and releases the same public lease, Zeus interruption releases ownership, and every soldier physically follows the replacement order without old-route resurrection.
 
-**Automation and open work:** runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Saved and statically validated; both live arms remain required.
+**Automation and open work:** runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Both core 3840x2160 arms passed; ACE HC distribution, disconnect, JIP and broader terrain/mod combinations remain outstanding.
 
 ### SCHED - Scheduler and distance tiers
 
 **Expected:** At least 100 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 100+ groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture is not scale acceptance.
 
-**Automation and open work:** runScheduler.sqf covers twelve production-queued squad movements at minimum soft budget. runPerformance.sqf supplies the completed server-only 100x6 patrol pilot. runPerformanceContact.sqf adds a matched OFF/ON/ON/OFF sustained-contact arm with 100 six-soldier manoeuvre groups distributed across the server and two real WMP headless owners; runPerformanceOwner.sqf records owner-local median, p95 and p99 frame time, queue age and actor counts while the server requires physical movement, ammunition use and response latency. The distributed contact arm is saved but not yet run.
+**Automation and open work:** runScheduler.sqf covers twelve production-queued squad movements at minimum soft budget. runPerformance.sqf supplies the completed server-only 100x6 patrol pilot. runPerformanceContact.sqf now runs matched OFF/ON/ON/OFF with 100 six-soldier groups distributed across the server and two HCs, 25 controlled contact groups and 75 movement groups. runPerformanceOwner.sqf records server, HC and rendered-client median/p95/p99 frame time, queue age and actor counts. Running without LAMBS compares vanilla with Cortex; -IncludeLambs compares LAMBS alone with Cortex plus LAMBS SPLIT. The per-frame scheduler correction and controlled-contact arm require fresh acceptance.
 
 ### PROFILE - Behaviour profiles and aggression
 

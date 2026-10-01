@@ -3,7 +3,9 @@
  * Starts the Smart AI Pass on this machine if it owns AI: the server or a headless client.
  *
  * Installs, once per machine:
- * - one CBA per-frame handler (0.25 s) that runs Waldo_fnc_CortexSchedulerTick;
+ * - one CBA per-frame handler that runs Waldo_fnc_CortexSchedulerTick. The due-time cache makes
+ *   idle frames constant-time; due work gets one budgeted opportunity per rendered/simulated frame
+ *   instead of being capped at four heavy jobs per second;
  * - one EntityKilled mission handler that passes kills in locally owned groups to survivor regroup;
  * - the Waldo_fnc_CortexDiscover sweep job, which brings local groups under the pass;
  * - a ProjectileCreated handler for grenade evasion, only while Waldo_AIPass_GrenadeEvasion_Enable is
@@ -63,7 +65,7 @@ if (isServer) then {
 };
 
 if (isNil {missionNamespace getVariable "Waldo_AIPass_SchedulerHandle"}) then {
-    missionNamespace setVariable ["Waldo_AIPass_SchedulerHandle", [{[] call Waldo_fnc_CortexSchedulerTick}, 0.25] call CBA_fnc_addPerFrameHandler];
+    missionNamespace setVariable ["Waldo_AIPass_SchedulerHandle", [{[] call Waldo_fnc_CortexSchedulerTick}, 0] call CBA_fnc_addPerFrameHandler];
 };
 if (isNil {missionNamespace getVariable "Waldo_AIPass_KilledHandler"}) then {
     missionNamespace setVariable ["Waldo_AIPass_KilledHandler", addMissionEventHandler ["EntityKilled", {

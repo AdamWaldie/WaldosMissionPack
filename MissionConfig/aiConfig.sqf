@@ -117,7 +117,7 @@
  * - Waldo_AIPass_Enable (MISSION MAKER): master switch; true by default. False means no pass code runs anywhere.
  * - Waldo_AIPass_IncludedSides (MISSION MAKER): sides the pass may command; CIV is left out by default.
  *   The shared Waldo_AI_IncludedFactions/ExcludedFactions/ExcludedClasses filters above also apply.
- * - Waldo_AIPass_TickBudgetMs (ADVANCED): milliseconds of work allowed per scheduler tick (0.25 s).
+ * - Waldo_AIPass_TickBudgetMs (ADVANCED): milliseconds of work allowed on a frame with due jobs.
  * - Waldo_AIPass_LowFpsThreshold (ADVANCED): below this machine FPS, behaviour steps run half as often.
  * - Waldo_AIPass_Regroup_Enable (MISSION MAKER): survivors of a destroyed squad join a nearby friendly squad.
  * - Waldo_AIPass_Regroup_MaxRemnantSize (ADVANCED): a group this small or smaller counts as a remnant.
@@ -290,7 +290,7 @@ createHashMapFromArray [
         // MISSION MAKER switches followed by ADVANCED Smart AI Pass scheduling and behaviour tuning.
         ["Waldo_AIPass_Enable", true], // BOOL: master switch for Cortex (server and headless clients only).
         ["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // ARRAY of WEST/EAST/GUER/CIV strings the pass may command.
-        ["Waldo_AIPass_TickBudgetMs", 1], // MILLISECONDS: work allowed per 0.25 s scheduler tick; at least one job always runs.
+        ["Waldo_AIPass_TickBudgetMs", 1], // MILLISECONDS: work allowed on a frame with due jobs; at least one due job always runs.
         ["Waldo_AIPass_LowFpsThreshold", 25], // FPS: below this, behaviour steps are rescheduled half as often.
         ["Waldo_AIPass_Regroup_Enable", true], // BOOL: survivors of a destroyed squad regroup with a nearby friendly squad.
         ["Waldo_AIPass_Regroup_MaxRemnantSize", 2], // COUNT: living members at or below this make a remnant.

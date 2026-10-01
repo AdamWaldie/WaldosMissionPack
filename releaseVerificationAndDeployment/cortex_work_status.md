@@ -1,6 +1,6 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `651dfc7` are pushed. The user has reopened batched Arma testing; new engine acceptance remains queued until the distributed performance checkpoint is committed and the disposable audit is rebuilt once.
+Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `68ad6e5` are pushed. Batched Arma testing has resumed at the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms; the first distributed contact benchmark failed closed and produced actionable scheduler and fixture findings.
 
 ## 1 October: LAMBS ownership and compatibility
 
@@ -18,19 +18,28 @@ LAMBS_Danger's GPLv2 license adds a condition forbidding modified or derivative 
 Workshop, so no upstream FSM source is copied into WMP. Shared mode uses the installed mod's engine
 FSM and public APIs at runtime. Static validation passed 268 focused Cortex/modularity tests, all 1,265
 SQF files, all 113 wiki pages, all 85 Zeus modules, eight performance-audit tests and `git diff --check`.
-The regression scan found no new high-severity recurring pattern. A rebuilt LAMBS-loaded
-dedicated/headless-client audit remains queued.
+The regression scan found no new high-severity recurring pattern. Runtime `20261001-110329` passed
+the standalone fallback with zero findings. Runtime `20261001-111118`, using the installed LAMBS
+suite and two real WMP HCs, passed active-tactic/forced-move/waypoint refusals, clean lease and exact
+false/true restoration, live HC adoption/renewal/release and Zeus replacement movement with zero
+findings and zero SQF errors. ACE HC, disconnect, JIP and wider terrain/mod combinations remain.
 
 ## 1 October: distributed 100-group contact benchmark
 
-The earlier 100-group result covered server-owned patrol only. A separate `performancecontact` focus
-now stages 100 six-soldier manoeuvre groups against real hostile contacts and deliberately divides
-them across the server and two WMP headless owners. Matched OFF/ON/ON/OFF arms keep the geometry,
-weapons and ownership distribution constant. Each owner samples median, p95 and p99 frame time plus
-maximum overdue-job age while the server requires at least 90 groups to move, at least 60 groups to
-consume rifle ammunition and at least 90 groups to reach an observable combat response. Each owner is
-independently checked against the agreed 5% median and 10% p95 overhead limits. Static validation
-passes; the live arm will run in the next batch with two headless clients.
+The earlier 100-group result covered server-owned patrol only. Runtime `20261001-111812` executed the
+first distributed 100x6 OFF/ON/ON/OFF contact matrix across the server and two WMP HCs. It failed
+closed: the user observed 14 FPS falling to 8 FPS, no arm achieved the required workload, and the
+Cortex arms accumulated 5.7-13.0 seconds of overdue work while disabled arms reported zero. Native
+arms moved 63/68 groups and fired 40/44; Cortex arms moved 61/53 and fired 48/35. This is not a
+performance-budget pass.
+
+The source review found a concrete scheduler ceiling: a 0.25-second handler guaranteed only one
+heavy job per wake after the soft budget was exceeded, limiting an owner to four heavy steps per
+second. Due work now gets one budgeted opportunity per frame while the cached deadline keeps idle
+frames constant-time. The revised benchmark retains 100 six-soldier groups but uses 25 controlled
+contact groups and 75 ordinary movement groups, and adds rendered-client frame sampling. Without
+LAMBS it compares vanilla against Cortex; with the installed suite it compares LAMBS alone against
+Cortex plus LAMBS SPLIT. Fresh 4K runs are required for the agreed 5% median / 10% p95 budget.
 
 ## 1 October: contact initiative without authored movement
 

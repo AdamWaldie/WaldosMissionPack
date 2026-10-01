@@ -646,6 +646,12 @@ class CortexOperations(unittest.TestCase):
                        'balanced-ownership','physical-workload','median-budget','p95-budget',
                        'Waldo_CortexQA_PerformanceContactCompleted']:
             self.assertIn(marker,distributed)
+        self.assertIn('private _contactGroups=[];',distributed)
+        self.assertIn('(_index mod 4) == 0',distributed)
+        self.assertIn('_fired >= 15',distributed)
+        self.assertIn('_responding >= 20',distributed)
+        self.assertIn('forEach _sampleOwners',distributed)
+        self.assertIn('["Waldo_AIPass_LambsMode","SPLIT"]',distributed)
         server_runner=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text()
         self.assertIn('PERF-CONTACT-run-completed',server_runner)
         self.assertIn('_leader ammo (primaryWeapon _leader)',distributed)

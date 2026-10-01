@@ -392,6 +392,7 @@ class CortexContracts(unittest.TestCase):
     def test_scheduler_skips_idle_queue_until_the_next_job_is_due(self):
         queue = source('cortexQueueJob')
         scheduler = source('cortexSchedulerTick')
+        init = source('cortexInit')
         stop = source('cortexStop')
         self.assertIn('Waldo_AIPass_NextJobDue', queue)
         self.assertIn('_dueAt < _nextDue', queue)
@@ -400,6 +401,8 @@ class CortexContracts(unittest.TestCase):
         self.assertLess(scheduler.index(idle_gate), scheduler.index('forEach _jobs'))
         self.assertIn('missionNamespace setVariable ["Waldo_AIPass_NextJobDue", _earliest]', scheduler)
         self.assertIn('missionNamespace setVariable ["Waldo_AIPass_NextJobDue", -1]', stop)
+        self.assertIn('{[] call Waldo_fnc_CortexSchedulerTick}, 0] call CBA_fnc_addPerFrameHandler', init)
+        self.assertNotIn('{[] call Waldo_fnc_CortexSchedulerTick}, 0.25]', init)
 
     def test_default_policy_enables_infantry_reactions_but_not_specialist_hazards(self):
         config = (ROOT / 'MissionConfig' / 'aiConfig.sqf').read_text(encoding='utf-8')
