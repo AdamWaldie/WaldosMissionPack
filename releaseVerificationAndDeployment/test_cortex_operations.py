@@ -623,6 +623,14 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('[switch]$IncludeLambs',launcher)
         self.assertIn('@LAMBS_Danger.fsm',launcher)
         self.assertIn('cortexQALambs.sqf',launcher)
+        lighting=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLighting.sqf').read_text()
+        for marker in ['LIGHTING-modded-nvg-prerequisite','LIGHTING-owner-adoption-reapplies',
+                       'LIGHTING-flashlight-no-global-skill-boost',
+                       'LIGHTING-light-off-control',
+                       'LIGHTING-forward-beam-acquisition-and-fire',
+                       'LIGHTING-rear-target-not-omnidirectional']:
+            self.assertIn(marker,lighting)
+        self.assertIn('cortexQALighting.sqf',launcher)
 
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')

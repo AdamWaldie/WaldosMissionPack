@@ -60,7 +60,7 @@ Feature cases: **57**. Required variant categories: **13**.
 | MULTI-BOUND - Squad and multi-squad bounding overwatch | 0 | `runMultiManoeuvre.sqf` | 0 | implemented_partial |
 | MULTI-WITHDRAW - Multi-squad screened withdrawal | 0 | `runReactions.sqf` | 0 | implemented_partial |
 | TRANSITIONS - Combat action transitions | 0 | `runCombat.sqf` | 2 | implemented_partial |
-| LIGHTING - Automatic darkness, night vision and illumination | 1 | `runProfiles.sqf` | 1 | implemented_partial |
+| LIGHTING - Automatic darkness, night vision and illumination | 1 | `runProfiles.sqf`, `runLighting.sqf` | 1 | implemented_partial |
 | DRILL-HANDOVER - Moving flank and advance handed to Zeus | 0 | `runCombat.sqf` | 2 | implemented_partial |
 | DRILL-RECOVERY - Bound continuation and straggler rejoin | 0 | `runCombat.sqf` | 2 | implemented_partial |
 | ATTACK-FLARES - Attack-run approach and departure flares | 1 | `runAircraft.sqf` | 0 | implemented_partial |
@@ -405,7 +405,7 @@ Feature cases: **57**. Required variant categories: **13**.
 
 **Expected:** Automatic lighting follows ambient conditions without compounded penalties; NVG capability is classname independent; flashlights do not grant omnidirectional vision. Record actual acquisition and shots independently of skill values.
 
-**Automation and open work:** runProfiles.sqf: direct-application darkness/NVG/day restoration and repeat checks passed in runtime-20260927-115212 (28 total checks, zero errors). Worker-only refresh added afterwards and unexecuted. Actual detection, flashlight, mod and ownership variants pending. Added owner-worker refresh after NVG removal/re-equipping without direct apply calls; saved, not yet live-validated.
+**Automation and open work:** runProfiles.sqf retains direct-application darkness/NVG/day restoration and repeat checks passed in runtime-20260927-115212. runLighting.sqf adds a dedicated dark fixture, dynamically discovered modded NVG and ordinary-HMD controls, HC adoption with original-skill preservation, physical flashlight activation, unchanged global skill, forward-cone acquisition/real fire and an equally distant rear-target control. Saved, not yet live-validated.
 
 ### DRILL-HANDOVER - Moving flank and advance handed to Zeus
 

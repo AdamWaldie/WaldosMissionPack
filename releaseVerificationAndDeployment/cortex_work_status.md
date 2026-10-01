@@ -264,3 +264,11 @@ The canonical full-pack launcher now supports `-CortexFocus lambs` and an explic
 The standalone arm requires every soldier to physically move to and hold an assigned defence position. The loaded arm additionally refuses queued/running LAMBS tactics, forced movement and LAMBS waypoint tasks; checks false and true baseline restoration; transfers the public lease to a real headless-client owner for renewal and release; returns the group to the server; then interrupts a live Cortex lease with Zeus and requires every soldier to execute the ordinary replacement waypoint without route resurrection. `Waldo_AIPass_LambsMode` now has its own 57th coverage case.
 
 Static validation passed 268 focused Cortex tests, all 1,265 SQF files, all 113 wiki pages, all 85 Zeus/script parity checks, the executable 57-case/165-setting coverage audit, and `git diff --check`. Arma remained closed; both paired live arms are queued and neither is claimed accepted.
+
+## 1 October: dedicated lighting and equipment audit
+
+Lighting no longer relies only on direct skill-number checks inside the profile fixture. A dedicated `lighting` focus dynamically discovers NVG-capable and ordinary HMD classes from `CfgWeapons`, so modded equipment is assessed by declared vision capability rather than classname. It verifies darkness clamping, partial NVG recovery, an ordinary-HMD control and preservation of the original skill snapshot across real WMP headless-client adoption.
+
+The same fixture performs a physical night comparison. The observer starts with its weapon light forced off and must neither acquire nor fire. After the light is physically on, the forward target must be acquired and receive actual fire while an equally distant rear target remains outside the beam. Spotting skill must remain unchanged: flashlights illuminate through the engine and do not grant omnidirectional Cortex awareness.
+
+Static validation passed 268 focused Cortex tests, all 1,265 SQF files, all 113 wiki pages, all 85 Zeus/script parity checks, the exact coverage report and `git diff --check`. Arma remained closed; the new physical detection, firing and HC cases are queued and unaccepted.

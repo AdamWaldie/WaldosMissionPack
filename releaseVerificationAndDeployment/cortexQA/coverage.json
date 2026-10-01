@@ -1004,12 +1004,13 @@
         "Waldo_AIRebalance_Mode"
       ],
       "status": "implemented_partial",
-      "automation": "runProfiles.sqf: direct-application darkness/NVG/day restoration and repeat checks passed in runtime-20260927-115212 (28 total checks, zero errors). Worker-only refresh added afterwards and unexecuted. Actual detection, flashlight, mod and ownership variants pending. Added owner-worker refresh after NVG removal/re-equipping without direct apply calls; saved, not yet live-validated.",
+      "automation": "runProfiles.sqf retains direct-application darkness/NVG/day restoration and repeat checks passed in runtime-20260927-115212. runLighting.sqf adds a dedicated dark fixture, dynamically discovered modded NVG and ordinary-HMD controls, HC adoption with original-skill preservation, physical flashlight activation, unchanged global skill, forward-cone acquisition/real fire and an equally distant rear-target control. Saved, not yet live-validated.",
       "live_evidence": [
         ".qa/pr-review-audit/runtime-20260927-115212/cortex-results.md"
       ],
       "executable_sources": [
-        "runProfiles.sqf"
+        "runProfiles.sqf",
+        "runLighting.sqf"
       ]
     },
     {
