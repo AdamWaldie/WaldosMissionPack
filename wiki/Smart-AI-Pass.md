@@ -80,11 +80,12 @@ touched.
 | INVESTIGATE, SEARCH or RETREAT | Group ownership moves to another machine | same semantic state | Publishes the remaining intent and original deadline. The new owner resumes it without resetting the timeout or passing through a false CALM state. |
 
 Every transition publishes its reason, timestamp and previous/next phase in a bounded group ledger.
-The manoeuvre controller has a separate bounded stage ledger for START, MOVE, PAUSE, HOLD, ASSAULT,
-CONSOLIDATE, CLEAR and ENDED. Those stages may change while the squad remains in CONTACT; they are
-sub-actions of combat, not competing squad states. Grenades, smoke and covering fire support a
-movement stage but never gate its completion. A failed or unavailable supporting action therefore
-cannot leave the squad waiting forever.
+The manoeuvre controller has a separate bounded stage ledger for START, MOVE, PAUSE, HOLD and ENDED.
+Its reasons distinguish ordinary bounds, assault commitment and position, grenade preparation,
+clear-through, consolidation, interruption, failure and completion. Those stages may change while
+the squad remains in CONTACT; they are sub-actions of combat, not competing squad states. Grenades,
+smoke and covering fire support a movement stage but never gate its completion. A failed or
+unavailable supporting action therefore cannot leave the squad waiting forever.
 
 ## Behaviours
 
