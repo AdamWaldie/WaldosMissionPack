@@ -26,6 +26,9 @@
         "Waldo_AIPass_IncludedSides",
         "Waldo_AIPass_ZeusHoldSeconds"
       ],
+      "controls": [
+        "Waldo_AIPass_Exclude"
+      ],
       "status": "implemented_partial",
       "live_evidence": [
         "runtime-20260927-032658: CORE MASTER/GROUP/UNIT/EXTERNAL/SIDE refusal and physical arrival passed.",
@@ -96,6 +99,9 @@
         "Waldo_AIPass_BehaviourProfile",
         "Waldo_AIPass_FactionProfiles",
         "Waldo_AIPass_ProfileBehaviour"
+      ],
+      "controls": [
+        "Waldo_AIPass_Profile"
       ],
       "status": "implemented_partial",
       "live_evidence": [
@@ -187,6 +193,9 @@
         "Waldo_HelicopterDeceleration_MinimumSpeedLoss",
         "Waldo_HelicopterDeceleration_SampleInterval",
         "Waldo_HelicopterDeceleration_TerrainClearance"
+      ],
+      "controls": [
+        "Waldo_HelicopterDeceleration_Exclude"
       ],
       "status": "implemented_partial",
       "live_evidence": [],

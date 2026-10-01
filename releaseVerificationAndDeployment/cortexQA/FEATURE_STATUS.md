@@ -5,66 +5,66 @@ inventory signals only. A feature is accepted only when its registry status is `
 
 Feature cases: **58**. Required variant categories: **13**.
 
-| Feature | Settings | Runnable suites | Evidence records | Status |
-| --- | ---: | --- | ---: | --- |
-| CORE - Master, exclusions and ownership | 3 | `runGates.sqf` | 2 | implemented_partial |
-| LAMBS - LAMBS coexistence and Cortex fallback | 1 | `runLambs.sqf`, `runBuildingComparison.sqf` | 2 | implemented_partial |
-| SCHED - Scheduler and distance tiers | 11 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
-| PROFILE - Behaviour profiles and aggression | 4 | `runProfiles.sqf` | 1 | implemented_partial |
-| SKILL - AI skill rebalance | 10 | `runMechanics.sqf` | 0 | implemented_partial |
-| LAND - Helicopter landing | 21 | `runLanding.sqf` | 1 | implemented_partial |
-| DECEL - Helicopter braking | 14 | `runDeceleration.sqf` | 0 | implemented_partial |
-| REGROUP - Survivor regroup | 9 | `runMechanics.sqf` | 0 | implemented_partial |
-| CONTACT - Contact detection | 2 | `runContact.sqf`, `runCombat.sqf` | 0 | implemented_partial |
-| POST - Post-contact search | 5 | `runMechanics.sqf`, `runContact.sqf` | 0 | implemented_partial |
-| FLANK - Flanking bounds | 8 | `runCombat.sqf` | 3 | implemented_partial |
-| CROSS - Road crossing | 1 | `runCrossing.sqf` | 0 | implemented_partial |
-| FIRE - Fire distribution and suppression | 3 | `runFireControl.sqf` | 0 | implemented_partial |
-| MORALE - Morale and withdrawal | 3 | `runReactions.sqf` | 2 | implemented_partial |
-| SURRENDER - Surrender | 1 | `runReactions.sqf` | 2 | implemented_partial |
-| GRENADE - Grenade avoidance | 1 | `runReactions.sqf` | 2 | implemented_partial |
-| AT - Anti-armour and ammunition roles | 2 | `runFireControl.sqf` | 0 | implemented_partial |
-| VEH - Vehicle engagement | 2 | `runGunnery.sqf` | 1 | implemented_partial |
-| DISMOUNT - Contact passenger dismount | 1 | `runVehicleDrills.sqf` | 0 | implemented_partial |
-| REMOUNT - Contact passenger remount | 1 | `runVehicleDrills.sqf` | 0 | implemented_partial |
-| WITHDRAW - Damaged vehicle withdrawal | 1 | `runVehicleDrills.sqf` | 1 | implemented_partial |
-| COVER - Cover selection and clearance | 1 | `runCover.sqf` | 1 | implemented_partial |
-| CNV-MOVE - Mixed convoy path and spacing | 0 | `runServer.sqf`, `runConvoyMatrix.sqf` | 0 | implemented_partial |
-| CNV-FIRE - Convoy weapon crew | 1 | `runServer.sqf` | 0 | implemented_partial |
-| CNV-COVER - Convoy dismount positions | 1 | `runServer.sqf` | 0 | implemented_partial |
-| CNV-AVOID - Convoy infantry avoidance | 1 | `runConvoyAvoidance.sqf` | 1 | implemented_partial |
-| CNV-HALT - Convoy contact drills | 1 | `runServer.sqf` | 0 | implemented_partial |
-| CNV-UNLOAD - Convoy cargo lifecycle | 1 | `runConvoySeats.sqf`, `runServer.sqf` | 1 | implemented_partial |
-| HEARING - Gunfire area reports | 1 | `runSupport.sqf` | 0 | implemented_partial |
-| REPORT - Contact sharing | 4 | `runSupport.sqf` | 0 | implemented_partial |
-| REINFORCE - Reinforcement | 3 | `runSupport.sqf` | 0 | implemented_partial |
-| ART - Spotted artillery bursts | 13 | `runServer.sqf` | 0 | implemented_partial |
-| CB - Counter-battery | 10 | `runServer.sqf` | 0 | implemented_partial |
-| AIRBORNE - Parachute passengers | 6 | `runAirborne.sqf` | 0 | implemented_partial |
-| GARRISON - Garrison and dynamic AO | 2 | `runServer.sqf`, `runBuildingComparison.sqf` | 1 | implemented_partial |
-| FLARES - Aircraft countermeasures | 1 | `runAircraft.sqf` | 2 | implemented_partial |
-| INVESTIGATE - Known-area investigation | 3 | `runSupport.sqf` | 0 | implemented_partial |
-| ASSAULT - Final assault | 2 | `runCombat.sqf` | 3 | implemented_partial |
-| ADVANCE - Bounding advance | 3 | `runCombat.sqf` | 2 | implemented_partial |
-| COORD - Coordinated assault | 1 | `runCoordinated.sqf` | 10 | implemented_partial |
-| STANCE - Cover stance | 1 | `runReactions.sqf` | 0 | implemented_partial |
-| AMMO - Magazine sharing | 2 | `runMechanics.sqf` | 0 | implemented_partial |
-| GUNNERY - Vehicle threat priority | 1 | `runGunnery.sqf` | 1 | implemented_partial |
-| ART-SMOKE - Artillery smoke | 1 | `runArtillerySmoke.sqf` | 1 | implemented_partial |
-| BREAK - Aircraft evasive break | 1 | `runAircraft.sqf` | 2 | implemented_partial |
-| DEFEND - Defence orders | 0 | `runServer.sqf` | 0 | implemented_partial |
-| CLEAR - Building clearance | 0 | `runBuildingComparison.sqf` | 1 | implemented_partial |
-| UI - Cortex UI and purpose modules | 0 | `runClient.sqf` | 0 | implemented_partial |
-| LIFECYCLE - Transfer, disconnect and JIP | 0 | `runLifecycle.sqf` | 6 | implemented_partial |
-| MULTI-FLANK - Multi-squad flank cohesion | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
-| MULTI-BOUND - Squad and multi-squad bounding overwatch | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
-| MULTI-WITHDRAW - Multi-squad screened withdrawal | 0 | `runReactions.sqf` | 0 | implemented_partial |
-| TRANSITIONS - Combat action transitions | 0 | `runCombat.sqf`, `runContact.sqf` | 2 | implemented_partial |
-| LIGHTING - Automatic darkness, night vision and illumination | 1 | `runProfiles.sqf`, `runLighting.sqf` | 1 | implemented_partial |
-| DRILL-HANDOVER - Moving flank and advance handed to Zeus | 0 | `runCombat.sqf` | 2 | implemented_partial |
-| DRILL-RECOVERY - Bound continuation and straggler rejoin | 0 | `runCombat.sqf` | 2 | implemented_partial |
-| ATTACK-FLARES - Attack-run approach and departure flares | 1 | `runAircraft.sqf` | 0 | implemented_partial |
-| AIR-ATTACK - Threat-aware finite aircraft attack patterns | 1 | `runAircraft.sqf` | 0 | implemented_partial |
+| Feature | Settings | Per-asset controls | Runnable suites | Evidence records | Status |
+| --- | ---: | ---: | --- | ---: | --- |
+| CORE - Master, exclusions and ownership | 3 | 1 | `runGates.sqf` | 2 | implemented_partial |
+| LAMBS - LAMBS coexistence and Cortex fallback | 1 | 0 | `runLambs.sqf`, `runBuildingComparison.sqf` | 2 | implemented_partial |
+| SCHED - Scheduler and distance tiers | 11 | 0 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
+| PROFILE - Behaviour profiles and aggression | 4 | 1 | `runProfiles.sqf` | 1 | implemented_partial |
+| SKILL - AI skill rebalance | 10 | 0 | `runMechanics.sqf` | 0 | implemented_partial |
+| LAND - Helicopter landing | 21 | 0 | `runLanding.sqf` | 1 | implemented_partial |
+| DECEL - Helicopter braking | 14 | 1 | `runDeceleration.sqf` | 0 | implemented_partial |
+| REGROUP - Survivor regroup | 9 | 0 | `runMechanics.sqf` | 0 | implemented_partial |
+| CONTACT - Contact detection | 2 | 0 | `runContact.sqf`, `runCombat.sqf` | 0 | implemented_partial |
+| POST - Post-contact search | 5 | 0 | `runMechanics.sqf`, `runContact.sqf` | 0 | implemented_partial |
+| FLANK - Flanking bounds | 8 | 0 | `runCombat.sqf` | 3 | implemented_partial |
+| CROSS - Road crossing | 1 | 0 | `runCrossing.sqf` | 0 | implemented_partial |
+| FIRE - Fire distribution and suppression | 3 | 0 | `runFireControl.sqf` | 0 | implemented_partial |
+| MORALE - Morale and withdrawal | 3 | 0 | `runReactions.sqf` | 2 | implemented_partial |
+| SURRENDER - Surrender | 1 | 0 | `runReactions.sqf` | 2 | implemented_partial |
+| GRENADE - Grenade avoidance | 1 | 0 | `runReactions.sqf` | 2 | implemented_partial |
+| AT - Anti-armour and ammunition roles | 2 | 0 | `runFireControl.sqf` | 0 | implemented_partial |
+| VEH - Vehicle engagement | 2 | 0 | `runGunnery.sqf` | 1 | implemented_partial |
+| DISMOUNT - Contact passenger dismount | 1 | 0 | `runVehicleDrills.sqf` | 0 | implemented_partial |
+| REMOUNT - Contact passenger remount | 1 | 0 | `runVehicleDrills.sqf` | 0 | implemented_partial |
+| WITHDRAW - Damaged vehicle withdrawal | 1 | 0 | `runVehicleDrills.sqf` | 1 | implemented_partial |
+| COVER - Cover selection and clearance | 1 | 0 | `runCover.sqf` | 1 | implemented_partial |
+| CNV-MOVE - Mixed convoy path and spacing | 0 | 0 | `runServer.sqf`, `runConvoyMatrix.sqf` | 0 | implemented_partial |
+| CNV-FIRE - Convoy weapon crew | 1 | 0 | `runServer.sqf` | 0 | implemented_partial |
+| CNV-COVER - Convoy dismount positions | 1 | 0 | `runServer.sqf` | 0 | implemented_partial |
+| CNV-AVOID - Convoy infantry avoidance | 1 | 0 | `runConvoyAvoidance.sqf` | 1 | implemented_partial |
+| CNV-HALT - Convoy contact drills | 1 | 0 | `runServer.sqf` | 0 | implemented_partial |
+| CNV-UNLOAD - Convoy cargo lifecycle | 1 | 0 | `runConvoySeats.sqf`, `runServer.sqf` | 1 | implemented_partial |
+| HEARING - Gunfire area reports | 1 | 0 | `runSupport.sqf` | 0 | implemented_partial |
+| REPORT - Contact sharing | 4 | 0 | `runSupport.sqf` | 0 | implemented_partial |
+| REINFORCE - Reinforcement | 3 | 0 | `runSupport.sqf` | 0 | implemented_partial |
+| ART - Spotted artillery bursts | 13 | 0 | `runServer.sqf` | 0 | implemented_partial |
+| CB - Counter-battery | 10 | 0 | `runServer.sqf` | 0 | implemented_partial |
+| AIRBORNE - Parachute passengers | 6 | 0 | `runAirborne.sqf` | 0 | implemented_partial |
+| GARRISON - Garrison and dynamic AO | 2 | 0 | `runServer.sqf`, `runBuildingComparison.sqf` | 1 | implemented_partial |
+| FLARES - Aircraft countermeasures | 1 | 0 | `runAircraft.sqf` | 2 | implemented_partial |
+| INVESTIGATE - Known-area investigation | 3 | 0 | `runSupport.sqf` | 0 | implemented_partial |
+| ASSAULT - Final assault | 2 | 0 | `runCombat.sqf` | 3 | implemented_partial |
+| ADVANCE - Bounding advance | 3 | 0 | `runCombat.sqf` | 2 | implemented_partial |
+| COORD - Coordinated assault | 1 | 0 | `runCoordinated.sqf` | 10 | implemented_partial |
+| STANCE - Cover stance | 1 | 0 | `runReactions.sqf` | 0 | implemented_partial |
+| AMMO - Magazine sharing | 2 | 0 | `runMechanics.sqf` | 0 | implemented_partial |
+| GUNNERY - Vehicle threat priority | 1 | 0 | `runGunnery.sqf` | 1 | implemented_partial |
+| ART-SMOKE - Artillery smoke | 1 | 0 | `runArtillerySmoke.sqf` | 1 | implemented_partial |
+| BREAK - Aircraft evasive break | 1 | 0 | `runAircraft.sqf` | 2 | implemented_partial |
+| DEFEND - Defence orders | 0 | 0 | `runServer.sqf` | 0 | implemented_partial |
+| CLEAR - Building clearance | 0 | 0 | `runBuildingComparison.sqf` | 1 | implemented_partial |
+| UI - Cortex UI and purpose modules | 0 | 0 | `runClient.sqf` | 0 | implemented_partial |
+| LIFECYCLE - Transfer, disconnect and JIP | 0 | 0 | `runLifecycle.sqf` | 6 | implemented_partial |
+| MULTI-FLANK - Multi-squad flank cohesion | 0 | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
+| MULTI-BOUND - Squad and multi-squad bounding overwatch | 0 | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
+| MULTI-WITHDRAW - Multi-squad screened withdrawal | 0 | 0 | `runReactions.sqf` | 0 | implemented_partial |
+| TRANSITIONS - Combat action transitions | 0 | 0 | `runCombat.sqf`, `runContact.sqf` | 2 | implemented_partial |
+| LIGHTING - Automatic darkness, night vision and illumination | 1 | 0 | `runProfiles.sqf`, `runLighting.sqf` | 1 | implemented_partial |
+| DRILL-HANDOVER - Moving flank and advance handed to Zeus | 0 | 0 | `runCombat.sqf` | 2 | implemented_partial |
+| DRILL-RECOVERY - Bound continuation and straggler rejoin | 0 | 0 | `runCombat.sqf` | 2 | implemented_partial |
+| ATTACK-FLARES - Attack-run approach and departure flares | 1 | 0 | `runAircraft.sqf` | 0 | implemented_partial |
+| AIR-ATTACK - Threat-aware finite aircraft attack patterns | 1 | 0 | `runAircraft.sqf` | 0 | implemented_partial |
 
 ## Required variants
 

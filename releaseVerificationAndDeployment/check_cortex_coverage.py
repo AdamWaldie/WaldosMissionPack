@@ -9,6 +9,11 @@ REQUIRED_CASE_FIELDS = {
     "id", "title", "setup", "expected", "settings", "status",
     "live_evidence", "automation", "executable_sources",
 }
+PUBLIC_RUNTIME_CONTROLS = {
+    "Waldo_AIPass_Exclude",
+    "Waldo_AIPass_Profile",
+    "Waldo_HelicopterDeceleration_Exclude",
+}
 
 
 def render_markdown(data):
@@ -21,13 +26,13 @@ def render_markdown(data):
         "",
         f"Feature cases: **{len(data['cases'])}**. Required variant categories: **{len(data['required_variants'])}**.",
         "",
-        "| Feature | Settings | Runnable suites | Evidence records | Status |",
-        "| --- | ---: | --- | ---: | --- |",
+        "| Feature | Settings | Per-asset controls | Runnable suites | Evidence records | Status |",
+        "| --- | ---: | ---: | --- | ---: | --- |",
     ]
     for case in data["cases"]:
         sources = ", ".join(f"`{source}`" for source in case["executable_sources"])
         lines.append(
-            f"| {case['id']} - {case['title']} | {len(case['settings'])} | {sources} | "
+            f"| {case['id']} - {case['title']} | {len(case['settings'])} | {len(case.get('controls', []))} | {sources} | "
             f"{len(case['live_evidence'])} | {case['status']} |"
         )
     lines.extend(["", "## Required variants", ""])
@@ -58,6 +63,11 @@ def audit(root=ROOT):
         errors.append(f"Setting coverage mismatch: missing={sorted(settings-set(assigned))}; obsolete={sorted(set(assigned)-settings)}")
     if len(assigned) != len(set(assigned)):
         errors.append("Settings assigned to multiple feature cases")
+    controls = [key for case in data["cases"] for key in case.get("controls", [])]
+    if set(controls) != PUBLIC_RUNTIME_CONTROLS:
+        errors.append(f"Runtime control coverage mismatch: missing={sorted(PUBLIC_RUNTIME_CONTROLS-set(controls))}; obsolete={sorted(set(controls)-PUBLIC_RUNTIME_CONTROLS)}")
+    if len(controls) != len(set(controls)):
+        errors.append("Runtime controls assigned to multiple feature cases")
     ids = [case["id"] for case in data["cases"]]
     if len(ids) != len(set(ids)):
         errors.append("Duplicate feature case IDs")

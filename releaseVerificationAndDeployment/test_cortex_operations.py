@@ -823,6 +823,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('phase state changed outside the atomic transition path',diagnostics)
         for name in ['cortexGroupTick','cortexRestoreCalm','cortexRetreat','cortexVehicles','cortexLocality']:
             self.assertIn('call Waldo_fnc_CortexSetPhase',source(name))
+            self.assertNotIn('_state set ["phase"',source(name))
         tick=source('cortexGroupTick')
         for reason in ['VISIBLE_CONTACT','AREA_REPORT','KNOWN_CONTACT','CONTACT_LOST',
                        'NO_SEARCH_TEAM','SEARCH_TEAM_SENT','SEARCH_COMPLETE',
@@ -1818,6 +1819,13 @@ class CortexOperations(unittest.TestCase):
         declared=[key for case in data['cases'] for key in case['settings']]
         self.assertEqual(actual,set(declared))
         self.assertEqual(len(declared),len(set(declared)))
+        controls=[key for case in data['cases'] for key in case.get('controls',[])]
+        self.assertEqual({
+            'Waldo_AIPass_Exclude',
+            'Waldo_AIPass_Profile',
+            'Waldo_HelicopterDeceleration_Exclude',
+        },set(controls))
+        self.assertEqual(len(controls),len(set(controls)))
         self.assertEqual(len(data['cases']),len({case['id'] for case in data['cases']}))
         for case in data['cases']:
             self.assertTrue(case['setup'] and case['expected'])
@@ -2060,6 +2068,16 @@ class CortexOperations(unittest.TestCase):
         for name in ['helicopterDecelerationTrackLocal','helicopterDecelerationCorrectLocal']:
             code=(ROOT/'MissionScripts/AiScripting'/f'{name}.sqf').read_text(encoding='utf-8')
             self.assertIn('Waldo_HelicopterDeceleration_IncludeVTOL',code)
+
+    def test_deceleration_exclusion_uses_a_live_braking_envelope(self):
+        text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runDeceleration.sqf').read_text(encoding='utf-8')
+        exclusion=text.split('// A per-aircraft opt-out',1)[1]
+        self.assertIn('Waldo_HelicopterDeceleration_Exclude",true,true',exclusion)
+        self.assertIn('speed _excludedAircraft >= 120',exclusion)
+        self.assertIn('_excludedWp setWaypointSpeed "LIMITED"',exclusion)
+        self.assertIn('Waldo_HelicopterDeceleration_Active',exclusion)
+        self.assertIn('DECEL-aircraft-exclusion-live-envelope',exclusion)
+        self.assertIn('DECEL-aircraft-exclusion-route-preserved',exclusion)
 
     def test_new_qa_suites_are_additive_and_staged(self):
         server=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text(encoding='utf-8')

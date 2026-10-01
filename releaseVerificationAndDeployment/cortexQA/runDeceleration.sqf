@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Compares real cruise braking with correction disabled and enabled, using ordinary flight orders.
+ * Compares real cruise braking with correction disabled, enabled and explicitly excluded, using
+ * ordinary flight orders and physical speed/route evidence.
  * Locality/authority: scheduled server fixture; the production aircraft-owner tracker applies correction.
- * Repeat/JIP: fresh aircraft per case, public actors/trails, original enable setting restored; no JIP runner.
+ * Repeat/JIP: fresh aircraft per case, public actors/trails, original enable setting restored; the
+ * per-aircraft exclusion is confined to its disposable fixture and there is no JIP runner.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required audit callbacks.
  * Return: Nothing. Current caller: cortexQAServer.sqf.
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQADeceleration.sqf";
@@ -81,4 +83,47 @@ private _comparable=abs ((_baseline select 3)-(_corrected select 3)) <= 10 && {a
 // This clear, level-flight fixture starts near 120 m. Ten metres allows a modest
 // braking flare; a large zoom-climb must fail even when the baseline is worse.
 ["DECEL-operational-climb-limit",(_corrected select 2) && {(_corrected select 0) <= 10},format ["peak climb=%1 m; allowed=10 m",_corrected select 0]] call _check;
+
+// A per-aircraft opt-out is a separate public control from the mission-wide switch. Exercise the
+// real tracker envelope while enabled so merely observing a quiet or stationary aircraft cannot
+// pass this exclusion case.
+missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable",true,true];
+[] call Waldo_fnc_HelicopterDecelerationInit;
+private _excludedAircraft=createVehicle ["B_Heli_Light_01_F",[4700,4500,120],[],0,"FLY"];
+_excludedAircraft setDir 0;
+_excludedAircraft setVariable ["Waldo_HelicopterDeceleration_Exclude",true,true];
+createVehicleCrew _excludedAircraft;
+private _excludedCrew=crew _excludedAircraft;
+private _excludedGroup=group driver _excludedAircraft;
+_excludedGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_excludedGroup setVariable ["acex_headless_blacklist",true,true];
+_excludedGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+{_x setVariable ["acex_headless_blacklist",true,true]} forEach _excludedCrew;
+_excludedGroup setBehaviour "CARELESS";
+_excludedGroup setCombatMode "BLUE";
+_excludedAircraft flyInHeight 120;
+_excludedAircraft setVariable ["Waldo_CortexQA_Label","DECEL excluded aircraft",true];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_excludedAircraft],true];
+private _excludedWp=_excludedGroup addWaypoint [[4700,6500,120],0];
+_excludedWp setWaypointType "MOVE";
+_excludedWp setWaypointSpeed "FULL";
+["DECEL exclusion: live braking envelope","This aircraft has the documented per-aircraft exclusion. It must reach cruise speed and physically slow for an ordinary LIMITED waypoint without Cortex ever acquiring the correction controller.",[4700,4800,120]] call _phase;
+private _excludedCruise=[{alive _excludedAircraft && {speed _excludedAircraft >= 120} && {(getPosATL _excludedAircraft select 2) >= 80}},90] call _wait;
+private _excludedStart=getPosATL _excludedAircraft;
+private _excludedBrake=_excludedAircraft getPos [250,getDir _excludedAircraft];
+_excludedBrake set [2,120];
+_excludedWp setWaypointPosition [_excludedBrake,0];
+_excludedWp setWaypointSpeed "LIMITED";
+_excludedAircraft setVariable ["Waldo_CortexQA_Target",_excludedBrake,true];
+private _excludedActive=false;
+for "_sample" from 1 to 120 do {
+    sleep 0.25;
+    _excludedActive=_excludedActive || {_excludedAircraft getVariable ["Waldo_HelicopterDeceleration_Active",false]};
+};
+["DECEL-aircraft-exclusion-live-envelope",_excludedCruise && {!_excludedActive},str [speed _excludedAircraft,_excludedAircraft distance2D _excludedStart]] call _check;
+["DECEL-aircraft-exclusion-route-preserved",waypointType _excludedWp == "MOVE" && {(waypointPosition _excludedWp) distance2D _excludedBrake < 1} && {waypointSpeed _excludedWp == "LIMITED"},str [waypointPosition _excludedWp,waypointType _excludedWp,waypointSpeed _excludedWp]] call _check;
+{deleteVehicle _x} forEach _excludedCrew;
+deleteVehicle _excludedAircraft;
+deleteGroup _excludedGroup;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable",_saved,true];
