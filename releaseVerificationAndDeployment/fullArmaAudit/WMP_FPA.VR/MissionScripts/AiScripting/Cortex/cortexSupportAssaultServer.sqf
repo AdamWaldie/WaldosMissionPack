@@ -46,16 +46,17 @@ private _dispatched=[];
         && {count _status == 4} && {(_status select 0) == _token} && {_status select 2}
         && {[leader _helper] call Waldo_fnc_CortexCanTransmit}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
-        private _rally=+(_lease select 3);
-        private _routeOrigin=if ((_status select 1) >= 0) then {+_rally} else {getPosATL leader _helper};
-        private _rallyX=(_routeOrigin select 0)-(_supportOrigin select 0);
-        private _rallyY=(_routeOrigin select 1)-(_supportOrigin select 1);
-        private _rallySide=if (_laneLength > 0) then {(_laneX*_rallyY-_laneY*_rallyX)/_laneLength} else {0};
-        // Near-axis rallies previously accepted either flank. That made the shortest route cross
+        // A coordinated route always begins at the squad's physical live position. The lease's
+        // optional rally coordinate is reservation metadata and must never become a synthetic start.
+        private _routeOrigin=getPosATL leader _helper;
+        private _originX=(_routeOrigin select 0)-(_supportOrigin select 0);
+        private _originY=(_routeOrigin select 1)-(_supportOrigin select 1);
+        private _originSide=if (_laneLength > 0) then {(_laneX*_originY-_laneY*_originX)/_laneLength} else {0};
+        // Near-axis origins previously accepted either flank. That made the shortest route cross
         // the base-of-fire lane in otherwise symmetric terrain. Preserve every meaningful side;
         // when geometry is effectively centred, distribute responders deterministically.
-        private _desiredSide=if (abs _rallySide >= 5) then {
-            [1,-1] select (_rallySide < 0)
+        private _desiredSide=if (abs _originSide >= 5) then {
+            [1,-1] select (_originSide < 0)
         } else {
             [1,-1] select ((count _dispatched) mod 2 == 1)
         };
