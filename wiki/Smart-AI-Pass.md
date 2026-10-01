@@ -63,6 +63,29 @@ really changes, so it does not flicker between them.
 A new sighting at any point sends the squad back to CONTACT. Squads you set to CARELESS are never
 touched.
 
+### State handovers
+
+| From | Trigger | To | What Cortex hands over or preserves |
+|---|---|---|---|
+| CALM | A physically visible enemy | CONTACT | Saves the group's original behaviour and speed before combat control begins. Existing authored movement is preserved unless a Cortex manoeuvre later acquires it. |
+| CALM | A recent report, heard shot or known unseen enemy within range | INVESTIGATE | Acquires only the finite investigation movement. A new sighting interrupts it immediately. Completion, timeout or a disabled investigation switch restores the saved mission state. |
+| CONTACT | No physical sighting for the configured delay and no active manoeuvre | SECURITY | Keeps the last known position and briefly watches it. An active flank, advance, coordinated assault or clear-through must finish or explicitly abort first. |
+| SECURITY | The security hold ends | SEARCH or REGROUP | Sends a two-person search only when suitable riflemen and a last known position exist; otherwise it begins consolidation. |
+| SEARCH | Enemy seen | CONTACT | Cancels the search movement and returns the searchers to the combat group without waiting for the search deadline. |
+| SEARCH | Position reached, team lost or deadline reached | REGROUP | Releases the search task and recalls only separated, unreserved members. |
+| CONTACT | Morale breaks and surrender is not selected | RETREAT | Releases garrison, defence or clearance ownership, selects a screened withdrawal avenue, uses smoke when available and measures physical net withdrawal. |
+| RETREAT | At least 30 m net withdrawal, or the bounded deadline expires | REGROUP | Clears the withdrawal task. A timeout is reported as incomplete and still releases the group instead of holding it indefinitely. |
+| REGROUP | Members are cohesive | CALM | Restores the saved mission behaviour, speed and waypoints. A new sighting interrupts consolidation and returns to CONTACT. |
+| Any Cortex-owned state | Zeus or a newer scripted order takes priority | CALM / external control | Releases only Cortex-owned movement, holds and temporary settings. It does not inject a replacement waypoint or revive an older task. |
+| INVESTIGATE, SEARCH or RETREAT | Group ownership moves to another machine | same semantic state | Publishes the remaining intent and original deadline. The new owner resumes it without resetting the timeout or passing through a false CALM state. |
+
+Every transition publishes its reason, timestamp and previous/next phase in a bounded group ledger.
+The manoeuvre controller has a separate bounded stage ledger for START, MOVE, PAUSE, HOLD, ASSAULT,
+CONSOLIDATE, CLEAR and ENDED. Those stages may change while the squad remains in CONTACT; they are
+sub-actions of combat, not competing squad states. Grenades, smoke and covering fire support a
+movement stage but never gate its completion. A failed or unavailable supporting action therefore
+cannot leave the squad waiting forever.
+
 ## Behaviours
 
 | Behaviour | Switch (default) | What the AI do |
@@ -139,11 +162,11 @@ Edit `Waldo_AIPass_ProfileBehaviour` in `aiConfig.sqf` to change the numbers.
 
 ### Vehicle crew and separate passenger squads
 
-Each passenger group's owner handles its own eligible cargo units. The group must know about a nearby enemy; merely sharing a vehicle does not inject the crew's knowledge. Routine unloading waits until the vehicle is stationary and safe. Drivers, commanders and operating gunners remain aboard. Only the group containing the effective vehicle commander may request vehicle withdrawal or gunnery.
+Each passenger group's owner handles its own eligible cargo units. A crew that sees a nearby enemy publishes a short-lived contact report for the passenger groups actually occupying its vehicle. The passenger owner validates that report, its vehicle and its seats before asking the vehicle owner for a bounded safe stop. The vehicle owner saves the previous forced-speed setting, brings the vehicle below 1 km/h, and acknowledges that it is ready before the passenger owner issues any exit command. Drivers, commanders and operating gunners remain aboard. The stop is cancelled and the saved speed restored when the passengers are out, the request expires, Cortex releases the group, or a newer controller takes priority. Only the group containing the effective vehicle commander may request vehicle withdrawal or gunnery.
 
 On a normal return to CALM, recorded passengers attempt to reboard the same vehicle for up to 60 seconds. New contact, an explicit order or a disabled remount feature cancels boarding. A newer assignment to a different vehicle retires the old remount attempt; cancellation only unassigns the original vehicle. Group ownership migration retires the old engine command and continues only the still-valid passenger/vehicle intent against its original deadline, so repeated transfer cannot prolong boarding. Zeus and a newer assignment take priority. Disabling Cortex contact dismount does not disable native Arma AI bailouts. Missing seats, vehicle loss or a failed attempt must not teleport passengers. WMP feature-owned vehicles, including active convoys, remain under their dedicated controller.
 
-Separate-group support is saved for PR #151 and has static regression coverage. Physical dismount/remount and cross-owner operation still require live acceptance. The audit retains native comparisons and both shared-group and separate-group layouts, adds stationary comparisons, and checks physical boarding into a replacement vehicle after another controller issues a new assignment. A native exit alone does not pass the Cortex-issued dismount check.
+Separate-group support is implemented in PR #151 and has static regression coverage. The crew report remains valid for 35 seconds so a far-tier passenger group cannot miss it on the normal 20-second scheduler cadence; this adds no per-frame worker. Physical dismount/remount and cross-owner operation still require rebuilt live acceptance. The audit retains native comparisons and both shared-group and separate-group layouts, adds stationary comparisons, and checks physical boarding into a replacement vehicle after another controller issues a new assignment. A native exit alone does not pass the Cortex-issued dismount check or become a Cortex-owned remount.
 
 ## Difficulty and tuning
 
