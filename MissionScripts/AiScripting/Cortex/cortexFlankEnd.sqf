@@ -110,6 +110,7 @@ if (_supportToken != "") then {
 };
 private _type = _drill getOrDefault ["type", "FLANK"];
 _group setVariable ["Waldo_Cortex_DrillResult",[_type,_reason,time],true];
+[_group,_drill,"ENDED",_reason] call Waldo_fnc_CortexDrillSetStage;
 _state deleteAt "drill";
 private _movementLease = _state getOrDefault ["movementLease",[]];
 if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {

@@ -215,7 +215,7 @@ if (_reinforcements isNotEqualTo []) then {
     _history pushBack [serverTime,_drill getOrDefault ["type",""],_drill getOrDefault ["index",-1],_reinforcements];
     _group setVariable ["Waldo_Cortex_DrillReinforcements",_history,true];
     if ((_drill getOrDefault ["stage",""]) == "MOVE") then {
-        _drill set ["stage","START"];
+        [_group,_drill,"START","CASUALTY_REINFORCEMENT"] call Waldo_fnc_CortexDrillSetStage;
         _drill set ["spots",[]];
         _drill set ["boundStart",time];
     };
@@ -427,7 +427,7 @@ private _issue = {
     _drill set ["combatModes",_combatModes];
     _drill set ["combatBehaviours",_combatBehaviours];
     _drill set ["boundStart", _now];
-    _drill set ["stage", "MOVE"];
+    [_group,_drill,"MOVE",format ["BOUND_%1_ISSUED",_drill get "index"]] call Waldo_fnc_CortexDrillSetStage;
 };
 
 private _result = 1.5;
@@ -539,7 +539,7 @@ switch (_drill get "stage") do {
         if (_arrived) then {
             [true] call _restoreFeatures;
             if (_teams isNotEqualTo [] && {(_drill get "teamTurn") == 0}) then {
-                _drill set ["stage","PAUSE"];
+                [_group,_drill,"PAUSE","FIRE_TEAM_ARRIVED"] call Waldo_fnc_CortexDrillSetStage;
                 // A separate squad already covers a coordinated bound. Avoid stacking
                 // a fixed team pause on top of the inter-squad handoff.
                 private _teamPause=if (_support) then {0} else {missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause",4]};
@@ -547,7 +547,7 @@ switch (_drill get "stage") do {
             } else {
             switch ((_points select (_drill get "index")) select 1) do {
                 case "CROSS_NEAR": {
-                    _drill set ["stage", "PAUSE"];
+                    [_group,_drill,"PAUSE","ROAD_EDGE_ARRIVED"] call Waldo_fnc_CortexDrillSetStage;
                     _drill set ["pauseUntil", _now + 3];
                     // One empty inventory must not suppress another member's carried smoke.
                     // Stop after the first accepted throw; the helper owns safety and cooldowns.
@@ -556,7 +556,7 @@ switch (_drill get "stage") do {
                     } forEach _units;
                 };
                 case "FINAL": {
-                    _drill set ["stage", "HOLD"];
+                    [_group,_drill,"HOLD","FINAL_BOUND_ARRIVED"] call Waldo_fnc_CortexDrillSetStage;
                     private _pause = if (_support) then {0} else {missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause",4]};
                     private _multiplier = [1,2] select (!_support && {(_drill getOrDefault ["type","FLANK"]) == "FLANK"});
                     _drill set ["pauseUntil",_now + _pause * _multiplier];
@@ -580,21 +580,21 @@ switch (_drill get "stage") do {
                     // Grenades support the assault; they do not own its state transition.
                     // Reserve the actor briefly for the next-frame throw, then continue the
                     // ordinary tactical pause whether the throw succeeds, cancels or migrates.
-                    _drill set ["stage","PAUSE"];
+                    [_group,_drill,"PAUSE",["ASSAULT_POSITION","ASSAULT_GRENADE_QUEUED"] select _queued] call Waldo_fnc_CortexDrillSetStage;
                     _drill set ["pauseUntil",_now + 3];
                     _drill set ["grenadeThrower",_thrower];
                     _drill set ["grenadeActionUntil",[_now,_now+2] select _queued];
                 };
                 case "CONSOLIDATE": {
-                    _drill set ["stage","HOLD"];
+                    [_group,_drill,"HOLD","CONSOLIDATION_ARRIVED"] call Waldo_fnc_CortexDrillSetStage;
                     _drill set ["pauseUntil",_now + (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause",4])];
                 };
                 case "CLEAR": {
-                    _drill set ["stage", "HOLD"];
+                    [_group,_drill,"HOLD","CLEAR_THROUGH_ARRIVED"] call Waldo_fnc_CortexDrillSetStage;
                     _drill set ["pauseUntil",_now + (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause",4])];
                 };
                 default {
-                    _drill set ["stage", "PAUSE"];
+                    [_group,_drill,"PAUSE","BOUND_ARRIVED"] call Waldo_fnc_CortexDrillSetStage;
                     _drill set ["pauseUntil", _now + (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundPause", 4])];
                 };
             };
@@ -664,7 +664,7 @@ switch (_drill get "stage") do {
                 _points pushBack [_approachPoint, "ASSAULT"];
                 _points pushBack [_clearPoint, "CLEAR"];
                 missionNamespace setVariable ["Waldo_AIPass_Assaults", (missionNamespace getVariable ["Waldo_AIPass_Assaults", 0]) + 1];
-                _drill set ["stage", "PAUSE"];
+                [_group,_drill,"PAUSE","ASSAULT_COMMITTED"] call Waldo_fnc_CortexDrillSetStage;
                 _drill set ["pauseUntil", _now + 3];
             } else {
                 if ((_drill getOrDefault ["type","FLANK"]) == "FLANK" && {_teams isEqualTo []}) then {

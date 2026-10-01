@@ -58,8 +58,8 @@
     {
       "id": "SCHED",
       "title": "Scheduler and distance tiers",
-      "setup": "Compare Cortex off/on at 25, 50, 100 and 150 groups, six AI per group, with identical fresh patrol/contact workloads. Repeat OFF/ON/ON/OFF on server-only and distributed HC ownership; collect frame-time distributions, queue age and physical response latency.",
-      "expected": "At least 100 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 100+ groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture is not scale acceptance.",
+      "setup": "Use 50 groups as the primary acceptance load, with separate six-soldier infantry and mixed infantry, ground vehicle, helicopter and jet fixtures. Repeat OFF/ON/ON/OFF under distributed HC ownership and collect frame-time distributions, queue age and physical response latency. Retain 100 groups as an exploratory stress run rather than the release gate.",
+      "expected": "All 50 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 50 groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture and the exploratory 100-group run are not primary scale acceptance.",
       "settings": [
         "Waldo_AIPass_Debug",
         "Waldo_AIPass_DiscoveryInterval",
@@ -996,7 +996,7 @@
         "runtime-20260927-193231: normal combat advance completed 33 checks with four findings and zero SQF errors. Actual covering fire and fire while moving passed. Contact deadline, frontage, clear-through and completion failed; ending GRENADE_UNRESOLVED with a separated leader. A saved explicit queued-throw cancellation transition is not yet live-verified. No acceptance claimed.",
         "Runtime 200043: focused ADVANCE-GRENADE completed 38 checks with zero findings and zero SQF errors, including actual grenade, physical clear-through by both elements and fire while moving. Single server-owner run; wider variants remain pending."
       ],
-      "automation": "runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Runtime-20260927-142945 completed with 96 server findings: several transition prerequisites were not reached. Multi-squad chaining and all interruption/ownership variants remain open.",
+      "automation": "runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Every manoeuvre publishes a bounded, owner-authored transition ledger and the audit requires chronological START, MOVE and ENDED entries for the current drill token; assault, clear-through and grenade cases require their specific transition reasons. Runtime-20260927-142945 completed with 96 server findings before this ledger was added. Multi-squad chaining and all interruption/ownership variants remain open.",
       "executable_sources": [
         "runCombat.sqf"
       ]

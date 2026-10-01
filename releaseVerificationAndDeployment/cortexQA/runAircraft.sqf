@@ -151,6 +151,8 @@ private _cortex=_results select 1;
         _group setVariable ["acex_headless_blacklist",true,true];
         {_x allowDamage false} forEach _crew;
         _plane flyInHeight 150;
+        private _launchSpeed=[45,90] select (_plane isKindOf "Plane");
+        _plane setVelocityModelSpace [0,_launchSpeed,0];
         private _target=createVehicle ["B_Truck_01_transport_F",[6500,6700,0],[],0,"NONE"];
         createVehicleCrew _target;
         _target allowDamage false;
@@ -159,7 +161,7 @@ private _cortex=_results select 1;
         _targetGroup setVariable ["Waldo_AIPass_Exclude",true,true];
         {_x allowDamage false; _x disableAI "PATH"} forEach _targetCrew;
         _group setCombatMode "RED";
-        (driver _plane) doTarget _target;
+        {_x doTarget _target} forEach _crew;
         private _waypoint=_group addWaypoint [[6500,7700,150],0];
         _waypoint setWaypointType "MOVE";
         _waypoint setWaypointBehaviour "AWARE";
@@ -179,9 +181,15 @@ private _cortex=_results select 1;
         missionNamespace setVariable ["Waldo_CortexQA_Actors",[_plane,_target],true];
         [_id,"Watch a moving aircraft approach and pass the target. Enabled runs need actual flare release on both legs and ammunition consumption; phase labels alone cannot pass.",getPosATL _plane] call _phase;
         private _origin=getPosASL _plane;
+        private _minimumSpeed=[80,200] select (_plane isKindOf "Plane");
+        private _airborne=[{alive _plane && {speed _plane >= _minimumSpeed}
+            && {(getPosATL _plane select 2) >= 100} && {_plane distance2D _origin >= 50}},30] call _wait;
+        [_id+"-moving-airborne-precondition",_airborne,
+            str [speed _plane,getPosATL _plane,_plane distance2D _origin]] call _recordCheck;
         private _passed=[{(_plane distance2D _origin > 1500) || {!alive _plane}},180] call _wait;
         private _events=_plane getVariable ["Waldo_CortexQA_AttackFlares",[]];
-        [_id+"-physical-flight",alive _plane && {_plane distance2D _origin > 500},str (_plane distance2D _origin)] call _recordCheck;
+        [_id+"-physical-flight",_airborne && {alive _plane} && {_plane distance2D _origin > 500}
+            && {(getPosATL _plane select 2) >= 30},str [_plane distance2D _origin,speed _plane,getPosATL _plane]] call _recordCheck;
         if (_enabled) then {
             [_id+"-approach-release",_events findIf {(_x select 1) == "APPROACH" && {(_x select 3) >= 40}} >= 0,str _events] call _recordCheck;
             [_id+"-departure-release",_events findIf {(_x select 1) == "DEPARTURE" && {(_x select 3) >= 40}} >= 0,str _events] call _recordCheck;

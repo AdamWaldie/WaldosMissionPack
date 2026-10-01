@@ -754,7 +754,7 @@ class CortexOperations(unittest.TestCase):
         step = source('cortexFlankStep')
         self.assertNotIn('getVariable ["Waldo_Cortex_FragCancelled",""]) == _token', step)
         self.assertNotIn('"GRENADE_UNRESOLVED" call _end', step)
-        self.assertIn('_drill set ["stage","PAUSE"]', step)
+        self.assertIn('"ASSAULT_GRENADE_QUEUED"] select _queued] call Waldo_fnc_CortexDrillSetStage', step)
 
     def test_flank_routes_avoid_friendly_support_fire_corridors(self):
         start = source('cortexFlankStart')
@@ -920,7 +920,7 @@ class CortexOperations(unittest.TestCase):
         step=source('cortexFlankStep')
         for marker in ['private _fitSquad=', 'private _rankCandidates=',
                        'Waldo_Cortex_DrillReinforcements', 'TEAM_1_REBALANCE',
-                       'TEAM_2_REBALANCE', '_drill set ["stage","START"]',
+                       'TEAM_2_REBALANCE', '"START","CASUALTY_REINFORCEMENT"] call Waldo_fnc_CortexDrillSetStage',
                        'private _ownedPathUnits=']:
             self.assertIn(marker,step)
         self.assertIn('_x checkAIFeature "PATH" || {_x in _ownedPathUnits}',step)
@@ -1961,7 +1961,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('case "ASSAULT": {',step)
         self.assertNotIn('case "GRENADE": {',step)
         self.assertNotIn('"GRENADE_UNRESOLVED" call _end',step)
-        self.assertIn('_drill set ["stage","PAUSE"]',step)
+        self.assertIn('"PAUSE","ASSAULT_COMMITTED"] call Waldo_fnc_CortexDrillSetStage',step)
         self.assertIn('_drill set ["grenadeActionUntil",[_now,_now+2] select _queued]',step)
         grenade=source('cortexThrowGrenade')
         self.assertIn('addEventHandler ["FiredMan"',grenade)
@@ -1975,6 +1975,27 @@ class CortexOperations(unittest.TestCase):
                        'time-(_x select 1) < 8']:
             self.assertIn(marker,qa)
         self.assertIn('["Waldo_AIPass_Assault_Enable",_case != "ADVANCE-CLOSE"]',qa)
+
+    def test_manoeuvre_transitions_are_public_bounded_and_audited(self):
+        helper=source('cortexDrillSetStage')
+        functions=(ROOT/'MissionScripts/WaldosFunctions.sqf').read_text(encoding='utf-8')
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text(encoding='utf-8')
+        self.assertIn('class CortexDrillSetStage',functions)
+        for marker in ['Waldo_Cortex_DrillTransition','Waldo_Cortex_DrillTransitions',
+                       'count _history > 32','setVariable ["Waldo_Cortex_DrillTransitions",_history,true]']:
+            self.assertIn(marker,helper)
+        for name,reason in [('cortexFlankStart','FLANK_ACCEPTED'),
+                            ('cortexAdvanceStart','ADVANCE_ACCEPTED'),
+                            ('cortexSupportBoundStart','COORDINATED_BOUND_ACCEPTED')]:
+            text=source(name)
+            self.assertIn('["stage",""]',text.replace(' ',''))
+            self.assertIn(reason,text)
+            self.assertIn('call Waldo_fnc_CortexDrillSetStage',text)
+        self.assertIn('"ENDED",_reason] call Waldo_fnc_CortexDrillSetStage',source('cortexFlankEnd'))
+        self.assertNotIn('_drill set ["stage"',source('cortexFlankStep'))
+        for marker in ['-transition-start','-transition-move','-transition-ended','-transition-order',
+                       '-transition-assault-committed','-transition-clear-through','-transition-grenade-queued']:
+            self.assertIn(marker,qa)
 
     def test_grenade_hold_times_actual_deployment_and_cleans_owned_listener(self):
         self.assertIn('_flight set [4,time]',source('cortexThrowGrenade'))
@@ -2099,7 +2120,7 @@ class CortexOperations(unittest.TestCase):
 
     def test_attack_run_flares_are_separate_gated_owner_job(self):
         text=source('cortexAttackRunFlares')
-        for requirement in ['local _aircraft','CortexIsEligible','CortexAircraftEligible','Waldo_Cortex_AttackRunFlares_Enable','isTouchingGround','vectorDotProduct','closest','APPROACH','DEPARTURE','serverTime+30','CortexFireCountermeasure']:
+        for requirement in ['local _aircraft','CortexIsEligible','CortexAircraftEligible','Waldo_Cortex_AttackRunFlares_Enable','isTouchingGround','vectorDotProduct','closest','APPROACH','DEPARTURE','serverTime+30','CortexFireCountermeasure','effectiveCommander _aircraft','gunner _aircraft','commander _aircraft','crew _aircraft','assignedTarget _x']:
             self.assertIn(requirement,text)
         self.assertNotIn('reveal ',text)
         self.assertNotIn('setVelocity',text)
@@ -2130,7 +2151,7 @@ class CortexOperations(unittest.TestCase):
 
     def test_attack_flare_audit_preserves_missile_cases_and_uses_real_flight(self):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
-        for item in ['AIR-paired-real-threats','O_Heli_Attack_02_dynamicLoadout_F','O_Plane_CAS_02_dynamicLoadout_F','-physical-flight','-approach-release','-departure-release','-ammunition-consumed','-no-cortex-release','addEventHandler ["Fired"']:
+        for item in ['AIR-paired-real-threats','O_Heli_Attack_02_dynamicLoadout_F','O_Plane_CAS_02_dynamicLoadout_F','-moving-airborne-precondition','setVelocityModelSpace','-physical-flight','-approach-release','-departure-release','-ammunition-consumed','-no-cortex-release','addEventHandler ["Fired"','{_x doTarget _target} forEach _crew']:
             self.assertIn(item,text)
         self.assertNotIn('call Waldo_fnc_CortexAttackRunFlares',text)
         self.assertNotIn('call Waldo_fnc_CortexFireCountermeasure',text)

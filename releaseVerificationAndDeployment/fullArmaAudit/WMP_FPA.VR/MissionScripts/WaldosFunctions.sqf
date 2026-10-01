@@ -232,6 +232,7 @@ class CfgFunctions
             class CortexFlankEnd {file = "MissionScripts\AiScripting\Cortex\cortexFlankEnd.sqf";};
             class CortexFlankStart {file = "MissionScripts\AiScripting\Cortex\cortexFlankStart.sqf";};
             class CortexFlankStep {file = "MissionScripts\AiScripting\Cortex\cortexFlankStep.sqf";};
+            class CortexDrillSetStage {file = "MissionScripts\AiScripting\Cortex\cortexDrillSetStage.sqf";};
             class CortexGarrison {file = "MissionScripts\AiScripting\Cortex\cortexGarrison.sqf";};
             class CortexGarrisonApplyLocal {file = "MissionScripts\AiScripting\Cortex\cortexGarrisonApplyLocal.sqf";};
             class CortexGarrisonRelease {file = "MissionScripts\AiScripting\Cortex\cortexGarrisonRelease.sqf";};

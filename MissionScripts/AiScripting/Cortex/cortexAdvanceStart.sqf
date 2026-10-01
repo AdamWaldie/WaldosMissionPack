@@ -116,10 +116,11 @@ _group setVariable ["Waldo_Cortex_DrillReinforcements",[],true];
 _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select 0) select 0],
     ["teams",[_element,_coverElement]],["teamSizes",[count _element,count _coverElement]],["teamTurn",0],
-    ["type", "ADVANCE"], ["units", _onFoot], ["desiredStrength",count _onFoot], ["points", _points], ["index", 0], ["stage", "START"],
+    ["type", "ADVANCE"], ["units", _onFoot], ["desiredStrength",count _onFoot], ["points", _points], ["index", 0], ["stage", ""],
     ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time], ["lastStep",time],
     ["boundStart", time], ["pauseUntil", 0]
 ]];
+[_group,_state get "drill","START","ADVANCE_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
 // Direct fire-team bounds are a group movement owner even though they do not
 // create a WMP waypoint. Other behaviours must wait until CortexFlankEnd releases it.
 _state set ["movementLease",["TACTICAL_DRILL",time+90]];

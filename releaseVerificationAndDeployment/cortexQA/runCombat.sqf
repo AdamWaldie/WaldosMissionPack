@@ -100,6 +100,8 @@ diag_log format ["WMP CORTEX QA COMBAT SCOPE: %1",_cases];
     ]] call Waldo_fnc_CortexTuning;
     [format ["%1 real contact",_case],"Six soldiers face two live enemies. They must detect contact, start the enabled manoeuvre, physically move its element, and fire. Invulnerability keeps this movement test independent of casualties.",[1200,1250,0]] call _phase;
     private _prefix = "COMBAT-"+_case;
+    _group setVariable ["Waldo_Cortex_DrillTransitions",[],true];
+    _group setVariable ["Waldo_Cortex_DrillTransition",nil,true];
     [_prefix+"-requested-contact-delay",(missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds",-1]) == 5,str (missionNamespace getVariable ["Waldo_AIPass_Advance_MinContactSeconds",-1])] call _check;
     private _nearestPlayer = 1e9;
     {if (!(_x isKindOf "HeadlessClient_F") && {alive _x}) then {_nearestPlayer=_nearestPlayer min (leader _group distance2D _x)}} forEach allPlayers;
@@ -115,6 +117,7 @@ diag_log format ["WMP CORTEX QA COMBAT SCOPE: %1",_cases];
     private _started = [{count ((_group getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["drill",createHashMap]) > 0},70] call _wait;
     [_prefix+"-started",_started] call _check;
     private _drill = (_group getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["drill",createHashMap];
+    private _drillToken = _drill getOrDefault ["token",""];
     if (_case == "ADVANCE-GRENADE" && {_started}) then {
         private _teams = _drill getOrDefault ["teams",[]];
         if (count _teams == 2 && {(_teams select 0) isNotEqualTo []}) then {
@@ -279,13 +282,19 @@ diag_log format ["WMP CORTEX QA COMBAT SCOPE: %1",_cases];
             private _fragRecords = [];
             {_fragRecords append (_x getVariable ["Waldo_CortexQA_FragShots",[]])} forEach _members;
             _fragShots = count _fragRecords;
-            if ((_live getOrDefault ["stage",""]) == "GRENADE") then {
+            private _transitionRows = (_group getVariable ["Waldo_Cortex_DrillTransitions",[]]) select {(_x param [1,""]) == _drillToken};
+            private _grenadeQueued = _transitionRows findIf {(_x param [5,""]) == "ASSAULT_GRENADE_QUEUED"} >= 0;
+            if (_grenadeQueued) then {
                 if (!_grenadeStageSeen) then {
                     _grenadeStageSeen=true;
                     _grenadeHoldOrigins = _element apply {[_x,getPosATL _x]};
                     [format ["%1: grenade hold",_case],"Watch the actual grenade and troop trails. Troops must stay at the assault position until the grenade is gone, then cross beyond the objective. A queued throw alone does not pass.",getPosATL leader _group] call _phase;
                 };
-                {_grenadeHoldDrift = _grenadeHoldDrift max ((_x select 0) distance2D (_x select 1))} forEach _grenadeHoldOrigins;
+                private _grenadeActive = (_live getOrDefault ["grenadeActionUntil",0]) > time
+                    || {_fragRecords findIf {!isNull (_x select 0)} >= 0};
+                if (_grenadeActive) then {
+                    {_grenadeHoldDrift = _grenadeHoldDrift max ((_x select 0) distance2D (_x select 1))} forEach _grenadeHoldOrigins;
+                };
             };
             private _liveRoute = _live getOrDefault ["points",[]];
             private _liveIndex = _live getOrDefault ["index",-1];
@@ -486,9 +495,26 @@ diag_log format ["WMP CORTEX QA COMBAT SCOPE: %1",_cases];
             _members apply {[_x,_x getVariable ["Waldo_CortexQA_Shots",0],_x getVariable ["Waldo_CortexQA_MovingShots",0]]}],true];
         diag_log format ["WMP CORTEX QA LATE COMPLETION: case=%1 result=%2 actors=%3",_case,_lateResult,_element apply {[netId _x,getPosATL _x,currentCommand _x,expectedDestination _x]}];
     };
+    private _caseTransitions = (_group getVariable ["Waldo_Cortex_DrillTransitions",[]]) select {(_x param [1,""]) == _drillToken};
+    [_prefix+"-transition-assault-committed",!_observedAssault || {_caseTransitions findIf {(_x param [5,""]) == "ASSAULT_COMMITTED"} >= 0},str _caseTransitions] call _check;
+    [_prefix+"-transition-clear-through",!_observedAssault || {_caseTransitions findIf {(_x param [5,""]) == "CLEAR_THROUGH_ARRIVED"} >= 0},str _caseTransitions] call _check;
+    if (_case in ["FLANK-GRENADE","ADVANCE-GRENADE"]) then {
+        [_prefix+"-transition-grenade-queued",_caseTransitions findIf {(_x param [5,""]) == "ASSAULT_GRENADE_QUEUED"} >= 0,str _caseTransitions] call _check;
+    };
     [format ["%1 result: %2",_case,_ending param [1,"NO DRILL"]],"Compare actual movement with the route. Completion requires every manoeuvre soldier to reach the bounds; firing or an accepted order alone is insufficient.",getPosATL leader _group] call _phase;
     sleep 20;
     };
+    private _caseTransitions = (_group getVariable ["Waldo_Cortex_DrillTransitions",[]]) select {(_x param [1,""]) == _drillToken};
+    private _chronological = true;
+    if (count _caseTransitions > 1) then {
+        for "_transitionIndex" from 1 to ((count _caseTransitions)-1) do {
+            if ((_caseTransitions select _transitionIndex select 0) < (_caseTransitions select (_transitionIndex-1) select 0)) then {_chronological=false};
+        };
+    };
+    [_prefix+"-transition-start",_drillToken != "" && {_caseTransitions findIf {(_x param [4,""]) == "START"} >= 0},str _caseTransitions] call _check;
+    [_prefix+"-transition-move",_caseTransitions findIf {(_x param [4,""]) == "MOVE"} >= 0,str _caseTransitions] call _check;
+    [_prefix+"-transition-ended",_caseTransitions findIf {(_x param [4,""]) == "ENDED"} >= 0,str _caseTransitions] call _check;
+    [_prefix+"-transition-order",_chronological,str _caseTransitions] call _check;
     // Disable while managed and verify cleanup, without writing successful state into the fixture.
     [createHashMapFromArray [["Waldo_AIPass_Contact_Enable",false]]] call Waldo_fnc_CortexTuning;
     [_prefix+"-disabled-cleanup",[{count ((_group getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["drill",createHashMap]) == 0 && {_members findIf {!(_x checkAIFeature "TARGET") || {!(_x checkAIFeature "AUTOTARGET")}} < 0}},15] call _wait] call _check;

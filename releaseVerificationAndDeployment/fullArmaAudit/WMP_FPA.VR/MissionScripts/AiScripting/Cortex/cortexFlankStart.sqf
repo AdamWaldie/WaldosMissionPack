@@ -146,9 +146,10 @@ _group setVariable ["Waldo_Cortex_DrillFailure",[],true];
 _group setVariable ["Waldo_Cortex_DrillReinforcements",[],true];
 _state set ["drill", createHashMapFromArray [
     ["token",_token],["target",(_enemies select _targetIndex) select 0],
-    ["type", "FLANK"], ["units", _element], ["desiredStrength",count _element], ["points", _points], ["index", 0], ["stage", "START"], ["enemyPos", _enemyPos],
+    ["type", "FLANK"], ["units", _element], ["desiredStrength",count _element], ["points", _points], ["index", 0], ["stage", ""], ["enemyPos", _enemyPos],
     ["disabled", []], ["spots", []], ["started", time], ["lastStep",time], ["boundStart", time], ["pauseUntil", 0]
 ]];
+[_group,_state get "drill","START","FLANK_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
 // The drill moves selected actors directly rather than adding a group waypoint.
 // Publish that ownership so support, vehicles and artillery cannot replace it mid-bound.
 _state set ["movementLease",["TACTICAL_DRILL",time+90]];

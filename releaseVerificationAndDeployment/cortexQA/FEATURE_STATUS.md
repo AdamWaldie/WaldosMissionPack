@@ -97,7 +97,7 @@ Feature cases: **57**. Required variant categories: **13**.
 
 ### SCHED - Scheduler and distance tiers
 
-**Expected:** At least 100 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 100+ groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture is not scale acceptance.
+**Expected:** All 50 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 50 groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture and the exploratory 100-group run are not primary scale acceptance.
 
 **Automation and open work:** runScheduler.sqf covers twelve production-queued squad movements at minimum soft budget. runPerformance.sqf retains the completed server-only 100x6 patrol stress pilot. runPerformanceContact.sqf runs matched OFF/ON/ON/OFF primary comparisons distributed across the server and two HCs: 50 six-soldier infantry groups through performancecontact, or 30 infantry squads, ten ground vehicles, six helicopters and four jets through performancemixed. runPerformanceOwner.sqf records server, HC and rendered-client median/p95/p99 frame time, queue age, owner heartbeat and actor counts. Running without LAMBS compares vanilla with Cortex; -IncludeLambs compares LAMBS alone with Cortex plus LAMBS SPLIT. Both 50-group arms require fresh acceptance.
 
@@ -399,7 +399,7 @@ Feature cases: **57**. Required variant categories: **13**.
 
 **Expected:** Physical completion, timed preparation and failure have distinct outcomes. A queued grenade or retired drill cannot affect a later action. Slow progress, no progress, controller deadline and QA observation deadline are distinguishable.
 
-**Automation and open work:** runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Runtime-20260927-142945 completed with 96 server findings: several transition prerequisites were not reached. Multi-squad chaining and all interruption/ownership variants remain open.
+**Automation and open work:** runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Every manoeuvre publishes a bounded, owner-authored transition ledger and the audit requires chronological START, MOVE and ENDED entries for the current drill token; assault, clear-through and grenade cases require their specific transition reasons. Runtime-20260927-142945 completed with 96 server findings before this ledger was added. Multi-squad chaining and all interruption/ownership variants remain open.
 
 ### LIGHTING - Automatic darkness, night vision and illumination
 

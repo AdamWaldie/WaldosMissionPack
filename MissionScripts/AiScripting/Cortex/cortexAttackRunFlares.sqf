@@ -3,6 +3,8 @@
  * Releases countermeasure bursts while approaching and leaving an assigned attack target.
  * Locality/authority: aircraft owner only; never changes flight paths or target knowledge.
  * Repeat/JIP: one local scheduler job; public cooldown survives owner migration. No JIP effects.
+ * Target discovery checks the effective commander, every operating crew member and every turret
+ * assignment because helicopters commonly give the attack target to the gunner rather than pilot.
  * Arguments: 0: job <HASHMAP>, empty default; aircraft <OBJECT> is required.
  * Return: NUMBER, next sampling delay or -1 to retire.
  * Current callers: Waldo_fnc_CortexDiscover through the budgeted Cortex scheduler.
@@ -24,8 +26,15 @@ if (isTouchingGround _aircraft || {speed _aircraft < 40}) exitWith {_job deleteA
 if (combatMode _group in ["BLUE","GREEN"]) exitWith {_job deleteAt "target"; _job deleteAt "burst"; 1};
 private _target=_job getOrDefault ["target",objNull];
 if (isNull _target) then {
-    _target=assignedTarget effectiveCommander _aircraft;
-    if (isNull _target) then {_target=assignedTarget _pilot};
+    private _targetOwners=[];
+    {
+        if (!isNull _x && {alive _x}) then {_targetOwners pushBackUnique _x};
+    } forEach ([effectiveCommander _aircraft,driver _aircraft,gunner _aircraft,commander _aircraft]+crew _aircraft);
+    {
+        private _candidate=assignedTarget _x;
+        if (!isNull _candidate && {alive _candidate}
+            && {(side _group) getFriend (side _candidate) < 0.6}) exitWith {_target=_candidate};
+    } forEach _targetOwners;
     if (isNull _target || {!alive _target} || {(side _group) getFriend (side _target) >= 0.6}) exitWith {};
     private _offset=(getPosASL _target) vectorDiff (getPosASL _aircraft);
     if (vectorMagnitude _offset <= 1500 && {(velocity _aircraft) vectorDotProduct _offset > 0}
