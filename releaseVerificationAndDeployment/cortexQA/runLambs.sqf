@@ -52,14 +52,20 @@ private _starts=_units apply {getPosATL _x};
 private _accepted=[_group,_fallbackDestination,0,14] call Waldo_fnc_CortexDefend;
 private _arrived=[{
     (_units findIf {
-        !alive _x || {(_x getVariable ["Waldo_AIPass_DefendPos",[]]) isEqualTo []}
-            || {_x distance2D (_x getVariable ["Waldo_AIPass_DefendPos",[]]) > 5}
+        private _assignment=_x getVariable ["Waldo_AIPass_DefendPos",[]];
+        !alive _x || {_assignment isEqualTo []} || {_x distance2D (_assignment select 0) > 5}
     }) < 0
 },90] call _wait;
 private _travelled=(_units findIf {_x distance2D (_starts select _forEachIndex) < 35}) < 0;
 ["LAMBS-fallback-physical-arrival",_accepted && {_arrived} && {_travelled},str (_units apply {getPosATL _x})] call _check;
 private _maxHoldDrift=0;
-for "_sample" from 1 to 5 do {sleep 1; {_maxHoldDrift=_maxHoldDrift max (_x distance2D (_x getVariable ["Waldo_AIPass_DefendPos",getPosATL _x]))} forEach _units};
+for "_sample" from 1 to 5 do {
+    sleep 1;
+    {
+        private _assignment=_x getVariable ["Waldo_AIPass_DefendPos",[]];
+        if (_assignment isNotEqualTo []) then {_maxHoldDrift=_maxHoldDrift max (_x distance2D (_assignment select 0))};
+    } forEach _units;
+};
 ["LAMBS-fallback-sustained-hold",_arrived && {_maxHoldDrift <= 7},str _maxHoldDrift] call _check;
 [_group] call Waldo_fnc_CortexDefendRelease;
 
