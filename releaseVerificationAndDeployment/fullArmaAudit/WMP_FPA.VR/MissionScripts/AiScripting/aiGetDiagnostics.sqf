@@ -25,7 +25,7 @@
 
 if !(isServer) exitWith {["ai", []] call Waldo_fnc_DiagnosticFeatureReport};
 private _groups = allGroups;
-private _enabled = missionNamespace getVariable ["Waldo_AIRebalance_Enable", false];
+private _enabled = missionNamespace getVariable ["Waldo_AIRebalance_Enable", true];
 private _hcOwners = (entities "HeadlessClient_F") apply {owner _x};
 private _hcGroups = _groups select {
     groupOwner _x in _hcOwners
@@ -95,7 +95,7 @@ private _decelerationActive = _decelerationAircraft select {
 private _decelerationLandingConflict = _decelerationActive select {
     _x getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
 };
-private _passEnabled = missionNamespace getVariable ["Waldo_AIPass_Enable", false];
+private _passEnabled = missionNamespace getVariable ["Waldo_AIPass_Enable", true];
 private _passActive = missionNamespace getVariable ["Waldo_AIPass_Active", false];
 private _passJobs = count (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + count (missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []]);
 private _passState = if (!_passEnabled) then {"DISABLED"} else {if (_passActive && {!isNil {missionNamespace getVariable "Waldo_AIPass_SchedulerHandle"}}) then {"ACTIVE"} else {"ERROR"}};
@@ -147,7 +147,7 @@ private _checks = [
         [missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""], "FOLLOW"] select ((missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""]) == ""),
         missionNamespace getVariable ["Waldo_AIPass_Aggression", 1.2], missionNamespace getVariable ["Waldo_AIPass_Cohesion", 1],
         missionNamespace getVariable ["Waldo_AIPass_ReactionSpeed", 1], missionNamespace getVariable ["Waldo_AIPass_Artillery_DefaultRole", "BOTH"],
-        missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"]]],
+        missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Mode", "AUTO"]]],
     ["ai", "cortex-lambs", if (_lambsDanger || {_lambsWaypoints} || {_lambsTurrets} || {_lambsSuppression} || {_lambsRpg}) then {"ACTIVE"} else {"UNAVAILABLE"}, format ["danger=%1 waypoints=%2 turrets=%3 suppression=%4 rpg=%5 mode=%6 scopedMovementLeases=%7 lambsOwnedGroups=%8 busyLeaseRefusals=%9; config companions remain active in every mode", _lambsDanger, _lambsWaypoints, _lambsTurrets, _lambsSuppression, _lambsRpg, missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"], _lambsMovementLeases, _lambsBusyGroups, missionNamespace getVariable ["Waldo_Cortex_LambsBusyRefusals", 0]]],
     ["ai", "ai-profile", if (_enabled) then {"ACTIVE"} else {"DISABLED"}, format ["profile=%1 mode=%2 serverActive=%3", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"], missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]]],
     ["ai", "ai-headless-adoption", if (!_enabled) then {"DISABLED"} else {if (count _missing > 0) then {"ERROR"} else {if (count _hcGroups > 0) then {"ACTIVE"} else {"UNCONFIGURED"}}}, format ["connectedHCs=%1 hcOwnedGroups=%2 missingVerifiedAdoption=%3", count _hcOwners, count _hcGroups, count _missing]],
@@ -172,7 +172,7 @@ private _featureNotes=createHashMapFromArray [
     ["PostContact","Requires lost contact; inspect phase age, search members and return to the authored route."],
     ["Flank","Requires eligible contact and a viable movement element. Inspect drill stage/bound, covering roles and actual commands; elapsed time alone is not a stall."],
     ["StreetCrossing","Requires a manoeuvre crossing an engine road; inspect approach/crossing stages, smoke inventory and far-side travel."],
-    ["FireControl","Requires known threats and permitted ROE. Assigned targets are not shots; check BLUE mode, ammunition and friendly obstruction."],
+    ["FireControl","Requires known threats and permitted ROE. Ordered suppression alternates within a squad and uses a short random delay per squad; assigned targets are not shots. Check BLUE mode, ammunition and friendly obstruction."],
     ["Morale","Uses casualties, pressure and leader state; inspect morale value/state and physical retreat, not only RETREAT phase."],
     ["Surrender","Requires broken isolated survivors and surrender enabled; check captive state and real weapon removal. ACE captivity is optional."],
     ["GrenadeEvasion","Requires a qualifying live projectile and eligible observer. Check projectile handler, movement ownership and evasion release."],

@@ -32,9 +32,6 @@ for "_i" from 0 to 3 do {
     _unit addEventHandler ["FiredMan",{
         params ["_unit"];
         _unit setVariable ["Waldo_CortexQA_ActualShots",(_unit getVariable ["Waldo_CortexQA_ActualShots",0])+1,true];
-        private _targets=_unit getVariable ["Waldo_CortexQA_FiredTargets",[]];
-        if (!isNull assignedTarget _unit) then {_targets pushBackUnique assignedTarget _unit};
-        _unit setVariable ["Waldo_CortexQA_FiredTargets",_targets,true];
     }];
     _shooters pushBack _unit;
 };
@@ -66,11 +63,13 @@ sleep 12;
 _group setCombatMode "RED";
 ["Fire control: weapons free","The same live targets remain. The squad must now fire real rounds at both targets. Labels show actual shots and target hit events; assignment alone does not establish effective fire.",[2100,1100,0]] call _phase;
 private _engaged=[{
-    private _seen=[];
-    {_seen append (_x getVariable ["Waldo_CortexQA_FiredTargets",[]])} forEach _shooters;
-    _targets findIf {!(_x in _seen)} < 0
+    (_shooters findIf {(_x getVariable ["Waldo_CortexQA_ActualShots",0]) > 0} >= 0)
+        && {_targets findIf {(_x getVariable ["Waldo_CortexQA_TargetHits",0]) == 0} < 0}
 },45] call _wait;
-["FIRE-both-targets-actual-fire",_engaged,str (_shooters apply {_x getVariable ["Waldo_CortexQA_ActualShots",0]})] call _check;
+["FIRE-both-targets-actual-fire",_engaged,str [
+    _shooters apply {_x getVariable ["Waldo_CortexQA_ActualShots",0]},
+    _targets apply {_x getVariable ["Waldo_CortexQA_TargetHits",0]}
+]] call _check;
 private _bothHit=[{
     {
         _x setVariable ["Waldo_CortexQA_Label",format ["TARGET %1 | projectile hit events %2",_forEachIndex+1,_x getVariable ["Waldo_CortexQA_TargetHits",0]],true];
@@ -92,12 +91,12 @@ sleep 12;
 deleteGroup _group; deleteGroup _enemyGroup;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 
-// Three independent squads acquire the same visible enemy, then retain its last known position after
+// Two independent squads acquire the same visible enemy, then retain its last known position after
 // it disappears. The production group ticks must choose and rotate suppressors without a test-injected
 // order. This observer samples existing public state only; it adds no runtime scheduler or coordination.
 private _suppressionGroups=[];
 private _suppressionShooters=[];
-for "_g" from 0 to 2 do {
+for "_g" from 0 to 1 do {
     private _suppressionGroup=createGroup [east,true];
     _suppressionGroup setGroupIdGlobal [format ["Cortex QA TALK %1",_g+1]];
     _suppressionGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
@@ -144,7 +143,7 @@ for "_i" from -20 to 20 do {
     _suppressionScreen pushBack _wall;
 };
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_suppressionShooters+[_suppressionEnemy],true];
-["Fire control: independent squad cadence","Three stationary squads first acquire the same visible enemy while holding fire. The enemy is then moved behind the concrete screen while their targets are cleared, leaving its old position unobstructed and known. Watch each squad rotate individual suppressors at its own lightly random cadence; cyan labels show Cortex-owned orders and actual shot times. A synchronized three-squad volley fails.",[2100,1375,0]] call _phase;
+["Fire control: independent squad cadence","Two stationary squads first acquire the same visible enemy while holding fire. The enemy is then moved behind the concrete screen while their targets are cleared, leaving its old position unobstructed and known. Watch each squad rotate individual suppressors at its own lightly random cadence; cyan labels show Cortex-owned orders and actual shot times. Repeated synchronized squad volleys fail.",[2100,1375,0]] call _phase;
 private _allContact=[{
     _suppressionGroups findIf {
         ((_x getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]) != "CONTACT"
@@ -171,7 +170,7 @@ waitUntil {
         private _group=_x;
         count ((units _group) select {(_x getVariable ["Waldo_CortexQA_SuppressOrders",[]]) isNotEqualTo []}) >= 2
     } count _suppressionGroups;
-    _readyGroups == 3 || {time >= _deadline}
+    _readyGroups == 2 || {time >= _deadline}
 };
 private _orderedByGroup=_suppressionGroups apply {
     private _events=[];

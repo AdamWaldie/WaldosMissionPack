@@ -9,7 +9,10 @@
  * street crossings, group-level RED pursuit is replaced by a finite YELLOW lease, but individual
  * TARGET and AUTOTARGET remain enabled. Movers therefore keep acquiring and engaging visible threats
  * while their owned destination remains authoritative. Only AUTOCOMBAT is suspended so the engine
- * cannot replace the finite AWARE move with a new COMBAT movement plan.
+ * cannot replace the finite AWARE move with a new COMBAT movement plan. If a live ATTACK command still
+ * replaces an individual destination, the controller clears that actor's target and reissues the owned
+ * spot at most twice per bound. This is a narrow recovery for a measured engine override, not a blanket
+ * targeting disable; other movers and every stationary fire element continue engaging.
  * A RED group first receives a finite YELLOW movement lease: it remains fire-at-will, but the engine must keep
  * formation instead of creating independent ATTACK subgroups that compete with the bounds. The lease begins one
  * scheduler step before the first move, remains active for the whole manoeuvre, and is restored only if the group
@@ -29,6 +32,9 @@
  * that were on are switched off, and they are switched back on at every halt, so mission-maker
  * disableAI settings survive. A bound completes when every member is within 3 m of his spot, or after
  * six seconds when at least two soldiers and 60 percent of the assigned element have physically arrived.
+ * A remaining soldier who is still making physical progress receives up to six additional seconds to
+ * finish the bound. This short, progress-driven grace avoids turning an active mover into a recovery
+ * chase while never holding the element for an actor who has actually stopped.
  * Remaining actors become bounded recovery stragglers and keep moving toward their element; they are
  * never counted as arrived or teleported. Each arrival holds PATH until the next bound, preventing formation return. Waldo_AIPass_Flank_BoundTimeout limits stationary time; four times that value is the absolute bound limit. Stationary movement ends as STALLED; the absolute limit ends as TIME_LIMIT, never arrival. Halts last
  * Waldo_AIPass_Flank_BoundPause seconds (also after clearing and consolidation),
@@ -41,7 +47,7 @@
  * assaultChance controls optional grenade preparation, not whether an enabled, successful manoeuvre
  * arbitrarily abandons its assault transition. One member may throw a fragmentation grenade
  * (Waldo_fnc_CortexThrowGrenade, never near friendlies). The approach uses a covered spot
- * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. A queued frag is an opportunistic action: its own next-frame safety check may cancel it, but deployment never gates the assault or aborts movement. The assault axis stays fixed through the crossing; water destinations are rejected.
+ * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. Formation commitment pauses for one second; arrival at the assault position pauses for one second without a grenade or two seconds when a throw was queued. A queued frag is an opportunistic action: its own next-frame safety check may cancel it, but deployment never gates the assault or aborts movement. The assault axis stays fixed through the crossing; water destinations are rejected.
  * Consolidation: a flank brings its covering element forward even when no final assault
  * is selected; the manoeuvre element holds its gained position. After clearing through,
  * its surviving on-foot covering element moves
@@ -423,6 +429,7 @@ private _issue = {
     {_progress pushBack [_x distance2D (_spots select _forEachIndex),_now,getPosATL _x,_now]} forEach _units;
     _drill set ["progress",_progress];
     _drill set ["retries",_units apply {[0,_now]}];
+    _drill set ["pursuitResets",_units apply {0}];
     _drill set ["disabled", _disabled];
     _drill set ["combatModes",_combatModes];
     _drill set ["combatBehaviours",_combatBehaviours];
@@ -443,6 +450,7 @@ switch (_drill get "stage") do {
         private _timeout = missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout",25];
         private _progress = _drill get "progress";
         private _retries = _drill getOrDefault ["retries",_movers apply {[0,_now]}];
+        private _pursuitResets = _drill getOrDefault ["pursuitResets",_movers apply {0}];
         {
             private _unit = _x;
             if (alive _unit && {_unit in _units}) then {
@@ -457,6 +465,23 @@ switch (_drill get "stage") do {
                     };
                 } else {
                     _arrived = false;
+                    private _spot = _spots select _forEachIndex;
+                    private _expected = (expectedDestination _unit) select 0;
+                    private _pursuitResetCount = _pursuitResets select _forEachIndex;
+                    // Live dedicated QA proved that YELLOW can retain a pre-existing native ATTACK
+                    // plan whose destination is hundreds of metres from the owned bound. Reissuing
+                    // doMove alone does not dislodge it. Clear only that actor's target, only while
+                    // the engine destination demonstrably disagrees with Cortex, and cap the repair.
+                    if (currentCommand _unit == "ATTACK"
+                        && {_expected distance2D _spot > 15}
+                        && {_pursuitResetCount < 2}) then {
+                        _unit doTarget objNull;
+                        _unit doWatch _enemyPos;
+                        _unit doMove _spot;
+                        _pursuitResetCount = _pursuitResetCount + 1;
+                        _pursuitResets set [_forEachIndex,_pursuitResetCount];
+                        diag_log format ["[WMP CORTEX] Native pursuit reset group=%1 unit=%2 bound=%3 attempt=%4 expectedOffset=%5",_group,netId _unit,_drill get "index",_pursuitResetCount,_expected distance2D _spot];
+                    };
                     private _last = _progress select _forEachIndex;
                     if ((_last select 0)-_remaining >= 0.5) then {_last set [0,_remaining]; _last set [1,_now]};
                     // A valid obstacle detour can temporarily increase target distance.
@@ -487,11 +512,19 @@ switch (_drill get "stage") do {
                 };
             };
         } forEach _movers;
+        _drill set ["pursuitResets",_pursuitResets];
         private _originalElement = if (_teams isEqualTo []) then {_allUnits} else {_teams select (_drill getOrDefault ["teamTurn",0])};
         private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;
+        private _boundAge = _now - (_drill get "boundStart");
+        private _lateMovers = _units - _arrivedUnits;
+        private _lateMoverProgressing = _lateMovers findIf {
+            private _progressIndex = _movers find _x;
+            _progressIndex >= 0 && {_now - ((_progress select _progressIndex) select 3) <= 3}
+        } >= 0;
         private _quorumReady = !_arrived
-            && {_now - (_drill get "boundStart") >= 6}
-            && {count _arrivedUnits >= _minimumArrivals};
+            && {_boundAge >= 6}
+            && {count _arrivedUnits >= _minimumArrivals}
+            && {!_lateMoverProgressing || {_boundAge >= 12}};
         if (_quorumReady) then {
             private _stragglers = _units - _arrivedUnits;
             {
@@ -581,7 +614,7 @@ switch (_drill get "stage") do {
                     // Reserve the actor briefly for the next-frame throw, then continue the
                     // ordinary tactical pause whether the throw succeeds, cancels or migrates.
                     [_group,_drill,"PAUSE",["ASSAULT_POSITION","ASSAULT_GRENADE_QUEUED"] select _queued] call Waldo_fnc_CortexDrillSetStage;
-                    _drill set ["pauseUntil",_now + 3];
+                    _drill set ["pauseUntil",_now + ([1,2] select _queued)];
                     _drill set ["grenadeThrower",_thrower];
                     _drill set ["grenadeActionUntil",[_now,_now+2] select _queued];
                 };
@@ -665,7 +698,7 @@ switch (_drill get "stage") do {
                 _points pushBack [_clearPoint, "CLEAR"];
                 missionNamespace setVariable ["Waldo_AIPass_Assaults", (missionNamespace getVariable ["Waldo_AIPass_Assaults", 0]) + 1];
                 [_group,_drill,"PAUSE","ASSAULT_COMMITTED"] call Waldo_fnc_CortexDrillSetStage;
-                _drill set ["pauseUntil", _now + 3];
+                _drill set ["pauseUntil", _now + 1];
             } else {
                 if ((_drill getOrDefault ["type","FLANK"]) == "FLANK" && {_teams isEqualTo []}) then {
                     // No assault is a valid tactical choice, not permission to leave

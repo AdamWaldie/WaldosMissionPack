@@ -154,7 +154,7 @@
  * - Waldo_AIPass_Flank_BoundTimeout (ADVANCED): seconds without two metres of progress before a bound aborts; absolute bound limit is four times this value. Never counts as arrival.
  * - Waldo_AIPass_Flank_Cooldown (ADVANCED): seconds before the same squad may flank again.
  * - Waldo_AIPass_StreetCrossing_Enable (MISSION MAKER): flanking elements stop at roads, throw smoke and cross in one bound.
- * - Waldo_AIPass_FireControl_Enable (MISSION MAKER): close threats first, fire spread across visible enemies, disciplined suppression.
+ * - Waldo_AIPass_FireControl_Enable (MISSION MAKER): close threats first, fire spread across visible enemies, and staggered alternating suppression between squads.
  * - Waldo_AIPass_FireControl_MaxSuppressors (ADVANCED): soldiers allowed to suppress at the same time.
  * - Waldo_AIPass_FireControl_MaxShootersPerTarget (ADVANCED): shooters on one visible enemy before extra shooters switch targets.
  * - Waldo_AIPass_Morale_Enable (MISSION MAKER): squads under losses and fire break and fall back under smoke.
@@ -331,7 +331,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Flank_BoundTimeout", 25], // SECONDS without progress before abort; absolute bound limit is 4x. Never counts as arrival.
         ["Waldo_AIPass_Flank_Cooldown", 90], // SECONDS: before the same squad flanks again.
         ["Waldo_AIPass_StreetCrossing_Enable", true], // BOOL: flanks stop at roads, smoke, and cross in one bound.
-        ["Waldo_AIPass_FireControl_Enable", true], // BOOL: close threats, fire distribution, disciplined suppression.
+        ["Waldo_AIPass_FireControl_Enable", true], // BOOL: close threats, fire distribution, staggered alternating suppression.
         ["Waldo_AIPass_FireControl_MaxSuppressors", 2], // COUNT: soldiers suppressing at once.
         ["Waldo_AIPass_FireControl_MaxShootersPerTarget", 2], // COUNT: shooters per visible enemy before others switch.
         ["Waldo_AIPass_Morale_Enable", true], // BOOL: weighted morale; broken squads retreat under smoke.

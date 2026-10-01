@@ -33,6 +33,8 @@
  * movement handover; no stale token survives.
  * CARELESS groups are left entirely to the mission maker.
  * Waldo_AIPass_ReactionSpeed (AI Tuning) divides the step interval, so squads re-assess faster or slower.
+ * Each returned interval receives a small zero-mean random jitter. This prevents newly created squads
+ * from repeatedly thinking and firing in the same frame, while adding no scheduler job or polling loop.
  * A squad riding as cargo in an AI-flown aircraft is handled by airborne insertion instead
  * (Waldo_fnc_CortexAirborneCheck) until it has parachuted and landed.
  *
@@ -683,5 +685,8 @@ switch (_state get "phase") do {
         };
     };
 };
-// Reaction speed (AI Tuning): above 1 squads re-assess more often, below 1 less often.
-(_delay / ((missionNamespace getVariable ["Waldo_AIPass_ReactionSpeed", 1]) max 0.25)) max 0.5
+// Reaction speed (AI Tuning): above 1 squads re-assess more often, below 1 less often. A small,
+// zero-mean jitter keeps groups off the same scheduler frame and spreads both CPU work and fire orders.
+private _reaction = (missionNamespace getVariable ["Waldo_AIPass_ReactionSpeed", 1]) max 0.25;
+private _cadence = _delay / _reaction;
+(_cadence + random 0.7 - 0.35) max 0.5
