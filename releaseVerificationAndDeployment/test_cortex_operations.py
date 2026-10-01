@@ -865,6 +865,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _enemies=[]',qa)
         self.assertIn('_enemies findIf {_leader knowsAbout _x >= 1}',qa)
         self.assertIn('_actors+_enemies',qa)
+        self.assertIn('_x setDir (_x getDir _enemy)',qa)
+        self.assertIn('_x setDir (_x getDir _opponent)',qa)
+        self.assertIn('if (_contact && {_mode == "BOUND"}) then {',qa)
+        self.assertLess(qa.index('[_prefix+"-natural-contact"'),
+                        qa.index('private _wp=_x addWaypoint'))
 
     def test_bounding_advance_default_reacts_before_native_waypoint_is_consumed(self):
         config=(ROOT/'MissionConfig/aiConfig.sqf').read_text()

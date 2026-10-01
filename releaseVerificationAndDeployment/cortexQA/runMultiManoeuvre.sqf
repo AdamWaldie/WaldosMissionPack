@@ -43,10 +43,6 @@ params ["_check","_phase","_wait"];
             }];
             _members pushBack _unit;
         };
-        if (_mode == "BOUND") then {
-            private _wp=_group addWaypoint [[2250,1310,0],0];
-            _wp setWaypointType "MOVE";
-        };
         _groups pushBack _group;
         _teams pushBack _members;
         _actors append _members;
@@ -76,10 +72,16 @@ params ["_check","_phase","_wait"];
     private _expectedDrill=["FLANK","ADVANCE"] select (_mode == "BOUND");
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors+_enemies,true];
     [_prefix+": two squads","Both squads must physically manoeuvre against the same enemy, retain their members and finish cohesive. Cyan trails show travel. Moving/covering counts and actual shots show whether one squad supports the other; accepted drill flags do not pass.",[2250,1200,0]] call _phase;
-    // Direction is established without revealing the target. Both sides remain armed,
-    // invulnerable and free to exchange fire so the prerequisite is a real engagement.
-    {_x doWatch (getPosATL _enemy)} forEach _actors;
-    {_x doWatch (getPosATL leader (_groups select (_forEachIndex mod 2)))} forEach _enemies;
+    // Direction is established without revealing the target. setDir gives every actor a genuine
+    // visual-acquisition opportunity before doWatch starts tracking; doWatch alone can leave a
+    // stationary formation facing its spawn bearing. Both sides remain armed, invulnerable and
+    // free to exchange fire so the prerequisite is still a real engine engagement.
+    {_x setDir (_x getDir _enemy); _x doWatch (getPosATL _enemy)} forEach _actors;
+    {
+        private _opponent=leader (_groups select (_forEachIndex mod 2));
+        _x setDir (_x getDir _opponent);
+        _x doWatch (getPosATL _opponent);
+    } forEach _enemies;
     private _contact=[{
         private _allContact=true;
         {
@@ -89,6 +91,15 @@ params ["_check","_phase","_wait"];
         _allContact
     },60] call _wait;
     [_prefix+"-natural-contact",_contact,str (_groups apply {private _leader=leader _x; [_leader getDir _enemy,_enemies apply {_leader knowsAbout _x}]})] call _check;
+    // The advance prerequisite must exist when Cortex evaluates it. Issuing this objective before
+    // visual contact let native combat consume or complete it during the contact-delay window,
+    // turning the test into an expired-waypoint check instead of a bounding-advance check.
+    if (_contact && {_mode == "BOUND"}) then {
+        {
+            private _wp=_x addWaypoint [[2200+_forEachIndex*100,1460,0],0];
+            _wp setWaypointType "MOVE";
+        } forEach _groups;
+    };
     private _until=diag_tickTime+([0,180] select _contact);
     while {diag_tickTime < _until} do {
         private _movingCounts=[];
