@@ -73,7 +73,28 @@ private _passengers=(_restore getOrDefault ["dismounted",[]]) select {
     alive _unit && {group _unit == _group} && {alive _vehicle} && {vehicle _unit == _unit}
         && {isNull assignedVehicle _unit || {assignedVehicle _unit == _vehicle}}
 };
-[_group, _restore, false, false, "OWNERSHIP_ADOPTED"] call Waldo_fnc_CortexRestoreCalm;
+// Do not publish an artificial CALM between owners when a durable SEARCH/INVESTIGATE or RETREAT
+// episode will resume immediately below. With no resumable semantic work, force a CALM record so
+// diagnostics and JIP cannot retain the old owner's stale public phase.
+private _transitionResumeEligible=count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
+    && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}
+    && {_withdrawalIntent isEqualTo []};
+if (_transitionResumeEligible) then {
+    private _resumePhase=_transitionIntent select 0;
+    private _resumeAreaMode=_transitionIntent select 4;
+    _transitionResumeEligible=switch (_resumePhase) do {
+        case "INVESTIGATE": {
+            private _sourceGate=["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_resumeAreaMode == "SOUND");
+            [_group,"Waldo_AIPass_Investigate_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+                && {_resumeAreaMode == "" || {[_group,_sourceGate,true] call Waldo_fnc_CortexFeatureEnabled}}
+        };
+        case "SEARCH": {[_group,"Waldo_AIPass_PostContact_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+        default {false};
+    };
+};
+private _withdrawalResumeEligible=count _withdrawalIntent == 7 && {serverTime-(_withdrawalIntent select 4) < 120}
+    && {[_group] call Waldo_fnc_CortexIsEligible};
+[_group, _restore, false, false, "OWNERSHIP_ADOPTED",!(_transitionResumeEligible || {_withdrawalResumeEligible})] call Waldo_fnc_CortexRestoreCalm;
 // A delegated building task is the active movement owner. Replay it only after old-owner calm
 // restoration has finished, then stop: remount, post-contact and withdrawal intents from an older
 // episode must not compete with the reconstructed building controller.
@@ -116,9 +137,7 @@ if (count _remountIntent == 2 && {serverTime < (_remountIntent select 0)}
 };
 // Rebuild semantic post-contact intent, not the old owner's commands or callbacks. The original
 // deadline continues across migration, preventing transfer churn from extending an episode.
-if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
-    && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}
-    && {_withdrawalIntent isEqualTo []}) then {
+if (_transitionResumeEligible) then {
     _transitionIntent params ["_transitionPhase","_target","_startedAt","_deadline","_areaMode","_savedTeam"];
     private _transitionGateOpen = switch (_transitionPhase) do {
         case "INVESTIGATE": {
@@ -150,7 +169,7 @@ if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
         _adopted set ["behaviourChanged",false];
         _adopted set ["speedChanged",false];
         if (behaviour _leader == "SAFE") then {_group setBehaviour "AWARE"; _adopted set ["behaviourChanged",true]};
-        [_group,_adopted,_transitionPhase,"OWNERSHIP_RESUME",time-((serverTime-_startedAt) max 0)] call Waldo_fnc_CortexSetPhase;
+        [_group,_adopted,_transitionPhase,"OWNERSHIP_RESUME",time-((serverTime-_startedAt) max 0),true] call Waldo_fnc_CortexSetPhase;
         _adopted set ["enemyPos",+_target];
         _adopted set ["searchTeam",_team];
         if (_areaMode != "") then {_adopted set ["areaInvestigation",_areaMode]};
@@ -164,8 +183,7 @@ if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
 // The old owner's scheduled callbacks are invalid, but physical withdrawal intent is durable.
 // Resume only a structurally valid, unfinished episode and let the common retreat controller
 // reacquire all temporary settings. Its resume path does not repeat smoke or artillery effects.
-if (count _withdrawalIntent == 7 && {serverTime-(_withdrawalIntent select 4) < 120}
-    && {[_group] call Waldo_fnc_CortexIsEligible}) then {
+if (_withdrawalResumeEligible) then {
     private _adopted = [_group] call Waldo_fnc_CortexGroupState;
     if ((_withdrawalIntent select 0) == "INFANTRY") then {
         [_group,_adopted,_withdrawalIntent] call Waldo_fnc_CortexRetreat;
@@ -180,7 +198,7 @@ if (count _withdrawalIntent == 7 && {serverTime-(_withdrawalIntent select 4) < 1
         _adopted set ["retreatStart",+(_withdrawalIntent select 1)];
         _adopted set ["retreatTarget",_target];
         _adopted set ["retreatProgress",[time,_withdrawalIntent select 6,_withdrawalIntent select 5]];
-        [_group,_adopted,"RETREAT","VEHICLE_OWNERSHIP_RESUME",time-_elapsed] call Waldo_fnc_CortexSetPhase;
+        [_group,_adopted,"RETREAT","VEHICLE_OWNERSHIP_RESUME",time-_elapsed,true] call Waldo_fnc_CortexSetPhase;
         _group setVariable ["Waldo_Cortex_WithdrawalIntent",_withdrawalIntent,true];
     };
 };

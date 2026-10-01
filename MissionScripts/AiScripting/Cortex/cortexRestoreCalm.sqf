@@ -26,6 +26,8 @@
  * 3: yield to external order <BOOL>, false; when true Cortex removes its owned controls and
  *    preserves identifiable replacement commands, behaviour and speed.
  * 4: transition reason <STRING>, "RESTORED"; published with the CALM handover.
+ * 5: force transition record <BOOL>, false; used only when a new owner must replace a stale public
+ *    phase even though its fresh local state already begins in CALM.
  * Repeat/JIP: removes only WMP transient orders and restores recorded values.
  * Explicitly tracked Cortex holds restore PATH and resume formation even if combat relabelled doStop
  * as ATTACK/FIRE. Search teams never restore PATH because Cortex did not disable it for that action;
@@ -43,7 +45,7 @@
  * Current callers: CortexGroupTick, CortexReleaseGroup, CortexLocality and CortexOnboardContact.
  */
 
-params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]], ["_yieldToExternal",false,[true]], ["_reason","RESTORED",[""]]];
+params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]], ["_yieldToExternal",false,[true]], ["_reason","RESTORED",[""]], ["_forcePhase",false,[true]]];
 if (isNull _group || {!local _group}) exitWith {};
 // A pending drill step may not run until after a checkpoint or ownership change.
 // Restore its movement restrictions now, before clearing the checkpoint below.
@@ -138,5 +140,5 @@ _group setVariable ["Waldo_Cortex_Withdrawal",nil,true];
 _group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];
 _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
-[_group,_state,"CALM",_reason,time] call Waldo_fnc_CortexSetPhase;
+[_group,_state,"CALM",_reason,time,_forcePhase] call Waldo_fnc_CortexSetPhase;
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP CORTEX] %1 CALM restored", _group]};
