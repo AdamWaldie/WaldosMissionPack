@@ -1613,6 +1613,25 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('LIFE-zeus-transition-reason',lifecycle)
         self.assertIn('Waldo_Cortex_PhaseTransition',lifecycle)
 
+    def test_lifecycle_audit_migrates_active_semantic_state_and_yields_to_zeus(self):
+        lifecycle=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLifecycle.sqf').read_text()
+        for marker in [
+            'LIFE-state-investigation-start',
+            'LIFE-state-owner-resume',
+            'LIFE-state-deadline-preserved',
+            'LIFE-state-physical-continuation',
+            'LIFE-state-zeus-replacement-arrival',
+            'LIFE-state-zeus-no-resurrection',
+            'OWNERSHIP_RESUME',
+        ]:
+            self.assertIn(marker,lifecycle)
+
+    def test_withdrawal_migration_respects_zeus_and_feature_gates(self):
+        locality=source('cortexLocality')
+        self.assertIn('Waldo_AIPass_Morale_Enable',locality)
+        self.assertIn('!([_group] call Waldo_fnc_CortexZeusHeld)',locality)
+        self.assertIn('(_withdrawalIntent select 0) in ["INFANTRY","VEHICLE"]',locality)
+
     def test_reaction_audit_requires_terminal_retreat_and_surrender_handoffs(self):
         reactions=(ROOT/'releaseVerificationAndDeployment/cortexQA/runReactions.sqf').read_text()
         self.assertIn('SURRENDER-terminal-transition',reactions)

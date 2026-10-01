@@ -941,7 +941,7 @@
         "runtime-20260927-092754 completed: 50 checks, one failure, zero SQF errors. No-waypoint Zeus takeover cleared defence on server and both HCs. Replacement travel passed server/HC1 but failed after HC2 returned to server; soldiers moved toward an older position. Detailed waypoint/expected-destination/adoption diagnostics added; interruption acceptance remains incomplete.",
         "runLifecycle.sqf: runtime-20260927-105913 completed 64 checks with zero findings or SQF errors. Disable/restart and Zeus replacement retained; moving leader casualty selected a living successor and physically continued on server, HC1 and HC2 without ownership change. ACE migration, disconnect, JIP, deletion and other action phases remain open."
       ],
-      "automation": "runLifecycle.sqf: runtime-20260927-105913 completed 64 checks with zero findings or SQF errors. Disable/restart and Zeus replacement retained; moving leader casualty selected a living successor and physically continued on server, HC1 and HC2 without ownership change. ACE migration, disconnect, JIP, deletion and other action phases remain open.",
+      "automation": "runLifecycle.sqf retains the accepted disable/restart, Zeus replacement and leader-casualty cases, and now adds an active INVESTIGATE transfer: the new HC owner must publish OWNERSHIP_RESUME, preserve the original deadline, continue physical movement and then yield permanently to a Zeus replacement order. The new state-handoff case is saved but unexecuted. RETREAT/SEARCH live migration, ACE migration, disconnect, JIP, deletion and other action phases remain open.",
       "executable_sources": [
         "runLifecycle.sqf"
       ]

@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Tests mid-order master disable, authored movement, restart and published handover reasons on
- * the server and two headless owners.
+ * Tests mid-order master disable, authored movement, restart, active investigation migration and
+ * published handover reasons on the server and two headless owners.
  * Locality/authority: server fixture; WMP migration and production owner-local defence/release paths.
  * Ordinary waypoints are issued after returning the group to the server while Cortex is disabled.
  * Also checks that a refused HC-to-HC transfer preserves actual ownership and its registry record.
@@ -194,3 +194,77 @@ deleteGroup _group;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 
 } forEach _variants;
+
+// A state handoff needs stronger evidence than ordinary waypoint migration. Start a real
+// investigation from the same validated area-report payload used by the production report path,
+// transfer it while moving, and require the new owner to continue the same bounded episode.
+if (_owners isNotEqualTo []) then {
+    [createHashMapFromArray [
+        ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
+        ["Waldo_AIPass_ContactReports_Enable",true],["Waldo_AIPass_Investigate_Enable",true],
+        ["Waldo_AIPass_PostContact_Enable",true],["Waldo_AIPass_Morale_Enable",false],
+        ["Waldo_AIPass_Regroup_Enable",false],["Waldo_AIPass_LambsMode","WMP"]
+    ]] call Waldo_fnc_CortexTuning;
+    private _stateGroup=createGroup [east,true];
+    _stateGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+    _stateGroup setVariable ["acex_headless_blacklist",true,true];
+    _stateGroup setCombatMode "BLUE";
+    private _stateUnits=[];
+    for "_i" from 0 to 2 do {
+        private _unit=_stateGroup createUnit ["O_Soldier_F",[2320+_i*3,1700,0],[],0,"NONE"];
+        _unit setVariable ["acex_headless_blacklist",true,true];
+        _unit setVariable ["Waldo_CortexQA_Label",format ["STATE HANDOFF %1",_i+1],true];
+        _stateUnits pushBack _unit;
+    };
+    _stateGroup setGroupIdGlobal ["QA STATE HANDOFF"];
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",+_stateUnits,true];
+    private _reportTarget=[2440,1700,0];
+    {_x setVariable ["Waldo_CortexQA_Target",_reportTarget,true]} forEach _stateUnits;
+    ["Lifecycle: investigation crosses ownership","A validated contact report starts a physical investigation. While the squad is moving, ownership transfers to a headless client. The same deadline and phase must continue without an artificial calm state.",_reportTarget] call _phase;
+    _stateGroup setVariable ["Waldo_AIPass_AreaReport",[+_reportTarget,serverTime,serverTime+30,"REPORT"],true];
+    private _investigating=[{
+        (_stateGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "INVESTIGATE"
+            && {count (_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]) == 6}
+    },30] call _wait;
+    ["LIFE-state-investigation-start",_investigating,str [_stateGroup getVariable ["Waldo_AIPass_PublicPhase",""],_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]]] call _recordCheck;
+    private _intentBefore=+(_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]);
+    private _deadlineBefore=_intentBefore param [3,-1];
+    private _handoffStart=getPosATL leader _stateGroup;
+    private _stateOwner=_owners select 0;
+    _stateGroup setVariable ["Waldo_Headless_ExcludeGroup",false,true];
+    {_x setVariable ["acex_headless_blacklist",false,true]} forEach _stateUnits;
+    private _migrationRequested=[_stateGroup,_stateOwner] call Waldo_fnc_HeadlessMigrateGroup;
+    private _stateAdopted=[{
+        groupOwner _stateGroup == _stateOwner
+            && {_stateUnits findIf {owner _x != _stateOwner} < 0}
+            && {(_stateGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "INVESTIGATE"}
+            && {private _entry=_stateGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]; count _entry == 5 && {(_entry select 3) == "OWNERSHIP_RESUME"} && {(_entry select 4) == _stateOwner}}
+    },35] call _wait;
+    ["LIFE-state-owner-resume",_migrationRequested && {_stateAdopted},str [groupOwner _stateGroup,_stateGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]]] call _recordCheck;
+    private _intentAfter=+(_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]);
+    ["LIFE-state-deadline-preserved",_stateAdopted && {count _intentAfter == 6} && {abs ((_intentAfter select 3)-_deadlineBefore) < 0.25},str [_deadlineBefore,_intentAfter]] call _recordCheck;
+    private _continued=[{leader _stateGroup distance2D _handoffStart >= 10},35] call _wait;
+    ["LIFE-state-physical-continuation",_stateAdopted && {_continued},str [_handoffStart,getPosATL leader _stateGroup]] call _recordCheck;
+
+    // Curator replacement is the terminal authority boundary for the resumed episode.
+    ["Lifecycle: Zeus replaces resumed investigation","After visible post-handoff movement, Zeus replaces the investigation. The squad must reach the replacement marker and the old INVESTIGATE intent must stay retired.",[2320,1780,0]] call _phase;
+    [_stateGroup,true] call Waldo_fnc_CortexZeusMark;
+    private _replacement=[2320,1780,0];
+    private _replacementWP=_stateGroup addWaypoint [_replacement,0];
+    _replacementWP setWaypointType "MOVE";
+    _replacementWP setWaypointCompletionRadius 4;
+    _stateGroup setCurrentWaypoint _replacementWP;
+    {_x setVariable ["Waldo_CortexQA_Target",_replacement,true]} forEach _stateUnits;
+    private _replacementArrived=[{_stateUnits findIf {!alive _x || {_x distance2D _replacement > 12}} < 0},90] call _wait;
+    ["LIFE-state-zeus-replacement-arrival",_replacementArrived,str (_stateUnits apply {getPosATL _x})] call _recordCheck;
+    private _stayedReleased=true;
+    for "_sample" from 1 to 12 do {
+        sleep 1;
+        if ((_stateGroup getVariable ["Waldo_AIPass_PublicPhase","CALM"]) == "INVESTIGATE"
+            || {(_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]) isNotEqualTo []}) then {_stayedReleased=false};
+    };
+    ["LIFE-state-zeus-no-resurrection",_replacementArrived && {_stayedReleased},str [_stateGroup getVariable ["Waldo_AIPass_PublicPhase",""],_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]]] call _recordCheck;
+    {deleteVehicle _x} forEach _stateUnits;
+    deleteGroup _stateGroup;
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+};
