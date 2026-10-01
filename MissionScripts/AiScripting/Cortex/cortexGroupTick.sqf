@@ -522,6 +522,14 @@ switch (_state get "phase") do {
     };
     case "SECURITY": {
         if (_visible isNotEqualTo []) exitWith {call _beginContact};
+        // Responders may finish rallying just as smoke, terrain or a building hides the target.
+        // Preserve the prepared action across CONTACT -> SECURITY, then resume the normal search
+        // chain as soon as every matching responder has released its finite assault lease.
+        private _coordinatedOwnsSecurity = false;
+        if (!_ordered && {["Waldo_AIPass_CoordinatedAssault_Enable", true] call _get}) then {
+            _coordinatedOwnsSecurity = [_group, _state] call Waldo_fnc_CortexCoordinatedAssault;
+        };
+        if (_coordinatedOwnsSecurity) exitWith {_delay = 2};
         if (_now - (_state get "phaseStart") < (["Waldo_AIPass_PostContact_SecuritySeconds", 10] call _get)) exitWith {_delay = 2};
         private _searchPos = _state getOrDefault ["enemyPos", []];
         private _team = [];

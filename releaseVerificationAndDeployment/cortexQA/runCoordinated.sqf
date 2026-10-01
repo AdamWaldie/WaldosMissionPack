@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Controller diagnostic, not combat acceptance: actors are invulnerable and the opponent
  * cannot fire. Exercises natural contact with three full squads, actual supporting/assault fire,
- * two real reinforcement arrivals, coordinated assault travel and
+ * two real reinforcement arrivals, a natural CONTACT-to-SECURITY target occlusion,
+ * coordinated assault travel from that SECURITY handoff and
  * release to new ordinary group orders after both support switches are disabled.
  * Locality/authority: scheduled server fixture using normal discovery, support and assault paths.
  * Optional responder owners use WMP migration before contact; return to server after release for
@@ -188,9 +189,30 @@ private _movementScreens=+_walls;
 _walls=[];
 sleep 0.1;
 ["COORD-assault-corridor-clear",(_movementScreens findIf {!isNull _x}) < 0,str (count _movementScreens)] call _check;
-_enemy setUnitPos "AUTO";
 private _origins=_helpers apply {getPosATL _x};
-[createHashMapFromArray [["Waldo_AIPass_CoordinatedAssault_Enable",true],["Waldo_AIPass_FireControl_Enable",true]]] call Waldo_fnc_CortexTuning;
+// Hide the known target from the fixed base of fire after both responders have physically rallied.
+// The obstacle is removed before movement, so this stage isolates the CONTACT -> SECURITY handoff
+// rather than adding route geometry to the subsequent bound measurements.
+private _occluders=[];
+for "_i" from -4 to 4 do {
+    private _wall=createVehicle ["Land_CncWall4_F",[1500+_i*4,1550,0],[],0,"CAN_COLLIDE"];
+    _wall setDir 0;
+    _occluders pushBack _wall;
+};
+[createHashMapFromArray [
+    ["Waldo_AIPass_CoordinatedAssault_Enable",true],
+    ["Waldo_AIPass_FireControl_Enable",true],
+    ["Waldo_AIPass_PostContact_LostSeconds",3]
+]] call Waldo_fnc_CortexTuning;
+["Coordinated assault: contact-loss handoff","The rallied squads are ready while a temporary wall hides the known target from the base of fire. Cortex must pass CONTACT to SECURITY without discarding the prepared assault, then publish both squad roles. The wall is removed before movement is measured.",[1500,1525,0]] call _phase;
+private _securityHandoff=[{_requester getVariable ["Waldo_AIPass_PublicPhase","NONE"] == "SECURITY"},20] call _wait;
+["COORD-contact-loss-entered-security",_securityHandoff,str (_requester getVariable ["Waldo_Cortex_PhaseTransition",[]])] call _check;
+private _rolesDispatched=[{
+    _teams findIf {count ((group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]) != 5} < 0
+},30] call _wait;
+["COORD-security-dispatches-prepared-assault",_securityHandoff && {_rolesDispatched},str (_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]})] call _check;
+{deleteVehicle _x} forEach _occluders;
+_enemy setUnitPos "AUTO";
 // Open fire only after the independently measured rally stage. Combat mode is global;
 // the production owner-local fire controller issues the actual engagement commands.
 {_x setCombatMode "RED"} forEach ([_requester]+(_teams apply {group (_x select 0)}));

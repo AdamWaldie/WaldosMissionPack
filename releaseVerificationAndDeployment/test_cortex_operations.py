@@ -1093,6 +1093,22 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (!_manoeuvreActive',transition)
         self.assertLess(transition.index('if (!_manoeuvreActive'),transition.index('Waldo_AIPass_PostContact_LostSeconds'))
 
+    def test_security_phase_preserves_and_finishes_prepared_coordinated_assault(self):
+        tick=source('cortexGroupTick')
+        security=tick.split('case "SECURITY": {',1)[1].split('case "SEARCH": {',1)[0]
+        coordinated=source('cortexCoordinatedAssault')
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text(encoding='utf-8')
+        self.assertIn('call Waldo_fnc_CortexCoordinatedAssault',security)
+        self.assertIn('if (_coordinatedOwnsSecurity) exitWith {_delay = 2}',security)
+        self.assertLess(security.index('call Waldo_fnc_CortexCoordinatedAssault'),security.index('Waldo_AIPass_PostContact_SecuritySeconds'))
+        self.assertIn('private _publicResponders = _group getVariable ["Waldo_Cortex_SupportResponders",[]]',coordinated)
+        self.assertIn('serverTime < (_lease select 2)',coordinated)
+        self.assertIn('_status select 3',coordinated)
+        self.assertIn('_state deleteAt "coordinated"',coordinated)
+        for marker in ['COORD-contact-loss-entered-security','COORD-security-dispatches-prepared-assault']:
+            self.assertIn(marker,qa)
+        self.assertLess(qa.index('COORD-security-dispatches-prepared-assault'),qa.index('_enemy setUnitPos "AUTO"'))
+
     def test_empty_coordinated_dispatch_does_not_consume_engagement(self):
         server=source('cortexSupportAssaultServer')
         self.assertIn('if (_sent > 0) then {', server)

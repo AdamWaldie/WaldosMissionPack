@@ -21,7 +21,11 @@
  * Review contract: Responder selection rechecks eligibility immediately before issuing assault orders, including any Zeus hold received since reinforcement was requested.
  *
  * Reads the server-published bounded responder index rather than scanning all groups.
- * Repeat/JIP: current feature gates and eligibility are rechecked; owner jobs are retired on migration.
+ * A prepared assault may dispatch from CONTACT or the immediately following SECURITY phase so a
+ * short target occlusion cannot strand rallied responders. Once every acknowledged responder has
+ * released its matching assault lease, the requester clears its coordinated ownership and resumes
+ * the ordinary post-contact chain. Repeat/JIP: current feature gates and eligibility are rechecked;
+ * owner jobs are retired on migration.
  * Dispatch is retried on a short cooldown until a responder acknowledges assault; sending
  * a request alone cannot consume the engagement if no responder was eligible.
  * Arguments:
@@ -40,7 +44,22 @@
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]]];
-if (_state getOrDefault ["coordinated", false]) exitWith {true};
+private _publicResponders = _group getVariable ["Waldo_Cortex_SupportResponders",[]];
+if (_state getOrDefault ["coordinated", false]) exitWith {
+    private _active = _publicResponders findIf {
+        _x params ["_helper","_token"];
+        private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
+        private _status = _helper getVariable ["Waldo_AIPass_SupportStatus",[]];
+        count _lease == 6 && {(_lease select 0) == _token} && {(_lease select 1) == _group}
+            && {serverTime < (_lease select 2)} && {count _status == 4}
+            && {(_status select 0) == _token} && {_status select 2} && {_status select 3}
+    };
+    if (_active >= 0) then {true} else {
+        _state deleteAt "coordinated";
+        _state deleteAt "coordinatedPendingUntil";
+        false
+    }
+};
 private _pendingUntil = _state getOrDefault ["coordinatedPendingUntil", 0];
 if (time < _pendingUntil) exitWith {true};
 if ([_state, "coordinated"] call Waldo_fnc_CortexCooldown) exitWith {false};
@@ -63,7 +82,7 @@ private _acknowledged = false;
         _responders pushBack _helper;
         if ((_status select 1) >= 0) then {_arrivals pushBack (_status select 1)};
     };
-} forEach (_group getVariable ["Waldo_Cortex_SupportResponders",[]]);
+} forEach _publicResponders;
 if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true};
 if (_arrivals isEqualTo []) exitWith {false};
 private _first = 1e9;
