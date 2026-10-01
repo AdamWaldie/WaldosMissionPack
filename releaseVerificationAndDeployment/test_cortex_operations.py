@@ -2333,9 +2333,13 @@ class CortexOperations(unittest.TestCase):
 
     def test_contact_transition_audit_requires_physical_search_and_resumption(self):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runContact.sqf').read_text()
-        for case in ['CONTACT-natural-reacquisition','TRANS-contact-postcontact-sequence','TRANS-search-physical-approach','TRANS-regroup-physical-cohesion','TRANS-calm-new-orders-physical-arrival','TRANS-no-old-search-order-resurrection']:
+        for case in ['CONTACT-natural-reacquisition','TRANS-contact-postcontact-sequence','TRANS-search-contact-interruption','TRANS-search-physical-approach','TRANS-regroup-physical-cohesion','TRANS-calm-new-orders-physical-arrival','TRANS-no-old-search-order-resurrection']:
             self.assertIn(case,text)
         self.assertIn('_searchTravel >= 15 && {_searchApproach}',text)
+        self.assertIn('(_state getOrDefault ["searchTeam",[]]) isEqualTo []',text)
+        self.assertIn('"SEARCH INTERRUPTION: NATURAL CONTACT"',text)
+        self.assertIn('(_x param [1,""]) == "SEARCH"',text)
+        self.assertIn('(_x param [2,""]) == "CONTACT"',text)
         self.assertNotIn('_state set ["phase"',text)
         self.assertIn('TRANS-published-phase-ledger',text)
         self.assertIn('Waldo_Cortex_PhaseTransitions',text)

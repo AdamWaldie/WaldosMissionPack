@@ -1000,9 +1000,10 @@
         "runtime-20260927-193231: normal combat advance completed 33 checks with four findings and zero SQF errors. Actual covering fire and fire while moving passed. Contact deadline, frontage, clear-through and completion failed; ending GRENADE_UNRESOLVED with a separated leader. A saved explicit queued-throw cancellation transition is not yet live-verified. No acceptance claimed.",
         "Runtime 200043: focused ADVANCE-GRENADE completed 38 checks with zero findings and zero SQF errors, including actual grenade, physical clear-through by both elements and fire while moving. Single server-owner run; wider variants remain pending."
       ],
-      "automation": "runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Every manoeuvre publishes a bounded, owner-authored transition ledger and the audit requires chronological START, MOVE and ENDED entries for the current drill token; assault, clear-through and grenade cases require their specific transition reasons. Runtime-20260927-142945 completed with 96 server findings before this ledger was added. Multi-squad chaining and all interruption/ownership variants remain open.",
+      "automation": "runCombat.sqf requires chronological START, MOVE and ENDED drill evidence plus physical assault, grenade, clear-through, consolidation, recovery and Zeus handover. runContact.sqf requires CONTACT, SECURITY, SEARCH, REGROUP and CALM in order, physical search and cohesion, natural SEARCH-to-CONTACT interruption with immediate search release, a second clean post-contact cycle and fresh authored movement without old-order resurrection. Runtime-20260927-142945 predates these ledgers and completed with 96 findings. Rebuilt live acceptance, multi-squad chaining and all ownership variants remain open.",
       "executable_sources": [
-        "runCombat.sqf"
+        "runCombat.sqf",
+        "runContact.sqf"
       ]
     },
     {

@@ -59,7 +59,7 @@ Feature cases: **58**. Required variant categories: **13**.
 | MULTI-FLANK - Multi-squad flank cohesion | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
 | MULTI-BOUND - Squad and multi-squad bounding overwatch | 0 | `runMultiManoeuvre.sqf` | 1 | implemented_partial |
 | MULTI-WITHDRAW - Multi-squad screened withdrawal | 0 | `runReactions.sqf` | 0 | implemented_partial |
-| TRANSITIONS - Combat action transitions | 0 | `runCombat.sqf` | 2 | implemented_partial |
+| TRANSITIONS - Combat action transitions | 0 | `runCombat.sqf`, `runContact.sqf` | 2 | implemented_partial |
 | LIGHTING - Automatic darkness, night vision and illumination | 1 | `runProfiles.sqf`, `runLighting.sqf` | 1 | implemented_partial |
 | DRILL-HANDOVER - Moving flank and advance handed to Zeus | 0 | `runCombat.sqf` | 2 | implemented_partial |
 | DRILL-RECOVERY - Bound continuation and straggler rejoin | 0 | `runCombat.sqf` | 2 | implemented_partial |
@@ -400,7 +400,7 @@ Feature cases: **58**. Required variant categories: **13**.
 
 **Expected:** Physical completion, timed preparation and failure have distinct outcomes. A queued grenade or retired drill cannot affect a later action. Slow progress, no progress, controller deadline and QA observation deadline are distinguishable.
 
-**Automation and open work:** runCombat.sqf: additive Advance/Flank assault, actual grenade deployment, physical hold and clear-through, consolidation, recovery and Zeus replacement checks. Every manoeuvre publishes a bounded, owner-authored transition ledger and the audit requires chronological START, MOVE and ENDED entries for the current drill token; assault, clear-through and grenade cases require their specific transition reasons. Runtime-20260927-142945 completed with 96 server findings before this ledger was added. Multi-squad chaining and all interruption/ownership variants remain open.
+**Automation and open work:** runCombat.sqf requires chronological START, MOVE and ENDED drill evidence plus physical assault, grenade, clear-through, consolidation, recovery and Zeus handover. runContact.sqf requires CONTACT, SECURITY, SEARCH, REGROUP and CALM in order, physical search and cohesion, natural SEARCH-to-CONTACT interruption with immediate search release, a second clean post-contact cycle and fresh authored movement without old-order resurrection. Runtime-20260927-142945 predates these ledgers and completed with 96 findings. Rebuilt live acceptance, multi-squad chaining and all ownership variants remain open.
 
 ### LIGHTING - Automatic darkness, night vision and illumination
 
