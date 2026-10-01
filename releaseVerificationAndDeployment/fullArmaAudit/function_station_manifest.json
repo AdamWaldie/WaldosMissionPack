@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1343,
+  "registeredFunctionCount": 1345,
   "runtimeFunctionCount": 383,
-  "functionCount": 1726,
+  "functionCount": 1728,
   "stations": [
     {
       "id": "control",
@@ -1051,6 +1051,18 @@
     {
       "name": "Waldo_fnc_CortexLambsLease",
       "file": "MissionScripts/AiScripting/Cortex/cortexLambsLease.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexLambsBuildingStart",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLambsBuildingStart.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexLambsBuildingRelease",
+      "file": "MissionScripts/AiScripting/Cortex/cortexLambsBuildingRelease.sqf",
       "station": "ai",
       "activation": "manual"
     },

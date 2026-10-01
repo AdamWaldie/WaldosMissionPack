@@ -7,11 +7,14 @@
  * owner and again on any new owner (Waldo_fnc_CortexDiscover). Soldiers more than 2 m from their
  * position are sent there. Only three-dimensional arrival locks PATH; a fixed safety deadline records
  * failure and leaves movement enabled rather than renewing forever around an unreachable doorway.
- * Routes try the interior destination directly first, matching the engine path that works on viable
+ * Routes stage at a real entrance when approaching from more than 30 m, then commit directly to the
+ * interior destination. This avoids the long idle planning pause seen when the engine receives a
+ * distant interior destination. Units move upright at assault pace until they reach their post.
+ * Nearby units try the interior destination directly, matching the engine path that works on viable
  * building models, then try up to four usable entrances nearest-first as bounded recovery.
  * Twelve seconds without two metres of progress retries the current leg twice, including commands
  * still reporting MOVE. While still approaching the building it then advances to another entrance.
- * Once the soldier has crossed an entrance, an interior stall reassigns a free alternative position
+ * Once the soldier has reached an entrance, an interior stall reassigns a free alternative position
  * instead of sending the soldier back outside through another door. Reassignment is attempted twice
  * before the position is reported unreachable. Opening an unlocked door does not reset the physical-progress timer. A replacement
  * order or locality change retires the old job; the new owner rebuilds its local route.
@@ -55,12 +58,23 @@ private _buildingEntries = {
     _entries resize ((count _entries) min 4);
     _entries
 };
+private _buildingAnchor = {
+    params ["_building","_entry","_destination"];
+    if (isNull _building || {_entry isEqualTo []}) exitWith {_destination};
+    private _positions=_building buildingPos -1;
+    if (_positions isEqualTo []) exitWith {_destination};
+    _positions=[_positions,[],{_x distance2D _entry},"ASCEND"] call BIS_fnc_sortBy;
+    +(_positions select 0)
+};
 {
     private _unit = _x;
     private _assignment = _unit getVariable ["Waldo_AIPass_GarrisonPos", []];
     if (alive _unit && {local _unit} && {!isPlayer _unit} && {lifeState _unit != "INCAPACITATED"} && {_assignment isNotEqualTo []}) then {
         _unit setVariable ["Waldo_AIPass_GarrisonFailed",nil,true];
         if (isNil {_unit getVariable "Waldo_AIPass_GarrisonStance"}) then {_unit setVariable ["Waldo_AIPass_GarrisonStance", unitPos _unit, true]};
+        if (isNil {_unit getVariable "Waldo_Cortex_GarrisonForcedSpeed"}) then {
+            _unit setVariable ["Waldo_Cortex_GarrisonForcedSpeed",getForcedSpeed _unit];
+        };
         if (_unit getVariable ["Waldo_AIPass_GarrisonDisabledPath", false]) then {_unit enableAI "PATH"};
         if !(_unit getVariable ["Waldo_AIPass_GarrisonHandlers", false]) then {
             _unit setVariable ["Waldo_AIPass_GarrisonHandlers", true];
@@ -97,10 +111,17 @@ private _buildingEntries = {
         private _destination = _assignment select 0;
         private _building = _assignment param [2,objNull];
         private _entries=[_building,_unit,_destination] call _buildingEntries;
-        private _target = _destination;
-        private _approach = false;
-        _routes set [netId _unit,[_target,_approach,getPosATL _unit,time,0,[str _destination],0,_entries,-1]];
-        if (_unit distance _destination > 2) then {_unit doMove _target; _unit setDestination [_target,"LEADER PLANNED",true]};
+        private _approach = _entries isNotEqualTo [] && {_unit distance2D _destination > 30};
+        private _entryIndex = [-1,0] select _approach;
+        private _target = if (_approach) then {_entries select 0} else {_destination};
+        private _anchor=if (_approach) then {[_building,_target,_destination] call _buildingAnchor} else {[]};
+        _routes set [netId _unit,[_target,_approach,getPosATL _unit,time,0,[str _destination],0,_entries,_entryIndex,_anchor,false]];
+        if (_unit distance _destination > 2) then {
+            _unit setUnitPos "UP";
+            _unit forceSpeed 4;
+            _unit doMove _target;
+            _unit setDestination [_target,"LEADER PLANNED",true];
+        };
     };
 } forEach units _group;
 [{
@@ -122,6 +143,7 @@ private _buildingEntries = {
             private _openedDoor = [_x,_assignment param [2,objNull]] call Waldo_fnc_CortexBuildingDoor;
             if (_x distance (_assignment select 0) <= 2) then {
                 doStop _x;
+                _x forceSpeed (_x getVariable ["Waldo_Cortex_GarrisonForcedSpeed",-1]);
                 _x setVariable ["Waldo_AIPass_GarrisonDisabledPath", true, true];
                 _x disableAI "PATH";
                 _x doWatch ((_assignment select 0) getPos [50, _assignment select 1]);
@@ -131,16 +153,22 @@ private _buildingEntries = {
                     diag_log format ["[WMP CORTEX] Garrison arrival failed unit=%1 remaining=%2",_x,_x distance (_assignment select 0)];
                 } else {
                     _pending = _pending + 1;
-                    private _route = (_job get "routes") getOrDefault [netId _x,[_assignment select 0,false,getPosATL _x,time,0,[str (_assignment select 0)],0,[],-1]];
-                    _route params ["_target","_approach","_lastPosition","_lastProgress","_retries","_attempted","_reassignments","_entries","_entryIndex"];
+                    private _route = (_job get "routes") getOrDefault [netId _x,[_assignment select 0,false,getPosATL _x,time,0,[str (_assignment select 0)],0,[],-1,[],false]];
+                    _route params ["_target","_approach","_lastPosition","_lastProgress","_retries","_attempted","_reassignments","_entries","_entryIndex","_anchor","_crossing"];
                     // Door requests can repeat on multi-door buildings. Reissue the current move, but
                     // only measured travel renews progress so an actor at a threshold cannot wait forever.
                     if (_openedDoor) then {_x doMove _target; _x setDestination [_target,"LEADER PLANNED",true]};
                     if (_approach && {_x distance2D _target <= 5}) then {
-                        _route set [0,_assignment select 0]; _route set [1,false];
+                        _route set [0,_anchor]; _route set [1,false]; _route set [10,true];
                         _route set [2,getPosATL _x]; _route set [3,time];
-                        doStop _x; _x doMove (_assignment select 0); _x setDestination [_assignment select 0,"LEADER PLANNED",true];
+                        _x doMove _anchor; _x setDestination [_anchor,"LEADER PLANNED",true];
                     } else {
+                        if (_crossing && {_x distance _anchor <= 2}) then {
+                            _route set [0,_assignment select 0]; _route set [2,getPosATL _x];
+                            _route set [3,time]; _route set [4,0]; _route set [10,false];
+                            _x doMove (_assignment select 0);
+                            _x setDestination [_assignment select 0,"LEADER PLANNED",true];
+                        } else {
                         if (_x distance2D _lastPosition >= 2) then {
                             _route set [2,getPosATL _x]; _route set [3,time];
                         } else {
@@ -150,7 +178,10 @@ private _buildingEntries = {
                                     _x setDestination [_target,"LEADER PLANNED",true];
                                     _route set [3,time]; _route set [4,_retries+1];
                                 } else {
-                                    private _nextEntry=_entryIndex+1;
+                                    // Alternate exterior entrances recover a failed approach. Once an
+                                    // entrance was reached, cycling outside creates the visible door
+                                    // orbit and cannot repair a broken interior navigation path.
+                                    private _nextEntry=if (_approach || {_crossing}) then {_entryIndex+1} else {count _entries};
                                     if (_nextEntry < count _entries) then {
                                         private _nextTarget=_entries select _nextEntry;
                                         _route set [0,_nextTarget];
@@ -159,6 +190,8 @@ private _buildingEntries = {
                                         _route set [3,time];
                                         _route set [4,0];
                                         _route set [8,_nextEntry];
+                                        _route set [9,[_assignment param [2,objNull],_nextTarget,_assignment select 0] call (_job get "buildingAnchor")];
+                                        _route set [10,false];
                                         doStop _x; _x doMove _nextTarget;
                                         _x setDestination [_nextTarget,"LEADER PLANNED",true];
                                         diag_log format ["[WMP CORTEX] Garrison trying alternate entrance unit=%1 entrance=%2/%3 remaining=%4",_x,_nextEntry+1,count _entries,_x distance (_assignment select 0)];
@@ -178,13 +211,15 @@ private _buildingEntries = {
                                         private _replacementDestination=_replacement select 0;
                                         private _replacementBuilding=_replacement param [2,objNull];
                                         private _replacementEntries=[_replacementBuilding,_x,_replacementDestination] call (_job get "buildingEntries");
-                                        // A reassigned position follows the same direct-first rule as
-                                        // the original assignment. Entrance routing remains recovery.
-                                        private _replacementApproach=false;
-                                        private _replacementTarget=_replacementDestination;
+                                        private _replacementApproach=_replacementEntries isNotEqualTo [] && {_x distance2D _replacementDestination > 30};
+                                        private _replacementEntryIndex=[-1,0] select _replacementApproach;
+                                        private _replacementTarget=if (_replacementApproach) then {_replacementEntries select 0} else {_replacementDestination};
+                                        private _replacementAnchor=if (_replacementApproach) then {
+                                            [_replacementBuilding,_replacementTarget,_replacementDestination] call (_job get "buildingAnchor")
+                                        } else {[]};
                                         _attempted pushBackUnique (str _replacementDestination);
                                         _x setVariable ["Waldo_AIPass_GarrisonPos",_replacement,true];
-                                        _route=[_replacementTarget,_replacementApproach,getPosATL _x,time,0,_attempted,_reassignments+1,_replacementEntries,-1];
+                                        _route=[_replacementTarget,_replacementApproach,getPosATL _x,time,0,_attempted,_reassignments+1,_replacementEntries,_replacementEntryIndex,_replacementAnchor,false];
                                         doStop _x; _x doMove _replacementTarget;
                                         _x setDestination [_replacementTarget,"LEADER PLANNED",true];
                                         diag_log format ["[WMP CORTEX] Garrison reassigned unit=%1 remaining=%2 alternative=%3",_x,_x distance (_assignment select 0),_replacementDestination];
@@ -196,6 +231,7 @@ private _buildingEntries = {
                                 };
                             };
                         };
+                        };
                     };
                     (_job get "routes") set [netId _x,_route];
                 };
@@ -203,4 +239,4 @@ private _buildingEntries = {
         };
     } forEach units _group;
     [2, -1] select (_pending == 0)
-}, createHashMapFromArray [["group", _group], ["routes",_routes], ["buildingEntries",_buildingEntries], ["deadline", time + 240], ["generation", _generation]], 1] call Waldo_fnc_CortexQueueJob;
+}, createHashMapFromArray [["group", _group], ["routes",_routes], ["buildingEntries",_buildingEntries], ["buildingAnchor",_buildingAnchor], ["deadline", time + 240], ["generation", _generation]], 1] call Waldo_fnc_CortexQueueJob;

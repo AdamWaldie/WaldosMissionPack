@@ -33,13 +33,15 @@ if (_order in ["GARRISON", "DEFEND", "CLEAR", "AIRBORNE"]) then {
         case "GARRISON": {[_group, _position, (_radius max 15) min 150] call Waldo_fnc_CortexGarrison};
         case "DEFEND": {[_group, _position, _facing, (_radius max 15) min 150] call Waldo_fnc_CortexDefend};
         case "RELEASE": {
-            private _released = [_group] call Waldo_fnc_CortexClearRelease;
+            private _released = [_group] call Waldo_fnc_CortexLambsBuildingRelease;
+            if ([_group] call Waldo_fnc_CortexClearRelease) then {_released=true};
             if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {_released = [_group] call Waldo_fnc_CortexGarrisonRelease};
             if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo []) then {_released = [_group] call Waldo_fnc_CortexDefendRelease};
             _released
         };
         case "EXCLUDE": {
             if (isNull _group) exitWith {false};
+            [_group] call Waldo_fnc_CortexLambsBuildingRelease;
             [_group] call Waldo_fnc_CortexClearRelease;
             [_group] call Waldo_fnc_CortexGarrisonRelease;
             [_group] call Waldo_fnc_CortexDefendRelease;

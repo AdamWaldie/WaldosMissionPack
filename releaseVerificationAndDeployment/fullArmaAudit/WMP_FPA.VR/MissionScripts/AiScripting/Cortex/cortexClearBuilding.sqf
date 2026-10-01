@@ -4,12 +4,15 @@
  *
  * Every available soldier, including the leader, may join the clear up to the building's bounded entry
  * capacity. Each interior worker owns one movement lane and draws the nearest unclaimed room from a
- * shared low-floor-first queue. This avoids a support partner waiting outside while only one soldier
+ * shared low-floor-first queue. Only roofed interior positions are clearance objectives; exposed
+ * balconies and roof posts belong to garrisoning. This avoids a support partner waiting outside while only one soldier
  * attempts every room, and makes a large squad flow through the building instead of parking around it.
  * Spare members above the entry capacity remain an actual reserve. A worker tries its room directly
  * first, then uses a bounded set of alternate real entrances only after the direct route stalls. A
- * blocked room returns to the shared queue for another worker before it
- * can be marked unreachable. A position is visited only when a soldier physically reaches it within
+ * blocked room returns to the shared queue for another worker before it can be marked unreachable.
+ * As in LAMBS CQB, committed units move upright at a bounded assault speed; unlike LAMBS, Cortex
+ * records a room only after a physical 1.5 m visit and never teleports a stuck soldier or clears a
+ * room from outside. A position is visited only when a soldier physically reaches it within
  * 1.5 m. A casualty or incapacitation is replaced from the uncommitted reserve; without a replacement,
  * other active workers continue claiming the remaining rooms. Timeouts never clear rooms.
  * After all rooms are visited or attempted, the clearing element exits through the building entry
@@ -21,9 +24,10 @@
  * cannot overwrite a later contact or Zeus behaviour change. While clearing, the squad does not
  * flank, retreat or search, and
  * is not sent to reinforce others.
- * With LAMBS Waypoints loaded and Waldo_AIPass_LambsMode "SPLIT", the order is handed to
- * lambs_wp_fnc_taskCQB instead (disable with the "useLambs" option). The WMP clear needs the Smart AI
- * Pass running (Waldo_AIPass_Enable); the LAMBS hand-over does not.
+ * With LAMBS Waypoints loaded, its public taskCQB controller is the primary backend regardless of
+ * the broader Danger FSM ownership mode (disable with the "useLambs" option). Cortex retains the
+ * spawned task handle and semantic intent so Zeus, stop and locality migration can release or replay
+ * it cleanly. The WMP fallback needs the Smart AI Pass running; the LAMBS hand-over does not.
  * Locality and authority: call where the group is local, or on the server, which forwards to the
  * owner. Non-server, non-owner copies do nothing.
  *
@@ -54,21 +58,23 @@ if (!local _group) exitWith {
 if !([_group] call Waldo_fnc_CortexIsEligible) exitWith {false};
 private _building = if (_target isEqualType objNull) then {_target} else {nearestBuilding _target};
 if (isNull _building) exitWith {if (_options getOrDefault ["resume", false]) then {[_group] call Waldo_fnc_CortexClearRelease}; false};
-if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
-    && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "SPLIT"}) exitWith {
+if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}) exitWith {
     [_group,false] call Waldo_fnc_CortexReleaseGroup;
     [_group] call Waldo_fnc_CortexClearRelease;
     if ((_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
     if ((_group getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
-    [_group, getPosATL _building, _options getOrDefault ["radius", 50]] spawn lambs_wp_fnc_taskCQB;
-    diag_log format ["[WMP CORTEX] %1 clear building handed to LAMBS (%2)", _group, typeOf _building];
-    true
+    [_group,"CQB",_building,_options getOrDefault ["radius",50]] call Waldo_fnc_CortexLambsBuildingStart
 };
 if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
     diag_log format ["[WMP CORTEX] %1 clear building refused: the Smart AI Pass is not running on this machine.", _group];
     false
 };
-private _positions = _building buildingPos -1;
+private _allPositions = _building buildingPos -1;
+private _positions = _allPositions select {
+    private _positionASL=AGLToASL _x;
+    (lineIntersectsSurfaces [_positionASL vectorAdd [0,0,0.5],_positionASL vectorAdd [0,0,10],objNull,objNull,true,1]) isNotEqualTo []
+};
+if (_positions isEqualTo []) then {_positions=+_allPositions};
 if (_positions isEqualTo []) exitWith {false};
 private _leader = leader _group;
 private _available = (units _group) select {alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"} && {vehicle _x == _x}};
@@ -165,7 +171,7 @@ private _pairStates=[];
         _entryIndex=(_ranked select 0) select 1;
     };
     _pairStates pushBack [0,false,_pair apply {getPosATL _x},time,0,-1,
-        time+(_forEachIndex*2),0,-1,_entryIndex,[],0];
+        time+(_forEachIndex*1.25),0,-1,_entryIndex,[],0,false];
 } forEach _pairs;
 [{
     params ["_job"];
@@ -176,17 +182,25 @@ private _pairStates=[];
         params [["_restore",true,[true]]];
         _group setVariable ["Waldo_Cortex_ClearEvidence",[+(_job get "cleared"),+(_job get "unreachable"),+(_job get "retryCounts"),+(_job get "failedBy"),_job get "deadline",_job get "lastProgressAt"],true];
         if (!isNull _group) then {
-            if (_restore) then {
-                private _leader = leader _group;
-                {
-                    if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}
-                        && {group _x == _group}) then {
-                        _x setUnitPos "AUTO";
+            private _leader = leader _group;
+            {
+                if (local _x && {!isPlayer _x} && {group _x == _group}) then {
+                    if (alive _x && {lifeState _x != "INCAPACITATED"}) then {
+                        if (unitPos _x == "UP" && {!isNil {_x getVariable "Waldo_Cortex_ClearStance"}}) then {
+                            _x setUnitPos (_x getVariable ["Waldo_Cortex_ClearStance","AUTO"]);
+                        };
+                        if (getForcedSpeed _x == 4 && {!isNil {_x getVariable "Waldo_Cortex_ClearForcedSpeed"}}) then {
+                            _x forceSpeed (_x getVariable ["Waldo_Cortex_ClearForcedSpeed",-1]);
+                        };
+                        if (_restore) then {
                         _x doWatch objNull;
                         _x doFollow _leader;
+                        };
                     };
-                } forEach (_job get "team");
-            };
+                    _x setVariable ["Waldo_Cortex_ClearForcedSpeed",nil];
+                    _x setVariable ["Waldo_Cortex_ClearStance",nil];
+                };
+            } forEach (_job get "team");
             _group setVariable ["Waldo_AIPass_ClearBuilding", nil, true];
             _group setVariable ["Waldo_Cortex_ClearEgress",nil,true];
             _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
@@ -328,7 +342,7 @@ private _pairStates=[];
         };
         if (_pair isNotEqualTo []) then {
             private _state=_pairStates select _pairIndex;
-            _state params ["_cursor","_approachingEntry","_lastPositions","_lastProgress","_retries","_lastTarget","_startAt","_moverIndex","_previousPositionIndex","_entryIndex","_triedEntries","_roomsCleared"];
+            _state params ["_cursor","_approachingEntry","_lastPositions","_lastProgress","_retries","_lastTarget","_startAt","_moverIndex","_previousPositionIndex","_entryIndex","_triedEntries","_roomsCleared","_entered"];
             if (_now >= _startAt) then {
                 private _route=_pairRoutes select _pairIndex;
                 while {_cursor < count _route && {(_route select _cursor) in (_cleared+_unreachable)}} do {_cursor=_cursor+1};
@@ -358,10 +372,12 @@ private _pairStates=[];
                             _entryRanks sort true;
                             _entryIndex=(_entryRanks select 0) select 1;
                         };
-                        // Start with the real room destination. Live comparison proved that viable
-                        // building models accept this path while forcing an exterior entry first can
-                        // strand the actor at the threshold. Entrances are bounded recovery routes.
-                        _approachingEntry=false;
+                        // Distant interior targets can leave Arma planning without moving. Stage at
+                        // the nearest real entrance first, then commit through it. Workers already
+                        // near the building keep the faster direct route.
+                        private _entryTarget=if (_entryIndex >= 0) then {(_job get "entries") select _entryIndex} else {[]};
+                        private _entryProbe=_pair select (_moverIndex mod count _pair);
+                        _approachingEntry=_entryTarget isNotEqualTo [] && {_entryProbe distance2D _entryTarget > 8};
                     };
                 };
                 if (_cursor < count _route) then {
@@ -371,6 +387,7 @@ private _pairStates=[];
                     } else {[]};
                     if (_approachingEntry && {_entryTarget isNotEqualTo []} && {_pair findIf {_x distance2D _entryTarget <= 3} >= 0}) then {
                         _approachingEntry=false;
+                        _entered=true;
                         _triedEntries pushBackUnique _entryIndex;
                         _lastTarget=-1;
                         _retries=0;
@@ -398,7 +415,10 @@ private _pairStates=[];
                             private _started=_job get "started";
                             if !(_unit in _started) then {
                                 doStop _unit;
-                                _unit setUnitPos "MIDDLE";
+                                _unit setVariable ["Waldo_Cortex_ClearStance",unitPos _unit];
+                                _unit setVariable ["Waldo_Cortex_ClearForcedSpeed",getForcedSpeed _unit];
+                                _unit setUnitPos "UP";
+                                _unit forceSpeed 4;
                                 _started pushBack _unit;
                             };
                             private _unitTarget=if (_unit == _point || {_supportTarget isEqualTo []}) then {_target} else {_supportTarget};
@@ -445,7 +465,7 @@ private _pairStates=[];
                                 _retryCounts set [_positionIndex,(_retryCounts param [_positionIndex,0])+1];
                             } else {
                                 private _changedEntry=false;
-                                if ((_job get "entries") isNotEqualTo []) then {
+                                if (!_entered && {(_job get "entries") isNotEqualTo []}) then {
                                     if (_approachingEntry) then {_triedEntries pushBackUnique _entryIndex};
                                     private _entryRanks=[];
                                     {
@@ -490,6 +510,7 @@ private _pairStates=[];
                     _state set [7,_moverIndex]; _state set [8,_previousPositionIndex];
                     _state set [9,_entryIndex]; _state set [10,_triedEntries];
                     _state set [11,_roomsCleared];
+                    _state set [12,_entered];
                 };
             };
         };

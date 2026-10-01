@@ -35,6 +35,10 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!local _group) exitWith {
     if (isServer) then {[_group,_restore] remoteExecCall ["Waldo_fnc_CortexGarrisonRelease", groupOwner _group]; true} else {false};
 };
+private _delegated=_group getVariable ["Waldo_Cortex_BuildingBackend",[]];
+if (count _delegated >= 2 && {(_delegated select 0) == "LAMBS"} && {(_delegated select 1) == "GARRISON"}) exitWith {
+    [_group,_restore] call Waldo_fnc_CortexLambsBuildingRelease
+};
 // No Cortex assignment means there is nothing for this release to restore.
 if ((_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo [] && {units _group findIf {(_x getVariable ["Waldo_AIPass_GarrisonPos",[]]) isNotEqualTo []} < 0}) exitWith {false};
 private _leader = leader _group;
@@ -55,6 +59,9 @@ private _leader = leader _group;
                 _x setUnitPos (_x getVariable ["Waldo_AIPass_GarrisonStance", "AUTO"]);
             };
             _x doWatch objNull;
+            if (getForcedSpeed _x == 4 && {!isNil {_x getVariable "Waldo_Cortex_GarrisonForcedSpeed"}}) then {
+                _x forceSpeed (_x getVariable ["Waldo_Cortex_GarrisonForcedSpeed",-1]);
+            };
             private _command = toUpperANSI currentCommand _x;
             if (_restore || {_ownedHold && {_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]}}) then {
                 _x doFollow _leader
@@ -66,6 +73,7 @@ private _leader = leader _group;
     _x setVariable ["Waldo_AIPass_GarrisonPos", nil, true];
     _x setVariable ["Waldo_AIPass_GarrisonFailed",nil,true];
     _x setVariable ["Waldo_AIPass_GarrisonStance", nil, true];
+    _x setVariable ["Waldo_Cortex_GarrisonForcedSpeed",nil];
 } forEach units _group;
 _group setVariable ["Waldo_AIPass_Garrison", nil, true];
 _group setVariable ["Waldo_Cortex_GarrisonCandidates",nil,true];

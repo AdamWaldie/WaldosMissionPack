@@ -98,6 +98,7 @@ if (!isNil "_handle") then {
         [_x] call Waldo_fnc_CortexReleaseGroup;
     };
     if (local _x) then {
+        [_x] call Waldo_fnc_CortexLambsBuildingRelease;
         [_x] call Waldo_fnc_CortexDefendRelease;
         [_x] call Waldo_fnc_CortexGarrisonRelease;
         [_x] call Waldo_fnc_CortexClearRelease;

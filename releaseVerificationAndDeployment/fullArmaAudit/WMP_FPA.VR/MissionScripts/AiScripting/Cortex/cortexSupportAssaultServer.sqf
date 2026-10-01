@@ -2,8 +2,10 @@
  * Author: WaldoTheWarfighter
  * Updates accepted reinforcement reservations with a finite coordinated assault destination.
  * Locality/authority: requester owner asks; server validates its existing leases; helper owners execute.
- * Each helper keeps the side of the support-to-enemy axis on which it rallied. Candidate approach
- * points remain separated, then Waldo_fnc_CortexSelectAvenue rejects routes entering the requester's
+ * Each helper keeps the side of the support-to-enemy axis on which it rallied. A responder inside
+ * the centre corridor receives a deterministic alternating side rather than permission to cross
+ * the support line. Candidate approach points remain separated by 60 m, then
+ * Waldo_fnc_CortexSelectAvenue rejects routes entering the requester's
  * 30 m firing corridor or changing sides. The shared bounded scorer distinguishes terrain/solid
  * ballistic screening from visual concealment. It runs once per dispatch, not per tick or soldier.
  * Responders which missed the finite assembly window are released when at least one arrived squad
@@ -44,6 +46,14 @@ private _dispatched=[];
         private _rallyX=(_rally select 0)-(_supportOrigin select 0);
         private _rallyY=(_rally select 1)-(_supportOrigin select 1);
         private _rallySide=if (_laneLength > 0) then {(_laneX*_rallyY-_laneY*_rallyX)/_laneLength} else {0};
+        // Near-axis rallies previously accepted either flank. That made the shortest route cross
+        // the base-of-fire lane in otherwise symmetric terrain. Preserve every meaningful side;
+        // when geometry is effectively centred, distribute responders deterministically.
+        private _desiredSide=if (abs _rallySide >= 5) then {
+            [1,-1] select (_rallySide < 0)
+        } else {
+            [1,-1] select ((count _dispatched) mod 2 == 1)
+        };
         private _candidateRoutes=[];
         {
             _x params ["_radius","_offset"];
@@ -51,8 +61,8 @@ private _dispatched=[];
             private _candidateX=(_candidate select 0)-(_supportOrigin select 0);
             private _candidateY=(_candidate select 1)-(_supportOrigin select 1);
             private _candidateSide=if (_laneLength > 0) then {(_laneX*_candidateY-_laneY*_candidateX)/_laneLength} else {0};
-            private _sameSide=abs _rallySide < 30 || {_candidateSide*_rallySide > 0};
-            private _separated=_approaches findIf {_x distance2D _candidate < 35} < 0;
+            private _sameSide=_candidateSide*_desiredSide > 0;
+            private _separated=_approaches findIf {_x distance2D _candidate < 60} < 0;
             if (_sameSide && {!surfaceIsWater _candidate} && {_separated}) then {
                 _candidateRoutes pushBack [_candidate];
             };

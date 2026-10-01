@@ -195,7 +195,7 @@ private _origins=_helpers apply {getPosATL _x};
 // the production owner-local fire controller issues the actual engagement commands.
 {_x setCombatMode "RED"} forEach ([_requester]+(_teams apply {group (_x select 0)}));
 {_x setVariable ["Waldo_CortexQA_Target",getPosATL _enemy,true]} forEach _helpers;
-["Movement diagnostic: coordinated bounds","DIAGNOSTIC ONLY: invulnerable actors and a non-firing target. This does not validate combat effectiveness. Squads exchange MOVE and COVER roles. Inside the moving squad, one fire team bounds while the other covers, then follows. Watch role labels, actual shots and cyan trails. Both squads must travel at least 60 m and reach within 50 m of the objective. No lease or waypoint is injected by this test.",[1500,1550,0]] call _phase;
+["Movement diagnostic: concurrent coordinated bounds","DIAGNOSTIC ONLY: invulnerable actors and a non-firing target. This does not validate combat effectiveness. Two squads may advance concurrently on separated lanes while the requester remains the base of fire. Inside each moving squad, one fire team bounds while the other covers, then follows. Watch role labels, actual shots and cyan trails. Both squads must travel at least 60 m and reach within 50 m of the objective. No lease or waypoint is injected by this test.",[1500,1550,0]] call _phase;
 private _lastSample=-1;
 private _lastMovementDiagnostic=-1;
 private _lastSquad=-1;
@@ -203,6 +203,9 @@ private _roleSwitches=0;
 private _boundTravel=createHashMap;
 private _largestBacktrack=0;
 private _interCover=0;
+private _simultaneousSquadBounds=0;
+private _concurrentLaneSamples=0;
+private _minimumConcurrentSeparation=1e9;
 private _intraCover=[0,0];
 private _movingShots=[0,0];
 private _physicalMoverSamples=[0,0];
@@ -214,11 +217,17 @@ private _longestMovingIdle=0;
 private _movementRoleObserved=false;
 private _retiredSince=-1;
 private _shotCounts=_helpers apply {_x getVariable ["Waldo_CortexQA_Shots",0]};
+private _baseShotCount=0;
+{_baseShotCount=_baseShotCount+(_x getVariable ["Waldo_CortexQA_Shots",0])} forEach _base;
 private _movementWindowEnded=[{
     if (diag_tickTime-_lastSample >= 1) then {
         _lastSample=diag_tickTime;
         private _movingTeams=[];
         private _firingTeams=[];
+        private _currentBaseShots=0;
+        {_currentBaseShots=_currentBaseShots+(_x getVariable ["Waldo_CortexQA_Shots",0])} forEach _base;
+        private _baseShotDelta=_currentBaseShots-_baseShotCount;
+        _baseShotCount=_currentBaseShots;
         {
             private _ti=_forEachIndex;
             private _members=_x;
@@ -308,7 +317,21 @@ private _movementWindowEnded=[{
             };
         } forEach _teams;
         if ((_movingTeams select 0) >= 2 && {(_movingTeams select 1) <= 1} && {(_firingTeams select 1) > 0}
-            || {(_movingTeams select 1) >= 2 && {(_movingTeams select 0) <= 1} && {(_firingTeams select 0) > 0}}) then {_interCover=_interCover+1};
+            || {(_movingTeams select 1) >= 2 && {(_movingTeams select 0) <= 1} && {(_firingTeams select 0) > 0}}
+            || {_baseShotDelta > 0 && {(_movingTeams select 0) >= 2 || {(_movingTeams select 1) >= 2}}}) then {_interCover=_interCover+1};
+        if ((_movingTeams select 0) >= 2 && {(_movingTeams select 1) >= 2}) then {
+            _simultaneousSquadBounds=_simultaneousSquadBounds+1;
+            private _centres=[];
+            {
+                private _team=_x;
+                private _sum=[0,0,0];
+                {_sum=_sum vectorAdd getPosATL _x} forEach _team;
+                _centres pushBack (_sum vectorMultiply (1/count _team));
+            } forEach _teams;
+            private _separation=(_centres select 0) distance2D (_centres select 1);
+            _minimumConcurrentSeparation=_minimumConcurrentSeparation min _separation;
+            if (_separation >= 35) then {_concurrentLaneSamples=_concurrentLaneSamples+1};
+        };
     };
     if (diag_tickTime-_lastMovementDiagnostic >= 15) then {
         _lastMovementDiagnostic=diag_tickTime;
@@ -350,6 +373,8 @@ private _advanced=true;
 {if (!alive _x || {_x distance2D (_origins select _forEachIndex) < 60} || {_x distance2D _enemy > 50}) then {_advanced=false}} forEach _helpers;
 ["COORD-movement-window-terminated",_movementWindowEnded,format ["roleObserved=%1 results=%2",_movementRoleObserved,_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportBoundResult",[]]}]] call _check;
 ["COORD-inter-squad-role-exchange",_roleSwitches >= 2,str _roleSwitches] call _check;
+["COORD-concurrent-squad-bounds",_simultaneousSquadBounds > 0,str _simultaneousSquadBounds] call _check;
+["COORD-concurrent-lanes-separated",_concurrentLaneSamples > 0,format ["samples=%1 minimum=%2 m",_concurrentLaneSamples,_minimumConcurrentSeparation]] call _check;
 ["COORD-full-fire-team-physical-bounds",(_physicalMoverSamples findIf {_x <= 0}) < 0,str _physicalMoverSamples] call _check;
 ["COORD-moving-roe-fire-at-will-disengaged",(_movementRoeSamples findIf {_x <= 0}) < 0 && {(_movementRoeViolations select 0)+(_movementRoeViolations select 1) == 0},format ["samples=%1 violations=%2",_movementRoeSamples,_movementRoeViolations]] call _check;
 ["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;

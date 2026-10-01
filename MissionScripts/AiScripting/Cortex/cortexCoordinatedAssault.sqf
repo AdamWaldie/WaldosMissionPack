@@ -5,8 +5,9 @@
  * The squad in contact becomes the base of fire
  * (its fire control keeps suppressing) and the reinforcing squads that have reached their rally
  * point assault the enemy position together from alternate sides (90 degrees left and right of the
- * line to the base of fire). The server alternates moving and covering squads; each mover
- * uses successive fire-team bounds and the gated final assault sequence. Original waypoints
+ * line to the base of fire). The server can move two responders concurrently when their approach
+ * lanes remain separated; each mover retains alternating fire-team bounds and the gated final
+ * assault sequence. Responders keep a fixed side of the supporting-fire axis. Original waypoints
  * survive the finite reservation. The assault launches when every responder has
  * arrived, or 20 s after the first did. The server releases responders which missed that assembly
  * window, so one delayed squad cannot hold the prepared force or remain trapped in a stale rally.

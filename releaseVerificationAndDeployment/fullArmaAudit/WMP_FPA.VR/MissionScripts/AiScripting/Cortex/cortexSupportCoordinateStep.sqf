@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Alternates reserved assault squads through short bounds; other squads provide cover.
+ * Coordinates reserved assault squads through short bounds while other squads provide cover.
  * Locality/authority: server publishes tokened roles; each group owner executes its fire teams.
  * Repeat/JIP: roles are durable snapshots; only changed roles are broadcast. Existing support
  * lease expiry, exclusion and Zeus cancellation remain authoritative. At most six groups are read.
@@ -9,7 +9,9 @@
  * base-of-fire roles. A squad which can no longer form two viable fire teams is retired immediately
  * instead of keeping the whole action alive until lease expiry. The server watchdog follows the
  * configured owner-side bound timeout and retries after eight seconds. Bound length scales with
- * remaining distance to avoid slow fixed-step movement.
+ * remaining distance to avoid slow fixed-step movement. Up to two squads on separated approaches
+ * may bound concurrently; each still alternates its own moving and covering fire teams. This removes
+ * the former four-deep serial queue without turning the whole force into one unsupported rush.
  * Arguments: 0: request <HASHMAP>; 1: accepted leases <ARRAY>, required.
  * Return: Nothing. Current caller: CortexSupportStep.
  * Example: [_job,_kept] call Waldo_fnc_CortexSupportCoordinateStep;
@@ -30,9 +32,14 @@ if (_teams isEqualTo []) exitWith {};
 private _completed=_job getOrDefault ["boundCompleted",[]];
 private _retired=_job getOrDefault ["boundRetired",[]];
 private _failuresByToken=_job getOrDefault ["boundFailuresByToken",createHashMap];
-private _active=_job getOrDefault ["boundActive",[]];
-if (_active isNotEqualTo []) then {
-    _active params ["_group","_sequence","_deadline","_final","_token"];
+private _activeRaw=_job getOrDefault ["boundActive",[]];
+// Accept the pre-concurrency single record during a live mission update, then publish the new list.
+private _active=if (_activeRaw isEqualTo []) then {[]} else {
+    if ((_activeRaw select 0) isEqualType grpNull) then {[_activeRaw]} else {+_activeRaw}
+};
+private _stillActive=[];
+{
+    _x params ["_group","_sequence","_deadline","_final","_token"];
     private _result=_group getVariable ["Waldo_Cortex_SupportBoundResult",[]];
     private _finished=count _result == 3 && {(_result select 0) == _token} && {(_result select 1) == _sequence};
     if (_teams findIf {(_x select 0) == _group} < 0 || {_finished} || {serverTime >= _deadline}) then {
@@ -52,33 +59,46 @@ if (_active isNotEqualTo []) then {
             };
         };
         if (_progressed && {_final}) then {_completed pushBackUnique _token; _job set ["boundCompleted",_completed]};
-        _job set ["boundActive",[]];
-        _active=[];
+    } else {
+        _stillActive pushBack _x;
     };
-};
-private _next=grpNull;
-private _point=[];
+} forEach _active;
+_active=_stillActive;
+_job set ["boundActive",_active];
 private _sequence=_job getOrDefault ["boundSequence",0];
-if (_active isEqualTo []) then {
-    // Casualties can make a formerly valid responder unable to field a moving and covering pair.
-    // Retire it here so it cannot be reconsidered every two seconds until the ten-minute lease ends.
-    {
-        _x params ["_group","_token"];
-        private _fit=(units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
-        if (count _fit < 4 && {!(_token in _completed)} && {!(_token in _retired)}) then {
-            _retired pushBackUnique _token;
-            _group setVariable ["Waldo_Cortex_SupportAbort",
-                [serverTime,"INSUFFICIENT_STRENGTH",count _fit],true];
-        };
-    } forEach _teams;
-    _job set ["boundRetired",_retired];
-    private _cursor=_job getOrDefault ["boundCursor",0];
+// Casualties can make a formerly valid responder unable to field a moving and covering pair.
+// Retire it here so it cannot be reconsidered every two seconds until the lease ends.
+{
+    _x params ["_group","_token"];
+    private _fit=(units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
+    if (count _fit < 4 && {!(_token in _completed)} && {!(_token in _retired)}) then {
+        _retired pushBackUnique _token;
+        _group setVariable ["Waldo_Cortex_SupportAbort",
+            [serverTime,"INSUFFICIENT_STRENGTH",count _fit],true];
+    };
+} forEach _teams;
+_job set ["boundRetired",_retired];
+
+private _cursor=_job getOrDefault ["boundCursor",0];
+private _maxConcurrent=(count _teams) min 2;
+for "_slot" from count _active to (_maxConcurrent-1) do {
+    private _next=grpNull;
+    private _point=[];
+    private _nextIndex=-1;
     for "_offset" from 0 to ((count _teams)-1) do {
         private _index=(_cursor+_offset) mod count _teams;
         (_teams select _index) params ["_group","_token","_goal"];
         private _fit=(units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
         if (count _fit >= 4 && {serverTime >= (_group getVariable ["Waldo_Cortex_SupportRetryAfter",0])}
-            && {!(_token in _completed)} && {!(_token in _retired)}) exitWith {
+            && {!(_token in _completed)} && {!(_token in _retired)}
+            && {_active findIf {(_x select 4) == _token} < 0}
+            // Concurrent movers need genuinely different approach lanes. A second squad on the
+            // same endpoint remains COVER until the first has yielded its turn.
+            && {_active findIf {
+                private _activeGroup=_x select 0;
+                private _activeTeam=_teams findIf {(_x select 0) == _activeGroup};
+                _activeTeam >= 0 && {((_teams select _activeTeam) select 2) distance2D _goal < 60}
+            } < 0}) exitWith {
             private _centre=[0,0,0];
             {_centre=_centre vectorAdd getPosATL _x} forEach _fit;
             _centre=_centre vectorMultiply (1/count _fit);
@@ -87,23 +107,35 @@ if (_active isEqualTo []) then {
             _point=_centre getPos [_boundLength min _remaining,_centre getDir _goal];
             if (!surfaceIsWater _point) then {
                 _next=_group;
+                _nextIndex=_index;
                 _sequence=_sequence+1;
                 _job set ["boundSequence",_sequence];
-                _job set ["boundCursor",(_index+1) mod count _teams];
                 private _boundTimeout=missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout",25];
                 private _watchdog=(((_boundTimeout max 10)*4)+15) min 180;
-                _active=[_group,_sequence,serverTime+_watchdog,_point distance2D _goal < 2,_token];
-                _job set ["boundActive",_active];
+                _active pushBack [_group,_sequence,serverTime+_watchdog,_point distance2D _goal < 2,_token,+_point];
             };
         };
     };
+    if (!isNull _next) then {_cursor=(_nextIndex+1) mod count _teams};
 };
+_job set ["boundCursor",_cursor];
+_job set ["boundActive",_active];
 {
     _x params ["_group","_token","_goal"];
     private _old=_group getVariable ["Waldo_Cortex_SupportRole",[]];
-    private _moving=_active isNotEqualTo [] && {(_active select 0) == _group};
-    private _role=if (_moving && {_next != _group} && {count _old == 5}) then {+_old} else {
-        [_token,_sequence,["COVER","MOVE"] select _moving,if (_moving) then {+_point} else {[]},+(_job get "assaultEnemy")]
+    private _activeIndex=_active findIf {(_x select 0) == _group && {(_x select 4) == _token}};
+    private _moving=_activeIndex >= 0;
+    private _role=if (_moving) then {
+        private _record=_active select _activeIndex;
+        private _activePoint=_record param [5,[]];
+        if (_activePoint isEqualTo [] && {count _old == 5}
+            && {(_old select 0) == _token} && {(_old select 1) == (_record select 1)}) then {
+            +_old
+        } else {
+            [_token,_record select 1,"MOVE",+_activePoint,+(_job get "assaultEnemy")]
+        }
+    } else {
+        [_token,_sequence,"COVER",[],+(_job get "assaultEnemy")]
     };
     if (_old isNotEqualTo _role) then {
         _group setVariable ["Waldo_Cortex_SupportRole",_role,true];

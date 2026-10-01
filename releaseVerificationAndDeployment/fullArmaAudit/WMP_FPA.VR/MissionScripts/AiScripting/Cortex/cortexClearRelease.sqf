@@ -12,6 +12,10 @@
  */
 params [["_group", grpNull, [grpNull]],["_restore",true,[true]]];
 if (isNull _group || {!local _group} || {remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}}) exitWith {false};
+private _delegated=_group getVariable ["Waldo_Cortex_BuildingBackend",[]];
+if (count _delegated >= 2 && {(_delegated select 0) == "LAMBS"} && {(_delegated select 1) == "CQB"}) exitWith {
+    [_group,_restore] call Waldo_fnc_CortexLambsBuildingRelease
+};
 private _order = _group getVariable ["Waldo_AIPass_ClearOrder", []];
 if (_order isEqualTo []) exitWith {false};
 _group setVariable ["Waldo_AIPass_ClearGeneration", (_group getVariable ["Waldo_AIPass_ClearGeneration", 0]) + 1];
@@ -21,8 +25,20 @@ _group setVariable ["Waldo_AIPass_ClearOrder", nil, true];
 _group setVariable ["Waldo_AIPass_ClearBuilding", nil, true];
 _group setVariable ["Waldo_Cortex_ClearEgress",nil,true];
 _group setVariable ["Waldo_AIPass_ClearApplied", nil];
-if (_restore) then {
-    private _leader=leader _group;
-    {if (alive _x && {local _x} && {!isPlayer _x} && {lifeState _x != "INCAPACITATED"}) then {_x doFollow _leader}} forEach units _group;
-};
+private _leader=leader _group;
+{
+    if (local _x && {!isPlayer _x}) then {
+        if (alive _x && {lifeState _x != "INCAPACITATED"}) then {
+            if (unitPos _x == "UP" && {!isNil {_x getVariable "Waldo_Cortex_ClearStance"}}) then {
+                _x setUnitPos (_x getVariable ["Waldo_Cortex_ClearStance","AUTO"]);
+            };
+            if (getForcedSpeed _x == 4 && {!isNil {_x getVariable "Waldo_Cortex_ClearForcedSpeed"}}) then {
+                _x forceSpeed (_x getVariable ["Waldo_Cortex_ClearForcedSpeed",-1]);
+            };
+            if (_restore) then {_x doFollow _leader};
+        };
+        _x setVariable ["Waldo_Cortex_ClearStance",nil];
+        _x setVariable ["Waldo_Cortex_ClearForcedSpeed",nil];
+    };
+} forEach units _group;
 true
