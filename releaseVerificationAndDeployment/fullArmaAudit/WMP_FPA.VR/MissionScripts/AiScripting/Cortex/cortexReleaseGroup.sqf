@@ -15,6 +15,7 @@
  * Cortex-owned AI feature switches and removing Cortex waypoints. Repeat/JIP: only tracked changes are
  * restored; repeated cleanup is harmless and never boards passengers.
  * Public remount intent is cancelled even when owner migration left no local behaviour map.
+ * A crew owner also restores any forced speed borrowed for an onboard dismount safe stop.
  * Arguments:
  * 0: group <GROUP>
  * 1: forget <BOOL> - also clear the managed flag so discovery may pick the group up again
@@ -50,6 +51,19 @@ if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Rem
     [_group, _state, false, _yieldToExternal, _reason] call Waldo_fnc_CortexRestoreCalm;
 };
 if (local _group) then {[_group,"",false] call Waldo_fnc_CortexLambsLease};
+// Release an interrupted cross-group dismount without stranding the vehicle at forced speed zero.
+private _releasedVehicles=[];
+{
+    private _vehicle=vehicle _x;
+    if (_vehicle != _x && {!(_vehicle in _releasedVehicles)}
+        && {local _vehicle} && {effectiveCommander _vehicle in units _group}) then {
+        _releasedVehicles pushBack _vehicle;
+        private _saved=_vehicle getVariable ["Waldo_Cortex_DismountForcedSpeed",[]];
+        if (_saved isNotEqualTo []) then {_vehicle forceSpeed (_saved param [0,-1])};
+        _vehicle setVariable ["Waldo_Cortex_DismountForcedSpeed",nil];
+        _vehicle setVariable ["Waldo_Cortex_DismountStopRequest",nil,true];
+    };
+} forEach units _group;
 if (local _group && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
     _group setVariable ["lambs_danger_disableGroupAI", _group getVariable ["Waldo_AIPass_LambsBaseline", false], true];
     _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];

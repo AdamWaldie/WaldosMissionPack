@@ -6,6 +6,8 @@
  * Dismount records ownership before issuing exit commands, then cancels outstanding boarding orders.
  * Exit handlers can therefore identify the initiating controller without racing bookkeeping.
  * Crew owners publish a bounded, expiring approximate contact report for separate onboard groups.
+ * A validated passenger-owner request temporarily forces the vehicle to zero speed, preserving and
+ * restoring any earlier forced-speed value once that passenger squad is out or the request expires.
  * Separate passenger groups handle only their own local cargo. Only the operating
  * crew group may order vehicle withdrawal or gunnery; convoy ownership remains excluded.
  * Dismount: infantry riding as cargo in a ground vehicle get out once an enemy is
@@ -66,13 +68,47 @@ if (_vehicleMove isNotEqualTo []) then {
 // Movement ownership blocks only another destination. Reporting, dismount handling and
 // gunnery remain composable for the duration of the physical move.
 private _movementOwned = _activeVehicleMove;
-if (_enemies isEqualTo []) exitWith {_movementOwned};
 private _vehicles = [];
 {
     private _vehicle = vehicle _x;
     if (_vehicle != _x && {alive _x} && {!(_vehicle in _vehicles)} ) then {_vehicles pushBack _vehicle};
 } forEach units _group;
-if (_vehicles isEqualTo []) exitWith {};
+if (_vehicles isEqualTo []) exitWith {_movementOwned};
+// Cross-group safe-stop handshake. The passenger owner publishes only an expiring identity request;
+// the vehicle authority validates current occupants and changes speed locally. This avoids remote
+// driver commands, unsafe moving exits and permanent stops after an interrupted/expired handover.
+{
+    private _vehicle=_x;
+    private _request=_vehicle getVariable ["Waldo_Cortex_DismountStopRequest",[]];
+    private _saved=_vehicle getVariable ["Waldo_Cortex_DismountForcedSpeed",[]];
+    private _valid=false;
+    if (count _request == 3 && {local _vehicle} && {effectiveCommander _vehicle in units _group}) then {
+        _request params ["_passengerGroup","_passengerOwner","_requestExpiry"];
+        _valid=_passengerGroup isEqualType grpNull && {!isNull _passengerGroup}
+            && {_passengerOwner isEqualType 0} && {_requestExpiry isEqualType 0}
+            && {groupOwner _passengerGroup == _passengerOwner}
+            && {side _passengerGroup == side _group}
+            && {serverTime < _requestExpiry} && {_requestExpiry <= serverTime+30}
+            && {(fullCrew [_vehicle,"",false]) findIf {
+                private _unit=_x select 0;
+                private _role=_x select 1;
+                alive _unit && {group _unit == _passengerGroup}
+                    && {_role == "cargo" || {_role == "turret" && {_x select 4}}}
+            } >= 0};
+    };
+    if (_valid) then {
+        if (_saved isEqualTo []) then {
+            _saved=[getForcedSpeed _vehicle];
+            _vehicle setVariable ["Waldo_Cortex_DismountForcedSpeed",_saved];
+        };
+        _vehicle forceSpeed 0;
+    } else {
+        if (_saved isNotEqualTo [] && {local _vehicle}) then {_vehicle forceSpeed (_saved param [0,-1])};
+        _vehicle setVariable ["Waldo_Cortex_DismountForcedSpeed",nil];
+        if (_request isNotEqualTo []) then {_vehicle setVariable ["Waldo_Cortex_DismountStopRequest",nil,true]};
+    };
+} forEach _vehicles;
+if (_enemies isEqualTo []) exitWith {_movementOwned};
 private _enemyPos = (_enemies select 0) select 1;
 private _withdrawn = _state getOrDefault ["withdrawn", []];
 {
@@ -86,10 +122,28 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
         && {serverTime >= (_vehicle getVariable ["Waldo_Cortex_OnboardReportDue",-1])}
         && {(crew _vehicle) findIf {alive _x && {group _x != _group} && {side group _x == side _group}} >= 0}) then {
         private _reportedPosition=[25*round ((_enemyPos select 0)/25),25*round ((_enemyPos select 1)/25),0];
-        _vehicle setVariable ["Waldo_Cortex_OnboardReport",[_group,groupOwner _group,_reportedPosition,serverTime+12],true];
+        // The far scheduler tier is 20 seconds. A shorter report could expire between the
+        // independently scheduled crew and passenger jobs and make a valid handover impossible.
+        _vehicle setVariable ["Waldo_Cortex_OnboardReport",[_group,groupOwner _group,_reportedPosition,serverTime+35],true];
         _vehicle setVariable ["Waldo_Cortex_OnboardReportDue",serverTime+5];
     };
     if (_vehicle isKindOf "LandVehicle" && {!(_vehicle isKindOf "StaticWeapon")} && {_distance < 400} && {[_group, "Waldo_AIPass_VehicleDismount_Enable", true] call Waldo_fnc_CortexFeatureEnabled}) then {
+        // A combined crew/passenger group has no cross-group report consumer. Use the same
+        // bounded handshake locally so moving cargo is brought to a safe stop before PassengerReady
+        // can admit an exit. The next owner tick restores speed after the last cargo seat clears.
+        private _onboardCargo=(fullCrew [_vehicle,"",false]) select {
+            private _unit=_x select 0;
+            private _role=_x select 1;
+            alive _unit && {group _unit == _group}
+                && {_role == "cargo" || {_role == "turret" && {_x select 4}}}
+        };
+        if (_commandsVehicle && {local _vehicle} && {_onboardCargo isNotEqualTo []}) then {
+            _vehicle setVariable ["Waldo_Cortex_DismountStopRequest",[_group,groupOwner _group,serverTime+30],true];
+            if ((_vehicle getVariable ["Waldo_Cortex_DismountForcedSpeed",[]]) isEqualTo []) then {
+                _vehicle setVariable ["Waldo_Cortex_DismountForcedSpeed",[getForcedSpeed _vehicle]];
+            };
+            _vehicle forceSpeed 0;
+        };
         private _cargo = (crew _vehicle) select {
             group _x == _group && {[_x, _vehicle] call Waldo_fnc_CortexPassengerReady}
         };

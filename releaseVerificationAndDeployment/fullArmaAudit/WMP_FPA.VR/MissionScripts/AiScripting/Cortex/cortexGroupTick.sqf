@@ -199,7 +199,9 @@ private _lambsCombat = (missionNamespace getVariable ["Waldo_AIPass_LambsDangerL
     && {toUpperANSI (["Waldo_AIPass_LambsMode", "SPLIT"] call _get) == "SPLIT"}
     && {!(_group getVariable ["lambs_danger_disableGroupAI", false])};
 // Passenger squads can hear their own vehicle crew without acquiring exact target knowledge.
-if (_nearTier && {!_ordered} && {!_lambsCombat} && {_visible isEqualTo []}
+// Run this lightweight own-vehicle check at every distance tier: the far cadence is already
+// bounded, and suppressing it outside FarRange made separate passenger squads unable to react.
+if (!_ordered && {!_lambsCombat} && {_visible isEqualTo []}
     && {(_state getOrDefault ["phase",""]) in ["CALM","CONTACT"]}) then {
     [_group,_state] call Waldo_fnc_CortexOnboardContact;
 };

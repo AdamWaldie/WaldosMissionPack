@@ -85,7 +85,7 @@ private _rearEnemy = _enemyGroup createUnit ["B_Soldier_F",[1900,980,0],[],0,"NO
 _rearEnemy setVariable ["acex_headless_blacklist",true,true]; _rearEnemy allowDamage false; _rearEnemy disableAI "PATH";
 private _opponents = [_enemy,_rearEnemy];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_passengers+_crew+_opponents,true];
-[(["","Native AI baseline: "] select _nativeBaseline)+(["Vehicle dismount disabled: ","Fresh enabled dismount: "] select _freshEnabled)+_layout,(["Passengers must remain aboard while contact dismount is disabled.","A fresh occupied truck tests enabled contact dismount independently of earlier retention failures."] select _freshEnabled)+" Visible opponents are ahead and behind for driver and cargo sightlines.",[1900,1100,0]] call _phase;
+[(["","Native AI baseline: "] select _nativeBaseline)+(["Vehicle dismount disabled: ","Fresh enabled dismount: "] select _freshEnabled)+_layout,(["Observe native seat retention while Cortex dismount is disabled; any engine exit must remain unattributed to Cortex.","A fresh occupied truck tests enabled contact dismount independently of earlier retention observations."] select _freshEnabled)+" Visible opponents are ahead and behind for driver and cargo sightlines.",[1900,1100,0]] call _phase;
 private _passengerSamples=[];
 private _nextPassengerSample=0;
 private _driverDetected=false;
@@ -99,21 +99,31 @@ private _contactSeen=[{
             _passengers apply {[netId _x,vehicle _x == _truck,currentCommand _x,[_x,_truck] call Waldo_fnc_CortexPassengerReady]},
             [_group,_passengerGroup] apply {private _sampleGroup=_x; [_sampleGroup,(_sampleGroup getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""],(_opponents apply {leader _sampleGroup knowsAbout _x})]}];
     };
-(_opponents findIf {(_crew select 0) knowsAbout _x > 1}) >= 0 && {(_opponents findIf {leader _passengerGroup knowsAbout _x > 1}) >= 0}},30] call _wait;
+private _crewSees=(_opponents findIf {(_crew select 0) knowsAbout _x > 1}) >= 0;
+private _passengersSee=(_opponents findIf {leader _passengerGroup knowsAbout _x > 1}) >= 0;
+_crewSees && {!_separate || {_passengersSee}}},30] call _wait;
 {diag_log format ["WMP CORTEX QA PASSENGER SAMPLE %1 [time,speed,occupants,groupKnowledge]: %2",_forEachIndex,_x]} forEach _passengerSamples;
-["DISMOUNT-fixture-natural-contact",_contactSeen,"Both driver and passenger groups must naturally detect an opponent"] call _check;
+["DISMOUNT-fixture-natural-contact",_contactSeen,["Shared occupants must naturally detect an opponent","The crew must naturally detect an opponent; the separate passenger squad intentionally relies on the bounded crew report"] select _separate] call _check;
 ["DISMOUNT-driver-detected-contact",_driverDetected,"Measured separately: a crew report cannot originate without crew detection"] call _check;
 diag_log format ["WMP CORTEX QA ONBOARD CONTACT: separate=%1 native=%2 driverDetected=%3 passengersDetected=%4 crewReport=%5",
     _separate,_nativeBaseline,_driverDetected,_passengersDetected,_truck getVariable ["Waldo_Cortex_OnboardReport",[]]];
 if (!_freshEnabled) then {
     sleep 15;
-    ["DISMOUNT-disabled-keeps-cargo",_passengers findIf {vehicle _x != _truck} < 0] call _check;
+    private _disabledRecords=([_passengerGroup] call Waldo_fnc_CortexGroupState) getOrDefault ["dismounted",[]];
+    ["DISMOUNT-disabled-no-controller-order",_disabledRecords isEqualTo [],format ["mounted=%1; native Arma may independently order a shared crew/passenger group out",_passengers findIf {vehicle _x != _truck} < 0]] call _check;
     _enabledStartedMounted=_passengers findIf {!alive _x || {vehicle _x != _truck}} < 0;
 };
 if (_nativeBaseline) then {
     // Preserve the real engine-only retention result. Do not force occupants back in
     // or run enabled transitions on this fixture; compare with the Cortex cases.
     diag_log format ["WMP CORTEX QA NATIVE PASSENGERS|separate=%1 occupants=%2",_separate,_passengers apply {[netId _x,vehicle _x,currentCommand _x]}];
+} else {
+if (!_enabledStartedMounted) then {
+    // This legacy disabled-to-enabled comparison remains additive, but a native exit has already
+    // consumed its precondition. Do not mislabel that engine action as a Cortex failure; the fresh
+    // enabled fixtures below remain the authoritative transition cases.
+    private _unowned=([_passengerGroup] call Waldo_fnc_CortexGroupState) getOrDefault ["dismounted",[]];
+    ["DISMOUNT-native-exit-not-misattributed",_unowned isEqualTo [],"Enabled transition skipped because occupants had already left under native control"] call _check;
 } else {
 ["DISMOUNT-enabled-starts-mounted",_enabledStartedMounted,"Passengers already outside cannot prove an enabled dismount transition"] call _check;
 [createHashMapFromArray [["Waldo_AIPass_VehicleDismount_Enable",true]]] call Waldo_fnc_CortexTuning;
@@ -129,14 +139,17 @@ private _dismounted=[{
 if (_stationary) then {["DISMOUNT-fixture-stationary-held",_peakExitSpeed < 1,format ["peakSpeed=%1; movement invalidates the stationary comparison",_peakExitSpeed]] call _check};
 ["DISMOUNT-contact-physical-exit",_contactSeen && {_enabledStartedMounted} && {_dismounted},format ["startedMounted=%1 endedDismounted=%2",_enabledStartedMounted,_dismounted]] call _check;
 private _recorded=([_passengerGroup] call Waldo_fnc_CortexGroupState) getOrDefault ["dismounted",[]];
-["DISMOUNT-controller-recorded-passengers",_passengers findIf {private _unit=_x; _recorded findIf {(_x select 0) == _unit && {(_x select 1) == _truck}} < 0} < 0,"Physical exit plus controller records distinguish Cortex dismount from native AI leaving"] call _check;
+private _ownedExit=_passengers findIf {private _unit=_x; _recorded findIf {(_x select 0) == _unit && {(_x select 1) == _truck}} < 0} < 0;
+["DISMOUNT-controller-attribution-valid",_ownedExit || {!_separate},["A shared group may execute its native exit first; Cortex does not claim or remount an unowned exit","The separate passenger case must record every exit before issuing it"] select _separate] call _check;
 if (_separate) then {
-    private _ownedExit=_passengers findIf {private _unit=_x; _recorded findIf {(_x select 0) == _unit && {(_x select 1) == _truck}} < 0} < 0;
     ["DISMOUNT-crew-report-physical-exit",_driverDetected && {_enabledStartedMounted} && {_dismounted} && {_ownedExit},
         format ["crewContact=%1 passengerContact=%2 physicalExit=%3 controllerOwned=%4 safeStop=%5",_driverDetected,_passengersDetected,_dismounted,_ownedExit,_safeStopObserved]] call _check;
 };
 ["DISMOUNT-driver-retained",vehicle (_crew select 0) == _truck] call _check;
 {deleteVehicle _x} forEach _opponents;
+if (!_ownedExit) then {
+    ["REMOUNT-unowned-native-exit-not-reclaimed",(_passengerGroup getVariable ["Waldo_Cortex_Remount",[]]) isEqualTo [],"Cortex must not overwrite an exit it did not initiate"] call _check;
+} else {
 if (_replacementOrder) then {
     private _replacement=createVehicle ["O_Truck_03_transport_F",_truck getPos [25,90],[],0,"NONE"];
     _replacement allowDamage false;
@@ -171,6 +184,8 @@ private _remounted=[{_passengers findIf {!alive _x || {vehicle _x != _truck}} < 
     && {group (_crew select 0) == _group}
     && {(_passengerGroup != _group) isEqualTo _separate},
     str [_separate,group (_crew select 0),_passengers apply {group _x}]] call _check;
+};
+};
 };
 };
 {deleteVehicle _x} forEach (_passengers+_crew+_opponents+[_truck]); deleteGroup _group; if (_separate) then {deleteGroup _passengerGroup}; deleteGroup _enemyGroup;

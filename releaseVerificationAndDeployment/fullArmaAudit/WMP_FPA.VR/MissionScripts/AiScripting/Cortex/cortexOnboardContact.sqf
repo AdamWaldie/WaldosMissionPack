@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Receives approximate onboard crew reports and dismounts this squad's safe cargo seats.
+ * Receives approximate onboard crew reports, requests an owner-local safe stop and dismounts
+ * this squad's cargo only after the vehicle is physically stationary.
  * Locality/authority: passenger group owner; validates current reporting crew ownership.
- * Repeat/JIP: expiring reports cannot replay old exits; records each passenger once. No reveal.
+ * Repeat/JIP: 35-second reports bridge the 20-second far scheduler tier without becoming durable;
+ * stop requests expire with the report and records each passenger once. No target disclosure or teleport.
  * Arguments: 0: group <GROUP>, grpNull; 1: state <HASHMAP>, empty.
  * Return: Nothing. Current caller: Waldo_fnc_CortexGroupTick after eligibility and order checks.
  * Example: [_group,_state] call Waldo_fnc_CortexOnboardContact;
@@ -23,9 +25,23 @@ private _vehicles=[];
             && {_position findIf {!(_x isEqualType 0)} < 0}
             && {groupOwner _reporter == _owner} && {group effectiveCommander _vehicle == _reporter}
             && {alive effectiveCommander _vehicle} && {side _reporter == side _group}
-            && {serverTime < _expiry} && {_expiry <= serverTime+12}
+            && {serverTime < _expiry} && {_expiry <= serverTime+35}
             && {_vehicle distance2D _position < 400}) then {
-            private _cargo=(crew _vehicle) select {group _x == _group && {[_x,_vehicle] call Waldo_fnc_CortexPassengerReady}};
+            private _onboardCargo=(fullCrew [_vehicle,"",false]) select {
+                private _unit=_x select 0;
+                private _role=_x select 1;
+                alive _unit && {group _unit == _group}
+                    && {_role == "cargo" || {_role == "turret" && {_x select 4}}}
+            };
+            // The passenger owner cannot safely stop a vehicle owned by the crew group. Publish a
+            // bounded request which CortexVehicles validates and executes on that vehicle owner.
+            // This remains useful even while moving, whereas PassengerReady deliberately rejects
+            // a moving vehicle and therefore prevents an unsafe exit.
+            if (_onboardCargo isNotEqualTo []) then {
+                _vehicle setVariable ["Waldo_Cortex_DismountStopRequest",[_group,groupOwner _group,serverTime+30],true];
+            };
+            private _cargo=_onboardCargo apply {_x select 0};
+            _cargo=_cargo select {[_x,_vehicle] call Waldo_fnc_CortexPassengerReady};
             private _owned=_state getOrDefault ["dismounted",[]];
             {
                 private _unit=_x;

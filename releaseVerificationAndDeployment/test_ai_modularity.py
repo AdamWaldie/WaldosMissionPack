@@ -41,9 +41,11 @@ class AIModularityContracts(unittest.TestCase):
             self.assertIn(check,text)
         for name in ['cortexVehicles','cortexRestoreCalm']:
             self.assertIn('Waldo_fnc_CortexPassengerReady',src(name))
-        self.assertIn('false] call Waldo_fnc_CortexRestoreCalm',src('cortexLocality'))
+        locality=src('cortexLocality')
+        self.assertIn('"OWNERSHIP_ADOPTED"',locality)
+        self.assertIn('call Waldo_fnc_CortexRestoreCalm',locality)
         release=src('cortexReleaseGroup')
-        self.assertIn('[_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm',release)
+        self.assertIn('[_group, _state, false, _yieldToExternal, _reason] call Waldo_fnc_CortexRestoreCalm',release)
         self.assertIn('Waldo_fnc_CortexZeusHeld',release)
     def test_report_transport_contains_positions_not_enemy_objects(self):
         report = src('cortexContactReport')

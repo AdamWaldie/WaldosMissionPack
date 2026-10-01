@@ -16,6 +16,7 @@
  * public defence/garrison assignments and restores only Cortex-owned movement restrictions.
  * Restart and ownership adoption cannot replay cancelled orders; tracked aircraft handlers are removed.
  * Public delayed artillery-relocation tokens and attack-run presentation state are invalidated.
+ * Vehicle safe-stop handshakes restore their prior forced speed before their tokens are cleared.
  * Owner-local missile-warning generations are advanced before handlers are removed; an
  * old CBA callback cannot become valid again after a quick restart.
  *
@@ -47,6 +48,10 @@ if (isServer) then {
     // maintaining another runtime registry. Clearing the public token makes every already queued
     // shoot-and-scoot callback fail its first identity check, including after Cortex restarts.
     {
+        private _savedStopSpeed=_x getVariable ["Waldo_Cortex_DismountForcedSpeed",[]];
+        if (_savedStopSpeed isNotEqualTo [] && {local _x}) then {_x forceSpeed (_savedStopSpeed param [0,-1])};
+        _x setVariable ["Waldo_Cortex_DismountForcedSpeed",nil];
+        _x setVariable ["Waldo_Cortex_DismountStopRequest",nil,true];
         _x setVariable ["Waldo_Cortex_ArtilleryScootToken",nil,true];
         _x setVariable ["Waldo_Cortex_ArtilleryScootDeadline",nil,true];
         _x setVariable ["Waldo_Cortex_ArtilleryScootPurpose",nil,true];

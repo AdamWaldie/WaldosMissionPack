@@ -2278,13 +2278,26 @@ class CortexOperations(unittest.TestCase):
 
     def test_onboard_reports_are_expiring_owner_validated_cargo_only(self):
         text=source('cortexOnboardContact')
-        for item in ['groupOwner _reporter == _owner','group effectiveCommander _vehicle == _reporter','serverTime < _expiry','CortexPassengerReady','CortexIsEligible','CortexRestoreCalm']:
+        for item in ['groupOwner _reporter == _owner','group effectiveCommander _vehicle == _reporter','serverTime < _expiry','serverTime+35','CortexPassengerReady','CortexIsEligible','CortexRestoreCalm','Waldo_Cortex_DismountStopRequest']:
             self.assertIn(item,text)
         self.assertLess(text.index('_state set ["dismounted"'),text.index('doGetOut'))
         self.assertNotIn(' reveal ',text)
         self.assertNotIn('doMove',text)
         tick=source('cortexGroupTick')
-        self.assertIn('_nearTier && {!_ordered} && {!_lambsCombat} && {_visible isEqualTo []}',tick)
+        self.assertIn('if (!_ordered && {!_lambsCombat} && {_visible isEqualTo []}',tick)
+
+    def test_cross_group_dismount_safe_stop_is_owner_validated_and_reversible(self):
+        vehicles=source('cortexVehicles')
+        for item in ['Waldo_Cortex_DismountStopRequest','groupOwner _passengerGroup == _passengerOwner',
+                     'effectiveCommander _vehicle in units _group','getForcedSpeed _vehicle',
+                     '_vehicle forceSpeed 0','Waldo_Cortex_DismountForcedSpeed',
+                     '[_group,groupOwner _group,serverTime+30]']:
+            self.assertIn(item,vehicles)
+        release=source('cortexReleaseGroup')
+        stop=source('cortexStop')
+        for text in [release,stop]:
+            self.assertIn('Waldo_Cortex_DismountForcedSpeed',text)
+            self.assertIn('Waldo_Cortex_DismountStopRequest',text)
 
     def test_countermeasure_inventory_includes_modded_person_turrets(self):
         for name in ['cortexFireCountermeasure','cortexVehicles']:
