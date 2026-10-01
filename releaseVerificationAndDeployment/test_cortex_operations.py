@@ -1109,6 +1109,13 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(marker,qa)
         self.assertLess(qa.index('COORD-security-dispatches-prepared-assault'),qa.index('_enemy setUnitPos "AUTO"'))
 
+    def test_checkpoint_repairs_public_phase_through_transition_ledger(self):
+        checkpoint=source('cortexCheckpoint')
+        repair=checkpoint.split('private _phase = _state getOrDefault ["phase","CALM"]',1)[1].split('// Engine MOVE commands',1)[0]
+        self.assertIn('"CHECKPOINT_REPAIR"',repair)
+        self.assertIn('call Waldo_fnc_CortexSetPhase',repair)
+        self.assertNotIn('setVariable ["Waldo_AIPass_PublicPhase"',checkpoint)
+
     def test_empty_coordinated_dispatch_does_not_consume_engagement(self):
         server=source('cortexSupportAssaultServer')
         self.assertIn('if (_sent > 0) then {', server)

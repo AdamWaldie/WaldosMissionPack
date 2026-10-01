@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Publishes restoration data and bounded post-contact movement intent after an unscheduled AI job.
+ * A missing or stale public phase is repaired through CortexSetPhase with an explicit continuity
+ * record; the checkpoint never changes observable phase state outside the common transition path.
  * Locality/authority: current group owner unless stated otherwise below.
  * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim.
  * Arguments: 0: group <GROUP>, default grpNull.
@@ -35,7 +37,9 @@ if (_saved isNotEqualTo (_group getVariable ["Waldo_AIPass_Checkpoint", []])) th
 };
 
 private _phase = _state getOrDefault ["phase","CALM"];
-if (_phase != (_group getVariable ["Waldo_AIPass_PublicPhase",""])) then {_group setVariable ["Waldo_AIPass_PublicPhase",_phase,true]};
+if (_phase != (_group getVariable ["Waldo_AIPass_PublicPhase",""])) then {
+    [_group,_state,_phase,"CHECKPOINT_REPAIR",_state getOrDefault ["phaseStart",time],true] call Waldo_fnc_CortexSetPhase;
+};
 
 // Engine MOVE commands are local to their issuing owner. Preserve the small amount of
 // semantic state needed to rebuild an unfinished investigation or search after migration;
