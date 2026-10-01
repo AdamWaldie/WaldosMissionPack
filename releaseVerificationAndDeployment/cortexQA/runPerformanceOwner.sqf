@@ -82,6 +82,9 @@ Waldo_CortexQA_PerformanceStartGroup = {
     if (isNull _group || {!local _group}) exitWith {};
     _group setVariable ["Waldo_CortexQA_PerformanceFired",false,true];
     {
+        // allowDamage is locality-sensitive. Reapply it after WMP transfers the group so the
+        // performance fixture cannot turn crossfire casualties into an apparent workload loss.
+        _x allowDamage false;
         _x addEventHandler ["FiredMan",{
             params ["_unit"];
             private _group=group _unit;
@@ -96,6 +99,7 @@ Waldo_CortexQA_PerformanceStartGroup = {
         if (_vehicle != _x) then {_vehicles pushBackUnique _vehicle};
     } forEach units _group;
     {
+        _x allowDamage false;
         _x engineOn true;
         if (_x isKindOf "Helicopter") then {_x flyInHeight 90};
         if (_x isKindOf "Plane") then {_x flyInHeight 250};

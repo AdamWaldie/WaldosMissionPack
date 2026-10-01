@@ -680,6 +680,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('cortexQAPerformanceOwner.sqf',launcher)
         self.assertIn('flyInHeight 90',owner_sampler)
         self.assertIn('flyInHeight 250',owner_sampler)
+        self.assertGreaterEqual(owner_sampler.count('allowDamage false'),2)
 
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')

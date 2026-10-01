@@ -69,6 +69,13 @@ only 65-67 moving groups. No native/Cortex comparison is valid from this run. Th
 now staggers owner-local path requests across frames, publishes an owner heartbeat, fails a
 connected-but-unresponsive owner explicitly and cancels the remaining arms after that loss.
 
+Runtime `runtime-20261001-122634` completed the first 50-squad matrix without owner stalls. All four
+arms moved 47-50 groups, all 13 contact groups fired, response began in 4.337-5.559 seconds and every
+sampler returned. Server median/p95 was 31/37 and 31/36 ms natively versus 27/39 and 28/38 ms with
+Cortex; both HCs stayed at 21/24 ms. Comparability was withheld because one to three transferred
+soldiers were no longer alive in three arms, including the closing native arm. The fixture had
+applied invulnerability before locality transfer; it now reapplies that state on the actual owner.
+
 The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
 measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage
 alongside them.

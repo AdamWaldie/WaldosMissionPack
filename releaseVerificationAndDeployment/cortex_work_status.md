@@ -68,6 +68,13 @@ jets. Both retain matched OFF/ON/ON/OFF arms, real physical work, actual-fire ga
 rendered-client sampling and the agreed 5% median / 10% p95 limit. The 100-group result remains a
 local-host saturation finding rather than the acceptance workload.
 
+Runtime `20261001-122634` completed the first 50-squad matrix without an owner stall. Every arm moved
+47-50 groups, all 13 contact groups fired, response began within 4.337-5.559 seconds and every sampler
+returned. Server median/p95 measured 31/37 and 31/36 ms natively versus 27/39 and 28/38 ms with
+Cortex; both HCs remained 21/24 ms. The run was not comparable because one to three transferred
+soldiers died in three arms, including the closing native arm. Invulnerability is now reapplied on
+the actual owner after locality transfer; no budget pass is claimed from the invalid matrix.
+
 ## 1 October: contact initiative without authored movement
 
 Bounding advance no longer requires an unfinished ordinary waypoint. An eligible steady squad with no active waypoint can use enemy knowledge seen within the previous ten seconds as a finite objective, run the existing successive covered bounds, and transition through the existing assault/consolidation flow. Cortex does not add a persistent waypoint for this case. An active HOLD, GUARD, SENTRY or other non-movement waypoint remains authoritative and refuses the automatic advance. This closes a source-level idle path for editor-placed or newly stationary squads without adding a poller, global scan or per-unit scheduler. Physical aggression, route quality, Zeus interruption and performance remain queued for the rebuilt audit.
