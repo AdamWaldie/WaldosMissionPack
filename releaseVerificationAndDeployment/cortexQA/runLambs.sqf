@@ -148,7 +148,11 @@ if (_lambsLoaded) then {
     private _cortexDestination=[2670,2470,0];
     [_group,_cortexDestination,5] call Waldo_fnc_CortexGroupMove;
     ["LAMBS: Zeus interrupts Cortex ownership","The squad must start the leased eastward move. Zeus then replaces it with a south-west ordinary waypoint; every soldier must follow and Cortex must not resurrect its old route.",_cortexDestination] call _phase;
-    private _started=[{(_units findIf {_x distance2D (_handoverStart select _forEachIndex) < 10}) < 0},35] call _wait;
+    private _started=[{
+        private _allStarted=true;
+        {if (_x distance2D (_handoverStart select _forEachIndex) < 10) then {_allStarted=false}} forEach _units;
+        _allStarted
+    },35] call _wait;
     ["LAMBS-zeus-handover-stimulus",_leased && {_started}] call _check;
     [_group,true] call Waldo_fnc_CortexZeusMark;
     private _replacement=[2540,2425,0];

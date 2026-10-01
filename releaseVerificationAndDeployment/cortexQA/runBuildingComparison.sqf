@@ -109,7 +109,7 @@ private _visits=_rooms apply {false};
 private _cleared=[{
     // Production now commits the leader as an independent clearing worker. Observe the whole
     // assigned team so a physical visit by the leader is not misreported as an unvisited room.
-    {private _room=_x; if (_members findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_forEachIndex,true]}} forEach _rooms;
+    {private _room=_x; private _roomIndex=_forEachIndex; if (_members findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_roomIndex,true]}} forEach _rooms;
     missionNamespace setVariable ["Waldo_CortexQA_Rooms",[_rooms,_visits],true];
     // Room visits and controller completion are published on separate scheduler passes.
     // Keep observing physical visits until the authoritative controller result arrives so
@@ -151,7 +151,7 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
     private _accepted=[_group,_house,createHashMapFromArray [["useLambs",false]]] call Waldo_fnc_CortexClearBuilding;
     [format ["CLEAR-fresh-%1-accepted",_size],_accepted] call _check;
     [{
-        {private _room=_x; if (_clearingMembers findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_forEachIndex,true]}} forEach _rooms;
+        {private _room=_x; private _roomIndex=_forEachIndex; if (_clearingMembers findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_roomIndex,true]}} forEach _rooms;
         {
             private _worker=_x;
             private _seen=_memberVisits select _forEachIndex;
@@ -176,7 +176,11 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
     _group setCurrentWaypoint _waypoint;
     [format ["Clearance handover: %1 soldiers",_size],"After the recorded clearance result, the same soldiers must follow an ordinary waypoint away from the building. No cleanup function or movement reset is injected before this check.",_destination] call _phase;
     private _moved=[{
-        _members findIf {!alive _x || {_x distance2D (_beforeMove select _forEachIndex) < 25} || {_x distance2D _destination > 18}} < 0
+        private _allMoved=true;
+        {
+            if (!alive _x || {_x distance2D (_beforeMove select _forEachIndex) < 25} || {_x distance2D _destination > 18}) then {_allMoved=false};
+        } forEach _members;
+        _allMoved
     },90] call _wait;
     [format ["CLEAR-fresh-%1-handover-physical",_size],_moved,str (_members apply {getPosATL _x})] call _check;
     sleep 8;
