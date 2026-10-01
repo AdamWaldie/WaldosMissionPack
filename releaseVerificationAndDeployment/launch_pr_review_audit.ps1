@@ -121,12 +121,36 @@ if ($CortexAudit) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runClient.sqf") -Destination (Join-Path $missionRoot "cortexQAClient.sqf")
     Add-Content -LiteralPath (Join-Path $missionRoot "auditInitServer.sqf") -Value '[] execVM "cortexQAServer.sqf";'
     Add-Content -LiteralPath (Join-Path $missionRoot "auditInitPlayerLocal.sqf") -Value '[] execVM "cortexQAClient.sqf";'
+
 }
 if ($HeadlessClients -gt 0) {
     Add-Content -LiteralPath (Join-Path $missionRoot "auditPreInit.sqf") -Encoding UTF8 -Value '
 missionNamespace setVariable ["Waldo_Headless_Enable", true];
 missionNamespace setVariable ["Waldo_Headless_StartDelaySeconds", 1000000];
 '
+}
+
+if ($CortexAudit) {
+    # Fingerprint the exact disposable mission payload after every source and runtime option is staged.
+    # auditPreInit.sqf receives the marker only after hashing so the fingerprint cannot include its own marker.
+    $fingerprintEntries = Get-ChildItem -LiteralPath $missionRoot -Recurse -File |
+        Sort-Object FullName |
+        ForEach-Object {
+            $relativePath = $_.FullName.Substring($missionRoot.Length).TrimStart('\').Replace('\', '/')
+            $fileHash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$relativePath|$fileHash"
+        }
+    $fingerprintPayload = [string]::Join("`n", $fingerprintEntries)
+    $fingerprintBytes = [System.Text.Encoding]::UTF8.GetBytes($fingerprintPayload)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $sourceFingerprint = ([System.BitConverter]::ToString($sha256.ComputeHash($fingerprintBytes))).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $sha256.Dispose()
+    }
+    Add-Content -LiteralPath (Join-Path $missionRoot "auditPreInit.sqf") -Value ('missionNamespace setVariable ["Waldo_CortexQA_SourceFingerprint","' + $sourceFingerprint + '"]; diag_log "WMP CORTEX QA SOURCE|fingerprint=' + $sourceFingerprint + '";')
+    New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $runRoot "cortex-source-fingerprint.txt") -Value $sourceFingerprint -Encoding ASCII
 }
 
 

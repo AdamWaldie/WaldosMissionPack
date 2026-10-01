@@ -620,6 +620,13 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("arma3server_x64.exe", launcher)
         self.assertNotIn("playMission['','WMP_PR_Review_Audit.VR'", launcher)
 
+    def test_cortex_launcher_fingerprints_the_staged_mission(self):
+        launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
+        self.assertIn("Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256", launcher)
+        self.assertIn('Waldo_CortexQA_SourceFingerprint', launcher)
+        self.assertIn('WMP CORTEX QA SOURCE|fingerprint=', launcher)
+        self.assertIn('cortex-source-fingerprint.txt', launcher)
+
     def test_audit_zeus_follows_the_replacement_player_unit(self):
         server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
         client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")

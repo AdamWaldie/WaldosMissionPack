@@ -6,6 +6,7 @@ import re
 
 CASE = re.compile(r"WMP CORTEX QA\|([^|]+)\|(PASS|FAIL)\|([^\r\n]*)")
 DONE = re.compile(r"WMP CORTEX QA (SERVER|CLIENT) COMPLETE: (\d+) finding")
+SOURCE = re.compile(r"WMP CORTEX QA SOURCE\|fingerprint=([0-9a-f]{64})", re.I)
 ERROR = re.compile(r"Error in expression|Error position:|Error Undefined variable|Error Missing", re.I)
 FATAL_RUNTIME_ERROR = re.compile(
     r"DX11 - device removed - reason:|ErrorMessage:\s*DX11|Exception code:\s*[0-9A-F]+",
@@ -18,13 +19,20 @@ def summarize(logs):
     errors = []
     runtime_errors = []
     runtime_error_kinds = set()
+    source_fingerprints = {}
+    evidence_logs = set()
     for name, content in logs.items():
+        fingerprints = {match.group(1).lower() for match in SOURCE.finditer(content)}
+        if fingerprints:
+            source_fingerprints[name] = sorted(fingerprints)
         for number, line in enumerate(content.splitlines(), 1):
             match = CASE.search(line)
             if match:
+                evidence_logs.add(name)
                 cases.append(dict(case=match[1], result=match[2], detail=match[3].rstrip('"'), log=name, line=number))
             match = DONE.search(line)
             if match:
+                evidence_logs.add(name)
                 completed[match[1]] = max(completed.get(match[1], 0), int(match[2]))
             if ERROR.search(line):
                 errors.append(dict(log=name, line=number, message=line))
@@ -36,10 +44,18 @@ def summarize(logs):
                 if kind not in runtime_error_kinds:
                     runtime_error_kinds.add(kind)
                     runtime_errors.append(dict(log=name, line=number, message=line))
+    observed_fingerprints = sorted({value for values in source_fingerprints.values() for value in values})
+    provenance_issues = []
+    missing_source_logs = sorted(evidence_logs - set(source_fingerprints))
+    if missing_source_logs:
+        provenance_issues.append("Missing staged-source fingerprint in: " + ", ".join(missing_source_logs))
+    if len(observed_fingerprints) > 1:
+        provenance_issues.append("Conflicting staged-source fingerprints: " + ", ".join(observed_fingerprints))
     failed = (
         any(case['result'] == 'FAIL' for case in cases)
         or bool(errors)
         or bool(runtime_errors)
+        or bool(provenance_issues)
         or any(completed.values())
     )
     complete = set(completed) == {'SERVER', 'CLIENT'} and bool(cases)
@@ -51,6 +67,9 @@ def summarize(logs):
         cases=cases,
         errors=errors,
         runtime_errors=runtime_errors,
+        source_fingerprint=observed_fingerprints[0] if len(observed_fingerprints) == 1 else None,
+        source_fingerprints=source_fingerprints,
+        provenance_issues=provenance_issues,
     )
 
 def attach_assessments(report, assessments):
@@ -78,6 +97,10 @@ def render_markdown(report):
              'This result covers only the recorded cases. It does not establish untested combat scenarios, mouse operation or every UI layout.', '',
              f"Run complete: **{'yes' if report['complete'] else 'no'}**. Missing completion markers: {', '.join(report['missing_completion']) or 'none'}.", '',
              f"Completion markers: {report['completed']}", '', '| Case | Result | Measurements | Evidence |', '| --- | --- | --- | --- |']
+    lines[4:4] = [
+        f"Staged-source fingerprint: `{report.get('source_fingerprint') or 'unverified'}`.",
+        '',
+    ]
     # Keep failures visible even when the final few checks happen to pass.
     failed_cases = [case for case in report['cases'] if case['result'] == 'FAIL']
     summary = [f"Recorded checks: {len(report['cases'])}; failed checks: {len(failed_cases)}. Passing subchecks do not establish a completed manoeuvre.", '']
@@ -110,6 +133,10 @@ def render_markdown(report):
         lines += ['', 'Fatal runtime failures:', ''] + [
             f"- {error['log']}:{error['line']}: {error['message']}"
             for error in report['runtime_errors']
+        ]
+    if report.get('provenance_issues'):
+        lines += ['', 'Source provenance failures:', ''] + [
+            f"- {issue}" for issue in report['provenance_issues']
         ]
     return lines
 
