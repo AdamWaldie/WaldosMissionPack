@@ -52,10 +52,11 @@ private _baseline=if ((_group getVariable ["Waldo_Cortex_BuildingIntent",[]]) is
     private _ownedBehaviour=["SAFE",_baseBehaviour] select (_kind == "CQB");
     private _ownedFormation=[_baseFormation,"FILE"] select (_kind == "CQB");
     private _ownedSpeed=[_baseSpeed,"FULL"] select (_kind == "CQB");
+    // Arma has no scripting getter for the live IR-laser state. Do not invent one here: the old
+    // isIRLaserOn token was not an engine command and made this entire function fail to compile.
     private _unitState=(units _group) apply {
         [_x,unitPos _x,getForcedSpeed _x,_x checkAIFeature "PATH",_x checkAIFeature "MOVE",
-            _x checkAIFeature "COVER",_x checkAIFeature "SUPPRESSION",_x checkAIFeature "AUTOCOMBAT",
-            isIRLaserOn _x]
+            _x checkAIFeature "COVER",_x checkAIFeature "SUPPRESSION",_x checkAIFeature "AUTOCOMBAT"]
     };
     createHashMapFromArray [
         ["group",[_baseBehaviour,_baseFormation,_baseSpeed,_baseCombat,_baseAttack,

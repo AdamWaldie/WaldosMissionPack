@@ -134,7 +134,7 @@ if (!_allowRemount) then {
 {_state deleteAt _x} forEach [
     "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
-    "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "movementLease", "retreatStart", "retreatTarget", "retreatProgress", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
+    "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "retreatRetryAt", "movementLease", "retreatStart", "retreatTarget", "retreatProgress", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
 _group setVariable ["Waldo_Cortex_Withdrawal",nil,true];
 _group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];

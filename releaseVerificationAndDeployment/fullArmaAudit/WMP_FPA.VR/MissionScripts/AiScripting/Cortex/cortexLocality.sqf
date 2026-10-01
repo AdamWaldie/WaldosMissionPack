@@ -2,7 +2,9 @@
  * Author: WaldoTheWarfighter
  * Passenger, pending calm remount, post-contact movement and active withdrawal intent survive migration without replaying
  * old owner jobs. Invalidates old jobs, restores interrupted transient behaviour and resumes a
- * bounded investigation, search or withdrawal after WMP or ACE migration.
+ * bounded investigation, search or withdrawal after WMP or ACE migration. A Zeus hold or the
+ * matching infantry-morale/vehicle-withdrawal gate cancels restoration so migration cannot revive
+ * superseded work or incorrectly couple the two withdrawal types.
  * Locality/authority: current group owner unless stated otherwise below.
  * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim. A calm
  * remount keeps its original deadline and vehicle, and yields to Zeus or a newer assignment.
@@ -92,8 +94,23 @@ if (_transitionResumeEligible) then {
         default {false};
     };
 };
-private _withdrawalResumeEligible=count _withdrawalIntent == 7 && {serverTime-(_withdrawalIntent select 4) < 120}
-    && {[_group] call Waldo_fnc_CortexIsEligible};
+private _withdrawalKind=_withdrawalIntent param [0,""];
+private _withdrawalGateOpen=switch (_withdrawalKind) do {
+    case "INFANTRY": {[_group,"Waldo_AIPass_Morale_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+    case "VEHICLE": {
+        [_group,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+            && {[_group,"Waldo_AIPass_VehicleWithdraw_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    };
+    default {false};
+};
+private _withdrawalResumeEligible=count _withdrawalIntent == 7
+    && {(_withdrawalIntent select 0) in ["INFANTRY","VEHICLE"]}
+    && {count (_withdrawalIntent select 2) >= 2}
+    && {count (_withdrawalIntent select 3) >= 2}
+    && {serverTime-(_withdrawalIntent select 4) < 120}
+    && {[_group] call Waldo_fnc_CortexIsEligible}
+    && {_withdrawalGateOpen}
+    && {!([_group] call Waldo_fnc_CortexZeusHeld)};
 [_group, _restore, false, false, "OWNERSHIP_ADOPTED",!(_transitionResumeEligible || {_withdrawalResumeEligible})] call Waldo_fnc_CortexRestoreCalm;
 // A delegated building task is the active movement owner. Replay it only after old-owner calm
 // restoration has finished, then stop: remount, post-contact and withdrawal intents from an older

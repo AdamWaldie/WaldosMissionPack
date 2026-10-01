@@ -60,12 +60,12 @@ if (local _group && {count _groupState == 10}) then {
 };
 
 private _leader=leader _group;
-// LAMBS CQB deliberately sets the group to never flee and enables IR lasers. Arma exposes the
-// laser state but no getter for the allowFleeing coefficient, whose engine default is 1.
-// Restore that default on handover so a finished CQB task cannot permanently suppress morale.
+// LAMBS CQB deliberately sets the group to never flee. Arma exposes no getter for that coefficient,
+// whose engine default is 1, or for the live IR-laser state. Restore the morale default, but leave
+// weapon-light ownership with the engine/LAMBS rather than guessing a pre-task laser state.
 if (_kind == "CQB" && {local _group}) then {_group allowFleeing 1};
 {
-    _x params ["_unit","_stance","_forcedSpeed","_path","_move","_cover","_suppression","_autocombat","_irLaser"];
+    _x params ["_unit","_stance","_forcedSpeed","_path","_move","_cover","_suppression","_autocombat"];
     if (local _unit) then {
         if (!isNil "lambs_main_fnc_removeEventhandlers") then {
             [_unit,_unit getVariable ["lambs_wp_eventhandlers",[]]] call lambs_main_fnc_removeEventhandlers;
@@ -87,7 +87,6 @@ if (_kind == "CQB" && {local _group}) then {_group allowFleeing 1};
             if (_path) then {_unit enableAI "PATH"} else {_unit disableAI "PATH"};
         };
         if (_kind == "CQB") then {
-            _unit enableIRLasers _irLaser;
             if !(_unit checkAIFeature "SUPPRESSION") then {
                 if (_suppression) then {_unit enableAI "SUPPRESSION"} else {_unit disableAI "SUPPRESSION"};
             };

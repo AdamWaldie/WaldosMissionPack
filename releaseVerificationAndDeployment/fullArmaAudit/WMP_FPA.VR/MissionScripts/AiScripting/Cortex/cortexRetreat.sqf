@@ -5,7 +5,10 @@
  * The retreat point is Waldo_AIPass_Morale_RetreatDistance (scaled by the behaviour profile's
  * retreatScale) from the leader. Five bounded escape candidates spread up to 60 degrees around the
  * direction away from the enemy; Cortex rejects water and selects the shortest screened avenue
- * through terrain, solid cover or concealment. The squad moves through an inserted waypoint
+ * through terrain, solid cover or concealment. If that full-distance fan is water-blocked, three
+ * shorter eight-direction fans seek a dry escape instead of silently leaving a broken squad idle.
+ * A completely trapped squad reports BLOCKED and keeps fighting while GroupTick applies a bounded
+ * retry delay. The squad moves through an inserted waypoint
  * (Waldo_fnc_CortexGroupMove) at FULL speed, so its own waypoints resume afterwards. Soldiers holding
  * ground from a drill fall back with it. One soldier throws smoke towards the enemy, and with
  * artillery support and Waldo_AIPass_ArtillerySmoke_Enable on, a friendly battery selected by the server across owners
@@ -54,9 +57,26 @@ if (!_resuming) then {
         _candidates pushBack [_origin getPos [_distance, _away+_x]];
     } forEach [0, 30, -30, 60, -60];
     private _legs=[_origin,_candidates,_enemyPos] call Waldo_fnc_CortexSelectAvenue;
+    // Coastlines, islands and flooded terrain can invalidate every ideal endpoint. Search
+    // progressively shorter rings in all directions; this remains bounded and only runs when a
+    // morale transition starts. It never teleports the group or pretends that travel occurred.
+    if (_legs isEqualTo []) then {
+        {
+            private _fallbackDistance=_distance*_x;
+            private _fallbackCandidates=[];
+            {
+                _fallbackCandidates pushBack [_origin getPos [_fallbackDistance,_away+_x]];
+            } forEach [0,45,-45,90,-90,135,-135,180];
+            _legs=[_origin,_fallbackCandidates,_enemyPos] call Waldo_fnc_CortexSelectAvenue;
+            if (_legs isNotEqualTo []) exitWith {};
+        } forEach [0.75,0.5,0.25];
+    };
     if (_legs isNotEqualTo []) then {_point=+(_legs select ((count _legs)-1))};
 };
-if (_point isEqualTo []) exitWith {false};
+if (_point isEqualTo []) exitWith {
+    _group setVariable ["Waldo_Cortex_Withdrawal",["BLOCKED",0,0],true];
+    false
+};
 // Finish any manoeuvre before acquiring its attack-setting restoration record.
 if (count (_state getOrDefault ["drill",createHashMap]) > 0) then {
     [_group,_state,"RETREAT"] call Waldo_fnc_CortexFlankEnd;

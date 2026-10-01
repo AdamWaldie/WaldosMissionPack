@@ -903,8 +903,10 @@ class FullAuditTests(unittest.TestCase):
             self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
             bad.write_text("_flags bitAnd 4;\n", encoding="utf-8")
             self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
+            bad.write_text("private _laser = isIRLaserOn player;\n", encoding="utf-8")
+            self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
             comment_only = Path(directory) / "comment.sqf"
-            comment_only.write_text("// ctrlSetStyle is invalid\n", encoding="utf-8")
+            comment_only.write_text("// ctrlSetStyle and isIRLaserOn are invalid\n", encoding="utf-8")
             self.assertEqual(SQF_VALIDATOR.check_sqf_syntax(str(comment_only)), 0)
 
     def test_standard_release_is_explicit_and_excludes_qa_tooling(self):
