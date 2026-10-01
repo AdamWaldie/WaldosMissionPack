@@ -1347,12 +1347,12 @@ class CortexOperations(unittest.TestCase):
 
     def test_every_explicit_infantry_order_transitions_into_physical_retreat(self):
         tick=source('cortexGroupTick')
-        block=tick.split('if (_outcome == "RETREAT") exitWith {',1)[1].split('_state set ["armourSeen"',1)[0]
+        block=tick.split('private _retreatStarted=false',1)[1].split('_state set ["armourSeen"',1)[0]
         for release in ['CortexGarrisonRelease','CortexDefendRelease','CortexClearRelease']:
             self.assertIn(f'call Waldo_fnc_{release}',block)
         self.assertEqual(1,block.count('call Waldo_fnc_CortexRetreat'))
         self.assertGreater(block.index('call Waldo_fnc_CortexRetreat'),block.index('switch (true)'))
-        self.assertNotIn('default {[_group, _state] call Waldo_fnc_CortexRetreat}',block)
+        self.assertIn('if (_retreatStarted) exitWith {}',block)
 
     def test_infantry_withdrawal_releases_support_holds_and_owns_its_route(self):
         retreat=source('cortexRetreat')
@@ -1379,6 +1379,19 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('setPos',retreat_case)
         self.assertIn('"retreatStart", "retreatTarget", "retreatProgress"',restore)
         self.assertIn('setVariable ["Waldo_Cortex_Withdrawal",nil,true]',restore)
+
+    def test_trapped_withdrawal_uses_bounded_dry_fallback_and_keeps_fighting(self):
+        retreat=source('cortexRetreat')
+        tick=source('cortexGroupTick')
+        self.assertIn('forEach [0.75,0.5,0.25]',retreat)
+        self.assertIn('forEach [0,45,-45,90,-90,135,-135,180]',retreat)
+        self.assertIn('["BLOCKED",0,0]',retreat)
+        contact=tick.split('case "CONTACT": {',1)[1].split('case "SECURITY": {',1)[0]
+        self.assertIn('private _retreatStarted=false',contact)
+        self.assertIn('_state set ["retreatRetryAt",_now+10]',contact)
+        self.assertIn('if (_retreatStarted) exitWith {}',contact)
+        self.assertLess(contact.index('if (_retreatStarted) exitWith {}'),contact.index('CortexFireControl'))
+        self.assertNotIn('if (_outcome == "RETREAT") exitWith {',contact)
 
     def test_infantry_withdrawal_resumes_across_locality_without_replaying_effects(self):
         retreat=source('cortexRetreat')

@@ -455,16 +455,27 @@ switch (_state get "phase") do {
                 if (_defending) then {[_group, _state, _enemies] call Waldo_fnc_CortexDefendStep};
             };
         };
-        if (_outcome == "RETREAT") exitWith {
-            switch (true) do {
-                case (_garrisoned): {[_group] call Waldo_fnc_CortexGarrisonRelease};
-                case (_defending): {[_group] call Waldo_fnc_CortexDefendRelease};
-                case (_group getVariable ["Waldo_AIPass_ClearBuilding", false]): {[_group] call Waldo_fnc_CortexClearRelease};
+        private _retreatStarted=false;
+        if (_outcome == "RETREAT") then {
+            if (_now >= (_state getOrDefault ["retreatRetryAt",0])) then {
+                switch (true) do {
+                    case (_garrisoned): {[_group] call Waldo_fnc_CortexGarrisonRelease};
+                    case (_defending): {[_group] call Waldo_fnc_CortexDefendRelease};
+                    case (_group getVariable ["Waldo_AIPass_ClearBuilding", false]): {[_group] call Waldo_fnc_CortexClearRelease};
+                };
+                // The release above only relinquishes the previous movement owner. Every broken
+                // non-surrendering squad still attempts the common physical withdrawal state.
+                _retreatStarted=[_group, _state] call Waldo_fnc_CortexRetreat;
+                if (!_retreatStarted) then {
+                    // A dry route may genuinely not exist. Do not spend every contact tick planning
+                    // the same impossible move, and do not skip fire control/tactics while waiting.
+                    _state set ["retreatRetryAt",_now+10];
+                } else {
+                    _state deleteAt "retreatRetryAt";
+                };
             };
-            // The release above only relinquishes the previous movement owner. Every broken
-            // non-surrendering squad must still acquire the common physical withdrawal state.
-            [_group, _state] call Waldo_fnc_CortexRetreat;
         };
+        if (_retreatStarted) exitWith {};
         _state set ["armourSeen", (_state getOrDefault ["armourSeen", false]) || {_enemies findIf {
             private _enemy = vehicle (_x select 0);
             (_enemy isKindOf "Tank" || {_enemy isKindOf "Wheeled_APC_F"}) && {(_x select 2) <= 60} && {(_x select 3) <= 800}
