@@ -281,8 +281,7 @@ private _enterContact = {
     // leaves a migration race where a new owner could rebuild an obsolete search over live contact.
     _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
     _state deleteAt "areaInvestigation";
-    _state set ["phase", "CONTACT"];
-    _state set ["phaseStart", _now];
+    [_group,_state,"CONTACT","VISIBLE_CONTACT",_now] call Waldo_fnc_CortexSetPhase;
     _state set ["lastSeen", _now];
     _state set ["hadContact", true];
     _state set ["enemyPos", (_visible select 0) select 1];
@@ -367,8 +366,7 @@ switch (_state get "phase") do {
             [_state,"investigate",120] call Waldo_fnc_CortexCooldown;
             private _target = _area select 0;
             [_group,_target getPos [30,_target getDir leader _group],25] call Waldo_fnc_CortexGroupMove;
-            _state set ["phase","INVESTIGATE"];
-            _state set ["phaseStart",_now];
+            [_group,_state,"INVESTIGATE","AREA_REPORT",_now] call Waldo_fnc_CortexSetPhase;
             _state set ["enemyPos",_target];
             _state set ["areaInvestigation",_area select 3];
             _group setVariable ["Waldo_AIPass_AreaReport",nil,true];
@@ -403,8 +401,7 @@ switch (_state get "phase") do {
                 };
                 _state set ["searchTeam", _team];
                 _state set ["enemyPos", _target];
-                _state set ["phase", "INVESTIGATE"];
-                _state set ["phaseStart", _now];
+                [_group,_state,"INVESTIGATE","KNOWN_CONTACT",_now] call Waldo_fnc_CortexSetPhase;
                 missionNamespace setVariable ["Waldo_AIPass_Investigations", (missionNamespace getVariable ["Waldo_AIPass_Investigations", 0]) + 1];
                 _delay = 3;
             };
@@ -514,8 +511,7 @@ switch (_state get "phase") do {
             && {(_state getOrDefault ["phase",""]) == "CONTACT"}
             && {_now - (_state getOrDefault ["lastSeen", _now]) > (["Waldo_AIPass_PostContact_LostSeconds", 30] call _get)}) then {
             if (["Waldo_AIPass_PostContact_Enable", true] call _get) then {
-                _state set ["phase", "SECURITY"];
-                _state set ["phaseStart", _now];
+                [_group,_state,"SECURITY","CONTACT_LOST",_now] call Waldo_fnc_CortexSetPhase;
             } else {
                 [_group, _state] call Waldo_fnc_CortexRestoreCalm;
             };
@@ -534,14 +530,12 @@ switch (_state get "phase") do {
             _team = (_ranked select [0, 2]) apply {_riflemen select (_x select 1)};
         };
         if (_team isEqualTo []) exitWith {
-            _state set ["phase", "REGROUP"];
-            _state set ["phaseStart", _now];
+            [_group,_state,"REGROUP","NO_SEARCH_TEAM",_now] call Waldo_fnc_CortexSetPhase;
             _delay = 3;
         };
         {_x doMove (_searchPos getPos [4 + _forEachIndex * 4, random 360])} forEach _team;
         _state set ["searchTeam", _team];
-        _state set ["phase", "SEARCH"];
-        _state set ["phaseStart", _now];
+        [_group,_state,"SEARCH","SEARCH_TEAM_SENT",_now] call Waldo_fnc_CortexSetPhase;
         _delay = 3;
     };
     case "SEARCH": {
@@ -554,8 +548,7 @@ switch (_state get "phase") do {
             {_x doFollow _leader} forEach (_team select {!(_x call _hasLiveActorMove)});
             _state set ["searchTeam", []];
             if (_visible isNotEqualTo []) then {call _beginContact} else {
-                _state set ["phase", "REGROUP"];
-                _state set ["phaseStart", _now];
+                [_group,_state,"REGROUP","SEARCH_COMPLETE",_now] call Waldo_fnc_CortexSetPhase;
                 _delay = 3;
             };
         } else {
@@ -664,8 +657,7 @@ switch (_state get "phase") do {
         if ((!_moving && {_travel >= 30}) || {_timedOut}) then {
             [_group] call Waldo_fnc_CortexGroupMoveClear;
             _group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];
-            _state set ["phase", "REGROUP"];
-            _state set ["phaseStart", _now];
+            [_group,_state,"REGROUP",["WITHDRAWAL_COMPLETE","WITHDRAWAL_TIMEOUT"] select _timedOut,_now] call Waldo_fnc_CortexSetPhase;
         };
     };
 };

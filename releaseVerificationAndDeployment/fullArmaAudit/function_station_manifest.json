@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1348,
+  "registeredFunctionCount": 1349,
   "runtimeFunctionCount": 383,
-  "functionCount": 1731,
+  "functionCount": 1732,
   "stations": [
     {
       "id": "control",
@@ -1315,6 +1315,12 @@
     {
       "name": "Waldo_fnc_CortexDrillSetStage",
       "file": "MissionScripts/AiScripting/Cortex/cortexDrillSetStage.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexSetPhase",
+      "file": "MissionScripts/AiScripting/Cortex/cortexSetPhase.sqf",
       "station": "ai",
       "activation": "manual"
     },

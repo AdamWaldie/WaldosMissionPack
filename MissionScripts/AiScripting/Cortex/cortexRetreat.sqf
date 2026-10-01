@@ -153,8 +153,7 @@ if (!_resuming) then {
         };
     };
 };
-_state set ["phase", "RETREAT"];
-_state set ["phaseStart", time-_elapsed];
+[_group,_state,"RETREAT",["MORALE_WITHDRAWAL","OWNERSHIP_RESUME"] select _resuming,time-_elapsed] call Waldo_fnc_CortexSetPhase;
 if (!_resuming) then {missionNamespace setVariable ["Waldo_AIPass_Retreats", (missionNamespace getVariable ["Waldo_AIPass_Retreats", 0]) + 1]};
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP CORTEX] %1 RETREAT to %2", _group, _point]};
 true

@@ -131,6 +131,16 @@ private _orderedSequence=(["SECURITY","SEARCH","REGROUP","CALM"] findIf {!(_x in
     && {(_sequence find "SEARCH") < (_sequence find "REGROUP")}
     && {(_sequence find "REGROUP") < (_sequence find "CALM")};
 ["TRANS-contact-postcontact-sequence",_contactBeforeRemoval && {_orderedSequence} && {_calm},str _sequence] call _check;
+private _phaseHistory=_group getVariable ["Waldo_Cortex_PhaseTransitions",[]];
+private _publishedPhases=_phaseHistory apply {_x param [2,""]};
+private _publishedOrder=("SECURITY" in _publishedPhases) && {"SEARCH" in _publishedPhases}
+    && {"REGROUP" in _publishedPhases} && {"CALM" in _publishedPhases}
+    && {(_publishedPhases find "SECURITY") < (_publishedPhases find "SEARCH")}
+    && {(_publishedPhases find "SEARCH") < (_publishedPhases find "REGROUP")}
+    && {(_publishedPhases find "REGROUP") < (_publishedPhases find "CALM")};
+private _latestPhase=_group getVariable ["Waldo_Cortex_PhaseTransition",[]];
+["TRANS-published-phase-ledger",_calm && {_publishedOrder} && {count _phaseHistory <= 32}
+    && {(_latestPhase param [2,""]) == "CALM"},str _phaseHistory] call _check;
 ["TRANS-search-physical-approach",_searchTravel >= 15 && {_searchApproach},str [_searchTravel,_searchApproach,_transitionSamples]] call _check;
 ["TRANS-regroup-physical-cohesion",_calm && {_units findIf {!alive _x || {_x distance2D leader _group > 20}} < 0},str (_units apply {getPosATL _x})] call _check;
 private _resumeDestination=(getPosATL leader _group) getPos [70,90];

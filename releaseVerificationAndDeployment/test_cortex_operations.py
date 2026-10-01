@@ -786,15 +786,44 @@ class CortexOperations(unittest.TestCase):
         self.assertLess(selector.index('_laneState set [1,true]'),
                         selector.rindex('if (_insideLiveLane) then {_valid=false}'))
 
-    def test_flank_refusals_explain_trigger_failures_without_polling(self):
+    def test_tactical_refusals_explain_trigger_failures_without_polling(self):
         flank=source('cortexFlankStart')
         for reason in ['SUPPORT_OWNS_MOVEMENT','MOVEMENT_LEASE','MORALE','INSUFFICIENT_ACTORS',
                        'NO_TARGET_IN_RANGE','NO_MANOEUVRE_ELEMENT','NO_SAFE_AVENUE']:
             self.assertIn(reason,flank)
-        self.assertIn('Waldo_Cortex_TacticalRefusal',flank)
+        self.assertIn('Waldo_Cortex_FlankRefusal',flank)
         self.assertNotIn('CBA_fnc_addPerFrameHandler',flank)
+        advance=source('cortexAdvanceStart')
+        for reason in ['SUPPORT_OWNS_MOVEMENT','MOVEMENT_LEASE','CONTACT_DELAY','NO_TARGET',
+                       'TARGET_TOO_CLOSE','AUTHORED_OBJECTIVE_TYPE','STALE_CONTACT','OBJECTIVE_REACHED',
+                       'NO_MANOEUVRE_ELEMENT','NO_COVER_ELEMENT','NO_SAFE_AVENUE']:
+            self.assertIn(reason,advance)
+        self.assertIn('Waldo_Cortex_AdvanceRefusal',advance)
+        self.assertNotIn('CBA_fnc_addPerFrameHandler',advance)
         diagnostic=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text()
         self.assertIn('cortex-tactical-refusal-',diagnostic)
+        self.assertIn('Waldo_Cortex_FlankRefusal',diagnostic)
+        self.assertIn('Waldo_Cortex_AdvanceRefusal',diagnostic)
+
+    def test_group_phases_change_atomically_and_publish_bounded_history(self):
+        setter=source('cortexSetPhase')
+        functions=(ROOT/'MissionScripts/WaldosFunctions.sqf').read_text()
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text()
+        self.assertIn('class CortexSetPhase',functions)
+        for marker in ['_state set ["phase",_next]','_state set ["phaseStart",_phaseStart]',
+                       'Waldo_Cortex_PhaseTransition','Waldo_Cortex_PhaseTransitions',
+                       'if (count _history > 32)']:
+            self.assertIn(marker,setter)
+        self.assertNotIn('CBA_fnc_addPerFrameHandler',setter)
+        self.assertIn('cortex-phase-transition-',diagnostics)
+        self.assertIn('phase state changed outside the atomic transition path',diagnostics)
+        for name in ['cortexGroupTick','cortexRestoreCalm','cortexRetreat','cortexVehicles','cortexLocality']:
+            self.assertIn('call Waldo_fnc_CortexSetPhase',source(name))
+        tick=source('cortexGroupTick')
+        for reason in ['VISIBLE_CONTACT','AREA_REPORT','KNOWN_CONTACT','CONTACT_LOST',
+                       'NO_SEARCH_TEAM','SEARCH_TEAM_SENT','SEARCH_COMPLETE',
+                       'WITHDRAWAL_COMPLETE','WITHDRAWAL_TIMEOUT']:
+            self.assertIn(reason,tick)
 
     def test_manoeuvres_share_one_bounded_avenue_selector(self):
         selector=source('cortexSelectAvenue')
@@ -1354,7 +1383,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('serverTime < (_transitionIntent select 3)',locality)
         self.assertIn('_withdrawalIntent isEqualTo []',locality)
         self.assertIn('CortexZeusHeld',locality)
-        self.assertIn('_adopted set ["phaseStart",time-((serverTime-_startedAt) max 0)]',locality)
+        self.assertIn('[_group,_adopted,_transitionPhase,"OWNERSHIP_RESUME",time-((serverTime-_startedAt) max 0)] call Waldo_fnc_CortexSetPhase',locality)
         self.assertIn('CortexGroupMove',locality)
         self.assertIn('doMove',locality)
         self.assertNotIn('CBA_fnc_waitAndExecute',locality)
@@ -1371,7 +1400,7 @@ class CortexOperations(unittest.TestCase):
         vehicle_resume=locality.split('== "VEHICLE"',1)[1]
         self.assertIn('CortexGroupMove',vehicle_resume)
         self.assertIn('["VEHICLE_WITHDRAW",time+((120-_elapsed) max 3)]',vehicle_resume)
-        self.assertIn('_adopted set ["phase","RETREAT"]',vehicle_resume)
+        self.assertIn('[_group,_adopted,"RETREAT","VEHICLE_OWNERSHIP_RESUME",time-_elapsed] call Waldo_fnc_CortexSetPhase',vehicle_resume)
         self.assertNotIn('CortexFireCountermeasure',vehicle_resume)
 
     def test_mounted_survivors_withdraw_instead_of_selecting_impossible_surrender(self):
@@ -2266,6 +2295,9 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(case,text)
         self.assertIn('_searchTravel >= 15 && {_searchApproach}',text)
         self.assertNotIn('_state set ["phase"',text)
+        self.assertIn('TRANS-published-phase-ledger',text)
+        self.assertIn('Waldo_Cortex_PhaseTransitions',text)
+        self.assertIn('count _phaseHistory <= 32',text)
         self.assertNotIn('call Waldo_fnc_CortexRestoreCalm',text)
 
     def test_calm_cleanup_retires_onboard_contact_deadline(self):

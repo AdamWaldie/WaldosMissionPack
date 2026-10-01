@@ -150,8 +150,7 @@ if (count _transitionIntent == 6 && {serverTime < (_transitionIntent select 3)}
         _adopted set ["behaviourChanged",false];
         _adopted set ["speedChanged",false];
         if (behaviour _leader == "SAFE") then {_group setBehaviour "AWARE"; _adopted set ["behaviourChanged",true]};
-        _adopted set ["phase",_transitionPhase];
-        _adopted set ["phaseStart",time-((serverTime-_startedAt) max 0)];
+        [_group,_adopted,_transitionPhase,"OWNERSHIP_RESUME",time-((serverTime-_startedAt) max 0)] call Waldo_fnc_CortexSetPhase;
         _adopted set ["enemyPos",+_target];
         _adopted set ["searchTeam",_team];
         if (_areaMode != "") then {_adopted set ["areaInvestigation",_areaMode]};
@@ -181,8 +180,7 @@ if (count _withdrawalIntent == 7 && {serverTime-(_withdrawalIntent select 4) < 1
         _adopted set ["retreatStart",+(_withdrawalIntent select 1)];
         _adopted set ["retreatTarget",_target];
         _adopted set ["retreatProgress",[time,_withdrawalIntent select 6,_withdrawalIntent select 5]];
-        _adopted set ["phase","RETREAT"];
-        _adopted set ["phaseStart",time-_elapsed];
+        [_group,_adopted,"RETREAT","VEHICLE_OWNERSHIP_RESUME",time-_elapsed] call Waldo_fnc_CortexSetPhase;
         _group setVariable ["Waldo_Cortex_WithdrawalIntent",_withdrawalIntent,true];
     };
 };

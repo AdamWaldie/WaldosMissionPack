@@ -276,14 +276,24 @@ _checks pushBack ["ai","cortex-coordination-health",if (_retiredSupportTeams > 0
 private _localGroups=_groups select {local _x && {_x getVariable ["Waldo_AIPass_Managed",false]}};
 _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot serverTime=%1; server-local managed groups=%2, sampled=%3 (limit 20); HC-owned groups=%4. HC private action/queue state is unavailable here, not zero. Stationary or PATH-disabled units may be covering; one snapshot cannot prove a stall.",serverTime,count _localGroups,(count _localGroups) min 20,count _hcGroups]];
 {
-    private _refusal=_x getVariable ["Waldo_Cortex_TacticalRefusal",[]];
-    if (_refusal isNotEqualTo []) then {
-        _checks pushBack ["ai",format ["cortex-tactical-refusal-%1",netId leader _x],"LOADED",format ["group=%1 owner=%2 lastRefusal=[type,reason,time,detail]=%3. This is the latest changed start gate, not a permanent error; a later accepted lease clears it.",groupId _x,groupOwner _x,_refusal]];
-    };
+    private _group=_x;
+    {
+        _x params ["_type","_variable"];
+        private _refusal=_group getVariable [_variable,[]];
+        if (_refusal isNotEqualTo []) then {
+            _checks pushBack ["ai",format ["cortex-tactical-refusal-%1-%2",toLowerANSI _type,netId leader _group],"LOADED",format ["group=%1 owner=%2 type=%3 lastRefusal=[reason,time,detail]=%4. This is the latest changed start gate, not a permanent error; a later accepted lease clears it.",groupId _group,groupOwner _group,_type,_refusal]];
+        };
+    } forEach [["FLANK","Waldo_Cortex_FlankRefusal"],["ADVANCE","Waldo_Cortex_AdvanceRefusal"]];
 } forEach (_localGroups select [0,20]);
 {
     private _group=_x;
     private _state=_group getVariable ["Waldo_AIPass_State",createHashMap];
+    private _phaseTransition=_group getVariable ["Waldo_Cortex_PhaseTransition",[]];
+    if (count _phaseTransition == 5) then {
+        private _phaseCurrent=_state getOrDefault ["phase","UNKNOWN"];
+        private _phaseExpected=_phaseTransition select 2;
+        _checks pushBack ["ai",format ["cortex-phase-transition-%1",netId leader _group],["ERROR","LOADED"] select (_phaseCurrent == _phaseExpected),format ["group=%1 owner=%2 current=%3 latest=[serverTime,from,to,reason,owner]=%4 historyEntries=%5. A mismatch means phase state changed outside the atomic transition path.",groupId _group,groupOwner _group,_phaseCurrent,_phaseTransition,count (_group getVariable ["Waldo_Cortex_PhaseTransitions",[]])]];
+    };
     private _drill=_state getOrDefault ["drill",createHashMap];
     private _members=(units _group) select [0,8];
     if (count _drill > 0) then {

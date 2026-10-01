@@ -32,6 +32,12 @@ Sources: cortexGroupTick.sqf, cortexFlankStart.sqf, cortexAdvanceStart.sqf, cort
 7. Restore squad cohesion without overriding a newer Zeus order, explicit holding order, captivity, medical state or vehicle role.
 8. Preserve authored feature exclusions and AI capabilities; do not enable capabilities that Cortex did not disable.
 
+Group-phase changes now use one owner-local atomic path which updates `phase` and `phaseStart` together
+and publishes a bounded 32-entry `[serverTime, from, to, reason, owner]` history. Diagnostics flag any
+current phase which disagrees with the newest published transition. The contact lifecycle audit requires
+the real `CONTACT -> SECURITY -> SEARCH -> REGROUP -> CALM` physical sequence and the matching public
+ledger; the ledger is evidence of ordering and never substitutes for movement, firing or arrival.
+
 ## Confirmed gaps and changes
 
 - Automatic drill migration remains restore-and-reassess. Investigation, search and withdrawal now have explicit continuation policies; WMP and ACE transfer/disconnect tests must prove them physically.

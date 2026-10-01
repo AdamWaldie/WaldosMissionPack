@@ -49,9 +49,9 @@
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
 private _refuse={
     params ["_reason",["_detail",[]]];
-    private _previous=_group getVariable ["Waldo_Cortex_TacticalRefusal",[]];
-    if ((_previous param [0,""]) != "FLANK" || {(_previous param [1,""]) != _reason}) then {
-        _group setVariable ["Waldo_Cortex_TacticalRefusal",["FLANK",_reason,serverTime,_detail],true];
+    private _previous=_group getVariable ["Waldo_Cortex_FlankRefusal",[]];
+    if ((_previous param [0,""]) != _reason) then {
+        _group setVariable ["Waldo_Cortex_FlankRefusal",[_reason,serverTime,_detail],true];
     };
     false
 };
@@ -158,7 +158,7 @@ _state set ["drill", createHashMapFromArray [
     ["disabled", []], ["spots", []], ["started", time], ["lastStep",time], ["boundStart", time], ["pauseUntil", 0]
 ]];
 [_group,_state get "drill","START","FLANK_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
-_group setVariable ["Waldo_Cortex_TacticalRefusal",nil,true];
+_group setVariable ["Waldo_Cortex_FlankRefusal",nil,true];
 // The drill moves selected actors directly rather than adding a group waypoint.
 // Publish that ownership so support, vehicles and artillery cannot replace it mid-bound.
 _state set ["movementLease",["TACTICAL_DRILL",time+90]];

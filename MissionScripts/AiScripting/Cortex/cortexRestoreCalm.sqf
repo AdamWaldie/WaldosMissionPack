@@ -25,6 +25,7 @@
  * 2: allow remount <BOOL>, true; false during stop, ownership restoration or external takeover.
  * 3: yield to external order <BOOL>, false; when true Cortex removes its owned controls and
  *    preserves identifiable replacement commands, behaviour and speed.
+ * 4: transition reason <STRING>, "RESTORED"; published with the CALM handover.
  * Repeat/JIP: removes only WMP transient orders and restores recorded values.
  * Explicitly tracked Cortex holds restore PATH and resume formation even if combat relabelled doStop
  * as ATTACK/FIRE. Search teams never restore PATH because Cortex did not disable it for that action;
@@ -39,10 +40,10 @@
  * [_group, _state] call Waldo_fnc_CortexRestoreCalm;
  * Result: the group carries on with its mission as it was before contact.
  *
- * Current callers: Waldo_fnc_CortexGroupTick and Waldo_fnc_CortexReleaseGroup.
+ * Current callers: CortexGroupTick, CortexReleaseGroup, CortexLocality and CortexOnboardContact.
  */
 
-params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]], ["_yieldToExternal",false,[true]]];
+params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_allowRemount",true,[true]], ["_yieldToExternal",false,[true]], ["_reason","RESTORED",[""]]];
 if (isNull _group || {!local _group}) exitWith {};
 // A pending drill step may not run until after a checkpoint or ownership change.
 // Restore its movement restrictions now, before clearing the checkpoint below.
@@ -137,6 +138,5 @@ _group setVariable ["Waldo_Cortex_Withdrawal",nil,true];
 _group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];
 _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
 _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
-_state set ["phase", "CALM"];
-_state set ["phaseStart", time];
+[_group,_state,"CALM",_reason,time] call Waldo_fnc_CortexSetPhase;
 if (missionNamespace getVariable ["Waldo_AIPass_Debug", false]) then {diag_log format ["[WMP CORTEX] %1 CALM restored", _group]};
