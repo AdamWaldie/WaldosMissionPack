@@ -19,6 +19,8 @@
  * mistaken for active movement and a newer feature route is never deleted.
  * A live gate closure rejects the exact accepted token back to the server before clearing local
  * state, so a stopped responder cannot retain a coordinated role or consume a support slot.
+ * Releasing support also restores the responder's pre-existing LAMBS group-AI setting. The scoped
+ * lease prevents LAMBS and Cortex from issuing movement to the same group during rally or assault.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: group <GROUP>; 1: local state <HASHMAP>.
  * Return Value: Nothing.
@@ -61,6 +63,7 @@ private _releaseSupport={
         [_group] call Waldo_fnc_CortexGroupMoveClear;
     };
     if (_supportOwnsMovement) then {_state deleteAt "movementLease"};
+    [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
     call _restoreAttack;
     {_state deleteAt _x} forEach ["supportToken","responding","respondingTo","respondUntil","arrivedAt","assaulting"];
 };

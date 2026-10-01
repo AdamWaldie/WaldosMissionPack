@@ -9,6 +9,8 @@
  * owner-local successive fire-team bounds; it does not issue a competing whole-squad waypoint.
  * During assault, each bound leases pursuit features only from its current moving fire team.
  * The covering fire team and other squads retain native target sharing and engagement.
+ * In LAMBS SPLIT mode, the finite support lease temporarily pauses LAMBS group manoeuvres for the
+ * responder only. The base-of-fire group and every config-only LAMBS add-on remain active.
  * Rally movement also uses 10 m completion; readiness requires physical squad arrival in GroupTick.
  * Arguments: 0: job <HASHMAP> containing group, lease and waitUntil.
  * Return Value: Retry delay in seconds or -1 after acknowledgement.
@@ -50,6 +52,9 @@ private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!
     && {_fit findIf {private _v = vehicle _x; _v isKindOf "Air" || {_v isKindOf "StaticWeapon"} || {getNumber (configOf _v >> "artilleryScanner") == 1}} < 0}
     && {!_needAT || {_fit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
 private _attackAllowed = _attack isNotEqualTo [] && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+if (_okay) then {
+    _okay = [_group,"SUPPORT",true,_expiry] call Waldo_fnc_CortexLambsLease;
+};
 if (_okay && {!_same || {_attackAllowed && {!(_state getOrDefault ["assaulting",false])}}}) then {
     if (_attackAllowed) then {
         [_group] call Waldo_fnc_CortexGroupMoveClear;

@@ -10,7 +10,7 @@
  * - re-applies garrison orders on the new owner after a locality change, because disableAI and
  *   event handlers are stored per machine;
  * - optionally applies WMP garrison handling to Dynamic AO garrison groups;
- * - in LAMBS "WMP" mode, turns LAMBS group AI off for managed groups (restored on release);
+ * - reconciles blanket WMP-mode and finite SPLIT-mode LAMBS movement ownership;
  * - caches locally owned, eligible artillery for fire support and counter-battery;
  * - re-applies defence-line orders after a locality change;
  * - hands landed paratroopers and dismounted crews of a lost transport to the pass
@@ -85,12 +85,28 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
         };
         private _eligible = [_group] call Waldo_fnc_CortexIsEligible;
         if ((!_lambsWmpMode || {!_eligible}) && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
-            _group setVariable ["lambs_danger_disableGroupAI", false, true];
+            _group setVariable ["lambs_danger_disableGroupAI", _group getVariable ["Waldo_AIPass_LambsBaseline", false], true];
             _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
+            _group setVariable ["Waldo_AIPass_LambsBaseline", nil, true];
         };
-        if (_lambsWmpMode && {_eligible} && {!(_group getVariable ["lambs_danger_disableGroupAI", false])}) then {
+        if (_lambsWmpMode && {_eligible} && {!(_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false])}) then {
+            private _scopedLease = _group getVariable ["Waldo_Cortex_LambsLease", []];
+            private _baseline = if (count _scopedLease == 3) then {_scopedLease select 1} else {
+                _group getVariable ["lambs_danger_disableGroupAI", false]
+            };
+            _group setVariable ["Waldo_AIPass_LambsBaseline", _baseline, true];
             _group setVariable ["lambs_danger_disableGroupAI", true, true];
             _group setVariable ["Waldo_AIPass_LambsDisabledByPass", true, true];
+        };
+        private _lambsLease = _group getVariable ["Waldo_Cortex_LambsLease", []];
+        if (_lambsLease isNotEqualTo []) then {
+            if (serverTime >= (_lambsLease select 2)) then {
+                [_group,"",false] call Waldo_fnc_CortexLambsLease;
+            } else {
+                // A live mode change may have just removed the blanket switch. Renewing the same
+                // scoped owner reasserts exclusive movement without changing its saved baseline.
+                [_group,_lambsLease select 0,true,_lambsLease select 2] call Waldo_fnc_CortexLambsLease;
+            };
         };
         if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_CortexIsEligible}) then {
             _group setVariable ["Waldo_AIPass_Managed", true];

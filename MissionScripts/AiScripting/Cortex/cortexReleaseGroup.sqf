@@ -4,7 +4,7 @@
  *
  * Ends any flank drill (re-enabling only the AI features the drill itself disabled), rejoins the
  * search team, removes pass waypoints, restores behaviour and speed without ordering passengers to board,
- * and restores LAMBS group AI if the pass turned it off in "WMP" mode. Explicit orders (garrison,
+ * and releases both scoped SPLIT-mode and blanket WMP-mode LAMBS ownership. Explicit orders (garrison,
  * clear building) are left in place; use their own release functions.
  * Locality and authority: call where the group is local; state and flags are machine-local.
  *
@@ -37,9 +37,11 @@ if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Rem
     if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _yieldToExternal] call Waldo_fnc_CortexFlankEnd};
     [_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm;
 };
+if (local _group) then {[_group,"",false] call Waldo_fnc_CortexLambsLease};
 if (local _group && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
-    _group setVariable ["lambs_danger_disableGroupAI", false, true];
+    _group setVariable ["lambs_danger_disableGroupAI", _group getVariable ["Waldo_AIPass_LambsBaseline", false], true];
     _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
+    _group setVariable ["Waldo_AIPass_LambsBaseline", nil, true];
 };
 _group setVariable ["Waldo_AIPass_State", nil];
 if (_forget) then {_group setVariable ["Waldo_AIPass_Managed", nil]};

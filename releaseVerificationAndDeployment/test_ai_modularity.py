@@ -115,4 +115,26 @@ class AIModularityContracts(unittest.TestCase):
             self.assertIn('magazinesAllTurrets',src(name))
             self.assertIn('(_x select 2) > 0',src(name))
         self.assertIn('Waldo_fnc_CortexFeatureEnabled',src('cortexArtilleryShot'))
+    def test_lambs_handover_is_scoped_and_restores_prior_state(self):
+        lease = src('cortexLambsLease')
+        for contract in ['Waldo_Cortex_LambsLease','lambs_danger_disableGroupAI','_baseline','serverTime','Waldo_AIPass_LambsDisabledByPass']:
+            self.assertIn(contract,lease)
+        self.assertIn('CortexLambsLease',(ROOT/'MissionScripts/WaldosFunctions.sqf').read_text(encoding='utf-8'))
+        apply = src('cortexSupportApply')
+        maintain = src('cortexSupportMaintain')
+        self.assertIn('[_group,"SUPPORT",true,_expiry] call Waldo_fnc_CortexLambsLease',apply)
+        self.assertIn('[_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease',maintain)
+        self.assertIn('[_group,"",false] call Waldo_fnc_CortexLambsLease',src('cortexReleaseGroup'))
+        self.assertIn('serverTime >= (_lambsLease select 2)',src('cortexDiscover'))
+        self.assertIn('Waldo_AIPass_LambsBaseline',src('cortexDiscover'))
+        self.assertIn('Waldo_AIPass_LambsBaseline',src('cortexReleaseGroup'))
+    def test_lambs_config_companions_are_detected_but_never_disabled(self):
+        init = src('cortexInit')
+        diagnostics = (ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        lease = src('cortexLambsLease')
+        for patch in ['lambs_turrets','lambs_suppression','lambs_rpg']:
+            self.assertIn(patch,init)
+            self.assertIn(patch,diagnostics)
+            self.assertNotIn(patch+' setVariable',lease)
+        self.assertIn('config companions remain active in every mode',diagnostics)
 if __name__ == '__main__': unittest.main()

@@ -380,7 +380,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Regroup_StuckSeconds` | Seconds without progress before one movement retry; a further stall aborts without merging at a distance. |
 | `Waldo_AIPass_Regroup_TimeoutSeconds` | Limit in seconds for finding a host and for walking to it. |
 | `Waldo_AIPass_Regroup_SettleSeconds` | Delay after a kill before the remnant is assessed. |
-| `Waldo_AIPass_LambsMode` | Only matters with LAMBS Danger loaded; SPLIT lets LAMBS keep in-contact unit tactics, WMP turns LAMBS group AI off for squads the pass manages. Default `"SPLIT"`. |
+| `Waldo_AIPass_LambsMode` | Only matters with LAMBS Danger loaded. `SPLIT` keeps the Danger FSM active and pauses its group movement only for a finite Cortex responder rally/assault; the previous group setting is restored on completion, expiry, Zeus takeover, locality change or stop. `WMP` gives Cortex full group control. LAMBS Turrets, Suppression and RPG remain active in both modes. Default `"SPLIT"`. |
 | `Waldo_AIPass_Debug` | Logs contact, flank, morale and retreat events to RPT. Default `false`. |
 | `Waldo_AIPass_EngageRange` | Range in metres within which known enemies are considered. Default `800`. |
 | `Waldo_AIPass_NearRange` | Squads this close to a player are stepped every TickNear seconds. Default `1000`. |

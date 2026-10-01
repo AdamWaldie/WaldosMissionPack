@@ -317,18 +317,38 @@ taken over once they land (see Exclusions).
 
 ## With LAMBS
 
-LAMBS is optional; WMP is primary. When LAMBS Danger is loaded, `Waldo_AIPass_LambsMode` decides who
-does what:
+All four LAMBS packages remain optional; Cortex never makes them mission dependencies. They have
+different ownership implications:
 
-- `SPLIT` (default): LAMBS keeps what it is good at in contact:
+| Package | Cortex treatment |
+|---|---|
+| [LAMBS_Danger.fsm](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Active behaviour controller. Cortex uses the group-level LAMBS switch for explicit movement handover. |
+| [LAMBS Waypoints](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Public garrison and CQB functions receive Cortex orders in shared mode. |
+| [LAMBS_Turrets](https://steamcommunity.com/sharedfiles/filedetails/?id=1862208264) | Config-only turret dispersion changes remain active in every mode. |
+| [LAMBS_Suppression](https://steamcommunity.com/sharedfiles/filedetails/?id=1808238502) | Config-only AI suppression/stress changes remain active in every mode. |
+| [LAMBS_RPG](https://steamcommunity.com/sharedfiles/filedetails/?id=1858070328) | Config-only launcher target and dispersion changes remain active in every mode. Cortex still applies its own live ammunition and backblast safety checks before an owned anti-armour shot. |
+
+When LAMBS Danger is loaded, `Waldo_AIPass_LambsMode` decides who owns movement:
+
+- `SPLIT` (default, shown as **Shared ownership**): LAMBS keeps what it is good at in contact:
   - moment-to-moment unit tactics, fire, anti-armour and vehicle handling;
   - sharing sightings.
 
   WMP keeps the state ladder, post-contact search, morale, retreat, surrender, reinforcement,
-  artillery and airborne drops. Garrison and clear-building orders are handed to LAMBS Waypoints
-  when it is loaded. A group you set to `lambs_danger_disableGroupAI` gets the full WMP pass.
-- `WMP`: WMP runs everything and turns LAMBS group AI off for the squads it manages. LAMBS group AI
-  is turned back on when the pass stops or releases the squad.
+  artillery and airborne drops. When a responder accepts a Cortex reinforcement rally or coordinated
+  assault, a finite public lease sets `lambs_danger_disableGroupAI` for that responder only. Completion,
+  rejection, expiry, locality migration, Zeus takeover and Cortex shutdown restore the exact value
+  seen before the lease. The requester's base of fire stays under LAMBS. Garrison and clear-building
+  orders are handed to LAMBS Waypoints when it is loaded. A group a mission maker has already set to
+  `lambs_danger_disableGroupAI` retains that choice after Cortex releases it.
+- `WMP` (shown as **Cortex only**): WMP runs everything and turns LAMBS group AI off for the squads it
+  manages. LAMBS group AI is turned back on when the pass stops or releases the squad. The three
+  config companions are unaffected.
+
+WMP calls the installed LAMBS public interface; it does not bundle LAMBS source. LAMBS_Danger's
+GPLv2 license includes an additional condition which forbids modified or derivative versions from
+being uploaded to Steam Workshop. Keeping the FSM in its own optional mod also avoids a stale fork and
+lets its engine-level Danger FSM continue to receive upstream fixes.
 
 ## Which AI are affected
 

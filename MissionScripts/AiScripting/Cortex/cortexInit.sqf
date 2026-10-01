@@ -14,6 +14,8 @@
  * optional handlers when their switches have been turned on since the last call. Player clients return immediately and pay nothing. Each
  * behaviour has its own Waldo_AIPass_<Behaviour>_Enable switch in MissionConfig\aiConfig.sqf, and
  * Waldo_fnc_CortexIsEligible keeps player groups and other WMP features' units out.
+ * LAMBS_Danger, Waypoints, Turrets, Suppression and RPG are detected without becoming hard
+ * dependencies. Only Danger participates in movement ownership; the config-only companions remain active.
  * Locality and authority: the server publishes Waldo_AIPass_Enable and replays this call to
  * headless clients through the JIP key Waldo_AIPass_RuntimeInit. Remote calls from anything other
  * than the server are refused. A headless client waits for the feature-runtime snapshot first.
@@ -103,6 +105,11 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_ArtilleryHandler"}) then {
     }]];
 };
 missionNamespace setVariable ["Waldo_AIPass_LambsDangerLoaded", isClass (configFile >> "CfgPatches" >> "lambs_danger")];
+// The companion packages are config layers. Record them for diagnostics, but never disable them
+// when Cortex takes movement ownership from LAMBS_Danger.
+missionNamespace setVariable ["Waldo_Cortex_LambsTurretsLoaded", isClass (configFile >> "CfgPatches" >> "lambs_turrets")];
+missionNamespace setVariable ["Waldo_Cortex_LambsSuppressionLoaded", isClass (configFile >> "CfgPatches" >> "lambs_suppression")];
+missionNamespace setVariable ["Waldo_Cortex_LambsRpgLoaded", isClass (configFile >> "CfgPatches" >> "lambs_rpg")];
 {
     if (local _x) then {
         _x setVariable ["Waldo_AIPass_PeakSize", (_x getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _x)];

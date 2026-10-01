@@ -129,7 +129,7 @@
  * - Waldo_AIPass_Regroup_StuckSeconds (ADVANCED): no progress for this long retries once, then aborts without merging at a distance.
  * - Waldo_AIPass_Regroup_TimeoutSeconds (ADVANCED): limit for finding a host and for walking to it.
  * - Waldo_AIPass_Regroup_SettleSeconds (ADVANCED): wait after a kill so simultaneous deaths settle.
- * - Waldo_AIPass_LambsMode (MISSION MAKER): only matters with LAMBS Danger loaded; SPLIT lets LAMBS keep in-contact unit tactics, WMP turns LAMBS group AI off for squads the pass manages.
+ * - Waldo_AIPass_LambsMode (MISSION MAKER): only matters with LAMBS Danger loaded; SPLIT keeps its FSM active except during finite Cortex-owned responder movement, while WMP gives Cortex full group control. Config-only LAMBS companions remain active.
  * - Waldo_AIPass_Debug (TROUBLESHOOTING): logs contact, flank, morale and retreat events to RPT.
  * - Waldo_AIPass_EngageRange (ADVANCED): range in metres within which known enemies are considered.
  * - Waldo_AIPass_NearRange (ADVANCED): squads this close to a player are stepped every TickNear seconds.
@@ -305,7 +305,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Aggression", 1.2], // 0-2: scales manoeuvre preference/participation and optional tactical actions; zero excludes them.
         ["Waldo_AIPass_Cohesion", 1], // 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner.
         ["Waldo_AIPass_ReactionSpeed", 1], // 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often.
-        ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads).
+        ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (shared ownership with finite movement handover) or WMP (Cortex group control). Turrets/Suppression/RPG remain active.
         ["Waldo_AIPass_Debug", false], // BOOL: extra [WMP CORTEX] RPT lines for contact, flanks, morale and retreats.
         ["Waldo_AIPass_EngageRange", 800], // METRES: enemies the leader knows about within this range are considered.
         ["Waldo_AIPass_NearRange", 1000], // METRES: squads this close to a player run at the near cadence.

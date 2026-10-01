@@ -1,6 +1,25 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `5212697` are pushed, with the contact-initiative work below awaiting its next checkpoint. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
+Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `aa2b666` are pushed, with the LAMBS compatibility work below awaiting its next checkpoint. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
+
+## 1 October: LAMBS ownership and compatibility
+
+The four supplied Workshop packages now have explicit, separate treatment. LAMBS_Danger and its
+Waypoints component are behavioural integrations; LAMBS_Turrets, LAMBS_Suppression and LAMBS_RPG
+are detected as config layers and remain active in every Cortex mode. In the default shared mode,
+Danger retains ordinary contact tactics. A responder accepting a Cortex reinforcement rally or
+coordinated assault takes a finite public movement lease, temporarily pauses LAMBS group manoeuvres,
+and restores the exact prior group setting on completion, rejection, expiry, ownership migration,
+Zeus takeover or Cortex shutdown. This removes simultaneous movement orders without disabling the
+requester's LAMBS-controlled base of fire. Cortex-only mode now also records and restores a mission
+maker's pre-existing disabled state across live mode changes.
+
+LAMBS_Danger's GPLv2 license adds a condition forbidding modified or derivative versions on Steam
+Workshop, so no upstream FSM source is copied into WMP. Shared mode uses the installed mod's engine
+FSM and public APIs at runtime. Static validation passed 268 focused Cortex/modularity tests, all 1,265
+SQF files, all 113 wiki pages, all 85 Zeus modules, eight performance-audit tests and `git diff --check`.
+The regression scan found no new high-severity recurring pattern. A rebuilt LAMBS-loaded
+dedicated/headless-client audit remains queued.
 
 ## 1 October: contact initiative without authored movement
 
