@@ -41,7 +41,7 @@
  * assaultChance controls optional grenade preparation, not whether an enabled, successful manoeuvre
  * arbitrarily abandons its assault transition. One member may throw a fragmentation grenade
  * (Waldo_fnc_CortexThrowGrenade, never near friendlies). The approach uses a covered spot
- * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. A queued frag is an opportunistic action: its own next-frame safety check may cancel it, but deployment never gates the assault or aborts movement. The assault axis stays fixed through the crossing; water destinations are rejected.
+ * 20 m short of the reported enemy and clears 20 m beyond that fixed objective, while the base of fire keeps suppressing. Formation commitment pauses for one second; arrival at the assault position pauses for one second without a grenade or two seconds when a throw was queued. A queued frag is an opportunistic action: its own next-frame safety check may cancel it, but deployment never gates the assault or aborts movement. The assault axis stays fixed through the crossing; water destinations are rejected.
  * Consolidation: a flank brings its covering element forward even when no final assault
  * is selected; the manoeuvre element holds its gained position. After clearing through,
  * its surviving on-foot covering element moves
@@ -581,7 +581,7 @@ switch (_drill get "stage") do {
                     // Reserve the actor briefly for the next-frame throw, then continue the
                     // ordinary tactical pause whether the throw succeeds, cancels or migrates.
                     [_group,_drill,"PAUSE",["ASSAULT_POSITION","ASSAULT_GRENADE_QUEUED"] select _queued] call Waldo_fnc_CortexDrillSetStage;
-                    _drill set ["pauseUntil",_now + 3];
+                    _drill set ["pauseUntil",_now + ([1,2] select _queued)];
                     _drill set ["grenadeThrower",_thrower];
                     _drill set ["grenadeActionUntil",[_now,_now+2] select _queued];
                 };
@@ -665,7 +665,7 @@ switch (_drill get "stage") do {
                 _points pushBack [_clearPoint, "CLEAR"];
                 missionNamespace setVariable ["Waldo_AIPass_Assaults", (missionNamespace getVariable ["Waldo_AIPass_Assaults", 0]) + 1];
                 [_group,_drill,"PAUSE","ASSAULT_COMMITTED"] call Waldo_fnc_CortexDrillSetStage;
-                _drill set ["pauseUntil", _now + 3];
+                _drill set ["pauseUntil", _now + 1];
             } else {
                 if ((_drill getOrDefault ["type","FLANK"]) == "FLANK" && {_teams isEqualTo []}) then {
                     // No assault is a valid tactical choice, not permission to leave

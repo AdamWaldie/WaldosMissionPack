@@ -62,6 +62,14 @@ class CortexOperations(unittest.TestCase):
                     'Waldo_AIPass_CounterBattery_Rounds']:
             self.assertIn(key,published)
 
+    def test_counter_battery_diagnostics_report_the_automatic_default(self):
+        config=(ROOT/'MissionConfig/aiConfig.sqf').read_text(encoding='utf-8')
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        expected='missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Mode", "AUTO"]'
+        self.assertIn('["Waldo_AIPass_CounterBattery_Mode", "AUTO"]',config)
+        self.assertIn(expected,diagnostics)
+        self.assertNotIn('missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"]',diagnostics)
+
     def test_replacement_clear_retires_old_movement_after_validation(self):
         text=source('cortexClearBuilding')
         marker='if (!_resume && {_previous isNotEqualTo []}) then {[_group] call Waldo_fnc_CortexClearRelease};'
@@ -2190,6 +2198,8 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('case "GRENADE": {',step)
         self.assertNotIn('"GRENADE_UNRESOLVED" call _end',step)
         self.assertIn('"PAUSE","ASSAULT_COMMITTED"] call Waldo_fnc_CortexDrillSetStage',step)
+        self.assertIn('_drill set ["pauseUntil", _now + 1]',step)
+        self.assertIn('_drill set ["pauseUntil",_now + ([1,2] select _queued)]',step)
         self.assertIn('_drill set ["grenadeActionUntil",[_now,_now+2] select _queued]',step)
         grenade=source('cortexThrowGrenade')
         self.assertIn('addEventHandler ["FiredMan"',grenade)
