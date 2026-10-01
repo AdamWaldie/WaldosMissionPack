@@ -614,6 +614,15 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(len(data['cases']),58)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
+        production={
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
+        }
+        assigned=[path for case in data['cases'] for path in case['production_sources']]
+        self.assertEqual(141,len(production))
+        self.assertEqual(production,set(assigned))
+        self.assertEqual(len(assigned),len(set(assigned)))
+        self.assertTrue(all((ROOT/path).is_file() for path in assigned))
         report=render_markdown(data)
         self.assertEqual(report,(ROOT/'releaseVerificationAndDeployment/cortexQA/FEATURE_STATUS.md').read_text(encoding='utf-8'))
         for case in data['cases']:
@@ -1846,6 +1855,7 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(len(data['cases']),len({case['id'] for case in data['cases']}))
         for case in data['cases']:
             self.assertTrue(case['setup'] and case['expected'])
+            self.assertIn('production_sources',case)
             self.assertNotEqual(case['status'],'passed')
 
     def test_preflight_runs_before_order_state_changes(self):

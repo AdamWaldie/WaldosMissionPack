@@ -7,7 +7,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_CASE_FIELDS = {
     "id", "title", "setup", "expected", "settings", "status",
-    "live_evidence", "automation", "executable_sources",
+    "live_evidence", "automation", "executable_sources", "production_sources",
 }
 PUBLIC_RUNTIME_CONTROLS = {
     "Waldo_AIPass_Exclude",
@@ -26,13 +26,14 @@ def render_markdown(data):
         "",
         f"Feature cases: **{len(data['cases'])}**. Required variant categories: **{len(data['required_variants'])}**.",
         "",
-        "| Feature | Settings | Per-asset controls | Runnable suites | Evidence records | Status |",
-        "| --- | ---: | ---: | --- | ---: | --- |",
+        "| Feature | Settings | Per-asset controls | Production sources | Runnable suites | Evidence records | Status |",
+        "| --- | ---: | ---: | ---: | --- | ---: | --- |",
     ]
     for case in data["cases"]:
         sources = ", ".join(f"`{source}`" for source in case["executable_sources"])
         lines.append(
-            f"| {case['id']} - {case['title']} | {len(case['settings'])} | {len(case.get('controls', []))} | {sources} | "
+            f"| {case['id']} - {case['title']} | {len(case['settings'])} | {len(case.get('controls', []))} | "
+            f"{len(case['production_sources'])} | {sources} | "
             f"{len(case['live_evidence'])} | {case['status']} |"
         )
     lines.extend(["", "## Required variants", ""])
@@ -68,6 +69,25 @@ def audit(root=ROOT):
         errors.append(f"Runtime control coverage mismatch: missing={sorted(PUBLIC_RUNTIME_CONTROLS-set(controls))}; obsolete={sorted(set(controls)-PUBLIC_RUNTIME_CONTROLS)}")
     if len(controls) != len(set(controls)):
         errors.append("Runtime controls assigned to multiple feature cases")
+    production_root = root / "MissionScripts/AiScripting"
+    production = {
+        path.relative_to(root).as_posix()
+        for path in production_root.rglob("*.sqf")
+        if path.is_file()
+    }
+    assigned_sources = [
+        source
+        for case in data["cases"]
+        for source in case.get("production_sources", [])
+    ]
+    if production != set(assigned_sources):
+        errors.append(
+            "Production source coverage mismatch: "
+            f"missing={sorted(production-set(assigned_sources))}; "
+            f"obsolete={sorted(set(assigned_sources)-production)}"
+        )
+    if len(assigned_sources) != len(set(assigned_sources)):
+        errors.append("Production AI sources assigned to multiple feature cases")
     ids = [case["id"] for case in data["cases"]]
     if len(ids) != len(set(ids)):
         errors.append("Duplicate feature case IDs")
@@ -80,6 +100,9 @@ def audit(root=ROOT):
             errors.append(f"{case['id']}: invalid acceptance status {case['status']}")
         if not case["setup"] or not case["expected"] or not case["automation"]:
             errors.append(f"{case['id']}: empty setup, expected result or automation scope")
+        for production_source in case["production_sources"]:
+            if not (root / production_source).is_file():
+                errors.append(f"{case['id']}: missing production source {production_source}")
         sources = case.get("executable_sources", [])
         if not sources:
             errors.append(f"{case['id']}: no executable source")
@@ -103,7 +126,12 @@ def main():
     parser.add_argument("--write-report", type=Path, metavar="PATH")
     args = parser.parse_args()
     data, errors, pending = audit()
-    print(f"Executable coverage: {len(data['cases'])} feature cases; {len(data['required_variants'])} required variant categories")
+    source_count = sum(len(case["production_sources"]) for case in data["cases"])
+    print(
+        f"Executable coverage: {len(data['cases'])} feature cases; "
+        f"{len(data['required_variants'])} required variant categories; "
+        f"{source_count} production AI sources"
+    )
     for error in errors:
         print("ERROR: " + error)
     print("Incomplete behavioural acceptance: " + ", ".join(pending))

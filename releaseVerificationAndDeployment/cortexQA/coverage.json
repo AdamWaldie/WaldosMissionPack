@@ -37,6 +37,23 @@
       "automation": "runGates.sqf: five closed-gate refusal and no-movement checks, each followed by reopened physical arrival. All ten passed in runtime-20260927-032658. Player-led, Zeus and locality variants remain outstanding.",
       "executable_sources": [
         "runGates.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCombatEffective.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexDiscover.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexFeatureEnabled.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexGroupState.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexGroupTick.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexInit.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexIsEligible.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexKnowledge.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexReleaseGroup.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexRestoreCalm.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSettingsLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexStop.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexTuning.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexTuningSpec.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexInfantrySpeed.sqf"
       ]
     },
     {
@@ -56,6 +73,11 @@
       "executable_sources": [
         "runLambs.sqf",
         "runBuildingComparison.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexLambsBuildingRelease.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexLambsBuildingStart.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexLambsLease.sqf"
       ]
     },
     {
@@ -87,6 +109,12 @@
         "runScheduler.sqf",
         "runPerformance.sqf",
         "runPerformanceContact.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCooldown.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexIsPaused.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexQueueJob.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSchedulerTick.sqf"
       ]
     },
     {
@@ -110,6 +138,9 @@
       "automation": "runProfiles.sqf: precedence, aliases, fallbacks, aggression limits and skill preservation passed in runtime-20260927-115212. Tactical behaviour for every profile remains unverified.",
       "executable_sources": [
         "runProfiles.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexProfile.sqf"
       ]
     },
     {
@@ -134,6 +165,12 @@
       "automation": "runMechanics.sqf: SKILL- engine aiming skill after profile change (partial variants; fresh live acceptance required)",
       "executable_sources": [
         "runMechanics.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/aiApplyProfile.sqf",
+        "MissionScripts/AiScripting/aiRebalanceInit.sqf",
+        "MissionScripts/AiScripting/aiRebalanceStop.sqf",
+        "MissionScripts/AiScripting/AISkillAdjustmentSystem.sqf"
       ]
     },
     {
@@ -171,6 +208,15 @@
       "automation": "runLanding.sqf: malformed payload rejection without mutation, physical touchdown and hold, landing cancellation and real redirected flight. Passed server cases in runtime-20260927-041916. Terrain, boundary, JIP and ownership variants remain unverified.",
       "executable_sources": [
         "runLanding.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/improvedHelicopterLandingAnchorLocal.sqf",
+        "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
+        "MissionScripts/AiScripting/improvedHelicopterLandingExecuteLocal.sqf",
+        "MissionScripts/AiScripting/improvedHelicopterLandingInit.sqf",
+        "MissionScripts/AiScripting/improvedHelicopterLandingRestoreLocal.sqf",
+        "MissionScripts/AiScripting/improvedHelicopterLandingSetting.sqf",
+        "MissionScripts/AiScripting/improvedHelicopterLandingTrackLocal.sqf"
       ]
     },
     {
@@ -202,6 +248,11 @@
       "automation": "runDeceleration.sqf: disabled/enabled cruise and braking, actual speed reduction, peak climb, ground clearance, crew survival and authored-route retention. Includes comparable entry conditions and a ten-metre operational climb limit. Executable coverage exists; clean physical acceptance and owner variants remain outstanding.",
       "executable_sources": [
         "runDeceleration.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/helicopterDecelerationCorrectLocal.sqf",
+        "MissionScripts/AiScripting/helicopterDecelerationInit.sqf",
+        "MissionScripts/AiScripting/helicopterDecelerationTrackLocal.sqf"
       ]
     },
     {
@@ -225,6 +276,10 @@
       "automation": "runMechanics.sqf: real casualties, physical approach and merge. Runtime 165401 passed both with survivors reaching within 18 m of the host; living succession and movement were sampled. Earlier runtime 155107 stalled and remains recorded. Independent Zeus interruption currently running; repeat reliability and owner variants remain open.",
       "executable_sources": [
         "runMechanics.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexRegroupOnKill.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexRegroupStep.sqf"
       ]
     },
     {
@@ -242,6 +297,9 @@
       "executable_sources": [
         "runContact.sqf",
         "runCombat.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexContactReport.sqf"
       ]
     },
     {
@@ -262,7 +320,8 @@
       "executable_sources": [
         "runMechanics.sqf",
         "runContact.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "FLANK",
@@ -288,6 +347,12 @@
       "automation": "runCombat.sqf: runtime-20260927-130332 ordinary RED flank ended STALLED and failed moving fire. YELLOW passed physical movement, frontage and moving fire but exceeded the completion deadline. Additive independent fire-control comparisons and late-completion diagnostic saved for retest.",
       "executable_sources": [
         "runCombat.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexFlankEnd.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexFlankStart.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexFlankStep.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSelectAvenue.sqf"
       ]
     },
     {
@@ -303,6 +368,9 @@
       "automation": "runCrossing.sqf: real engine-road prerequisite, disabled/enabled route comparison, natural contact, production crossing stage, actual smoke projectile and all-member far-side movement. Not executed. VR has no qualifying road and must fail the prerequisite; a real-road terrain run and owner/interruption variants remain outstanding.",
       "executable_sources": [
         "runCrossing.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexPlanRoute.sqf"
       ]
     },
     {
@@ -320,6 +388,10 @@
       "automation": "runFireControl.sqf: FIRE-*; live retest pending",
       "executable_sources": [
         "runFireControl.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexFireControl.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexLineOfFireClear.sqf"
       ]
     },
     {
@@ -340,6 +412,9 @@
       "automation": "runReactions.sqf: runtime-20260927-111216 passed casualty succession, physical withdrawal over 30 m with increased threat separation, retained rifle and actual smoke projectile. Reactions completed 41 checks with zero findings or SQF errors. Server fixture only; medical, support, HC and boundary variants remain open.",
       "executable_sources": [
         "runReactions.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexMorale.sqf"
       ]
     },
     {
@@ -358,6 +433,9 @@
       "automation": "runReactions.sqf: runtime-20260927-111216 passed real disarm, ground weapon inventory, ten-second captive hold and repeat without duplicate holder. Disabled surrender retained the rifle during real retreat. Server ACE fixture only; vanilla, medical, HC and support variants remain open.",
       "executable_sources": [
         "runReactions.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexSurrender.sqf"
       ]
     },
     {
@@ -376,6 +454,10 @@
       "automation": "runReactions.sqf: runtime-20260927-111216 passed physical escape, new 60 m movement after evasion, queued smoke cancellation on captivity and Zeus takeover, and handler disable. Medical, ownership and additional projectile variants remain open. Additive runReactions ASSAULT-DISABLED queued cancellation checks actual FiredMan count and unchanged inventory. runCombat grenade cases observe projectiles and physical hold/crossing; pending live acceptance.",
       "executable_sources": [
         "runReactions.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexGrenadeCheck.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexThrowGrenade.sqf"
       ]
     },
     {
@@ -392,6 +474,9 @@
       "automation": "runFireControl.sqf adds real visible-armour hold-fire and Cortex targeting plus actual launcher-shot checks. Not executed. Backblast obstruction, owner transfer and cancellation variants remain outstanding.",
       "executable_sources": [
         "runFireControl.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAntiArmour.sqf"
       ]
     },
     {
@@ -410,6 +495,10 @@
       "automation": "runGunnery.sqf: disabled stationary control and enabled physical AT standoff with crew retention. Server cases passed in runtime-20260927-040456; remaining variants unverified.",
       "executable_sources": [
         "runGunnery.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAircraftEligible.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexVehicles.sqf"
       ]
     },
     {
@@ -425,6 +514,9 @@
       "automation": "runVehicleDrills.sqf: runtime 165401 shared passengers exited with dismount disabled; fresh enabled shared exit had no Cortex dismount records. Separate squads failed natural-contact prerequisites and did not exit. Saved native-AI baselines and GetOut diagnostics distinguish engine exits from Cortex commands; unexecuted. No reliable acceptance yet.",
       "executable_sources": [
         "runVehicleDrills.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexOnboardContact.sqf"
       ]
     },
     {
@@ -440,6 +532,9 @@
       "automation": "runVehicleDrills.sqf: runtime 165401 shared and fresh shared remount failed after exits without Cortex records. Saved release guards now cancel public remount intent even without an owner-local state map. Physical Zeus replacement and migration cancellation remain untested.",
       "executable_sources": [
         "runVehicleDrills.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexPassengerReady.sqf"
       ]
     },
     {
@@ -457,6 +552,9 @@
       "automation": "runVehicleDrills.sqf retains the accepted server disabled/enabled comparison and adds an independent active-withdrawal migration case. The new case requires natural contact, production RETREAT, a real HC vehicle/crew owner, VEHICLE_OWNERSHIP_RESUME, the original start time, continued threat separation, crew retention, no smoke replay, and physical Zeus replacement with no stale RETREAT resurrection. Saved, not yet live-validated. Immobilized/deleted and additional vehicle-class cases remain open.",
       "executable_sources": [
         "runVehicleDrills.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexRetreat.sqf"
       ]
     },
     {
@@ -474,6 +572,9 @@
       "automation": "runCover.sqf: actual defence arrival, separate occupied positions and independent solid-wall ray check. Server cases passed in runtime-20260927-041148 after correcting the fixture ray height. Other geometry, owner and gate variants remain unverified. Added physical defence-release and replacement-waypoint travel check; saved, not yet live-validated.",
       "executable_sources": [
         "runCover.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexFindCover.sqf"
       ]
     },
     {
@@ -488,6 +589,11 @@
       "executable_sources": [
         "runServer.sqf",
         "runConvoyMatrix.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/simpleAiConvoy.sqf",
+        "MissionScripts/AiScripting/convoySync.sqf",
+        "MissionScripts/AiScripting/convoyTick.sqf"
       ]
     },
     {
@@ -503,6 +609,9 @@
       "automation": "runServer.sqf AMB-03 checks actual escort Fired events; AMB-07 retains operating crew. Direction, hold-fire and disable variants remain outstanding; no fresh acceptance.",
       "executable_sources": [
         "runServer.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/convoyThreat.sqf"
       ]
     },
     {
@@ -518,7 +627,8 @@
       "automation": "runServer.sqf AMB-06 and CNV-09b measure actual travel clear of vehicles. Solid-cover geometry and threat-relative placement remain outstanding; no fresh acceptance.",
       "executable_sources": [
         "runServer.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "CNV-AVOID",
@@ -535,7 +645,8 @@
       "automation": "runConvoyAvoidance.sqf: physical yielding, walking clearance, resumed travel and no injury. Runtime 041548 failed stop/hold. Source now activates controller before observer delay and adds an occupied-corridor case plus minimum distance/stop diagnostics. Retest pending.",
       "executable_sources": [
         "runConvoyAvoidance.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "CNV-HALT",
@@ -550,6 +661,9 @@
       "automation": "runServer.sqf AMB-01/02/04/05 measures enemy shots, moving push-through, pinned halt and cargo exit. Roadblock, cancellation and all-owner variants remain outstanding; no fresh acceptance.",
       "executable_sources": [
         "runServer.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/convoyHaltServer.sqf"
       ]
     },
     {
@@ -568,6 +682,11 @@
       "executable_sources": [
         "runConvoySeats.sqf",
         "runServer.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/convoyCrewLocal.sqf",
+        "MissionScripts/AiScripting/convoyDismountLocal.sqf",
+        "MissionScripts/AiScripting/convoyReleaseLocal.sqf"
       ]
     },
     {
@@ -583,6 +702,9 @@
       "automation": "runSupport.sqf: HEARING- actual Fired event and hearing delivery (partial variants; fresh live acceptance required) Added physical wall occlusion, real gunshot with hearing disabled, handler readiness and a fresh enabled shot. Saved changes need a fresh live run.",
       "executable_sources": [
         "runSupport.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexHearingLocal.sqf"
       ]
     },
     {
@@ -601,6 +723,11 @@
       "automation": "runSupport.sqf: REPORT- actual delivery and receiver travel (partial variants; fresh live acceptance required)",
       "executable_sources": [
         "runSupport.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCanTransmit.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexReportLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexReportServer.sqf"
       ]
     },
     {
@@ -618,6 +745,9 @@
       "automation": "runSupport.sqf: REINFORCE- physical rally and cancellation (partial variants; fresh live acceptance required)",
       "executable_sources": [
         "runSupport.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexReinforce.sqf"
       ]
     },
     {
@@ -645,6 +775,23 @@
       "automation": "runServer.sqf ART-*; finite firing passed; impact safety variants pending Added lethal HE warning-ring, physical projectile count, actual first-shot delay and once-per-burst checks in runServer.sqf; unexecuted. Four red shells at 25 m and ten-second lead apply only to HE, including counter-battery. Cancellation, repeated HE bursts and owner migration still need full warning coverage.",
       "executable_sources": [
         "runServer.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryAim.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryAmmo.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryFire.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryFired.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryMissionStep.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryObserve.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryRejected.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryReport.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryRequest.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryRole.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryScoot.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexArtilleryShot.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSetArtilleryRole.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSetSpotter.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSpotterFix.sqf"
       ]
     },
     {
@@ -669,6 +816,11 @@
       "automation": "runServer.sqf CB-*; real firing and radar delays passed; impact safety variants pending",
       "executable_sources": [
         "runServer.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCounterBattery.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexCounterObserve.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexRegisterRadar.sqf"
       ]
     },
     {
@@ -689,6 +841,12 @@
       "automation": "runAirborne.sqf: runtime 165401 normal and invalid-class fallback both deployed parachutes and landed alive with backpacks and operating crew retained. Normal post-landing movement passed (50.6/48.7 m). Fallback raw FAIL recorded 70.2/27.3 m travel with both inside the destination area: leader-relative destination made one route too short. Saved route now starts at least 65 m from every passenger; unexecuted. Automatic trigger, varied aircraft and owner/JIP variants remain open.",
       "executable_sources": [
         "runAirborne.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAirborneCheck.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexAirborneDrop.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexAirborneDropStep.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexParachuteJump.sqf"
       ]
     },
     {
@@ -708,6 +866,11 @@
       "executable_sources": [
         "runServer.sqf",
         "runBuildingComparison.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexGarrison.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexGarrisonApplyLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexGarrisonRelease.sqf"
       ]
     },
     {
@@ -726,6 +889,9 @@
       "automation": "runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
       "executable_sources": [
         "runAircraft.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexFireCountermeasure.sqf"
       ]
     },
     {
@@ -743,6 +909,10 @@
       "automation": "runSupport.sqf: INVESTIGATE- sound-led physical approach (partial variants; fresh live acceptance required)",
       "executable_sources": [
         "runSupport.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexGroupMove.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexGroupMoveClear.sqf"
       ]
     },
     {
@@ -763,7 +933,8 @@
       "automation": "runCombat.sqf: actual approach proximity, physical crossing by each Advance element, complete squad/support consolidation, independent FiredMan grenade deployment and no movement into a live frag. FLANK-GRENADE, ADVANCE-GRENADE with a single first-element carrier, and FLANK-ZEUS-CONSOLIDATE are additive cases. All new stages await live acceptance in runtime 142945.",
       "executable_sources": [
         "runCombat.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "ADVANCE",
@@ -783,6 +954,10 @@
       "automation": "runCombat.sqf COMBAT-ADVANCE-*; server completion and proximity-stop passed",
       "executable_sources": [
         "runCombat.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAdvanceStart.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexTacticalStart.sqf"
       ]
     },
     {
@@ -809,6 +984,18 @@
       "automation": "runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, two actual rallies, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. Added coordinatedbounds focus with contact-during-rally, physical role exchange and inter/intra-squad covering fire. Added TARGET/AUTOTARGET/PATH restoration comparison alongside unchanged physical handover requirements; newest restoration assertion awaits rebuilt live execution.",
       "executable_sources": [
         "runCoordinated.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCoordinatedAssault.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportAck.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportApply.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportAssaultServer.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportBoundStart.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportCoordinateStep.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportMaintain.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportServer.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSupportStep.sqf"
       ]
     },
     {
@@ -824,6 +1011,9 @@
       "automation": "runReactions.sqf: STANCE- physical pose and disable restoration (partial variants; fresh live acceptance required)",
       "executable_sources": [
         "runReactions.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexStance.sqf"
       ]
     },
     {
@@ -840,6 +1030,11 @@
       "automation": "runMechanics.sqf: runtime-20260927-155107 passed disabled inventory, recipient gain, conserved total rounds and donor-funded transfer of a seven-round partial magazine. Additional inventories, ranges and ownership variants remain open.",
       "executable_sources": [
         "runMechanics.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAmmoShare.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexCapabilities.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexUnitRole.sqf"
       ]
     },
     {
@@ -857,7 +1052,8 @@
       "automation": "runGunnery.sqf: real projectile direction and AT target priority, BLUE hold-fire and cease-fire. Server cases passed in runtime-20260927-040456; remaining variants unverified. Transfer and feature-disable variants remain outstanding.",
       "executable_sources": [
         "runGunnery.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "ART-SMOKE",
@@ -874,7 +1070,8 @@
       "automation": "runArtillerySmoke.sqf: real finite delivery, disabled gates, empty inventory and repeat cases retained. Red warning smoke is prohibited for non-lethal smoke support; initial and repeat no-warning assertions added. Runtime 172726 used superseded warning-on-smoke code and wrong EntityCreated observer; 41 checks, 10 findings, zero SQF errors, complete. Corrected ProjectileCreated observation and lethal-only behavior await fresh run.",
       "executable_sources": [
         "runArtillerySmoke.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "BREAK",
@@ -892,7 +1089,8 @@
       "automation": "runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
       "executable_sources": [
         "runAircraft.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "DEFEND",
@@ -905,6 +1103,12 @@
       "automation": "runServer.sqf ORD-02* and HC-03b*; server and WMP owner movement passed",
       "executable_sources": [
         "runServer.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexDefend.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexDefendApplyLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexDefendRelease.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexDefendStep.sqf"
       ]
     },
     {
@@ -920,6 +1124,11 @@
       "automation": "runBuildingComparison.sqf: original room visits preserved; fresh 2/6/12-soldier clearance and ordinary-waypoint physical handover. Live enemies, terrain buildings, blocked-room recovery and owner/interruption variants remain incomplete.",
       "executable_sources": [
         "runBuildingComparison.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexBuildingDoor.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexClearBuilding.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexClearRelease.sqf"
       ]
     },
     {
@@ -933,6 +1142,11 @@
       "automation": "runClient.sqf UI-*; functional pass; mouse and layout acceptance pending",
       "executable_sources": [
         "runClient.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexControlOpenLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexControlPageLocal.sqf",
+        "MissionScripts/AiScripting/aiGetDiagnostics.sqf"
       ]
     },
     {
@@ -953,6 +1167,19 @@
       "automation": "runLifecycle.sqf retains the accepted disable/restart, Zeus replacement and leader-casualty cases. Additive active-state cases now migrate INVESTIGATE, naturally reached SEARCH and production RETREAT to an HC: each requires OWNERSHIP_RESUME, the original deadline/start, and continued physical movement. RETREAT must not replay smoke, and Zeus must permanently release all three states. These new cases are saved but unexecuted. ACE migration, disconnect, JIP, deletion and remaining action phases remain open.",
       "executable_sources": [
         "runLifecycle.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCheckpoint.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexLocality.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexOrderDispatch.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexOrderLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexOrderReason.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexOrderResult.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexReleaseFeatureCrew.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexZeusHeld.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexZeusMark.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexZeusWatchLocal.sqf",
+        "MissionScripts/AiScripting/aiHeadlessAdoptionResultServer.sqf"
       ]
     },
     {
@@ -968,7 +1195,8 @@
       "automation": "runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent before relying on natural detection. It measures per-member physical travel, final cohesion, actual covering shots and support-lane crossing while the other squad moves. Bounding requires two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.",
       "executable_sources": [
         "runMultiManoeuvre.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "MULTI-BOUND",
@@ -983,7 +1211,8 @@
       "automation": "runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent, establish natural contact, and only then receive the physical MOVE objective that Cortex uses to start bounding. It measures per-member travel, final cohesion, actual covering shots and two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.",
       "executable_sources": [
         "runMultiManoeuvre.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "MULTI-WITHDRAW",
@@ -996,7 +1225,8 @@
       "automation": "runReactions.sqf: additive two-squad casualty-driven withdrawal, natural contact, every survivor travelling away, real smoke, retained groups/rifles and intra-squad cohesion. Saved, unexecuted. This baseline does not prove coordinated alternating overwatch, a shared rally, interruption or distributed-owner behaviour.",
       "executable_sources": [
         "runReactions.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "TRANSITIONS",
@@ -1013,6 +1243,10 @@
       "executable_sources": [
         "runCombat.sqf",
         "runContact.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexDrillSetStage.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexSetPhase.sqf"
       ]
     },
     {
@@ -1031,7 +1265,8 @@
       "executable_sources": [
         "runProfiles.sqf",
         "runLighting.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "DRILL-HANDOVER",
@@ -1047,7 +1282,8 @@
       ],
       "executable_sources": [
         "runCombat.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "DRILL-RECOVERY",
@@ -1063,7 +1299,8 @@
       ],
       "executable_sources": [
         "runCombat.sqf"
-      ]
+      ],
+      "production_sources": []
     },
     {
       "id": "ATTACK-FLARES",
@@ -1078,6 +1315,9 @@
       "automation": "runAircraft.sqf adds paired moving helicopter/plane cases, Fired events tagged by leg, physical flight and ammunition checks. Empty ammunition, target replacement, Zeus interruption, owner migration and repeated-run acceptance remain outstanding.",
       "executable_sources": [
         "runAircraft.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAttackRunFlares.sqf"
       ]
     },
     {
@@ -1093,6 +1333,10 @@
       "automation": "runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence. Threat-pattern selection, stuck replan, target loss, Zeus replacement and HC migration require rebuilt live acceptance.",
       "executable_sources": [
         "runAircraft.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexAirAttack.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf"
       ]
     }
   ]
