@@ -1,14 +1,30 @@
 /*
  * Author: WaldoTheWarfighter
  * Shows the disposable Cortex audit's current test, expected behaviour and recorded results.
- * Locality/authority: interface only; reads server-published audit state, never changes AI outcomes.
- * Repeat/JIP: one observer per client; controls are rebuilt when the game/Zeus display changes.
+ * Locality/authority: interface only; reads server-published audit state and protects the local
+ * observer so combat cannot invalidate rendered-client measurements; never changes fixture AI.
+ * Repeat/JIP: one observer per client; an obsolete respawn handler is removed before installation,
+ * and controls are rebuilt when the game/Zeus display changes.
  * Arguments: None. Return: Nothing (scheduled script).
  * Current callers: staged Cortex audit client. Example: [] execVM "cortexQAGuide.sqf";
  */
 if (!hasInterface || {missionNamespace getVariable ["Waldo_CortexQA_GuideRunning",false]}) exitWith {};
 missionNamespace setVariable ["Waldo_CortexQA_GuideRunning",true];
 waitUntil {uiSleep 0.2; !isNull player && {!isNull findDisplay 46}};
+// The observer is part of the measurement surface, not the combat fixture. Death can move the
+// camera away from the workload and make the client frame-time arm appear artificially faster.
+player allowDamage false;
+player setCaptive true;
+private _oldRespawnHandler=missionNamespace getVariable ["Waldo_CortexQA_ObserverRespawnHandler",-1];
+if (_oldRespawnHandler >= 0) then {removeMissionEventHandler ["EntityRespawned",_oldRespawnHandler]};
+private _respawnHandler=addMissionEventHandler ["EntityRespawned",{
+    params ["_newEntity"];
+    if (_newEntity isEqualTo player) then {
+        player allowDamage false;
+        player setCaptive true;
+    };
+}];
+missionNamespace setVariable ["Waldo_CortexQA_ObserverRespawnHandler",_respawnHandler];
 player createDiaryRecord ["Diary",["Cortex audit: what to watch","The test card names the current case and expected behaviour. Open Zeus and use Inspect test to move its camera to the fixtures. PASS covers the stated assertion only. Missing completion means incomplete. Infantry should accept/release orders; both headless clients should adopt it; all three convoy vehicles should move; cargo should unload while weapon crew remain; the mortar should fire exactly two rounds. UI checks exercise real controls, not mouse input. Assess readability separately. Results are added to this diary when each suite completes."]];
 private _catalogue=missionNamespace getVariable ["Waldo_CortexQA_Catalogue",[]];
 private _catalogueText="Selected run: "+(missionNamespace getVariable ["Waldo_CortexQA_Focus","all"])+"<br/>The all and features selections run every suite; individual focuses skip other suites. Listed procedures are not passes. Required ownership and interruption variants may still be incomplete.<br/><br/>";

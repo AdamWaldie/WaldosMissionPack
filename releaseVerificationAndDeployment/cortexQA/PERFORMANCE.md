@@ -76,6 +76,25 @@ Cortex; both HCs stayed at 21/24 ms. Comparability was withheld because one to t
 soldiers were no longer alive in three arms, including the closing native arm. The fixture had
 applied invulnerability before locality transfer; it now reapplies that state on the actual owner.
 
+Runtime `runtime-20261001-123818` is the first valid 50-squad infantry matrix. All four arms moved
+47-50 groups, all 13 contact squads fired, every owner stayed responsive and no Cortex job starved.
+The two native server baselines measured 30/36 and 31/37 ms median/p95; the Cortex arms measured
+29/38 and 28/38 ms. Both HCs remained 21 ms median and 24-25 ms p95. The rendered client measured
+21/28 and 18/22 ms natively versus 18/21 and 18/22 ms with Cortex. Every 5% median and 10% p95 gate
+passed. This is one local-host matrix; repeat hardware runs and ACE HC ownership remain required.
+
+Runtime `runtime-20261001-131706` is the first valid 50-group mixed matrix: 30 infantry squads, ten
+ground vehicles, six helicopters and four jets. Flight groups remained server-local under the
+production flight-locality policy, producing the same 24/13/13 active-group distribution in every
+arm. Native arms moved 50 and 49 groups; Cortex arms moved 49 and 48. All ten contact squads fired,
+response began in 3.352-4.387 seconds, every owner stayed responsive and no job starved. Native
+server baselines measured 21/24 ms median/p95 in both arms; Cortex measured 21/25 ms in both arms.
+Both HCs measured 21/24 ms natively and 21/24-25 ms with Cortex. The rendered client measured
+17/20 and 17/21 ms natively versus 17/20 and 17/21 ms with Cortex. Every agreed budget gate passed,
+and both server and client completed with zero Cortex findings and no SQF errors. The audit now keeps
+the observer invulnerable, starts jets airborne, retries transient owner-transfer refusal before
+measurement and deletes emptied groups on their actual owner between arms.
+
 The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
 measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage
 alongside them.

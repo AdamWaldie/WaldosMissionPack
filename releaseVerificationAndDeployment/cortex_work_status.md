@@ -1,6 +1,6 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `e437ab2` are pushed. Batched Arma testing has resumed at the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms; two distributed contact benchmarks failed closed and produced actionable scheduler, overhead and fixture findings.
+Updated 1 October 2026. PR 151 remains draft. Batched Arma testing uses the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms. The 50-squad infantry and 50-group mixed native-versus-Cortex matrices now pass the agreed frame-time budgets; repeated hardware and ACE HC runs remain.
 
 ## 1 October: LAMBS ownership and compatibility
 
@@ -74,6 +74,20 @@ returned. Server median/p95 measured 31/37 and 31/36 ms natively versus 27/39 an
 Cortex; both HCs remained 21/24 ms. The run was not comparable because one to three transferred
 soldiers died in three arms, including the closing native arm. Invulnerability is now reapplied on
 the actual owner after locality transfer; no budget pass is claimed from the invalid matrix.
+
+Runtime `20261001-123818` completed a valid 50-squad infantry OFF/ON/ON/OFF matrix. Every arm moved
+47-50 groups, all 13 contacts fired, all owners remained responsive and all server, HC and rendered
+client median/p95 gates passed. Server native baselines were 30/36 and 31/37 ms versus Cortex 29/38
+and 28/38 ms. The HCs remained 21/24-25 ms and the client remained within budget.
+
+Runtime `20261001-131706` completed a valid additive mixed matrix with 30 infantry squads, ten ground
+vehicles, six helicopters and four jets. The production flight-locality policy kept aircraft on the
+server, giving every arm the same 24/13/13 active ownership. Native arms moved 50/49 groups and Cortex
+arms 49/48; all ten contacts fired and responded within 3.352-4.387 seconds. Server median/p95 was
+21/24 ms natively and 21/25 ms with Cortex; HC and rendered-client gates also passed. Server and client
+both completed with zero Cortex findings and no SQF errors. Observer death, stationary jet spawning,
+transient group migration refusal, stale remote groups and an unrelated conversation-author audit
+error cascade were corrected before this accepted run.
 
 ## 1 October: contact initiative without authored movement
 

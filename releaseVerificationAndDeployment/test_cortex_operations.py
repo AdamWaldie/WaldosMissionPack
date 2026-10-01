@@ -654,6 +654,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('"O_MRAP_02_F"',distributed)
         self.assertIn('"O_Heli_Light_02_unarmed_F"',distributed)
         self.assertIn('"O_Plane_CAS_02_dynamicLoadout_F"',distributed)
+        self.assertIn('_ownerCounts isEqualTo [24,13,13]',distributed)
+        self.assertIn('_vehicle setVelocityModelSpace [0,140,0]',distributed)
+        self.assertIn('if (_mixed && {_index >= 40}) then {2}',distributed)
+        self.assertIn('for "_retry" from 0 to 4',distributed)
+        self.assertIn('groupOwner _x != _desiredOwner',distributed)
         self.assertIn('Waldo_CortexQA_PerformanceStarted',distributed)
         self.assertIn('Waldo_CortexQA_PerformanceFired',distributed)
         self.assertIn('owner-prerequisite',distributed)
@@ -669,6 +674,8 @@ class CortexOperations(unittest.TestCase):
         server_runner=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text()
         self.assertIn('PERF-CONTACT-run-completed',server_runner)
         self.assertIn('Waldo_CortexQA_PerformanceStartGroup',owner_sampler)
+        self.assertIn('Waldo_CortexQA_PerformanceDeleteGroup',owner_sampler)
+        self.assertIn('units _x isNotEqualTo []',owner_sampler)
         self.assertIn('addEventHandler ["FiredMan"',owner_sampler)
         for marker in ['diag_deltaTime*1000','Waldo_CortexQA_PerformanceGroup','[0.99] call _percentile']:
             self.assertIn(marker,owner_sampler)
@@ -681,6 +688,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('flyInHeight 90',owner_sampler)
         self.assertIn('flyInHeight 250',owner_sampler)
         self.assertGreaterEqual(owner_sampler.count('allowDamage false'),2)
+        self.assertIn('remoteExecCall ["Waldo_CortexQA_PerformanceDeleteGroup",_ownedBy]',distributed)
+        guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text()
+        self.assertIn('player allowDamage false',guide)
+        self.assertIn('player setCaptive true',guide)
+        self.assertIn('addMissionEventHandler ["EntityRespawned"',guide)
 
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')

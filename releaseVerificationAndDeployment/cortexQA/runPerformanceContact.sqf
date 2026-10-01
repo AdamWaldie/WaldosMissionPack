@@ -81,9 +81,18 @@ private _ownersResponsive=true;
             } else {
                 private _class=if (_index < 40) then {"O_MRAP_02_F"} else {if (_index < 46) then {"O_Heli_Light_02_unarmed_F"} else {"O_Plane_CAS_02_dynamicLoadout_F"}};
                 private _placement=if (_index >= 40) then {"FLY"} else {"NONE"};
-                private _vehicle=createVehicle [_class,_origin,[],0,_placement];
+                private _spawnOrigin=+_origin;
+                if (_index >= 40 && {_index < 46}) then {_spawnOrigin set [2,90]};
+                if (_index >= 46) then {_spawnOrigin set [2,250]};
+                private _vehicle=createVehicle [_class,_spawnOrigin,[],0,_placement];
                 _vehicle allowDamage false;
                 _vehicle setDir 0;
+                _vehicle engineOn true;
+                if (_index >= 40 && {_index < 46}) then {_vehicle flyInHeight 90};
+                if (_index >= 46) then {
+                    _vehicle flyInHeight 250;
+                    _vehicle setVelocityModelSpace [0,140,0];
+                };
                 createVehicleCrew _vehicle;
                 _group=group effectiveCommander _vehicle;
                 {
@@ -100,7 +109,10 @@ private _ownersResponsive=true;
             _groupTargets pushBack _target;
             _destinations pushBack (_origin vectorAdd [0,if (_mixed && {_index >= 40}) then {1000} else {210},0]);
             if (_contact) then {_contactGroups pushBack _group};
-            private _desiredOwner=_owners select (_index mod count _owners);
+            // WMP deliberately refuses to migrate an active helicopter in flight. Keep every air
+            // group on the server in both native and Cortex arms so the benchmark measures the
+            // production locality policy instead of treating that protection as a fixture failure.
+            private _desiredOwner=if (_mixed && {_index >= 40}) then {2} else {_owners select (_index mod count _owners)};
             if (_desiredOwner == 2) then {
                 _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
             } else {
@@ -113,13 +125,41 @@ private _ownersResponsive=true;
         };
     };
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors select [0,18],true];
+    // The engine can transiently refuse the tail of a burst of setGroupOwner requests even while
+    // both HCs remain healthy. Retry only groups which have not reached their declared owner; the
+    // measured window still begins after ownership settles, and a persistent refusal remains a
+    // hard failed prerequisite rather than silently changing the workload.
+    for "_retry" from 0 to 4 do {
+        private _pending=[];
+        {
+            private _index=_forEachIndex;
+            private _desiredOwner=if (_mixed && {_index >= 40}) then {2} else {_owners select (_index mod count _owners)};
+            if (groupOwner _x != _desiredOwner) then {_pending pushBack [_x,_desiredOwner]};
+        } forEach _groups;
+        if (_pending isEqualTo []) exitWith {};
+        sleep 2;
+        {
+            _x params ["_pendingGroup","_pendingOwner"];
+            [_pendingGroup,_pendingOwner] call Waldo_fnc_HeadlessMigrateGroup;
+            sleep 0.1;
+        } forEach _pending;
+    };
     [format ["Performance %1: arm %2 / Cortex %3",["infantry","mixed force"] select _mixed,_arm+1,["OFF","ON"] select _enabled],
         (["Fifty six-soldier squads move across the server and two headless owners. Thirteen squads receive controlled contacts.","Fifty groups combine 30 infantry squads, ten ground vehicles, six helicopters and four jets; ten infantry squads receive controlled contacts."] select _mixed)+" Physical movement, real fire, queue health and server, HC and client frame times are measured.",[1800,1800,0]] call _phase;
     private _ownershipReady=[{
-        _groups findIf {private _index=_groups find _x; groupOwner _x != (_owners select (_index mod count _owners))} < 0
+        _groups findIf {
+            private _index=_groups find _x;
+            private _desiredOwner=if (_mixed && {_index >= 40}) then {2} else {_owners select (_index mod count _owners)};
+            groupOwner _x != _desiredOwner
+        } < 0
     },90] call _wait;
     private _ownerCounts=_owners apply {private _owner=_x; {groupOwner _x == _owner} count _groups};
-    private _balanced=(_ownerCounts select 0) >= 16 && {(_ownerCounts select 1) >= 16} && {(_ownerCounts select 2) >= 16};
+    private _balanced=if (_mixed) then {
+        // Ten flight groups remain server-local; the forty land groups remain round-robin.
+        _ownerCounts isEqualTo [24,13,13]
+    } else {
+        (_ownerCounts select 0) >= 16 && {(_ownerCounts select 1) >= 16} && {(_ownerCounts select 2) >= 16}
+    };
     [format ["%1-arm-%2-balanced-ownership",_prefix,_arm],_ownershipReady && {_balanced},str _ownerCounts] call _check;
     private _ownerUnitBaselines=_owners apply {private _owner=_x; private _total=0; {{if (alive _x) then {_total=_total+1}} forEach units _x} forEach (_groups select {groupOwner _x == _owner}); _total};
     sleep 20;
@@ -181,8 +221,13 @@ private _ownersResponsive=true;
         format ["movedGroups=%1 firedContactGroups=%2 responseSeconds=%3 samples=%4",_moved,_fired,_responseLatency,_sampleResults]] call _check;
     [format ["%1-arm-%2-no-starvation",_prefix,_arm],_sampleReady && {_ownerResults findIf {(_x select 5) > 10} < 0},str _ownerResults] call _check;
     _results pushBack [_sampleResults,_valid,_responseLatency];
+    private _ownedGroups=_groups apply {[_x,groupOwner _x]};
     {deleteVehicle _x} forEach (_actors+_targets);
-    {deleteGroup _x} forEach (_groups+_targetGroups);
+    {
+        _x params ["_ownedGroup","_ownedBy"];
+        [_ownedGroup] remoteExecCall ["Waldo_CortexQA_PerformanceDeleteGroup",_ownedBy];
+    } forEach _ownedGroups;
+    {deleteGroup _x} forEach _targetGroups;
     missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
     sleep 10;
 } forEach [false,true,true,false];
