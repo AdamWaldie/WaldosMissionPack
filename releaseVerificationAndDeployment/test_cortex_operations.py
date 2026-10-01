@@ -621,6 +621,8 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(marker,lambs)
         self.assertIn('private _assignment=_x getVariable ["Waldo_AIPass_DefendPos",[]];',lambs)
         self.assertIn('_x distance2D (_assignment select 0)',lambs)
+        self.assertIn('} forEach _units;',lambs)
+        self.assertNotIn('findIf {_x distance2D (_starts select _forEachIndex)',lambs)
         self.assertIn('}) < 0\n},90] call _wait;',lambs)
         launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text()
         self.assertIn('[switch]$IncludeLambs',launcher)

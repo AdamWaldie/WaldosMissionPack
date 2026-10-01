@@ -56,7 +56,10 @@ private _arrived=[{
         !alive _x || {_assignment isEqualTo []} || {_x distance2D (_assignment select 0) > 5}
     }) < 0
 },90] call _wait;
-private _travelled=(_units findIf {_x distance2D (_starts select _forEachIndex) < 35}) < 0;
+private _travelled=true;
+{
+    if (_x distance2D (_starts select _forEachIndex) < 35) then {_travelled=false};
+} forEach _units;
 ["LAMBS-fallback-physical-arrival",_accepted && {_arrived} && {_travelled},str (_units apply {getPosATL _x})] call _check;
 private _maxHoldDrift=0;
 for "_sample" from 1 to 5 do {
