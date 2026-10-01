@@ -989,9 +989,17 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_expected distance2D _spot > 15', step)
         self.assertIn('_pursuitResetCount < 2', step)
         recovery = step.split('// Live dedicated QA proved that YELLOW', 1)[1].split('private _last =', 1)[0]
-        for order in ['_unit doTarget objNull', '_unit doWatch _enemyPos', '_unit doMove _spot']:
+        for order in ['_unit doTarget objNull', '_unit doWatch _enemyPos', '_unit doMove _spot',
+                      '_unit setDestination [_spot,"LEADER PLANNED",true]']:
             self.assertIn(order, recovery)
         self.assertNotIn('enableAttack false', recovery)
+
+    def test_tactical_bounds_own_actor_path_without_disabling_fire(self):
+        step = source("cortexFlankStep")
+        self.assertGreaterEqual(step.count('setDestination ['), 3)
+        self.assertIn('_unit setDestination [_spots select _forEachIndex,"LEADER PLANNED",true]',step)
+        self.assertNotIn('_unit disableAI "TARGET"',step)
+        self.assertNotIn('_unit disableAI "AUTOTARGET"',step)
 
     def test_suppressive_fire_talks_inside_squad_and_desynchronises_squads(self):
         fire = source("cortexFireControl")

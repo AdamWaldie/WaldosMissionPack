@@ -9,9 +9,11 @@
  * street crossings, group-level RED pursuit is replaced by a finite YELLOW lease, but individual
  * TARGET and AUTOTARGET remain enabled. Movers therefore keep acquiring and engaging visible threats
  * while their owned destination remains authoritative. Only AUTOCOMBAT is suspended so the engine
- * cannot replace the finite AWARE move with a new COMBAT movement plan. If a live ATTACK command still
- * replaces an individual destination, the controller clears that actor's target and reissues the owned
- * spot at most twice per bound. This is a narrow recovery for a measured engine override, not a blanket
+ * cannot replace the finite AWARE move with a new COMBAT movement plan. Every bound pairs doMove with an
+ * actor-local LEADER PLANNED destination so the engine path planner retains the owned spot while the actor
+ * continues firing. If a live ATTACK command still replaces that destination, the controller clears that
+ * actor's target and reissues the same paired movement order at most twice per bound. This is a narrow
+ * recovery for a measured engine override, not a blanket
  * targeting disable; other movers and every stationary fire element continue engaging.
  * A RED group first receives a finite YELLOW movement lease: it remains fire-at-will, but the engine must keep
  * formation instead of creating independent ATTACK subgroups that compete with the bounds. The lease begins one
@@ -416,6 +418,7 @@ private _issue = {
         doStop _unit;
         _unit doWatch _enemyPos;
         _unit doMove _spot;
+        _unit setDestination [_spot,"LEADER PLANNED",true];
     } forEach _units;
     private _waypointIndex = currentWaypoint _group;
     private _waypointSnapshot = [];
@@ -478,6 +481,7 @@ switch (_drill get "stage") do {
                         _unit doTarget objNull;
                         _unit doWatch _enemyPos;
                         _unit doMove _spot;
+                        _unit setDestination [_spot,"LEADER PLANNED",true];
                         _pursuitResetCount = _pursuitResetCount + 1;
                         _pursuitResets set [_forEachIndex,_pursuitResetCount];
                         diag_log format ["[WMP CORTEX] Native pursuit reset group=%1 unit=%2 bound=%3 attempt=%4 expectedOffset=%5",_group,netId _unit,_drill get "index",_pursuitResetCount,_expected distance2D _spot];
@@ -504,6 +508,7 @@ switch (_drill get "stage") do {
                         // Reissue only the movement destination. Target ownership is
                         // independent and must survive a path recovery attempt.
                         _unit doMove (_spots select _forEachIndex);
+                        _unit setDestination [_spots select _forEachIndex,"LEADER PLANNED",true];
                         _retry set [0,(_retry select 0)+1];
                         _retry set [1,_now];
                         diag_log format ["[WMP CORTEX] Bound retry group=%1 unit=%2 bound=%3 attempt=%4 remaining=%5",_group,netId _unit,_drill get "index",_retry select 0,_remaining];
