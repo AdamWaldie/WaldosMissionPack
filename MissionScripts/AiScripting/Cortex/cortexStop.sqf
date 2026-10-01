@@ -96,7 +96,7 @@ if (!isNil "_handle") then {
     [_x,true] call Waldo_fnc_CortexHearingLocal;
     if (local _x) then {_x setVariable ["Waldo_AIPass_AreaReport",nil,true]};
     if (local _x && {count (_x getVariable ["Waldo_AIPass_State", createHashMap]) > 0 || {_x getVariable ["Waldo_AIPass_Managed", false]} || {(_x getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
-        [_x] call Waldo_fnc_CortexReleaseGroup;
+        [_x,true,"CORTEX_STOPPED"] call Waldo_fnc_CortexReleaseGroup;
     };
     if (local _x) then {
         [_x] call Waldo_fnc_CortexLambsBuildingRelease;

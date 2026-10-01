@@ -43,7 +43,7 @@ if (_waypoints && {!(_group getVariable ["Waldo_AIPass_ZeusWaypoints", false])})
 // Publish the hold before cleanup so CortexReleaseGroup recognises an external takeover and
 // restores only Cortex-owned state without replacing the curator's movement, behaviour or speed.
 if (local _group) then {
-    [_group,false] call Waldo_fnc_CortexReleaseGroup;
+    [_group,false,"ZEUS_TAKEOVER"] call Waldo_fnc_CortexReleaseGroup;
 } else {
-    [_group,false] remoteExecCall ["Waldo_fnc_CortexReleaseGroup",groupOwner _group];
+    [_group,false,"ZEUS_TAKEOVER"] remoteExecCall ["Waldo_fnc_CortexReleaseGroup",groupOwner _group];
 };

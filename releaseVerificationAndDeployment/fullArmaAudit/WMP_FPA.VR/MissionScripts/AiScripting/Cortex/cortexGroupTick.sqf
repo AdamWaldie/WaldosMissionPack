@@ -236,7 +236,7 @@ private _contactDelay = if (_nearTier) then {["Waldo_AIPass_TickContact", 2] cal
 private _areaMode = _state getOrDefault ["areaInvestigation",""];
 if (_areaMode != "" && {(!([_group,"Waldo_AIPass_Investigate_Enable",true] call Waldo_fnc_CortexFeatureEnabled))
     || {!([_group,["Waldo_AIPass_ContactReports_Enable","Waldo_AIPass_Hearing_Enable"] select (_areaMode == "SOUND"),true] call Waldo_fnc_CortexFeatureEnabled)}}) then {
-    [_group,_state] call Waldo_fnc_CortexRestoreCalm;
+    [_group,_state,true,false,"INVESTIGATION_GATE_CLOSED"] call Waldo_fnc_CortexRestoreCalm;
     _state deleteAt "areaInvestigation";
 };
 // Runtime switches are authoritative permissions, not start-only preferences. A feature
@@ -251,7 +251,8 @@ private _phaseGateClosed = (_activePhase == "INVESTIGATE"
     || {_activePhase in ["SECURITY","SEARCH","REGROUP"]
         && {!(["Waldo_AIPass_PostContact_Enable",true] call _get)}};
 if (_phaseGateClosed) then {
-    [_group,_state] call Waldo_fnc_CortexRestoreCalm;
+    private _closedReason=["POSTCONTACT_DISABLED","INVESTIGATION_DISABLED"] select (_activePhase == "INVESTIGATE");
+    [_group,_state,true,false,_closedReason] call Waldo_fnc_CortexRestoreCalm;
     _activePhase = "CALM";
 };
 
@@ -423,7 +424,7 @@ switch (_state get "phase") do {
                 _delay = 2;
             } else {
                 {if (local _x) then {_x doWatch objNull}} forEach _alive;
-                [_group, _state] call Waldo_fnc_CortexRestoreCalm;
+                [_group, _state, true, false, ["INVESTIGATION_COMPLETE","INVESTIGATION_TIMEOUT"] select (_now - (_state get "phaseStart") > (["Waldo_AIPass_Investigate_Seconds", 60] call _get))] call Waldo_fnc_CortexRestoreCalm;
             };
         } else {
             _delay = 3;
@@ -513,7 +514,7 @@ switch (_state get "phase") do {
             if (["Waldo_AIPass_PostContact_Enable", true] call _get) then {
                 [_group,_state,"SECURITY","CONTACT_LOST",_now] call Waldo_fnc_CortexSetPhase;
             } else {
-                [_group, _state] call Waldo_fnc_CortexRestoreCalm;
+                [_group, _state, true, false, "CONTACT_ENDED"] call Waldo_fnc_CortexRestoreCalm;
             };
         };
     };
@@ -563,7 +564,7 @@ switch (_state get "phase") do {
         };
         // Explicit holding orders and the post-contact gate outrank automatic consolidation.
         if (_ordered || {!(["Waldo_AIPass_PostContact_Enable", true] call _get)}) exitWith {
-            [_group, _state] call Waldo_fnc_CortexRestoreCalm;
+            [_group, _state, true, false, ["POSTCONTACT_DISABLED","AUTHORED_ORDER"] select _ordered] call Waldo_fnc_CortexRestoreCalm;
         };
         if (["Waldo_AIPass_AmmoShare_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexAmmoShare};
         private _members = _alive select {
@@ -594,7 +595,7 @@ switch (_state get "phase") do {
         };
         if (_closed || {_expired}) then {
             // Expiry releases control but remains INCOMPLETE; it is never reported as arrival.
-            [_group, _state] call Waldo_fnc_CortexRestoreCalm;
+            [_group, _state, true, false, ["REGROUP_TIMEOUT","REGROUP_COHESIVE"] select _closed] call Waldo_fnc_CortexRestoreCalm;
         } else {
             _delay = 3;
         };

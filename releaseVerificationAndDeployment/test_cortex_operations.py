@@ -218,7 +218,8 @@ class CortexOperations(unittest.TestCase):
         flank_end=source('cortexFlankEnd')
         self.assertIn('private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld}',release)
         self.assertIn('["RELEASE","ZEUS"] select _yieldToExternal',release)
-        self.assertIn('[_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm',release)
+        self.assertIn('[_group, _state, false, _yieldToExternal, _reason] call Waldo_fnc_CortexRestoreCalm',release)
+        self.assertIn('["RELEASED","ZEUS_TAKEOVER"] select _yieldToExternal',release)
         self.assertIn('["_yieldToExternal",false,[true]]',restore)
         self.assertIn('if (!_yieldToExternal && {_state getOrDefault ["behaviourChanged", false]}',restore)
         self.assertIn('if (!_yieldToExternal && {_state getOrDefault ["speedChanged", false]})',restore)
@@ -569,8 +570,8 @@ class CortexOperations(unittest.TestCase):
         mark=(ROOT/'MissionScripts/AiScripting/Cortex/cortexZeusMark.sqf').read_text()
         executable=mark.split('params [',1)[1]
         self.assertLess(executable.index('setVariable ["Waldo_AIPass_ZeusHold"'),executable.index('Waldo_fnc_CortexReleaseGroup'))
-        self.assertIn('[_group,false] call Waldo_fnc_CortexReleaseGroup',mark)
-        self.assertIn('remoteExecCall ["Waldo_fnc_CortexReleaseGroup",groupOwner _group]',mark)
+        self.assertIn('[_group,false,"ZEUS_TAKEOVER"] call Waldo_fnc_CortexReleaseGroup',mark)
+        self.assertIn('[_group,false,"ZEUS_TAKEOVER"] remoteExecCall ["Waldo_fnc_CortexReleaseGroup",groupOwner _group]',mark)
 
     def test_handover_visuals_do_not_keep_stale_rally_labels(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
@@ -1542,11 +1543,28 @@ class CortexOperations(unittest.TestCase):
         for phase in ['SECURITY','SEARCH','REGROUP']:
             self.assertIn(f'"{phase}"',gates)
         self.assertIn('Waldo_AIPass_PostContact_Enable',gates)
-        self.assertIn('[_group,_state] call Waldo_fnc_CortexRestoreCalm',gates)
+        self.assertIn('[_group,_state,true,false,_closedReason] call Waldo_fnc_CortexRestoreCalm',gates)
+        self.assertIn('["POSTCONTACT_DISABLED","INVESTIGATION_DISABLED"]',gates)
         self.assertIn('_activePhase = "CALM"',gates)
         restore=source('cortexRestoreCalm')
         self.assertIn('_state getOrDefault ["searchTeam", []]',restore)
         self.assertIn('[_group] call Waldo_fnc_CortexGroupMoveClear',restore)
+
+    def test_calm_handover_reasons_distinguish_completion_control_and_gate_closure(self):
+        tick=source('cortexGroupTick')
+        for reason in ['INVESTIGATION_GATE_CLOSED','POSTCONTACT_DISABLED','INVESTIGATION_DISABLED',
+                       'INVESTIGATION_COMPLETE','INVESTIGATION_TIMEOUT','CONTACT_ENDED',
+                       'AUTHORED_ORDER','REGROUP_TIMEOUT','REGROUP_COHESIVE']:
+            self.assertIn(f'"{reason}"',tick)
+        self.assertIn('"ONBOARD_REPORT_EXPIRED"',source('cortexOnboardContact'))
+        self.assertIn('"OWNERSHIP_ADOPTED"',source('cortexLocality'))
+        self.assertIn('"CORTEX_STOPPED"',source('cortexStop'))
+        self.assertIn('"SURRENDER"',source('cortexSurrender'))
+        self.assertIn('"ZEUS_TAKEOVER"',source('cortexZeusMark'))
+        lifecycle=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLifecycle.sqf').read_text()
+        self.assertIn('LIFE-stop-transition-reason',lifecycle)
+        self.assertIn('LIFE-zeus-transition-reason',lifecycle)
+        self.assertIn('Waldo_Cortex_PhaseTransition',lifecycle)
 
     def test_support_gate_closure_rejects_server_token_and_clears_local_role(self):
         text=source('cortexSupportMaintain')

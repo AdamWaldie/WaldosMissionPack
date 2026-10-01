@@ -44,5 +44,5 @@ private _vehicles=[];
 if ("onboardContactUntil" in _state && {serverTime >= (_state get "onboardContactUntil")}
     && {(_state getOrDefault ["phase",""]) == "CALM"}) then {
     _state deleteAt "onboardContactUntil";
-    [_group,_state] call Waldo_fnc_CortexRestoreCalm;
+    [_group,_state,true,false,"ONBOARD_REPORT_EXPIRED"] call Waldo_fnc_CortexRestoreCalm;
 };

@@ -73,7 +73,7 @@ private _passengers=(_restore getOrDefault ["dismounted",[]]) select {
     alive _unit && {group _unit == _group} && {alive _vehicle} && {vehicle _unit == _unit}
         && {isNull assignedVehicle _unit || {assignedVehicle _unit == _vehicle}}
 };
-[_group, _restore, false] call Waldo_fnc_CortexRestoreCalm;
+[_group, _restore, false, false, "OWNERSHIP_ADOPTED"] call Waldo_fnc_CortexRestoreCalm;
 // A delegated building task is the active movement owner. Replay it only after old-owner calm
 // restoration has finished, then stop: remount, post-contact and withdrawal intents from an older
 // episode must not compete with the reconstructed building controller.

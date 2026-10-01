@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Tests mid-order master disable, authored movement and restart on server and two headless owners.
+ * Tests mid-order master disable, authored movement, restart and published handover reasons on
+ * the server and two headless owners.
  * Locality/authority: server fixture; WMP migration and production owner-local defence/release paths.
  * Ordinary waypoints are issued after returning the group to the server while Cortex is disabled.
  * Also checks that a refused HC-to-HC transfer preserves actual ownership and its registry record.
@@ -66,6 +67,11 @@ private _moving=[{
 ["LIFE-defence-physical-start",_accepted && {_moving}] call _check;
 [createHashMapFromArray [["Waldo_AIPass_Enable",false]]] call Waldo_fnc_CortexTuning;
 ["LIFE-master-stopped",[{!(missionNamespace getVariable ["Waldo_AIPass_Active",true])},20] call _wait] call _check;
+private _stopRecorded=[{
+    private _transition=_group getVariable ["Waldo_Cortex_PhaseTransition",[]];
+    count _transition == 5 && {(_transition select 2) == "CALM"} && {(_transition select 3) == "CORTEX_STOPPED"}
+},20] call _wait;
+["LIFE-stop-transition-reason",_stopRecorded,str (_group getVariable ["Waldo_Cortex_PhaseTransition",[]])] call _check;
 ["LIFE-owner-cleared-assignment",[{
     (_group getVariable ["Waldo_AIPass_Defend",[]]) isEqualTo []
         && {_units findIf {(_x getVariable ["Waldo_AIPass_DefendPos",[]]) isNotEqualTo []} < 0}
@@ -100,6 +106,11 @@ private _zeusReleased=[{
     && {_units findIf {(_x getVariable ["Waldo_AIPass_DefendPos",[]]) isNotEqualTo []} < 0}
 },20] call _wait;
 ["LIFE-zeus-no-waypoint-releases-defence",_zeusReleased] call _check;
+private _zeusRecorded=[{
+    private _transition=_group getVariable ["Waldo_Cortex_PhaseTransition",[]];
+    count _transition == 5 && {(_transition select 2) == "CALM"} && {(_transition select 3) == "ZEUS_TAKEOVER"}
+},20] call _wait;
+["LIFE-zeus-transition-reason",_zeusRecorded,str (_group getVariable ["Waldo_Cortex_PhaseTransition",[]])] call _check;
 if (_targetOwner != 2) then {[2] call _migrate};
 private _zeusDestination=[2130,1800,0];
 private _zeusWP=_group addWaypoint [_zeusDestination,0];

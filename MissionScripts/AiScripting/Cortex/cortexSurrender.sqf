@@ -34,7 +34,7 @@ if ((units _group) findIf {local _x && {vehicle _x == _x} && {[_x] call Waldo_fn
 if ((_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
 if ((_group getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
 if (_group getVariable ["Waldo_AIPass_ClearBuilding",false]) then {[_group] call Waldo_fnc_CortexClearRelease};
-[_group,false] call Waldo_fnc_CortexReleaseGroup;
+[_group,false,"SURRENDER"] call Waldo_fnc_CortexReleaseGroup;
 private _surrendered = 0;
 private _aceCaptives = !isNil "ace_captives_fnc_setSurrendered";
 {

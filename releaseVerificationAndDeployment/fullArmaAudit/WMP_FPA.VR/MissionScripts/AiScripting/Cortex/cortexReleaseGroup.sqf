@@ -19,6 +19,8 @@
  * 0: group <GROUP>
  * 1: forget <BOOL> - also clear the managed flag so discovery may pick the group up again
  *    (optional, default: true)
+ * 2: transition reason <STRING> - published with the CALM handover. Empty selects
+ *    ZEUS_TAKEOVER when an external hold is active, otherwise RELEASED (optional, default: "").
  *
  * Return Value:
  * Nothing
@@ -27,13 +29,15 @@
  * [_group] call Waldo_fnc_CortexReleaseGroup;
  * Result: the group behaves exactly as it would without the pass.
  *
- * Current callers: Waldo_fnc_CortexGroupTick (group became ineligible) and Waldo_fnc_CortexStop.
+ * Current callers: Cortex eligibility/stop cleanup, Zeus and AI-order handovers, surrender,
+ * defence, garrison and building-clear order entry.
  */
 
-params [["_group", grpNull, [grpNull]], ["_forget", true, [false]]];
+params [["_group", grpNull, [grpNull]], ["_forget", true, [false]], ["_reason", "", [""]]];
 if (isNull _group) exitWith {};
 private _state = _group getVariable ["Waldo_AIPass_State", createHashMap];
 private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld};
+if (_reason == "") then {_reason=["RELEASED","ZEUS_TAKEOVER"] select _yieldToExternal};
 // Explicit building controllers are movement owners too. Zeus replacement orders must terminate the
 // delegated LAMBS loop or native building job before general Cortex state is restored.
 if (_yieldToExternal) then {
@@ -43,7 +47,7 @@ if (_yieldToExternal) then {
 };
 if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
     if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _yieldToExternal] call Waldo_fnc_CortexFlankEnd};
-    [_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm;
+    [_group, _state, false, _yieldToExternal, _reason] call Waldo_fnc_CortexRestoreCalm;
 };
 if (local _group) then {[_group,"",false] call Waldo_fnc_CortexLambsLease};
 if (local _group && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
