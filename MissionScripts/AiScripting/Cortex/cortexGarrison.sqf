@@ -9,8 +9,9 @@
  * Suppressed or hit, he drops to a lower stance for a few seconds, then stands back up. The order
  * breaks when the group falls to Waldo_AIPass_Garrison_BreakFraction of its strength at the time of
  * the order, or its morale breaks: PATH is re-enabled and the survivors fight normally.
- * With LAMBS Waypoints loaded and Waldo_AIPass_LambsMode "SPLIT", the order is handed to
- * lambs_wp_fnc_taskGarrison instead (disable per call with the "useLambs" option).
+ * With LAMBS Waypoints loaded, its public taskGarrison controller is the primary backend regardless
+ * of the broader Danger FSM ownership mode (disable per call with the "useLambs" option). Cortex
+ * records the delegated task so Zeus, stop and locality migration can release or replay it cleanly.
  * "inPlace" keeps soldiers where they already stand, for units spawned at building positions (used for
  * Dynamic AO garrisons when Waldo_AIPass_Garrison_DynamicAO is true).
  * The order and each soldier's position are published once as group/unit variables, so a new owner
@@ -52,15 +53,12 @@ if (_units isEqualTo []) exitWith {false};
 // Refuse an empty search before releasing the existing order or claiming success.
 if (!(_options getOrDefault ["inPlace",false]) && {(nearestObjects [_centre,["House","Building"],_radius,true]) findIf {(_x buildingPos -1) isNotEqualTo []} < 0}) exitWith {false};
 
-if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
-    && {toUpperANSI (missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]) == "SPLIT"}) exitWith {
+if ((_options getOrDefault ["useLambs", true]) && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}) exitWith {
     [_group,false] call Waldo_fnc_CortexReleaseGroup;
     [_group] call Waldo_fnc_CortexClearRelease;
     if ((_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
     if ((_group getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexDefendRelease};
-    [_group, _centre, _radius, [], false, true, -2, false] call lambs_wp_fnc_taskGarrison;
-    diag_log format ["[WMP CORTEX] %1 garrison handed to LAMBS at %2 r=%3", _group, _centre, _radius];
-    true
+    [_group,"GARRISON",_centre,_radius] call Waldo_fnc_CortexLambsBuildingStart
 };
 if !(missionNamespace getVariable ["Waldo_AIPass_Active", false]) exitWith {
     diag_log format ["[WMP CORTEX] %1 garrison refused: the Smart AI Pass is not running on this machine.", _group];

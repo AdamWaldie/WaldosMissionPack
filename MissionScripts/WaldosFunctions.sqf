@@ -191,6 +191,8 @@ class CfgFunctions
             class CortexSetArtilleryRole {file = "MissionScripts\AiScripting\Cortex\cortexSetArtilleryRole.sqf";};
             class CortexReleaseFeatureCrew {file = "MissionScripts\AiScripting\Cortex\cortexReleaseFeatureCrew.sqf";};
             class CortexLambsLease {file = "MissionScripts\AiScripting\Cortex\cortexLambsLease.sqf";};
+            class CortexLambsBuildingStart {file = "MissionScripts\AiScripting\Cortex\cortexLambsBuildingStart.sqf";};
+            class CortexLambsBuildingRelease {file = "MissionScripts\AiScripting\Cortex\cortexLambsBuildingRelease.sqf";};
             class CortexAntiArmour {file = "MissionScripts\AiScripting\Cortex\cortexAntiArmour.sqf";};
             class CortexCheckpoint {file = "MissionScripts\AiScripting\Cortex\cortexCheckpoint.sqf";};
             class CortexLocality {file = "MissionScripts\AiScripting\Cortex\cortexLocality.sqf";};

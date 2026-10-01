@@ -159,6 +159,8 @@ class CortexOperations(unittest.TestCase):
 
     def test_clearance_uses_independent_workers_and_continuous_room_routes(self):
         text=source('cortexClearBuilding')
+        self.assertIn('private _allPositions = _building buildingPos -1',text)
+        self.assertIn('lineIntersectsSurfaces',text)
         self.assertIn('private _pairs=_team apply {[_x]}',text)
         self.assertIn('private _team = +_available',text)
         self.assertIn('private _entryCapacity = ((((count _positions) min 4) * 2) max 2) min 8',text)
@@ -168,6 +170,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_entries resize ((count _entries) min 4)',text)
         self.assertIn('_approachingEntry=false',text)
         self.assertIn('_approachingEntry=true',text)
+        self.assertIn('_approachingEntry=_entryTarget isNotEqualTo []',text)
+        self.assertIn('if (!_entered && {(_job get "entries") isNotEqualTo []})',text)
+        self.assertIn('_unit setUnitPos "UP"',text)
+        self.assertIn('_unit forceSpeed 4',text)
+        self.assertNotIn('setVehiclePosition',text)
         self.assertIn('_triedEntries pushBackUnique _entryIndex',text)
         self.assertIn('_cursor=_cursor+1',text)
 
@@ -229,10 +236,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('!(_key in _attempted)',apply)
         self.assertIn('for "_index" from 0 to 31 do',apply)
         self.assertIn('Garrison trying alternate entrance',apply)
-        self.assertIn('private _target = _destination',apply)
-        self.assertIn('private _approach = false',apply)
-        self.assertIn('private _replacementApproach=false',apply)
-        self.assertIn('private _replacementTarget=_replacementDestination',apply)
+        self.assertIn('private _approach = _entries isNotEqualTo [] && {_unit distance2D _destination > 30}',apply)
+        self.assertIn('private _target = if (_approach) then {_entries select 0} else {_destination}',apply)
+        self.assertIn('private _replacementApproach=_replacementEntries isNotEqualTo []',apply)
+        self.assertIn('private _replacementTarget=if (_replacementApproach)',apply)
+        self.assertIn('private _replacementAnchor=if (_replacementApproach)',apply)
         self.assertIn('_entries resize ((count _entries) min 4)',apply)
         self.assertIn('if (_nextEntry < count _entries) then',apply)
         self.assertIn('["deadline", time + 240]',apply)
@@ -1692,9 +1700,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('time-_lastProgress >= 12',text)
         self.assertIn('_retries < 2',text)
         self.assertIn('setDestination [_target,"LEADER PLANNED",true]',text)
-        self.assertIn('private _nextEntry=_entryIndex+1',text)
-        self.assertIn('private _target = _destination',text)
-        self.assertIn('private _approach = false',text)
+        self.assertIn('private _nextEntry=if (_approach || {_crossing}) then {_entryIndex+1} else {count _entries}',text)
+        self.assertIn('private _target = if (_approach) then {_entries select 0} else {_destination}',text)
+        self.assertIn('_unit forceSpeed 4',text)
+        self.assertIn('_unit setUnitPos "UP"',text)
         self.assertIn('_entries resize ((count _entries) min 4)',text)
         self.assertIn('private _replacementEntries=',text)
         self.assertNotIn('_job set ["deadline",(_job get "deadline") max (time+60)]',text)
@@ -1708,6 +1717,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('cortexQABuildings.sqf',server)
         comparison=(ROOT/'releaseVerificationAndDeployment/cortexQA/runBuildingComparison.sqf').read_text(encoding='utf-8')
         self.assertIn('_unit distance _target <= 2',comparison)
+        for case in ['GARRISON-lambs-backend','GARRISON-lambs-physical-arrival',
+                     'CLEAR-lambs-multiple-soldiers-enter','CLEAR-lambs-multiple-rooms-traversed',
+                     'CLEAR-lambs-replacement-order-physical']:
+            self.assertIn(case,comparison)
+        self.assertIn('[["useLambs",false]]',comparison)
         self.assertNotIn('setPos',comparison)
 
     def test_consolidation_orders_follow_and_does_not_call_timeout_arrival(self):

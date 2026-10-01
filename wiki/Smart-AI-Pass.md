@@ -323,7 +323,7 @@ different ownership implications:
 | Package | Cortex treatment |
 |---|---|
 | [LAMBS_Danger.fsm](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Active behaviour controller. Cortex uses the group-level LAMBS switch for explicit movement handover. |
-| [LAMBS Waypoints](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Public garrison and CQB functions receive Cortex orders in shared mode. |
+| [LAMBS Waypoints](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Its public garrison and CQB functions are the preferred backend for Cortex building orders whenever installed. |
 | [LAMBS_Turrets](https://steamcommunity.com/sharedfiles/filedetails/?id=1862208264) | Config-only turret dispersion changes remain active in every mode. |
 | [LAMBS_Suppression](https://steamcommunity.com/sharedfiles/filedetails/?id=1808238502) | Config-only AI suppression/stress changes remain active in every mode. |
 | [LAMBS_RPG](https://steamcommunity.com/sharedfiles/filedetails/?id=1858070328) | Config-only launcher target and dispersion changes remain active in every mode. Cortex still applies its own live ammunition and backblast safety checks before an owned anti-armour shot. |
@@ -341,12 +341,18 @@ When LAMBS Danger is loaded, `Waldo_AIPass_LambsMode` decides who owns movement:
   group can be selected. Once LAMBS is clear, a finite public lease sets
   `lambs_danger_disableGroupAI` for that responder only. Completion, rejection, expiry, locality
   migration, Zeus takeover and Cortex shutdown restore the exact value seen before the lease. The
-  requester's base of fire stays under LAMBS. Garrison and clear-building
-  orders are handed to LAMBS Waypoints when it is loaded. A group a mission maker has already set to
+  requester's base of fire stays under LAMBS. A group a mission maker has already set to
   `lambs_danger_disableGroupAI` retains that choice after Cortex releases it.
 - `WMP` (shown as **Cortex only**): WMP runs everything and turns LAMBS group AI off for the squads it
   manages. LAMBS group AI is turned back on when the pass stops or releases the squad. The three
   config companions are unaffected.
+
+`Waldo_AIPass_LambsMode` controls the Danger FSM ownership described above. It does not disable the
+LAMBS Waypoints integration. In either mode, an installed LAMBS Waypoints supplies the primary
+garrison and CQB implementation. Cortex records the semantic building intent and the spawned CQB
+script handle, terminates it before a Zeus or replacement order, removes only task-owned waypoints
+and state, and reconstructs the public task after a headless-client locality change. Per-call
+`useLambs=false` remains available for an explicit script-only fallback test or mission override.
 
 This handover was checked against the locally installed Workshop build of LAMBS 2.6.2.1. That build
 sets `lambs_danger_isExecutingTactic` before scheduling its delayed flank or assault callback, so the
@@ -355,7 +361,8 @@ Turrets, Suppression and RPG packages are config-only and remain active.
 
 Cortex remains self-contained when LAMBS is absent. Its scheduler, movement leases, manoeuvre roles,
 withdrawal, reinforcement, morale, vehicle, artillery and recovery controllers do not call LAMBS.
-The implementation adopts the useful architectural ideas rather than copying LAMBS code: explicit
+Its native building controller is also retained as the automatic fallback. The implementation adopts
+useful architectural ideas rather than copying LAMBS code: explicit
 ownership, short asynchronous tactical steps, separate move/cover roles, casualty eligibility and a
 clean return to authored orders. Cortex does not claim script-level equivalents for LAMBS config/FSM
 features that SQF cannot reproduce reliably. LAMBS CQB's forced-position recovery is deliberately not

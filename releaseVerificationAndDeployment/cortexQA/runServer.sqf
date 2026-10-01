@@ -65,11 +65,27 @@ sleep 5;
 ["GARRISON",[8000,8000,0]] call _order;
 ["ORD-03-empty-garrison-preserves-defend",(_group getVariable ["Waldo_AIPass_Defend",[]]) isNotEqualTo [] && {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo []}] call _check;
 ["GARRISON",getPosATL _house] call _order;
-["ORD-04-garrison-accepted",(_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo [] && {units _group findIf {(_x getVariable ["Waldo_AIPass_GarrisonPos",[]]) isNotEqualTo []} >= 0}] call _check;
-["Garrison movement","Both soldiers must physically reach their assigned building positions, including the correct floor. Standing outside or below the position fails.",getPosATL _house] call _phase;
-["ORD-04b-garrison-arrival",[{["Waldo_AIPass_GarrisonPos",2.5] call _atAssigned},95] call _wait] call _check;
+private _housePositions=_house buildingPos -1;
+private _atHouse={
+    _housePositions isNotEqualTo [] && {units _group findIf {
+        private _unit=_x;
+        !alive _unit || {_housePositions findIf {_unit distance _x <= 2.5} < 0}
+    } < 0}
+};
+private _buildingBackend=_group getVariable ["Waldo_Cortex_BuildingBackend",[]];
+private _lambsBuilding=isClass (configFile >> "CfgPatches" >> "lambs_wp");
+private _garrisonAccepted=if (_lambsBuilding) then {
+    (_buildingBackend param [0,""]) == "LAMBS" && {(_buildingBackend param [1,""]) == "GARRISON"}
+} else {
+    (_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo []
+        && {units _group findIf {(_x getVariable ["Waldo_AIPass_GarrisonPos",[]]) isNotEqualTo []} >= 0}
+};
+["ORD-04-garrison-accepted",_garrisonAccepted,str _buildingBackend] call _check;
+["Garrison movement",["LAMBS is absent, so the public Zeus order must use the native Cortex fallback.","Installed LAMBS Waypoints must own the public Zeus order."] select _lambsBuilding
+    + " Both soldiers must physically enter and hold real building positions; backend selection or an assignment alone does not pass.",getPosATL _house] call _phase;
+["ORD-04b-garrison-arrival",[{call _atHouse},95] call _wait,str (units _group apply {[getPosATL _x,currentCommand _x,expectedDestination _x]})] call _check;
 sleep 5;
-["ORD-04c-garrison-hold",["Waldo_AIPass_GarrisonPos",2.5] call _atAssigned] call _check;
+["ORD-04c-garrison-hold",call _atHouse,str (units _group apply {getPosATL _x})] call _check;
 ["FIXTURE-engine-building-path",_baselineTarget isNotEqualTo [] && {_baseline distance _baselineTarget <= 2.5},format ["engine-only unit pos=%1 target=%2 command=%3 expected=%4",getPosATL _baseline,_baselineTarget,currentCommand _baseline,expectedDestination _baseline]] call _check;
 // Diagnostic comparison: retain the closed-door result; opening doors is not a production fix.
 private _doorCount = getNumber (configOf _house >> "numberOfDoors");
@@ -81,12 +97,15 @@ for "_door" from 1 to _doorCount do {
 };
 sleep 2;
 diag_log format ["WMP CORTEX QA DOORS OPEN: states=%1",(animationNames _house) select {toLower _x find "door" >= 0} apply {[_x,_house animationPhase _x]}];
-[_group] call Waldo_fnc_CortexGarrisonApplyLocal;
+["GARRISON",getPosATL _house] call _order;
 if (local _baseline && {_baselineTarget isNotEqualTo []}) then {doStop _baseline; _baseline doMove _baselineTarget};
-["DIAG-open-door-garrison",[{["Waldo_AIPass_GarrisonPos",2.5] call _atAssigned},95] call _wait] call _check;
+["DIAG-open-door-garrison",[{call _atHouse},95] call _wait,str (units _group apply {[getPosATL _x,currentCommand _x,expectedDestination _x]})] call _check;
 ["DIAG-open-door-engine",local _baseline && {_baselineTarget isNotEqualTo []} && {_baseline distance _baselineTarget <= 2.5},format ["owner=%1 pos=%2 target=%3 command=%4",groupOwner _baselineGroup,getPosATL _baseline,_baselineTarget,currentCommand _baseline]] call _check;
 ["EXCLUDE"] call _order;
-["ORD-05-hand-back",_group getVariable ["Waldo_AIPass_Exclude",false] && {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo []} && {(_group getVariable ["Waldo_AIPass_Defend",[]]) isEqualTo []}] call _check;
+["ORD-05-hand-back",_group getVariable ["Waldo_AIPass_Exclude",false]
+    && {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo []}
+    && {(_group getVariable ["Waldo_AIPass_Defend",[]]) isEqualTo []}
+    && {(_group getVariable ["Waldo_Cortex_BuildingBackend",[]]) isEqualTo []}] call _check;
 ["RETURN"] call _order;
 ["ORD-06-return",!(_group getVariable ["Waldo_AIPass_Exclude",false])] call _check;
 [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQABuildings.sqf";

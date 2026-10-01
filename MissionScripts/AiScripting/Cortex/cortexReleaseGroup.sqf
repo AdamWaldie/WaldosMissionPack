@@ -4,8 +4,9 @@
  *
  * Ends any flank drill (re-enabling only the AI features the drill itself disabled), rejoins the
  * search team, removes pass waypoints, restores behaviour and speed without ordering passengers to board,
- * and releases both scoped SPLIT-mode and blanket WMP-mode LAMBS ownership. Explicit orders (garrison,
- * clear building) are left in place; use their own release functions.
+ * and releases both scoped SPLIT-mode and blanket WMP-mode LAMBS ownership. Explicit building
+ * orders remain in place during ordinary cleanup; a detected Zeus takeover releases them before
+ * restoring the rest of Cortex state so no old controller competes with the curator.
  * Locality and authority: call where the group is local; state and flags are machine-local.
  *
  * Review contract: Only the current group owner restores the public LAMBS flag. Changed restoration checkpoints are public and consumed on ownership adoption.
@@ -33,6 +34,13 @@ params [["_group", grpNull, [grpNull]], ["_forget", true, [false]]];
 if (isNull _group) exitWith {};
 private _state = _group getVariable ["Waldo_AIPass_State", createHashMap];
 private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld};
+// Explicit building controllers are movement owners too. Zeus replacement orders must terminate the
+// delegated LAMBS loop or native building job before general Cortex state is restored.
+if (_yieldToExternal) then {
+    [_group,false] call Waldo_fnc_CortexLambsBuildingRelease;
+    [_group,false] call Waldo_fnc_CortexClearRelease;
+    [_group,false] call Waldo_fnc_CortexGarrisonRelease;
+};
 if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
     if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _yieldToExternal] call Waldo_fnc_CortexFlankEnd};
     [_group, _state, false, _yieldToExternal] call Waldo_fnc_CortexRestoreCalm;

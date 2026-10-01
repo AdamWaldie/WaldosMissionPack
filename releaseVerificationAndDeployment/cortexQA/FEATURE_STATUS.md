@@ -8,7 +8,7 @@ Feature cases: **57**. Required variant categories: **13**.
 | Feature | Settings | Runnable suites | Evidence records | Status |
 | --- | ---: | --- | ---: | --- |
 | CORE - Master, exclusions and ownership | 3 | `runGates.sqf` | 2 | implemented_partial |
-| LAMBS - LAMBS coexistence and Cortex fallback | 1 | `runLambs.sqf` | 2 | implemented_partial |
+| LAMBS - LAMBS coexistence and Cortex fallback | 1 | `runLambs.sqf`, `runBuildingComparison.sqf` | 2 | implemented_partial |
 | SCHED - Scheduler and distance tiers | 11 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
 | PROFILE - Behaviour profiles and aggression | 4 | `runProfiles.sqf` | 1 | implemented_partial |
 | SKILL - AI skill rebalance | 10 | `runMechanics.sqf` | 0 | implemented_partial |
@@ -91,9 +91,9 @@ Feature cases: **57**. Required variant categories: **13**.
 
 ### LAMBS - LAMBS coexistence and Cortex fallback
 
-**Expected:** Without LAMBS, Cortex physically moves and holds the whole squad with no upstream dependency. With LAMBS loaded, Cortex never steals queued or active LAMBS movement, finite leases restore both false and true group baselines, a new HC owner renews and releases the same public lease, Zeus interruption releases ownership, and every soldier physically follows the replacement order without old-route resurrection.
+**Expected:** Without LAMBS, Cortex physically moves and holds the whole squad with no upstream dependency. With LAMBS loaded, its public Waypoints tasks are the primary garrison/CQB backend in both Danger ownership modes. Cortex never steals queued or active LAMBS movement, finite leases restore both false and true group baselines, a new HC owner renews or reconstructs semantic intent, Zeus interruption releases ownership, and every soldier physically follows the replacement order without old-route resurrection.
 
-**Automation and open work:** runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Both core 3840x2160 arms passed; ACE HC distribution, disconnect, JIP and broader terrain/mod combinations remain outstanding.
+**Automation and open work:** runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, exact baseline restoration, HC lease adoption/renewal/release and Zeus handover. runBuildingComparison.sqf adds physical LAMBS garrison/CQB participation and handover beside explicit native fallback cases. The launcher supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs; use two HCs for the loaded arm. Earlier core ownership arms passed; the new building integration, ACE HC distribution, disconnect, JIP and broader terrain/mod combinations remain outstanding.
 
 ### SCHED - Scheduler and distance tiers
 
@@ -291,7 +291,7 @@ Feature cases: **57**. Required variant categories: **13**.
 
 **Expected:** Every assigned soldier physically reaches the correct slot/floor and holds; timeout reports failure, break/release restores only owned restrictions.
 
-**Automation and open work:** runServer.sqf ORD-04*, runBuildingComparison.sqf; live physical arrival failed
+**Automation and open work:** runServer.sqf ORD-04* now validates the public LAMBS backend plus physical arrival and hold. runBuildingComparison.sqf retains native fallback across multiple models. Earlier native physical arrival failed; rebuilt primary and fallback acceptance is pending.
 
 ### FLARES - Aircraft countermeasures
 

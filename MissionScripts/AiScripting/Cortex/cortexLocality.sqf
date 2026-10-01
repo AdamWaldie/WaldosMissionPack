@@ -31,6 +31,7 @@ private _remountIntent = _group getVariable ["Waldo_Cortex_Remount",[]];
         _unit setVariable ["Waldo_AIPass_DuckUntil", nil];
         _unit setVariable ["Waldo_Cortex_ActorMove",nil];
 } forEach units _group;
+if (!_gained) then {[_group,false,true] call Waldo_fnc_CortexLambsBuildingRelease};
 _group setVariable ["Waldo_AIPass_Epoch", (_group getVariable ["Waldo_AIPass_Epoch", 0]) + 1];
 _group setVariable ["Waldo_AIPass_State", nil];
 _group setVariable ["Waldo_AIPass_Managed", nil];
@@ -73,6 +74,23 @@ private _passengers=(_restore getOrDefault ["dismounted",[]]) select {
         && {isNull assignedVehicle _unit || {assignedVehicle _unit == _vehicle}}
 };
 [_group, _restore, false] call Waldo_fnc_CortexRestoreCalm;
+// A delegated building task is the active movement owner. Replay it only after old-owner calm
+// restoration has finished, then stop: remount, post-contact and withdrawal intents from an older
+// episode must not compete with the reconstructed building controller.
+private _buildingIntent=_group getVariable ["Waldo_Cortex_BuildingIntent",[]];
+if (count _buildingIntent >= 3 && {isClass (configFile >> "CfgPatches" >> "lambs_wp")}
+    && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}) exitWith {
+    _group setVariable ["Waldo_Cortex_Remount",nil,true];
+    _group setVariable ["Waldo_Cortex_TransitionIntent",nil,true];
+    _group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];
+    _buildingIntent params ["_buildingKind","_buildingTarget","_buildingRadius"];
+    if (_buildingKind == "GARRISON") then {
+        [_group,_buildingTarget,_buildingRadius] call Waldo_fnc_CortexGarrison;
+    };
+    if (_buildingKind == "CQB" && {_buildingTarget isEqualType objNull} && {!isNull _buildingTarget}) then {
+        [_group,_buildingTarget,createHashMapFromArray [["radius",_buildingRadius]]] call Waldo_fnc_CortexClearBuilding;
+    };
+};
 if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) then {
     private _adopted=[_group] call Waldo_fnc_CortexGroupState;
     _adopted set ["dismounted",_passengers];

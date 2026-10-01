@@ -37,13 +37,35 @@ class CortexContracts(unittest.TestCase):
             self.assertIn(event,text)
 
     def test_orders_gate_players_and_other_features_before_side_effects(self):
-        for name, effect in [('cortexGarrison', 'call lambs_wp_fnc_taskGarrison'),
+        for name, effect in [('cortexGarrison', 'call Waldo_fnc_CortexLambsBuildingStart'),
                              ('cortexDefend', '_x setVariable ["Waldo_AIPass_DefendPos"'),
-                             ('cortexClearBuilding', 'spawn lambs_wp_fnc_taskCQB')]:
+                             ('cortexClearBuilding', 'call Waldo_fnc_CortexLambsBuildingStart')]:
             with self.subTest(name=name):
                 text = source(name)
                 self.assertLess(text.index('call Waldo_fnc_CortexIsEligible'), text.index(effect))
         self.assertIn('[_group] call _isFeatureOwned', source('cortexIsEligible'))
+
+    def test_lambs_building_backend_retains_cleanup_and_migration_intent(self):
+        start=source('cortexLambsBuildingStart')
+        release=source('cortexLambsBuildingRelease')
+        self.assertIn('spawn lambs_wp_fnc_taskCQB',start)
+        self.assertIn('call lambs_wp_fnc_taskGarrison',start)
+        self.assertIn('Waldo_Cortex_LambsBuildingHandle',start)
+        self.assertIn('Waldo_Cortex_BuildingIntent',start)
+        self.assertIn('Waldo_Cortex_BuildingBaseline',start)
+        self.assertIn('createHashMapFromArray _publishedBaseline',start)
+        self.assertIn('terminate _handle',release)
+        self.assertIn('lambs_main_fnc_removeEventhandlers',release)
+        self.assertIn('if (_migration) exitWith {true}',release)
+        self.assertIn('Waldo_Cortex_BuildingBaseline",nil,true',release)
+        self.assertIn('_group allowFleeing 1',release)
+        self.assertIn('_unit enableIRLasers _irLaser',release)
+        self.assertNotIn('[_unit,"MOVE",_move] call',release)
+        self.assertNotIn('[_unit,"COVER",_cover] call',release)
+        locality=source('cortexLocality')
+        self.assertLess(locality.index('call Waldo_fnc_CortexRestoreCalm'),
+                        locality.index('private _buildingIntent='))
+        self.assertIn('Waldo_Cortex_TransitionIntent",nil,true',locality)
 
     def test_fire_revalidates_after_queue_and_dispersion(self):
         text = source('cortexArtilleryShot')

@@ -338,6 +338,22 @@ covered by a regression assertion and queued for an immediate clean rerun.
 
 Static validation passed 268 focused Cortex tests, all 1,265 SQF files, all 113 wiki pages, all 85 Zeus/script parity checks, the executable 57-case/165-setting coverage audit, and `git diff --check`. Arma remained closed; both paired live arms are queued and neither is claimed accepted.
 
+## 1 October: LAMBS-first building backend
+
+Installed LAMBS Waypoints is now the preferred backend for public Cortex garrison and clear-building
+orders in both Danger ownership modes. Cortex calls only the installed public task functions. It
+retains the spawned CQB handle, pre-task group/unit state, task-created waypoints and a public semantic
+intent so stop, replacement orders, Zeus takeover and locality migration can retire or reconstruct the
+task without copying LAMBS implementation or leaving a stale controller behind. The independent
+Cortex building controller remains the automatic fallback when LAMBS is absent and can be selected
+per call with `useLambs=false`.
+
+The building audit now treats these as two distinct paths. The installed arm requires physical
+garrison arrival and hold, at least two CQB participants, multiple real room visits and physical
+execution of a replacement order after release. The additive native arm still covers multiple house
+models, 2/6/12-person clears, casualty replacement and locked-door behavior. Static validation passes;
+the rebuilt live building audit is pending and no new CQB acceptance is claimed yet.
+
 ## 1 October: dedicated lighting and equipment audit
 
 Lighting no longer relies only on direct skill-number checks inside the profile fixture. A dedicated `lighting` focus dynamically discovers NVG-capable and ordinary HMD classes from `CfgWeapons`, so modded equipment is assessed by declared vision capability rather than classname. It verifies darkness clamping, partial NVG recovery, an ordinary-HMD control and preservation of the original skill snapshot across real WMP headless-client adoption.

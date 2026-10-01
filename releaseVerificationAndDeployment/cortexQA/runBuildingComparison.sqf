@@ -66,8 +66,13 @@ sleep 15;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 {_x params ["_group","_unit","_house"]; deleteVehicle _unit; deleteGroup _group; deleteVehicle _house} forEach _cases;
 
-// Add a production order test on the model that the independent direct-order control could enter.
-// The original model and all failed diagnostic results remain above.
+// Primary integration path: installed LAMBS Waypoints owns the public GARRISON and CQB orders.
+// Native Cortex fallback cases remain below and are always invoked with useLambs=false.
+private _lambsWaypointsLoaded=isClass (configFile >> "CfgPatches" >> "lambs_wp");
+["LAMBS-building-backend-available-or-optional",true,
+    ["Optional LAMBS Waypoints is absent; its primary-backend cases are skipped and native fallback still runs.",
+     "Installed LAMBS Waypoints detected; primary-backend cases are active."] select _lambsWaypointsLoaded] call _check;
+if (_lambsWaypointsLoaded) then {
 private _house=createVehicle ["Land_i_House_Small_01_V1_F",[6250,5800,0],[],0,"NONE"];
 _house enableSimulationGlobal true;
 private _group=createGroup [east,true];
@@ -77,52 +82,97 @@ private _members=[];
 for "_i" from 0 to 2 do {
     private _unit=_group createUnit ["O_Soldier_F",[6250+_i*3,5770,0],[],0,"NONE"];
     _unit setVariable ["acex_headless_blacklist",true,true];
-    _unit setVariable ["Waldo_CortexQA_Label",format ["BUILDING ORDER %1",_i+1],true];
+    _unit setVariable ["Waldo_CortexQA_Label",format ["LAMBS BUILDING %1",_i+1],true];
     _members pushBack _unit;
 };
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_members,true];
-["Garrison: second model","Three soldiers receive the real garrison order on the second house model. A successful single-position control does not establish that every position is reachable. Each must reach and hold its assigned three-dimensional slot. The first model's failure remains recorded.",getPosATL _house] call _phase;
-["GARRISON-model2-order",[_group,_house,20] call Waldo_fnc_CortexGarrison] call _check;
-private _arrived=[{
-    _members findIf {private _slot=_x getVariable ["Waldo_AIPass_GarrisonPos",[]]; !alive _x || {_slot isEqualTo []} || {_x distance (_slot select 0) > 2}} < 0
-},95] call _wait;
-["GARRISON-model2-physical-arrival",_arrived,str (_members apply {
-    [getPosATL _x,_x getVariable ["Waldo_AIPass_GarrisonPos",[]],currentCommand _x,expectedDestination _x,
-    _x checkAIFeature "PATH",_x checkAIFeature "MOVE",behaviour _x]
-})] call _check;
-sleep 8;
-["GARRISON-model2-physical-hold",_arrived && {_members findIf {private _slot=_x getVariable ["Waldo_AIPass_GarrisonPos",[]]; !alive _x || {_slot isEqualTo []} || {_x distance (_slot select 0) > 2}} < 0}] call _check;
-// A later explicit stance must survive cleanup even if building navigation failed.
-private _hadGarrison=(_group getVariable ["Waldo_AIPass_Garrison",[]]) isNotEqualTo [];
-{_x setUnitPos "DOWN"} forEach _members;
-["Garrison: preserve replacement stance","The soldiers have received an explicit prone stance. Releasing the garrison must preserve that later choice. This checks cleanup independently of the recorded building-arrival result; it does not simulate curator UI input.",getPosATL _house] call _phase;
-[_group] call Waldo_fnc_CortexGarrisonRelease;
-sleep 2;
-["GARRISON-release-preserves-later-stance",_hadGarrison && {_members findIf {!alive _x || {unitPos _x != "DOWN"}} < 0},str (_members apply {unitPos _x})] call _check;
-{_x setUnitPos "AUTO"} forEach _members;
-{private _exit=[6250+_forEachIndex*3,5770,0]; doStop _x; _x doMove _exit; _x setDestination [_exit,"LEADER PLANNED",true]} forEach _members;
-["CLEAR-outside-start",[{_members findIf {_x distance2D [6253,5770,0] > 8} < 0},45] call _wait] call _check;
-["Building clearance: room visits","The clearing team must physically visit every building position. Coloured markers show independently observed visits; an expired order cannot count as cleared.",getPosATL _house] call _phase;
 private _rooms=_house buildingPos -1;
 private _visits=_rooms apply {false};
-["CLEAR-order-accepted",[_group,_house] call Waldo_fnc_CortexClearBuilding] call _check;
-private _cleared=[{
-    // Production now commits the leader as an independent clearing worker. Observe the whole
-    // assigned team so a physical visit by the leader is not misreported as an unvisited room.
-    {private _room=_x; private _roomIndex=_forEachIndex; if (_members findIf {alive _x && {(getPosASL _x) vectorDistance (AGLToASL _room) <= 1.5}} >= 0) then {_visits set [_roomIndex,true]}} forEach _rooms;
+private _memberVisits=_members apply {[]};
+["LAMBS garrison: physical occupation","The ordinary Cortex garrison order must delegate to installed LAMBS Waypoints. Every soldier must physically enter a real building position and remain there. Backend selection or a waypoint alone does not pass.",getPosATL _house] call _phase;
+private _garrisonAccepted=[_group,_house,20] call Waldo_fnc_CortexGarrison;
+private _garrisonBackend=_group getVariable ["Waldo_Cortex_BuildingBackend",[]];
+["GARRISON-lambs-backend",_garrisonAccepted && {(_garrisonBackend param [0,""]) == "LAMBS"} && {(_garrisonBackend param [1,""]) == "GARRISON"},str _garrisonBackend] call _check;
+private _garrisonArrived=[{
+    _members findIf {
+        private _unit=_x;
+        !alive _unit || {_rooms findIf {_unit distance _x <= 2.5} < 0}
+    } < 0
+},120] call _wait;
+["GARRISON-lambs-physical-arrival",_garrisonArrived,str (_members apply {[getPosATL _x,currentCommand _x,expectedDestination _x]})] call _check;
+sleep 8;
+private _garrisonHeld=_garrisonArrived && {_members findIf {
+    private _unit=_x;
+    !alive _unit || {_rooms findIf {_unit distance _x <= 3} < 0}
+} < 0};
+["GARRISON-lambs-physical-hold",_garrisonHeld,str (_members apply {getPosATL _x})] call _check;
+{_x setUnitPos "DOWN"} forEach _members;
+["LAMBS garrison release","The soldiers now have an explicit prone stance. Releasing the delegated task must stop its controller while preserving that later stance.",getPosATL _house] call _phase;
+private _garrisonReleased=[_group] call Waldo_fnc_CortexGarrisonRelease;
+sleep 2;
+["GARRISON-lambs-release-preserves-later-stance",_garrisonReleased
+    && {_members findIf {!alive _x || {unitPos _x != "DOWN"}} < 0}
+    && {(_group getVariable ["Waldo_Cortex_BuildingBackend",[]]) isEqualTo []},
+    str (_members apply {unitPos _x})] call _check;
+{_x setUnitPos "AUTO"} forEach _members;
+{private _exit=[6250+_forEachIndex*3,5770,0]; doStop _x; _x doMove _exit; _x setDestination [_exit,"LEADER PLANNED",true]} forEach _members;
+["LAMBS-CLEAR-outside-start",[{_members findIf {_x distance2D [6253,5770,0] > 8} < 0},45] call _wait] call _check;
+["LAMBS CQB: physical flow","The ordinary Cortex clearance order must delegate to installed LAMBS Waypoints. At least two soldiers must physically enter, and the team must traverse multiple real room positions. A running task marker alone does not pass.",getPosATL _house] call _phase;
+private _clearStart=_members apply {getPosATL _x};
+private _clearAccepted=[_group,_house] call Waldo_fnc_CortexClearBuilding;
+private _clearBackend=_group getVariable ["Waldo_Cortex_BuildingBackend",[]];
+["CLEAR-lambs-backend",_clearAccepted && {(_clearBackend param [0,""]) == "LAMBS"} && {(_clearBackend param [1,""]) == "CQB"},str _clearBackend] call _check;
+private _clearObserved=[{
+    {
+        private _room=_x;
+        private _roomIndex=_forEachIndex;
+        {
+            private _worker=_x;
+            if (alive _worker && {(getPosASL _worker) vectorDistance (AGLToASL _room) <= 2}) then {
+                _visits set [_roomIndex,true];
+                (_memberVisits select _forEachIndex) pushBackUnique _roomIndex;
+            };
+        } forEach _members;
+    } forEach _rooms;
     missionNamespace setVariable ["Waldo_CortexQA_Rooms",[_rooms,_visits],true];
-    // Room visits and controller completion are published on separate scheduler passes.
-    // Keep observing physical visits until the authoritative controller result arrives so
-    // a successful final room cannot be misreported as an incomplete handover race.
-    ((_group getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) in ["COMPLETE","INCOMPLETE"]
-},245] call _wait;
-["CLEAR-every-room-physically-visited",_cleared && {_visits findIf {!_x} < 0},str _visits] call _check;
-["CLEAR-completion-matches-visits",((_group getVariable ["Waldo_Cortex_ClearResult",[]]) param [0,""]) == "COMPLETE" && {_visits findIf {!_x} < 0}] call _check;
-sleep 12;
-[_group] call Waldo_fnc_CortexClearRelease;
+    ({_x isNotEqualTo []} count _memberVisits) >= 2 && {({_x} count _visits) >= 2}
+},150] call _wait;
+private _participants={_x isNotEqualTo []} count _memberVisits;
+private _visitedCount={_x} count _visits;
+["CLEAR-lambs-multiple-soldiers-enter",_clearObserved && {_participants >= 2},str _memberVisits] call _check;
+["CLEAR-lambs-multiple-rooms-traversed",_clearObserved && {_visitedCount >= 2},str _visits] call _check;
+private _physicallyTravelled=false;
+for "_memberIndex" from 0 to ((count _members)-1) do {
+    if ((_members select _memberIndex) distance2D (_clearStart select _memberIndex) >= 12) then {
+        _physicallyTravelled=true;
+    };
+};
+["CLEAR-lambs-physical-travel",_physicallyTravelled,str (_members apply {getPosATL _x})] call _check;
+private _released=[_group,false] call Waldo_fnc_CortexClearRelease;
+private _handoverStart=_members apply {getPosATL _x};
+private _handoverDestination=[6330,5770,0];
+private _waypoint=_group addWaypoint [_handoverDestination,0];
+_waypoint setWaypointType "MOVE";
+_group setCurrentWaypoint _waypoint;
+["LAMBS CQB handover","The delegated CQB loop has been released. The same squad must obey a fresh ordinary waypoint without returning to the building.",_handoverDestination] call _phase;
+private _handoverMoved=[{
+    private _allMoved=true;
+    for "_memberIndex" from 0 to ((count _members)-1) do {
+        private _unit=_members select _memberIndex;
+        if (!alive _unit || {_unit distance2D (_handoverStart select _memberIndex) < 20}) then {
+            _allMoved=false;
+        };
+    };
+    _allMoved
+},90] call _wait;
+["CLEAR-lambs-release-clears-backend",_released && {(_group getVariable ["Waldo_Cortex_BuildingBackend",[]]) isEqualTo []}] call _check;
+["CLEAR-lambs-replacement-order-physical",_handoverMoved,str (_members apply {[getPosATL _x,currentCommand _x]})] call _check;
 missionNamespace setVariable ["Waldo_CortexQA_Rooms",[],true];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
-{deleteVehicle _x} forEach _members; deleteGroup _group; deleteVehicle _house;
+{deleteVehicle _x} forEach _members;
+deleteGroup _group;
+deleteVehicle _house;
+};
 
 // Fresh groups distinguish clearance defects from state left by a previous garrison.
 // Keep all original comparisons above, including their failures.
