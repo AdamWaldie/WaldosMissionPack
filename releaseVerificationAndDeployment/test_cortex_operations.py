@@ -1440,6 +1440,7 @@ class CortexOperations(unittest.TestCase):
     def test_vehicle_withdrawal_records_and_resumes_physical_progress(self):
         vehicles=source('cortexVehicles')
         locality=source('cortexLocality')
+        audit=(ROOT/'releaseVerificationAndDeployment/cortexQA/runVehicleDrills.sqf').read_text(encoding='utf-8')
         for marker in ['_state set ["retreatStart",_origin]',
                        '_state set ["retreatTarget",_away]',
                        '_state set ["retreatProgress",[time,0,0]]',
@@ -1450,6 +1451,20 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('["VEHICLE_WITHDRAW",time+((120-_elapsed) max 3)]',vehicle_resume)
         self.assertIn('[_group,_adopted,"RETREAT","VEHICLE_OWNERSHIP_RESUME",time-_elapsed,true] call Waldo_fnc_CortexSetPhase',vehicle_resume)
         self.assertNotIn('CortexFireCountermeasure',vehicle_resume)
+        for marker in [
+            'WITHDRAW-MIGRATION-headless-prerequisite',
+            'WITHDRAW-MIGRATION-production-start',
+            'WITHDRAW-MIGRATION-owner-resume',
+            'WITHDRAW-MIGRATION-start-preserved',
+            'WITHDRAW-MIGRATION-physical-continuation',
+            'WITHDRAW-MIGRATION-no-smoke-replay',
+            'WITHDRAW-MIGRATION-crew-retained',
+            'WITHDRAW-MIGRATION-zeus-physical-replacement',
+            'WITHDRAW-MIGRATION-zeus-no-resurrection',
+            'Waldo_fnc_HeadlessMigrateGroup',
+            'VEHICLE_OWNERSHIP_RESUME',
+        ]:
+            self.assertIn(marker,audit)
 
     def test_mounted_survivors_withdraw_instead_of_selecting_impossible_surrender(self):
         morale=source('cortexMorale')

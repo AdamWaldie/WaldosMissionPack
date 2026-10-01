@@ -208,7 +208,7 @@ Feature cases: **58**. Required variant categories: **13**.
 
 **Expected:** Vehicle physically withdraws, uses only available smoke and restores controls; immobilized or deleted vehicles terminate safely.
 
-**Automation and open work:** runVehicleDrills.sqf WITHDRAW-*; movement passed, actual smoke failed Added same-vehicle disabled baseline, natural-contact prerequisite, no-smoke baseline and enabled physical retreat; saved, not yet live-validated.
+**Automation and open work:** runVehicleDrills.sqf retains the accepted server disabled/enabled comparison and adds an independent active-withdrawal migration case. The new case requires natural contact, production RETREAT, a real HC vehicle/crew owner, VEHICLE_OWNERSHIP_RESUME, the original start time, continued threat separation, crew retention, no smoke replay, and physical Zeus replacement with no stale RETREAT resurrection. Saved, not yet live-validated. Immobilized/deleted and additional vehicle-class cases remain open.
 
 ### COVER - Cover selection and clearance
 

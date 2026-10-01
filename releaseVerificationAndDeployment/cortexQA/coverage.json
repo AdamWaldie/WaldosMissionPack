@@ -445,7 +445,7 @@
       "live_evidence": [
         "runtime-20260929-181821: server fixture passed disabled stationary/no-smoke comparison, actual SmokeLauncher Fired event, physical withdrawal and retained crew. Turret scan now includes person paths. Does not prove HC migration, Zeus interruption or all vehicle classes."
       ],
-      "automation": "runVehicleDrills.sqf WITHDRAW-*; movement passed, actual smoke failed Added same-vehicle disabled baseline, natural-contact prerequisite, no-smoke baseline and enabled physical retreat; saved, not yet live-validated.",
+      "automation": "runVehicleDrills.sqf retains the accepted server disabled/enabled comparison and adds an independent active-withdrawal migration case. The new case requires natural contact, production RETREAT, a real HC vehicle/crew owner, VEHICLE_OWNERSHIP_RESUME, the original start time, continued threat separation, crew retention, no smoke replay, and physical Zeus replacement with no stale RETREAT resurrection. Saved, not yet live-validated. Immobilized/deleted and additional vehicle-class cases remain open.",
       "executable_sources": [
         "runVehicleDrills.sqf"
       ]

@@ -1,7 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Checks contact dismount, calm remount and damaged-armour withdrawal using live vehicles.
- * Locality/authority: scheduled server owns disposable groups and simulation-enabled vehicles.
+ * Checks contact dismount, calm remount and damaged-armour withdrawal using live vehicles, including
+ * an active withdrawal migrating from the server to a real headless owner before Zeus replacement.
+ * Locality/authority: scheduled server creates disposable fixtures; production Cortex code commands
+ * each current owner, and the migration case deliberately transfers its crew group and vehicle.
  * Repeat/JIP: fresh fixtures and public observer state; caller restores tuning, actors are deleted.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>, required callbacks.
  * Return: Nothing. Current caller: cortexQAServer.sqf.
@@ -253,3 +255,132 @@ private _withdrawn=[{_armour distance2D _origin > 40 && {_armour distance2D _ene
 sleep 12;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 {deleteVehicle _x} forEach (_crew+[_enemy,_armour]); deleteGroup _group; deleteGroup _enemyGroup;
+
+// A separate fixture crosses the owner boundary while the production vehicle withdrawal is active.
+// Keeping it independent preserves the original disabled/enabled comparison and prevents a failed
+// migration precondition from consuming that result.
+private _hcOwners=(missionNamespace getVariable ["Waldo_Headless_Clients",[]]) apply {_x select 0};
+["WITHDRAW-MIGRATION-headless-prerequisite",_hcOwners isNotEqualTo [],str _hcOwners] call _check;
+if (_hcOwners isNotEqualTo []) then {
+    private _hcOwner=_hcOwners select 0;
+    [createHashMapFromArray [
+        ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
+        ["Waldo_AIPass_Vehicles_Enable",true],["Waldo_AIPass_VehicleWithdraw_Enable",true],
+        ["Waldo_AIPass_VehicleDismount_Enable",false],["Waldo_AIPass_VehicleGunnery_Enable",false],
+        ["Waldo_AIPass_Morale_Enable",false],["Waldo_AIPass_PostContact_Enable",false],
+        ["Waldo_AIPass_LambsMode","WMP"]
+    ]] call Waldo_fnc_CortexTuning;
+    private _migrateArmour=createVehicle ["O_APC_Tracked_02_cannon_F",[2300,1100,0],[],0,"NONE"];
+    createVehicleCrew _migrateArmour;
+    private _migrateGroup=group driver _migrateArmour;
+    [_migrateGroup] call _pin;
+    _migrateGroup setCombatMode "BLUE";
+    private _migrateCrew=crew _migrateArmour;
+    {
+        _x allowDamage false;
+        _x setVariable ["Waldo_CortexQA_Label",format ["VEHICLE WITHDRAW HANDOFF %1",_forEachIndex+1],true];
+    } forEach _migrateCrew;
+    private _migrateEnemyGroup=createGroup [west,true];
+    [_migrateEnemyGroup] call _pin;
+    _migrateEnemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+    _migrateEnemyGroup setCombatMode "BLUE";
+    private _migrateEnemy=_migrateEnemyGroup createUnit ["B_Soldier_LAT_F",[2300,1260,0],[],0,"NONE"];
+    _migrateEnemy allowDamage false;
+    _migrateEnemy disableAI "PATH";
+    _migrateEnemy setVariable ["acex_headless_blacklist",true,true];
+    _migrateEnemy setVariable ["Waldo_CortexQA_Label","WITHDRAW HANDOFF THREAT",true];
+    _migrateArmour setDamage 0.55;
+    _migrateArmour setVariable ["Waldo_CortexQA_SmokeShots",0,true];
+    private _countermeasureAmmo={
+        params ["_vehicle"];
+        private _total=0;
+        {
+            _x params ["_magazine","_turret","_rounds"];
+            private _ammo=getText (configFile >> "CfgMagazines" >> _magazine >> "ammo");
+            if (toLowerANSI getText (configFile >> "CfgAmmo" >> _ammo >> "simulation") in ["shotsmoke","shotsmokex"]) then {
+                _total=_total+_rounds;
+            };
+        } forEach magazinesAllTurrets _vehicle;
+        _total
+    };
+    _migrateArmour addEventHandler ["Fired",{
+        params ["_vehicle","_weapon","_muzzle","_mode","_ammo","_magazine"];
+        if (toLowerANSI getText (configFile >> "CfgWeapons" >> _weapon >> "simulation") == "cmlauncher") then {
+            _vehicle setVariable ["Waldo_CortexQA_SmokeShots",(_vehicle getVariable ["Waldo_CortexQA_SmokeShots",0])+1,true];
+        };
+    }];
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",_migrateCrew+[_migrateEnemy],true];
+    private _migrationOrigin=getPosATL _migrateArmour;
+    ["Vehicle withdrawal: active owner handoff","The damaged APC must naturally detect the visible AT threat, start a real withdrawal on the server, then continue under a headless owner without replaying its initial smoke screen. Crew must remain aboard.",_migrationOrigin getPos [120,180]] call _phase;
+    private _migrationContact=[{driver _migrateArmour knowsAbout _migrateEnemy > 1},35] call _wait;
+    ["WITHDRAW-MIGRATION-natural-contact",_migrationContact,str (driver _migrateArmour knowsAbout _migrateEnemy)] call _check;
+    private _migrationStarted=[{
+        (_migrateGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "RETREAT"
+            && {private _intent=_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]; count _intent == 7 && {(_intent select 0) == "VEHICLE"}}
+            && {_migrateArmour distance2D _migrationOrigin >= 8}
+    },45] call _wait;
+    ["WITHDRAW-MIGRATION-production-start",_migrationContact && {_migrationStarted},str [_migrateGroup getVariable ["Waldo_AIPass_PublicPhase",""],_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]],getPosATL _migrateArmour]] call _check;
+    private _initialSmoke=[{(_migrateArmour getVariable ["Waldo_CortexQA_SmokeShots",0]) > 0},12] call _wait;
+    ["WITHDRAW-MIGRATION-initial-smoke",_initialSmoke,str (_migrateArmour getVariable ["Waldo_CortexQA_SmokeShots",0])] call _check;
+    // Let the owner's initial launcher burst finish before taking the ammunition baseline. A Fired
+    // handler installed on the old owner cannot observe a later HC-local replay, while live magazine
+    // depletion remains authoritative across locality and therefore catches one.
+    sleep 5;
+    private _smokeBefore=_migrateArmour getVariable ["Waldo_CortexQA_SmokeShots",0];
+    private _countermeasureAmmoBefore=[_migrateArmour] call _countermeasureAmmo;
+    private _intentBefore=+(_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]);
+    private _startedAt=_intentBefore param [4,-1];
+    private _handoffPosition=getPosATL _migrateArmour;
+    private _handoffThreatDistance=_migrateArmour distance2D _migrateEnemy;
+    _migrateGroup setVariable ["Waldo_Headless_ExcludeGroup",false,true];
+    {_x setVariable ["acex_headless_blacklist",false,true]} forEach _migrateCrew;
+    private _migrationRequested=[_migrateGroup,_hcOwner] call Waldo_fnc_HeadlessMigrateGroup;
+    private _migrationAdopted=[{
+        groupOwner _migrateGroup == _hcOwner
+            && {owner _migrateArmour == _hcOwner}
+            && {_migrateCrew findIf {owner _x != _hcOwner} < 0}
+            && {(_migrateGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "RETREAT"}
+            && {private _entry=_migrateGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]; count _entry == 5 && {(_entry select 3) == "VEHICLE_OWNERSHIP_RESUME"} && {(_entry select 4) == _hcOwner}}
+    },40] call _wait;
+    ["WITHDRAW-MIGRATION-owner-resume",_migrationRequested && {_migrationAdopted},str [groupOwner _migrateGroup,owner _migrateArmour,_migrateCrew apply {owner _x},_migrateGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]]] call _check;
+    private _intentAfter=+(_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]);
+    ["WITHDRAW-MIGRATION-start-preserved",_migrationAdopted && {count _intentAfter == 7}
+        && {abs ((_intentAfter select 4)-_startedAt) < 0.25},str [_startedAt,_intentAfter]] call _check;
+    private _continued=[{
+        _migrateArmour distance2D _handoffPosition >= 12
+            && {_migrateArmour distance2D _migrateEnemy >= _handoffThreatDistance+8}
+    },45] call _wait;
+    ["WITHDRAW-MIGRATION-physical-continuation",_migrationAdopted && {_continued},str [_handoffPosition,getPosATL _migrateArmour,_handoffThreatDistance,_migrateArmour distance2D _migrateEnemy]] call _check;
+    sleep 6;
+    private _countermeasureAmmoAfter=[_migrateArmour] call _countermeasureAmmo;
+    ["WITHDRAW-MIGRATION-no-smoke-replay",_initialSmoke && {_countermeasureAmmoAfter == _countermeasureAmmoBefore},str [_smokeBefore,_migrateArmour getVariable ["Waldo_CortexQA_SmokeShots",0],_countermeasureAmmoBefore,_countermeasureAmmoAfter]] call _check;
+    ["WITHDRAW-MIGRATION-crew-retained",_migrateCrew findIf {!alive _x || {vehicle _x != _migrateArmour}} < 0,str (_migrateCrew apply {vehicle _x})] call _check;
+
+    ["Vehicle withdrawal: Zeus replacement","Zeus now replaces the resumed withdrawal. The APC must release RETREAT, drive to the new marker under the replacement waypoint and remain there without reviving the old withdrawal.",[2420,1100,0]] call _phase;
+    [_migrateGroup,true] call Waldo_fnc_CortexZeusMark;
+    private _released=[{
+        (_migrateGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "CALM"
+            && {(_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]) isEqualTo []}
+    },25] call _wait;
+    ["WITHDRAW-MIGRATION-zeus-release",_released,str [_migrateGroup getVariable ["Waldo_AIPass_PublicPhase",""],_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]]] call _check;
+    private _replacement=[2420,1100,0];
+    private _replacementWP=_migrateGroup addWaypoint [_replacement,0];
+    _replacementWP setWaypointType "MOVE";
+    _replacementWP setWaypointCompletionRadius 8;
+    _migrateGroup setCurrentWaypoint _replacementWP;
+    {_x setVariable ["Waldo_CortexQA_Target",_replacement,true]} forEach _migrateCrew;
+    private _replacementArrived=[{_migrateArmour distance2D _replacement <= 22},100] call _wait;
+    ["WITHDRAW-MIGRATION-zeus-physical-replacement",_released && {_replacementArrived},str getPosATL _migrateArmour] call _check;
+    private _stayedReleased=_replacementArrived;
+    for "_sample" from 1 to 12 do {
+        sleep 1;
+        if ((_migrateGroup getVariable ["Waldo_AIPass_PublicPhase","CALM"]) == "RETREAT"
+            || {(_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]) isNotEqualTo []}
+            || {_migrateArmour distance2D _replacement > 25}) then {_stayedReleased=false};
+    };
+    ["WITHDRAW-MIGRATION-zeus-no-resurrection",_stayedReleased,str [_migrateGroup getVariable ["Waldo_AIPass_PublicPhase",""],_migrateGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]],getPosATL _migrateArmour]] call _check;
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+    {deleteVehicle _x} forEach (_migrateCrew+[_migrateEnemy,_migrateArmour]);
+    deleteGroup _migrateGroup;
+    deleteGroup _migrateEnemyGroup;
+};
