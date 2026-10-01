@@ -1,6 +1,6 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `aa2b666` are pushed, with the LAMBS compatibility work below awaiting its next checkpoint. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
+Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `651dfc7` are pushed. The user has reopened batched Arma testing; new engine acceptance remains queued until the distributed performance checkpoint is committed and the disposable audit is rebuilt once.
 
 ## 1 October: LAMBS ownership and compatibility
 
@@ -20,6 +20,17 @@ FSM and public APIs at runtime. Static validation passed 268 focused Cortex/modu
 SQF files, all 113 wiki pages, all 85 Zeus modules, eight performance-audit tests and `git diff --check`.
 The regression scan found no new high-severity recurring pattern. A rebuilt LAMBS-loaded
 dedicated/headless-client audit remains queued.
+
+## 1 October: distributed 100-group contact benchmark
+
+The earlier 100-group result covered server-owned patrol only. A separate `performancecontact` focus
+now stages 100 six-soldier manoeuvre groups against real hostile contacts and deliberately divides
+them across the server and two WMP headless owners. Matched OFF/ON/ON/OFF arms keep the geometry,
+weapons and ownership distribution constant. Each owner samples median, p95 and p99 frame time plus
+maximum overdue-job age while the server requires at least 90 groups to move, at least 60 groups to
+consume rifle ammunition and at least 90 groups to reach an observable combat response. Each owner is
+independently checked against the agreed 5% median and 10% p95 overhead limits. Static validation
+passes; the live arm will run in the next batch with two headless clients.
 
 ## 1 October: contact initiative without authored movement
 

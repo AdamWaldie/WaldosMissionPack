@@ -631,6 +631,15 @@ class CortexOperations(unittest.TestCase):
                        'LIGHTING-rear-target-not-omnidirectional']:
             self.assertIn(marker,lighting)
         self.assertIn('cortexQALighting.sqf',launcher)
+        distributed=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceContact.sqf').read_text()
+        owner_sampler=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceOwner.sqf').read_text()
+        for marker in ['PERF-CONTACT-two-headless-prerequisite','PERF-CONTACT-comparable-arms',
+                       'balanced-ownership','physical-workload','median-budget','p95-budget']:
+            self.assertIn(marker,distributed)
+        for marker in ['diag_deltaTime*1000','Waldo_CortexQA_PerformanceGroup','[0.99] call _percentile']:
+            self.assertIn(marker,owner_sampler)
+        self.assertIn('performancecontact',launcher)
+        self.assertIn('cortexQAPerformanceOwner.sqf',launcher)
 
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')

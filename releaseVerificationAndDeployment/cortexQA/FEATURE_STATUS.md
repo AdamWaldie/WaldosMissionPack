@@ -9,7 +9,7 @@ Feature cases: **57**. Required variant categories: **13**.
 | --- | ---: | --- | ---: | --- |
 | CORE - Master, exclusions and ownership | 3 | `runGates.sqf` | 2 | implemented_partial |
 | LAMBS - LAMBS coexistence and Cortex fallback | 1 | `runLambs.sqf` | 0 | implemented_partial |
-| SCHED - Scheduler and distance tiers | 11 | `runScheduler.sqf`, `runPerformance.sqf` | 2 | implemented_partial |
+| SCHED - Scheduler and distance tiers | 11 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 2 | implemented_partial |
 | PROFILE - Behaviour profiles and aggression | 4 | `runProfiles.sqf` | 1 | implemented_partial |
 | SKILL - AI skill rebalance | 10 | `runMechanics.sqf` | 0 | implemented_partial |
 | LAND - Helicopter landing | 21 | `runLanding.sqf` | 1 | implemented_partial |
@@ -99,7 +99,7 @@ Feature cases: **57**. Required variant categories: **13**.
 
 **Expected:** At least 100 groups must remain responsive without significant overhead versus the matched native baseline. User-confirmed budget: <=5% median and <=10% p95 added frame time at 100+ groups, with no stalled AI jobs. No starvation, duplicate controllers, or disabled-feature work. The twelve one-unit queue fixture is not scale acceptance.
 
-**Automation and open work:** runScheduler.sqf: twelve production-queued squad movements at minimum soft budget, actual start latency, physical arrival and no duplicate completion. Server case executed; distance tiers, saturation, FPS throttling and HC workload variants remain outstanding. Server patrol scale pilot added in runPerformance.sqf: fresh 100x6 OFF/ON/ON/OFF arms, frame times, physical progress, managed/eligible group checks, baseline drift and 5% median/10% p95 gates. First server patrol run runtime-20260927-085848 passed all 13 performance checks; broader performance acceptance remains outstanding.
+**Automation and open work:** runScheduler.sqf covers twelve production-queued squad movements at minimum soft budget. runPerformance.sqf supplies the completed server-only 100x6 patrol pilot. runPerformanceContact.sqf adds a matched OFF/ON/ON/OFF sustained-contact arm with 100 six-soldier manoeuvre groups distributed across the server and two real WMP headless owners; runPerformanceOwner.sqf records owner-local median, p95 and p99 frame time, queue age and actor counts while the server requires physical movement, ammunition use and response latency. The distributed contact arm is saved but not yet run.
 
 ### PROFILE - Behaviour profiles and aggression
 

@@ -24,4 +24,16 @@ The scheduler has a soft budget between jobs. One running job can exceed that bu
 
 The server patrol pilot is implemented in `runPerformance.sqf`, available through `-CortexFocus performance`. It creates 100 six-soldier groups for each OFF/ON/ON/OFF arm, warms up, then samples 60 seconds of server frame times. Every group must physically move; enabled arms require all 100 groups to remain managed and eligible. It checks baseline drift, the agreed median/p95 limits and a separate overdue-job bound. The first server pilot, runtime-20260927-085848, completed its performance stages with all 13 checks passing: OFF samples were 21 ms median / 24 ms p95; ON samples were 21/25 and 21/24 ms. Every group moved and all enabled groups remained managed and eligible. Maximum observed job overdue age was 6.511 seconds. This is one patrol run, not acceptance for contact latency, repeated trials, other scales or HC workloads.
 
-The remaining scale matrix, repeated trials, contact workloads and per-owner collection remain to be implemented and run. Keep existing physical behaviour tests and add performance coverage alongside them.
+The distributed contact arm is implemented in `runPerformanceContact.sqf` and selected with
+`-CortexFocus performancecontact -HeadlessClients 2`. It uses matched OFF/ON/ON/OFF arms with 100
+six-soldier manoeuvre groups divided across the server and both WMP headless owners. Real, stationary,
+invulnerable opponents produce sustained contact without casualty drift. Every arm must retain at
+least 33 groups and 198 living subject soldiers on each owner, move at least 90 groups, consume live
+rifle ammunition in at least 60 groups and bring at least 90 groups into a physical response. The
+owner-local sampler reports median, p95 and p99 frame time plus maximum overdue-job age. Each enabled
+arm is compared with the two matched disabled baselines using the confirmed 5% median and 10% p95
+budgets. This arm is saved and statically checked but has not yet run in Arma.
+
+The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
+measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage
+alongside them.
