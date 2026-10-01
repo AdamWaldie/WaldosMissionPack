@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Installs the owner-local sampler used by the distributed Cortex performance audit.
+ * Installs the owner-local sampler and workload activator used by the distributed Cortex
+ * performance audit.
  * Locality/authority: compiled on the server and every connected headless client during audit
  * pre-init. Waldo_CortexQA_PerformanceSampleOwner samples only groups local to that machine.
  * Repeat/JIP: replacing a sample removes the earlier EachFrame handler and advances a generation;
@@ -10,10 +11,16 @@
  * Arguments to Waldo_CortexQA_PerformanceSampleOwner:
  * 0: sample id <STRING>
  * 1: duration <NUMBER> (default 60 seconds)
+ * Arguments to Waldo_CortexQA_PerformanceStartGroup:
+ * 0: locally owned subject group <GROUP>; 1: hostile target <OBJECT> (default objNull);
+ * 2: destination ATL <ARRAY>; 3: whether this is a live-contact group <BOOL> (default false).
  *
  * Return Value: Nothing. Publishes Waldo_CortexQA_PerformanceResult_<sample id>_<owner id>.
+ * Waldo_CortexQA_PerformanceStartGroup installs group-wide first-shot evidence and starts the
+ * owner-local MOVE/SAD workload only after ownership and measurement baselines are ready.
  * Current callers: runPerformanceContact.sqf through remoteExecCall.
  * Example: ["ON1",60] call Waldo_CortexQA_PerformanceSampleOwner;
+ * Example: [_group,_target,[200,410,0],true] call Waldo_CortexQA_PerformanceStartGroup;
  */
 Waldo_CortexQA_PerformanceSampleOwner = {
     params [["_sampleId","",[""]],["_duration",60,[0]]];
@@ -58,5 +65,38 @@ Waldo_CortexQA_PerformanceSampleOwner = {
         missionNamespace setVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_sampleOwner],_result,true];
         missionNamespace setVariable ["Waldo_CortexQA_PerformanceFrameSamples",nil];
     };
+};
+
+Waldo_CortexQA_PerformanceStartGroup = {
+    params [
+        ["_group",grpNull,[grpNull]],
+        ["_target",objNull,[objNull]],
+        ["_destination",[0,0,0],[[]],3],
+        ["_contact",false,[false]]
+    ];
+    if (isNull _group || {!local _group}) exitWith {};
+    _group setVariable ["Waldo_CortexQA_PerformanceFired",false,true];
+    {
+        _x addEventHandler ["FiredMan",{
+            params ["_unit"];
+            private _group=group _unit;
+            if !(_group getVariable ["Waldo_CortexQA_PerformanceFired",false]) then {
+                _group setVariable ["Waldo_CortexQA_PerformanceFired",true,true];
+            };
+        }];
+    } forEach units _group;
+    if (_contact && {!isNull _target}) then {
+        _group reveal [_target,4];
+        _group setBehaviour "COMBAT";
+        _group setCombatMode "RED";
+    } else {
+        _group setBehaviour "AWARE";
+        _group setCombatMode "YELLOW";
+    };
+    private _waypoint=_group addWaypoint [_destination,0];
+    _waypoint setWaypointType (["MOVE","SAD"] select _contact);
+    _waypoint setWaypointSpeed "FULL";
+    _group setCurrentWaypoint _waypoint;
+    _group setVariable ["Waldo_CortexQA_PerformanceStarted",true,true];
 };
 

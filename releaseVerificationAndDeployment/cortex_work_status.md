@@ -1,6 +1,6 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `68ad6e5` are pushed. Batched Arma testing has resumed at the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms; the first distributed contact benchmark failed closed and produced actionable scheduler and fixture findings.
+Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `e437ab2` are pushed. Batched Arma testing has resumed at the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms; two distributed contact benchmarks failed closed and produced actionable scheduler, overhead and fixture findings.
 
 ## 1 October: LAMBS ownership and compatibility
 
@@ -40,6 +40,14 @@ frames constant-time. The revised benchmark retains 100 six-soldier groups but u
 contact groups and 75 ordinary movement groups, and adds rendered-client frame sampling. Without
 LAMBS it compares vanilla against Cortex; with the installed suite it compares LAMBS alone against
 Cortex plus LAMBS SPLIT. Fresh 4K runs are required for the agreed 5% median / 10% p95 budget.
+
+Runtime `20261001-114026` completed that controlled-contact matrix. Scheduler lateness improved to
+0-2.235 seconds, but server frame time remained above budget: native arms measured 23/30 ms
+median/p95 and Cortex arms measured 31/44 and 34/46 ms. HC differences were smaller. The workload
+gate correctly withheld a comparison, but review found two audit defects: routes started before the
+warm-up baseline, and shots were counted only from leaders. The saved fixture now captures every
+soldier's start before owner-local activation and records a group's first real FiredMan event on the
+group owner. No budget pass is claimed pending a rebuilt matrix.
 
 ## 1 October: contact initiative without authored movement
 

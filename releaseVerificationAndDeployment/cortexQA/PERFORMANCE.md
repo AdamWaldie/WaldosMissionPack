@@ -43,6 +43,16 @@ reported zero. The run is evidence of both fixture saturation and a scheduler th
 is not a performance-budget pass. The controlled-contact fixture and per-frame scheduler require a
 fresh paired run without LAMBS (vanilla versus Cortex) and with LAMBS (LAMBS versus SPLIT mode).
 
+Runtime `runtime-20261001-114026` completed the first controlled-contact OFF/ON/ON/OFF matrix at
+3840x2160. The scheduler correction reduced maximum overdue work from 5.7-13.0 seconds to 0-2.235
+seconds. Native server samples were 23/30 and 23/30 ms median/p95; Cortex samples were 31/44 and
+34/46 ms, so the observed server overhead remains outside the agreed budget. Both HCs stayed much
+closer: native 20-21/26-28 ms and Cortex 22/29-30 ms. The run did not reach comparability because the
+fixture created movement waypoints before its 20-second warm-up and then measured only subsequent
+travel, while its firing count inspected squad leaders rather than all six soldiers. The saved audit
+now starts owner-local work only after baselines are captured and records the first real FiredMan
+event from any group member. A fresh run is required; no percentage pass is claimed from this matrix.
+
 The 25/50/150 scale points, ACE HC distribution, repeated hardware runs and publication-rate
 measurement remain outstanding. Keep existing physical behaviour tests and add performance coverage
 alongside them.

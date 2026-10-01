@@ -30,6 +30,8 @@ private _results=[];
     private _groups=[];
     private _actors=[];
     private _targets=[];
+    private _groupTargets=[];
+    private _destinations=[];
     private _contactGroups=[];
     private _targetGroups=[];
     private _targetGroup=createGroup [west,true];
@@ -48,6 +50,7 @@ private _results=[];
             if (_contact) then {
                 _target=_targetGroup createUnit ["B_Soldier_F",_origin vectorAdd [0,150,0],[],0,"NONE"];
                 _target allowDamage false;
+                _target setCaptive true;
                 _target disableAI "MOVE";
                 _target disableAI "TARGET";
                 _target disableAI "AUTOTARGET";
@@ -63,14 +66,9 @@ private _results=[];
                 if (!_contact) then {_unit disableAI "TARGET"; _unit disableAI "AUTOTARGET"};
                 _actors pushBack _unit;
             };
-            if (_contact) then {_group reveal [_target,4]};
-            _group setBehaviour (["AWARE","COMBAT"] select _contact);
-            _group setCombatMode (["YELLOW","RED"] select _contact);
-            private _waypoint=_group addWaypoint [_origin vectorAdd [0,210,0],0];
-            _waypoint setWaypointType (["MOVE","SAD"] select _contact);
-            _waypoint setWaypointSpeed "FULL";
-            _group setCurrentWaypoint _waypoint;
             _groups pushBack _group;
+            _groupTargets pushBack _target;
+            _destinations pushBack (_origin vectorAdd [0,210,0]);
             if (_contact) then {_contactGroups pushBack _group};
             private _desiredOwner=_owners select (_index mod count _owners);
             if (_desiredOwner == 2) then {
@@ -91,21 +89,32 @@ private _results=[];
     private _balanced=(_ownerCounts select 0) >= 33 && {(_ownerCounts select 1) >= 33} && {(_ownerCounts select 2) >= 33};
     [format ["PERF-CONTACT-arm-%1-balanced-ownership",_arm],_ownershipReady && {_balanced},str _ownerCounts] call _check;
     sleep 20;
-    private _starts=_groups apply {getPosATL leader _x};
-    private _ammoBefore=_groups apply {private _leader=leader _x; _leader ammo (primaryWeapon _leader)};
+    private _starts=_groups apply {(units _x) apply {[_x,getPosATL _x]}};
     {
         missionNamespace setVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],nil,true];
         [_sampleId,60] remoteExecCall ["Waldo_CortexQA_PerformanceSampleOwner",_x];
     } forEach _sampleOwners;
     private _responseStart=diag_tickTime;
+    {if (!isNull _x) then {_x setCaptive false}} forEach _targets;
+    {
+        private _index=_forEachIndex;
+        [_x,_groupTargets select _index,_destinations select _index,(_index mod 4) == 0]
+            remoteExecCall ["Waldo_CortexQA_PerformanceStartGroup",groupOwner _x];
+    } forEach _groups;
+    private _startReady=[{
+        _groups findIf {!(_x getVariable ["Waldo_CortexQA_PerformanceStarted",false])} < 0
+    },20] call _wait;
+    [format ["PERF-CONTACT-arm-%1-owner-start",_arm],_startReady,""] call _check;
     private _responseLatency=-1;
-    private _until=diag_tickTime+60;
+    private _until=_responseStart+60;
     while {diag_tickTime < _until} do {
         if (_responseLatency < 0) then {
             private _responding={
                 private _index=_groups find _x;
-                leader _x distance2D (_starts select _index) >= 10
-                    && {behaviour leader _x == "COMBAT" || {currentCommand leader _x in ["ATTACK","FIRE","MOVE"]}}
+                private _physicallyMoved=(_starts select _index) findIf {
+                    (_x select 0) distance2D (_x select 1) >= 10
+                } >= 0;
+                _physicallyMoved || {_x getVariable ["Waldo_CortexQA_PerformanceFired",false]}
             } count _contactGroups;
             if (_responding >= 20) then {_responseLatency=diag_tickTime-_responseStart};
         };
@@ -116,9 +125,12 @@ private _results=[];
     },20] call _wait;
     private _ownerResults=_owners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
     private _sampleResults=_sampleOwners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
-    private _moved={private _index=_groups find _x; leader _x distance2D (_starts select _index) >= 20} count _groups;
-    private _fired={private _index=_groups find _x; (leader _x) ammo (primaryWeapon leader _x) < (_ammoBefore select _index)} count _contactGroups;
-    private _valid=_ready && {_ownershipReady} && {_sampleReady} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
+    private _moved={
+        private _index=_groups find _x;
+        (_starts select _index) findIf {(_x select 0) distance2D (_x select 1) >= 20} >= 0
+    } count _groups;
+    private _fired={_x getVariable ["Waldo_CortexQA_PerformanceFired",false]} count _contactGroups;
+    private _valid=_ready && {_ownershipReady} && {_startReady} && {_sampleReady} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
         && {_moved >= 90} && {_fired >= 15} && {_responseLatency >= 0};
     [format ["PERF-CONTACT-arm-%1-physical-workload",_arm],_valid,
         format ["movedGroups=%1 firedContactGroups=%2 responseSeconds=%3 samples=%4",_moved,_fired,_responseLatency,_sampleResults]] call _check;
