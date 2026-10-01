@@ -96,7 +96,7 @@ Feature cases: **56**. Required variant categories: **13**.
 
 ### PROFILE - Behaviour profiles and aggression
 
-**Expected:** Precedence is correct; zero prevents chance-based starts; skill values remain independent.
+**Expected:** Precedence is correct; zero excludes proactive starts; positive flank/advance values choose a tactic instead of independently rejecting action; skill values remain independent.
 
 **Automation and open work:** runProfiles.sqf: precedence, aliases, fallbacks, aggression limits and skill preservation passed in runtime-20260927-115212. Tactical behaviour for every profile remains unverified.
 

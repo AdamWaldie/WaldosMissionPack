@@ -6,8 +6,9 @@
  * Uses bounded fire-team movement so that it cannot freeze or
  * undo itself. The squad must have been in CONTACT for Waldo_AIPass_Advance_MinContactSeconds, its
  * current waypoint (MOVE, SAD or DESTROY, not a pass waypoint) must be more than 80 m away, the nearest
- * known enemy must be at least 60 m away, morale must be STEADY, no drill may be running, and the
- * behaviour profile's advanceChance roll must succeed. A bounded avenue selector compares the
+ * known enemy must be at least 60 m away, morale must be STEADY and no drill may be running.
+ * Waldo_fnc_CortexTacticalStart applies advanceChance as a relative preference before calling this
+ * deterministic viability/start function. A bounded avenue selector compares the
  * direct route with four offset two-leg routes and samples screening once when the drill starts.
  * Two elements advance successively: riflemen
  * move first while the leader/support element covers, then hold while that element closes up.
@@ -37,7 +38,7 @@
  * Result: a pinned squad advances two elements successively towards its objective.
  *
  * Support integration: active reinforcement/assault responders decline new drills until released.
- * Current caller: Waldo_fnc_CortexGroupTick.
+ * Current caller: Waldo_fnc_CortexTacticalStart.
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
@@ -58,10 +59,6 @@ if (waypointDescription [_group, _index] == "WMP AI PASS" || {!(waypointType [_g
 private _objective = waypointPosition [_group, _index];
 if (_leader distance2D _objective <= 80) exitWith {false};
 if (_enemies isEqualTo [] || {((_enemies select 0) select 3) < 60}) exitWith {false};
-if (random 1 >= ([_group, "advanceChance"] call Waldo_fnc_CortexProfile)) exitWith {
-    [_state, "advance", 30] call Waldo_fnc_CortexCooldown;
-    false
-};
 private _onFoot = (units _group) select {
     private _actorMove = _x getVariable ["Waldo_Cortex_ActorMove",[]];
     [_x] call Waldo_fnc_CortexCombatEffective && {local _x} && {vehicle _x == _x}

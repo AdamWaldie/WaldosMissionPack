@@ -12,11 +12,13 @@
  * 4. Waldo_AIRebalance_Profile, the active AI Rebalance profile (PUBLIC and STANDARD map to MILITIA
  *    and LINE);
  * 5. LINE.
- * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales every chance
- * key, capped at 1.
+ * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales every
+ * tactical-weight key, capped at 1.
  * Missing keys in a mission-edited profile fall back to LINE's values, and an unknown profile name
  * uses LINE.
- * Keys: flankChance, advanceChance, investigateChance and coordinatedChance are 0-1 tactic rolls;
+ * Keys: flankChance and advanceChance are relative local-manoeuvre preferences (zero excludes that
+ * option); coordinatedChance is a positive participation gate once support has assembled;
+ * investigateChance remains a 0-1 post-contact search roll;
  * assaultChance is the 0-1 chance of preparing an eligible assault with a safe carried grenade,
  * while the enabled assault transition itself remains deterministic after a successful manoeuvre.
  * moraleShaken and moraleBroken (morale thresholds), retreatScale (multiplies

@@ -17,8 +17,9 @@
  * element reaches its flanking position it may go on to a final assault (Waldo_fnc_CortexFlankStep).
  * Gates: infantry squad of at least Waldo_AIPass_Flank_MinGroupSize with 60% of its peak strength,
  * morale STEADY, a seen enemy between Waldo_AIPass_Flank_MinRange and MaxRange, no drill running, no
- * cooldown, and a roll against the group's behaviour profile flankChance (Waldo_fnc_CortexProfile; a
- * failed roll waits 30 s).
+ * cooldown. Waldo_fnc_CortexTacticalStart applies the group's flankChance as a relative preference
+ * before calling this deterministic viability/start function, so a failed random roll cannot idle an
+ * otherwise capable squad.
  * Actors completing a short grenade-evasion or anti-armour relocation lease are omitted from the
  * new element rather than having their destination replaced.
  * Locality and authority: call where the group is local. The drill runs as its own scheduler job.
@@ -40,7 +41,7 @@
  * Result: half the squad moves round the enemy's flank in covered bounds while the rest suppresses.
  *
  * Support integration: active reinforcement/assault responders decline new drills until released.
- * Current caller: Waldo_fnc_CortexGroupTick.
+ * Current caller: Waldo_fnc_CortexTacticalStart.
  */
 
 params [["_group", grpNull, [grpNull]], ["_state", createHashMap, [createHashMap]], ["_enemies", [], [[]]]];
@@ -67,11 +68,6 @@ private _targetIndex = _enemies findIf {
     && {(_x select 3) <= (missionNamespace getVariable ["Waldo_AIPass_Flank_MaxRange", 400])}
 };
 if (_targetIndex < 0) exitWith {false};
-if (random 1 >= ([_group, "flankChance"] call Waldo_fnc_CortexProfile)) exitWith {
-    [_state, "flank", 30] call Waldo_fnc_CortexCooldown;
-    false
-};
-
 private _target = (_enemies select _targetIndex) select 0;
 private _enemyPos = (_enemies select _targetIndex) select 1;
 private _distance = (_enemies select _targetIndex) select 3;

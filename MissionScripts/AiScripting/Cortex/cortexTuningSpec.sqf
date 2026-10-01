@@ -84,7 +84,7 @@ private _spec = [
     ["Waldo_AIPass_Hearing_Enable", "Nearby gunfire investigation", "Hostile FiredNear events create a throttled, approximate 50 m area for investigation, never a target reveal.", "CHECKBOX", [], true],
     // Squad behaviour
     ["Waldo_AIPass_BehaviourProfile", "Behaviour profile", "Tactics profile for every squad without a group or faction profile of its own. Skill values are not changed.", "COMBO", [_profiles, _profileLabels], ""],
-    ["Waldo_AIPass_Aggression", "Aggression", "Scales how often squads flank, assault, advance, investigate and join coordinated assaults. Default 1.2 adds tactical initiative; 1 is the profile's own value, 0 never, 2 doubles the chance before clamping.", "SLIDER", [0, 2, 2], 1.2],
+    ["Waldo_AIPass_Aggression", "Aggression", "Scales flank/advance preference, optional grenade preparation, investigation and coordinated-assault participation. Positive local preferences choose which viable manoeuvre starts instead of deciding whether the squad acts. Default 1.2 adds initiative; 1 is the profile value and 0 excludes proactive tactics.", "SLIDER", [0, 2, 2], 1.2],
     ["Waldo_AIPass_Cohesion", "Cohesion", "How much punishment squads take before morale breaks. Above 1 they hold longer, below 1 they break sooner.", "SLIDER", [0.5, 2, 2], 1],
     ["Waldo_AIPass_ReactionSpeed", "Reaction speed", "How often squads re-assess. Above 1 they react faster and use more server time; below 1 slower.", "SLIDER", [0.5, 2, 2], 1],
     ["Waldo_AIPass_EngageRange", "Engagement range (m)", "Known enemies within this range of a squad leader are acted on.", "SLIDER", [200, 1500, 0], 800],

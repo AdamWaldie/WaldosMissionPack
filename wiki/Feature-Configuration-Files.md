@@ -432,7 +432,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Reinforce_Radius` | How far away responding squads may be. Default `600`. |
 | `Waldo_AIPass_Reinforce_MaxResponders` | Responding squads per squad in contact. Default `2`. |
 | `Waldo_AIPass_BehaviourProfile` | Tactics profile for every squad without its own or its faction's; `""` follows the AI Rebalance profile. Live-tunable with the AI Tuning Zeus module, like every setting marked *(AI Tuning)* below. Default `""`. |
-| `Waldo_AIPass_Aggression` | *(AI Tuning)* Scales how often squads flank, assault, advance, investigate and coordinate. Default `1.2`. |
+| `Waldo_AIPass_Aggression` | *(AI Tuning)* Scales flank/advance preference, coordinated participation, assault-grenade preparation and investigation. Positive local preferences choose a viable tactic; zero excludes proactive tactics. Default `1.2`. |
 | `Waldo_AIPass_Cohesion` | *(AI Tuning)* Above `1` squads take more before morale breaks, below `1` they break sooner. Default `1`. |
 | `Waldo_AIPass_ReactionSpeed` | *(AI Tuning)* Above `1` squads re-assess more often (more server time). Default `1`. |
 | `Waldo_AIPass_Artillery_DefaultRole` | *(AI Tuning)* Missions a gun takes without its own role: `SUPPORT`, `COUNTER` or `BOTH`. Default `"BOTH"`. |

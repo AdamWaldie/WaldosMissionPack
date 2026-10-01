@@ -9,8 +9,9 @@
  * uses successive fire-team bounds and the gated final assault sequence. Original waypoints
  * survive the finite reservation. The assault launches when every responder has
  * arrived, or 60 s after the first did. It needs an enemy seen in the last 60 s within 400 m, STEADY
- * morale, and a successful roll against the requesting squad's behaviour profile coordinatedChance
- * (a failed roll waits 120 s). Only one coordinated assault is made per engagement. Responders must be
+ * morale, and a positive requesting-squad coordinatedChance profile weight. Once responders have
+ * assembled, the assault launches deterministically rather than discarding the prepared action on a
+ * second random roll. Only one coordinated assault is made per engagement. Responders must be
  * reserved by the server; receiving owners revalidate before execution, including after migration.
  * Locality and authority: call where the requesting group is local.
  *
@@ -41,6 +42,7 @@ private _pendingUntil = _state getOrDefault ["coordinatedPendingUntil", 0];
 if (time < _pendingUntil) exitWith {true};
 if ([_state, "coordinated"] call Waldo_fnc_CortexCooldown) exitWith {false};
 if ((_state getOrDefault ["moraleState", "STEADY"]) != "STEADY") exitWith {false};
+if (([_group, "coordinatedChance"] call Waldo_fnc_CortexProfile) <= 0) exitWith {false};
 private _enemyPos = _state getOrDefault ["enemyPos", []];
 private _leader = leader _group;
 if (count _enemyPos < 2 || {time - (_state getOrDefault ["lastSeen", -1e6]) > 60} || {_leader distance2D _enemyPos > 400}) exitWith {false};
@@ -64,10 +66,6 @@ if (_arrivals isEqualTo []) exitWith {false};
 private _first = 1e9;
 {_first = _first min _x} forEach _arrivals;
 if (count _arrivals < count _responders && {serverTime - _first < 60}) exitWith {false};
-if (random 1 >= ([_group, "coordinatedChance"] call Waldo_fnc_CortexProfile)) exitWith {
-    [_state, "coordinated", 120] call Waldo_fnc_CortexCooldown;
-    false
-};
 [_group,_enemyPos,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAssaultServer",2];
 [_state,"coordinated",10] call Waldo_fnc_CortexCooldown;
 // Reserve the requester's movement role while the authenticated server dispatch and

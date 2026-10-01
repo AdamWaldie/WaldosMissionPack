@@ -174,7 +174,8 @@
  *   numbers below, can be changed during the mission with the AI Tuning Zeus module or
  *   Waldo_fnc_CortexTuning):
  *   - Waldo_AIPass_BehaviourProfile: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics mission-wide (group and faction profiles still win).
- *   - Waldo_AIPass_Aggression: scales flank, assault grenade preparation, advance, investigate and coordinated-assault chances (1 = the profile's own).
+ *   - Waldo_AIPass_Aggression: scales local-manoeuvre preferences, optional assault preparation,
+ *     post-contact investigation and coordinated-assault participation (1 = the profile's own).
  *   - Waldo_AIPass_Cohesion: how much punishment squads take before morale breaks (1 = normal).
  *   - Waldo_AIPass_ReactionSpeed: how often squads re-assess (1 = normal; higher costs more server time).
  * - Waldo_AIPass_Artillery_Enable (MISSION MAKER): squads call fire from friendly AI artillery on well-located enemies only.
@@ -301,7 +302,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Regroup_TimeoutSeconds", 120], // SECONDS: limit for finding a host and for walking to it.
         ["Waldo_AIPass_Regroup_SettleSeconds", 5], // SECONDS: delay after a kill before the remnant is assessed.
         ["Waldo_AIPass_BehaviourProfile", ""], // STRING: "" follows the AI Rebalance profile; MILITIA, LINE, VETERAN or ELITE sets squad tactics for every squad without its own.
-        ["Waldo_AIPass_Aggression", 1.2], // 0-2: scales how often squads flank, assault, advance, investigate and coordinate.
+        ["Waldo_AIPass_Aggression", 1.2], // 0-2: scales manoeuvre preference/participation and optional tactical actions; zero excludes them.
         ["Waldo_AIPass_Cohesion", 1], // 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner.
         ["Waldo_AIPass_ReactionSpeed", 1], // 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often.
         ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads).

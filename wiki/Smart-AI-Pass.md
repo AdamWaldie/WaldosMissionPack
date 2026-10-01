@@ -106,14 +106,18 @@ Aircraft reactions recheck owner locality, active/pause state, pilot health, exp
 
 The pass reads the same profile names as [Waldo's AI Tuning](Waldos-AI-Tweak) (MILITIA, LINE,
 VETERAN, ELITE; LEGACY behaves like LINE). Skill profiles set how well AI shoot and spot, and the
-pass never changes them. Behaviour profiles set how willing a squad is to fight smart:
+pass never changes them. Behaviour profiles set how a squad prefers to fight. Flank and advance
+values are relative weights: Cortex tries the preferred viable manoeuvre first and immediately falls
+back to the other, rather than rolling twice and leaving the squad idle. Zero excludes an option.
+Once requested support squads have assembled, a positive coordinated value launches the prepared
+assault without another random rejection. Assault grenade and investigation values remain chances:
 
-| Profile | Flank | Assault grenade | Breaks at | Retreats | Surrenders at |
-|---|---|---|---|---|---|
-| MILITIA | 30% | 20% | early | 1.5x further | 3 survivors |
-| LINE | 50% | 40% | normal | normal | 2 survivors |
-| VETERAN | 60% | 55% | late | 0.8x | 1 survivor |
-| ELITE | 70% | 70% | very late | 0.7x | 1 survivor |
+| Profile | Flank weight | Advance weight | Coordinated participation | Assault grenade | Breaks at | Retreats | Surrenders at |
+|---|---:|---:|---:|---:|---|---|---|
+| MILITIA | 0.3 | 0.3 | 0.2 | 20% | early | 1.5x further | 3 survivors |
+| LINE | 0.5 | 0.5 | 0.4 | 40% | normal | normal | 2 survivors |
+| VETERAN | 0.6 | 0.6 | 0.5 | 55% | late | 0.8x | 1 survivor |
+| ELITE | 0.7 | 0.7 | 0.6 | 70% | very late | 0.7x | 1 survivor |
 
 A squad uses, in order:
 1. its own profile (`(group this) setVariable ["Waldo_AIPass_Profile", "ELITE", true];`);
@@ -142,7 +146,7 @@ headless clients that join later. Each squad uses them from its next step; nothi
 | Setting | Type | Default | Effect |
 |---|---|---|
 | `Waldo_AIPass_BehaviourProfile` | `""` | Tactics profile for every squad without its own or its faction's. Empty follows the AI Rebalance profile. |
-| `Waldo_AIPass_Aggression` | `1.2` | Scales how often squads flank, assault, advance, investigate and join coordinated assaults. `0` never, `2` twice as often. |
+| `Waldo_AIPass_Aggression` | `1.2` | Scales manoeuvre preference, coordinated participation, assault-grenade preparation and investigation. Any positive flank/advance mix starts a viable local tactic; `0` excludes proactive tactics. |
 | `Waldo_AIPass_Cohesion` | `1` | How much punishment a squad takes before it breaks. Above `1` they hold longer. |
 | `Waldo_AIPass_ReactionSpeed` | `1` | How often squads re-assess. Above `1` they react faster and use more server time. |
 | `Waldo_AIPass_EngageRange` | `800` | Known enemies within this range (m) are acted on. |

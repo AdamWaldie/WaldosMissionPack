@@ -963,13 +963,29 @@ class CortexOperations(unittest.TestCase):
     def test_coordinated_assault_owns_requester_movement_before_local_tactics(self):
         tick=source('cortexGroupTick')
         coordinated=source('cortexCoordinatedAssault')
-        self.assertLess(tick.index('private _coordinatedOwnsMovement = _vehicleOwnsMovement'),tick.index('call Waldo_fnc_CortexFlankStart'))
+        self.assertLess(tick.index('private _coordinatedOwnsMovement = _vehicleOwnsMovement'),tick.index('call Waldo_fnc_CortexTacticalStart'))
         self.assertIn('if (!_ordered && {!_coordinatedOwnsMovement} && {!_lambsCombat})',tick)
-        self.assertIn('private _localTacticStarted = false',tick)
-        self.assertIn('if (!_localTacticStarted && {["Waldo_AIPass_Advance_Enable", true] call _get})',tick)
+        self.assertIn('["Waldo_AIPass_Flank_Enable", true] call _get',tick)
+        self.assertIn('["Waldo_AIPass_Advance_Enable", true] call _get',tick)
         self.assertIn('_state set ["coordinatedPendingUntil",time+15]',coordinated)
         self.assertIn('if (time < _pendingUntil) exitWith {true}',coordinated)
         self.assertIn('"coordinatedPendingUntil"',source('cortexRestoreCalm'))
+
+    def test_tactical_profile_weights_choose_action_instead_of_idleness(self):
+        selector=source('cortexTacticalStart')
+        flank=source('cortexFlankStart')
+        advance=source('cortexAdvanceStart')
+        coordinated=source('cortexCoordinatedAssault')
+        self.assertIn('private _totalWeight = _flankWeight + _advanceWeight',selector)
+        self.assertIn('random _totalWeight < _flankWeight',selector)
+        self.assertIn('if (!_started && {_advanceWeight > 0})',selector)
+        self.assertIn('if (!_started && {_flankWeight > 0})',selector)
+        self.assertEqual(2,selector.count('call Waldo_fnc_CortexFlankStart'))
+        self.assertEqual(2,selector.count('call Waldo_fnc_CortexAdvanceStart'))
+        self.assertNotIn('random 1 >= ([_group, "flankChance"]',flank)
+        self.assertNotIn('random 1 >= ([_group, "advanceChance"]',advance)
+        self.assertIn('([_group, "coordinatedChance"] call Waldo_fnc_CortexProfile) <= 0',coordinated)
+        self.assertNotIn('random 1 >= ([_group, "coordinatedChance"]',coordinated)
 
     def test_coordinated_selection_uses_bounded_server_responder_index(self):
         coordinated=source('cortexCoordinatedAssault')

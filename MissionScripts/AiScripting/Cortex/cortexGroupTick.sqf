@@ -495,13 +495,10 @@ switch (_state get "phase") do {
                 _coordinatedOwnsMovement = [_group, _state] call Waldo_fnc_CortexCoordinatedAssault;
             };
             if (!_ordered && {!_coordinatedOwnsMovement} && {!_lambsCombat}) then {
-                private _localTacticStarted = false;
-                if (["Waldo_AIPass_Flank_Enable", true] call _get) then {
-                    _localTacticStarted = [_group, _state, _enemies] call Waldo_fnc_CortexFlankStart;
-                };
-                if (!_localTacticStarted && {["Waldo_AIPass_Advance_Enable", true] call _get}) then {
-                    [_group, _state, _enemies] call Waldo_fnc_CortexAdvanceStart;
-                };
+                [_group, _state, _enemies,
+                    ["Waldo_AIPass_Flank_Enable", true] call _get,
+                    ["Waldo_AIPass_Advance_Enable", true] call _get
+                ] call Waldo_fnc_CortexTacticalStart;
             };
             if (["Waldo_AIPass_AmmoShare_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexAmmoShare};
         };

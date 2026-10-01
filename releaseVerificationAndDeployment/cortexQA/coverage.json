@@ -70,7 +70,7 @@
       "id": "PROFILE",
       "title": "Behaviour profiles and aggression",
       "setup": "Exercise each profile, faction override and group override; repeat with aggression zero and maximum.",
-      "expected": "Precedence is correct; zero prevents chance-based starts; skill values remain independent.",
+      "expected": "Precedence is correct; zero excludes proactive starts; positive flank/advance values choose a tactic instead of independently rejecting action; skill values remain independent.",
       "settings": [
         "Waldo_AIPass_Aggression",
         "Waldo_AIPass_BehaviourProfile",

@@ -497,3 +497,21 @@ move them; direct movement, boarding, actions, and scripts remain untouched.
 Blocked anti-armour backblast now creates one ten-second actor movement reservation. The relocation
 is not reissued every group tick, a newer destination cancels it, and coordinated bounds omit that
 single actor until the reservation expires. The rest of the squad remains free to move and engage.
+
+# Tactical initiative selection
+
+Source review found three independent random vetoes in the active contact path. A squad could reject
+flank and then reject advance despite satisfying both physical prerequisites. More seriously, a
+requester could rally and reserve support squads, then reject the assembled coordinated assault and
+wait 120 seconds. These outcomes presented as intermittent inactivity and wasted completed support
+work rather than useful tactical variation.
+
+`cortexTacticalStart.sqf` now treats positive flank and advance profile values as relative preference
+weights. One bounded draw chooses the first viability check; if that manoeuvre cannot start, the
+other positive enabled option is attempted immediately. The start functions retain their actor,
+range, route, lease, morale and cooldown gates, but no longer add independent random rejection.
+Prepared coordinated assaults launch deterministically when participation is positive. Zero remains
+an explicit exclusion. The selector adds no scheduler, persistent loop or per-unit scan.
+
+This is source and static-regression evidence only. It requires a fresh audit build and repeated live
+contact cases before it can establish improved tempo or combat effectiveness.
