@@ -228,6 +228,7 @@ for ($hcIndex = 1; $hcIndex -le $HeadlessClients; $hcIndex++) {
 $clientArguments = @(
     "-noBattlEye", "-netlog", "-noSplash", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
     "-connect=localhost", "-port=$Port", "-x=$ResolutionWidth", "-y=$ResolutionHeight",
+    "-windowWidth=$ResolutionWidth", "-windowHeight=$ResolutionHeight",
     "-password=wmpqa", "-profiles=$clientProfile", "-name=WMPAuditClient", $clientModArgument
 )
 $client = Start-Process -FilePath $armaExe -ArgumentList $clientArguments -WorkingDirectory $armaRoot -PassThru

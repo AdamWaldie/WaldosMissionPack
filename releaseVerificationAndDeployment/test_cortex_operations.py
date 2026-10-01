@@ -713,6 +713,13 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(marker,guide)
         self.assertNotIn('if (count _track > 90) then {_track deleteAt 0}',guide)
 
+    def test_pr_audit_requests_the_declared_window_resolution(self):
+        launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text(encoding='utf-8')
+        for marker in ['[int]$ResolutionWidth = 3840','[int]$ResolutionHeight = 2160',
+                       '"-x=$ResolutionWidth"','"-y=$ResolutionHeight"',
+                       '"-windowWidth=$ResolutionWidth"','"-windowHeight=$ResolutionHeight"']:
+            self.assertIn(marker,launcher)
+
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')
         self.assertIn('private _teamPause=if (_support) then {0} else', text)
