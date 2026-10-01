@@ -7,11 +7,17 @@ import re
 CASE = re.compile(r"WMP CORTEX QA\|([^|]+)\|(PASS|FAIL)\|([^\r\n]*)")
 DONE = re.compile(r"WMP CORTEX QA (SERVER|CLIENT) COMPLETE: (\d+) finding")
 ERROR = re.compile(r"Error in expression|Error position:|Error Undefined variable|Error Missing", re.I)
+FATAL_RUNTIME_ERROR = re.compile(
+    r"DX11 - device removed - reason:|ErrorMessage:\s*DX11|Exception code:\s*[0-9A-F]+",
+    re.I,
+)
 
 def summarize(logs):
     cases = []
     completed = {}
     errors = []
+    runtime_errors = []
+    runtime_error_kinds = set()
     for name, content in logs.items():
         for number, line in enumerate(content.splitlines(), 1):
             match = CASE.search(line)
@@ -22,9 +28,30 @@ def summarize(logs):
                 completed[match[1]] = max(completed.get(match[1], 0), int(match[2]))
             if ERROR.search(line):
                 errors.append(dict(log=name, line=number, message=line))
-    failed = any(case['result'] == 'FAIL' for case in cases) or bool(errors) or any(completed.values())
+            fatal = FATAL_RUNTIME_ERROR.search(line)
+            if fatal:
+                # A device-loss cascade can repeat hundreds of times. Preserve the first
+                # occurrence of each fatal signature per process without flooding the report.
+                kind = (name, fatal.group(0).lower())
+                if kind not in runtime_error_kinds:
+                    runtime_error_kinds.add(kind)
+                    runtime_errors.append(dict(log=name, line=number, message=line))
+    failed = (
+        any(case['result'] == 'FAIL' for case in cases)
+        or bool(errors)
+        or bool(runtime_errors)
+        or any(completed.values())
+    )
     complete = set(completed) == {'SERVER', 'CLIENT'} and bool(cases)
-    return dict(status='FAIL' if failed else ('PASS' if complete else 'INCOMPLETE'), complete=complete, missing_completion=sorted({'SERVER', 'CLIENT'} - set(completed)), completed=completed, cases=cases, errors=errors)
+    return dict(
+        status='FAIL' if failed else ('PASS' if complete else 'INCOMPLETE'),
+        complete=complete,
+        missing_completion=sorted({'SERVER', 'CLIENT'} - set(completed)),
+        completed=completed,
+        cases=cases,
+        errors=errors,
+        runtime_errors=runtime_errors,
+    )
 
 def attach_assessments(report, assessments):
     """Attach evidence-backed review without changing assertion or run outcomes."""
@@ -79,6 +106,11 @@ def render_markdown(report):
         lines.append(f"| {cell(case['case'])} | {case['result']} | {cell(case['detail']) or '—'} | {cell(case['log'])}:{case['line']} |")
     if report['errors']:
         lines += ['', 'SQF errors:', ''] + [f"- {error['log']}:{error['line']}: {error['message']}" for error in report['errors']]
+    if report.get('runtime_errors'):
+        lines += ['', 'Fatal runtime failures:', ''] + [
+            f"- {error['log']}:{error['line']}: {error['message']}"
+            for error in report['runtime_errors']
+        ]
     return lines
 
 def main():
@@ -94,7 +126,12 @@ def main():
     (root/'cortex-results.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     lines = render_markdown(report)
     (root/'cortex-results.md').write_text('\n'.join(lines)+'\n', encoding='utf-8')
-    print(f"Cortex audit: {report['status']}; {len(report['cases'])} checks, {len(report['errors'])} SQF error lines; run complete={report['complete']}. Report: {root/'cortex-results.md'}")
+    print(
+        f"Cortex audit: {report['status']}; {len(report['cases'])} checks, "
+        f"{len(report['errors'])} SQF error lines, "
+        f"{len(report['runtime_errors'])} fatal runtime failures; "
+        f"run complete={report['complete']}. Report: {root/'cortex-results.md'}"
+    )
     return 0 if report['status'] == 'PASS' else 1
 
 if __name__ == '__main__':

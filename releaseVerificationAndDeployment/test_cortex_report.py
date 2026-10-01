@@ -14,6 +14,24 @@ class CortexReportTests(unittest.TestCase):
     def test_empty_run_is_incomplete(self):
         self.assertEqual('INCOMPLETE',summarize({})['status'])
 
+    def test_device_hung_is_a_bounded_fatal_failure(self):
+        report=summarize({'client.rpt':'\n'.join([
+            'DX11 - device removed - reason: DXGI_ERROR_DEVICE_HUNG',
+            'DX11 - device removed - reason: DXGI_ERROR_DEVICE_HUNG',
+            'ErrorMessage: DX11 error : buffer Map failed : DXGI_ERROR_DEVICE_REMOVED',
+        ])})
+        self.assertEqual('FAIL',report['status'])
+        self.assertFalse(report['complete'])
+        self.assertEqual(2,len(report['runtime_errors']))
+        rendered='\n'.join(render_markdown(report))
+        self.assertIn('Fatal runtime failures:',rendered)
+        self.assertIn('DXGI_ERROR_DEVICE_HUNG',rendered)
+
+    def test_fatal_exception_without_completion_cannot_be_incomplete(self):
+        report=summarize({'client.rpt':'Exception code: 0000DEAD'})
+        self.assertEqual('FAIL',report['status'])
+        self.assertEqual(1,len(report['runtime_errors']))
+
     def test_failure_does_not_imply_completion_and_details_are_visible(self):
         report=summarize({'server.rpt':'WMP CORTEX QA|arrival|FAIL|remaining=63 m | allowed=50 m\nWMP CORTEX QA SERVER COMPLETE: 1 finding(s) []'})
         self.assertEqual('FAIL',report['status'])
