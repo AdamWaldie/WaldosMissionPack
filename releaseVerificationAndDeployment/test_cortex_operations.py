@@ -1625,10 +1625,31 @@ class CortexOperations(unittest.TestCase):
             'OWNERSHIP_RESUME',
         ]:
             self.assertIn(marker,lifecycle)
+        for marker in [
+            'LIFE-search-natural-contact',
+            'LIFE-search-production-start',
+            'LIFE-search-owner-resume',
+            'LIFE-search-deadline-preserved',
+            'LIFE-search-physical-continuation',
+            'LIFE-search-zeus-release',
+            'LIFE-retreat-production-start',
+            'LIFE-retreat-initial-smoke',
+            'LIFE-retreat-owner-resume',
+            'LIFE-retreat-start-preserved',
+            'LIFE-retreat-physical-continuation',
+            'LIFE-retreat-no-smoke-replay',
+            'LIFE-retreat-zeus-no-resurrection',
+        ]:
+            self.assertIn(marker,lifecycle)
+        self.assertIn('call Waldo_fnc_CortexRetreat',lifecycle)
+        self.assertIn('Waldo_AIPass_AreaReport',lifecycle)
 
     def test_withdrawal_migration_respects_zeus_and_feature_gates(self):
         locality=source('cortexLocality')
         self.assertIn('Waldo_AIPass_Morale_Enable',locality)
+        self.assertIn('Waldo_AIPass_Vehicles_Enable',locality)
+        self.assertIn('Waldo_AIPass_VehicleWithdraw_Enable',locality)
+        self.assertIn('switch (_withdrawalKind)',locality)
         self.assertIn('!([_group] call Waldo_fnc_CortexZeusHeld)',locality)
         self.assertIn('(_withdrawalIntent select 0) in ["INFANTRY","VEHICLE"]',locality)
 

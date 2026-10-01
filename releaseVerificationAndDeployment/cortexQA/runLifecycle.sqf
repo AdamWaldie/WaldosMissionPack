@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Tests mid-order master disable, authored movement, restart, active investigation migration and
- * published handover reasons on the server and two headless owners.
+ * Tests mid-order master disable, authored movement, restart, active investigation/search/retreat
+ * migration and published handover reasons on the server and two headless owners.
  * Locality/authority: server fixture; WMP migration and production owner-local defence/release paths.
  * Ordinary waypoints are issued after returning the group to the server while Cortex is disabled.
  * Also checks that a refused HC-to-HC transfer preserves actual ownership and its registry record.
@@ -266,5 +266,163 @@ if (_owners isNotEqualTo []) then {
     ["LIFE-state-zeus-no-resurrection",_replacementArrived && {_stayedReleased},str [_stateGroup getVariable ["Waldo_AIPass_PublicPhase",""],_stateGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]]] call _recordCheck;
     {deleteVehicle _x} forEach _stateUnits;
     deleteGroup _stateGroup;
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+};
+
+// Exercise the other two durable combat intents through their production entry paths. SEARCH is
+// reached from natural contact loss; RETREAT uses the common withdrawal controller after supplying
+// the enemy position that the morale evaluator normally records.
+if (_owners isNotEqualTo []) then {
+    private _stateOwner=_owners select 0;
+    [createHashMapFromArray [
+        ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
+        ["Waldo_AIPass_PostContact_Enable",true],["Waldo_AIPass_PostContact_LostSeconds",3],
+        ["Waldo_AIPass_PostContact_SecuritySeconds",2],["Waldo_AIPass_PostContact_SearchSeconds",60],
+        ["Waldo_AIPass_Morale_Enable",false],["Waldo_AIPass_Flank_Enable",false],
+        ["Waldo_AIPass_Advance_Enable",false],["Waldo_AIPass_CoordinatedAssault_Enable",false],
+        ["Waldo_AIPass_Reinforce_Enable",false],["Waldo_AIPass_LambsMode","WMP"]
+    ]] call Waldo_fnc_CortexTuning;
+    private _searchGroup=createGroup [east,true];
+    private _searchEnemyGroup=createGroup [west,true];
+    {
+        _x setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+        _x setVariable ["acex_headless_blacklist",true,true];
+        _x setCombatMode "BLUE";
+    } forEach [_searchGroup,_searchEnemyGroup];
+    _searchEnemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+    private _searchUnits=[];
+    for "_i" from 0 to 3 do {
+        private _unit=_searchGroup createUnit ["O_Soldier_F",[2600+_i*3,1700,0],[],0,"NONE"];
+        _unit setDir 0;
+        _unit allowDamage false;
+        _unit setVariable ["acex_headless_blacklist",true,true];
+        _unit setVariable ["Waldo_CortexQA_Label",format ["SEARCH HANDOFF %1",_i+1],true];
+        _searchUnits pushBack _unit;
+    };
+    private _searchEnemy=_searchEnemyGroup createUnit ["B_Soldier_F",[2600,1840,0],[],0,"NONE"];
+    _searchEnemy setDir 180;
+    _searchEnemy allowDamage false;
+    _searchEnemy disableAI "PATH";
+    _searchEnemy setVariable ["acex_headless_blacklist",true,true];
+    _searchEnemy setVariable ["Waldo_CortexQA_Label","SEARCH CONTACT",true];
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",_searchUnits+[_searchEnemy],true];
+    ["Lifecycle: search crosses ownership","The squad must naturally detect the visible opponent. After contact is removed, its two-soldier search starts on the server and continues on a headless client with the original deadline.",getPosATL _searchEnemy] call _phase;
+    private _searchContact=[{(_searchGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "CONTACT"},35] call _wait;
+    ["LIFE-search-natural-contact",_searchContact,str (_searchUnits apply {_x knowsAbout _searchEnemy})] call _recordCheck;
+    private _searchTarget=getPosATL _searchEnemy;
+    deleteVehicle _searchEnemy;
+    private _searchStarted=[{
+        (_searchGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "SEARCH"
+            && {private _intent=_searchGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]; count _intent == 6 && {(_intent select 5) isNotEqualTo []}}
+    },45] call _wait;
+    ["LIFE-search-production-start",_searchContact && {_searchStarted},str [_searchGroup getVariable ["Waldo_AIPass_PublicPhase",""],_searchGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]]] call _recordCheck;
+    private _searchIntentBefore=+(_searchGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]);
+    private _searchDeadline=_searchIntentBefore param [3,-1];
+    private _searchTeam=+(_searchIntentBefore param [5,[]]);
+    private _searchStarts=_searchTeam apply {getPosATL _x};
+    _searchGroup setVariable ["Waldo_Headless_ExcludeGroup",false,true];
+    {_x setVariable ["acex_headless_blacklist",false,true]} forEach _searchUnits;
+    private _searchMigration=[_searchGroup,_stateOwner] call Waldo_fnc_HeadlessMigrateGroup;
+    private _searchAdopted=[{
+        groupOwner _searchGroup == _stateOwner
+            && {(_searchGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "SEARCH"}
+            && {private _entry=_searchGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]; count _entry == 5 && {(_entry select 3) == "OWNERSHIP_RESUME"} && {(_entry select 4) == _stateOwner}}
+    },35] call _wait;
+    ["LIFE-search-owner-resume",_searchMigration && {_searchAdopted},str [groupOwner _searchGroup,_searchGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]]] call _recordCheck;
+    private _searchIntentAfter=+(_searchGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]);
+    ["LIFE-search-deadline-preserved",_searchAdopted && {count _searchIntentAfter == 6}
+        && {abs ((_searchIntentAfter select 3)-_searchDeadline) < 0.25},str [_searchDeadline,_searchIntentAfter]] call _recordCheck;
+    private _searchTravel=[{
+        _searchTeam findIf {private _index=_searchTeam find _x; !alive _x || {_x distance2D (_searchStarts select _index) < 8}} < 0
+    },40] call _wait;
+    ["LIFE-search-physical-continuation",_searchAdopted && {_searchTravel},str [_searchTarget,_searchTeam apply {getPosATL _x}]] call _recordCheck;
+    [_searchGroup,true] call Waldo_fnc_CortexZeusMark;
+    private _searchReleased=[{
+        (_searchGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "CALM"
+            && {(_searchGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]) isEqualTo []}
+    },20] call _wait;
+    ["LIFE-search-zeus-release",_searchReleased,str [_searchGroup getVariable ["Waldo_AIPass_PublicPhase",""],_searchGroup getVariable ["Waldo_Cortex_TransitionIntent",[]]]] call _recordCheck;
+    {deleteVehicle _x} forEach _searchUnits;
+    deleteGroup _searchGroup;
+    deleteGroup _searchEnemyGroup;
+
+    [createHashMapFromArray [
+        ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
+        ["Waldo_AIPass_Morale_Enable",true],["Waldo_AIPass_Surrender_Enable",false],
+        ["Waldo_AIPass_Morale_RetreatDistance",100],["Waldo_AIPass_Artillery_Enable",false],
+        ["Waldo_AIPass_LambsMode","WMP"]
+    ]] call Waldo_fnc_CortexTuning;
+    private _retreatGroup=createGroup [east,true];
+    _retreatGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+    _retreatGroup setVariable ["acex_headless_blacklist",true,true];
+    _retreatGroup setCombatMode "YELLOW";
+    private _retreatUnits=[];
+    for "_i" from 0 to 2 do {
+        private _unit=_retreatGroup createUnit ["O_Soldier_F",[2860+_i*3,1700,0],[],0,"NONE"];
+        _unit allowDamage false;
+        _unit addMagazine "SmokeShell";
+        _unit setVariable ["acex_headless_blacklist",true,true];
+        _unit setVariable ["Waldo_CortexQA_Label",format ["RETREAT HANDOFF %1",_i+1],true];
+        _unit addEventHandler ["FiredMan",{
+            params ["_unit","_weapon","_muzzle","_mode","_ammo","_magazine","_projectile"];
+            if (getText (configFile >> "CfgAmmo" >> _ammo >> "simulation") in ["shotSmoke","shotSmokeX"] && {!isNull _projectile}) then {
+                private _records=_unit getVariable ["Waldo_CortexQA_SmokeThrows",[]];
+                _records pushBack [_ammo,serverTime,getPosATL _projectile];
+                _unit setVariable ["Waldo_CortexQA_SmokeThrows",_records,true];
+            };
+        }];
+        _retreatUnits pushBack _unit;
+    };
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",+_retreatUnits,true];
+    private _retreatState=[_retreatGroup] call Waldo_fnc_CortexGroupState;
+    _retreatState set ["enemyPos",[2860,1800,0]];
+    private _retreatOrigin=getPosATL leader _retreatGroup;
+    ["Lifecycle: withdrawal crosses ownership","The common withdrawal controller starts on the server, throws its one smoke screen and moves away from the threat. Ownership then transfers without replaying smoke or extending the episode.",_retreatOrigin getPos [100,180]] call _phase;
+    private _retreatAccepted=[_retreatGroup,_retreatState] call Waldo_fnc_CortexRetreat;
+    private _retreatStarted=[{
+        (_retreatGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "RETREAT"
+            && {count (_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]) == 7}
+            && {leader _retreatGroup distance2D _retreatOrigin >= 8}
+    },35] call _wait;
+    ["LIFE-retreat-production-start",_retreatAccepted && {_retreatStarted},str [_retreatGroup getVariable ["Waldo_AIPass_PublicPhase",""],_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]]] call _recordCheck;
+    private _smokeObserved=[{_retreatUnits findIf {(_x getVariable ["Waldo_CortexQA_SmokeThrows",[]]) isNotEqualTo []} >= 0},10] call _wait;
+    ["LIFE-retreat-initial-smoke",_smokeObserved,str (_retreatUnits apply {_x getVariable ["Waldo_CortexQA_SmokeThrows",[]]})] call _recordCheck;
+    private _smokeCountBefore=0;
+    {_smokeCountBefore=_smokeCountBefore+count (_x getVariable ["Waldo_CortexQA_SmokeThrows",[]])} forEach _retreatUnits;
+    private _withdrawalBefore=+(_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]);
+    private _retreatStartedAt=_withdrawalBefore param [4,-1];
+    private _retreatHandoffStart=getPosATL leader _retreatGroup;
+    _retreatGroup setVariable ["Waldo_Headless_ExcludeGroup",false,true];
+    {_x setVariable ["acex_headless_blacklist",false,true]} forEach _retreatUnits;
+    private _retreatMigration=[_retreatGroup,_stateOwner] call Waldo_fnc_HeadlessMigrateGroup;
+    private _retreatAdopted=[{
+        groupOwner _retreatGroup == _stateOwner
+            && {(_retreatGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "RETREAT"}
+            && {private _entry=_retreatGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]; count _entry == 5 && {(_entry select 3) == "OWNERSHIP_RESUME"} && {(_entry select 4) == _stateOwner}}
+    },35] call _wait;
+    ["LIFE-retreat-owner-resume",_retreatMigration && {_retreatAdopted},str [groupOwner _retreatGroup,_retreatGroup getVariable ["Waldo_Cortex_PhaseTransition",[]]]] call _recordCheck;
+    private _withdrawalAfter=+(_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]);
+    ["LIFE-retreat-start-preserved",_retreatAdopted && {count _withdrawalAfter == 7}
+        && {abs ((_withdrawalAfter select 4)-_retreatStartedAt) < 0.25},str [_retreatStartedAt,_withdrawalAfter]] call _recordCheck;
+    private _retreatContinued=[{leader _retreatGroup distance2D _retreatHandoffStart >= 10},35] call _wait;
+    ["LIFE-retreat-physical-continuation",_retreatAdopted && {_retreatContinued},str [_retreatHandoffStart,getPosATL leader _retreatGroup]] call _recordCheck;
+    sleep 6;
+    private _smokeCountAfter=0;
+    {_smokeCountAfter=_smokeCountAfter+count (_x getVariable ["Waldo_CortexQA_SmokeThrows",[]])} forEach _retreatUnits;
+    ["LIFE-retreat-no-smoke-replay",_smokeObserved && {_smokeCountAfter == _smokeCountBefore},str [_smokeCountBefore,_smokeCountAfter]] call _recordCheck;
+    [_retreatGroup,true] call Waldo_fnc_CortexZeusMark;
+    private _retreatReleased=[{
+        (_retreatGroup getVariable ["Waldo_AIPass_PublicPhase",""]) == "CALM"
+            && {(_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]) isEqualTo []}
+    },20] call _wait;
+    private _retreatStayedReleased=_retreatReleased;
+    for "_sample" from 1 to 12 do {
+        sleep 1;
+        if ((_retreatGroup getVariable ["Waldo_AIPass_PublicPhase","CALM"]) == "RETREAT"
+            || {(_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]) isNotEqualTo []}) then {_retreatStayedReleased=false};
+    };
+    ["LIFE-retreat-zeus-no-resurrection",_retreatStayedReleased,str [_retreatGroup getVariable ["Waldo_AIPass_PublicPhase",""],_retreatGroup getVariable ["Waldo_Cortex_WithdrawalIntent",[]]]] call _recordCheck;
+    {deleteVehicle _x} forEach _retreatUnits;
+    deleteGroup _retreatGroup;
     missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 };

@@ -376,7 +376,7 @@ Feature cases: **58**. Required variant categories: **13**.
 
 **Expected:** One owner executes each action, restored controls match prior state, public results replay and jobs/handlers do not leak.
 
-**Automation and open work:** runLifecycle.sqf retains the accepted disable/restart, Zeus replacement and leader-casualty cases, and now adds an active INVESTIGATE transfer: the new HC owner must publish OWNERSHIP_RESUME, preserve the original deadline, continue physical movement and then yield permanently to a Zeus replacement order. The new state-handoff case is saved but unexecuted. RETREAT/SEARCH live migration, ACE migration, disconnect, JIP, deletion and other action phases remain open.
+**Automation and open work:** runLifecycle.sqf retains the accepted disable/restart, Zeus replacement and leader-casualty cases. Additive active-state cases now migrate INVESTIGATE, naturally reached SEARCH and production RETREAT to an HC: each requires OWNERSHIP_RESUME, the original deadline/start, and continued physical movement. RETREAT must not replay smoke, and Zeus must permanently release all three states. These new cases are saved but unexecuted. ACE migration, disconnect, JIP, deletion and remaining action phases remain open.
 
 ### MULTI-FLANK - Multi-squad flank cohesion
 
