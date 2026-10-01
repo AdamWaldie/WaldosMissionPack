@@ -1065,6 +1065,21 @@
       "executable_sources": [
         "runAircraft.sqf"
       ]
+    },
+    {
+      "id": "AIR-ATTACK",
+      "title": "Threat-aware finite aircraft attack patterns",
+      "setup": "Launch moving armed helicopters and planes against live hostile targets with low-threat and observed-AA variants. Interrupt one active run with a replacement Zeus order.",
+      "expected": "Aircraft select strafe, hook, offset or standoff geometry from type, observed AA and live ammunition; physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.",
+      "settings": [
+        "Waldo_Cortex_AirAttack_Enable"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence. Threat-pattern selection, stuck replan, target loss, Zeus replacement and HC migration require rebuilt live acceptance.",
+      "executable_sources": [
+        "runAircraft.sqf"
+      ]
     }
   ]
 }

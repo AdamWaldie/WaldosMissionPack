@@ -364,7 +364,7 @@ switch (toUpperANSI _action) do {
             "Waldo_AIPass_Morale_Enable", "Waldo_AIPass_Surrender_Enable", "Waldo_AIPass_GrenadeEvasion_Enable",
             "Waldo_AIPass_AntiArmour_Enable", "Waldo_AIPass_Vehicles_Enable", "Waldo_AIPass_ContactReports_Enable",
             "Waldo_AIPass_Reinforce_Enable", "Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable",
-            "Waldo_AIPass_Airborne_Enable", "Waldo_AIPass_AircraftFlares_Enable", "Waldo_Cortex_AttackRunFlares_Enable",
+            "Waldo_AIPass_Airborne_Enable", "Waldo_AIPass_AircraftFlares_Enable", "Waldo_Cortex_AttackRunFlares_Enable", "Waldo_Cortex_AirAttack_Enable",
             "Waldo_AIPass_Investigate_Enable", "Waldo_AIPass_Assault_Enable", "Waldo_AIPass_Advance_Enable", "Waldo_AIPass_CoordinatedAssault_Enable", "Waldo_AIPass_Stance_Enable", "Waldo_AIPass_AmmoShare_Enable", "Waldo_AIPass_VehicleGunnery_Enable", "Waldo_AIPass_ArtillerySmoke_Enable", "Waldo_AIPass_AircraftBreak_Enable"
         ];
         private _updates = [

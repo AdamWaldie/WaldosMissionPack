@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Exercises aircraft missile defence using a live AA launcher and real projectile events.
+ * Exercises aircraft missile defence and adaptive attack patterns using live aircraft, targets,
+ * weapon fire, countermeasure events and physical flight.
  * Locality/authority: scheduled server fixtures; defensive response runs through normal discovery.
  * Repeat/JIP: fresh actors, public trails/labels; removes actors and their event handlers on completion.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required callbacks.
@@ -208,3 +209,149 @@ private _cortex=_results select 1;
         deleteGroup _group; deleteGroup _targetGroup;
     } forEach [false,true];
 } forEach ["O_Heli_Attack_02_dynamicLoadout_F","O_Plane_CAS_02_dynamicLoadout_F"];
+
+// Adaptive attacks remain separate from the flare-only comparison above. These cases never invoke
+// the production planner/worker directly: ordinary targets, knowledge and flight orders provide the
+// stimulus, and discovery must acquire the aircraft on its normal interval.
+{
+    _x params ["_id","_class","_withAA","_interrupt"];
+    [createHashMapFromArray [
+        ["Waldo_Cortex_AirAttack_Enable",true],["Waldo_Cortex_AttackRunFlares_Enable",true],
+        ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]
+    ]] call Waldo_fnc_CortexTuning;
+    private _aircraft=createVehicle [_class,[8200,5000,260],[],0,"FLY"];
+    _aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
+    private _crew=crew _aircraft;
+    private _group=group driver _aircraft;
+    _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+    _group setVariable ["acex_headless_blacklist",true,true];
+    {_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]} forEach _crew;
+    private _launchSpeed=[55,105] select (_aircraft isKindOf "Plane");
+    _aircraft setVelocityModelSpace [0,_launchSpeed,0];
+    _aircraft flyInHeight ([120,260] select (_aircraft isKindOf "Plane"));
+    private _target=createVehicle ["B_APC_Tracked_01_rcws_F",[8200,6500,0],[],0,"NONE"];
+    createVehicleCrew _target; _target allowDamage false;
+    private _targetCrew=crew _target;
+    private _targetGroup=group driver _target;
+    _targetGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+    {_x allowDamage false; _x disableAI "PATH"} forEach _targetCrew;
+    private _aa=objNull;
+    private _aaCrew=[];
+    private _aaGroup=grpNull;
+    if (_withAA) then {
+        _aa=createVehicle ["B_static_AA_F",[8750,6350,0],[],0,"NONE"];
+        createVehicleCrew _aa; _aa allowDamage false;
+        _aaCrew=crew _aa; _aaGroup=group gunner _aa;
+        _aaGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+        {_x allowDamage false; _x disableAI "PATH"} forEach _aaCrew;
+        // The case is explicitly observed-AA planning, so known threat is its declared stimulus.
+        _group reveal [_aa,4];
+        _aa setVariable ["Waldo_CortexQA_Label","OBSERVED AA THREAT",true];
+    };
+    _group setCombatMode "RED";
+    {_x doTarget _target} forEach _crew;
+    private _authoredDestination=[8200,7900,260];
+    private _waypoint=_group addWaypoint [_authoredDestination,0];
+    _waypoint setWaypointType "MOVE"; _waypoint setWaypointBehaviour "COMBAT";
+    _aircraft setVariable ["Waldo_CortexQA_Label",_id,true];
+    _target setVariable ["Waldo_CortexQA_Label","LIVE ARMOURED ATTACK TARGET",true];
+    _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",0,true];
+    _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",0,true];
+    _aircraft addEventHandler ["Fired",{
+        params ["_aircraft","_weapon"];
+        if (toLowerANSI getText (configFile >> "CfgWeapons" >> _weapon >> "simulation") == "cmlauncher") then {
+            _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0])+1,true];
+        } else {
+            _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])+1,true];
+        };
+    }];
+    private _actors=[_aircraft,_target]; if (!isNull _aa) then {_actors pushBack _aa};
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors,true];
+    [_id,"Watch the aircraft physically fly its labelled pattern, fire real weapons and exit safely. The cyan leg and red target line are live geometry; an assigned target or elapsed timer cannot pass.",getPosATL _aircraft] call _phase;
+    private _origin=getPosATL _aircraft;
+    private _started=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []},35] call _wait;
+    [_id+"-physical-plan-start",_started,str (_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _recordCheck;
+    private _initialPlan=_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
+    private _pattern=_initialPlan param [1,""];
+    if (_withAA) then {
+        [_id+"-aa-aware-pattern",_pattern in ["OFFSET","STANDOFF"] && {(_initialPlan param [7,0]) > 0},str _initialPlan] call _recordCheck;
+    } else {
+        [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK"],str _initialPlan] call _recordCheck;
+    };
+    if (_interrupt && {_started}) then {
+        private _moved=[{_aircraft distance2D _origin >= 100},60] call _wait;
+        [_id+"-interrupt-physical-prerequisite",_moved,str (_aircraft distance2D _origin)] call _recordCheck;
+        [_group,missionNamespace getVariable ["Waldo_AIPass_ZeusHoldSeconds",120],"CORTEX_QA_REPLACEMENT"] call Waldo_fnc_CortexZeusMark;
+        private _replacement=(getPosATL _aircraft) vectorAdd [600,250,0];
+        (driver _aircraft) doMove _replacement;
+        private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
+        private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
+        [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
+        [_id+"-zeus-replacement-travel",_released && {_travelled},str [_aircraft distance2D _replacement,getPosATL _aircraft]] call _recordCheck;
+        private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
+        [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;
+        sleep 8;
+        [_id+"-no-old-plan-resurrection",(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo [],str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
+    } else {
+        private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in ["COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE"]},210] call _wait;
+        private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
+        [_id+"-finite-completion",_ended && {_outcome param [0,""] == "COMPLETE"},str _outcome] call _recordCheck;
+        [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,str (_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])] call _recordCheck;
+        [_id+"-visible-countermeasures",_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0] >= 2,
+            str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0],_aircraft getVariable ["Waldo_Cortex_CountermeasureLastRequest",[]]]] call _recordCheck;
+        private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
+        private _stages=_transitions select {(_x select 2) == "AIR_ATTACK"} apply {_x select 4};
+        [_id+"-explicit-state-flow",["INGRESS","ATTACK","EGRESS","ENDED"] findIf {!(_x in _stages)} < 0,str _transitions] call _recordCheck;
+        [_id+"-safe-crew-egress",alive _aircraft && {(getPosATL _aircraft select 2) >= 25}
+            && {_crew findIf {!alive _x || {vehicle _x != _aircraft}} < 0},str [getPosATL _aircraft,_crew apply {vehicle _x == _aircraft}]] call _recordCheck;
+    };
+    missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+    {deleteVehicle _x} forEach (_crew+_targetCrew+_aaCrew+[_aircraft,_target,_aa]);
+    deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
+} forEach [
+    ["AIR-ATTACK-HELI-LOW","O_Heli_Attack_02_dynamicLoadout_F",false,false],
+    ["AIR-ATTACK-PLANE-AA","O_Plane_CAS_02_dynamicLoadout_F",true,false],
+    ["AIR-ATTACK-ZEUS-HANDOVER","O_Heli_Attack_02_dynamicLoadout_F",false,true]
+];
+
+// The adaptive controller's disabled boundary must preserve an ordinary authored flight. This is a
+// physical comparison rather than an absence-only assertion: the aircraft must keep moving while no
+// Cortex plan or AIR_ATTACK transition appears.
+[createHashMapFromArray [
+    ["Waldo_Cortex_AirAttack_Enable",false],["Waldo_Cortex_AttackRunFlares_Enable",false],
+    ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]
+]] call Waldo_fnc_CortexTuning;
+private _disabledAircraft=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[9800,5000,140],[],0,"FLY"];
+_disabledAircraft setDir 0; createVehicleCrew _disabledAircraft; _disabledAircraft allowDamage false;
+private _disabledCrew=crew _disabledAircraft;
+private _disabledGroup=group driver _disabledAircraft;
+_disabledGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_disabledGroup setVariable ["acex_headless_blacklist",true,true];
+{_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]} forEach _disabledCrew;
+_disabledAircraft setVelocityModelSpace [0,55,0];
+_disabledAircraft flyInHeight 140;
+private _disabledTarget=createVehicle ["B_APC_Tracked_01_rcws_F",[9800,6200,0],[],0,"NONE"];
+createVehicleCrew _disabledTarget; _disabledTarget allowDamage false;
+private _disabledTargetCrew=crew _disabledTarget;
+private _disabledTargetGroup=group driver _disabledTarget;
+_disabledTargetGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+{_x allowDamage false; _x disableAI "PATH"} forEach _disabledTargetCrew;
+_disabledGroup setCombatMode "RED";
+{_x doTarget _disabledTarget} forEach _disabledCrew;
+private _disabledDestination=[9800,7200,140];
+private _disabledWaypoint=_disabledGroup addWaypoint [_disabledDestination,0];
+_disabledWaypoint setWaypointType "MOVE"; _disabledWaypoint setWaypointBehaviour "COMBAT";
+_disabledAircraft setVariable ["Waldo_CortexQA_Label","AIR-ATTACK-DISABLED",true];
+_disabledTarget setVariable ["Waldo_CortexQA_Label","DISABLED-BOUNDARY TARGET",true];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_disabledAircraft,_disabledTarget],true];
+["AIR-ATTACK-DISABLED","Adaptive attacks are disabled. The helicopter must continue its authored physical flight toward the live target without creating an AIR_ATTACK lease or transition.",getPosATL _disabledAircraft] call _phase;
+private _disabledOrigin=getPosATL _disabledAircraft;
+private _disabledTravel=[{alive _disabledAircraft && {_disabledAircraft distance2D _disabledOrigin >= 180}},45] call _wait;
+private _disabledTransitions=_disabledGroup getVariable ["Waldo_Cortex_DrillTransitions",[]];
+["AIR-ATTACK-DISABLED-authored-flight",_disabledTravel,
+    str [_disabledAircraft distance2D _disabledOrigin,_disabledAircraft distance2D _disabledDestination]] call _recordCheck;
+["AIR-ATTACK-DISABLED-no-controller",(_disabledAircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []
+    && {_disabledTransitions findIf {(_x select 2) == "AIR_ATTACK"} < 0},str _disabledTransitions] call _recordCheck;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{deleteVehicle _x} forEach (_disabledCrew+_disabledTargetCrew+[_disabledAircraft,_disabledTarget]);
+deleteGroup _disabledGroup; deleteGroup _disabledTargetGroup;

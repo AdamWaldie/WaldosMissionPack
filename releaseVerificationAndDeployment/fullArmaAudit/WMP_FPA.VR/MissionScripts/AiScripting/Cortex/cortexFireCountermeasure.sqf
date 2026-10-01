@@ -22,7 +22,8 @@
  * [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
  * Result: a damaged APC pops its smoke screen before withdrawing.
  *
- * Current callers: Waldo_fnc_CortexVehicles and the aircraft flare handler in Waldo_fnc_CortexDiscover.
+ * Current callers: Waldo_fnc_CortexVehicles, Waldo_fnc_CortexAirAttack and the aircraft flare
+ * handler in Waldo_fnc_CortexDiscover.
  */
 
 params [["_vehicle", objNull, [objNull]]];
@@ -31,10 +32,16 @@ private _entry = ["", []];
 {
     private _turret = _x;
     private _weapons = _vehicle weaponsTurret _turret;
-    private _index = _weapons findIf {toLowerANSI (getText (configFile >> "CfgWeapons" >> _x >> "simulation")) == "cmlauncher"};
+    private _turretMagazines=(magazinesAllTurrets _vehicle) select {(_x select 1) isEqualTo _turret && {(_x select 2) > 0}};
+    private _index = _weapons findIf {
+        private _weapon=_x;
+        toLowerANSI (getText (configFile >> "CfgWeapons" >> _weapon >> "simulation")) == "cmlauncher"
+            && {_turretMagazines findIf {(_x select 0) in compatibleMagazines _weapon} >= 0}
+    };
     if (_index >= 0) exitWith {_entry = [_weapons select _index, _turret]};
 } forEach ([[-1]] + allTurrets [_vehicle, true]);
 _entry params ["_weapon", "_turret"];
-if (_weapon == "") exitWith {false};
+if (_weapon == "") exitWith {_vehicle setVariable ["Waldo_Cortex_CountermeasureLastRequest",[serverTime,false,"NO_AMMO_OR_LAUNCHER"],true]; false};
 [_vehicle, _weapon, _turret] call BIS_fnc_fire;
+_vehicle setVariable ["Waldo_Cortex_CountermeasureLastRequest",[serverTime,true,_weapon,_turret],true];
 true

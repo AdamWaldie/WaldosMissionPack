@@ -224,6 +224,8 @@ class CfgFunctions
             class CortexCooldown {file = "MissionScripts\AiScripting\Cortex\cortexCooldown.sqf";};
             class CortexCounterBattery {file = "MissionScripts\AiScripting\Cortex\cortexCounterBattery.sqf";};
             class CortexAttackRunFlares {file = "MissionScripts\AiScripting\Cortex\cortexAttackRunFlares.sqf";};
+            class CortexAirAttackPlan {file = "MissionScripts\AiScripting\Cortex\cortexAirAttackPlan.sqf";};
+            class CortexAirAttack {file = "MissionScripts\AiScripting\Cortex\cortexAirAttack.sqf";};
             class CortexAircraftEligible {file = "MissionScripts\AiScripting\Cortex\cortexAircraftEligible.sqf";};
             class CortexDiscover {file = "MissionScripts\AiScripting\Cortex\cortexDiscover.sqf";};
             class CortexFindCover {file = "MissionScripts\AiScripting\Cortex\cortexFindCover.sqf";};

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1346,
+  "registeredFunctionCount": 1348,
   "runtimeFunctionCount": 383,
-  "functionCount": 1729,
+  "functionCount": 1731,
   "stations": [
     {
       "id": "control",
@@ -1249,6 +1249,18 @@
     {
       "name": "Waldo_fnc_CortexAttackRunFlares",
       "file": "MissionScripts/AiScripting/Cortex/cortexAttackRunFlares.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAirAttackPlan",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAirAttack",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirAttack.sqf",
       "station": "ai",
       "activation": "manual"
     },

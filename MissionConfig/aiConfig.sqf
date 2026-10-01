@@ -210,6 +210,7 @@
  * - Waldo_AIPass_Garrison_DynamicAO (MISSION MAKER): Dynamic AO garrisons duck under fire, watch outward and break at losses.
  * - Waldo_AIPass_Garrison_BreakFraction (ADVANCED): a garrison or defence line breaks when down to this share of its strength at the time of the order.
  * - Waldo_Cortex_AttackRunFlares_Enable (MISSION MAKER): AI planes and helicopters with an assigned hostile target make finite countermeasure requests while closing on the attack run and again after passing their closest approach. This does not create ammunition or alter the flight path.
+ * - Waldo_Cortex_AirAttack_Enable (MISSION MAKER): eligible airborne AI choose finite strafe, offset, helicopter-hook or standoff attack geometry from observed AA and live weapon capability, then cleanly return to an unchanged authored order.
  * - Waldo_AIPass_AircraftFlares_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first.
  * - Waldo_AIPass_ProfileBehaviour (ADVANCED): behaviour per profile name, alongside AI Rebalance's skill
  *   values (which the pass never changes): flank, assault, advance, investigate and coordinated-assault
@@ -388,6 +389,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Garrison_DynamicAO", false], // BOOL: WMP garrison handling for Dynamic AO garrisons.
         ["Waldo_AIPass_Garrison_BreakFraction", 0.5], // 0-1: a garrison breaks at this share of its strength.
         ["Waldo_Cortex_AttackRunFlares_Enable", true], // BOOL: finite countermeasure bursts approaching and leaving assigned attack targets.
+        ["Waldo_Cortex_AirAttack_Enable", true], // BOOL: threat-aware finite aircraft attack patterns with safe Zeus handover.
         ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
         ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: behaviour per AI Rebalance profile name.
             ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.7], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],

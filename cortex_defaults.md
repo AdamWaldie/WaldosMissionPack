@@ -162,6 +162,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Garrison_DynamicAO` | `false` | BOOL: WMP garrison handling for Dynamic AO garrisons. |
 | `Waldo_AIPass_Garrison_BreakFraction` | `0.5` | 0-1: a garrison breaks at this share of its strength. |
 | `Waldo_Cortex_AttackRunFlares_Enable` | `true` | BOOL: finite countermeasure requests while eligible AI aircraft approach and leave assigned attack targets. |
+| `Waldo_Cortex_AirAttack_Enable` | `true` | BOOL: finite threat-aware strafe, offset, helicopter-hook and standoff attack patterns. |
 | `Waldo_AIPass_AircraftFlares_Enable` | `false` | BOOL: WMP gunships and Dynamic AA fighters flare at missiles. |
 | `Waldo_AIPass_FactionProfiles` | `createHashMap` | MAP: CfgFactionClasses name to behaviour profile, for example OPF_F to ELITE. |
 | `Waldo_AIPass_ZeusHoldSeconds` | `120` | SECONDS: the pass leaves a group alone this long after Zeus selects or edits it. |

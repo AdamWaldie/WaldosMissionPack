@@ -22,6 +22,9 @@ private _allowed=local _aircraft && {alive _aircraft} && {!isNull _pilot} && {al
     && {[_group,"Waldo_Cortex_AttackRunFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
     && {[_group] call Waldo_fnc_CortexIsEligible || {[_aircraft] call Waldo_fnc_CortexAircraftEligible}};
 if (!_allowed) exitWith {_aircraft setVariable ["Waldo_Cortex_AttackFlareJob",false]; -1};
+// The adaptive attack controller owns approach/departure bursts while it holds a finite plan.
+// Keeping this sampler idle avoids duplicate releases without removing its fallback coverage.
+if !((_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []) exitWith {1};
 if (isTouchingGround _aircraft || {speed _aircraft < 40}) exitWith {_job deleteAt "target"; _job deleteAt "burst"; 1};
 if (combatMode _group in ["BLUE","GREEN"]) exitWith {_job deleteAt "target"; _job deleteAt "burst"; 1};
 private _target=_job getOrDefault ["target",objNull];

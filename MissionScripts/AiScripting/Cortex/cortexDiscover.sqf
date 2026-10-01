@@ -17,7 +17,8 @@
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
  * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
  *   WMP gunships and Dynamic AA fighters.
- * - queues proactive attack-run flare sampling only for a currently eligible, crewed AI aircraft;
+ * - queues proactive attack-run flare sampling and the finite adaptive attack controller only for a
+ *   currently eligible, crewed AI aircraft;
  *   empty, player, UAV and excluded aircraft are reconsidered on later sweeps without job churn.
  * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
  *
@@ -129,7 +130,8 @@ private _wantArtillery = (missionNamespace getVariable ["Waldo_AIPass_Artillery_
 private _wantFlares = (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false])
     || {missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]};
 private _wantAttackFlares=missionNamespace getVariable ["Waldo_Cortex_AttackRunFlares_Enable",true];
-if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
+private _wantAirAttack=missionNamespace getVariable ["Waldo_Cortex_AirAttack_Enable",true];
+if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
     private _artillery = [];
     private _allArtillery = [];
     {
@@ -144,6 +146,23 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares) then {
             if (_attackFlareEligible && {!(_vehicle getVariable ["Waldo_Cortex_AttackFlareJob",false])}) then {
                 _vehicle setVariable ["Waldo_Cortex_AttackFlareJob",true];
                 [Waldo_fnc_CortexAttackRunFlares,createHashMapFromArray [["aircraft",_vehicle]],1] call Waldo_fnc_CortexQueueJob;
+            };
+            private _airAttackEligible=_wantAirAttack && {_vehicle isKindOf "Air"}
+                && {!isNull _pilot} && {alive _pilot} && {!isPlayer _pilot} && {!unitIsUAV _vehicle}
+                && {!isTouchingGround _vehicle} && {speed _vehicle >= 40}
+                && {combatMode group _pilot in ["YELLOW","RED"]}
+                && {[group _pilot,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+                && {[group _pilot] call Waldo_fnc_CortexIsEligible};
+            private _hasHostileTarget=false;
+            if (_airAttackEligible) then {
+                {
+                    private _candidate=assignedTarget _x;
+                    if (!isNull _candidate && {alive _candidate} && {(side group _pilot) getFriend side _candidate < 0.6}) exitWith {_hasHostileTarget=true};
+                } forEach ([effectiveCommander _vehicle,driver _vehicle,gunner _vehicle,commander _vehicle]+crew _vehicle);
+            };
+            if (_airAttackEligible && {_hasHostileTarget} && {!(_vehicle getVariable ["Waldo_Cortex_AirAttackJob",false])}) then {
+                _vehicle setVariable ["Waldo_Cortex_AirAttackJob",true];
+                [Waldo_fnc_CortexAirAttack,createHashMapFromArray [["aircraft",_vehicle],["group",group _pilot]],0] call Waldo_fnc_CortexQueueJob;
             };
             if (_wantArtillery && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {
                 private _gunner = gunner _vehicle;

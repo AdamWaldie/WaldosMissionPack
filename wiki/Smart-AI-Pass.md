@@ -722,6 +722,14 @@ Helicopter cruise-deceleration workers now carry an owner-local generation captu
 
 Required live acceptance: moving plane and helicopter approach and departure, actual countermeasure Fired events and ammunition consumption, disabled comparison, empty ammunition, Zeus interruption, target loss and HC ownership transfer. These cases are not yet verified.
 
+### Adaptive aircraft attacks (awaiting live acceptance)
+
+`Waldo_Cortex_AirAttack_Enable` defaults to true. An eligible moving AI aircraft with a hostile assigned target receives one finite owner-local attack lease. The planner samples at most sixteen contacts already known to the pilot within 2,500 m; it does not reveal or globally scan for enemies. It identifies observed AA from live launcher ammunition and chooses strafe, offset, helicopter-hook or standoff geometry from aircraft type and usable guided-ground ammunition. Offset geometry is placed away from the observed AA sector. This is an independent WMP implementation of general attack-planning principles: ingress, attack, egress, threat avoidance and re-attack decisions remain explicit rather than one endless movement order.
+
+The controller flies physical ingress, attack and egress legs without creating or deleting waypoints. It requires actual non-countermeasure `Fired` events before leaving the attack phase. It requests two approach and two departure countermeasures when enabled, uses only onboard ammunition, monitors ground clearance and forward progress, replans once after a genuine stall, then aborts and releases control. Target loss, locality migration, Cortex stop, feature disable or Zeus priority removes the temporary handler and speed limit. A successful run resumes toward the original waypoint only when that route remains unchanged.
+
+Required live acceptance: moving helicopter and plane, low-threat and observed-AA pattern choice, actual weapon fire, visible approach/departure countermeasures with ammunition change, safe clearance, target loss, bounded stuck recovery, Zeus replacement without resurrection and HC ownership migration. The saved audit fixtures are not yet evidence that these cases pass.
+
 
 ### Building clearance recovery and current acceptance
 

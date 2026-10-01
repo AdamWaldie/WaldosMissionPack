@@ -610,7 +610,7 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),57)
+        self.assertEqual(len(data['cases']),58)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
         report=render_markdown(data)
@@ -2129,6 +2129,35 @@ class CortexOperations(unittest.TestCase):
             transport=(ROOT/'MissionScripts/ZenModules/RuntimeControl'/f'{name}.sqf').read_text()
             self.assertIn('Waldo_Cortex_AttackRunFlares_Enable',transport)
 
+    def test_adaptive_air_attack_is_bounded_physical_and_zeus_safe(self):
+        planner=source('cortexAirAttackPlan')
+        for requirement in ['nearTargets 2500','select [0,16]','Waldo_Cortex_AirAmmoFacts',
+                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE']:
+            self.assertIn(requirement,planner)
+        self.assertNotIn('allUnits',planner)
+        self.assertNotIn('nearEntities',planner)
+        controller=source('cortexAirAttack')
+        for requirement in ['local _aircraft','Waldo_Cortex_AirAttack_Enable','CortexZeusHeld',
+                            'addEventHandler ["Fired"','doMove _destination','doFire _target','flyInHeight',
+                            'limitSpeed','INGRESS','ATTACK','EGRESS','GROUND_CLEARANCE','STUCK',
+                            'routeSignature','AUTHORED_ROUTE_CHANGED','CortexFireCountermeasure','Waldo_Cortex_AirAttackOutcome']:
+            self.assertIn(requirement,controller)
+        self.assertNotIn('addWaypoint',controller)
+        self.assertNotIn('deleteWaypoint',controller)
+        discover=source('cortexDiscover')
+        self.assertIn('Waldo_Cortex_AirAttackJob',discover)
+        self.assertIn('Waldo_fnc_CortexAirAttack',discover)
+        stop=source('cortexStop')
+        for requirement in ['Waldo_Cortex_AirAttackPlan','Waldo_Cortex_AirAttackJob','removeEventHandler ["Fired"','limitSpeed -1']:
+            self.assertIn(requirement,stop)
+        for name in ['featureRuntimeApply','featureRuntimeRequestState']:
+            transport=(ROOT/'MissionScripts/ZenModules/RuntimeControl'/f'{name}.sqf').read_text()
+            self.assertIn('Waldo_Cortex_AirAttack_Enable',transport)
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text()
+        for requirement in ['adaptiveAirAttacks','activeAirAttacks','cortex-air-attack-',
+                            'lastCountermeasureRequest','actualShots','observedAA']:
+            self.assertIn(requirement,diagnostics)
+
     def test_attack_run_flare_jobs_are_not_queued_for_ineligible_aircraft(self):
         discover=source('cortexDiscover')
         block=discover.split('private _attackFlareEligible',1)[1].split('if (_attackFlareEligible',1)[0]
@@ -2157,6 +2186,22 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('call Waldo_fnc_CortexFireCountermeasure',text)
         stop=source('cortexStop')
         self.assertLess(stop.index('Waldo_Cortex_AttackFlareJob'),stop.index('if (!isNull _group) then',stop.index('private _jobs')))
+
+    def test_air_attack_audit_proves_patterns_fire_flares_and_handover(self):
+        text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
+        for item in ['AIR-ATTACK-HELI-LOW','AIR-ATTACK-PLANE-AA','AIR-ATTACK-ZEUS-HANDOVER','AIR-ATTACK-DISABLED',
+                     '-physical-plan-start','-aa-aware-pattern','-actual-weapon-fire',
+                     '-visible-countermeasures','-safe-crew-egress','CortexZeusMark',
+                     '-zeus-replacement-travel','-no-old-plan-resurrection','-explicit-state-flow',
+                     '-explicit-interruption-transition','setVelocityModelSpace']:
+            self.assertIn(item,text)
+        self.assertNotIn('call Waldo_fnc_CortexAirAttack;',text)
+        self.assertNotIn('call Waldo_fnc_CortexAirAttackPlan;',text)
+        guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text()
+        for item in ['Waldo_Cortex_AirAttackPlan','actual shots','observed AA','CountermeasureLastRequest']:
+            self.assertIn(item,guide)
+        diagnostic=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text()
+        self.assertIn('cortex-air-attack-snapshot-limits',diagnostic)
 
     def test_onboard_reports_are_expiring_owner_validated_cargo_only(self):
         text=source('cortexOnboardContact')

@@ -113,6 +113,7 @@ private _lambsBusyGroups = {
         || {(_currentTactic isEqualType "") && {(toLowerANSI _currentTactic) find "task" == 0}}
         || {(units _x) findIf {_x getVariable ["lambs_danger_forceMove", false]} >= 0}
 } count _groups;
+private _activeAirAttacks=vehicles select {(_x getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []};
 private _checks = [
     ["ai", "cortex", _passState, [format ["enabled=%1 serverActive=%2 serverJobs=%3 paused=%4 includedSides=%5", _passEnabled, _passActive, _passJobs, [] call Waldo_fnc_CortexIsPaused, missionNamespace getVariable ["Waldo_AIPass_IncludedSides", []]], _passHint] call Waldo_fnc_DiagnosticFoldHint],
     ["ai", "cortex-regroup", if (_passEnabled && {_regroupEnabled}) then {"LOADED"} else {"DISABLED"}, format ["enabled=%1 serverRegroupsCompleted=%2 serverUnitsJoined=%3", _regroupEnabled, missionNamespace getVariable ["Waldo_AIPass_RegroupsCompleted", 0], missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]]],
@@ -134,13 +135,14 @@ private _checks = [
         {_x getVariable ["Waldo_AIPass_ZeusWaypoints", false]} count _groups,
         {_x getVariable ["Waldo_AIPass_Exclude", false]} count _groups,
         missionNamespace getVariable ["Waldo_AIPass_ZeusHoldSeconds", 120]]],
-    ["ai", "cortex-support", if (!_passEnabled) then {"DISABLED"} else {"LOADED"}, format ["artillery=%1 counterBattery=%2 serverBatteries=%3 missions=%4 radars=%5 airborne=%6 drops=%7 reactiveFlares=%8 attackRunFlares=%9",
+    ["ai", "cortex-support", if (!_passEnabled) then {"DISABLED"} else {"LOADED"}, format ["artillery=%1 counterBattery=%2 serverBatteries=%3 missions=%4 radars=%5 airborne=%6 drops=%7 reactiveFlares=%8 attackRunFlares=%9 adaptiveAirAttacks=%10 activeAirAttacks=%11",
         missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false], missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false],
         count (missionNamespace getVariable ["Waldo_AIPass_LocalArtillery", []]), missionNamespace getVariable ["Waldo_AIPass_ArtilleryMissions", 0],
         count (missionNamespace getVariable ["Waldo_AIPass_CounterBatteryRadars", []]), missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false],
         missionNamespace getVariable ["Waldo_AIPass_AirborneDrops", 0],
         missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false],
-        missionNamespace getVariable ["Waldo_Cortex_AttackRunFlares_Enable", true]]],
+        missionNamespace getVariable ["Waldo_Cortex_AttackRunFlares_Enable", true],
+        missionNamespace getVariable ["Waldo_Cortex_AirAttack_Enable", true],count _activeAirAttacks]],
     ["ai", "cortex-tuning", if (!_passEnabled) then {"DISABLED"} else {"LOADED"}, format ["profile=%1 aggression=%2 cohesion=%3 reaction=%4 artilleryRole=%5 counterBatteryMode=%6",
         [missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""], "FOLLOW"] select ((missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""]) == ""),
         missionNamespace getVariable ["Waldo_AIPass_Aggression", 1.2], missionNamespace getVariable ["Waldo_AIPass_Cohesion", 1],
@@ -182,6 +184,7 @@ private _featureNotes=createHashMapFromArray [
     ["CounterBattery","Requires an enemy artillery emission and eligible counter-role battery. Radar shortens delay but is not required; inspect pending/uncertain missions and friendly clearance."],
     ["Airborne","Requires eligible passengers in a suitable flying aircraft; inspect altitude, chute configuration, operating crew and post-landing orders."],
     ["AttackRunFlares","Assigned hostile target, airborne speed at least 40 km/h, closing within 1500 m then opening past closest approach. Two requests per leg; inspect actual countermeasure fire and finite ammunition. Phase is intent, not proof of release."],
+    ["AirAttack","Requires a moving airborne AI aircraft, hostile assigned target and attack ROE. Inspect pattern/stage, observed AA, physical ingress/egress, real weapon fire, clearance, outcome and Zeus handover."],
     ["AircraftFlares","Applies to registered WMP gunship/Dynamic AA aircraft under missile threat; inspect countermeasure ammunition and actual Fired events."],
     ["Investigate","Requires a known uncertain area; inspect area source, search team and actual travel without revealing hidden targets."],
     ["Assault","Requires a viable approach transition; inspect assault/frag/clear/consolidate stages. Live frag clearance must precede movement."],
@@ -384,4 +387,21 @@ private _attackAircraft=vehicles select {_x isKindOf "Air" && {(_x getVariable [
 {
     _checks pushBack ["ai",format ["cortex-attack-flares-%1",netId _x],"LOADED",format ["class=%1 owner=%2 phase=%3 cooldownRemaining=%4 speed=%5 alive=%6. Phase describes the last requested leg, not actual release; inspect Fired events and countermeasure ammunition. No flight commands are issued.",typeOf _x,owner _x,_x getVariable ["Waldo_Cortex_AttackFlarePhase",""],((_x getVariable ["Waldo_Cortex_AttackFlareCooldown",0])-serverTime) max 0,speed _x,alive _x]];
 } forEach (_attackAircraft select [0,20]);
+private _adaptiveAircraft=vehicles select {_x isKindOf "Air" && {
+    (_x getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []
+        || {(_x getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) isNotEqualTo []}
+}};
+{
+    private _aircraft=_x;
+    private _plan=_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
+    private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
+    private _request=_aircraft getVariable ["Waldo_Cortex_CountermeasureLastRequest",[]];
+    private _reason=_outcome param [0,""];
+    private _healthy=alive _aircraft && {(getPosATL _aircraft select 2) >= 25}
+        && {_reason in ["","COMPLETE","CONTROL_RELEASED","TARGET_LOST","AUTHORED_ROUTE_CHANGED","NOT_ATTACKING"]};
+    _checks pushBack ["ai",format ["cortex-air-attack-%1",netId _aircraft],["ERROR","LOADED"] select _healthy,
+        format ["class=%1 owner=%2 current=[token,pattern,stage,target,destination,remaining,actualShots,observedAA,speed,altitude]=%3 lastOutcome=[reason,time,pattern,actualShots]=%4 lastCountermeasureRequest=%5 crewRetained=%6. A plan or requested release is intent; physical travel, Fired events, clearance and the final outcome establish behaviour.",
+            typeOf _aircraft,owner _aircraft,_plan,_outcome,_request,(crew _aircraft) findIf {!alive _x || {vehicle _x != _aircraft}} < 0]];
+} forEach (_adaptiveAircraft select [0,20]);
+_checks pushBack ["ai","cortex-air-attack-snapshot-limits","LOADED",format ["Adaptive aircraft total=%1 sampled=%2 (limit 20). Active plans and retained outcomes are included; physical travel, Fired events and explicit transitions remain the acceptance evidence.",count _adaptiveAircraft,(count _adaptiveAircraft) min 20]];
 ["ai", _checks] call Waldo_fnc_DiagnosticFeatureReport
