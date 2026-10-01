@@ -424,7 +424,10 @@ if (_focus in ["all","features","aircraft"]) then {[_check,_phase,_wait] call co
 if (_focus in ["all","features","lifecycle"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALifecycle.sqf"};
 if (_focus in ["all","features","lambs"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALambs.sqf"};
 if (_focus in ["all","features","performance"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformance.sqf"};
-if (_focus == "performancecontact") then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformanceContact.sqf"};
+if (_focus == "performancecontact") then {
+    [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformanceContact.sqf";
+    ["PERF-CONTACT-run-completed",missionNamespace getVariable ["Waldo_CortexQA_PerformanceContactCompleted",false]] call _check;
+};
 if (_focus in ["all","features","profiles"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAProfiles.sqf"};
 if (_focus in ["all","features","lighting"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALighting.sqf"};
 if (_focus in ["all","features","scheduler"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAScheduler.sqf"};

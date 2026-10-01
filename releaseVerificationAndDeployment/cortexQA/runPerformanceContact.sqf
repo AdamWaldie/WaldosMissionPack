@@ -12,6 +12,7 @@
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformanceContact.sqf";
  */
 params ["_check","_phase","_wait"];
+missionNamespace setVariable ["Waldo_CortexQA_PerformanceContactCompleted",false];
 private _hcOwners=((missionNamespace getVariable ["Waldo_Headless_Clients",[]]) apply {_x select 0}) select [0,2];
 ["PERF-CONTACT-two-headless-prerequisite",count _hcOwners == 2,str _hcOwners] call _check;
 if (count _hcOwners != 2) exitWith {};
@@ -81,7 +82,7 @@ private _results=[];
     [format ["PERF-CONTACT-arm-%1-balanced-ownership",_arm],_ownershipReady && {_balanced},str _ownerCounts] call _check;
     sleep 20;
     private _starts=_groups apply {getPosATL leader _x};
-    private _ammoBefore=_groups apply {private _leader=leader _x; ammo (primaryWeapon _leader)};
+    private _ammoBefore=_groups apply {private _leader=leader _x; _leader ammo (primaryWeapon _leader)};
     {
         missionNamespace setVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],nil,true];
         [_sampleId,60] remoteExecCall ["Waldo_CortexQA_PerformanceSampleOwner",_x];
@@ -105,7 +106,7 @@ private _results=[];
     },20] call _wait;
     private _ownerResults=_owners apply {missionNamespace getVariable [format ["Waldo_CortexQA_PerformanceResult_%1_%2",_sampleId,_x],[]]};
     private _moved={private _index=_groups find _x; leader _x distance2D (_starts select _index) >= 20} count _groups;
-    private _fired={private _index=_groups find _x; ammo (primaryWeapon leader _x) < (_ammoBefore select _index)} count _groups;
+    private _fired={private _index=_groups find _x; (leader _x) ammo (primaryWeapon leader _x) < (_ammoBefore select _index)} count _groups;
     private _valid=_ready && {_ownershipReady} && {_sampleReady} && {_ownerResults findIf {count _x != 8 || {(_x select 1) < 100} || {(_x select 6) < 33} || {(_x select 7) < 198}} < 0}
         && {_moved >= 90} && {_fired >= 60} && {_responseLatency >= 0};
     [format ["PERF-CONTACT-arm-%1-physical-workload",_arm],_valid,
@@ -131,3 +132,4 @@ if (_allValid) then {
         } forEach [1,2];
     } forEach _owners;
 };
+missionNamespace setVariable ["Waldo_CortexQA_PerformanceContactCompleted",true];

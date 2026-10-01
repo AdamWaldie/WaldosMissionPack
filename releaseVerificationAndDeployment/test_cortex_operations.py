@@ -643,8 +643,12 @@ class CortexOperations(unittest.TestCase):
         distributed=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceContact.sqf').read_text()
         owner_sampler=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceOwner.sqf').read_text()
         for marker in ['PERF-CONTACT-two-headless-prerequisite','PERF-CONTACT-comparable-arms',
-                       'balanced-ownership','physical-workload','median-budget','p95-budget']:
+                       'balanced-ownership','physical-workload','median-budget','p95-budget',
+                       'Waldo_CortexQA_PerformanceContactCompleted']:
             self.assertIn(marker,distributed)
+        server_runner=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text()
+        self.assertIn('PERF-CONTACT-run-completed',server_runner)
+        self.assertIn('_leader ammo (primaryWeapon _leader)',distributed)
         for marker in ['diag_deltaTime*1000','Waldo_CortexQA_PerformanceGroup','[0.99] call _percentile']:
             self.assertIn(marker,owner_sampler)
         self.assertIn('performancecontact',launcher)
