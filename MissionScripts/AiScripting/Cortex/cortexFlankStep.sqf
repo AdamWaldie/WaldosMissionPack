@@ -3,7 +3,7 @@
  * Advances a running drill (flank or bounding advance) by one step: issue a bound, wait for arrival,
  * pause and overwatch, cross streets under smoke, and finish by holding the ground won or assaulting.
  *
- * Bounds: each member gets his own spot, spread 5 m apart across the direction to the last known enemy position. WEDGE uses staggered rear ranks; other formations use a broad line. Ordinary
+ * Bounds: each member gets his own spot, spread across a shallow line facing the last known enemy position. Ordinary
  * bounds, the final position and the assault position are snapped to cover facing the enemy
  * (Waldo_fnc_CortexFindCover); street crossings and the clearing rush are not. On movement bounds, final approaches and
  * street crossings, group-level RED pursuit is replaced by a finite YELLOW lease, but individual
@@ -516,7 +516,10 @@ switch (_drill get "stage") do {
         } forEach _movers;
         _drill set ["pursuitResets",_pursuitResets];
         private _originalElement = if (_teams isEqualTo []) then {_allUnits} else {_teams select (_drill getOrDefault ["teamTurn",0])};
-        private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;
+        // Use the live assigned movers for this bound. Casualty replacement, recovery and
+        // consolidation can change the original team; a stale denominator must not hold the
+        // whole action after a viable majority physically arrives.
+        private _minimumArrivals = ((ceil (count _units * 0.6)) max 2) min count _units;
         private _boundAge = _now - (_drill get "boundStart");
         private _lateMovers = _units - _arrivedUnits;
         private _lateMoverProgressing = _lateMovers findIf {
@@ -537,7 +540,7 @@ switch (_drill get "stage") do {
             } forEach _stragglers;
             _drill set ["recovery",_recovery];
             _group setVariable ["Waldo_Cortex_DrillRecovery",["REJOINING",_recovery apply {_x select 0},_drill get "index"],true];
-            diag_log format ["[WMP CORTEX] Bound role complete group=%1 arrived=%2/%3 recovery=%4",_group,count _arrivedUnits,count _originalElement,_stragglers];
+            diag_log format ["[WMP CORTEX] Bound role complete group=%1 arrived=%2/%3 recovery=%4",_group,count _arrivedUnits,count _units,_stragglers];
             _arrived = true;
             _stalled = false;
         };

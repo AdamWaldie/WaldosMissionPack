@@ -1227,11 +1227,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true}', requester)
         self.assertIn('[_state,"coordinated",10] call Waldo_fnc_CortexCooldown', requester)
 
-    def test_coordinated_assault_does_not_wait_on_or_retain_late_responders(self):
+    def test_coordinated_assault_dispatches_from_accepted_shared_contact(self):
         requester=source('cortexCoordinatedAssault')
         server=source('cortexSupportAssaultServer')
-        self.assertIn('serverTime - _first < 20',requester)
-        self.assertNotIn('serverTime - _first < 60',requester)
+        self.assertIn('if (_responders isEqualTo []) exitWith {false}',requester)
+        self.assertNotIn('serverTime - _first',requester)
+        self.assertNotIn('_arrivals',requester)
+        self.assertNotIn('(_status select 1) >= 0',server.split('private _rally=')[0])
+        self.assertIn('private _routeOrigin=if ((_status select 1) >= 0)',server)
+        self.assertIn('[_routeOrigin,_candidateRoutes,_enemy,[_supportOrigin]]',server)
+        self.assertIn('[leader _helper] call Waldo_fnc_CortexCanTransmit',server)
+        self.assertIn('[leader _x] call Waldo_fnc_CortexCanTransmit',source('cortexSupportServer'))
+        self.assertIn('[leader _group] call Waldo_fnc_CortexCanTransmit',source('cortexSupportApply'))
         self.assertIn('private _dispatched=[]',server)
         self.assertIn('_job set ["leases",_dispatched]',server)
         self.assertIn('_helper setVariable ["Waldo_AIPass_SupportLease",nil,true]',server)
@@ -2351,7 +2358,7 @@ class CortexOperations(unittest.TestCase):
 
     def test_bound_progresses_on_physical_role_quorum_and_recovers_laggards(self):
         step=source('cortexFlankStep')
-        self.assertIn('private _minimumArrivals = (ceil (count _originalElement * 0.6)) max 2;',step)
+        self.assertIn('private _minimumArrivals = ((ceil (count _units * 0.6)) max 2) min count _units;',step)
         self.assertIn('private _boundAge = _now - (_drill get "boundStart");',step)
         self.assertIn('private _lateMoverProgressing = _lateMovers findIf',step)
         self.assertIn('_now - ((_progress select _progressIndex) select 3) <= 3',step)
@@ -2362,6 +2369,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_recovery pushBack [_straggler,0,_now]',step)
         self.assertIn('Bound role complete',step)
         self.assertNotIn('setPos',step)
+
+    def test_frontage_audit_measures_only_physical_halts_with_two_actor_tolerance(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
+        measurement=qa.split('// Recovery movement across the scene is not the halt',1)[1].split('if (diag_tickTime >= _nextLog)',1)[0]
+        self.assertIn('if (_physicalArrival) then {',measurement)
+        self.assertIn('private _minimumWidth = [2.25,3] select (count _moving > 2)',measurement)
+        self.assertIn('_width >= _minimumWidth',measurement)
 
     def test_bound_recovery_preserves_combat_targeting(self):
         step=source('cortexFlankStep')

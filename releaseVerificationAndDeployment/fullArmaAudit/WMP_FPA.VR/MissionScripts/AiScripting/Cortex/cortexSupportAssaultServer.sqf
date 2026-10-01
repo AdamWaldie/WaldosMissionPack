@@ -8,8 +8,10 @@
  * Waldo_fnc_CortexSelectAvenue rejects routes entering the requester's
  * 30 m firing corridor or changing sides. The shared bounded scorer distinguishes terrain/solid
  * ballistic screening from visual concealment. It runs once per dispatch, not per tick or soldier.
- * Responders which missed the finite assembly window are released when at least one arrived squad
- * receives an approach. They resume autonomous combat instead of keeping a ten-minute rally lease.
+ * Accepted responders need not finish the optional rally first. Route selection starts at each
+ * squad's live position when it has not rallied, so shared contact becomes a natural action instead
+ * of scheduled assembly. Responders without a safe approach are released and resume autonomous
+ * combat instead of keeping a ten-minute rally lease.
  * Repeat/JIP: one assault per request; the updated durable lease revalidates on HC migration.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, [].
  * 2: reply owner <NUMBER>, default -1; HC callers supply clientOwner.
@@ -40,11 +42,13 @@ private _dispatched=[];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
     private _status = _helper getVariable ["Waldo_AIPass_SupportStatus",[]];
     if (_accepted == "ACCEPTED" && {count _lease == 6} && {(_lease select 0) == _token}
-        && {count _status == 4} && {(_status select 0) == _token} && {(_status select 1) >= 0} && {_status select 2}
+        && {count _status == 4} && {(_status select 0) == _token} && {_status select 2}
+        && {[leader _helper] call Waldo_fnc_CortexCanTransmit}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
         private _rally=+(_lease select 3);
-        private _rallyX=(_rally select 0)-(_supportOrigin select 0);
-        private _rallyY=(_rally select 1)-(_supportOrigin select 1);
+        private _routeOrigin=if ((_status select 1) >= 0) then {+_rally} else {getPosATL leader _helper};
+        private _rallyX=(_routeOrigin select 0)-(_supportOrigin select 0);
+        private _rallyY=(_routeOrigin select 1)-(_supportOrigin select 1);
         private _rallySide=if (_laneLength > 0) then {(_laneX*_rallyY-_laneY*_rallyX)/_laneLength} else {0};
         // Near-axis rallies previously accepted either flank. That made the shortest route cross
         // the base-of-fire lane in otherwise symmetric terrain. Preserve every meaningful side;
@@ -67,7 +71,7 @@ private _dispatched=[];
                 _candidateRoutes pushBack [_candidate];
             };
         } forEach [[45,90],[85,90],[65,135],[45,-90],[85,-90],[65,-135]];
-        private _selected=[_rally,_candidateRoutes,_enemy,[_supportOrigin]] call Waldo_fnc_CortexSelectAvenue;
+        private _selected=[_routeOrigin,_candidateRoutes,_enemy,[_supportOrigin]] call Waldo_fnc_CortexSelectAvenue;
         private _attack=if (_selected isEqualTo []) then {[]} else {+(_selected select ((count _selected)-1))};
         if (_attack isNotEqualTo []) then {
             _approaches pushBack +_attack;

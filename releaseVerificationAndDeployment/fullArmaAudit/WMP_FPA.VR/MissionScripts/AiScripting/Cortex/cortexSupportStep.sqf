@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Maintains at most six reserved responders and examines at most eight candidates per request step.
- * Assigns each responder a distinct 45 m rally area, with at least 110 m between centres.
+ * Assigns each responder a distinct optional 45 m rally area, with at least 110 m between centres.
  * Six bounded candidate areas lie behind the requester; the nearest unused dry area is chosen.
+ * An acknowledged responder may transition directly into a coordinated approach without waiting
+ * for physical rally arrival; the rally remains a fallback while no approach has been dispatched.
  * Publishes only the request's at-most-six responder identities for owner-side tactical selection.
  * This separation is not terrain-aware approach routing. No shared-point fallback is used.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.

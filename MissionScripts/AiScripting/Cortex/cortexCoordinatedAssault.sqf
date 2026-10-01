@@ -8,9 +8,10 @@
  * line to the base of fire). The server can move two responders concurrently when their approach
  * lanes remain separated; each mover retains alternating fire-team bounds and the gated final
  * assault sequence. Responders keep a fixed side of the supporting-fire axis. Original waypoints
- * survive the finite reservation. The assault launches when every responder has
- * arrived, or 20 s after the first did. The server releases responders which missed that assembly
- * window, so one delayed squad cannot hold the prepared force or remain trapped in a stale rally.
+ * survive the finite reservation. An accepted responder can enter the assault directly from its
+ * current position; physical rally arrival is not a prerequisite. The rally remains a fallback
+ * movement while acknowledgement and route selection cross the network, so nearby squads exploit
+ * a shared contact as soon as communication succeeds instead of waiting for scheduled assembly.
  * It needs an enemy seen in the last 60 s within 400 m, STEADY
  * morale, and a positive requesting-squad coordinatedChance profile weight. Once responders have
  * assembled, the assault launches deterministically rather than discarding the prepared action on a
@@ -69,7 +70,6 @@ private _enemyPos = _state getOrDefault ["enemyPos", []];
 private _leader = leader _group;
 if (count _enemyPos < 2 || {time - (_state getOrDefault ["lastSeen", -1e6]) > 60} || {_leader distance2D _enemyPos > 400}) exitWith {false};
 private _responders = [];
-private _arrivals = [];
 private _acknowledged = false;
 {
     _x params ["_helper","_token"];
@@ -80,14 +80,10 @@ private _acknowledged = false;
         && {_status select 2} && {[_helper] call Waldo_fnc_CortexIsEligible}) then {
         if (_status select 3) then {_acknowledged = true};
         _responders pushBack _helper;
-        if ((_status select 1) >= 0) then {_arrivals pushBack (_status select 1)};
     };
 } forEach _publicResponders;
 if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true};
-if (_arrivals isEqualTo []) exitWith {false};
-private _first = 1e9;
-{_first = _first min _x} forEach _arrivals;
-if (count _arrivals < count _responders && {serverTime - _first < 20}) exitWith {false};
+if (_responders isEqualTo []) exitWith {false};
 [_group,_enemyPos,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAssaultServer",2];
 [_state,"coordinated",10] call Waldo_fnc_CortexCooldown;
 // Reserve the requester's movement role while the authenticated server dispatch and

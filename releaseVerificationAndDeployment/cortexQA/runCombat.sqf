@@ -374,21 +374,28 @@ diag_log format ["WMP CORTEX QA COMBAT SCOPE: %1",_cases];
                         _clearThroughTeams pushBackUnique (_bound select 1);
                     };
                 };
-                private _centre = [0,0,0];
-                {_centre = _centre vectorAdd getPosATL _x} forEach _moving;
-                _centre = _centre vectorMultiply (1 / count _moving);
-                private _heading = _centre getDir _enemyPosition;
-                private _side = [cos _heading,-sin _heading,0];
-                private _front = [sin _heading,cos _heading,0];
-                private _lateral = _moving apply {((getPosATL _x) vectorDiff _centre) vectorDotProduct _side};
-                private _depth = _moving apply {((getPosATL _x) vectorDiff _centre) vectorDotProduct _front};
-                private _width = (selectMax _lateral)-(selectMin _lateral);
-                private _length = (selectMax _depth)-(selectMin _depth);
-                _haltMeasurements pushBack [_bound,_width,_length,_width >= 3 && {_length <= _width+4}];
-                diag_log format ["WMP CORTEX QA FRONTAGE DETAIL: case=%1 bound=%2 physicalArrival=%3 width=%4 depth=%5 actors=%6 recovery=%7",
-                    _case,_bound,_physicalArrival,_width,_length,
-                    _moving apply {[netId _x,getPosATL _x,currentCommand _x]},
-                    (_live getOrDefault ["recovery",[]]) apply {netId (_x select 0)}];
+                // Recovery movement across the scene is not the halt's formation. Measure only
+                // after every assigned actor has physically reached this bound.
+                if (_physicalArrival) then {
+                    private _centre = [0,0,0];
+                    {_centre = _centre vectorAdd getPosATL _x} forEach _moving;
+                    _centre = _centre vectorMultiply (1 / count _moving);
+                    private _heading = _centre getDir _enemyPosition;
+                    private _side = [cos _heading,-sin _heading,0];
+                    private _front = [sin _heading,cos _heading,0];
+                    private _lateral = _moving apply {((getPosATL _x) vectorDiff _centre) vectorDotProduct _side};
+                    private _depth = _moving apply {((getPosATL _x) vectorDiff _centre) vectorDotProduct _front};
+                    private _width = (selectMax _lateral)-(selectMin _lateral);
+                    private _length = (selectMax _depth)-(selectMin _depth);
+                    // Two actors assigned 3 m apart commonly settle just inside that engine
+                    // destination. Keep a 0.75 m tolerance while retaining the depth rejection.
+                    private _minimumWidth = [2.25,3] select (count _moving > 2);
+                    _haltMeasurements pushBack [_bound,_width,_length,_width >= _minimumWidth && {_length <= _width+4}];
+                    diag_log format ["WMP CORTEX QA FRONTAGE DETAIL: case=%1 bound=%2 physicalArrival=%3 width=%4 depth=%5 actors=%6 recovery=%7",
+                        _case,_bound,_physicalArrival,_width,_length,
+                        _moving apply {[netId _x,getPosATL _x,currentCommand _x]},
+                        (_live getOrDefault ["recovery",[]]) apply {netId (_x select 0)}];
+                };
             };
 
             if (diag_tickTime >= _nextLog) then {

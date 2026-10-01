@@ -27,7 +27,9 @@ private _maximum = (missionNamespace getVariable ["Waldo_AIPass_Reinforce_MaxRes
 if (_maximum <= 0) exitWith {};
 private _radius = missionNamespace getVariable ["Waldo_AIPass_Reinforce_Radius",600];
 private _candidates = [];
-{if (_x != _requester && {side _x == side _requester} && {alive leader _x} && {leader _x distance2D leader _requester <= _radius}) then {
+{if (_x != _requester && {side _x == side _requester} && {alive leader _x}
+    && {[leader _x] call Waldo_fnc_CortexCanTransmit}
+    && {leader _x distance2D leader _requester <= _radius}) then {
     _candidates pushBack [leader _x distance2D leader _requester,_forEachIndex,_x];
 }} forEach allGroups;
 _candidates sort true;

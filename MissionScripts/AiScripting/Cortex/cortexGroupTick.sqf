@@ -46,7 +46,8 @@
  * flanking (with final assault), bounding advance, contact reports, ammo sharing, artillery,
  * reinforcement and coordinated assault. Garrison and defence orders run their own break and reserve
  * logic instead of flanking or retreating. Soldiers left holding ground by a drill rejoin when the
- * leader comes within 30 m. Responders mark their arrival at the rally point for a coordinated assault.
+ * leader comes within 30 m. Reinforcement rallies are optional fallback positions; an acknowledged
+ * responder with a safe shared-contact approach may enter a coordinated assault immediately.
  * With LAMBS Danger loaded and Waldo_AIPass_LambsMode "SPLIT", LAMBS keeps in-contact unit tactics
  * (flanking, assault, advance, fire control, stance, anti-armour, vehicles, contact sharing) for groups
  * it manages; WMP keeps the ladder, investigation, post-contact, morale, reinforcement, coordinated
@@ -60,7 +61,7 @@
  * this owner ends it through common cleanup and restores its engine leases.
  * SafeStart and ENDEX provide a one-minute resumption grace instead of causing a false stall.
  *
- * Review contract: Waypoint completion compares tagged indices with currentWaypoint; completed waypoints may remain in the engine list. This allows rally arrival and retreat completion to be detected.
+ * Review contract: Waypoint completion compares tagged indices with currentWaypoint; completed waypoints may remain in the engine list. This allows optional rally arrival and retreat completion to be detected.
  *
  * Repeat/JIP: current feature gates and eligibility are rechecked, including active phase gates;
  * owner jobs are retired on migration.

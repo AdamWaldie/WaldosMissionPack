@@ -38,6 +38,7 @@ private _supportOwnsMovement = _same && {_movementOwner in ["SUPPORT_RALLY","COO
 private _fit = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective};
 private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!([] call Waldo_fnc_CortexIsPaused)}
     && {serverTime < _expiry} && {!isNull _requester} && {side _requester == side _group}
+    && {[leader _group] call Waldo_fnc_CortexCanTransmit}
     && {[_group] call Waldo_fnc_CortexIsEligible} && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
     && {[_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
     && {count _fit >= 3} && {behaviour leader _group != "CARELESS"} && {!fleeing leader _group}
