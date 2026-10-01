@@ -539,6 +539,19 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_drill set ["grenadeActionUntil",[_now,_now+2] select _queued]', text)
         self.assertNotIn('case "GRENADE": {', text)
 
+    def test_tactical_bounds_use_dynamic_line_defaults(self):
+        config=(ROOT/'MissionConfig/aiConfig.sqf').read_text(encoding='utf-8')
+        route=source('cortexPlanRoute')
+        advance=source('cortexAdvanceStart')
+        step=source('cortexFlankStep')
+        self.assertIn('["Waldo_AIPass_Flank_BoundDistance", 55]',config)
+        self.assertIn('["Waldo_AIPass_Flank_BoundPause", 2]',config)
+        self.assertIn('getVariable ["Waldo_AIPass_Flank_BoundDistance", 55]',route)
+        self.assertIn('getVariable ["Waldo_AIPass_Flank_BoundDistance", 55]',advance)
+        self.assertIn('private _depth = 0;',step)
+        self.assertNotIn('formation _group == "WEDGE"',step)
+        self.assertNotIn('private _rank = ceil (_forEachIndex / 2)',step)
+
     def test_support_reserves_separate_rally_areas_in_durable_leases(self):
         step = source('cortexSupportStep')
         self.assertIn('for "_slot" from 0 to 5 do', step)
@@ -2274,7 +2287,7 @@ class CortexOperations(unittest.TestCase):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text(encoding='utf-8')
         self.assertIn('class CortexDrillSetStage',functions)
         for marker in ['Waldo_Cortex_DrillTransition','Waldo_Cortex_DrillTransitions',
-                       'count _history > 32','setVariable ["Waldo_Cortex_DrillTransitions",_history,true]']:
+                       'count _history > 64','setVariable ["Waldo_Cortex_DrillTransitions",_history,true]']:
             self.assertIn(marker,helper)
         for name,reason in [('cortexFlankStart','FLANK_ACCEPTED'),
                             ('cortexAdvanceStart','ADVANCE_ACCEPTED'),

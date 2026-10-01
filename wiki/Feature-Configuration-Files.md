@@ -401,8 +401,8 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Flank_MinGroupSize` | Soldiers on foot needed before a squad may flank. Default `6`. |
 | `Waldo_AIPass_Flank_MinRange` | Enemies nearer than this are fought, not flanked. Default `60`. |
 | `Waldo_AIPass_Flank_MaxRange` | Enemies farther than this are not flanked. Default `400`. |
-| `Waldo_AIPass_Flank_BoundDistance` | Length of one bound in metres. Default `40`. |
-| `Waldo_AIPass_Flank_BoundPause` | Seconds of overwatch between bounds. Default `4`. |
+| `Waldo_AIPass_Flank_BoundDistance` | Length of one bound in metres. Default `55`. |
+| `Waldo_AIPass_Flank_BoundPause` | Seconds of overwatch between bounds. Default `2`. |
 | `Waldo_AIPass_Flank_BoundTimeout` | Seconds without two metres of progress before an unfinished bound aborts. The absolute bound limit is four times this value. A timeout never counts as arrival. Default `25`. |
 | `Waldo_AIPass_Flank_Cooldown` | Seconds before the same squad may flank again. Default `90`. |
 | `Waldo_AIPass_StreetCrossing_Enable` | Flanking elements stop at roads, throw smoke and cross in one bound. Default `true`. |

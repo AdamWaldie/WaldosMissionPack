@@ -103,7 +103,7 @@ if (count _coverElement < 2) exitWith {["NO_COVER_ELEMENT",[count _coverElement]
 private _start = [0, 0, 0];
 {_start = _start vectorAdd getPosATL _x} forEach _element;
 _start = _start vectorMultiply (1 / count _element);
-private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
+private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 55]) max 15;
 private _goal = _start getPos [((_start distance2D _objective) - 20) min (_bound * 3), _start getDir _objective];
 private _routeDistance=_start distance2D _goal;
 private _axis=_start getDir _goal;

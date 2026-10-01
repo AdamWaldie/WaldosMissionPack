@@ -326,8 +326,8 @@ createHashMapFromArray [
         ["Waldo_AIPass_Flank_MinGroupSize", 6], // COUNT: soldiers on foot needed to flank.
         ["Waldo_AIPass_Flank_MinRange", 60], // METRES: nearer enemies are fought, not flanked.
         ["Waldo_AIPass_Flank_MaxRange", 400], // METRES: farther enemies are not flanked.
-        ["Waldo_AIPass_Flank_BoundDistance", 40], // METRES: length of one bound (minimum 15).
-        ["Waldo_AIPass_Flank_BoundPause", 4], // SECONDS: overwatch halt between bounds.
+        ["Waldo_AIPass_Flank_BoundDistance", 55], // METRES: length of one bound (minimum 15).
+        ["Waldo_AIPass_Flank_BoundPause", 2], // SECONDS: overwatch halt between bounds.
         ["Waldo_AIPass_Flank_BoundTimeout", 25], // SECONDS without progress before abort; absolute bound limit is 4x. Never counts as arrival.
         ["Waldo_AIPass_Flank_Cooldown", 90], // SECONDS: before the same squad flanks again.
         ["Waldo_AIPass_StreetCrossing_Enable", true], // BOOL: flanks stop at roads, smoke, and cross in one bound.

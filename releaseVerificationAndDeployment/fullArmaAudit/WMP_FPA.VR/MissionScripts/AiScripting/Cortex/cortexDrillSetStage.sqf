@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Changes one Cortex manoeuvre stage and publishes a bounded transition ledger for diagnostics.
  * Locality/authority: call only on the local group owner which owns the supplied drill HashMap.
- * Repeat/JIP: identical stages are ignored. The current transition and the newest 32 entries
+ * Repeat/JIP: identical stages are ignored. The current transition and the newest 64 entries
  * are public for Zeus/JIP observers; no scheduled work or per-unit handler is installed.
  * Arguments:
  * 0: group <GROUP, default grpNull>
@@ -39,7 +39,7 @@ private _entry=[
 ];
 private _history=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
 _history pushBack _entry;
-if (count _history > 32) then {_history deleteRange [0,count _history-32]};
+if (count _history > 64) then {_history deleteRange [0,count _history-64]};
 _group setVariable ["Waldo_Cortex_DrillTransition",_entry,true];
 _group setVariable ["Waldo_Cortex_DrillTransitions",_history,true];
 true

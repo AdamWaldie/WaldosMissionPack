@@ -28,7 +28,7 @@
  */
 
 params [["_start", [], [[]]], ["_legs", [], [[]]], ["_finalKind", "FINAL", [""]], ["_group",grpNull,[grpNull]]];
-private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 40]) max 15;
+private _bound = (missionNamespace getVariable ["Waldo_AIPass_Flank_BoundDistance", 55]) max 15;
 private _streets = [_group,"Waldo_AIPass_StreetCrossing_Enable",true] call Waldo_fnc_CortexFeatureEnabled;
 private _points = [];
 private _from = _start;
