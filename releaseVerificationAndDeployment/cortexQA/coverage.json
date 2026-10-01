@@ -24,7 +24,6 @@
       "settings": [
         "Waldo_AIPass_Enable",
         "Waldo_AIPass_IncludedSides",
-        "Waldo_AIPass_LambsMode",
         "Waldo_AIPass_ZeusHoldSeconds"
       ],
       "status": "implemented_partial",
@@ -35,6 +34,21 @@
       "automation": "runGates.sqf: five closed-gate refusal and no-movement checks, each followed by reopened physical arrival. All ten passed in runtime-20260927-032658. Player-led, Zeus and locality variants remain outstanding.",
       "executable_sources": [
         "runGates.sqf"
+      ]
+    },
+    {
+      "id": "LAMBS",
+      "title": "LAMBS coexistence and Cortex fallback",
+      "setup": "Run the same fresh dedicated-server squad audit twice: once without LAMBS and once with -IncludeLambs loading Danger, Turrets, Suppression and RPG. In the loaded arm exercise active-tactic, forced-movement and waypoint-task ownership before a clean Cortex lease and Zeus replacement order.",
+      "expected": "Without LAMBS, Cortex physically moves and holds the whole squad with no upstream dependency. With LAMBS loaded, Cortex never steals queued or active LAMBS movement, finite leases restore both false and true group baselines, Zeus interruption releases the lease, and every soldier physically follows the replacement order without old-route resurrection.",
+      "settings": [
+        "Waldo_AIPass_LambsMode"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runLambs.sqf stages physical standalone movement plus loaded-suite arbitration, baseline restoration and Zeus handover. The launcher now supplies paired absent/present arms through -CortexFocus lambs and -IncludeLambs. Saved and statically validated; both live arms remain required.",
+      "executable_sources": [
+        "runLambs.sqf"
       ]
     },
     {

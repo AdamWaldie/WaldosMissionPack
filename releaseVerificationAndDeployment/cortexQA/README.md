@@ -54,13 +54,15 @@ The infantry suite retains the original garrison result before an explicitly lab
 
 ## Full AI coverage
 
-`COVERAGE.md` specifies 48 behaviour cases, with an exact mapping of all 165 declared AI settings in `coverage.json`. A mapped setting means the test is specified, not executed. The regression check rejects new settings without a case.
+`COVERAGE.md` specifies 57 behaviour cases, with an exact mapping of all 165 declared AI settings in `coverage.json`. A mapped setting means the test is specified, not executed. The regression check rejects new settings without a case.
 
 Use `-CortexFocus combat` for real contact, flank/assault and waypoint advance. These fixtures must be inside the configured tactical distance from the actual player; Zeus camera position does not satisfy that gate. The test records this prerequisite, movement, actual firing, real drill ending and disable cleanup. The first combat run at the distant infantry range did not satisfy the distance prerequisite and is not valid acceptance evidence.
 
 ## Additive runs
 
 The default `-CortexFocus all` retains infantry, both headless clients, convoy travel and ambushes, artillery, counterbattery, combat movement, mechanics and client UI checks. Focused runs are diagnostic subsets, never substitutes for full acceptance. The convoy subset includes moving contact and pinned contact as well as travel and unloading.
+
+LAMBS compatibility uses a paired audit against the same saved fixture. Run `-CortexAudit -CortexFocus lambs` without optional LAMBS mods to prove Cortex's standalone physical movement, then repeat with `-IncludeLambs` to load the installed Danger, Turrets, Suppression and RPG suite. The loaded arm verifies that Cortex refuses groups already owned by a queued/running LAMBS tactic, forced move or LAMBS waypoint task; clean finite leases restore the prior LAMBS group state; and a Zeus replacement order physically takes control without route resurrection. Both arms are required before compatibility is accepted.
 
 Use `-CortexFocus mechanics` for ammunition sharing, casualty regroup and actual skill changes. These new cases require live validation. Existing failed building cases remain in the full run; the open-door comparison records a separate result.
 
@@ -155,7 +157,7 @@ Runtime `20260927-101028` completed 34 checks with two failures and zero SQF err
 
 ## Breadth-first acceptance pass
 
-Establish a usable baseline across all 55 cases in `coverage.json` before further tuning individual manoeuvres. Preserve existing tests and failures. A baseline requires a visible physical outcome, feature-off behaviour, safe cancellation and repeat cleanup; full ownership and integration acceptance remains a separate required pass.
+Establish a usable baseline across all 57 cases in `coverage.json` before further tuning individual manoeuvres. Preserve existing tests and failures. A baseline requires a visible physical outcome, feature-off behaviour, safe cancellation and repeat cleanup; full ownership and integration acceptance remains a separate required pass.
 
 The launcher also accepts independent `-CortexFocus support`, `airborne`, `vehicles` and `fire` runs. These execute the existing support, parachute, vehicle-reaction and fire-control procedures separately. They remain included in `mechanics` and `all`; no coverage is removed. Each run retains server/client completion reporting and the visual guide.
 

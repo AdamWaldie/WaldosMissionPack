@@ -256,3 +256,11 @@ The four supplied Workshop packages were inspected from their locally installed 
 LAMBS publishes `lambs_danger_isExecutingTactic` before scheduling those delayed callbacks. Shared ownership now refuses a fresh Cortex movement lease while that marker is active, while any unit carries LAMBS forced movement, or while an explicit LAMBS Waypoint `task*` owns the group. Cortex does not clear or rewrite upstream state; it leaves that responder under LAMBS and permits another group to be selected. Diagnostics show LAMBS-owned groups and accumulated busy-lease refusals. Scoped lease cleanup was also added to calm, retreat, gate-close and orphan-token paths so a same-tick state transition cannot leave LAMBS disabled until the next discovery pass.
 
 The installed Turrets, Suppression and RPG PBOs confirm they are configuration companions; Cortex does not disable them. No LAMBS code is copied into WMP. Static validation covers the ownership contract. A rebuilt multiplayer run with LAMBS loaded, queued and active tactics, locality migration and Zeus replacement remains queued under the no-launch instruction.
+
+## 1 October: paired LAMBS compatibility audit
+
+The canonical full-pack launcher now supports `-CortexFocus lambs` and an explicit `-IncludeLambs` arm that loads the installed Danger, Turrets, Suppression and RPG packages on every audit process. Omitting the switch runs the same Cortex fallback fixture without LAMBS.
+
+The standalone arm requires every soldier to physically move to and hold an assigned defence position. The loaded arm additionally refuses queued/running LAMBS tactics, forced movement and LAMBS waypoint tasks; checks false and true baseline restoration; then interrupts a live Cortex lease with Zeus and requires every soldier to execute the ordinary replacement waypoint without route resurrection. `Waldo_AIPass_LambsMode` now has its own 57th coverage case.
+
+Static validation passed 268 focused Cortex tests, all 1,265 SQF files, all 113 wiki pages, all 85 Zeus/script parity checks, the executable 57-case/165-setting coverage audit, and `git diff --check`. Arma remained closed; both paired live arms are queued and neither is claimed accepted.

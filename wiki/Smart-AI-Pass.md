@@ -353,6 +353,20 @@ sets `lambs_danger_isExecutingTactic` before scheduling its delayed flank or ass
 busy check covers both queued and already-running group tactics without a new polling loop. Its
 Turrets, Suppression and RPG packages are config-only and remain active.
 
+Cortex remains self-contained when LAMBS is absent. Its scheduler, movement leases, manoeuvre roles,
+withdrawal, reinforcement, morale, vehicle, artillery and recovery controllers do not call LAMBS.
+The implementation adopts the useful architectural ideas rather than copying LAMBS code: explicit
+ownership, short asynchronous tactical steps, separate move/cover roles, casualty eligibility and a
+clean return to authored orders. Cortex does not claim script-level equivalents for LAMBS config/FSM
+features that SQF cannot reproduce reliably. LAMBS CQB's forced-position recovery is deliberately not
+adopted because Cortex must never teleport a stuck soldier.
+
+Compatibility acceptance requires two fresh full-pack runs of the dedicated `lambs` focus: one
+without optional LAMBS mods and one with `-IncludeLambs`. The first requires physical Cortex movement
+and a sustained hold. The second also requires busy-group refusal, exact lease-baseline restoration
+and physical execution of a Zeus replacement order with no old-route resurrection. Static source
+checks alone do not establish that either handover works in Arma.
+
 WMP calls the installed LAMBS public interface; it does not bundle LAMBS source. LAMBS_Danger's
 GPLv2 license includes an additional condition which forbids modified or derivative versions from
 being uploaded to Steam Workshop. Keeping the FSM in its own optional mod also avoids a stale fork and

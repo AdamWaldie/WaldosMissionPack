@@ -602,7 +602,8 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),56)
+        self.assertEqual(len(data['cases']),57)
+        self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
         report=render_markdown(data)
         self.assertEqual(report,(ROOT/'releaseVerificationAndDeployment/cortexQA/FEATURE_STATUS.md').read_text(encoding='utf-8'))
@@ -613,6 +614,14 @@ class CortexOperations(unittest.TestCase):
                        'CROSS-real-smoke-projectile','CROSS-all-members-physical-far-side']:
             self.assertIn(marker,crossing)
         self.assertNotIn(' reveal ',crossing.split('*/',1)[1])
+        lambs=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLambs.sqf').read_text()
+        for marker in ['LAMBS-fallback-physical-arrival','LAMBS-active-tactic-keeps-ownership',
+                       'LAMBS-zeus-replacement-physical-arrival','LAMBS-zeus-clean-release']:
+            self.assertIn(marker,lambs)
+        launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text()
+        self.assertIn('[switch]$IncludeLambs',launcher)
+        self.assertIn('@LAMBS_Danger.fsm',launcher)
+        self.assertIn('cortexQALambs.sqf',launcher)
 
     def test_coordinated_handoffs_do_not_stack_fixed_tactical_pauses(self):
         text = source('cortexFlankStep')

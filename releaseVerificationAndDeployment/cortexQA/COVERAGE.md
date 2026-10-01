@@ -2,13 +2,14 @@
 
 All declared aiConfig settings plus explicit infantry, convoy and UI behaviours. A procedure or mapped setting is not live acceptance.
 
-165 settings mapped to 55 cases. A mapping is not an executable test or acceptance result.
+165 settings mapped to 57 cases. A mapping is not an executable test or acceptance result.
 
 Required variants: enabled physical outcome; disabled before start; disabled during operation; order replacement and cancellation; repeated start and cleanup; server owner; WMP HC transfer; ACE HC transfer; HC disconnect; JIP observer; invalid or missing dependencies; minimum/default/maximum settings where supported; Zeus interruption during each action phase, cleanup and physical replacement-order execution.
 
 | Case | Status | Runnable coverage and remaining work |
 |---|---|---|
 | CORE: Master, exclusions and ownership | implemented_partial | runGates.sqf: five closed-gate refusal and no-movement checks, each followed by reopened physical arrival. All ten passed in runtime-20260927-032658. Player-led, Zeus and locality variants remain outstanding. |
+| LAMBS: LAMBS coexistence and Cortex fallback | implemented_partial | runLambs.sqf: paired standalone and installed-LAMBS arms cover physical fallback, busy ownership refusal, exact baseline restoration and physical Zeus handover. Both live arms remain unexecuted. |
 | SCHED: Scheduler and distance tiers | implemented_partial | runScheduler.sqf: twelve production-queued squad movements at minimum soft budget, actual start latency, physical arrival and no duplicate completion. Server case executed; distance tiers, saturation, FPS throttling and HC workload variants remain outstanding. Server patrol scale pilot added in runPerformance.sqf: fresh 100x6 OFF/ON/ON/OFF arms, frame times, physical progress, managed/eligible group checks, baseline drift and 5% median/10% p95 gates. First server patrol run runtime-20260927-085848 passed all 13 performance checks; broader performance acceptance remains outstanding. |
 | PROFILE: Behaviour profiles and aggression | implemented_partial | runProfiles.sqf: precedence, aliases, fallbacks, aggression limits and skill preservation passed in runtime-20260927-115212. Tactical behaviour for every profile remains unverified. |
 | SKILL: AI skill rebalance | implemented_partial | runMechanics.sqf: SKILL- engine aiming skill after profile change (partial variants; fresh live acceptance required) |

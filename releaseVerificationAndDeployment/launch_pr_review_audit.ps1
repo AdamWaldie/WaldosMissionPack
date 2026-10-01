@@ -14,6 +14,8 @@
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
  * IncludeRhsPolaris: legacy compatibility switch to load RHSUSAF. The seat station remains the
  *   vanilla NATO Prowler/DAGOR regardless of this switch.
+ * IncludeLambs: load the installed LAMBS Danger, Turrets, Suppression and RPG suite for the
+ *   paired Cortex ownership/handover audit. Omit it to exercise Cortex's standalone fallback.
  * HeadlessClients: number of local headless owners to launch (0-2, default 0).
  * CortexAudit: run the disposable Cortex owner, convoy, artillery and custom UI acceptance cases.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
@@ -34,10 +36,11 @@ param(
     [int]$ResolutionHeight = 2160,
     [switch]$ExcludePersistenceMod,
     [switch]$IncludeRhsPolaris,
+    [switch]$IncludeLambs,
     [ValidateRange(0, 2)]
     [int]$HeadlessClients = 0,
     [switch]$CortexAudit,
-    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "performance", "coordinated", "coordinatedbounds", "coordinatedclean", "lifecycle", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
+    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "performance", "coordinated", "coordinatedbounds", "coordinatedclean", "lifecycle", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
     [string]$CortexFocus = "all",
     [ValidateSet("FLANK-NATIVE-FIRE","FLANK-YELLOW-NATIVE-FIRE","FLANK-YELLOW","FLANK-AWARE","ADVANCE-AWARE","FLANK","ADVANCE","ADVANCE-YELLOW","ADVANCE-CLOSE","ADVANCE-DISTANT","FLANK-ZEUS","ADVANCE-ZEUS","FLANK-ZEUS-ROE","FLANK-BLOCKED","ADVANCE-BLOCKED","FLANK-GRENADE","FLANK-ZEUS-CONSOLIDATE","ADVANCE-GRENADE")]
     [string]$CortexCombatCase = "",
@@ -90,6 +93,7 @@ if ($CortexAudit) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runMultiManoeuvre.sqf") -Destination (Join-Path $missionRoot "cortexQAMultiManoeuvre.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runCoordinated.sqf") -Destination (Join-Path $missionRoot "cortexQACoordinated.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runLifecycle.sqf") -Destination (Join-Path $missionRoot "cortexQALifecycle.sqf")
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runLambs.sqf") -Destination (Join-Path $missionRoot "cortexQALambs.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runDeceleration.sqf") -Destination (Join-Path $missionRoot "cortexQADeceleration.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runAircraft.sqf") -Destination (Join-Path $missionRoot "cortexQAAircraft.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runContact.sqf") -Destination (Join-Path $missionRoot "cortexQAContact.sqf")
@@ -129,6 +133,16 @@ $clientMods = foreach ($name in $modNames) {
 }
 $serverMods = @($clientMods)
 $workshopRoot = Join-Path $armaRoot "!Workshop"
+if ($IncludeLambs) {
+    $lambsNames = @("@LAMBS_Danger.fsm", "@LAMBS_Turrets", "@LAMBS_Suppression", "@LAMBS_RPG")
+    foreach ($name in $lambsNames) {
+        $lambsPath = Join-Path $workshopRoot $name
+        if (-not (Test-Path -LiteralPath $lambsPath)) { throw "LAMBS paired audit requires installed Workshop mod: $name" }
+        $clientMods += $lambsPath
+        $serverMods += $lambsPath
+    }
+    Write-Output "Including the installed LAMBS suite for the Cortex compatibility arm."
+}
 if ($IncludeRhsPolaris) {
     $rhsPath = Join-Path $workshopRoot "@RHSUSAF"
     if (-not (Test-Path -LiteralPath $rhsPath)) { throw "RHSUSAF is required for -IncludeRhsPolaris but is not installed." }
