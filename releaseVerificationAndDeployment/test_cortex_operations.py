@@ -987,6 +987,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('([_group, "coordinatedChance"] call Waldo_fnc_CortexProfile) <= 0',coordinated)
         self.assertNotIn('random 1 >= ([_group, "coordinatedChance"]',coordinated)
 
+    def test_shipped_profiles_change_tactical_style_without_disabling_fallback(self):
+        config=(ROOT/'MissionConfig/aiConfig.sqf').read_text(encoding='utf-8')
+        for profile,flank,advance in [
+            ('MILITIA','0.3','0.7'),
+            ('LINE','0.5','0.6'),
+            ('VETERAN','0.7','0.5'),
+            ('ELITE','0.9','0.4'),
+        ]:
+            row=config.split(f'["{profile}", createHashMapFromArray ',1)[1].split(']]]',1)[0]
+            self.assertIn(f'["flankChance", {flank}]',row)
+            self.assertIn(f'["advanceChance", {advance}]',row)
+
     def test_coordinated_selection_uses_bounded_server_responder_index(self):
         coordinated=source('cortexCoordinatedAssault')
         server=source('cortexSupportServer')

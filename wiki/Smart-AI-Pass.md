@@ -114,10 +114,10 @@ assault without another random rejection. Assault grenade and investigation valu
 
 | Profile | Flank weight | Advance weight | Coordinated participation | Assault grenade | Breaks at | Retreats | Surrenders at |
 |---|---:|---:|---:|---:|---|---|---|
-| MILITIA | 0.3 | 0.3 | 0.2 | 20% | early | 1.5x further | 3 survivors |
-| LINE | 0.5 | 0.5 | 0.4 | 40% | normal | normal | 2 survivors |
-| VETERAN | 0.6 | 0.6 | 0.5 | 55% | late | 0.8x | 1 survivor |
-| ELITE | 0.7 | 0.7 | 0.6 | 70% | very late | 0.7x | 1 survivor |
+| MILITIA | 0.3 | 0.7 | 0.2 | 20% | early | 1.5x further | 3 survivors |
+| LINE | 0.5 | 0.6 | 0.4 | 40% | normal | normal | 2 survivors |
+| VETERAN | 0.7 | 0.5 | 0.5 | 55% | late | 0.8x | 1 survivor |
+| ELITE | 0.9 | 0.4 | 0.6 | 70% | very late | 0.7x | 1 survivor |
 
 A squad uses, in order:
 1. its own profile (`(group this) setVariable ["Waldo_AIPass_Profile", "ELITE", true];`);

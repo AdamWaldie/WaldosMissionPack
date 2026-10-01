@@ -515,3 +515,9 @@ an explicit exclusion. The selector adds no scheduler, persistent loop or per-un
 
 This is source and static-regression evidence only. It requires a fresh audit build and repeated live
 contact cases before it can establish improved tempo or combat effectiveness.
+
+The shipped profiles previously assigned identical flank and advance values within every profile.
+After converting those values from independent permission rolls to preferences, that would have made
+every profile choose the same 50/50 style. Defaults now progress from direct-bound preference for
+MILITIA and LINE to increasing flank preference for VETERAN and ELITE. This changes first choice,
+never the immediate fallback or the physical viability gates.

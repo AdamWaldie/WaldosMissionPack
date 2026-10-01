@@ -55,7 +55,7 @@ _name = toUpperANSI _name;
 if (_name == "PUBLIC") then {_name = "MILITIA"};
 if (_name == "STANDARD") then {_name = "LINE"};
 private _defaults = createHashMapFromArray [
-    ["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.5], ["investigateChance", 0.6],
+    ["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6],
     ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]
 ];
 private _line = _table getOrDefault ["LINE", createHashMap];
