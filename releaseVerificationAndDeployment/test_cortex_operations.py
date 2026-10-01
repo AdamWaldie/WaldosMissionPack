@@ -935,11 +935,22 @@ class CortexOperations(unittest.TestCase):
 
     def test_empty_coordinated_dispatch_does_not_consume_engagement(self):
         server=source('cortexSupportAssaultServer')
-        self.assertIn('if (_sent > 0) then {_job set ["assaultIssued",true];', server)
+        self.assertIn('if (_sent > 0) then {', server)
+        self.assertIn('_job set ["assaultIssued",true]', server)
         requester=source('cortexCoordinatedAssault')
         self.assertIn('if (_status select 3) then {_acknowledged = true}', requester)
         self.assertIn('if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "coordinatedPendingUntil"; true}', requester)
         self.assertIn('[_state,"coordinated",10] call Waldo_fnc_CortexCooldown', requester)
+
+    def test_coordinated_assault_does_not_wait_on_or_retain_late_responders(self):
+        requester=source('cortexCoordinatedAssault')
+        server=source('cortexSupportAssaultServer')
+        self.assertIn('serverTime - _first < 20',requester)
+        self.assertNotIn('serverTime - _first < 60',requester)
+        self.assertIn('private _dispatched=[]',server)
+        self.assertIn('_job set ["leases",_dispatched]',server)
+        self.assertIn('_helper setVariable ["Waldo_AIPass_SupportLease",nil,true]',server)
+        self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",_dispatched apply',server)
 
     def test_coordinated_approaches_do_not_cross_support_fire_lane(self):
         server=source('cortexSupportAssaultServer')
@@ -1016,13 +1027,16 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('allGroups',coordinator)
         self.assertIn('if (_old isNotEqualTo _role)',coordinator)
         self.assertIn('(_result select 0) == _token',coordinator)
-        self.assertIn('serverTime+15',coordinator)
+        self.assertIn('serverTime+8',coordinator)
         self.assertIn('private _failuresByToken=',coordinator)
         self.assertIn('_outcome in ["COMPLETE","PARTIAL"]',coordinator)
         self.assertIn('_retired pushBackUnique _token',coordinator)
         self.assertIn('if (_failures >= 2)',coordinator)
         self.assertNotIn('_job set ["coordinationAborted",true]',coordinator)
         self.assertIn('private _boundLength=(_remaining*0.35) max 45 min 70',coordinator)
+        self.assertIn('"INSUFFICIENT_STRENGTH"',coordinator)
+        self.assertIn('private _watchdog=(((_boundTimeout max 10)*4)+15) min 180',coordinator)
+        self.assertNotIn('serverTime+180',coordinator)
         start=source('cortexSupportBoundStart')
         self.assertIn('["teams",[_first,_second]]',start)
         self.assertIn('["SUPPORT_BOUND","FINAL"] select _final',start)

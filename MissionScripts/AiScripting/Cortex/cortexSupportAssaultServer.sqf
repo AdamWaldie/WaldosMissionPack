@@ -6,6 +6,8 @@
  * points remain separated, then Waldo_fnc_CortexSelectAvenue rejects routes entering the requester's
  * 30 m firing corridor or changing sides. The shared bounded scorer distinguishes terrain/solid
  * ballistic screening from visual concealment. It runs once per dispatch, not per tick or soldier.
+ * Responders which missed the finite assembly window are released when at least one arrived squad
+ * receives an approach. They resume autonomous combat instead of keeping a ten-minute rally lease.
  * Repeat/JIP: one assault per request; the updated durable lease revalidates on HC migration.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, [].
  * 2: reply owner <NUMBER>, default -1; HC callers supply clientOwner.
@@ -30,6 +32,7 @@ private _laneX=(_enemy select 0)-(_supportOrigin select 0);
 private _laneY=(_enemy select 1)-(_supportOrigin select 1);
 private _laneLength=sqrt (_laneX*_laneX+_laneY*_laneY);
 private _approaches=[];
+private _dispatched=[];
 {
     _x params ["_helper","_token","","","_accepted"];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
@@ -61,10 +64,28 @@ private _approaches=[];
             _lease = +_lease; _lease set [2,_job get "expiry"]; _lease set [5,_attack];
             _helper setVariable ["Waldo_AIPass_SupportLease",_lease,true];
             [_helper,_lease] remoteExecCall ["Waldo_fnc_CortexSupportLocal",groupOwner _helper];
+            _dispatched pushBack _x;
             _sent = _sent+1;
         };
     };
 } forEach (_job get "leases");
 
-// A rejected/empty dispatch remains retryable; no movement was reserved.
-if (_sent > 0) then {_job set ["assaultIssued",true]; [_job,_job get "leases"] call Waldo_fnc_CortexSupportCoordinateStep};
+// A rejected/empty dispatch remains retryable; no movement was reserved. Once at least one
+// responder is moving, release every late or route-rejected reservation. Its owner observes the
+// missing lease and restores normal autonomous behaviour on the next group tick.
+if (_sent > 0) then {
+    {
+        _x params ["_helper","_token"];
+        if (_dispatched findIf {(_x select 0) == _helper && {(_x select 1) == _token}} < 0) then {
+            private _lease=_helper getVariable ["Waldo_AIPass_SupportLease",[]];
+            if (count _lease == 6 && {(_lease select 0) == _token}) then {
+                _helper setVariable ["Waldo_AIPass_SupportLease",nil,true];
+                _helper setVariable ["Waldo_Cortex_SupportRole",nil,true];
+            };
+        };
+    } forEach (_job get "leases");
+    _job set ["leases",_dispatched];
+    _requester setVariable ["Waldo_Cortex_SupportResponders",_dispatched apply {[_x select 0,_x select 1]},true];
+    _job set ["assaultIssued",true];
+    [_job,_dispatched] call Waldo_fnc_CortexSupportCoordinateStep;
+};

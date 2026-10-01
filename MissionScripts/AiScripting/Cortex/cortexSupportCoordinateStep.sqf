@@ -6,7 +6,10 @@
  * lease expiry, exclusion and Zeus cancellation remain authoritative. At most six groups are read.
  * A partial bound is useful progress and hands movement to the next squad. Stalls are counted per
  * squad; one unreliable element can recover or retire without cancelling the other manoeuvre and
- * base-of-fire roles. Bound length scales with remaining distance to avoid slow fixed-step movement.
+ * base-of-fire roles. A squad which can no longer form two viable fire teams is retired immediately
+ * instead of keeping the whole action alive until lease expiry. The server watchdog follows the
+ * configured owner-side bound timeout and retries after eight seconds. Bound length scales with
+ * remaining distance to avoid slow fixed-step movement.
  * Arguments: 0: request <HASHMAP>; 1: accepted leases <ARRAY>, required.
  * Return: Nothing. Current caller: CortexSupportStep.
  * Example: [_job,_kept] call Waldo_fnc_CortexSupportCoordinateStep;
@@ -17,7 +20,8 @@ private _teams=[];
 {
     _x params ["_group","_token","","","_accepted"];
     private _lease=_group getVariable ["Waldo_AIPass_SupportLease",[]];
-    if (_accepted == "ACCEPTED" && {count _lease == 6} && {(_lease select 5) isNotEqualTo []}
+    if (_accepted == "ACCEPTED" && {count _lease == 6} && {(_lease select 0) == _token}
+        && {serverTime < (_lease select 2)} && {(_lease select 5) isNotEqualTo []}
         && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
         _teams pushBack [_group,_token,_lease select 5];
     };
@@ -36,7 +40,7 @@ if (_active isNotEqualTo []) then {
         private _progressed=_outcome in ["COMPLETE","PARTIAL"];
         // A failed mover yields its turn; it cannot freeze or cancel the other squads.
         if (!_progressed) then {
-            _group setVariable ["Waldo_Cortex_SupportRetryAfter",serverTime+15];
+            _group setVariable ["Waldo_Cortex_SupportRetryAfter",serverTime+8];
             private _failures=(_failuresByToken getOrDefault [_token,0])+1;
             _failuresByToken set [_token,_failures];
             _job set ["boundFailuresByToken",_failuresByToken];
@@ -56,6 +60,18 @@ private _next=grpNull;
 private _point=[];
 private _sequence=_job getOrDefault ["boundSequence",0];
 if (_active isEqualTo []) then {
+    // Casualties can make a formerly valid responder unable to field a moving and covering pair.
+    // Retire it here so it cannot be reconsidered every two seconds until the ten-minute lease ends.
+    {
+        _x params ["_group","_token"];
+        private _fit=(units _group) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
+        if (count _fit < 4 && {!(_token in _completed)} && {!(_token in _retired)}) then {
+            _retired pushBackUnique _token;
+            _group setVariable ["Waldo_Cortex_SupportAbort",
+                [serverTime,"INSUFFICIENT_STRENGTH",count _fit],true];
+        };
+    } forEach _teams;
+    _job set ["boundRetired",_retired];
     private _cursor=_job getOrDefault ["boundCursor",0];
     for "_offset" from 0 to ((count _teams)-1) do {
         private _index=(_cursor+_offset) mod count _teams;
@@ -74,7 +90,9 @@ if (_active isEqualTo []) then {
                 _sequence=_sequence+1;
                 _job set ["boundSequence",_sequence];
                 _job set ["boundCursor",(_index+1) mod count _teams];
-                _active=[_group,_sequence,serverTime+180,_point distance2D _goal < 2,_token];
+                private _boundTimeout=missionNamespace getVariable ["Waldo_AIPass_Flank_BoundTimeout",25];
+                private _watchdog=(((_boundTimeout max 10)*4)+15) min 180;
+                _active=[_group,_sequence,serverTime+_watchdog,_point distance2D _goal < 2,_token];
                 _job set ["boundActive",_active];
             };
         };

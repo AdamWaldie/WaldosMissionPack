@@ -1,6 +1,6 @@
 # Cortex work and acceptance status
 
-Updated 30 September 2026. PR 151 remains draft. Current source checkpoints through `0a8f606` are committed and pushed. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
+Updated 1 October 2026. PR 151 remains draft. Current committed checkpoints through `c3e4264` are pushed, with later coordinated-tempo work recorded below until its next checkpoint. Arma is deliberately closed while source, static verification and documentation work continue; all new engine acceptance remains queued for a later rebuilt audit.
 
 | Requested work | Implementation | Recorded evidence / work remaining |
 |---|---|---|
@@ -217,3 +217,11 @@ Pending calm remount also lost its public intent during group-owner adoption bec
 Adoption previously relied on the following GroupTick to notice a newly closed Investigation, report/hearing, Post-contact, Vehicles or Remount gate. That allowed the new owner to issue one stale search or boarding intent first. Locality recovery now rechecks the applicable gates before any semantic movement is rebuilt and clears a refused transition immediately. Static ordering coverage passes; live migration while toggling settings remains queued.
 
 Delayed artillery work now carries and enforces its owner. Counter-battery acquisition rejects a delayed callback immediately when its live switch closes. Shoot-and-scoot publishes SUPPORT or COUNTER purpose with its durable token, and both ordinary retries and locality resumption recheck the matching artillery feature plus shoot-and-scoot setting before issuing movement. Static contracts pass; migration during the firing-to-relocation transition remains queued.
+
+## 1 October: tactical initiative and coordinated tempo
+
+Contact no longer makes independent random decisions which can reject both flank and advance. One weighted profile choice establishes the preferred style, then the alternate enabled tactic is attempted immediately when the preferred route or actor gate cannot start. Militia and line profiles favour direct bounds; veteran and elite profiles increasingly favour flank routes. Positive profile weights select style rather than adding a second idle outcome.
+
+Prepared coordinated attacks no longer wait a full minute on the slowest responder. They start when every responder arrives or 20 seconds after the first physical arrival. Once one safe approach is dispatched, late or route-rejected reservations are released so those squads resume autonomous combat. During the attack, a responder below four combat-effective dismounts is retired immediately instead of leaving the coordinator alive until lease expiry. Failed bounds yield for eight seconds, and the server watchdog follows the configured owner-side bound timeout rather than always waiting 180 seconds.
+
+These are bounded group-level checks in the existing two-second coordinator, with no per-unit worker or global scan. Source contracts cover the assembly window, release path, exact lease validation, casualty retirement and watchdog. Physical tempo, engagement effectiveness, owner migration and the 100-group frame-time budget still require the next rebuilt audit.

@@ -8,7 +8,9 @@
  * line to the base of fire). The server alternates moving and covering squads; each mover
  * uses successive fire-team bounds and the gated final assault sequence. Original waypoints
  * survive the finite reservation. The assault launches when every responder has
- * arrived, or 60 s after the first did. It needs an enemy seen in the last 60 s within 400 m, STEADY
+ * arrived, or 20 s after the first did. The server releases responders which missed that assembly
+ * window, so one delayed squad cannot hold the prepared force or remain trapped in a stale rally.
+ * It needs an enemy seen in the last 60 s within 400 m, STEADY
  * morale, and a positive requesting-squad coordinatedChance profile weight. Once responders have
  * assembled, the assault launches deterministically rather than discarding the prepared action on a
  * second random roll. Only one coordinated assault is made per engagement. Responders must be
@@ -65,7 +67,7 @@ if (_acknowledged) exitWith {_state set ["coordinated",true]; _state deleteAt "c
 if (_arrivals isEqualTo []) exitWith {false};
 private _first = 1e9;
 {_first = _first min _x} forEach _arrivals;
-if (count _arrivals < count _responders && {serverTime - _first < 60}) exitWith {false};
+if (count _arrivals < count _responders && {serverTime - _first < 20}) exitWith {false};
 [_group,_enemyPos,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAssaultServer",2];
 [_state,"coordinated",10] call Waldo_fnc_CortexCooldown;
 // Reserve the requester's movement role while the authenticated server dispatch and
