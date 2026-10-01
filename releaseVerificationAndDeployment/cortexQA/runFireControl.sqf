@@ -130,15 +130,23 @@ _suppressionEnemy allowDamage false;
 _suppressionEnemy disableAI "PATH";
 _suppressionEnemy setVariable ["acex_headless_blacklist",true,true];
 _suppressionEnemy setVariable ["Waldo_CortexQA_Label","SHARED ENEMY / visible acquisition",true];
+private _suppressionScreen=[];
+for "_i" from -20 to 20 do {
+    private _wall=createVehicle ["Land_CncWall4_F",[2100+_i*4,1415,0],[],0,"CAN_COLLIDE"];
+    _wall setDir 0;
+    _wall allowDamage false;
+    _suppressionScreen pushBack _wall;
+};
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_suppressionShooters+[_suppressionEnemy],true];
-["Fire control: independent squad cadence","Three stationary squads first acquire the same visible enemy while holding fire. The enemy then disappears. Watch each squad rotate individual suppressors at its own lightly random cadence; cyan labels show production orders and actual shot times. A synchronized three-squad volley fails.",[2100,1325,0]] call _phase;
+["Fire control: independent squad cadence","Three stationary squads first acquire the same visible enemy while holding fire. The enemy is then moved behind the concrete screen while their targets are cleared, leaving its old position unobstructed and known. Watch each squad rotate individual suppressors at its own lightly random cadence; cyan labels show Cortex-owned orders and actual shot times. A synchronized three-squad volley fails.",[2100,1375,0]] call _phase;
 private _allContact=[{
     _suppressionGroups findIf {
         ((_x getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]) != "CONTACT"
     } < 0
 },40] call _wait;
 ["FIRE-multi-squad-natural-contact",_allContact,str (_suppressionGroups apply {(_x getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]})] call _check;
-hideObjectGlobal _suppressionEnemy;
+_suppressionEnemy setPosATL [2100,1460,0];
+{_x doTarget objNull; _x doWatch objNull} forEach _suppressionShooters;
 {_x setCombatMode "RED"} forEach _suppressionGroups;
 private _deadline=time+35;
 waitUntil {
@@ -180,7 +188,7 @@ private _actualSuppression=_suppressionGroups findIf {
 ["FIRE-squads-not-global-volley",_staggered,str _firstOrders] call _check;
 ["FIRE-multi-squad-actual-suppression",_actualSuppression,str (_suppressionShooters apply {count (_x getVariable ["Waldo_CortexQA_SuppressShots",[]])})] call _check;
 {[_x] call Waldo_fnc_CortexReleaseGroup} forEach _suppressionGroups;
-{deleteVehicle _x} forEach (_suppressionShooters+[_suppressionEnemy]);
+{deleteVehicle _x} forEach (_suppressionShooters+[_suppressionEnemy]+_suppressionScreen);
 {deleteGroup _x} forEach (_suppressionGroups+[_suppressionEnemyGroup]);
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 

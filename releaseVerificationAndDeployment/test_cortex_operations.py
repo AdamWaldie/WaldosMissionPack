@@ -1009,7 +1009,9 @@ class CortexOperations(unittest.TestCase):
                       'Waldo_CortexQA_SuppressOrders',
                       'Waldo_CortexQA_SuppressShots']:
             self.assertIn(token,qa)
-        self.assertIn('hideObjectGlobal _suppressionEnemy',qa)
+        self.assertIn('Land_CncWall4_F',qa)
+        self.assertIn('_suppressionEnemy setPosATL [2100,1460,0]',qa)
+        self.assertIn('_x doTarget objNull; _x doWatch objNull',qa)
         self.assertNotIn('call Waldo_fnc_CortexFireControl',qa)
 
     def test_recovery_qa_measures_continuation_after_separation(self):
