@@ -5,7 +5,9 @@
  * Base of fire and manoeuvre uses multiple movement bounds. The leader, machine gunners and anti-tank gunners stay as the base of fire,
  * which Waldo_fnc_CortexFireControl uses to suppress. Up to half the squad (2-5 riflemen) becomes
  * the manoeuvre element. Candidate two-leg routes are sampled against the firing corridors from the
- * squad's own base of fire and nearby friendly squads to the objective. Cortex chooses a side and
+ * squad's own base of fire and at most four nearby friendly squads which are actually in CONTACT
+ * or assigned a coordinated COVER role. Merely knowing about the target does not create a firing
+ * corridor. Cortex chooses a side and
  * width that stays outside a 30 m firing corridor and, when it begins clearly on one side of another
  * supporting squad's fire axis, remains on that side. All six bounded candidates are scored once at start;
  * fixed geometry samples reward terrain and solid objects which screen the manoeuvre from the
@@ -84,6 +86,7 @@ private _start = [0, 0, 0];
 _start = _start vectorMultiply (1 / count _element);
 private _base = _onFoot - _element;
 private _supportOrigins = [];
+private _supportCandidates = [];
 if (_base isNotEqualTo []) then {
     private _origin = [0,0,0];
     {_origin = _origin vectorAdd getPosATL _x} forEach _base;
@@ -92,7 +95,11 @@ if (_base isNotEqualTo []) then {
 {
     private _friendlyGroup = _x;
     private _friendlyLeader = leader _friendlyGroup;
+    private _supportRole = _friendlyGroup getVariable ["Waldo_Cortex_SupportRole",[]];
+    private _activeSupport = (_friendlyGroup getVariable ["Waldo_AIPass_PublicPhase","CALM"]) == "CONTACT"
+        || {count _supportRole == 5 && {(_supportRole select 2) == "COVER"}};
     if (_friendlyGroup != _group && {!isNull _friendlyLeader} && {alive _friendlyLeader}
+        && {_activeSupport}
         && {(side _group) getFriend (side _friendlyGroup) >= 0.6}
         && {_friendlyLeader distance2D _enemyPos < 500}
         && {_friendlyLeader knowsAbout _target > 0.5}) then {
@@ -100,10 +107,18 @@ if (_base isNotEqualTo []) then {
         if (_friendlyFoot isNotEqualTo []) then {
             private _origin = [0,0,0];
             {_origin = _origin vectorAdd getPosATL _x} forEach _friendlyFoot;
-            _supportOrigins pushBack (_origin vectorMultiply (1/count _friendlyFoot));
+            _supportCandidates pushBack [
+                _friendlyLeader distance2D _enemyPos,
+                count _supportCandidates,
+                _origin vectorMultiply (1/count _friendlyFoot)
+            ];
         };
     };
 } forEach allGroups;
+_supportCandidates sort true;
+{
+    _supportOrigins pushBack (_x select 2);
+} forEach (_supportCandidates select [0,(count _supportCandidates) min 4]);
 
 // Generate six bounded flank shapes. The shared selector rejects water, support-lane crossings and
 // side changes while preferring terrain or object screening. It evaluates this fixed set once.

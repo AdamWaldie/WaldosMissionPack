@@ -671,7 +671,10 @@ class CortexOperations(unittest.TestCase):
     def test_flank_routes_avoid_friendly_support_fire_corridors(self):
         start = source('cortexFlankStart')
         selector = source('cortexSelectAvenue')
-        for marker in ['private _supportOrigins = []', 'knowsAbout _target > 0.5',
+        for marker in ['private _supportOrigins = []', 'private _supportCandidates = []',
+                       'Waldo_AIPass_PublicPhase','Waldo_Cortex_SupportRole',
+                       '(_supportRole select 2) == "COVER"','knowsAbout _target > 0.5',
+                       '(count _supportCandidates) min 4',
                        'private _avenueCandidates=[]','[1,110,90]',
                        'call Waldo_fnc_CortexSelectAvenue']:
             self.assertIn(marker, start)
