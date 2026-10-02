@@ -427,6 +427,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Vehicles_Enable` | Infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw. Default `true`. |
 | `Waldo_AIPass_ContactReports_Enable` | Squads share sighted enemies by radio (blocked by jamming) or by voice. Default `true`. |
 | `Waldo_AIPass_ContactReports_Radius` | Radio report range in metres. Default `500`. |
+| `Waldo_Cortex_CombinedArms_AirRange` | Radio-linked aircraft support opportunity range in metres. This does not widen ordinary squad contact sharing. Default `4000`. |
 | `Waldo_AIPass_ContactReports_VoiceRange` | Report range in metres without a working radio. Default `35`. |
 | `Waldo_AIPass_ContactReports_RequireRadio` | Legacy compatibility only. AI communications ignore radio inventory; jamming still applies. Default `false`. |
 | `Waldo_AIPass_Reinforce_Enable` | Idle nearby squads move up behind a squad in contact. Default `true`. |

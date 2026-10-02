@@ -63,7 +63,7 @@ Feature cases: **60**. Required variant categories: **13**.
 | LIGHTING - Automatic darkness, night vision and illumination | 1 | 0 | 0 | `runProfiles.sqf`, `runLighting.sqf` | 1 | implemented_partial |
 | DRILL-HANDOVER - Moving flank and advance handed to Zeus | 0 | 0 | 0 | `runCombat.sqf` | 2 | implemented_partial |
 | DRILL-RECOVERY - Bound continuation and straggler rejoin | 0 | 0 | 0 | `runCombat.sqf` | 2 | implemented_partial |
-| COMBINED-ARMS - Contact-led combined-arms opportunity | 0 | 0 | 3 | `runCombinedArms.sqf` | 0 | implemented_partial |
+| COMBINED-ARMS - Contact-led combined-arms opportunity | 1 | 0 | 3 | `runCombinedArms.sqf` | 0 | implemented_partial |
 | COMBINED-OPERATION - Dynamic multi-squad combined operation | 0 | 0 | 0 | `runCombinedOperation.sqf` | 0 | implemented_partial |
 | ATTACK-FLARES - Attack-run approach and departure flares | 1 | 0 | 1 | `runAircraft.sqf` | 0 | implemented_partial |
 | AIR-ATTACK - Threat-aware finite aircraft attack patterns | 1 | 0 | 2 | `runAircraft.sqf` | 0 | implemented_partial |

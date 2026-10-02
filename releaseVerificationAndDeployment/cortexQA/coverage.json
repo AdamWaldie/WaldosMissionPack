@@ -1307,7 +1307,9 @@
       "title": "Contact-led combined-arms opportunity",
       "setup": "Place an observing infantry squad, a communicating armed ground vehicle and a moving armed aircraft near a naturally observed hostile. Do not inject rally points, role waypoints or readiness flags.",
       "expected": "Fresh contact immediately offers independent finite roles to capable nearby assets. Infantry continues without waiting; ground vehicles retain their route and use existing gunnery; aircraft use the finite attack controller. Missing, rejected or interrupted support cannot block infantry action.",
-      "settings": [],
+      "settings": [
+        "Waldo_Cortex_CombinedArms_AirRange"
+      ],
       "status": "implemented_partial",
       "live_evidence": [],
       "automation": "runCombinedArms.sqf preserves the common audit plot as visible DETECT, DISTRIBUTE, ACT, HANDOVER and CLEANUP phases. The dedicated renderer shows the observer-to-target line, communication links, offered roles, live roles and results alongside capped physical trails. Assertions require a physically moving airborne fixture, natural contact, finite public opportunity and role tokens, no infantry support lease or assembly waypoint, physical progress on the APC authored route without a Cortex movement owner, actual APC fire, an active aircraft controller and automatic role cleanup. Artillery remains independently asynchronous through the existing qualified-spotter path. HC ownership, real jamming and voice fallback, Zeus interruption, absent-arm, artillery and mixed 50-group performance variants await batched live acceptance.",

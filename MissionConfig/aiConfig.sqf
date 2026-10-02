@@ -166,6 +166,7 @@
  * - Waldo_AIPass_ContactReports_Enable (MISSION MAKER): squads share sighted enemies by radio (blocked by jamming) or by voice.
  * - Waldo_AIPass_ContactReports_Radius (ADVANCED): radio report range in metres.
  * - Waldo_AIPass_ContactReports_VoiceRange (ADVANCED): report range in metres when AI transmission is blocked.
+ * - Waldo_Cortex_CombinedArms_AirRange (ADVANCED): operational radius for radio-linked aircraft support opportunities.
  * - Waldo_AIPass_ContactReports_RequireRadio (ADVANCED): legacy compatibility setting; inventory radios are no longer checked. Jamming still applies.
  * - Waldo_AIPass_Reinforce_Enable (MISSION MAKER): idle nearby squads move up behind a squad in contact.
  * - Waldo_AIPass_Reinforce_Radius (ADVANCED): how far away responding squads may be.
@@ -353,6 +354,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_ContactReports_Enable", true], // BOOL: share sightings by radio (jammable) or voice.
         ["Waldo_AIPass_ContactReports_Radius", 500], // METRES: radio report range.
         ["Waldo_AIPass_ContactReports_VoiceRange", 35], // METRES: report range when AI transmission is blocked.
+        ["Waldo_Cortex_CombinedArms_AirRange", 4000], // METRES: radio-linked aircraft support opportunity radius.
         ["Waldo_AIPass_ContactReports_RequireRadio", false], // Legacy compatibility only: AI inventory radios are no longer checked.
         ["Waldo_AIPass_Reinforce_Enable", true], // BOOL: idle nearby squads move up behind a squad in contact.
         ["Waldo_AIPass_Reinforce_Radius", 600], // METRES: how far away responders may be.

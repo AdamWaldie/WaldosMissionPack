@@ -1415,7 +1415,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _air=0',server)
         self.assertIn('Waldo_AIPass_ContactReports_Radius',server)
         self.assertIn('Waldo_AIPass_ContactReports_VoiceRange',server)
-        self.assertIn('leader _candidate distance2D leader _requester <= _range',server)
+        self.assertIn('Waldo_Cortex_CombinedArms_AirRange',server)
+        self.assertIn('_distance <= _airRange',server)
+        self.assertIn('_distance <= _groundRange',server)
+        self.assertIn('_senderRadio && {_candidateRadio}',server)
+        self.assertNotIn('private _range=if (_senderRadio)',server)
         self.assertNotIn('<= 1200',server)
         self.assertNotIn('CortexCanTransmit',request)
         self.assertIn('if (_ground >= 2 && {_air >= 1}) exitWith {}',server)
@@ -1449,6 +1453,12 @@ class CortexOperations(unittest.TestCase):
         diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
         self.assertIn('cortex-combined-role-',diagnostics)
         self.assertIn('Combined roles share an opportunity only',diagnostics)
+
+    def test_helicopter_locality_pin_does_not_disable_cortex_flight_behaviour(self):
+        eligible=source('cortexIsEligible')
+        self.assertIn('Waldo_ImprovedHelicopterLanding_Active',eligible)
+        self.assertNotIn('_vehicles findIf {_x getVariable ["Waldo_Headless_HelicopterPinned"',eligible)
+        self.assertIn('The permanent helicopter pin prevents unstable HC transfer',eligible)
 
     def test_combined_roles_use_owned_fire_team_drills_and_restore_holds(self):
         coordinator=source('cortexSupportCoordinateStep')
@@ -1510,6 +1520,9 @@ class CortexOperations(unittest.TestCase):
         operation=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedOperation.sqf').read_text(encoding='utf-8')
         self.assertIn('["Waldo_AIPass_Reinforce_Enable",false]',operation)
         self.assertIn('COMBINED-OP-independent-coordination-gate',operation)
+        self.assertIn('private _lastInfantryShotCount=0',operation)
+        self.assertIn('_movingGroups == 0 && {_infantryShotCount == _lastInfantryShotCount}',operation)
+        self.assertIn('longest infantry movement/fire lull=',operation)
 
     def test_assault_preserves_group_attack_setting(self):
         apply=source('cortexSupportApply')

@@ -11,7 +11,9 @@
  * feature gates; the current asset owner applies targeting through Waldo_fnc_CortexCombinedArmsLocal.
  * Vehicle and aircraft cooperation depends on contact communication and each asset's own feature
  * gate. It does not depend on the infantry coordinated-assault switch: disabling infantry bounds
- * must not silently disable otherwise enabled armour or aircraft support.
+ * must not silently disable otherwise enabled armour or aircraft support. Aircraft use their own
+ * operational support radius rather than the short squad-to-squad report radius; both ends must
+ * still be able to transmit, so jamming continues to prevent long-range composition.
  * Repeat/JIP: requester rate limit and expiring public role tokens replace older opportunities safely.
  * Arguments: 0: requester <GROUP>; 1: observed hostile <OBJECT>; 2: believed ATL <ARRAY>;
  * 3: observation server time <NUMBER>.
@@ -38,15 +40,16 @@ private _air=0;
 private _dispatched=0;
 private _roleGroups=[];
 private _voiceRange=missionNamespace getVariable ["Waldo_AIPass_ContactReports_VoiceRange",35];
+private _groundRange=missionNamespace getVariable ["Waldo_AIPass_ContactReports_Radius",500];
+private _airRange=missionNamespace getVariable ["Waldo_Cortex_CombinedArms_AirRange",4000];
 private _senderRadio=[leader _requester] call Waldo_fnc_CortexCanTransmit;
-private _range=if (_senderRadio) then {missionNamespace getVariable ["Waldo_AIPass_ContactReports_Radius",500]} else {_voiceRange};
 {
     private _candidate=_x;
+    private _distance=leader _candidate distance2D leader _requester;
+    private _candidateRadio=[leader _candidate] call Waldo_fnc_CortexCanTransmit;
     if (_candidate != _requester && {side _candidate == side _requester} && {alive leader _candidate}
-        && {leader _candidate distance2D leader _requester <= _range}
         && {[_candidate] call Waldo_fnc_CortexIsEligible}
-        && {([leader _candidate] call Waldo_fnc_CortexCanTransmit)
-            || {leader _candidate distance2D leader _requester <= _voiceRange}}) then {
+        && {_distance <= _voiceRange || {_senderRadio && {_candidateRadio}}}) then {
         private _asset=objNull;
         {
             private _vehicle=vehicle _x;
@@ -57,12 +60,12 @@ private _range=if (_senderRadio) then {missionNamespace getVariable ["Waldo_AIPa
                     || {!isNull _driver && {group _driver == _candidate}}}) exitWith {_asset=_vehicle};
         } forEach units _candidate;
         private _role="";
-        if (!isNull _asset && {_asset isKindOf "Air"} && {_air < 1} && {!isTouchingGround _asset}
+        if (!isNull _asset && {_asset isKindOf "Air"} && {_distance <= _airRange} && {_air < 1} && {!isTouchingGround _asset}
             && {combatMode _candidate in ["YELLOW","RED"]}
             && {[_candidate,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
             _role="AIR_ATTACK"; _air=_air+1;
         } else {
-            if (!isNull _asset && {_asset isKindOf "LandVehicle"} && {!(_asset isKindOf "StaticWeapon")}
+            if (!isNull _asset && {_asset isKindOf "LandVehicle"} && {_distance <= _groundRange} && {!(_asset isKindOf "StaticWeapon")}
                 && {_ground < 2} && {canFire _asset} && {!(_asset getVariable ["Waldo_Convoy_Active",false])}
                 && {[_candidate,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
                 && {[_candidate,"Waldo_AIPass_VehicleGunnery_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {

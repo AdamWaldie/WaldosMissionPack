@@ -98,6 +98,7 @@ private _spec = [
     ["Waldo_AIPass_ZeusHoldSeconds", "Zeus hold (s)", "How long Cortex leaves a squad alone after Zeus edits it or opens its attributes. Selecting a squad for inspection does not interrupt it.", "SLIDER", [0, 600, 0], 120],
     // Support
     ["Waldo_AIPass_ContactReports_Radius", "Radio report range (m)", "How far squads pass sightings by radio.", "SLIDER", [0, 1500, 0], 500],
+    ["Waldo_Cortex_CombinedArms_AirRange", "Aircraft support range (m)", "How far a radio-linked aircraft may accept a fresh combined-arms opportunity. This is independent of the shorter squad report radius.", "SLIDER", [500, 10000, 0], 4000],
     ["Waldo_AIPass_Reinforce_Radius", "Reinforcement radius (m)", "How far away idle squads may be sent to help.", "SLIDER", [100, 2000, 0], 600],
     ["Waldo_AIPass_Reinforce_MaxResponders", "Reinforcing squads", "Squads sent to help one squad in contact.", "SLIDER", [0, 5, 0], 2],
     ["Waldo_AIPass_Artillery_Bursts", "Burst limit", "Maximum HE bursts per mission; smoke uses one burst.", "SLIDER", [1, 5, 0], 3],

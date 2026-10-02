@@ -221,6 +221,7 @@ headless clients that join later. Each squad uses them from its next step; nothi
 | `Waldo_AIPass_Morale_RetreatDistance` | `200` | How far a broken squad falls back. |
 | `Waldo_AIPass_ZeusHoldSeconds` | `120` | How long the pass leaves a squad alone after Zeus touches it. |
 | `Waldo_AIPass_ContactReports_Radius` | `500` | Radio report range. |
+| `Waldo_Cortex_CombinedArms_AirRange` | `4000` | Radio-linked aircraft support opportunity range; ordinary squad reports keep their shorter radius. |
 | `Waldo_AIPass_Reinforce_Radius`, `_MaxResponders` | `600`, `2` | How far away, and how many, squads come to help. |
 | `Waldo_AIPass_Artillery_Rounds`, `_MaxError`, `_Cooldown`, `_MinFriendlyDistance`, `_ShootAndScoot` | `3`, `50`, `120`, `200`, on | Squads' artillery support. |
 | `Waldo_AIPass_Artillery_OpeningSafeDistance`, `_OpeningBuffer`, `_WarningInterval` | `200`, `100`, `20` | Opening aim exclusion and added margin in metres; warning pause after estimated impact in seconds. |

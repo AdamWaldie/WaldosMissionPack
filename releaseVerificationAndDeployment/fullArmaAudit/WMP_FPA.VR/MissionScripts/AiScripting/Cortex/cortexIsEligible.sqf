@@ -10,7 +10,9 @@
  * - the group, a member, or a member's current or assigned vehicle belongs to another WMP feature:
  *   Waldo_ServerOwnedFeature (Headless pin: Gunship, AI Convoy, Dynamic AA, Paradrop aircraft and
  *   jumpers), Gunship, Transport Services, Paradrop drop zones, Dynamic AA systems, pinned
- *   helicopters, or a dialogue speaker. Landed paratroopers and the dismounted crew of a written-off
+ *   helicopters during an active WMP landing correction, or a dialogue speaker. The permanent
+ *   helicopter locality pin alone is not behavioural ownership; otherwise every ordinary helicopter
+ *   would be excluded from Cortex attack patterns and defensive reactions. Landed paratroopers and the dismounted crew of a written-off
  *   transport are un-pinned by Waldo_fnc_CortexReleaseFeatureCrew and then pass this check;
  * - a member uses a UAV or UGV (for example Virtual Vehicle Depot drone crews);
  * - Zeus has priority: the group is held after a curator edited it or gave it waypoints
@@ -95,8 +97,9 @@ if ([_group] call _isFeatureOwned) exitWith {false};
     || {count _includedFactions > 0 && {!(faction _unit in _includedFactions)}}
     || {faction _unit in _excludedFactions}
     || {typeOf _unit in _excludedClasses}
-    // Landing pins flight ownership, not passenger tactics. Exclude its operating crew,
-    // but allow a separate cargo squad to receive an explicit airborne order.
-    || {_vehicles findIf {_x getVariable ["Waldo_Headless_HelicopterPinned",false] && {group driver _x == _group}} >= 0}
+    // The permanent helicopter pin prevents unstable HC transfer; it does not own flight behaviour.
+    // Only an active landing correction excludes the operating crew. A separate cargo squad remains
+    // eligible for an explicit airborne order throughout.
+    || {_vehicles findIf {_x getVariable ["Waldo_ImprovedHelicopterLanding_Active",false] && {group driver _x == _group}} >= 0}
     || {_vehicles findIf {unitIsUAV _x || {[_x] call _isFeatureOwned}} >= 0}
 }) < 0

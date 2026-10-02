@@ -192,9 +192,11 @@ private _firstAirControl=-1;
 private _maxMovingGroups=0;
 private _idleTicks=0;
 private _maxIdleTicks=0;
+private _lastInfantryShotCount=0;
 private _until=diag_tickTime+150;
 while {diag_tickTime < _until} do {
     private _movingGroups=0;
+    private _infantryShotCount=0;
     {
         private _teamIndex=_forEachIndex;
         private _state=_x getVariable ["Waldo_AIPass_State",createHashMap];
@@ -207,6 +209,7 @@ while {diag_tickTime < _until} do {
             private _origin=(_origins select ((_teamIndex*6)+_forEachIndex)) select 1;
             _teamPeak=_teamPeak max (_x distance2D _origin);
             private _shots=_x getVariable ["Waldo_CortexQA_CombinedShots",[]];
+            _infantryShotCount=_infantryShotCount+count _shots;
             if (_firstInfantryFire < 0 && {_shots isNotEqualTo []}) then {_firstInfantryFire=(_shots select 0) select 0};
             _x setVariable ["Waldo_CortexQA_Label",format ["M%1.%2 | %3/%4 | %5 | %6 km/h | shots %7",
                 _teamIndex+1,_forEachIndex+1,
@@ -216,7 +219,10 @@ while {diag_tickTime < _until} do {
         _peakTravel set [_teamIndex,(_peakTravel select _teamIndex) max _teamPeak];
     } forEach _attackGroups;
     _maxMovingGroups=_maxMovingGroups max _movingGroups;
-    if (_movingGroups == 0) then {_idleTicks=_idleTicks+1} else {_idleTicks=0};
+    // A base of fire is deliberately stationary. Count fresh real fire as activity so this
+    // assertion detects an operation-wide lull rather than mislabelling effective cover as idle.
+    if (_movingGroups == 0 && {_infantryShotCount == _lastInfantryShotCount}) then {_idleTicks=_idleTicks+1} else {_idleTicks=0};
+    _lastInfantryShotCount=_infantryShotCount;
     _maxIdleTicks=_maxIdleTicks max _idleTicks;
     private _groundShots=_apc getVariable ["Waldo_CortexQA_CombinedShots",[]];
     if (_firstGroundFire < 0 && {_groundShots isNotEqualTo []}) then {_firstGroundFire=(_groundShots select 0) select 0};
@@ -243,7 +249,7 @@ private _drillSquads={_x} count _drillSeen;
 ["COMBINED-OP-composed-tactics",_drillSquads >= 2,str _drillSeen] call _check;
 ["COMBINED-OP-infantry-actual-fire",_activeFireSquads >= 2,str _squadShots] call _check;
 ["COMBINED-OP-fire-while-moving",({_x > 0} count _movingShots) >= 1,str _movingShots] call _check;
-["COMBINED-OP-no-operation-wide-pause",_maxIdleTicks <= 10,format ["longest all-squad pause=%1 seconds",_maxIdleTicks*2]] call _check;
+["COMBINED-OP-no-operation-wide-pause",_maxIdleTicks <= 10,format ["longest infantry movement/fire lull=%1 seconds",_maxIdleTicks*2]] call _check;
 ["COMBINED-OP-ground-route-and-fire",_apc distance2D _apcDestination < _apcStartDistance-50
     && {count (_apc getVariable ["Waldo_CortexQA_CombinedShots",[]]) > 0},
     str [_apcStartDistance,_apc distance2D _apcDestination,_apc getVariable ["Waldo_CortexQA_CombinedShots",[]]]] call _check;
