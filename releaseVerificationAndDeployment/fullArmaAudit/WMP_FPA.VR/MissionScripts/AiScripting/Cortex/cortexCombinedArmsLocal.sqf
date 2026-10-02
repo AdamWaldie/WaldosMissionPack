@@ -16,8 +16,7 @@ _opportunity params ["_token","_requester","_target","_position","_role","_expir
 if ((_group getVariable ["Waldo_Cortex_CombinedRole",[]]) isNotEqualTo _opportunity
     || {serverTime >= _expiry} || {isNull _requester} || {isNull _target} || {!alive _target}
     || {side _group != side _requester} || {(side _group) getFriend side _target >= 0.6}
-    || {!(_role in ["GROUND_FIRE","AIR_ATTACK"])}
-    || {!([leader _group] call Waldo_fnc_CortexCanTransmit)}) exitWith {false};
+    || {!(_role in ["GROUND_FIRE","AIR_ATTACK"])}) exitWith {false};
 private _asset=objNull;
 {
     private _vehicle=vehicle _x;
@@ -40,6 +39,8 @@ _group reveal [_target,2.5];
 if (_role == "GROUND_FIRE") exitWith {
     private _gunner=gunner _asset;
     if (!isNull _gunner && {alive _gunner} && {local _gunner} && {combatMode _group in ["YELLOW","RED"]}) then {_gunner doFire _target};
+    _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
+    _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"APPLIED",serverTime,_target],true];
     true
 };
 if (_role == "AIR_ATTACK") exitWith {
@@ -47,6 +48,8 @@ if (_role == "AIR_ATTACK") exitWith {
         _asset setVariable ["Waldo_Cortex_AirAttackJob",true];
         [Waldo_fnc_CortexAirAttack,createHashMapFromArray [["aircraft",_asset],["group",_group]],0.5] call Waldo_fnc_CortexQueueJob;
     };
+    _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
+    _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"APPLIED",serverTime,_target],true];
     true
 };
 false

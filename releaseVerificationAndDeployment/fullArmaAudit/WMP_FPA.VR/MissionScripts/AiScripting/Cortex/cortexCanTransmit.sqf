@@ -18,7 +18,7 @@
  * if ([leader _group] call Waldo_fnc_CortexCanTransmit) then {...};
  * Result: a jammed squad leader cannot call for help.
  *
- * Current callers: Waldo_fnc_CortexContactReport, Waldo_fnc_CortexReinforce and Waldo_fnc_CortexArtilleryRequest.
+ * Current callers: Cortex contact reports, reinforcement, artillery, coordinated support and combined-arms opportunity selection.
  */
 
 params [["_unit", objNull, [objNull]]];

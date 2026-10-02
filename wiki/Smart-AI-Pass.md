@@ -152,10 +152,16 @@ older mission configuration does not break, but they no longer select or veto mo
 
 Combined arms uses the same opportunity model as infantry coordination. A squad with a fresh visual
 contact can publish one short-lived contact opportunity through the normal communications gate. The
-server selects at most two nearby armed ground-vehicle groups and one moving armed aircraft. Each
+configured contact-report radio radius limits normal selection; jamming reduces this to the configured
+voice range rather than creating a separate communications model. The server selects at most two nearby armed ground-vehicle groups and one moving armed aircraft. Each
 asset accepts independently on its current owner; there is no platoon template, rally waypoint,
 readiness counter or scheduled attack time. Infantry movement continues even when every supporting
 asset refuses, is jammed, becomes unavailable or is taken by Zeus.
+
+Each role carries an expiring token and records `DISPATCHED`, owner-local `APPLIED`, then server
+`EXPIRED` evidence. If a vehicle or aircraft group migrates between the server and a headless client,
+the new owner adopts the same still-live token once. Token matching prevents an old owner or earlier
+contact from restarting the role. Expiry removes role ownership without changing the asset route.
 
 A ground vehicle keeps its authored route and receives only the shared target, allowing the existing
 gunnery and anti-tank standoff controllers to act. An aircraft keeps its existing route checkpoint and

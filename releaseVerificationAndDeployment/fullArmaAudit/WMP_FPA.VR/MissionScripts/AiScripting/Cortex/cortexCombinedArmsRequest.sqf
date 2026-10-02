@@ -10,7 +10,7 @@
  * Example: [_group,_state,_visible] call Waldo_fnc_CortexCombinedArmsRequest;
  */
 params [["_group",grpNull,[grpNull]],["_state",createHashMap,[createHashMap]],["_visible",[],[[]]]];
-if (!local _group || {_visible isEqualTo []} || {!([leader _group] call Waldo_fnc_CortexCanTransmit)}) exitWith {false};
+if (!local _group || {_visible isEqualTo []}) exitWith {false};
 if (serverTime < (_state getOrDefault ["combinedArmsDue",0])) exitWith {false};
 private _contact=_visible select 0;
 private _target=_contact param [0,objNull,[objNull]];

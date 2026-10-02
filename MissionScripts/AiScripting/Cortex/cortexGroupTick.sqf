@@ -182,6 +182,17 @@ private _get = {
     if (_fallback isEqualType true) then {[_group, _name, _fallback] call Waldo_fnc_CortexFeatureEnabled} else {missionNamespace getVariable _this}
 };
 
+// Combined-arms roles are public finite intent. Reapply once when a group moves to a new owner;
+// the token prevents an obsolete owner or an older opportunity from reviving work.
+private _combinedRole=_group getVariable ["Waldo_Cortex_CombinedRole",[]];
+if (count _combinedRole == 6 && {serverTime < (_combinedRole select 5)}) then {
+    private _combinedApplied=_group getVariable ["Waldo_Cortex_CombinedApplied",[]];
+    if ((_combinedApplied param [0,""]) != (_combinedRole select 0)
+        || {(_combinedApplied param [1,-1]) != clientOwner}) then {
+        [_group,_combinedRole] call Waldo_fnc_CortexCombinedArmsLocal;
+    };
+};
+
 private _nearest = 1e6;
 {_nearest = _nearest min (_leader distance2D _x)} forEach (missionNamespace getVariable ["Waldo_AIPass_PlayerPositions", []]);
 private _farRange = ["Waldo_AIPass_FarRange", 2500] call _get;

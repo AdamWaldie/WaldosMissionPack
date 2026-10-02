@@ -52,6 +52,8 @@ private _groundRole=[{((_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) 
 private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""]) == "AIR_ATTACK"},20] call _wait;
 ["COMBINED-ground-role",_groundRole,str (_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
 ["COMBINED-air-role",_airRole,str (_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
+["COMBINED-ground-applied",[{((_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
+["COMBINED-air-applied",[{((_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 ["COMBINED-no-infantry-assembly",(_infantry getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo [] && {(waypoints _infantry) isEqualTo []},str waypoints _infantry] call _check;
 ["COMBINED-ground-target-shared",[{_apcGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _apc}},15] call _wait,format ["knowledge=%1 target=%2 shots=%3",_apcGroup knowsAbout _enemy,assignedTarget gunner _apc,count (_apc getVariable ["Waldo_CortexQA_Shots",[]])]] call _check;
 ["COMBINED-air-controller-started",[{_heli getVariable ["Waldo_Cortex_AirAttackJob",false] || {(_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []}},20] call _wait,str (_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _check;

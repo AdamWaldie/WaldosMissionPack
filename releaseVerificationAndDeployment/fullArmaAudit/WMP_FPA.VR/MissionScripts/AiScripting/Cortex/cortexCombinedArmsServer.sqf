@@ -20,8 +20,7 @@ if (!isServer || {isNull _requester} || {isNull _target} || {!alive _target}
     || {(side _requester) getFriend side _target >= 0.6}
     || {!([_requester] call Waldo_fnc_CortexIsEligible)}
     || {!([_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
-    || {!([_requester,"Waldo_AIPass_ContactReports_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
-    || {!([leader _requester] call Waldo_fnc_CortexCanTransmit)}) exitWith {0};
+    || {!([_requester,"Waldo_AIPass_ContactReports_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) exitWith {0};
 if (serverTime < (_requester getVariable ["Waldo_Cortex_CombinedDue",0])) exitWith {0};
 _requester setVariable ["Waldo_Cortex_CombinedDue",serverTime+18];
 private _serial=(missionNamespace getVariable ["Waldo_Cortex_CombinedSerial",0])+1;
@@ -32,12 +31,16 @@ private _ground=0;
 private _air=0;
 private _dispatched=0;
 private _roleGroups=[];
+private _voiceRange=missionNamespace getVariable ["Waldo_AIPass_ContactReports_VoiceRange",35];
+private _senderRadio=[leader _requester] call Waldo_fnc_CortexCanTransmit;
+private _range=if (_senderRadio) then {missionNamespace getVariable ["Waldo_AIPass_ContactReports_Radius",500]} else {_voiceRange};
 {
     private _candidate=_x;
     if (_candidate != _requester && {side _candidate == side _requester} && {alive leader _candidate}
-        && {leader _candidate distance2D leader _requester <= 1200}
+        && {leader _candidate distance2D leader _requester <= _range}
         && {[_candidate] call Waldo_fnc_CortexIsEligible}
-        && {[leader _candidate] call Waldo_fnc_CortexCanTransmit}) then {
+        && {([leader _candidate] call Waldo_fnc_CortexCanTransmit)
+            || {leader _candidate distance2D leader _requester <= _voiceRange}}) then {
         private _asset=objNull;
         {
             private _vehicle=vehicle _x;
@@ -59,6 +62,8 @@ private _roleGroups=[];
         if (_role != "") then {
             private _opportunity=[_token,_requester,_target,+_position,_role,_expiry];
             _candidate setVariable ["Waldo_Cortex_CombinedRole",_opportunity,true];
+            _candidate setVariable ["Waldo_Cortex_CombinedApplied",nil,true];
+            _candidate setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"DISPATCHED",serverTime,_target],true];
             [_candidate,_opportunity] remoteExecCall ["Waldo_fnc_CortexCombinedArmsLocal",groupOwner _candidate];
             _roleGroups pushBack _candidate;
             _dispatched=_dispatched+1;
@@ -74,7 +79,11 @@ _requester setVariable ["Waldo_Cortex_CombinedOpportunity",[_token,_target,+_pos
     };
     {
         if (!isNull _x && {((_x getVariable ["Waldo_Cortex_CombinedRole",[]]) param [0,""]) == _token}) then {
+            private _role=(_x getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""];
+            private _target=(_x getVariable ["Waldo_Cortex_CombinedRole",[]]) param [2,objNull];
+            _x setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"EXPIRED",serverTime,_target],true];
             _x setVariable ["Waldo_Cortex_CombinedRole",nil,true];
+            _x setVariable ["Waldo_Cortex_CombinedApplied",nil,true];
         };
     } forEach _roleGroups;
 },[_requester,_token,_roleGroups],(_expiry-serverTime) max 0] call CBA_fnc_waitAndExecute;
