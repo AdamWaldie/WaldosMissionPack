@@ -219,10 +219,12 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             private _target = (_enemies select ((_ranked select 0) select 2)) select 0;
             if (assignedTarget _gunner != _target) then {
                 _gunner doTarget _target;
-                _gunner doFire _target;
-                _gunner setVariable ["Waldo_AIPass_TargetHold", time + 8];
-                _gunner setVariable ["Waldo_AIPass_VehicleTarget", _target, true];
             };
+            // Target sharing may have assigned this contact before the vehicle layer runs. Fire refresh
+            // therefore follows its own bounded hold instead of depending on a target identity change.
+            _gunner doFire _target;
+            _gunner setVariable ["Waldo_AIPass_TargetHold", time + 8];
+            _gunner setVariable ["Waldo_AIPass_VehicleTarget", _target, true];
         };
         private _standoff = missionNamespace getVariable ["Waldo_AIPass_Vehicles_StandoffDistance", 250];
         private _atIndex = _enemies findIf {

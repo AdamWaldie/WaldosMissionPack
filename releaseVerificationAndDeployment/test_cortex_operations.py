@@ -1705,6 +1705,15 @@ class CortexOperations(unittest.TestCase):
         non_vehicle=vehicles.split('} else {',1)[1].split('};',1)[0]
         self.assertNotIn('deleteAt "movementLease"',non_vehicle)
 
+    def test_vehicle_gunnery_refreshes_fire_when_contact_was_already_shared(self):
+        vehicles=source('cortexVehicles')
+        target_change=vehicles.index('if (assignedTarget _gunner != _target) then {')
+        target_change_end=vehicles.index('};',target_change)
+        fire=vehicles.index('_gunner doFire _target;',target_change)
+        hold=vehicles.index('_gunner setVariable ["Waldo_AIPass_TargetHold", time + 8]',fire)
+        self.assertGreater(fire,target_change_end)
+        self.assertGreater(hold,fire)
+
     def test_artillery_scoot_waits_for_and_acquires_shared_movement_ownership(self):
         mission=source('cortexArtilleryMissionStep')
         scoot=source('cortexArtilleryScoot')

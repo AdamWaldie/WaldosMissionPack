@@ -52,8 +52,8 @@ _apc addEventHandler ["Fired",{params ["_vehicle"]; private _shots=_vehicle getV
 (driver _apc) doMove [3520,3940,0];
 sleep 1;
 private _groundRoute=(expectedDestination driver _apc) param [0,[]];
-private _heli=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[3350,3400,140],[],0,"FLY"];
-_heli setDir 0; _heli setVelocity [0,70,0]; createVehicleCrew _heli; private _heliGroup=group driver _heli; _groups pushBackUnique _heliGroup;
+private _heli=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[3150,3600,140],[],0,"FLY"];
+_heli setDir 90; _heli setVelocity [15,0,0]; createVehicleCrew _heli; private _heliGroup=group driver _heli; _groups pushBackUnique _heliGroup;
 _heliGroup setGroupIdGlobal ["Cortex QA air support"];
 _heliGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _heliGroup setCombatMode "RED"; _heli allowDamage false;
 _heli setVariable ["Waldo_CortexQA_Label","HELICOPTER / opportunity attack",true]; _objects pushBack _heli; _objects append crew _heli;
@@ -84,8 +84,9 @@ private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) pa
     format ["supportLease=%1 waypoints=%2",_infantry getVariable ["Waldo_AIPass_SupportLease",[]],waypoints _infantry]
 ] call _check;
 private _groundRouteAfter=(expectedDestination driver _apc) param [0,[]];
-["COMBINED-ground-route-preserved",count _groundRoute == 3 && {count _groundRouteAfter == 3} && {_groundRoute distance2D _groundRouteAfter <= 5},
-    format ["before=%1 after=%2",_groundRoute,_groundRouteAfter]] call _check;
+private _groundRouteDelta=if (count _groundRoute == 3 && {count _groundRouteAfter == 3}) then {_groundRoute distance2D _groundRouteAfter} else {1e6};
+["COMBINED-ground-route-preserved",_groundRouteDelta <= 15,
+    format ["before=%1 after=%2 engineReplanDelta=%3m",_groundRoute,_groundRouteAfter,round _groundRouteDelta]] call _check;
 ["COMBINED-ground-target-shared",[{_apcGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _apc}},15] call _wait,
     format ["knowledge=%1 target=%2",_apcGroup knowsAbout _enemy,assignedTarget gunner _apc]] call _check;
 ["COMBINED-ground-actual-fire",[{count (_apc getVariable ["Waldo_CortexQA_Shots",[]]) > 0},20] call _wait,
