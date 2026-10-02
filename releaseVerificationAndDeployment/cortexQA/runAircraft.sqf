@@ -20,7 +20,8 @@ _aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
 private _aircrew=crew _aircraft;
 private _airgroup=group driver _aircraft;
 _airgroup setCombatMode "BLUE";
-_aircraft setVariable ["Waldo_Gunship_Id","CORTEX_QA_DEFENSIVE_FIXTURE",true];
+// Deliberately leave this ordinary aircraft without Gunship/Dynamic-AA provenance. The global
+// setting must install defensive reactions on eligible AI aircraft directly.
 _aircraft flyInHeight 100;
 private _launcher=createVehicle ["B_static_AA_F",[4500,4100,0],[],0,"NONE"];
 _launcher setDir 0; createVehicleCrew _launcher;
@@ -81,6 +82,9 @@ if (_enabled) then {
     ["AIR-disabled-no-handler",!(_aircraft getVariable ["Waldo_AIPass_FlaresInstalled",false])] call _check;
 };
 ["AIR-defence-owner-eligible",[_aircraft] call Waldo_fnc_CortexAircraftEligible] call _check;
+["AIR-generic-aircraft-handler",isNil {_aircraft getVariable "Waldo_Gunship_Id"}
+    && {isNil {_aircraft getVariable "Waldo_DynamicAA_SystemId"}}
+    && {(!_enabled) || {_installed}}] call _check;
 // Configuration refusal checks are kept separate from the live physical assertions.
 _airgroup setVariable ["Waldo_AI_ExternalControl",true,true];
 ["AIR-external-owner-refused",!([_aircraft] call Waldo_fnc_CortexAircraftEligible)] call _check;

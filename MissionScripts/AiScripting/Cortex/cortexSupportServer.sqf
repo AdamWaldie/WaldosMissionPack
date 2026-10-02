@@ -8,6 +8,8 @@
  * and future combined-arms roles instead of being misrouted through infantry bounds.
  * Reinforcement and coordinated assault independently permit this shared discovery channel. This
  * avoids making an enabled coordinated assault silently depend on the separate reinforcement switch.
+ * Publishes a compact ACTIVE request state on the requester. SupportStep replaces it with
+ * NO_RESPONDER when every bounded candidate is exhausted, allowing one owner-side delayed retry.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, []; 2: AT required <BOOL>, false.
  * Return Value: Nothing.
@@ -29,6 +31,7 @@ private _requests = missionNamespace getVariable ["Waldo_AIPass_SupportRequests"
 private _key = netId _requester;
 private _existing = _requests getOrDefault [_key,createHashMap];
 if (count _existing > 0) exitWith {
+    _requester setVariable ["Waldo_Cortex_SupportRequestState",[_existing get "serial","ACTIVE",_existing get "expiry"],true];
     if (_at && {!(_existing getOrDefault ["at",false])}) then {_existing set ["at",true]; _existing set ["maximum",((_existing get "maximum")+1) min 6]};
 };
 if (count _requests >= 32) exitWith {};
@@ -52,6 +55,7 @@ private _job = createHashMapFromArray [["requester",_requester],["key",_key],["s
 // Publish only this request's bounded responder index. Requester owners consume it
 // without scanning allGroups on every contact tick.
 _requester setVariable ["Waldo_Cortex_SupportResponders",[],true];
+_requester setVariable ["Waldo_Cortex_SupportRequestState",[_serial,"ACTIVE",_job get "expiry"],true];
 _requests set [_key,_job];
 missionNamespace setVariable ["Waldo_AIPass_SupportRequests",_requests];
 [Waldo_fnc_CortexSupportStep,_job,1] call Waldo_fnc_CortexQueueJob;

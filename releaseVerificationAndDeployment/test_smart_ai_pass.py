@@ -339,6 +339,12 @@ class CortexContracts(unittest.TestCase):
                       'Waldo_AIPass_IncludedSides', 'Waldo_AI_ExcludedFactions',
                       'ACE_isUnconscious']:
             self.assertIn(guard, permission)
+        self.assertNotIn('Waldo_Gunship_Id', permission)
+        self.assertNotIn('Waldo_DynamicAA_SystemId', permission)
+        install = discover.split('if (_wantFlares', 1)[1].split('then {', 1)[0]
+        self.assertIn('CortexAircraftEligible', install)
+        self.assertNotIn('Waldo_Gunship_Id', install)
+        self.assertNotIn('Waldo_DynamicAA_SystemId', install)
         self.assertLess(discover.index('getTerrainHeightASL _position'),
                         discover.index('setVelocityModelSpace _candidate'))
         self.assertIn('forEach [0,1,2]', discover)

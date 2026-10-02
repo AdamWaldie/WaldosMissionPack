@@ -12,6 +12,8 @@
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
  * Reinforcement and coordinated assault independently keep the shared discovery request alive; a
  * responder may therefore join a coordinated action while ordinary reinforcement movement is off.
+ * When every candidate is exhausted without an accepted lease, publishes NO_RESPONDER once so the
+ * requester owner can make its single bounded retry instead of remaining inert for the engagement.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: request job <HASHMAP>.
  * Return Value: Next delay in seconds, or -1 on cleanup.
@@ -60,6 +62,7 @@ private _kept = [];
 _job set ["leases",_kept];
 if (!_valid) exitWith {
     _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+    _requester setVariable ["Waldo_Cortex_SupportRequestState",nil,true];
     _requests deleteAt (_job get "key");
     -1
 };
@@ -112,6 +115,7 @@ if (_responders isNotEqualTo (_requester getVariable ["Waldo_Cortex_SupportRespo
 };
 if (_cursor >= count _candidates && {_kept isEqualTo []}) exitWith {
     _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+    _requester setVariable ["Waldo_Cortex_SupportRequestState",[_job get "serial","NO_RESPONDER",serverTime],true];
     _requests deleteAt (_job get "key");
     -1
 };

@@ -1373,6 +1373,24 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",_responders,true]',step)
         self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",nil,true]',step)
 
+    def test_support_request_failure_has_one_bounded_retry(self):
+        reinforce=source('cortexReinforce')
+        server=source('cortexSupportServer')
+        step=source('cortexSupportStep')
+        assault=source('cortexSupportAssaultServer')
+        self.assertIn('Waldo_Cortex_SupportRequestState',reinforce)
+        self.assertIn('_requests == 1',reinforce)
+        self.assertIn('time >= _lastDispatch+20',reinforce)
+        self.assertIn('_requests >= 2',reinforce)
+        self.assertIn('["reinforceDispatchedAt",time]',reinforce)
+        self.assertIn('"ACTIVE"',server)
+        self.assertIn('"NO_RESPONDER"',step)
+        self.assertIn('"NO_SAFE_ROUTE"',assault)
+        self.assertIn('_job get "expiry"',assault)
+        stop=source('cortexStop')
+        self.assertIn('Waldo_Cortex_SupportRequestState',stop)
+        self.assertIn('Waldo_Cortex_SupportResponders',stop)
+
     def test_infantry_support_never_routes_mounted_vehicle_crews_as_bounders(self):
         server=source('cortexSupportServer')
         step=source('cortexSupportStep')

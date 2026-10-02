@@ -132,7 +132,7 @@ if (!_allowRemount) then {
     _group setVariable ["Waldo_Cortex_Remount",nil,true];
 };
 {_state deleteAt _x} forEach [
-    "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested",
+    "consolidateIssued", "baseAttack", "attackChanged", "areaInvestigation", "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "onboardContactUntil", "reinforceRequested", "reinforceDispatchedAt",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
     "armourRequested", "antiArmourRelocation", "coordinated", "coordinatedPendingUntil", "retreatCombatMode", "retreatRetryAt", "movementLease", "retreatStart", "retreatTarget", "retreatProgress", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];

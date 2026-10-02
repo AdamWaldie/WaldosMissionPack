@@ -15,7 +15,8 @@
  * Repeat/JIP: Repeat calls clear pending startup and abandoned jobs. Owner-local release clears
  * public defence/garrison assignments and restores only Cortex-owned movement restrictions.
  * Restart and ownership adoption cannot replay cancelled orders; tracked aircraft handlers are removed.
- * Public delayed artillery-relocation tokens and attack-run presentation state are invalidated.
+ * Public support request/responder state, delayed artillery-relocation tokens and attack-run
+ * presentation state are invalidated.
  * Vehicle safe-stop handshakes restore their prior forced speed before their tokens are cleared.
  * Owner-local missile-warning generations are advanced before handlers are removed; an
  * old CBA callback cannot become valid again after a quick restart.
@@ -34,7 +35,15 @@
 
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 if (isServer) then {
-    {private _job = _y; {(_x select 0) setVariable ["Waldo_AIPass_SupportLease",nil,true]} forEach (_job get "leases")} forEach (missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap]);
+    {
+        private _job = _y;
+        private _requester=_job getOrDefault ["requester",grpNull];
+        if (!isNull _requester) then {
+            _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+            _requester setVariable ["Waldo_Cortex_SupportRequestState",nil,true];
+        };
+        {(_x select 0) setVariable ["Waldo_AIPass_SupportLease",nil,true]} forEach (_job get "leases");
+    } forEach (missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap]);
     missionNamespace setVariable ["Waldo_AIPass_SupportRequests",createHashMap];
     missionNamespace setVariable ["Waldo_AIPass_CounterGeneration", (missionNamespace getVariable ["Waldo_AIPass_CounterGeneration", 0]) + 1];
     missionNamespace setVariable ["Waldo_AIPass_Enable", false, true];

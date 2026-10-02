@@ -211,7 +211,7 @@
  * - Waldo_AIPass_Garrison_BreakFraction (ADVANCED): a garrison or defence line breaks when down to this share of its strength at the time of the order.
  * - Waldo_Cortex_AttackRunFlares_Enable (MISSION MAKER): AI planes and helicopters with an assigned hostile target make finite countermeasure requests while closing on the attack run and again after passing their closest approach. This does not create ammunition or alter the flight path.
  * - Waldo_Cortex_AirAttack_Enable (MISSION MAKER): eligible airborne AI choose finite strafe, offset, helicopter-hook or standoff attack geometry from observed AA and live weapon capability, then cleanly return to an unchanged authored order.
- * - Waldo_AIPass_AircraftFlares_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first.
+ * - Waldo_AIPass_AircraftFlares_Enable (MISSION MAKER): eligible AI aircraft fire flares at incoming missiles; test addon aircraft first.
  * - Waldo_AIPass_ProfileBehaviour (ADVANCED): behaviour per profile name, alongside AI Rebalance's skill
  *   values (which the pass never changes): flank, assault, advance, investigate and coordinated-assault
  *   chances (0-1), morale thresholds, retreat distance scale and the largest squad that may surrender.
@@ -234,7 +234,7 @@
  * - Waldo_AIPass_VehicleGunnery_Enable (MISSION MAKER): AI gunners engage anti-tank soldiers first, then armour; armour backs away from known AT teams.
  * - Waldo_AIPass_Vehicles_StandoffDistance (ADVANCED): distance armour tries to keep from known anti-tank soldiers.
  * - Waldo_AIPass_ArtillerySmoke_Enable (MISSION MAKER): an unjammed retreating squad gets an artillery smoke screen; needs artillery support on and a battery with smoke.
- * - Waldo_AIPass_AircraftBreak_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters jink sideways away from a missile launch; test your aircraft first.
+ * - Waldo_AIPass_AircraftBreak_Enable (MISSION MAKER): eligible AI aircraft jink sideways away from a missile launch; test addon aircraft first.
  */
 createHashMapFromArray [
     ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings", "AI Helicopter Deceleration", "Smart AI Pass"]],
@@ -390,7 +390,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Garrison_BreakFraction", 0.5], // 0-1: a garrison breaks at this share of its strength.
         ["Waldo_Cortex_AttackRunFlares_Enable", true], // BOOL: finite countermeasure bursts approaching and leaving assigned attack targets.
         ["Waldo_Cortex_AirAttack_Enable", true], // BOOL: threat-aware finite aircraft attack patterns with safe Zeus handover.
-        ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
+        ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: eligible AI aircraft flare at incoming missiles.
         ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: morale/preparation per profile; legacy movement keys are compatibility-only.
             ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.7], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
             ["LINE", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
@@ -415,7 +415,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_VehicleGunnery_Enable", true], // BOOL: gunners prioritise AT soldiers; armour keeps away from them.
         ["Waldo_AIPass_Vehicles_StandoffDistance", 250], // METRES: distance armour keeps from known AT soldiers.
         ["Waldo_AIPass_ArtillerySmoke_Enable", true], // BOOL: a retreating squad gets an artillery smoke screen (needs Artillery).
-        ["Waldo_AIPass_AircraftBreak_Enable", false], // BOOL: WMP gunships and fighters jink sideways from missiles; test first.
+        ["Waldo_AIPass_AircraftBreak_Enable", false], // BOOL: eligible AI aircraft jink sideways from missiles; test addon aircraft first.
         ["Waldo_AI_ProfileDisplayNames", createHashMapFromArray [ // ADVANCED: labels only; keys are implementation IDs.
             ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
             ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]

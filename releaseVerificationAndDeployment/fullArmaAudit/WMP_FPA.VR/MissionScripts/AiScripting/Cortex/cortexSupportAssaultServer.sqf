@@ -12,6 +12,9 @@
  * squad's live position when it has not rallied, so shared contact becomes a natural action instead
  * of scheduled assembly. Responders without a safe approach are released and resume autonomous
  * combat instead of keeping a ten-minute rally lease.
+ * The requester receives ACTIVE with the extended lease after a successful dispatch, or
+ * NO_SAFE_ROUTE when every bounded avenue is rejected. The latter permits one delayed rediscovery
+ * attempt after positions change instead of consuming the whole engagement on a failed snapshot.
  * Repeat/JIP: one assault per request; the updated durable lease revalidates on HC migration.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, [].
  * 2: reply owner <NUMBER>, default -1; HC callers supply clientOwner.
@@ -102,6 +105,7 @@ if (_sent > 0) then {
     } forEach (_job get "leases");
     _job set ["leases",_dispatched];
     _requester setVariable ["Waldo_Cortex_SupportResponders",_dispatched apply {[_x select 0,_x select 1]},true];
+    _requester setVariable ["Waldo_Cortex_SupportRequestState",[_job get "serial","ACTIVE",_job get "expiry"],true];
     _job set ["assaultIssued",true];
     [_job,_dispatched] call Waldo_fnc_CortexSupportCoordinateStep;
 } else {
@@ -119,5 +123,6 @@ if (_sent > 0) then {
     _job set ["leases",[]];
     _job set ["expiry",serverTime];
     _requester setVariable ["Waldo_Cortex_SupportResponders",nil,true];
+    _requester setVariable ["Waldo_Cortex_SupportRequestState",[_job get "serial","NO_SAFE_ROUTE",serverTime],true];
     _requests deleteAt (_job get "key");
 };

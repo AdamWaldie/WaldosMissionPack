@@ -15,8 +15,8 @@
  * - re-applies defence-line orders after a locality change;
  * - hands landed paratroopers and dismounted crews of a lost transport to the pass
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
- * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
- *   WMP gunships and Dynamic AA fighters.
+ * - installs the missile-warning handler (flares, and the optional break-away jink) on every locally
+ *   owned, eligible AI aircraft; no unrelated WMP aircraft-system marker is required.
  * - queues proactive attack-run flare sampling and the finite adaptive attack controller only for a
  *   currently eligible, crewed AI aircraft;
  *   empty, player, UAV and excluded aircraft are reconsidered on later sweeps without job churn.
@@ -169,7 +169,7 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                 if (alive _gunner && {!isPlayer _gunner} && {[group _gunner] call Waldo_fnc_CortexIsEligible}) then {_artillery pushBack _vehicle};
             };
             if (_wantFlares && {_vehicle isKindOf "Air"} && {!(_vehicle getVariable ["Waldo_AIPass_FlaresInstalled", false])}
-                && {!isNil {_vehicle getVariable "Waldo_Gunship_Id"} || {!isNil {_vehicle getVariable "Waldo_DynamicAA_SystemId"}}}) then {
+                && {[_vehicle] call Waldo_fnc_CortexAircraftEligible}) then {
                 _vehicle setVariable ["Waldo_AIPass_FlaresInstalled", true];
                 // The value is intentionally owner-local. A newly installed owner handler advances it,
                 // permanently invalidating callbacks left by an earlier handler on this machine.

@@ -1,7 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Checks owner-local permission for defensive reactions on WMP-managed aircraft.
- * Locality/authority: on the aircraft owner; feature ownership is intentional here.
+ * Checks owner-local permission for defensive reactions on any eligible AI aircraft.
+ * Locality/authority: on the aircraft owner; the aircraft does not need to originate from another
+ * WMP feature. This prevents the global missile-reaction setting from silently depending on the
+ * separate Gunship or Dynamic AA systems.
  * Repeat/JIP: no installation; rechecks permission and uses the shared local Zeus-hold cache.
  * Arguments: 0: aircraft <OBJECT>, objNull.
  * Return: Boolean. Current callers: Waldo_fnc_CortexDiscover missile handler and delayed flare bursts.
@@ -13,7 +15,6 @@ if (isNull _aircraft || {!local _aircraft} || {!alive _aircraft}
     || {[] call Waldo_fnc_CortexIsPaused}) exitWith {false};
 private _pilot=driver _aircraft;
 if (isNull _pilot || {!alive _pilot} || {isPlayer _pilot} || {unitIsUAV _aircraft} || {_pilot getVariable ["ACE_isUnconscious",false]} || {lifeState _pilot == "INCAPACITATED"}) exitWith {false};
-if (isNil {_aircraft getVariable "Waldo_Gunship_Id"} && {isNil {_aircraft getVariable "Waldo_DynamicAA_SystemId"}}) exitWith {false};
 private _group=group _pilot;
 if (_group getVariable ["Waldo_AI_ExternalControl",false]
     || {"ALL" in (_group getVariable ["Waldo_AIPass_DisabledFeatures",[]])}
