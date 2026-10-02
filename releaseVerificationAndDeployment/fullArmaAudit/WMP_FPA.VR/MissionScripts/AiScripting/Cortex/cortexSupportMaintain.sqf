@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Releases only the current WMP support assignment when it expires, is revoked or loses its feature gate.
+ * Releases only the current WMP support assignment when it expires, is revoked or loses every
+ * feature gate capable of owning it. Reinforcement and coordinated assault independently keep the
+ * shared reservation valid; disabling reinforcement must not cancel an active coordinated assault.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
  * Restores the recorded autonomous-attack setting when the support move is released.
  * Measures physical rally arrival in both calm and contact phases; seeing an enemy
@@ -57,6 +59,8 @@ private _restoreAttack={
     _state deleteAt "attackChanged"; _state deleteAt "baseAttack";
 };
 private _lease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
+private _supportEnabled = [_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+    || {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 private _releaseSupport={
     // Reject only the exact lease snapshot accepted by this owner. The server validates token,
     // snapshot and sender again, making repeated cleanup and a racing replacement lease harmless.
@@ -76,7 +80,7 @@ private _releaseSupport={
 };
 if (_lease isEqualTo [] || {(_lease select 0) != _token} || {serverTime >= (_lease select 2)}
     || {!([_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
-    || {!([_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) then {
+    || {!_supportEnabled}) then {
     call _releaseSupport;
 };
 

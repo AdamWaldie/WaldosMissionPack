@@ -276,7 +276,7 @@ private _cortex=_results select 1;
     if (_withAA) then {
         [_id+"-aa-aware-pattern",_pattern in ["OFFSET","STANDOFF"] && {(_initialPlan param [7,0]) > 0},str _initialPlan] call _recordCheck;
     } else {
-        [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK"],str _initialPlan] call _recordCheck;
+        [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK","LATERAL"],str _initialPlan] call _recordCheck;
     };
     if (_interrupt && {_started}) then {
         private _moved=[{_aircraft distance2D _origin >= 100},60] call _wait;

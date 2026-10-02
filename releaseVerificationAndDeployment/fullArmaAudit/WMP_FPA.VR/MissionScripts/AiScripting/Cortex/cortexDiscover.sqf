@@ -149,7 +149,7 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
             };
             private _airAttackEligible=_wantAirAttack && {_vehicle isKindOf "Air"}
                 && {!isNull _pilot} && {alive _pilot} && {!isPlayer _pilot} && {!unitIsUAV _vehicle}
-                && {!isTouchingGround _vehicle} && {speed _vehicle >= 40}
+                && {!isTouchingGround _vehicle} && {!(_vehicle isKindOf "Plane") || {speed _vehicle >= 40}}
                 && {combatMode group _pilot in ["YELLOW","RED"]}
                 && {[group _pilot,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
                 && {[group _pilot] call Waldo_fnc_CortexIsEligible};

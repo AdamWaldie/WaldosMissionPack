@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Builds one finite, threat-aware Cortex attack plan for an AI aircraft and its assigned target.
- * The planner chooses a strafe, offset, helicopter hook or standoff run from aircraft type, live
+ * The planner chooses a strafe, offset, hook, standoff or helicopter lateral run from aircraft type, live
  * guided-ground ammunition and a bounded sample of targets already known to the pilot. Observed AA
  * shifts the run away from the threat sector and prefers standoff weapons when available.
  * Locality/authority: read-only; called on the aircraft owner. It does not reveal enemies, add
@@ -81,7 +81,13 @@ private _isPlane=_aircraft isKindOf "Plane";
 private _pattern=if (_aaPositions isNotEqualTo []) then {
     if (_standoff) then {"STANDOFF"} else {"OFFSET"}
 } else {
-    if (_isPlane) then {["OFFSET","STRAFE"] select (random 1 < 0.7)} else {["STRAFE","HOOK"] select (random 1 < 0.7)}
+    if (_isPlane) then {
+        selectRandomWeighted ["STRAFE",0.45,"OFFSET",0.3,"HOOK",0.25]
+    } else {
+        private _choices=["STRAFE",0.3,"LATERAL",0.35,"HOOK",0.25];
+        if (_standoff) then {_choices append ["STANDOFF",0.1]};
+        selectRandomWeighted _choices
+    }
 };
 private _altitude=if (_isPlane) then {if (_aaPositions isNotEqualTo []) then {450} else {260}} else {if (_aaPositions isNotEqualTo []) then {180} else {110}};
 private _speed=if (_isPlane) then {430} else {170};
@@ -90,13 +96,26 @@ private _ingress=[];
 private _attack=[];
 private _egress=[];
 switch _pattern do {
-    case "STANDOFF": {_ingress=[-1600,500] call _point; _attack=[-1150,350] call _point; _egress=[-1700,-650] call _point};
-    case "OFFSET": {_ingress=[-1100,700] call _point; _attack=[-250,320] call _point; _egress=[850,650] call _point};
-    case "HOOK": {_ingress=[-750,700] call _point; _attack=[-180,220] call _point; _egress=[650,700] call _point};
-    default {_ingress=[-950,0] call _point; _attack=[-180,0] call _point; _egress=[900,0] call _point};
+    case "STANDOFF": {
+        if (_isPlane) then {_ingress=[-1600,500] call _point; _attack=[-1150,350] call _point; _egress=[-1700,-650] call _point}
+        else {_ingress=[-700,450] call _point; _attack=[-550,300] call _point; _egress=[-800,-450] call _point};
+    };
+    case "OFFSET": {
+        if (_isPlane) then {_ingress=[-1100,700] call _point; _attack=[-250,320] call _point; _egress=[850,650] call _point}
+        else {_ingress=[-650,550] call _point; _attack=[-180,300] call _point; _egress=[650,550] call _point};
+    };
+    case "HOOK": {
+        if (_isPlane) then {_ingress=[-950,800] call _point; _attack=[-180,250] call _point; _egress=[850,-650] call _point}
+        else {_ingress=[-600,650] call _point; _attack=[-120,260] call _point; _egress=[550,-600] call _point};
+    };
+    case "LATERAL": {_ingress=[-300,750] call _point; _attack=[-220,320] call _point; _egress=[220,-750] call _point};
+    default {
+        if (_isPlane) then {_ingress=[-950,0] call _point; _attack=[-180,0] call _point; _egress=[900,0] call _point}
+        else {_ingress=[-650,0] call _point; _attack=[-140,0] call _point; _egress=[650,0] call _point};
+    };
 };
 createHashMapFromArray [
     ["token",format ["%1:%2:%3",netId _aircraft,round serverTime,round random 1e6]],
     ["pattern",_pattern],["target",_target],["aaPositions",_aaPositions],["standoff",_standoff],
-    ["points",[_ingress,_attack,_egress]],["altitude",_altitude],["speed",_speed]
+    ["points",[_ingress,_attack,_egress]],["altitude",_altitude],["speed",_speed],["platform",["HELICOPTER","PLANE"] select _isPlane]
 ]

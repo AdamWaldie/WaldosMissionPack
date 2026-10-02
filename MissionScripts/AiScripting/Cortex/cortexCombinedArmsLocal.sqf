@@ -52,7 +52,9 @@ if (_role == "GROUND_FIRE") exitWith {
 if (_role == "AIR_ATTACK") exitWith {
     if !(_asset getVariable ["Waldo_Cortex_AirAttackJob",false]) then {
         _asset setVariable ["Waldo_Cortex_AirAttackJob",true];
-        [Waldo_fnc_CortexAirAttack,createHashMapFromArray [["aircraft",_asset],["group",_group]],0.5] call Waldo_fnc_CortexQueueJob;
+        // The server already authenticated this live hostile. Pass it into the finite controller;
+        // doTarget is asynchronous and assignedTarget may not be populated half a second later.
+        [Waldo_fnc_CortexAirAttack,createHashMapFromArray [["aircraft",_asset],["group",_group],["target",_target]],0.5] call Waldo_fnc_CortexQueueJob;
     };
     _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
     _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"APPLIED",serverTime,_target],true];

@@ -9,9 +9,11 @@
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
- * Arguments: 0: scheduler job <HASHMAP>; aircraft <OBJECT> is required.
+ * Arguments: 0: scheduler job <HASHMAP>; aircraft <OBJECT> is required; target <OBJECT> is optional
+ * when an authenticated combined-arms opportunity already selected it.
  * Return Value: NUMBER delay, or -1 after cleanup.
- * Current callers: Waldo_fnc_CortexDiscover through the budgeted Cortex scheduler.
+ * Current callers: Waldo_fnc_CortexDiscover and Waldo_fnc_CortexCombinedArmsLocal through the
+ * budgeted Cortex scheduler.
  * Example: [createHashMapFromArray [["aircraft",_plane]]] call Waldo_fnc_CortexAirAttack;
  */
 params [["_job",createHashMap,[createHashMap]]];
@@ -45,16 +47,22 @@ private _allowed=local _aircraft && {alive _aircraft} && {!isNull _pilot} && {al
     && {[_group,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
     && {[_group] call Waldo_fnc_CortexIsEligible};
 if (!_allowed) exitWith {["CONTROL_RELEASED"] call _finish};
-if (isTouchingGround _aircraft || {speed _aircraft < 40} || {combatMode _group in ["BLUE","GREEN"]}) exitWith {["NOT_ATTACKING"] call _finish};
+private _isPlane=_aircraft isKindOf "Plane";
+// A helicopter may validly begin an attack from a hover. Planes still need enough energy to enter a
+// finite run; accepting a stationary plane would make its own spawn/ground state look like tactics.
+if (isTouchingGround _aircraft || {_isPlane && {speed _aircraft < 40}} || {combatMode _group in ["BLUE","GREEN"]}) exitWith {["NOT_ATTACKING"] call _finish};
 
 private _stage=_job getOrDefault ["stage",""];
 private _startFailure="";
 if (_stage == "") then {
-    private _target=objNull;
-    {
-        private _candidate=assignedTarget _x;
-        if (!isNull _candidate && {alive _candidate} && {(side _group) getFriend side _candidate < 0.6}) exitWith {_target=_candidate};
-    } forEach ([effectiveCommander _aircraft,driver _aircraft,gunner _aircraft,commander _aircraft]+crew _aircraft);
+    private _target=_job getOrDefault ["target",objNull];
+    if (isNull _target || {!alive _target} || {(side _group) getFriend side _target >= 0.6}) then {
+        _target=objNull;
+        {
+            private _candidate=assignedTarget _x;
+            if (!isNull _candidate && {alive _candidate} && {(side _group) getFriend side _candidate < 0.6}) exitWith {_target=_candidate};
+        } forEach ([effectiveCommander _aircraft,driver _aircraft,gunner _aircraft,commander _aircraft]+crew _aircraft);
+    };
     if (isNull _target) then {_startFailure="NO_TARGET"};
     private _plan=if (_startFailure == "") then {[_aircraft,_target] call Waldo_fnc_CortexAirAttackPlan} else {createHashMap};
     if (_startFailure == "" && {count _plan == 0}) then {_startFailure="NO_PLAN"};
@@ -127,14 +135,21 @@ _pilot doMove _destination;
 private _flareSetting=[_group,"Waldo_Cortex_AttackRunFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled;
 private _flareKey="flare"+_stage;
 private _flareCount=_job getOrDefault [_flareKey,0];
-if (_flareSetting && {_stage in ["INGRESS","EGRESS"]} && {_flareCount < 2}) then {
+private _flareNextKey="flareNext"+_stage;
+private _flareNext=_job getOrDefault [_flareNextKey,serverTime];
+if (_flareSetting && {_stage in ["INGRESS","EGRESS"]} && {_flareCount < 3} && {serverTime >= _flareNext}) then {
     _aircraft setVariable ["Waldo_Cortex_AttackFlarePhase",["APPROACH","DEPARTURE"] select (_stage == "EGRESS"),true];
-    [_aircraft] call Waldo_fnc_CortexFireCountermeasure;
-    _job set [_flareKey,_flareCount+1];
+    if ([_aircraft] call Waldo_fnc_CortexFireCountermeasure) then {
+        _job set [_flareKey,_flareCount+1];
+    };
+    // Avoid synchronized salvos across aircraft and respect launcher cycle time.
+    _job set [_flareNextKey,serverTime+0.8+random 0.8];
 };
 _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     _job get "token",_job get "pattern",_stage,_target,_destination,_aircraft distance2D _destination,
-    _shots,count ((_job getOrDefault ["aaPositions",[]])),speed _aircraft,getPosATL _aircraft select 2
+    _shots,count ((_job getOrDefault ["aaPositions",[]])),speed _aircraft,getPosATL _aircraft select 2,
+    _job getOrDefault ["flareINGRESS",0],_job getOrDefault ["flareEGRESS",0],
+    ["HELICOPTER","PLANE"] select _isPlane
 ],true];
 
 if (serverTime > (_job get "deadline")) exitWith {["STAGE_TIMEOUT"] call _finish};

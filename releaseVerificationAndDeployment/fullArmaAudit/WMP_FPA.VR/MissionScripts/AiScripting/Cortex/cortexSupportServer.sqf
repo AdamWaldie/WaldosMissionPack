@@ -1,11 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
- * Creates a bounded cross-owner reinforcement request or upgrades its remaining capacity for armour.
+ * Creates a bounded cross-owner support-discovery request or upgrades its remaining capacity for armour.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
  * Publishes a bounded responder index on the requester so its owner never scans every group.
  * Only groups with at least three combat-effective dismounts can enter the infantry responder
  * pool. Vehicle crews and mounted passenger groups remain available to their vehicle controllers
  * and future combined-arms roles instead of being misrouted through infantry bounds.
+ * Reinforcement and coordinated assault independently permit this shared discovery channel. This
+ * avoids making an enabled coordinated assault silently depend on the separate reinforcement switch.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, []; 2: AT required <BOOL>, false.
  * Return Value: Nothing.
@@ -13,10 +15,14 @@
  * Example: [_group, _enemyPos, false] remoteExecCall ["Waldo_fnc_CortexSupportServer", 2];
  */
 params [["_requester",grpNull,[grpNull]],["_enemy",[],[[]]],["_at",false,[true]]];
+private _supportEnabled = !isNull _requester && {
+    [_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+        || {[_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+};
 if (!isServer || {isNull _requester} || {remoteExecutedOwner > 0 && {remoteExecutedOwner != groupOwner _requester}}
     || {!(missionNamespace getVariable ["Waldo_AIPass_Enable",false])} || {[] call Waldo_fnc_CortexIsPaused}
     || {!([_requester,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
-    || {!([_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
+    || {!_supportEnabled}
     || {!([_requester] call Waldo_fnc_CortexIsEligible)} || {!([leader _requester] call Waldo_fnc_CortexCanTransmit)}
     || {count _enemy != 3} || {_enemy findIf {!(_x isEqualType 0)} >= 0}) exitWith {};
 private _requests = missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap];

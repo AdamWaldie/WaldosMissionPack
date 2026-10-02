@@ -427,7 +427,7 @@ private _adaptiveAircraft=vehicles select {_x isKindOf "Air" && {
     private _healthy=alive _aircraft && {(getPosATL _aircraft select 2) >= 25}
         && {_reason in ["","COMPLETE","CONTROL_RELEASED","TARGET_LOST","AUTHORED_ROUTE_CHANGED","NOT_ATTACKING"]};
     _checks pushBack ["ai",format ["cortex-air-attack-%1",netId _aircraft],["ERROR","LOADED"] select _healthy,
-        format ["class=%1 owner=%2 current=[token,pattern,stage,target,destination,remaining,actualShots,observedAA,speed,altitude]=%3 lastOutcome=[reason,time,pattern,actualShots]=%4 lastCountermeasureRequest=%5 crewRetained=%6. A plan or requested release is intent; physical travel, Fired events, clearance and the final outcome establish behaviour.",
+        format ["class=%1 owner=%2 current=[token,pattern,stage,target,destination,remaining,actualShots,observedAA,speed,altitude,approachCM,egressCM,platform]=%3 lastOutcome=[reason,time,pattern,actualShots]=%4 lastCountermeasureRequest=%5 crewRetained=%6. A plan or requested release is intent; physical travel, Fired events, clearance and the final outcome establish behaviour.",
             typeOf _aircraft,owner _aircraft,_plan,_outcome,_request,(crew _aircraft) findIf {!alive _x || {vehicle _x != _aircraft}} < 0]];
 } forEach (_adaptiveAircraft select [0,20]);
 _checks pushBack ["ai","cortex-air-attack-snapshot-limits","LOADED",format ["Adaptive aircraft total=%1 sampled=%2 (limit 20). Active plans and retained outcomes are included; physical travel, Fired events and explicit transitions remain the acceptance evidence.",count _adaptiveAircraft,(count _adaptiveAircraft) min 20]];

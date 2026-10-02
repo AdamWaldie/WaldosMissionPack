@@ -335,11 +335,14 @@ private _beginContact = {
     // The first fresh contact may occur outside the player-proximity cadence. Publish one bounded
     // combined-arms opportunity here so distant AI can cooperate naturally; ongoing refreshes remain
     // in the near CONTACT tier below and the request cooldown rejects a duplicate in this tick.
-    if (!_lambsCombat && {["Waldo_AIPass_ContactReports_Enable",true] call _get}
-        && {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}) then {
+    if (!_lambsCombat && {["Waldo_AIPass_ContactReports_Enable",true] call _get}) then {
         [_group,_state,_visible] call Waldo_fnc_CortexCombinedArmsRequest;
     };
-    if (_nearTier && {!_ordered} && {["Waldo_AIPass_Reinforce_Enable", true] call _get}) then {
+    // Shared support discovery is needed by either ordinary reinforcement or coordinated assault.
+    // It is a bounded once-per-engagement request, so first contact may publish it outside the
+    // player-detail tier without enabling the expensive near-tier combat loop.
+    if (!_ordered && {(["Waldo_AIPass_Reinforce_Enable",true] call _get)
+        || {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}}) then {
         [_group, _state] call Waldo_fnc_CortexReinforce;
     };
     if (["Waldo_AIPass_Debug", false] call _get) then {
@@ -521,13 +524,13 @@ switch (_state get "phase") do {
                 // A fresh observed contact is also a short-lived combined-arms opportunity. This
                 // only shares the target with a bounded number of independently capable assets;
                 // it creates no rally, readiness barrier or replacement infantry movement order.
-                if ((["Waldo_AIPass_ContactReports_Enable",true] call _get)
-                    && {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}) then {
+                if (["Waldo_AIPass_ContactReports_Enable",true] call _get) then {
                     [_group,_state,_visible] call Waldo_fnc_CortexCombinedArmsRequest;
                 };
             };
             if (["Waldo_AIPass_Artillery_Enable", false] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexArtilleryRequest};
-            if (!_ordered && {["Waldo_AIPass_Reinforce_Enable", true] call _get}) then {[_group, _state] call Waldo_fnc_CortexReinforce};
+            if (!_ordered && {(["Waldo_AIPass_Reinforce_Enable",true] call _get)
+                || {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}}) then {[_group, _state] call Waldo_fnc_CortexReinforce};
             // Select one movement owner. A coordinated assault keeps this requester as the
             // base of fire while its responders manoeuvre; it must be decided before a local
             // flank or advance can acquire the same group's movement state.
@@ -542,6 +545,13 @@ switch (_state get "phase") do {
                 ] call Waldo_fnc_CortexTacticalStart;
             };
             if (["Waldo_AIPass_AmmoShare_Enable", true] call _get) then {[_group, _state] call Waldo_fnc_CortexAmmoShare};
+        };
+        // Full fire-control and route selection remain player-distance tiered. Once the server has
+        // published a bounded responder list, however, the lightweight asynchronous handoff must
+        // still complete for distant AI or the valid operation remains permanently half-created.
+        if (!_nearTier && {!_ordered} && {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}
+            && {(_group getVariable ["Waldo_Cortex_SupportResponders",[]]) isNotEqualTo []}) then {
+            [_group,_state] call Waldo_fnc_CortexCoordinatedAssault;
         };
         // Smoke, terrain and buildings can briefly hide a target while a bounded manoeuvre is still
         // making physical progress. Post-contact may take ownership only after that manoeuvre has

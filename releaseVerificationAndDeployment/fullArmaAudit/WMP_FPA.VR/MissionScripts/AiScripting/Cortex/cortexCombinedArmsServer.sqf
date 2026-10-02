@@ -9,6 +9,9 @@
  * cannot hide an otherwise valid aircraft, while passenger-only groups remain ineligible.
  * Locality/authority: server validates the sender, target, hostility, range, communications and role
  * feature gates; the current asset owner applies targeting through Waldo_fnc_CortexCombinedArmsLocal.
+ * Vehicle and aircraft cooperation depends on contact communication and each asset's own feature
+ * gate. It does not depend on the infantry coordinated-assault switch: disabling infantry bounds
+ * must not silently disable otherwise enabled armour or aircraft support.
  * Repeat/JIP: requester rate limit and expiring public role tokens replace older opportunities safely.
  * Arguments: 0: requester <GROUP>; 1: observed hostile <OBJECT>; 2: believed ATL <ARRAY>;
  * 3: observation server time <NUMBER>.
@@ -23,7 +26,6 @@ if (!isServer || {isNull _requester} || {isNull _target} || {!alive _target}
     || {serverTime-_observedAt > 10} || {_target distance2D _position > 75}
     || {(side _requester) getFriend side _target >= 0.6}
     || {!([_requester] call Waldo_fnc_CortexIsEligible)}
-    || {!([_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
     || {!([_requester,"Waldo_AIPass_ContactReports_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}) exitWith {0};
 if (serverTime < (_requester getVariable ["Waldo_Cortex_CombinedDue",0])) exitWith {0};
 _requester setVariable ["Waldo_Cortex_CombinedDue",serverTime+18];

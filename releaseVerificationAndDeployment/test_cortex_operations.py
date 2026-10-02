@@ -662,7 +662,7 @@ class CortexOperations(unittest.TestCase):
         for marker in ['COMBINED-air-fixture-moving','COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
                        'COMBINED-ground-route-preserved','COMBINED-ground-target-shared',
                        'COMBINED-ground-actual-fire','COMBINED-air-controller-started',
-                       'COMBINED-finite-cleanup','COMBINED-no-blocking-state']:
+                       'COMBINED-independent-feature-gates','COMBINED-finite-cleanup','COMBINED-no-blocking-state']:
             self.assertIn(marker,combined)
         self.assertNotIn(' addWaypoint ',combined.split('*/',1)[1])
         self.assertIn('waypointDescription _x == "WMP AI PASS"',combined)
@@ -670,8 +670,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_groundLease isEqualTo []',combined)
         self.assertIn('_apc limitSpeed 30',combined)
         self.assertIn('_heli flyInHeight 140',combined)
-        self.assertIn('_heli limitSpeed 60',combined)
-        self.assertIn('(driver _heli) doMove [4150,3600,140]',combined)
+        self.assertIn('_heli limitSpeed 170',combined)
+        self.assertIn('(driver _heli) doMove [3900,3900,140]',combined)
         self.assertIn('Waldo_HelicopterDeceleration_Enable',combined)
         self.assertIn('Waldo_CortexQA_Combined',combined)
         guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text()
@@ -1418,12 +1418,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('(_combinedApplied param [1,-1]) != clientOwner',tick)
         self.assertIn('_group reveal [_target,2.5]',local)
         self.assertIn('Waldo_fnc_CortexAirAttack',local)
+        self.assertIn('["target",_target]',local)
         self.assertIn(']],0.5] call Waldo_fnc_CortexQueueJob',local)
+        self.assertNotIn('Waldo_AIPass_CoordinatedAssault_Enable',server)
         self.assertIn('Waldo_fnc_CortexCombinedArmsRequest',tick)
         begin_contact=tick.split('private _beginContact = {',1)[1].split('};\n\nif (_visible',1)[0]
         self.assertIn('Waldo_fnc_CortexCombinedArmsRequest',begin_contact)
         first_contact_share=begin_contact.rsplit('// The first fresh contact',1)[1]
         self.assertNotIn('if (_nearTier',first_contact_share.split('Waldo_fnc_CortexCombinedArmsRequest',1)[0])
+        self.assertNotIn('Waldo_AIPass_CoordinatedAssault_Enable',
+                         first_contact_share.split('Waldo_fnc_CortexCombinedArmsRequest',1)[0])
         diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
         self.assertIn('cortex-combined-role-',diagnostics)
         self.assertIn('Combined roles share an opportunity only',diagnostics)
@@ -1457,6 +1461,26 @@ class CortexOperations(unittest.TestCase):
         for name in ['cortexRetreat','cortexRestoreCalm']:
             self.assertIn('"supportHeld"',source(name))
             self.assertIn('Waldo_fnc_CortexSupportAck',source(name))
+
+    def test_contacted_peer_can_join_coordinated_assault_without_calm_rally_gate(self):
+        apply=source('cortexSupportApply')
+        self.assertIn('private _contactPeer = _phase in ["CONTACT","SECURITY"]',apply)
+        self.assertIn('_phase == "CALM" || {_contactPeer}',apply)
+        self.assertIn('[0.2,0.65] select _contactPeer',apply)
+        self.assertNotIn('(_state getOrDefault ["phase","CALM"]) == "CALM"',apply)
+        self.assertIn('private _supportEnabled',apply)
+        self.assertIn('Waldo_AIPass_Reinforce_Enable',apply)
+        self.assertIn('Waldo_AIPass_CoordinatedAssault_Enable',apply)
+        server=source('cortexSupportServer')
+        support_step=source('cortexSupportStep')
+        maintain=source('cortexSupportMaintain')
+        for text in [server,support_step,maintain]:
+            self.assertIn('Waldo_AIPass_Reinforce_Enable',text)
+            self.assertIn('Waldo_AIPass_CoordinatedAssault_Enable',text)
+        self.assertIn('|| {!_supportEnabled}',maintain)
+        tick=source('cortexGroupTick')
+        self.assertIn('// Shared support discovery is needed by either ordinary reinforcement or coordinated assault.',tick)
+        self.assertIn('if (!_nearTier && {!_ordered}',tick)
         step=source('cortexFlankStep')
         self.assertIn('(_supportRole select 1) == (_drill get "supportSequence")',step)
         self.assertIn('Waldo_AIPass_CoordinatedAssault_Enable',step)
@@ -1465,6 +1489,9 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(check,qa)
         self.assertIn('abs speed _x > 2',qa)
         self.assertIn('_shots-(_shotCounts select _i)',qa)
+        operation=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedOperation.sqf').read_text(encoding='utf-8')
+        self.assertIn('["Waldo_AIPass_Reinforce_Enable",false]',operation)
+        self.assertIn('COMBINED-OP-independent-coordination-gate',operation)
 
     def test_assault_preserves_group_attack_setting(self):
         apply=source('cortexSupportApply')
@@ -2578,7 +2605,7 @@ class CortexOperations(unittest.TestCase):
     def test_adaptive_air_attack_is_bounded_physical_and_zeus_safe(self):
         planner=source('cortexAirAttackPlan')
         for requirement in ['nearTargets 2500','select [0,16]','Waldo_Cortex_AirAmmoFacts',
-                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE']:
+                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','LATERAL']:
             self.assertIn(requirement,planner)
         self.assertNotIn('allUnits',planner)
         self.assertNotIn('nearEntities',planner)
@@ -2588,9 +2615,15 @@ class CortexOperations(unittest.TestCase):
                             'limitSpeed','INGRESS','ATTACK','EGRESS','GROUND_CLEARANCE','STUCK',
                             'routeSignature','AUTHORED_ROUTE_CHANGED','CortexFireCountermeasure','Waldo_Cortex_AirAttackOutcome']:
             self.assertIn(requirement,controller)
+        self.assertIn('private _target=_job getOrDefault ["target",objNull]',controller)
+        self.assertIn('_isPlane && {speed _aircraft < 40}',controller)
+        self.assertIn('serverTime+0.8+random 0.8',controller)
+        self.assertIn('flareINGRESS',controller)
+        self.assertIn('flareEGRESS',controller)
+        discover=source('cortexDiscover')
+        self.assertIn('!(_vehicle isKindOf "Plane") || {speed _vehicle >= 40}',discover)
         self.assertNotIn('addWaypoint',controller)
         self.assertNotIn('deleteWaypoint',controller)
-        discover=source('cortexDiscover')
         self.assertIn('Waldo_Cortex_AirAttackJob',discover)
         self.assertIn('Waldo_fnc_CortexAirAttack',discover)
         stop=source('cortexStop')

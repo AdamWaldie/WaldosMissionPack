@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Waits for the matching server reservation before issuing a reinforcement order on its current owner.
+ * Waits for the matching server reservation before issuing a support order on its current owner.
  * Locality/authority: queued only by authenticated SupportLocal; all execution gates are checked again.
  * Repeat/JIP: at most five seconds waiting for ordered state; stale tokens never issue movement.
  * A support update may replace its own lease, but never an active withdrawal, vehicle route,
@@ -10,13 +10,16 @@
  * server dispatches an avenue from its live position. Rally movement is retained for reinforcement
  * when coordinated assault is explicitly disabled. Assault hands a COORDINATED_ASSAULT lease to
  * server-assigned squad roles and owner-local successive fire-team bounds; it does not issue a
- * competing whole-squad waypoint.
+ * competing whole-squad waypoint. A nearby squad already in CONTACT or SECURITY may join the same
+ * finite action when it has no other movement owner; requiring CALM here made mutually aware squads
+ * fight beside one another without ever composing support-by-fire and manoeuvre roles.
  * During assault, each bound leases pursuit features only from its current moving fire team.
  * The covering fire team and other squads retain native target sharing and engagement.
  * Infantry support requires at least three combat-effective dismounts. Mounted passenger groups
  * and operating vehicle crews reject this lease instead of executing infantry movement in vehicles.
  * In LAMBS SPLIT mode, the finite support lease temporarily pauses LAMBS group manoeuvres for the
  * responder only. The base-of-fire group and every config-only LAMBS add-on remain active.
+ * Reinforcement and coordinated assault independently authorize this shared responder channel.
  * Rally movement also uses 10 m completion; readiness requires physical squad arrival in GroupTick.
  * Arguments: 0: job <HASHMAP> containing group, lease and waitUntil.
  * Return Value: Retry delay in seconds or -1 after acknowledgement.
@@ -43,17 +46,22 @@ private _movementLeaseActive = count _movementLease == 2 && {time < (_movementLe
 private _supportOwnsMovement = _same && {_movementOwner in ["SUPPORT_RALLY","COORDINATED_ASSAULT"]};
 private _fit = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective};
 private _footFit = _fit select {vehicle _x == _x};
+private _phase = _state getOrDefault ["phase","CALM"];
+private _contactPeer = _phase in ["CONTACT","SECURITY"]
+    && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _supportEnabled = [_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+    || {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!([] call Waldo_fnc_CortexIsPaused)}
     && {serverTime < _expiry} && {!isNull _requester} && {side _requester == side _group}
     && {[leader _group] call Waldo_fnc_CortexCanTransmit}
     && {[_group] call Waldo_fnc_CortexIsEligible} && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-    && {[_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    && {_supportEnabled}
     && {count _footFit >= 3} && {behaviour leader _group != "CARELESS"} && {!fleeing leader _group}
-    && {_same || {getSuppression leader _group <= 0.2}}
+    && {_same || {getSuppression leader _group <= ([0.2,0.65] select _contactPeer)}}
     && {leader _group distance2D leader _requester <= (missionNamespace getVariable ["Waldo_AIPass_Reinforce_Radius",600])}
     && {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo []} && {(_group getVariable ["Waldo_AIPass_Defend",[]]) isEqualTo []}
     && {!(_group getVariable ["Waldo_AIPass_ClearBuilding",false])} && {!(_group getVariable ["Waldo_AIPass_RegroupQueued",false])}
-    && {_same || {(_state getOrDefault ["phase","CALM"]) == "CALM" && {!(_state getOrDefault ["responding",false])}}}
+    && {_same || {(_phase == "CALM" || {_contactPeer}) && {!(_state getOrDefault ["responding",false])}}}
     // A support order may update its own rally/assault, but it cannot erase an
     // infantry withdrawal, vehicle manoeuvre, artillery scoot or local tactical drill.
     && {!_movementLeaseActive || {_supportOwnsMovement}}

@@ -61,7 +61,7 @@ private _spec = [
     ["Waldo_AIPass_CounterBattery_Enable", "Counter-battery", "AI artillery answers enemy artillery whose position is known.", "CHECKBOX", [], false],
     ["Waldo_AIPass_Airborne_Enable", "Airborne insertion", "AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy.", "CHECKBOX", [], false],
     ["Waldo_Cortex_AttackRunFlares_Enable", "Proactive attack-run countermeasures", "AI aircraft expend countermeasures while approaching and leaving an assigned hostile target. This is based on attack-run geometry, not a detected missile.", "CHECKBOX", [], true],
-    ["Waldo_Cortex_AirAttack_Enable", "Adaptive aircraft attack patterns", "Eligible aircraft choose finite strafe, offset, helicopter-hook or standoff runs from observed AA and live weapons. Zeus orders immediately take priority.", "CHECKBOX", [], true],
+    ["Waldo_Cortex_AirAttack_Enable", "Adaptive aircraft attack patterns", "Eligible planes choose finite strafe, offset, hook or standoff runs. Helicopters also use hover-capable standoff and lateral gun runs. Observed AA and live weapons influence the choice; Zeus orders immediately take priority.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AircraftFlares_Enable", "Missile-threat countermeasures", "Supported WMP gunships and Dynamic AA fighters expend countermeasures after an incoming missile is detected.", "CHECKBOX", [], false],
     ["Waldo_AIPass_Investigate_Enable", "Investigation", "Squads send two riflemen to check enemies they know about but have not seen.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Assault_Enable", "Final assault", "A flank can finish with a grenade and a rush on the enemy position.", "CHECKBOX", [], true],

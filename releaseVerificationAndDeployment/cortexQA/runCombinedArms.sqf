@@ -24,7 +24,9 @@ private _publish={
 };
 [createHashMapFromArray [
     ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
-    ["Waldo_AIPass_ContactReports_Enable",true],["Waldo_AIPass_CoordinatedAssault_Enable",true],
+    // This component case deliberately disables infantry coordinated assault. Armour and aircraft
+    // contact support must remain governed by their own enabled features.
+    ["Waldo_AIPass_ContactReports_Enable",true],["Waldo_AIPass_CoordinatedAssault_Enable",false],
     ["Waldo_AIPass_Vehicles_Enable",true],["Waldo_AIPass_VehicleGunnery_Enable",true],
     ["Waldo_Cortex_AirAttack_Enable",true],["Waldo_AIPass_Artillery_Enable",false],
     ["Waldo_AIPass_Reinforce_Enable",false],["Waldo_AIPass_Flank_Enable",false],
@@ -54,11 +56,11 @@ private _groundRouteStart=_apc distance2D _groundRouteTarget;
 _apc limitSpeed 30;
 (driver _apc) doMove _groundRouteTarget;
 sleep 1;
-private _heli=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[3150,3600,140],[],0,"FLY"];
-_heli setDir 90; _heli setVelocity [15,0,0]; createVehicleCrew _heli; private _heliGroup=group driver _heli; _groups pushBackUnique _heliGroup;
+private _heli=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[3300,3300,140],[],0,"FLY"];
+_heli setDir 45; _heli setVelocityModelSpace [0,55,0]; createVehicleCrew _heli; private _heliGroup=group driver _heli; _groups pushBackUnique _heliGroup;
 _heliGroup setGroupIdGlobal ["Cortex QA air support"];
 _heliGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _heliGroup setCombatMode "RED"; _heli allowDamage false;
-_heli flyInHeight 140; _heli limitSpeed 60; (driver _heli) doMove [4150,3600,140];
+_heli flyInHeight 140; _heli limitSpeed 170; (driver _heli) doMove [3900,3900,140];
 _heli setVariable ["Waldo_CortexQA_Label","HELICOPTER / opportunity attack",true]; _objects pushBack _heli; _objects append crew _heli;
 private _assets=[[_apcGroup,_apc,"GROUND FIRE"],[_heliGroup,_heli,"AIR ATTACK"]];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",(units _infantry)+[_enemy,_apc,_heli],true];
@@ -77,6 +79,9 @@ private _groundRole=[{((_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) 
 private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""]) == "AIR_ATTACK"},20] call _wait;
 ["COMBINED-ground-role",_groundRole,str (_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
 ["COMBINED-air-role",_airRole,str (_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
+["COMBINED-independent-feature-gates",_groundRole && {_airRole}
+    && {!(missionNamespace getVariable ["Waldo_AIPass_CoordinatedAssault_Enable",true])},
+    str [_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]],_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]]] call _check;
 ["COMBINED-ground-applied",[{((_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 ["COMBINED-air-applied",[{((_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 

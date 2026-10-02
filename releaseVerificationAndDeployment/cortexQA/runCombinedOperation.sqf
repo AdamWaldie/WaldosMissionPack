@@ -45,9 +45,14 @@ private _publish={
     ["Waldo_AIPass_Vehicles_Enable",true],
     ["Waldo_AIPass_VehicleGunnery_Enable",true],["Waldo_Cortex_AirAttack_Enable",true],
     ["Waldo_AIPass_Aggression",2],["Waldo_AIPass_Regroup_Enable",true],
-    ["Waldo_AIPass_Reinforce_Enable",true],["Waldo_AIPass_Morale_Enable",false],
+    // Prove coordinated composition does not silently depend on ordinary reinforcement movement.
+    ["Waldo_AIPass_Reinforce_Enable",false],["Waldo_AIPass_Morale_Enable",false],
     ["Waldo_AIPass_Artillery_Enable",false]
 ]] call Waldo_fnc_CortexTuning;
+["COMBINED-OP-independent-coordination-gate",
+    missionNamespace getVariable ["Waldo_AIPass_CoordinatedAssault_Enable",false]
+        && {!(missionNamespace getVariable ["Waldo_AIPass_Reinforce_Enable",true])},
+    "Coordinated assault enabled while ordinary reinforcement is disabled"] call _check;
 
 // The squads begin on separate axes and share only the defended objective. The ordinary SAD
 // waypoint represents a Zeus/mission task; Cortex chooses how each group fights toward it.
@@ -138,9 +143,9 @@ _apc setVariable ["Waldo_CortexQA_Label","MOBILE GROUND FIRE SUPPORT",true];
 _objects pushBack _apc;
 _objects append crew _apc;
 
-private _air=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[4550,3740,160],[],0,"FLY"];
-_air setDir 75;
-_air setVelocity [42,10,0];
+private _air=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[4650,3700,160],[],0,"FLY"];
+_air setDir 90;
+_air setVelocityModelSpace [0,45,0];
 createVehicleCrew _air;
 private _airGroup=group driver _air;
 _airGroup setGroupIdGlobal ["Cortex air support"];
@@ -152,7 +157,7 @@ _air allowDamage false;
 _air flyInHeight 160;
 _air limitSpeed 170;
 private _airOrigin=getPosATL _air;
-(driver _air) doMove [5550,4140,160];
+(driver _air) doMove [5350,3700,160];
 _air setVariable ["Waldo_CortexQA_Label","MOVING AIR SUPPORT",true];
 _objects pushBack _air;
 _objects append crew _air;

@@ -10,6 +10,8 @@
  * Publishes only the request's at-most-six responder identities for owner-side tactical selection.
  * This separation is not terrain-aware approach routing. No shared-point fallback is used.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
+ * Reinforcement and coordinated assault independently keep the shared discovery request alive; a
+ * responder may therefore join a coordinated action while ordinary reinforcement movement is off.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: request job <HASHMAP>.
  * Return Value: Next delay in seconds, or -1 on cleanup.
@@ -23,10 +25,12 @@ private _leases = _job get "leases";
 private _requests = missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap];
 private _observedPhase = _requester getVariable ["Waldo_AIPass_PublicPhase","CALM"];
 if (_observedPhase != "CALM") then {_job set ["sawContact",true]};
+private _requesterSupport = [_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+    || {[_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 private _valid = !isNull _requester && {alive leader _requester} && {serverTime < (_job get "expiry")}
     && {missionNamespace getVariable ["Waldo_AIPass_Enable",false]}
     && {[_requester,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-    && {[_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    && {_requesterSupport}
     && {[_requester] call Waldo_fnc_CortexIsEligible}
     && {!(_job getOrDefault ["sawContact",false]) || {_observedPhase != "CALM"}};
 private _kept = [];
@@ -34,11 +38,15 @@ private _kept = [];
     _x params ["_helper","_token","_owner","_ackBy","_status"];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
     private _footFit = (units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
+    private _helperSupport = !isNull _helper && {
+        [_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+            || {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    };
     private _keep = _valid && {!isNull _helper} && {alive leader _helper} && {_status != "REJECTED"}
         && {count _footFit >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible}
         && {[_helper,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-        && {[_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+        && {_helperSupport}
         && {_lease isNotEqualTo [] && {(_lease select 0) == _token}};
     if (_keep && {groupOwner _helper != _owner}) then {
         _owner = groupOwner _helper; _ackBy = serverTime+15; _status = "PENDING";
@@ -61,10 +69,14 @@ for "_i" from 1 to 8 do {
     if (_cursor >= count _candidates || {count _kept >= (_job get "maximum")}) exitWith {};
     private _helper = (_candidates select _cursor) select 2;
     _cursor = _cursor+1;
+    private _helperSupport = !isNull _helper && {
+        [_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
+            || {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    };
     if (!isNull _helper && {alive leader _helper} && {(_helper getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo []}
         && {count ((units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}}) >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-        && {[_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
+        && {_helperSupport}) then {
         // The request rally is an area anchor, never a common squad destination.
         // Reserve the footprint in the lease so migration preserves the same area.
         private _rally = [];
