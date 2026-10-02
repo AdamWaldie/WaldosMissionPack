@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Visually tests a contact-led combined-arms opportunity with infantry, an APC and an attack helicopter.
+ * Runs an additive, phase-visible contact-led combined-arms scenario with infantry, an APC and an attack helicopter.
  * No rally, readiness flag, waypoint or scripted assembly is injected. The infantry must acquire the
  * hostile naturally; production communication then gives each nearby capable asset an independent role.
  * Locality/authority: scheduled dedicated-server fixture with server-owned groups and normal production calls.
@@ -16,6 +16,12 @@ private _objects=[];
 private _savedDeceleration=missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable",false];
 missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable",false,true];
 private _makeGroup={private _g=createGroup [_this,true]; _g setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _g setVariable ["acex_headless_blacklist",true,true]; _g allowFleeing 0; _groups pushBack _g; _g};
+private _publish={
+    params ["_stage","_requester","_target","_assets",["_note",""]];
+    missionNamespace setVariable ["Waldo_CortexQA_Combined",[
+        "CONTACT-LED OPPORTUNITY",_stage,_requester,_target,_assets,serverTime,_note
+    ],true];
+};
 [createHashMapFromArray [
     ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
     ["Waldo_AIPass_ContactReports_Enable",true],["Waldo_AIPass_CoordinatedAssault_Enable",true],
@@ -31,23 +37,35 @@ for "_i" from 0 to 3 do {
     _u setVariable ["Waldo_CortexQA_Label",format ["OBSERVER %1",_i+1],true]; _objects pushBack _u;
 };
 _infantry setCombatMode "RED";
+_infantry setGroupIdGlobal ["Cortex QA observer"];
+private _infantryWaypoints=count waypoints _infantry;
 private _enemyGroup=west call _makeGroup;
 _enemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
 private _enemy=_enemyGroup createUnit ["B_Soldier_F",[3600,3780,0],[],0,"NONE"];
 _enemy setDir 180; _enemy disableAI "PATH"; _enemy allowDamage false; _enemy setVariable ["Waldo_CortexQA_Label","OBSERVED HOSTILE",true]; _objects pushBack _enemy;
 private _apc=createVehicle ["O_APC_Tracked_02_cannon_F",[3520,3570,0],[],0,"NONE"];
 _apc setDir 0; createVehicleCrew _apc; private _apcGroup=group driver _apc; _groups pushBackUnique _apcGroup;
+_apcGroup setGroupIdGlobal ["Cortex QA ground support"];
 _apcGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _apcGroup setCombatMode "RED"; _apc allowDamage false;
 _apc setVariable ["Waldo_CortexQA_Label","APC / independent fire support",true]; _apc setVariable ["Waldo_CortexQA_Shots",[],true];
 _apc addEventHandler ["Fired",{params ["_vehicle"]; private _shots=_vehicle getVariable ["Waldo_CortexQA_Shots",[]]; _shots pushBack serverTime; _vehicle setVariable ["Waldo_CortexQA_Shots",_shots,true]}]; _objects pushBack _apc; _objects append crew _apc;
+(driver _apc) doMove [3520,3940,0];
+sleep 1;
+private _groundRoute=(expectedDestination driver _apc) param [0,[]];
 private _heli=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[3350,3400,140],[],0,"FLY"];
 _heli setDir 0; _heli setVelocity [0,70,0]; createVehicleCrew _heli; private _heliGroup=group driver _heli; _groups pushBackUnique _heliGroup;
+_heliGroup setGroupIdGlobal ["Cortex QA air support"];
 _heliGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _heliGroup setCombatMode "RED"; _heli allowDamage false;
 _heli setVariable ["Waldo_CortexQA_Label","HELICOPTER / opportunity attack",true]; _objects pushBack _heli; _objects append crew _heli;
-missionNamespace setVariable ["Waldo_CortexQA_Actors",[leader _infantry,_enemy,_apc,_heli],true];
-["Combined arms: contact creates independent roles","The infantry observes the hostile naturally. The APC and helicopter may engage immediately through their own controllers. No unit waits at a rally, and the infantry receives no assembly waypoint. Labels, target lines, shots and the air route show physical behaviour.",[3600,3650,0]] call _phase;
+private _assets=[[_apcGroup,_apc,"GROUND FIRE"],[_heliGroup,_heli,"AIR ATTACK"]];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",(units _infantry)+[_enemy,_apc,_heli],true];
+["DETECT",_infantry,_enemy,_assets,"No Cortex support role exists yet. The infantry must see the hostile without injected knowledge."] call _publish;
+["Combined arms / 1. Detect","The observer squad must acquire the live hostile through the engine. No readiness flag, rally point or support lease is created. Cyan trails show physical travel; blue links show communication candidates, not orders.",[3600,3650,0]] call _phase;
 private _seen=[{(leader _infantry knowsAbout _enemy) >= 1},35] call _wait;
 ["COMBINED-natural-contact",_seen,str (leader _infantry targetKnowledge _enemy)] call _check;
+
+["DISTRIBUTE",_infantry,_enemy,_assets,"Fresh contact may be shared immediately. Each arm accepts or refuses independently."] call _publish;
+["Combined arms / 2. Distribute","The fresh contact should create one short-lived opportunity. The APC and flying helicopter may receive independent roles immediately; the infantry does not wait for either asset.",[3600,3650,0]] call _phase;
 private _opportunity=[{count (_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]]) >= 5},25] call _wait;
 ["COMBINED-opportunity-created",_opportunity,str (_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]])] call _check;
 private _groundRole=[{((_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""]) == "GROUND_FIRE"},20] call _wait;
@@ -56,11 +74,45 @@ private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) pa
 ["COMBINED-air-role",_airRole,str (_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
 ["COMBINED-ground-applied",[{((_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 ["COMBINED-air-applied",[{((_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
-["COMBINED-no-infantry-assembly",(_infantry getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo [] && {(waypoints _infantry) findIf {waypointDescription _x == "WMP AI PASS"} < 0},str waypoints _infantry] call _check;
-["COMBINED-ground-target-shared",[{_apcGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _apc}},15] call _wait,format ["knowledge=%1 target=%2 shots=%3",_apcGroup knowsAbout _enemy,assignedTarget gunner _apc,count (_apc getVariable ["Waldo_CortexQA_Shots",[]])]] call _check;
+
+["ACT",_infantry,_enemy,_assets,"Roles are finite. Watch real ground fire and the aircraft controller while the observer remains unblocked."] call _publish;
+["Combined arms / 3. Act independently","The APC should physically engage without losing its authored route. The helicopter should enter its finite attack controller. A role or target assignment alone is insufficient for the physical-effect checks.",[3600,3650,0]] call _phase;
+["COMBINED-no-infantry-assembly",
+    (_infantry getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo []
+        && {count waypoints _infantry == _infantryWaypoints}
+        && {(waypoints _infantry) findIf {waypointDescription _x == "WMP AI PASS"} < 0},
+    format ["supportLease=%1 waypoints=%2",_infantry getVariable ["Waldo_AIPass_SupportLease",[]],waypoints _infantry]
+] call _check;
+private _groundRouteAfter=(expectedDestination driver _apc) param [0,[]];
+["COMBINED-ground-route-preserved",count _groundRoute == 3 && {count _groundRouteAfter == 3} && {_groundRoute distance2D _groundRouteAfter <= 5},
+    format ["before=%1 after=%2",_groundRoute,_groundRouteAfter]] call _check;
+["COMBINED-ground-target-shared",[{_apcGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _apc}},15] call _wait,
+    format ["knowledge=%1 target=%2",_apcGroup knowsAbout _enemy,assignedTarget gunner _apc]] call _check;
+["COMBINED-ground-actual-fire",[{count (_apc getVariable ["Waldo_CortexQA_Shots",[]]) > 0},20] call _wait,
+    str (_apc getVariable ["Waldo_CortexQA_Shots",[]])] call _check;
 ["COMBINED-air-controller-started",[{_heli getVariable ["Waldo_Cortex_AirAttackJob",false] || {(_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []}},20] call _wait,str (_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _check;
-sleep 5;
+
+["HANDOVER",_infantry,_enemy,_assets,"The opportunity expires by itself. No arm may leave an infantry movement lease or permanent role behind."] call _publish;
+["Combined arms / 4. Handover","After the finite opportunity expires, role tokens must clear without a scheduled rally or shared completion barrier. Existing authored movement remains the owner of movement.",[3600,3650,0]] call _phase;
+private _expired=[{
+    (_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]]) isEqualTo []
+        && {(_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) isEqualTo []}
+        && {(_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) isEqualTo []}
+},45] call _wait;
+["COMBINED-finite-cleanup",_expired,format ["requester=%1 ground=%2 air=%3",
+    _infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]],
+    _apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]],
+    _heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]
+]] call _check;
+["COMBINED-no-blocking-state",
+    (_infantry getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo []
+        && {(_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]]) isEqualTo []},
+    format ["supportLease=%1 opportunity=%2",_infantry getVariable ["Waldo_AIPass_SupportLease",[]],_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]]]
+] call _check;
+
+missionNamespace setVariable ["Waldo_CortexQA_Combined",["CONTACT-LED OPPORTUNITY","CLEANUP",grpNull,objNull,[],serverTime,"All fixture-owned roles and actors are being removed."],true];
 missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable",_savedDeceleration,true];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
-{deleteVehicle _x} forEach _objects;
-{deleteGroup _x} forEach _groups;
+{if (!isNull _x) then {deleteVehicle _x}} forEach _objects;
+{if (!isNull _x) then {deleteGroup _x}} forEach _groups;
+missionNamespace setVariable ["Waldo_CortexQA_Combined",[],true];

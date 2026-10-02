@@ -110,6 +110,29 @@ private _draw = addMissionEventHandler ["Draw3D",{
     } forEach ((missionNamespace getVariable ["Waldo_CortexQA_Actors",[]]) select {
         !isNull _x && {_x distance2D _cameraPosition <= _renderDistance}
     });
+    private _combined=missionNamespace getVariable ["Waldo_CortexQA_Combined",[]];
+    if (count _combined >= 7) then {
+        _combined params ["_scenario","_stage","_requester","_combinedTarget","_assets","_stageStarted","_note"];
+        private _anchor=if (isNull _requester || {isNull leader _requester}) then {[0,0,0]} else {getPosATL leader _requester};
+        if (_anchor distance2D _cameraPosition <= _renderDistance) then {
+            if (!isNull _combinedTarget) then {
+                drawLine3D [_anchor vectorAdd [0,0,1.4],(getPosATL _combinedTarget) vectorAdd [0,0,1.2],[1,0.25,0.15,0.9]];
+            };
+            drawIcon3D ["",[1,0.7,0,1],_anchor vectorAdd [0,0,4],0,0,0,
+                format ["%1 | %2 | %3 s | %4",_scenario,_stage,round (serverTime-_stageStarted),_note],2,0.032,"RobotoCondensed"];
+            {
+                _x params ["_assetGroup","_asset","_declaredRole"];
+                if (!isNull _asset && {!isNull _assetGroup}) then {
+                    private _role=(_assetGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,"NONE"];
+                    private _result=(_assetGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,"WAITING"];
+                    private _colour=if (_result == "APPLIED") then {[0.2,1,0.3,0.9]} else {[0.2,0.65,1,0.9]};
+                    drawLine3D [_anchor vectorAdd [0,0,1.2],(getPosATL _asset) vectorAdd [0,0,2],_colour];
+                    drawIcon3D ["",_colour,(getPosATL _asset) vectorAdd [0,0,5],0,0,0,
+                        format ["%1 | offered %2 | live role %3 | %4",groupId _assetGroup,_declaredRole,_role,_result],2,0.03,"RobotoCondensed"];
+                };
+            } forEach _assets;
+        };
+    };
     private _rooms=missionNamespace getVariable ["Waldo_CortexQA_Rooms",[]];
     if (_rooms isNotEqualTo []) then {
         {private _visited=(_rooms select 1) select _forEachIndex; drawIcon3D ["\a3\ui_f\data\map\markers\military\objective_ca.paa",[[1,0.7,0,1],[0.2,1,0.3,1]] select _visited,_x vectorAdd [0,0,0.5],0.7,0.7,0,format ["Building position %1 | %2",_forEachIndex+1,["not visited","physical visit"] select _visited],2,0.03,"RobotoCondensed"]} forEach (_rooms select 0);

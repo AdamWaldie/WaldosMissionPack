@@ -659,11 +659,17 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(f"| {case['id']} - {case['title']} |",report)
         combined=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedArms.sqf').read_text()
         for marker in ['COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
-                       'COMBINED-ground-target-shared','COMBINED-air-controller-started']:
+                       'COMBINED-ground-route-preserved','COMBINED-ground-target-shared',
+                       'COMBINED-ground-actual-fire','COMBINED-air-controller-started',
+                       'COMBINED-finite-cleanup','COMBINED-no-blocking-state']:
             self.assertIn(marker,combined)
         self.assertNotIn(' addWaypoint ',combined.split('*/',1)[1])
         self.assertIn('waypointDescription _x == "WMP AI PASS"',combined)
         self.assertIn('Waldo_HelicopterDeceleration_Enable',combined)
+        self.assertIn('Waldo_CortexQA_Combined',combined)
+        guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text()
+        self.assertIn('Waldo_CortexQA_Combined',guide)
+        self.assertIn('offered %2 | live role %3 | %4',guide)
         crossing=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCrossing.sqf').read_text()
         for marker in ['CROSS-engine-road-prerequisite','CROSS-natural-contact-prerequisite',
                        'CROSS-real-smoke-projectile','CROSS-all-members-physical-far-side']:

@@ -425,7 +425,7 @@ Feature cases: **59**. Required variant categories: **13**.
 
 **Expected:** Fresh contact immediately offers independent finite roles to capable nearby assets. Infantry continues without waiting; ground vehicles retain their route and use existing gunnery; aircraft use the finite attack controller. Missing, rejected or interrupted support cannot block infantry action.
 
-**Automation and open work:** runCombinedArms.sqf visualizes the natural observer contact, public opportunity token, ground and air roles, target lines, actual fire and aircraft route while asserting that the infantry receives no support lease or assembly waypoint. Artillery remains independently asynchronous through the existing qualified-spotter path. HC ownership, jamming, Zeus interruption, absent-arm, artillery and mixed 50-group performance variants await batched live acceptance.
+**Automation and open work:** runCombinedArms.sqf now preserves the common audit plot as visible DETECT, DISTRIBUTE, ACT, HANDOVER and CLEANUP phases. The dedicated renderer shows the observer-to-target line, communication links, offered roles, live roles and results alongside capped physical trails. Assertions require natural contact, finite public opportunity and role tokens, no infantry support lease or assembly waypoint, preservation of the APC route, actual APC fire, an active aircraft controller and automatic role cleanup. Artillery remains independently asynchronous through the existing qualified-spotter path. HC ownership, real jamming and voice fallback, Zeus interruption, absent-arm, artillery and mixed 50-group performance variants await batched live acceptance.
 
 ### ATTACK-FLARES - Attack-run approach and departure flares
 
