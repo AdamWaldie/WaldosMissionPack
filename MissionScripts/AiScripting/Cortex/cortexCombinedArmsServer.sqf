@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Converts a verified fresh contact into finite, independent combined-arms roles.
- * The server selects at most two nearby ground-vehicle groups and one airborne group. Each role is
- * dispatched immediately; infantry never waits for acceptance and no shared assembly state exists.
+ * The server selects at most two nearby ground-vehicle groups and one airborne group. Aircraft are
+ * not rejected for a momentary low-speed sample; the finite attack controller owns acceleration,
+ * progress and stuck detection after accepting an aircraft that is physically off the ground. Each
+ * role is dispatched immediately; infantry never waits for acceptance and no shared assembly state exists.
  * Locality/authority: server validates the sender, target, hostility, range, communications and role
  * feature gates; the current asset owner applies targeting through Waldo_fnc_CortexCombinedArmsLocal.
  * Repeat/JIP: requester rate limit and expiring public role tokens replace older opportunities safely.
@@ -47,7 +49,7 @@ private _range=if (_senderRadio) then {missionNamespace getVariable ["Waldo_AIPa
             if (_vehicle != _x && {alive _vehicle} && {effectiveCommander _vehicle in units _candidate}) exitWith {_asset=_vehicle};
         } forEach units _candidate;
         private _role="";
-        if (!isNull _asset && {_asset isKindOf "Air"} && {_air < 1} && {!isTouchingGround _asset} && {speed _asset >= 40}
+        if (!isNull _asset && {_asset isKindOf "Air"} && {_air < 1} && {!isTouchingGround _asset}
             && {combatMode _candidate in ["YELLOW","RED"]}
             && {[_candidate,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
             _role="AIR_ATTACK"; _air=_air+1;

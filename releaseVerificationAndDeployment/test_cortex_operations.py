@@ -658,7 +658,7 @@ class CortexOperations(unittest.TestCase):
         for case in data['cases']:
             self.assertIn(f"| {case['id']} - {case['title']} |",report)
         combined=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedArms.sqf').read_text()
-        for marker in ['COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
+        for marker in ['COMBINED-air-fixture-moving','COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
                        'COMBINED-ground-route-preserved','COMBINED-ground-target-shared',
                        'COMBINED-ground-actual-fire','COMBINED-air-controller-started',
                        'COMBINED-finite-cleanup','COMBINED-no-blocking-state']:
@@ -1376,6 +1376,9 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('<= 1200',server)
         self.assertNotIn('CortexCanTransmit',request)
         self.assertIn('if (_ground >= 2 && {_air >= 1}) exitWith {}',server)
+        self.assertIn('!isTouchingGround _asset',server)
+        self.assertIn('{isTouchingGround _asset}',local)
+        self.assertNotIn('speed _asset',server+local)
         self.assertNotIn('waitUntil',server+local)
         self.assertNotIn('addWaypoint',server+local)
         self.assertNotIn('CortexGroupMove',server+local)

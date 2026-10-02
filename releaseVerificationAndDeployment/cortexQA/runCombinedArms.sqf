@@ -63,6 +63,8 @@ private _assets=[[_apcGroup,_apc,"GROUND FIRE"],[_heliGroup,_heli,"AIR ATTACK"]]
 missionNamespace setVariable ["Waldo_CortexQA_Actors",(units _infantry)+[_enemy,_apc,_heli],true];
 ["DETECT",_infantry,_enemy,_assets,"No Cortex support role exists yet. The infantry must see the hostile without injected knowledge."] call _publish;
 ["Combined arms / 1. Detect","The observer squad must acquire the live hostile through the engine. No readiness flag, rally point or support lease is created. Cyan trails show physical travel; blue links show communication candidates, not orders.",[3600,3650,0]] call _phase;
+["COMBINED-air-fixture-moving",!isTouchingGround _heli && {speed _heli >= 40} && {(getPosATL _heli select 2) >= 80} && {alive driver _heli},
+    format ["speed=%1km/h altitude=%2m command=%3 expected=%4",round speed _heli,round (getPosATL _heli select 2),currentCommand driver _heli,expectedDestination driver _heli]] call _check;
 private _seen=[{(leader _infantry knowsAbout _enemy) >= 1},35] call _wait;
 ["COMBINED-natural-contact",_seen,str (leader _infantry targetKnowledge _enemy)] call _check;
 

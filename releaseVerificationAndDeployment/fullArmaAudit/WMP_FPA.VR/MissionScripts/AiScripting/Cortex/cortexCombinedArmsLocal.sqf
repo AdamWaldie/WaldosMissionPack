@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Applies one expiring combined-arms contact role on the selected asset owner.
  * Ground vehicles receive target knowledge and use the existing gunnery layer without a movement
- * order. Flying aircraft receive the same target and may start their existing finite attack-run job.
+ * order. Airborne aircraft receive the same target and may start their existing finite attack-run job;
+ * its controller, rather than a single instantaneous speed sample, proves progress or handles a stall.
  * Locality/authority: current group owner only; server-issued public token must still match.
  * Repeat/JIP: duplicate roles are harmless; expiry, Zeus takeover, feature closure and token replacement reject stale calls.
  * Arguments: 0: asset group <GROUP>; 1: opportunity <ARRAY> [token,requester,target,position,role,expiry].
@@ -29,7 +30,7 @@ if (_role == "GROUND_FIRE" && {
         || {!([_group,"Waldo_AIPass_VehicleGunnery_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
 }) exitWith {false};
 if (_role == "AIR_ATTACK" && {
-    !(_asset isKindOf "Air") || {isTouchingGround _asset} || {speed _asset < 40}
+    !(_asset isKindOf "Air") || {isTouchingGround _asset}
         || {!([_group,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
 }) exitWith {false};
 _group reveal [_target,2.5];
