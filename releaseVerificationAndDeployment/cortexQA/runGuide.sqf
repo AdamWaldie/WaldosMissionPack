@@ -125,10 +125,21 @@ private _draw = addMissionEventHandler ["Draw3D",{
                 if (!isNull _asset && {!isNull _assetGroup}) then {
                     private _role=(_assetGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,"NONE"];
                     private _result=(_assetGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,"WAITING"];
+                    private _detail=format ["offered %1 | live role %2 | %3",_declaredRole,_role,_result];
+                    if (_asset isKindOf "CAManBase") then {
+                        private _state=_assetGroup getVariable ["Waldo_AIPass_State",createHashMap];
+                        private _drill=_state getOrDefault ["drill",createHashMap];
+                        private _lease=_state getOrDefault ["movementLease",[]];
+                        private _support=_assetGroup getVariable ["Waldo_Cortex_SupportRole",[]];
+                        _detail=format ["%1 | phase %2 | tactic %3/%4 | movement %5 | support %6",
+                            _declaredRole,_state getOrDefault ["phase","IDLE"],
+                            _drill getOrDefault ["type","FREE"],_drill getOrDefault ["stage","FREE"],
+                            _lease param [0,"ENGINE"],_support param [1,"INDEPENDENT"]];
+                    };
                     private _colour=if (_result == "APPLIED") then {[0.2,1,0.3,0.9]} else {[0.2,0.65,1,0.9]};
                     drawLine3D [_anchor vectorAdd [0,0,1.2],(getPosATL _asset) vectorAdd [0,0,2],_colour];
                     drawIcon3D ["",_colour,(getPosATL _asset) vectorAdd [0,0,5],0,0,0,
-                        format ["%1 | offered %2 | live role %3 | %4",groupId _assetGroup,_declaredRole,_role,_result],2,0.03,"RobotoCondensed"];
+                        format ["%1 | %2",groupId _assetGroup,_detail],2,0.03,"RobotoCondensed"];
                 };
             } forEach _assets;
         };

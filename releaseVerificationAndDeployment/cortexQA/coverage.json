@@ -1321,6 +1321,20 @@
       ]
     },
     {
+      "id": "COMBINED-OPERATION",
+      "title": "Dynamic multi-squad combined operation",
+      "setup": "Place three separated manoeuvre squads on distinct approach axes against a defended objective with mobile tracked fire support and a moving attack aircraft. Give only ordinary mission objectives before natural contact; do not inject tactic calls, rally schedules, readiness flags or a shared completion barrier.",
+      "expected": "At least two squads physically manoeuvre and fire, the production tactic stack becomes active, fire overlaps movement, mobile armour retains route progress and fires, and the aircraft travels under its finite attack controller. Elements begin and finish independently while the operation avoids an all-squad pause.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runCombinedOperation.sqf is additive to the smaller COMBINED-ARMS component diagnostic. It enables the real contact, flank, advance, coordinated assault, fire-control, regroup, reinforcement, vehicle-gunnery and air-attack stack against an instrumented defended objective. The overlay exposes each squad's phase, tactic stage, movement owner and support role plus physical trails. Assertions use natural contact, actual travel, Fired/FiredMan events, concurrent moving groups, moving fire, APC route progress, aircraft travel/controller state and absence of a shared lease. Lethal casualty reinforcement, Zeus interruption, missing-arm, jamming, headless-owner migration and mixed-terrain variants remain pending batched live acceptance.",
+      "executable_sources": [
+        "runCombinedOperation.sqf"
+      ],
+      "production_sources": []
+    },
+    {
       "id": "ATTACK-FLARES",
       "title": "Attack-run approach and departure flares",
       "setup": "Fly an armed helicopter and plane towards an assigned hostile target, with separate enabled and disabled runs.",

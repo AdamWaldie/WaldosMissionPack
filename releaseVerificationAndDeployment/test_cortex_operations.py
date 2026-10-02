@@ -640,10 +640,11 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),59)
+        self.assertEqual(len(data['cases']),60)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
         self.assertIn('COMBINED-ARMS',pending)
+        self.assertIn('COMBINED-OPERATION',pending)
         production={
             path.relative_to(ROOT).as_posix()
             for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
@@ -675,7 +676,28 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_CortexQA_Combined',combined)
         guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text()
         self.assertIn('Waldo_CortexQA_Combined',guide)
-        self.assertIn('offered %2 | live role %3 | %4',guide)
+        self.assertIn('phase %2 | tactic %3/%4 | movement %5 | support %6',guide)
+        operation=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedOperation.sqf').read_text()
+        for marker in ['COMBINED-OP-natural-contact','COMBINED-OP-separated-approaches',
+                       'COMBINED-OP-multiple-squads-manoeuvred','COMBINED-OP-composed-tactics',
+                       'COMBINED-OP-infantry-actual-fire','COMBINED-OP-fire-while-moving',
+                       'COMBINED-OP-no-operation-wide-pause','COMBINED-OP-ground-route-and-fire',
+                       'COMBINED-OP-air-controller-and-travel','COMBINED-OP-concurrent-arms',
+                       'COMBINED-OP-no-shared-completion-barrier']:
+            self.assertIn(marker,operation)
+        for forbidden in ['Waldo_fnc_CortexFlank','Waldo_fnc_CortexAdvance',
+                          'Waldo_fnc_CortexCoordinatedAssault','Waldo_CortexQA_Readiness']:
+            self.assertNotIn(forbidden,operation)
+        self.assertIn('setWaypointType "SAD"',operation)
+        self.assertIn('Waldo_AIPass_Flank_Enable",true',operation)
+        self.assertIn('Waldo_AIPass_Advance_Enable",true',operation)
+        self.assertIn('Waldo_AIPass_CoordinatedAssault_Enable",true',operation)
+        combined_server=source('cortexCombinedArmsServer')
+        combined_local=source('cortexCombinedArmsLocal')
+        for implementation in [combined_server,combined_local]:
+            self.assertIn('effectiveCommander _vehicle',implementation)
+            self.assertIn('driver _vehicle',implementation)
+            self.assertIn('group _driver == _',implementation)
         crossing=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCrossing.sqf').read_text()
         for marker in ['CROSS-engine-road-prerequisite','CROSS-natural-contact-prerequisite',
                        'CROSS-real-smoke-projectile','CROSS-all-members-physical-far-side']:
@@ -701,6 +723,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('cortexQALambs.sqf',launcher)
         self.assertIn('"combinedarms"',launcher)
         self.assertIn('cortexQACombinedArms.sqf',launcher)
+        self.assertIn('cortexQACombinedOperation.sqf',launcher)
         lighting=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLighting.sqf').read_text()
         for marker in ['LIGHTING-modded-nvg-prerequisite','LIGHTING-owner-adoption-reapplies',
                        'LIGHTING-flashlight-no-global-skill-boost',

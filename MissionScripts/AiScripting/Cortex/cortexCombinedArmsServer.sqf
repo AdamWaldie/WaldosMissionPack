@@ -5,6 +5,8 @@
  * not rejected for a momentary low-speed sample; the finite attack controller owns acceleration,
  * progress and stuck detection after accepting an aircraft that is physically off the ground. Each
  * role is dispatched immediately; infantry never waits for acceptance and no shared assembly state exists.
+ * Vehicle discovery accepts either the effective commander's or driver's group so turret ownership
+ * cannot hide an otherwise valid aircraft, while passenger-only groups remain ineligible.
  * Locality/authority: server validates the sender, target, hostility, range, communications and role
  * feature gates; the current asset owner applies targeting through Waldo_fnc_CortexCombinedArmsLocal.
  * Repeat/JIP: requester rate limit and expiring public role tokens replace older opportunities safely.
@@ -46,7 +48,11 @@ private _range=if (_senderRadio) then {missionNamespace getVariable ["Waldo_AIPa
         private _asset=objNull;
         {
             private _vehicle=vehicle _x;
-            if (_vehicle != _x && {alive _vehicle} && {effectiveCommander _vehicle in units _candidate}) exitWith {_asset=_vehicle};
+            private _commander=effectiveCommander _vehicle;
+            private _driver=driver _vehicle;
+            if (_vehicle != _x && {alive _vehicle}
+                && {(!isNull _commander && {group _commander == _candidate})
+                    || {!isNull _driver && {group _driver == _candidate}}}) exitWith {_asset=_vehicle};
         } forEach units _candidate;
         private _role="";
         if (!isNull _asset && {_asset isKindOf "Air"} && {_air < 1} && {!isTouchingGround _asset}

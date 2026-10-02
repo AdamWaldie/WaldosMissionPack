@@ -470,7 +470,12 @@ if (_focus in ["all","features","combat"]) then {[_check,_phase,_wait] call comp
 if (_focus in ["all","features","mechanics"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAMechanics.sqf"};
 if (_focus in ["all","features","mechanics","reactions"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAReactions.sqf"};
 if (_focus in ["all","features","mechanics","support"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQASupport.sqf"};
-if (_focus in ["all","features","combinedarms"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACombinedArms.sqf"};
+if (_focus in ["all","features","combinedarms"]) then {
+    // Keep the narrow communications diagnostic, then exercise the same production layers in a
+    // full multi-squad operation. The second case is additive and cannot inherit fixture actors.
+    [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACombinedArms.sqf";
+    [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACombinedOperation.sqf";
+};
 if (_focus in ["all","features","mechanics","airborne"]) then {
     [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAAirborne.sqf";
     private _airborneBaseCheck=_check;

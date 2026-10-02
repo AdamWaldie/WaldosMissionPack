@@ -4,7 +4,8 @@
  * Ground vehicles receive target knowledge and use the existing gunnery layer without a movement
  * order. Airborne aircraft receive the same target and may start their existing finite attack-run job;
  * its controller, rather than a single instantaneous speed sample, proves progress or handles a stall.
- * Locality/authority: current group owner only; server-issued public token must still match.
+ * Locality/authority: current group owner only; server-issued public token must still match. Asset
+ * discovery accepts the effective commander's or driver's group but never a passenger-only group.
  * Repeat/JIP: duplicate roles are harmless; expiry, Zeus takeover, feature closure and token replacement reject stale calls.
  * Arguments: 0: asset group <GROUP>; 1: opportunity <ARRAY> [token,requester,target,position,role,expiry].
  * Return Value: Boolean, true when the role was applied.
@@ -21,7 +22,11 @@ if ((_group getVariable ["Waldo_Cortex_CombinedRole",[]]) isNotEqualTo _opportun
 private _asset=objNull;
 {
     private _vehicle=vehicle _x;
-    if (_vehicle != _x && {alive _vehicle} && {effectiveCommander _vehicle in units _group}) exitWith {_asset=_vehicle};
+    private _commander=effectiveCommander _vehicle;
+    private _driver=driver _vehicle;
+    if (_vehicle != _x && {alive _vehicle}
+        && {(!isNull _commander && {group _commander == _group})
+            || {!isNull _driver && {group _driver == _group}}}) exitWith {_asset=_vehicle};
 } forEach units _group;
 if (isNull _asset) exitWith {false};
 if (_role == "GROUND_FIRE" && {
