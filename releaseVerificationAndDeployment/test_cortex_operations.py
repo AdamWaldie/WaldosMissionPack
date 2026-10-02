@@ -667,6 +667,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('waypointDescription _x == "WMP AI PASS"',combined)
         self.assertIn('_groundRemaining < _groundRouteStart-50',combined)
         self.assertIn('_groundLease isEqualTo []',combined)
+        self.assertIn('_apc limitSpeed 30',combined)
+        self.assertIn('_heli flyInHeight 140',combined)
         self.assertIn('_heli limitSpeed 60',combined)
         self.assertIn('(driver _heli) doMove [4150,3600,140]',combined)
         self.assertIn('Waldo_HelicopterDeceleration_Enable',combined)
