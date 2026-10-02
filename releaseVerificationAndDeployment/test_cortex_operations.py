@@ -640,15 +640,16 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),58)
+        self.assertEqual(len(data['cases']),59)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
+        self.assertIn('COMBINED-ARMS',pending)
         production={
             path.relative_to(ROOT).as_posix()
             for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
         }
         assigned=[path for case in data['cases'] for path in case['production_sources']]
-        self.assertEqual(141,len(production))
+        self.assertEqual(144,len(production))
         self.assertEqual(production,set(assigned))
         self.assertEqual(len(assigned),len(set(assigned)))
         self.assertTrue(all((ROOT/path).is_file() for path in assigned))
@@ -656,6 +657,11 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(report,(ROOT/'releaseVerificationAndDeployment/cortexQA/FEATURE_STATUS.md').read_text(encoding='utf-8'))
         for case in data['cases']:
             self.assertIn(f"| {case['id']} - {case['title']} |",report)
+        combined=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedArms.sqf').read_text()
+        for marker in ['COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
+                       'COMBINED-ground-target-shared','COMBINED-air-controller-started']:
+            self.assertIn(marker,combined)
+        self.assertNotIn(' addWaypoint ',combined.split('*/',1)[1])
         crossing=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCrossing.sqf').read_text()
         for marker in ['CROSS-engine-road-prerequisite','CROSS-natural-contact-prerequisite',
                        'CROSS-real-smoke-projectile','CROSS-all-members-physical-far-side']:
@@ -679,6 +685,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('[switch]$IncludeLambs',launcher)
         self.assertIn('@LAMBS_Danger.fsm',launcher)
         self.assertIn('cortexQALambs.sqf',launcher)
+        self.assertIn('"combinedarms"',launcher)
+        self.assertIn('cortexQACombinedArms.sqf',launcher)
         lighting=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLighting.sqf').read_text()
         for marker in ['LIGHTING-modded-nvg-prerequisite','LIGHTING-owner-adoption-reapplies',
                        'LIGHTING-flashlight-no-global-skill-boost',
@@ -1103,7 +1111,7 @@ class CortexOperations(unittest.TestCase):
         for marker in ['cortex-coordination-health','recordedBoundFailures=',
                        'boundFailuresByToken','Waldo_Cortex_SupportBoundResult',
                        'Waldo_Cortex_SupportAbort','groupSpeed=%8',
-                       'withdrawal=[status,travel,replans]=%15',
+                       'withdrawal=[status,travel,replans]=%16',
                        'reactiveFlares=%8 attackRunFlares=%9',
                        'Waldo_Cortex_AttackRunFlares_Enable']:
             self.assertIn(marker,diagnostic)
@@ -1340,6 +1348,30 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('count _footFit >= 3',apply)
         self.assertIn('_footFit findIf {"AT" in',apply)
         self.assertIn(dismount_guard,assault)
+
+    def test_combined_arms_opportunities_are_bounded_and_never_gate_infantry(self):
+        request=source('cortexCombinedArmsRequest')
+        server=source('cortexCombinedArmsServer')
+        local=source('cortexCombinedArmsLocal')
+        tick=source('cortexGroupTick')
+        self.assertIn('serverTime+20+random 8',request)
+        self.assertIn('remoteExecCall ["Waldo_fnc_CortexCombinedArmsServer",2]',request)
+        self.assertIn('private _ground=0',server)
+        self.assertIn('private _air=0',server)
+        self.assertIn('if (_ground >= 2 && {_air >= 1}) exitWith {}',server)
+        self.assertNotIn('waitUntil',server+local)
+        self.assertNotIn('addWaypoint',server+local)
+        self.assertNotIn('CortexGroupMove',server+local)
+        self.assertIn('CBA_fnc_waitAndExecute',server)
+        self.assertIn('setVariable ["Waldo_Cortex_CombinedRole",nil,true]',server)
+        self.assertIn('_role in ["GROUND_FIRE","AIR_ATTACK"]',local)
+        self.assertIn('_group reveal [_target,2.5]',local)
+        self.assertIn('Waldo_fnc_CortexAirAttack',local)
+        self.assertIn(']],0.5] call Waldo_fnc_CortexQueueJob',local)
+        self.assertIn('Waldo_fnc_CortexCombinedArmsRequest',tick)
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        self.assertIn('cortex-combined-role-',diagnostics)
+        self.assertIn('Combined roles share an opportunity only',diagnostics)
 
     def test_combined_roles_use_owned_fire_team_drills_and_restore_holds(self):
         coordinator=source('cortexSupportCoordinateStep')

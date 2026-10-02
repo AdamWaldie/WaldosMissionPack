@@ -13,6 +13,8 @@
  * competing whole-squad waypoint.
  * During assault, each bound leases pursuit features only from its current moving fire team.
  * The covering fire team and other squads retain native target sharing and engagement.
+ * Infantry support requires at least three combat-effective dismounts. Mounted passenger groups
+ * and operating vehicle crews reject this lease instead of executing infantry movement in vehicles.
  * In LAMBS SPLIT mode, the finite support lease temporarily pauses LAMBS group manoeuvres for the
  * responder only. The base-of-fire group and every config-only LAMBS add-on remain active.
  * Rally movement also uses 10 m completion; readiness requires physical squad arrival in GroupTick.
@@ -40,12 +42,13 @@ private _movementOwner = _movementLease param [0,""];
 private _movementLeaseActive = count _movementLease == 2 && {time < (_movementLease select 1)};
 private _supportOwnsMovement = _same && {_movementOwner in ["SUPPORT_RALLY","COORDINATED_ASSAULT"]};
 private _fit = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective};
+private _footFit = _fit select {vehicle _x == _x};
 private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!([] call Waldo_fnc_CortexIsPaused)}
     && {serverTime < _expiry} && {!isNull _requester} && {side _requester == side _group}
     && {[leader _group] call Waldo_fnc_CortexCanTransmit}
     && {[_group] call Waldo_fnc_CortexIsEligible} && {[_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
     && {[_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-    && {count _fit >= 3} && {behaviour leader _group != "CARELESS"} && {!fleeing leader _group}
+    && {count _footFit >= 3} && {behaviour leader _group != "CARELESS"} && {!fleeing leader _group}
     && {_same || {getSuppression leader _group <= 0.2}}
     && {leader _group distance2D leader _requester <= (missionNamespace getVariable ["Waldo_AIPass_Reinforce_Radius",600])}
     && {(_group getVariable ["Waldo_AIPass_Garrison",[]]) isEqualTo []} && {(_group getVariable ["Waldo_AIPass_Defend",[]]) isEqualTo []}
@@ -55,7 +58,7 @@ private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!
     // infantry withdrawal, vehicle manoeuvre, artillery scoot or local tactical drill.
     && {!_movementLeaseActive || {_supportOwnsMovement}}
     && {_fit findIf {private _v = vehicle _x; _v isKindOf "Air" || {_v isKindOf "StaticWeapon"} || {getNumber (configOf _v >> "artilleryScanner") == 1}} < 0}
-    && {!_needAT || {_fit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
+    && {!_needAT || {_footFit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
 private _attackAllowed = _attack isNotEqualTo [] && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
 private _directCoordinationPending = _attack isEqualTo []
     && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};

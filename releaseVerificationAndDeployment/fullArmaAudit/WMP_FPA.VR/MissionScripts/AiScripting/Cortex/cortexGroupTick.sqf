@@ -500,6 +500,13 @@ switch (_state get "phase") do {
                 if ((["Waldo_AIPass_ContactReports_Enable", true] call _get) && {_now - (_state getOrDefault ["lastReport", -1e6]) >= 20}) then {
                     [_group, _state, _visible] call Waldo_fnc_CortexContactReport;
                 };
+                // A fresh observed contact is also a short-lived combined-arms opportunity. This
+                // only shares the target with a bounded number of independently capable assets;
+                // it creates no rally, readiness barrier or replacement infantry movement order.
+                if ((["Waldo_AIPass_ContactReports_Enable",true] call _get)
+                    && {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}) then {
+                    [_group,_state,_visible] call Waldo_fnc_CortexCombinedArmsRequest;
+                };
             };
             if (["Waldo_AIPass_Artillery_Enable", false] call _get) then {[_group, _state, _enemies] call Waldo_fnc_CortexArtilleryRequest};
             if (!_ordered && {["Waldo_AIPass_Reinforce_Enable", true] call _get}) then {[_group, _state] call Waldo_fnc_CortexReinforce};

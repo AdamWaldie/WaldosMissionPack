@@ -221,6 +221,9 @@ class CfgFunctions
             class CortexReportLocal {file = "MissionScripts\AiScripting\Cortex\cortexReportLocal.sqf";};
             class CortexHearingLocal {file = "MissionScripts\AiScripting\Cortex\cortexHearingLocal.sqf";};
             class CortexContactReport {file = "MissionScripts\AiScripting\Cortex\cortexContactReport.sqf";};
+            class CortexCombinedArmsRequest {file = "MissionScripts\AiScripting\Cortex\cortexCombinedArmsRequest.sqf";};
+            class CortexCombinedArmsServer {file = "MissionScripts\AiScripting\Cortex\cortexCombinedArmsServer.sqf";};
+            class CortexCombinedArmsLocal {file = "MissionScripts\AiScripting\Cortex\cortexCombinedArmsLocal.sqf";};
             class CortexCooldown {file = "MissionScripts\AiScripting\Cortex\cortexCooldown.sqf";};
             class CortexCounterBattery {file = "MissionScripts\AiScripting\Cortex\cortexCounterBattery.sqf";};
             class CortexAttackRunFlares {file = "MissionScripts\AiScripting\Cortex\cortexAttackRunFlares.sqf";};

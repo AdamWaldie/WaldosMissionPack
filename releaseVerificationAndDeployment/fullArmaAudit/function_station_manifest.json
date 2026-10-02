@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1349,
+  "registeredFunctionCount": 1352,
   "runtimeFunctionCount": 383,
-  "functionCount": 1732,
+  "functionCount": 1735,
   "stations": [
     {
       "id": "control",
@@ -1231,6 +1231,24 @@
     {
       "name": "Waldo_fnc_CortexContactReport",
       "file": "MissionScripts/AiScripting/Cortex/cortexContactReport.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCombinedArmsRequest",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCombinedArmsRequest.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCombinedArmsServer",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCombinedArmsServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexCombinedArmsLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexCombinedArmsLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },

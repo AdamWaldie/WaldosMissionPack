@@ -148,6 +148,28 @@ join a coordinated action from their current positions without waiting for an as
 rally movement. Legacy `flankChance`, `advanceChance` and `coordinatedChance` keys remain accepted so
 older mission configuration does not break, but they no longer select or veto movement.
 
+## Dynamic combined arms
+
+Combined arms uses the same opportunity model as infantry coordination. A squad with a fresh visual
+contact can publish one short-lived contact opportunity through the normal communications gate. The
+server selects at most two nearby armed ground-vehicle groups and one moving armed aircraft. Each
+asset accepts independently on its current owner; there is no platoon template, rally waypoint,
+readiness counter or scheduled attack time. Infantry movement continues even when every supporting
+asset refuses, is jammed, becomes unavailable or is taken by Zeus.
+
+A ground vehicle keeps its authored route and receives only the shared target, allowing the existing
+gunnery and anti-tank standoff controllers to act. An aircraft keeps its existing route checkpoint and
+may enter the existing finite ingress, attack and egress controller; route replacement cancels that
+run. Qualified artillery spotters continue to request fire asynchronously through the existing safety,
+warning-smoke and battery-availability checks. Contact sharing does not make infantry wait for rounds
+to land. The opportunity scan runs at most once per observing squad every 18 to 28 seconds, selects at
+most three assets and adds no per-frame or per-unit monitor.
+
+The first additive visual audit covers natural infantry observation, immediate APC and aircraft roles,
+no infantry assembly order, target transfer, actual ground fire and the aircraft attack controller.
+Jamming, missing-arm, artillery, Zeus, headless-client and 50-group mixed-load variants still need fresh
+in-engine acceptance.
+
 Assault-grenade preparation and investigation remain inexpensive chances. Neither is a prerequisite
 for movement or completion:
 

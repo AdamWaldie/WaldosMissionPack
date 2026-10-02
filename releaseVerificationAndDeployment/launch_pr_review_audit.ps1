@@ -41,7 +41,7 @@ param(
     [ValidateRange(0, 2)]
     [int]$HeadlessClients = 0,
     [switch]$CortexAudit,
-    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "lighting", "performance", "performancecontact", "performancemixed", "coordinated", "coordinatedbounds", "coordinatedclean", "lifecycle", "stateflows", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
+    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "lighting", "performance", "performancecontact", "performancemixed", "coordinated", "coordinatedbounds", "coordinatedclean", "combinedarms", "lifecycle", "stateflows", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
     [string]$CortexFocus = "all",
     [ValidateSet("FLANK-NATIVE-FIRE","FLANK-YELLOW-NATIVE-FIRE","FLANK-YELLOW","FLANK-AWARE","ADVANCE-AWARE","FLANK","ADVANCE","ADVANCE-YELLOW","ADVANCE-CLOSE","ADVANCE-DISTANT","FLANK-ZEUS","ADVANCE-ZEUS","FLANK-ZEUS-ROE","FLANK-BLOCKED","ADVANCE-BLOCKED","FLANK-GRENADE","FLANK-ZEUS-CONSOLIDATE","ADVANCE-GRENADE")]
     [string]$CortexCombatCase = "",
@@ -114,6 +114,7 @@ if ($CortexAudit) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runVehicleDrills.sqf") -Destination (Join-Path $missionRoot "cortexQAVehicles.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runAirborne.sqf") -Destination (Join-Path $missionRoot "cortexQAAirborne.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runSupport.sqf") -Destination (Join-Path $missionRoot "cortexQASupport.sqf")
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runCombinedArms.sqf") -Destination (Join-Path $missionRoot "cortexQACombinedArms.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runReactions.sqf") -Destination (Join-Path $missionRoot "cortexQAReactions.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runMechanics.sqf") -Destination (Join-Path $missionRoot "cortexQAMechanics.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runCombat.sqf") -Destination (Join-Path $missionRoot "cortexQACombat.sqf")
