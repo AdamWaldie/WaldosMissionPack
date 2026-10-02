@@ -332,6 +332,13 @@ private _beginContact = {
     if (_nearTier && {!_lambsCombat} && {["Waldo_AIPass_ContactReports_Enable", true] call _get}) then {
         [_group, _state, _visible] call Waldo_fnc_CortexContactReport;
     };
+    // The first fresh contact may occur outside the player-proximity cadence. Publish one bounded
+    // combined-arms opportunity here so distant AI can cooperate naturally; ongoing refreshes remain
+    // in the near CONTACT tier below and the request cooldown rejects a duplicate in this tick.
+    if (!_lambsCombat && {["Waldo_AIPass_ContactReports_Enable",true] call _get}
+        && {["Waldo_AIPass_CoordinatedAssault_Enable",true] call _get}) then {
+        [_group,_state,_visible] call Waldo_fnc_CortexCombinedArmsRequest;
+    };
     if (_nearTier && {!_ordered} && {["Waldo_AIPass_Reinforce_Enable", true] call _get}) then {
         [_group, _state] call Waldo_fnc_CortexReinforce;
     };

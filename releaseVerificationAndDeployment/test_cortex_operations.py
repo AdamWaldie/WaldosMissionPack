@@ -662,6 +662,8 @@ class CortexOperations(unittest.TestCase):
                        'COMBINED-ground-target-shared','COMBINED-air-controller-started']:
             self.assertIn(marker,combined)
         self.assertNotIn(' addWaypoint ',combined.split('*/',1)[1])
+        self.assertIn('waypointDescription _x == "WMP AI PASS"',combined)
+        self.assertIn('Waldo_HelicopterDeceleration_Enable',combined)
         crossing=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCrossing.sqf').read_text()
         for marker in ['CROSS-engine-road-prerequisite','CROSS-natural-contact-prerequisite',
                        'CROSS-real-smoke-projectile','CROSS-all-members-physical-far-side']:
@@ -1380,6 +1382,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_fnc_CortexAirAttack',local)
         self.assertIn(']],0.5] call Waldo_fnc_CortexQueueJob',local)
         self.assertIn('Waldo_fnc_CortexCombinedArmsRequest',tick)
+        begin_contact=tick.split('private _beginContact = {',1)[1].split('};\n\nif (_visible',1)[0]
+        self.assertIn('Waldo_fnc_CortexCombinedArmsRequest',begin_contact)
+        first_contact_share=begin_contact.rsplit('// The first fresh contact',1)[1]
+        self.assertNotIn('if (_nearTier',first_contact_share.split('Waldo_fnc_CortexCombinedArmsRequest',1)[0])
         diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
         self.assertIn('cortex-combined-role-',diagnostics)
         self.assertIn('Combined roles share an opportunity only',diagnostics)

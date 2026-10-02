@@ -13,6 +13,8 @@
 params ["_check","_phase","_wait"];
 private _groups=[];
 private _objects=[];
+private _savedDeceleration=missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable",false];
+missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable",false,true];
 private _makeGroup={private _g=createGroup [_this,true]; _g setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _g setVariable ["acex_headless_blacklist",true,true]; _g allowFleeing 0; _groups pushBack _g; _g};
 [createHashMapFromArray [
     ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
@@ -54,10 +56,11 @@ private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) pa
 ["COMBINED-air-role",_airRole,str (_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
 ["COMBINED-ground-applied",[{((_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 ["COMBINED-air-applied",[{((_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
-["COMBINED-no-infantry-assembly",(_infantry getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo [] && {(waypoints _infantry) isEqualTo []},str waypoints _infantry] call _check;
+["COMBINED-no-infantry-assembly",(_infantry getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo [] && {(waypoints _infantry) findIf {waypointDescription _x == "WMP AI PASS"} < 0},str waypoints _infantry] call _check;
 ["COMBINED-ground-target-shared",[{_apcGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _apc}},15] call _wait,format ["knowledge=%1 target=%2 shots=%3",_apcGroup knowsAbout _enemy,assignedTarget gunner _apc,count (_apc getVariable ["Waldo_CortexQA_Shots",[]])]] call _check;
 ["COMBINED-air-controller-started",[{_heli getVariable ["Waldo_Cortex_AirAttackJob",false] || {(_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []}},20] call _wait,str (_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _check;
 sleep 5;
+missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable",_savedDeceleration,true];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 {deleteVehicle _x} forEach _objects;
 {deleteGroup _x} forEach _groups;
