@@ -5,6 +5,8 @@
  * Six bounded candidate areas lie behind the requester; the nearest unused dry area is chosen.
  * An acknowledged responder may transition directly into a coordinated approach without waiting
  * for physical rally arrival; the rally remains a fallback while no approach has been dispatched.
+ * Every reservation and revalidation requires three combat-effective dismounts, preventing an
+ * ordinary tank/APC crew or mounted passenger squad from receiving infantry bound roles.
  * Publishes only the request's at-most-six responder identities for owner-side tactical selection.
  * This separation is not terrain-aware approach routing. No shared-point fallback is used.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
@@ -31,7 +33,9 @@ private _kept = [];
 {
     _x params ["_helper","_token","_owner","_ackBy","_status"];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
+    private _footFit = (units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
     private _keep = _valid && {!isNull _helper} && {alive leader _helper} && {_status != "REJECTED"}
+        && {count _footFit >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible}
         && {[_helper,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
         && {[_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
@@ -58,6 +62,7 @@ for "_i" from 1 to 8 do {
     private _helper = (_candidates select _cursor) select 2;
     _cursor = _cursor+1;
     if (!isNull _helper && {alive leader _helper} && {(_helper getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo []}
+        && {count ((units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}}) >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
         && {[_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
         // The request rally is an area anchor, never a common squad destination.

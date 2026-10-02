@@ -734,7 +734,7 @@
       "id": "REINFORCE",
       "title": "Reinforcement",
       "setup": "Contact one squad near idle, busy, excluded and remotely owned friendlies.",
-      "expected": "Only eligible responders physically move to rally; request/acknowledgement and timeout release ownership cleanly.",
+      "expected": "Only eligible squads with at least three combat-effective dismounted infantry accept reinforcement movement; vehicle crews and mounted passenger groups retain their dedicated controllers. Request, acknowledgement, rejection and timeout release ownership cleanly.",
       "settings": [
         "Waldo_AIPass_Reinforce_Enable",
         "Waldo_AIPass_Reinforce_MaxResponders",
@@ -742,7 +742,7 @@
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runSupport.sqf: REINFORCE- physical rally and cancellation (partial variants; fresh live acceptance required)",
+      "automation": "runSupport.sqf: reinforcement movement and cancellation variants. Static guards also prove that vehicle crews and mounted passenger groups cannot enter infantry support bounds. Fresh live acceptance remains required.",
       "executable_sources": [
         "runSupport.sqf"
       ],
@@ -964,7 +964,7 @@
       "id": "COORD",
       "title": "Coordinated assault",
       "setup": "Use two eligible responders on separate owners and a supported squad in real contact.",
-      "expected": "Responders physically rally then assault from distinct directions; rejection/loss/disable releases all leases.",
+      "expected": "Responders accept communicated contact and begin separated approaches from their live positions without an intermediate assembly or all-responder readiness gate; rejection, loss and disable release every affected lease independently.",
       "settings": [
         "Waldo_AIPass_CoordinatedAssault_Enable"
       ],
@@ -981,7 +981,7 @@
         "runtime-20260927-091514 completed: 38 checks, three failures, zero SQF errors. Physical rally passed server and separate-HC responders; HC assault arrival passed. Server assault arrival and both fresh-order handovers failed. Later autonomous attack-order suppression/restoration is not covered by this run.",
         "runtime-20260927-181516: 34 checks, four findings, zero SQF errors; server and client complete. Physical rally, squad role exchange, inter/intra-squad covering fire passed; complete advance and both handovers failed. Natural sight during rally failed its prerequisite. Movement pursuit candidate is being retested in 183219; no acceptance claimed."
       ],
-      "automation": "runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, two actual rallies, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. Added coordinatedbounds focus with contact-during-rally, physical role exchange and inter/intra-squad covering fire. Added TARGET/AUTOTARGET/PATH restoration comparison alongside unchanged physical handover requirements; newest restoration assertion awaits rebuilt live execution.",
+      "automation": "runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, immediate live-position approaches, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. The coordinatedbounds focus measures contact interruption, physical role exchange and inter/intra-squad covering fire. TARGET/AUTOTARGET/PATH restoration comparisons retain unchanged physical handover requirements; rebuilt live execution is pending.",
       "executable_sources": [
         "runCoordinated.sqf"
       ],

@@ -3,6 +3,9 @@
  * Creates a bounded cross-owner reinforcement request or upgrades its remaining capacity for armour.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
  * Publishes a bounded responder index on the requester so its owner never scans every group.
+ * Only groups with at least three combat-effective dismounts can enter the infantry responder
+ * pool. Vehicle crews and mounted passenger groups remain available to their vehicle controllers
+ * and future combined-arms roles instead of being misrouted through infantry bounds.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
  * Arguments: 0: requester <GROUP>, grpNull; 1: believed enemy ATL <ARRAY>, []; 2: AT required <BOOL>, false.
  * Return Value: Nothing.
@@ -29,6 +32,7 @@ private _radius = missionNamespace getVariable ["Waldo_AIPass_Reinforce_Radius",
 private _candidates = [];
 {if (_x != _requester && {side _x == side _requester} && {alive leader _x}
     && {[leader _x] call Waldo_fnc_CortexCanTransmit}
+    && {count ((units _x) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}}) >= 3}
     && {leader _x distance2D leader _requester <= _radius}) then {
     _candidates pushBack [leader _x distance2D leader _requester,_forEachIndex,_x];
 }} forEach allGroups;

@@ -266,9 +266,9 @@ Feature cases: **58**. Required variant categories: **13**.
 
 ### REINFORCE - Reinforcement
 
-**Expected:** Only eligible responders physically move to rally; request/acknowledgement and timeout release ownership cleanly.
+**Expected:** Only eligible squads with at least three combat-effective dismounted infantry accept reinforcement movement; vehicle crews and mounted passenger groups retain their dedicated controllers. Request, acknowledgement, rejection and timeout release ownership cleanly.
 
-**Automation and open work:** runSupport.sqf: REINFORCE- physical rally and cancellation (partial variants; fresh live acceptance required)
+**Automation and open work:** runSupport.sqf: reinforcement movement and cancellation variants. Static guards also prove that vehicle crews and mounted passenger groups cannot enter infantry support bounds. Fresh live acceptance remains required.
 
 ### ART - Spotted artillery bursts
 
@@ -320,9 +320,9 @@ Feature cases: **58**. Required variant categories: **13**.
 
 ### COORD - Coordinated assault
 
-**Expected:** Responders physically rally then assault from distinct directions; rejection/loss/disable releases all leases.
+**Expected:** Responders accept communicated contact and begin separated approaches from their live positions without an intermediate assembly or all-responder readiness gate; rejection, loss and disable release every affected lease independently.
 
-**Automation and open work:** runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, two actual rallies, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. Added coordinatedbounds focus with contact-during-rally, physical role exchange and inter/intra-squad covering fire. Added TARGET/AUTOTARGET/PATH restoration comparison alongside unchanged physical handover requirements; newest restoration assertion awaits rebuilt live execution.
+**Automation and open work:** runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, immediate live-position approaches, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. The coordinatedbounds focus measures contact interruption, physical role exchange and inter/intra-squad covering fire. TARGET/AUTOTARGET/PATH restoration comparisons retain unchanged physical handover requirements; rebuilt live execution is pending.
 
 ### STANCE - Cover stance
 

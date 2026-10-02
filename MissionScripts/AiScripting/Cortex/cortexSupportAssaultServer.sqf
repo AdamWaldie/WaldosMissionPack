@@ -45,6 +45,7 @@ private _dispatched=[];
     if (_accepted == "ACCEPTED" && {count _lease == 6} && {(_lease select 0) == _token}
         && {count _status == 4} && {(_status select 0) == _token} && {_status select 2}
         && {[leader _helper] call Waldo_fnc_CortexCanTransmit}
+        && {count ((units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}}) >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
         // A coordinated route always begins at the squad's physical live position. The lease's
         // optional rally coordinate is reservation metadata and must never become a synthetic start.

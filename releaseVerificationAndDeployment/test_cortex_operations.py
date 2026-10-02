@@ -1328,6 +1328,19 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",_responders,true]',step)
         self.assertIn('_requester setVariable ["Waldo_Cortex_SupportResponders",nil,true]',step)
 
+    def test_infantry_support_never_routes_mounted_vehicle_crews_as_bounders(self):
+        server=source('cortexSupportServer')
+        step=source('cortexSupportStep')
+        apply=source('cortexSupportApply')
+        assault=source('cortexSupportAssaultServer')
+        dismount_guard='[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}'
+        self.assertIn(dismount_guard,server)
+        self.assertGreaterEqual(step.count(dismount_guard),2)
+        self.assertIn('private _footFit = _fit select {vehicle _x == _x}',apply)
+        self.assertIn('count _footFit >= 3',apply)
+        self.assertIn('_footFit findIf {"AT" in',apply)
+        self.assertIn(dismount_guard,assault)
+
     def test_combined_roles_use_owned_fire_team_drills_and_restore_holds(self):
         coordinator=source('cortexSupportCoordinateStep')
         self.assertNotIn('allUnits',coordinator)
