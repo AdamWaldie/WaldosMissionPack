@@ -45,10 +45,17 @@ private _ammoFacts={
         private _simulation=toLowerANSI getText (_ammo >> "simulation");
         private _pylonWeapon=toUpperANSI getText (_magazineConfig >> "pylonWeapon");
         private _hardpoints=(getArray (_magazineConfig >> "hardpoints")) apply {toUpperANSI _x};
+        private _ordnanceName=toUpperANSI (_magazine+" "+_pylonWeapon+" "+(_hardpoints joinString " "));
         // Pylon bombs are not consistently represented by shotBomb. The magazine is the authoritative
         // loadout item, so retain its pylon metadata instead of inferring delivery solely from CfgAmmo.
         private _bombHint="BOMB" in (toUpperANSI _magazine) || {"BOMB" in _pylonWeapon}
             || {_hardpoints findIf {"BOMB" in _x} >= 0};
+        // Several vanilla and modded fixed-rocket pylons use shotMissile because the engine's
+        // projectile family does not describe the tactical delivery. The loaded pylon metadata does:
+        // classify explicit rocket racks as run weapons before considering seeker flags. Without
+        // this, OFFSET and HOOK could be offered from _hasRocket and then rejected because the same
+        // magazine was later called GUIDED.
+        private _rocketHint=!_bombHint && {"ROCKET" in _ordnanceName || {"DAGR" in _ordnanceName}};
         // aiAmmoUsageFlags alone marks some air-to-ground ordnance as useful against aircraft.
         // Require a real air lock for missiles; guns may use the engine's anti-air usage hint.
         private _antiAir=getNumber (_ammo >> "airLock") > 0
@@ -58,7 +65,7 @@ private _ammoFacts={
         // STANDOFF is reserved for a guided missile. Guided rockets still need a forward run and
         // belong to OFFSET/HOOK; treating them as stand-off ordnance created long-range overshoots.
         private _hit=(getNumber (_ammo >> "hit")) max (getNumber (_ammo >> "indirectHit"));
-        private _standoff=_simulation == "shotmissile" && {_hit >= 100}
+        private _standoff=_simulation == "shotmissile" && {!_rocketHint} && {_hit >= 100}
             && {_guidedGround} && {!_antiAir} && {!_bombHint};
         // Cannons are commonly dual-purpose. An anti-air usage hint must not exclude the same
         // loaded gun from a ground attack. Missiles need a real ground seeker; bombs and fixed
@@ -68,7 +75,7 @@ private _ammoFacts={
                 || {_simulation == "shotmissile" && {_guidedGround}}
             }
         };
-        private _weaponClass=if (_bombHint) then {"BOMB"} else {
+        private _weaponClass=if (_bombHint) then {"BOMB"} else {if (_rocketHint) then {"ROCKET"} else {
             switch _simulation do {
                 case "shotbullet";
                 case "shotshell": {"GUN"};
@@ -77,7 +84,7 @@ private _ammoFacts={
                 case "shotbomb": {"BOMB"};
                 default {""};
             }
-        };
+        }};
         _facts=[_antiAir,_standoff,_surface,_simulation,_hit,_guidedGround,_weaponClass,_magazine];
         _ammoCache set [_magazine,_facts];
     };
@@ -229,24 +236,35 @@ private _standoffAvailable=_standoff && {serverTime >= (_aircraft getVariable ["
 private _hasGun=_groundCandidates findIf {(_x select 2) in ["shotbullet","shotshell"]} >= 0;
 private _hasRocket=_groundCandidates findIf {(_x select 4) == "ROCKET"} >= 0;
 private _hasBomb=_groundCandidates findIf {(_x select 4) == "BOMB"} >= 0;
-private _hasRunWeapon=_hasGun || {_hasRocket};
+// Target protection changes weights, not geometry or damage. Reading the vehicle config once when a
+// plan is built is cheap and works for modded subclasses without maintaining a classname table.
+private _targetArmour=if (_target isKindOf "CAManBase") then {0}
+    else {getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "armor")};
+private _armouredTarget=_targetArmour >= 180 || {_target isKindOf "Tank"};
 private _pattern=if (_airToAir) then {"INTERCEPT"} else {if (_aaPositions isNotEqualTo []) then {
-    if (_standoffAvailable) then {"STANDOFF"} else {"OFFSET"}
+    // Do not invent an offset run when the aircraft has no fixed rockets. In that case native AI
+    // keeps control; a cannon-only aircraft should not be driven into known AA by this feature.
+    if (_standoffAvailable) then {"STANDOFF"} else {if (_hasRocket) then {"OFFSET"} else {""}}
 } else {
     if (_isPlane) then {
         private _choices=[];
-        if (_hasGun) then {_choices append ["STRAFE",0.35]};
-        if (_hasRocket) then {_choices append ["OFFSET",0.25,"HOOK",0.15]};
-        if (_hasBomb) then {_choices append ["BOMB",0.25]};
-        if (_choices isEqualTo [] && {_standoffAvailable}) then {_choices=["STANDOFF",1]};
+        if (_hasGun) then {_choices append ["STRAFE",[0.42,0.12] select _armouredTarget]};
+        if (_hasRocket) then {_choices append ["OFFSET",[0.25,0.22] select _armouredTarget,
+            "HOOK",[0.18,0.16] select _armouredTarget]};
+        if (_hasBomb) then {_choices append ["BOMB",[0.08,0.22] select _armouredTarget]};
+        if (_standoffAvailable) then {_choices append ["STANDOFF",[0.07,0.38] select _armouredTarget]};
         if (_choices isEqualTo []) then {""} else {selectRandomWeighted _choices}
     } else {
         private _choices=[];
-        if (_hasGun) then {_choices append ["STRAFE",0.4]};
-        if (_hasRunWeapon) then {_choices append ["HOOK",0.3]};
-        if (_lateralTurret) then {_choices append ["LATERAL",0.3]};
-        if (_standoffAvailable) then {_choices append ["STANDOFF",0.1]};
-        selectRandomWeighted _choices
+        if (_hasGun) then {_choices append ["STRAFE",[0.42,0.15] select _armouredTarget]};
+        // A hook is a fixed-rocket delivery profile. Previously a helicopter gun alone made HOOK
+        // selectable, after which the weapon-compatibility gate correctly rejected the same plan.
+        // That contradictory offer/reject path looked like an aircraft accepting an attack and then
+        // doing nothing. Only advertise a manoeuvre when the live loadout can execute it.
+        if (_hasRocket) then {_choices append ["OFFSET",0.18,"HOOK",0.22]};
+        if (_lateralTurret) then {_choices append ["LATERAL",[0.28,0.08] select _armouredTarget]};
+        if (_standoffAvailable) then {_choices append ["STANDOFF",[0.08,0.37] select _armouredTarget]};
+        if (_choices isEqualTo []) then {""} else {selectRandomWeighted _choices}
     }
 }};
 private _patternOverride=toUpperANSI (_aircraft getVariable ["Waldo_Cortex_AirAttackPattern","AUTO"]);

@@ -222,6 +222,7 @@ if (_stage == "") then {
             private _guidedTarget=_aircraft getVariable ["Waldo_Cortex_AirAttackTarget",objNull];
             if (_weapon == _guidedWeapon && {!isNull _projectile} && {!isNull _guidedTarget} && {alive _guidedTarget}) then {
                 _projectile setMissileTarget _guidedTarget;
+                _projectile setMissileTargetPos (aimPos _guidedTarget);
             };
         };
     }];
@@ -240,14 +241,21 @@ if (isNull _target) exitWith {["TARGET_LOST",true] call _finish};
 // INGRESS -> ATTACK -> EGRESS contract, using the wreck's stable position for departure geometry.
 // A target lost before an actual attack remains a failed run and hands native control back at once.
 if (!alive _target && {!(_job getOrDefault ["targetDestroyed",false])}) then {
-    if (_stage == "ATTACK" && {(_job getOrDefault ["shots",0]) > (_job getOrDefault ["attackShotBaseline",0])}) then {
+    // The engine may report the kill after the shot has already moved the finite plan into EGRESS.
+    // Treat a destroyed target as this run's result when the aircraft physically fired during the
+    // attack, without requiring the damage event and the ATTACK label to land on the same scheduler
+    // tick. A target lost before real weapon fire remains a failed run.
+    if (_stage in ["ATTACK","EGRESS"]
+        && {(_job getOrDefault ["shots",0]) > (_job getOrDefault ["attackShotBaseline",0])}) then {
         _job set ["targetDestroyed",true];
-        [_group,_job,"EGRESS","TARGET_DESTROYED"] call Waldo_fnc_CortexDrillSetStage;
-        _job set ["commandedStage",""];
-        _job set ["egressStartPosition",getPosATL _aircraft];
-        _job set ["egressStartedAt",serverTime];
-        _job set ["deadline",serverTime+75];
-        _stage="EGRESS";
+        if (_stage == "ATTACK") then {
+            [_group,_job,"EGRESS","TARGET_DESTROYED"] call Waldo_fnc_CortexDrillSetStage;
+            _job set ["commandedStage",""];
+            _job set ["egressStartPosition",getPosATL _aircraft];
+            _job set ["egressStartedAt",serverTime];
+            _job set ["deadline",serverTime+75];
+            _stage="EGRESS";
+        };
     };
 };
 if (!alive _target && {!(_job getOrDefault ["targetDestroyed",false])}) exitWith {["TARGET_LOST",true] call _finish};
@@ -333,6 +341,7 @@ if (_stage == "ATTACK") then {
         _job set ["targetCommanded",true];
     };
     private _range=_aircraft distance _target;
+    private _horizontalRange=_aircraft distance2D _target;
     private _weaponVector=if (_weapon == "") then {[0,0,0]} else {_aircraft weaponDirection _weapon};
     private _targetVector=(aimPos _target) vectorDiff (getPosASL _aircraft);
     private _alignment=if (vectorMagnitude _weaponVector > 0.01 && {vectorMagnitude _targetVector > 0.01}) then {
@@ -363,6 +372,17 @@ if (_stage == "ATTACK") then {
         (vectorNormalized _horizontalForward) vectorDotProduct (vectorNormalized _horizontalTarget)
     } else {-1};
     private _deliveryAngle=acos ((_alignment max -1) min 1);
+    // A bomb rack points with the airframe and cannot be validated by comparing weaponDirection to
+    // the target. Use a cheap ballistic release basket from live AGL and horizontal speed instead.
+    // This does not steer the bomb or guarantee a hit; it only prevents firing after overflight and
+    // gives the native projectile a physically credible release.
+    private _horizontalVelocity=velocity _aircraft;
+    _horizontalVelocity set [2,0];
+    private _fallTime=sqrt (2*((getPosATL _aircraft select 2) max 1)/9.81);
+    private _bombReleaseDistance=(vectorMagnitude _horizontalVelocity)*_fallTime;
+    private _bombWindow=_horizontalRange >= ((_bombReleaseDistance*0.55) max 250)
+        && {_horizontalRange <= ((_bombReleaseDistance*1.45) max 500)}
+        && {_forwardAlignment >= 0.9};
     // aimedAtTarget is useful for seekers, but fixed pilot guns/rockets can report zero even when
     // weaponDirection is physically on the target. Geometry remains the release authority for
     // unguided weapons; otherwise a correct pass flies through without firing.
@@ -372,11 +392,12 @@ if (_stage == "ATTACK") then {
     private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
-        && {_closing} && {_alignment >= _minimumAlignment}
+        && {_closing} && {_bombWindow || {!_bomb && {_alignment >= _minimumAlignment}}}
         && {!_bomb || {(getPosATL _aircraft select 2) >= 350}}
         && {_aimed >= _minimumAim};
     private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
-        _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing];
+        _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing,
+        _horizontalRange,_bombReleaseDistance,_bombWindow];
     _job set ["fireSolution",_solution];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
     if (_validSolution && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {

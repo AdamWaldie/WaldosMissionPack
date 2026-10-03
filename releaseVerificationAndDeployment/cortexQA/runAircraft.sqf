@@ -337,7 +337,10 @@ private _observedProfiles=createHashMap;
         ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]
     ]] call Waldo_fnc_CortexTuning;
     private _isPlaneClass=_class isKindOf ["Plane",configFile >> "CfgVehicles"];
-    private _aircraft=createVehicle [_class,[8200,5000,[180,650] select _isPlaneClass],[],0,"FLY"];
+    // Fixed-wing employment needs enough distance to establish a stable weapon axis before release.
+    // Starting a jet inside two kilometres made discovery occur after overflight, so the fixture
+    // measured emergency turns rather than the authored attack. Helicopters retain the compact lane.
+    private _aircraft=createVehicle [_class,[8200,[5000,3000] select _isPlaneClass,[180,900] select _isPlaneClass],[],0,"FLY"];
     _aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
     private _pilot=driver _aircraft;
     // Observe the aircraft's normal crew exactly as createVehicleCrew supplies it. The fixture must
@@ -350,7 +353,7 @@ private _observedProfiles=createHashMap;
     {_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]} forEach _crew;
     private _launchSpeed=[55,155] select (_aircraft isKindOf "Plane");
     _aircraft setVelocityModelSpace [0,_launchSpeed,0];
-    _aircraft flyInHeight ([180,650] select (_aircraft isKindOf "Plane"));
+    _aircraft flyInHeight ([180,900] select (_aircraft isKindOf "Plane"));
     private _friendlySide=side _group;
     private _targetClass=if (_targetClassOverride != "") then {_targetClassOverride} else {if (_friendlySide == west) then {
         ["O_APC_Tracked_02_cannon_F","O_Plane_CAS_02_dynamicLoadout_F"] select _airTarget
@@ -358,7 +361,7 @@ private _observedProfiles=createHashMap;
         ["B_APC_Tracked_01_rcws_F","B_Plane_CAS_01_dynamicLoadout_F"] select _airTarget
     }};
     private _targetPosition=if (_airTarget) then {[8500,9300,650]} else {
-        [[8200,7600,0],[8200,9800,0]] select (_aircraft isKindOf "Plane")
+        [[8200,7600,0],[8200,12000,0]] select (_aircraft isKindOf "Plane")
     };
     private _target=createVehicle [_targetClass,_targetPosition,[],0,["NONE","FLY"] select _airTarget];
     createVehicleCrew _target; _target allowDamage _mustDestroy;
@@ -380,7 +383,7 @@ private _observedProfiles=createHashMap;
     private _aaCrew=[];
     private _aaGroup=grpNull;
     if (_withAA) then {
-        _aa=createVehicle ["B_static_AA_F",[8750,6350,0],[],0,"NONE"];
+        _aa=createVehicle ["B_static_AA_F",[[8750,6350,0],[8750,10750,0]] select _isPlaneClass,[],0,"NONE"];
         createVehicleCrew _aa; _aa allowDamage false;
         _aaCrew=crew _aa; _aaGroup=group gunner _aa;
         _aaGroup setVariable ["Waldo_AIPass_Exclude",true,true];
@@ -394,7 +397,7 @@ private _observedProfiles=createHashMap;
     // discovery path must turn normal group knowledge into the finite job; otherwise native fire
     // can make a controller that never reaches ATTACK appear successful.
     _group reveal [_target,4];
-    private _authoredDestination=[8200,12500,[180,650] select (_aircraft isKindOf "Plane")];
+    private _authoredDestination=[8200,[12500,17000] select _isPlaneClass,[180,900] select _isPlaneClass];
     private _waypoint=_group addWaypoint [_authoredDestination,0];
     _waypoint setWaypointType "MOVE"; _waypoint setWaypointBehaviour "COMBAT";
     _aircraft setVariable ["Waldo_CortexQA_Label",_id,true];
@@ -504,12 +507,14 @@ private _observedProfiles=createHashMap;
             || {count (_profileSpeeds arrayIntersect _profileSpeeds) > 1}},
         str [_pattern,_profileAltitudes,_profileSpeeds,_profileRadii,_profileDwell,_profilePoints]] call _recordCheck;
     private _weaponMatchesPattern=switch _pattern do {
-        case "STRAFE": {_selectedSimulation in ["shotbullet","shotshell"]};
-        case "LATERAL": {_selectedSimulation in ["shotbullet","shotshell"]};
-        case "STANDOFF": {_selectedSimulation == "shotmissile"};
-        case "BOMB": {_selectedSimulation == "shotbomb"};
-        case "INTERCEPT": {_selectedSimulation in ["shotbullet","shotshell","shotmissile"]};
-        default {_selectedSimulation in ["shotbullet","shotshell","shotrocket"]};
+        case "STRAFE";
+        case "LATERAL": {_selectedWeaponClass == "GUN"};
+        case "STANDOFF": {_selectedWeaponClass == "GUIDED"};
+        case "BOMB": {_selectedWeaponClass == "BOMB"};
+        case "OFFSET";
+        case "HOOK": {_selectedWeaponClass == "ROCKET"};
+        case "INTERCEPT": {_selectedWeaponClass in ["GUN","GUIDED"]};
+        default {false};
     };
     [_id+"-weapon-matches-manoeuvre",_selectedWeapon != "" && {_weaponMatchesPattern}
         && {_expectedWeaponClass == "" || {_selectedWeaponClass == _expectedWeaponClass}},
@@ -528,7 +533,7 @@ private _observedProfiles=createHashMap;
         [_id+"-aa-aware-pattern",_pattern in ["OFFSET","STANDOFF"] && {(_initialPlan param [7,0]) > 0},str _initialPlan] call _recordCheck;
     } else {
         if (!_interrupt && {!_airTarget}) then {
-        [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK","LATERAL"],str _initialPlan] call _recordCheck;
+        [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK","LATERAL","BOMB","STANDOFF"],str _initialPlan] call _recordCheck;
         if (_patternOverride == "LATERAL") then {
             [_id+"-lateral-capable-turret",_pattern == "LATERAL" && {_initialPlan param [13,false]},str _initialPlan] call _recordCheck;
         };

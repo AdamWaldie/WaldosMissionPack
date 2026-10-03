@@ -2786,13 +2786,17 @@ class CortexOperations(unittest.TestCase):
                             'INTERCEPT','_airToAir','airWeapon','airWeaponTurret','pylonWeapon','hardpoints','indirectHit']:
             self.assertIn(requirement,planner)
         for requirement in ['groundWeapon','groundTurret','_groundCandidates','shotbullet','shotshell',
-                            'shotrocket','shotmissile','shotbomb','selectedWeapon','selectedSimulation','selectedWeaponClass',
+                            'shotrocket','shotmissile','shotbomb','_rocketHint','selectedWeapon','selectedSimulation','selectedWeaponClass',
                             '_simulation in ["shotbullet","shotshell"]',
                             '_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]']:
             self.assertIn(requirement,planner)
         self.assertIn('private _standoff=_simulation == "shotmissile"',planner)
         self.assertIn('&& {_guidedGround} && {!_antiAir} && {!_bombHint}',planner)
         self.assertIn('_bombHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]',planner)
+        self.assertIn('private _armouredTarget=_targetArmour >= 180',planner)
+        self.assertIn('if (_standoffAvailable) then {"STANDOFF"} else {if (_hasRocket) then {"OFFSET"} else {""}}',planner)
+        self.assertIn('if (_hasRocket) then {_choices append ["OFFSET",0.18,"HOOK",0.22]}',planner)
+        self.assertNotIn('private _hasRunWeapon=_hasGun || {_hasRocket}',planner)
         self.assertNotIn('allUnits',planner)
         self.assertNotIn('nearEntities',planner)
         for requirement in ['fullCrew _aircraft','_aircraft weaponsTurret _turret','_personTurret',
@@ -2800,7 +2804,7 @@ class CortexOperations(unittest.TestCase):
                             'toLowerANSI _role in ["gunner","commander","turret"]',
                             'standoffWeapon','Waldo_Cortex_AirStandoffBlockedUntil',
                             '[-1200,750]','[900,750]','[2200,1100]','[-6500,-2200]',
-                            '["BOMB",0.25]',
+                            '["BOMB",[0.08,0.22] select _armouredTarget]',
                             'private _forwardIngress=(_toIngress vectorDotProduct _axis) >= 100',
                             'vectorNormalized _toAttack']:
             self.assertIn(requirement,planner)
@@ -2867,6 +2871,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('case "BOMB"',controller)
         self.assertIn('"TARGET_DESTROYED"',controller)
         self.assertIn('_job set ["targetDestroyed",true]',controller)
+        self.assertIn('_stage in ["ATTACK","EGRESS"]',controller)
         self.assertIn('[_group,_job,"EGRESS","TARGET_DESTROYED"]',controller)
         self.assertIn('_reason == "COMPLETE" && {_job getOrDefault ["targetDestroyed",false]}',controller)
         discovery=source('cortexDiscover')
