@@ -11,11 +11,12 @@
  * 3: originally enabled AI feature names <ARRAY>, default []; 4: original pilot combat mode
  * <STRING>, default "YELLOW"; 5: original group combat mode <STRING>, default "YELLOW";
  * 6: original autonomous attack permission <BOOL>, default true; 7: leased pilot combat behaviour
- * <STRING>, default ""; 8: original pilot combat behaviour <STRING>, default "". The
- * curator-authored group behaviour is deliberately retained.
+ * <STRING>, default ""; 8: original pilot combat behaviour <STRING>, default ""; 9: final
+ * curator-authored behaviour <STRING>, default "". A valid final behaviour is restored to both
+ * the group and pilot after the bounded CARELESS transit lease.
  * Return Value: BOOL true when the current lease was restored, otherwise false.
  * Current callers: delayed Zeus-handover cleanup in Waldo_fnc_CortexAirAttack.
- * Example: [_heli,driver _heli,"heli:2:10.5",[],"RED","RED",true,"AWARE","COMBAT"]
+ * Example: [_heli,driver _heli,"heli:2:10.5",[],"RED","RED",true,"CARELESS","COMBAT","AWARE"]
  *     call Waldo_fnc_CortexAirHandoverRestoreLocal;
  */
 params [
@@ -27,7 +28,8 @@ params [
     ["_previousGroupCombatMode","YELLOW",[""]],
     ["_previousAttackEnabled",true,[true]],
     ["_leasedPilotBehaviour","",[""]],
-    ["_previousPilotBehaviour","",[""]]
+    ["_previousPilotBehaviour","",[""]],
+    ["_finalBehaviour","",[""]]
 ];
 if (isNull _aircraft || {!local _aircraft} || {_token == ""}) exitWith {false};
 private _lease=_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]];
@@ -41,12 +43,22 @@ if (!isNull _pilot && {alive _pilot} && {local _pilot}) then {
     if (unitCombatMode _pilot == "BLUE") then {_pilot setUnitCombatMode _previousCombatMode};
     // Undo only the pilot behaviour still owned by this bounded handover lease. A later
     // curator/script change is authoritative and must never be overwritten by cleanup.
-    if (_leasedPilotBehaviour != "" && {_previousPilotBehaviour != ""}
+    if (_leasedPilotBehaviour != ""
         && {combatBehaviour _pilot == _leasedPilotBehaviour}) then {
-        _pilot setCombatBehaviour _previousPilotBehaviour;
+        private _restoreBehaviour=_previousPilotBehaviour;
+        if (_finalBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
+            _restoreBehaviour=_finalBehaviour;
+        };
+        if (_restoreBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
+            _pilot setCombatBehaviour _restoreBehaviour;
+        };
     };
 };
 private _group=group _pilot;
+if (!isNull _group && {local _group}
+    && {_finalBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]}) then {
+    _group setBehaviourStrong _finalBehaviour;
+};
 if (!isNull _group && {local _group} && {combatMode _group == "BLUE"}) then {
     _group setCombatMode _previousGroupCombatMode;
 };

@@ -10,7 +10,9 @@
  * If Arma retains a completed helicopter doMove as a zero-thrust hover during a direct Zeus
  * handover, measured-stagnation recovery first replaces it with one commandMove to the exact
  * authenticated curator destination. A second verified stall receives one forward-velocity
- * impulse along that same route. Neither step moves the aircraft position or creates a waypoint.
+ * impulse along that same route. During this bounded lease CARELESS suppresses Arma's combat-flight
+ * hover, then cleanup restores the curator-authored behaviour. Neither recovery step moves the
+ * aircraft position or creates a waypoint.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -127,19 +129,14 @@ private _finish={
                 // Reassert the curator's active group route as well as the pilot destination after
                 // retiring the target knowledge introduced by this lease.
                 if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
-                    // Editing an already-active waypoint does not immediately apply its behaviour.
-                    // setBehaviour changes the units but not the group entity, allowing the group
-                    // to remain COMBAT and fly back toward Cortex's former target. Apply the
-                    // curator-authored value strongly to both; the setting is deliberately retained
-                    // because it belongs to the replacement waypoint. Fire permission and every
-                    // gunner remain intact.
-                    _handoverGroup setBehaviourStrong _authoredBehaviour;
-                    // A visible hostile can immediately drive the pilot's combat FSM back to
-                    // COMBAT even after the group accepted AWARE. Lease only the pilot's combat
-                    // behaviour to the curator waypoint; gunners remain untouched and continue
-                    // sensing, aiming and returning fire while the aircraft follows the order.
-                    _handoverPilot setCombatBehaviour _authoredBehaviour;
-                    _handoverLeasedBehaviour=_authoredBehaviour;
+                    // The gunner can immediately republish Cortex's former target to the group,
+                    // rebuilding COMBAT even after the pilot forgets it. Arma's helicopter combat
+                    // flight FSM then holds a perfect Zeus MOVE in a stable hover. Lease a bounded
+                    // CARELESS transit state so direct curator movement wins; restoration applies
+                    // the curator-authored behaviour, never the pilot's pre-Zeus combat state.
+                    _handoverGroup setBehaviourStrong "CARELESS";
+                    _handoverPilot setCombatBehaviour "CARELESS";
+                    _handoverLeasedBehaviour="CARELESS";
                 };
                 if (_authoredSpeed in ["LIMITED","NORMAL","FULL"]) then {
                     // As with behaviour, editing an active waypoint does not reliably update the
@@ -166,12 +163,12 @@ private _finish={
             };
             [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverPosition,
                 _handoverCombatMode,_handoverGroupCombatMode,_handoverAttackEnabled,
-                _handoverLeasedBehaviour,_handoverPilotBehaviour,_authoredSpeed,
+                _handoverLeasedBehaviour,_handoverPilotBehaviour,_authoredSpeed,_authoredBehaviour,
                 _handoverZeusToken,_authoredWaypointIndex] spawn {
                 params ["_handoverAircraft","_handoverPilot","_handoverToken","_handoverFeatures",
                     "_handoverPosition","_handoverCombatMode","_handoverGroupCombatMode",
                     "_handoverAttackEnabled","_handoverLeasedBehaviour","_handoverPilotBehaviour",
-                    "_authoredSpeed","_handoverZeusToken","_authoredWaypointIndex"];
+                    "_authoredSpeed","_authoredBehaviour","_handoverZeusToken","_authoredWaypointIndex"];
                 // This is a bounded handover monitor, not a new Cortex movement profile. Arma can
                 // rebuild the pilot's COMBAT state after the first command even while AUTOCOMBAT is
                 // disabled. Keep only the pilot aligned with the exact curator order and reassert
@@ -284,12 +281,12 @@ private _finish={
                 if (local _handoverAircraft) then {
                     [_handoverAircraft,_handoverPilot,_handoverToken,_handoverFeatures,
                         _handoverCombatMode,_handoverGroupCombatMode,_handoverAttackEnabled,
-                        _handoverLeasedBehaviour,_handoverPilotBehaviour]
+                        _handoverLeasedBehaviour,_handoverPilotBehaviour,_authoredBehaviour]
                         call Waldo_fnc_CortexAirHandoverRestoreLocal;
                 } else {
                     [_handoverAircraft,_handoverPilot,_handoverToken,_handoverFeatures,
                         _handoverCombatMode,_handoverGroupCombatMode,_handoverAttackEnabled,
-                        _handoverLeasedBehaviour,_handoverPilotBehaviour]
+                        _handoverLeasedBehaviour,_handoverPilotBehaviour,_authoredBehaviour]
                         remoteExecCall ["Waldo_fnc_CortexAirHandoverRestoreLocal",owner _handoverAircraft];
                 };
             };

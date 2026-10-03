@@ -2708,9 +2708,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"]',controller)
         self.assertIn('_handoverPilot disableAI _x',controller)
         self.assertIn('_handoverPilot setUnitCombatMode "BLUE"',controller)
-        self.assertIn('_handoverGroup setBehaviourStrong _authoredBehaviour',controller)
+        self.assertIn('_handoverGroup setBehaviourStrong "CARELESS"',controller)
         self.assertNotIn('_handoverGroup setBehaviour _authoredBehaviour',controller)
-        self.assertIn('_handoverPilot setCombatBehaviour _authoredBehaviour',controller)
+        self.assertIn('_handoverPilot setCombatBehaviour "CARELESS"',controller)
         self.assertIn('waypointBehaviour [_handoverGroup,_handoverIndex]',controller)
         self.assertIn('waypointSpeed [_handoverGroup,_handoverIndex]',controller)
         self.assertIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
@@ -2737,7 +2737,9 @@ class CortexOperations(unittest.TestCase):
         for requirement in ['remoteExecutedOwner != _originOwner','arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET"]',
                             '_pilot enableAI _x','unitCombatMode _pilot == "BLUE"','combatMode _group == "BLUE"',
                             '!attackEnabled _group','_group enableAttack _previousAttackEnabled',
-                            '_pilot setCombatBehaviour _previousPilotBehaviour',
+                            'private _restoreBehaviour=_previousPilotBehaviour',
+                            '_pilot setCombatBehaviour _restoreBehaviour',
+                            '_group setBehaviourStrong _finalBehaviour',
                             'Waldo_Cortex_AirHandoverLease",nil,true']:
             self.assertIn(requirement,restore)
         self.assertIn('egressStartPosition',controller)
