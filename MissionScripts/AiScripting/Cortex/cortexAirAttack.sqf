@@ -8,8 +8,9 @@
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
- * authenticated curator waypoint and replaces the Cortex group ATTACK once with a group MOVE to
- * that same destination. It also updates the pilot's movement planner once to the identical point;
+ * authenticated curator waypoint, returns the crew from the Cortex engage task to normal formation,
+ * and replaces the Cortex group ATTACK once with a group MOVE to that same destination. It also
+ * updates the pilot's movement planner once to the identical point;
  * cleanup releases the attack target at both individual and group-command layers, then
  * a short token-bound transit guard prevents the pilot from autonomously selecting the retired target
  * while that move takes hold. It never changes the route, combat mode, group attack permission, FSM,
@@ -120,11 +121,13 @@ private _finish={
                         distance2D _handoverPosition <= 2}) then {
                     _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
                 };
-                // ATTACK is a group-command-layer order, so a private pilot doMove cannot reliably
-                // replace it. Issue one group-command MOVE to the byte-for-byte Zeus waypoint, then
-                // force the local movement planner to adopt that same point. Live dedicated evidence
-                // showed commandMove alone left expectedDestination on the retired attack leg. This
-                // is cleanup, not a continuing tactic; the guard never invents or repeats movement.
+                // ATTACK includes an engine formation/engage task. Return the vehicle crew to its
+                // ordinary formation first, then issue one group-command MOVE to the byte-for-byte
+                // Zeus waypoint and force the local movement planner to adopt that same point. Live
+                // dedicated evidence showed commandMove/setDestination alone could intermittently
+                // leave the engage task active. This is cleanup, not a continuing tactic; the guard
+                // never invents or repeats movement.
+                (crew _aircraft) doFollow leader _handoverGroup;
                 _handoverPilot commandMove _handoverPosition;
                 _handoverPilot setDestination [_handoverPosition,"LEADER PLANNED",true];
                 _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
