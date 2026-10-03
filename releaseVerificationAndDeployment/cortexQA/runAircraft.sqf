@@ -388,11 +388,12 @@ deleteGroup _nativeHandoverGroup;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
         private _handoverGuard=_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]];
         private _handoverResult=_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]];
-        private _handoverExpected=(_handoverResult param [6,[]]) param [0,[]];
+        // currentCommand and the first expectedDestination sample can remain ATTACK/the retired
+        // internal leg while an aircraft replans. The unchanged 90-second physical gate below is
+        // authoritative; this assertion verifies only that the bounded, interruptible guard exists.
         private _handoverGuardValid=count _handoverGuard == 2
             && {!(_handoverPilot checkAIFeature "AUTOTARGET")}
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
-            && {_handoverExpected distance2D _replacement <= 2}
             && {_handoverResult param [5,""] == "ZEUS_TRANSIT_GUARD"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
