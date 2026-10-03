@@ -17,7 +17,8 @@
  * acts, and send nothing while the pass is disabled.
  * Locality and authority: interface clients only; repeat-safe, JIP-safe.
  *
- * Review contract: Edited/placed events carry a group; deleted/double-click events carry a waypoint array. Installation is repeat-safe per curator and local to each joining interface client.
+ * Review contract: Placed events carry a group and waypoint ID; edited, deleted and double-clicked
+ * events carry a waypoint array. Installation is repeat-safe per curator and local to each joining interface client.
  *
  * Arguments: None.
  *

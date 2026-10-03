@@ -9,6 +9,8 @@
  * Repeat/JIP: durable restoration data is public; local jobs are never replayed verbatim. A calm
  * remount keeps its original deadline and vehicle, and yields to Zeus or a newer assignment.
  * Combat-mode restoration checks the applied value before restoring, preserving newer ROE changes.
+ * Aircraft occupants are restored from any earlier ground lease but are not adopted into ground
+ * transitions; their dedicated flight controllers remain the sole movement owner.
  * Arguments: 0: group <GROUP>, default grpNull; 1: gained locality <BOOL>, default false.
  * Return Value: Nothing unless a value is explicitly returned below.
  * Current callers: group Local handler and discovery.
@@ -112,6 +114,12 @@ private _withdrawalResumeEligible=count _withdrawalIntent == 7
     && {_withdrawalGateOpen}
     && {!([_group] call Waldo_fnc_CortexZeusHeld)};
 [_group, _restore, false, false, "OWNERSHIP_ADOPTED",!(_transitionResumeEligible || {_withdrawalResumeEligible})] call Waldo_fnc_CortexRestoreCalm;
+// Aircrew have dedicated flight, countermeasure and attack controllers. A Local event handler may
+// survive from the group's earlier ground phase, but ownership migration must never reconstruct
+// infantry transitions, remounts or building movement while any living member occupies an aircraft.
+if ((units _group) findIf {
+    alive _x && {vehicle _x != _x} && {vehicle _x isKindOf "Air"}
+} >= 0) exitWith {};
 // A delegated building task is the active movement owner. Replay it only after old-owner calm
 // restoration has finished, then stop: remount, post-contact and withdrawal intents from an older
 // episode must not compete with the reconstructed building controller.

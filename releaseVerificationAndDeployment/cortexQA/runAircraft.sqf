@@ -222,6 +222,57 @@ private _cortex=_results select 1;
     } forEach [false,true];
 } forEach ["O_Heli_Attack_02_dynamicLoadout_F","O_Plane_CAS_02_dynamicLoadout_F"];
 
+// Paired native waypoint-replacement control. It uses the same aircraft class, airborne start,
+// replacement-leg distance and physical threshold as the Cortex handover arm, but no Cortex flight
+// controller or Zeus callback. This proves that the engine and audit geometry can fly a freshly
+// selected group waypoint before attributing a Cortex handover failure to production logic.
+[createHashMapFromArray [
+    ["Waldo_Cortex_AirAttack_Enable",false],["Waldo_Cortex_AttackRunFlares_Enable",false],
+    ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]
+]] call Waldo_fnc_CortexTuning;
+private _nativeHandoverAircraft=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[7400,5000,180],[],0,"FLY"];
+_nativeHandoverAircraft setDir 0; createVehicleCrew _nativeHandoverAircraft; _nativeHandoverAircraft allowDamage false;
+private _nativeHandoverCrew=crew _nativeHandoverAircraft;
+private _nativeHandoverGroup=group driver _nativeHandoverAircraft;
+_nativeHandoverGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+_nativeHandoverGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+_nativeHandoverGroup setVariable ["acex_headless_blacklist",true,true];
+{_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]} forEach _nativeHandoverCrew;
+_nativeHandoverAircraft setVelocityModelSpace [0,55,0];
+_nativeHandoverAircraft flyInHeight 180;
+private _nativeInitial=[7400,6800,180];
+private _nativeInitialWaypoint=_nativeHandoverGroup addWaypoint [_nativeInitial,0];
+_nativeInitialWaypoint setWaypointType "MOVE";
+_nativeInitialWaypoint setWaypointBehaviour "AWARE";
+_nativeInitialWaypoint setWaypointSpeed "FULL";
+_nativeHandoverAircraft setVariable ["Waldo_CortexQA_Label","AIR-HANDOVER-NATIVE-CONTROL",true];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_nativeHandoverAircraft],true];
+["AIR-HANDOVER-NATIVE-CONTROL","Native comparison: the airborne helicopter must accept a replacement AWARE/FULL/MOVE waypoint and physically fly it. This uses the same leg and threshold as the Cortex Zeus handover without starting any Cortex aircraft lease.",getPosATL _nativeHandoverAircraft] call _phase;
+private _nativeOrigin=getPosATL _nativeHandoverAircraft;
+private _nativeStarted=[{_nativeHandoverAircraft distance2D _nativeOrigin >= 100},60] call _wait;
+["AIR-HANDOVER-NATIVE-CONTROL-started",_nativeStarted,str [getPosATL _nativeHandoverAircraft,speed _nativeHandoverAircraft]] call _recordCheck;
+private _nativeReplacement=(getPosATL _nativeHandoverAircraft) vectorAdd [600,250,0];
+private _nativeReplacementWaypoint=_nativeHandoverGroup addWaypoint [_nativeReplacement,0];
+_nativeReplacementWaypoint setWaypointType "MOVE";
+_nativeReplacementWaypoint setWaypointBehaviour "AWARE";
+_nativeReplacementWaypoint setWaypointSpeed "FULL";
+_nativeHandoverGroup setCurrentWaypoint _nativeReplacementWaypoint;
+private _nativeTravelled=[{_nativeHandoverAircraft distance2D _nativeReplacement <= 350},90] call _wait;
+["AIR-HANDOVER-NATIVE-CONTROL-replacement-travel",_nativeStarted && {_nativeTravelled},str [
+    _nativeHandoverAircraft distance2D _nativeReplacement,getPosATL _nativeHandoverAircraft,
+    currentCommand driver _nativeHandoverAircraft,expectedDestination driver _nativeHandoverAircraft,
+    currentWaypoint _nativeHandoverGroup,waypoints _nativeHandoverGroup apply {waypointPosition _x},
+    speed _nativeHandoverAircraft,velocityModelSpace _nativeHandoverAircraft
+]] call _recordCheck;
+["AIR-HANDOVER-NATIVE-CONTROL-no-cortex-owner",
+    (_nativeHandoverAircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []
+        && {(_nativeHandoverAircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []},
+    str [_nativeHandoverAircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]],
+        _nativeHandoverAircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]]] call _recordCheck;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{deleteVehicle _x} forEach (_nativeHandoverCrew+[_nativeHandoverAircraft]);
+deleteGroup _nativeHandoverGroup;
+
 // Adaptive attacks remain separate from the flare-only comparison above. These cases never invoke
 // the production planner/worker directly: ordinary targets, knowledge and flight orders provide the
 // stimulus, and discovery must acquire the aircraft on its normal interval.
@@ -284,6 +335,12 @@ private _cortex=_results select 1;
     private _origin=getPosATL _aircraft;
     private _started=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []},35] call _wait;
     [_id+"-physical-plan-start",_started,str (_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _recordCheck;
+    [_id+"-dedicated-aircraft-owner",
+        !(_group getVariable ["Waldo_AIPass_Managed",false])
+            && {count (_group getVariable ["Waldo_AIPass_State",createHashMap]) == 0},
+        str [_group getVariable ["Waldo_AIPass_Managed",false],
+            _group getVariable ["Waldo_AIPass_PublicPhase",""],
+            _group getVariable ["Waldo_AIPass_State",createHashMap]]] call _recordCheck;
     [_id+"-exclusive-flight-controller",!(_aircraft getVariable ["Waldo_HelicopterDeceleration_Active",false])
         && {!(_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active",false])},
         str [_aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]],
@@ -348,7 +405,12 @@ private _cortex=_results select 1;
             _aircraft getVariable ["Waldo_HelicopterDeceleration_Active",false],
             _aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]],
             ["MOVE","PATH","FSM"] apply {_handoverPilot checkAIFeature _x},
-            unitReady _handoverPilot,canMove _aircraft,isEngineOn _aircraft,fuel _aircraft,damage _aircraft
+            unitReady _handoverPilot,canMove _aircraft,isEngineOn _aircraft,fuel _aircraft,damage _aircraft,
+            _group getVariable ["Waldo_AIPass_Managed",false],
+            _group getVariable ["Waldo_AIPass_PublicPhase",""],
+            _group getVariable ["Waldo_AIPass_State",createHashMap],
+            _group getVariable ["Waldo_Cortex_DrillTransitions",[]],
+            units _group apply {[_x,vehicle _x,currentCommand _x,assignedVehicleRole _x]}
         ]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
         [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;

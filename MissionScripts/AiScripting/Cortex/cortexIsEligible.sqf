@@ -31,6 +31,9 @@
  * Arguments:
  * 0: group <GROUP>
  * 1: ignore temporary Zeus hold <BOOL>, default false; explicit order preflight only.
+ * 2: generic ground pass <BOOL>, default false. When true, any group with a living member aboard
+ *    an aircraft is reserved for the dedicated airborne, flare and attack controllers. This keeps
+ *    infantry contact, support, regroup and vehicle-ground logic from competing for its pilot.
  * Repeat/JIP: read-only apart from the documented local hold cache; safe to repeat.
  *
  * Return Value:
@@ -40,10 +43,11 @@
  * [group _unit] call Waldo_fnc_CortexIsEligible;
  * Result: false for a player squad, a gunship crew or any group marked with Waldo_AIPass_Exclude.
  *
- * Current callers: Waldo_fnc_CortexRegroupStep.
+ * Current callers: shared eligibility gates across Cortex group, vehicle, aircraft, artillery,
+ * building, support and locality controllers.
  */
 
-params [["_group", grpNull, [grpNull]], ["_ignoreZeusHold",false,[true]]];
+params [["_group", grpNull, [grpNull]], ["_ignoreZeusHold",false,[true]], ["_groundPass",false,[true]]];
 if (isNull _group) exitWith {false};
 if (_group getVariable ["Waldo_AI_ExternalControl", false] || {"ALL" in (_group getVariable ["Waldo_AIPass_DisabledFeatures", []])}) exitWith {false};
 // Zeus always has priority: a group Zeus is commanding is left alone (Waldo_fnc_CortexZeusHeld).
@@ -54,6 +58,10 @@ if (_group getVariable ["Waldo_AI_Exclude", false]
 
 private _alive = (units _group) select {alive _x};
 if (_alive isEqualTo [] || {_alive findIf {isPlayer _x} >= 0}) exitWith {false};
+if (_groundPass && {_alive findIf {
+    private _vehicle=vehicle _x;
+    _vehicle != _x && {_vehicle isKindOf "Air"}
+} >= 0}) exitWith {false};
 
 if (_alive findIf {
     private _job = _x getVariable ["Waldo_Convoy_Dismount", []];

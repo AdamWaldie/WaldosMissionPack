@@ -25,9 +25,14 @@ class CortexContracts(unittest.TestCase):
 
     def test_curator_payloads_are_not_conflated(self):
         text = source('cortexZeusWatchLocal')
-        self.assertIn('forEach ["CuratorWaypointPlaced", "CuratorWaypointEdited"]', text)
-        self.assertNotIn('["CuratorWaypointEdited", "CuratorWaypointDeleted"]', text)
-        self.assertIn('params ["", "_group"]', text)
+        placed=text.index('_curator addEventHandler ["CuratorWaypointPlaced"')
+        array_payloads=text.index('forEach ["CuratorWaypointEdited", "CuratorWaypointDeleted", "CuratorWaypointDoubleClicked"]')
+        self.assertLess(placed,array_payloads)
+        self.assertIn('params ["", "_group", "_waypointID"]', text)
+        self.assertIn('[_group,true,_waypointID]',text)
+        self.assertIn('forEach ["CuratorWaypointEdited", "CuratorWaypointDeleted", "CuratorWaypointDoubleClicked"]', text)
+        self.assertNotIn('forEach ["CuratorWaypointPlaced", "CuratorWaypointEdited"]', text)
+        self.assertIn('params ["", "_waypoint"]', text)
         self.assertIn('_waypoint select 0', text)
 
     def test_plain_curator_selection_does_not_cancel_ai(self):

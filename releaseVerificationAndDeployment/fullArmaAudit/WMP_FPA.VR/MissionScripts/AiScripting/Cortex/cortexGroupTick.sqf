@@ -104,7 +104,16 @@ if (_alive isEqualTo []) exitWith {
     _group setVariable ["Waldo_AIPass_Managed", nil];
     -1
 };
-if !([_group] call Waldo_fnc_CortexIsEligible) exitWith {
+// The generic group loop owns infantry and ground-vehicle behaviour only. Aircraft occupants retain
+// ordinary eligibility for the dedicated flight systems, but this job must retire immediately if a
+// group boards an aircraft so CONTACT cleanup and tactical jobs cannot fight the pilot controller.
+private _generallyEligible=[_group] call Waldo_fnc_CortexIsEligible;
+private _groundPassEligible=[_group,false,true] call Waldo_fnc_CortexIsEligible;
+if (!_groundPassEligible && {_generallyEligible}) exitWith {
+    [_group,true,"AIRCRAFT_DEDICATED"] call Waldo_fnc_CortexReleaseGroup;
+    -1
+};
+if (!_generallyEligible) exitWith {
     if (count (_group getVariable ["Waldo_AIPass_State", createHashMap]) > 0 || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}) then {[_group, false] call Waldo_fnc_CortexReleaseGroup};
     // Any active Zeus takeover outranks explicit holding orders, including target,
     // stance and ZEN commands that do not create a waypoint.

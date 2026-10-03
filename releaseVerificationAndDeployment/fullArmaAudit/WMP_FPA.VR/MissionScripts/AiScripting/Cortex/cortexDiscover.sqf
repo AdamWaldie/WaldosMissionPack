@@ -3,9 +3,9 @@
  * Machine-local discovery sweep for Cortex, run as a scheduler job every
  * Waldo_AIPass_DiscoveryInterval seconds (default 10) on the server and each headless client.
  *
- * One sweep caches candidates and installs repeat-safe group ownership handlers:
+ * One sweep caches candidates and installs repeat-safe ground-group ownership handlers:
  * - caches player positions for the distance tiers (one allPlayers read per sweep, not per group);
- * - starts a Waldo_fnc_CortexGroupTick job for each newly local, eligible group and records its
+ * - starts a Waldo_fnc_CortexGroupTick job for each newly local, eligible non-aircraft group and records its
  *   peak strength, which is how groups handed over by ACE Headless or WMP Headless are picked up;
  * - re-applies garrison orders on the new owner after a locality change, because disableAI and
  *   event handlers are stored per machine;
@@ -17,7 +17,8 @@
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
  * - installs the missile-warning handler (flares, and the optional break-away jink) on every locally
  *   owned, eligible AI aircraft; no unrelated WMP aircraft-system marker is required.
- * - queues proactive attack-run flare sampling and the finite adaptive attack controller only for a
+ * - reserves aircraft crews from the generic group domain, then queues proactive attack-run flare
+ *   sampling and the finite adaptive attack controller only for a
  *   currently eligible, crewed AI aircraft;
  *   empty, player, UAV and excluded aircraft are reconsidered on later sweeps without job churn.
  * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
@@ -52,14 +53,25 @@ private _spotters = [];
 private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_DynamicAO", false];
 {
     private _group = _x;
-    [_group] call Waldo_fnc_CortexHearingLocal;
-    if (isNil {_group getVariable "Waldo_AIPass_LocalHandler"}) then {
-        _group setVariable ["Waldo_AIPass_LocalHandler", _group addEventHandler ["Local", {
-            _this call Waldo_fnc_CortexLocality;
-        }]];
-    };
-    if (local _group && {!(_group getVariable ["Waldo_AIPass_Adopted", false])}) then {
-        [_group, true] call Waldo_fnc_CortexLocality;
+    // Aircraft occupants remain eligible for the dedicated air systems below, but the generic
+    // infantry/ground-vehicle domain must not install hearing, locality adoption or a group tick.
+    // If a previously managed ground group boards an aircraft, release that old owner immediately.
+    private _groundEligible = [_group,false,true] call Waldo_fnc_CortexIsEligible;
+    if (_groundEligible) then {
+        [_group] call Waldo_fnc_CortexHearingLocal;
+        if (isNil {_group getVariable "Waldo_AIPass_LocalHandler"}) then {
+            _group setVariable ["Waldo_AIPass_LocalHandler", _group addEventHandler ["Local", {
+                _this call Waldo_fnc_CortexLocality;
+            }]];
+        };
+        if (local _group && {!(_group getVariable ["Waldo_AIPass_Adopted", false])}) then {
+            [_group, true] call Waldo_fnc_CortexLocality;
+        };
+    } else {
+        [_group,true] call Waldo_fnc_CortexHearingLocal;
+        if (local _group && {_group getVariable ["Waldo_AIPass_Managed",false]}) then {
+            [_group,true,"AIRCRAFT_DEDICATED"] call Waldo_fnc_CortexReleaseGroup;
+        };
     };
     // "Applied" flags are machine-local. Clear them while another machine owns the group, so a group
     // that comes back (for example server to headless client and back) has its order re-applied here.
@@ -84,7 +96,10 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
             || {!isNil {_group getVariable "Waldo_TransportService_Vehicle"}}) then {
             [_group] call Waldo_fnc_CortexReleaseFeatureCrew;
         };
-        private _eligible = [_group] call Waldo_fnc_CortexIsEligible;
+        // Aircraft occupants have dedicated flight, flare, missile-reaction and airborne controllers.
+        // They may remain generally Cortex-eligible for those systems, but must never acquire the
+        // generic ground-group loop as a second movement/behaviour owner.
+        private _eligible = _groundEligible;
         if ((!_lambsWmpMode || {!_eligible}) && {_group getVariable ["Waldo_AIPass_LambsDisabledByPass", false]}) then {
             _group setVariable ["lambs_danger_disableGroupAI", _group getVariable ["Waldo_AIPass_LambsBaseline", false], true];
             _group setVariable ["Waldo_AIPass_LambsDisabledByPass", nil, true];
@@ -109,7 +124,7 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
                 [_group,_lambsLease select 0,true,_lambsLease select 2] call Waldo_fnc_CortexLambsLease;
             };
         };
-        if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_CortexIsEligible}) then {
+        if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {_eligible}) then {
             _group setVariable ["Waldo_AIPass_Managed", true];
             _group setVariable ["Waldo_AIPass_PeakSize", (_group getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _group)];
             [Waldo_fnc_CortexGroupTick, createHashMapFromArray [["group", _group]], random 2] call Waldo_fnc_CortexQueueJob;

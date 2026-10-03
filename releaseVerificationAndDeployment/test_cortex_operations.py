@@ -1473,6 +1473,20 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_vehicles findIf {_x getVariable ["Waldo_Headless_HelicopterPinned"',eligible)
         self.assertIn('The permanent helicopter pin prevents unstable HC transfer',eligible)
 
+    def test_aircraft_occupants_have_one_dedicated_movement_owner(self):
+        eligible=source('cortexIsEligible')
+        discover=source('cortexDiscover')
+        tick=source('cortexGroupTick')
+        attack=source('cortexAirAttack')
+        self.assertIn('["_groundPass",false,[true]]',eligible)
+        self.assertIn('_groundPass && {_alive findIf {',eligible)
+        self.assertIn('_vehicle isKindOf "Air"',eligible)
+        self.assertIn('[_group,false,true] call Waldo_fnc_CortexIsEligible',discover)
+        self.assertIn('private _generallyEligible=[_group] call Waldo_fnc_CortexIsEligible',tick)
+        self.assertIn('private _groundPassEligible=[_group,false,true] call Waldo_fnc_CortexIsEligible',tick)
+        self.assertIn('[_group,true,"AIRCRAFT_DEDICATED"] call Waldo_fnc_CortexReleaseGroup',tick)
+        self.assertIn('&& {[_group] call Waldo_fnc_CortexIsEligible}',attack)
+
     def test_combined_roles_use_owned_fire_team_drills_and_restore_holds(self):
         coordinator=source('cortexSupportCoordinateStep')
         self.assertNotIn('allUnits',coordinator)
@@ -1556,7 +1570,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_reason != "ZEUS" && {_state getOrDefault ["attackChanged",false]})',flank_end)
 
     def test_zeus_takeover_releases_explicit_orders_without_waypoint(self):
-        text=source('cortexGroupTick').split('if !([_group] call Waldo_fnc_CortexIsEligible)')[1].split('// Survivor regroup')[0]
+        text=source('cortexGroupTick').split('if (!_generallyEligible)')[1].split('// Survivor regroup')[0]
         self.assertIn('if ([_group] call Waldo_fnc_CortexZeusHeld) then', text)
         for name in ['CortexGarrisonRelease','CortexDefendRelease','CortexClearRelease']:
             self.assertIn('call Waldo_fnc_'+name, text)
@@ -2762,6 +2776,36 @@ class CortexOperations(unittest.TestCase):
         for requirement in ['adaptiveAirAttacks','activeAirAttacks','cortex-air-attack-',
                             'lastCountermeasureRequest','actualShots','observedAA']:
             self.assertIn(requirement,diagnostics)
+
+        audit=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
+        for requirement in ['AIR-HANDOVER-NATIVE-CONTROL-started',
+                            'AIR-HANDOVER-NATIVE-CONTROL-replacement-travel',
+                            'AIR-HANDOVER-NATIVE-CONTROL-no-cortex-owner',
+                            '-dedicated-aircraft-owner','Waldo_AIPass_Managed',
+                            'Waldo_AIPass_State']:
+            self.assertIn(requirement,audit)
+        native=audit.split('// Paired native waypoint-replacement control.',1)[1].split(
+            '// Adaptive attacks remain separate',1)[0]
+        self.assertIn('["Waldo_Cortex_AirAttack_Enable",false]',native)
+        self.assertIn('["Waldo_AIPass_Exclude",true,true]',native)
+        self.assertIn('distance2D _nativeReplacement <= 350',native)
+
+    def test_aircraft_crew_never_acquire_generic_group_ownership(self):
+        eligibility=source('cortexIsEligible')
+        self.assertIn('params [["_group", grpNull, [grpNull]], ["_ignoreZeusHold",false,[true]], ["_groundPass",false,[true]]]',eligibility)
+        self.assertIn('_groundPass && {_alive findIf',eligibility)
+        self.assertIn('_vehicle isKindOf "Air"',eligibility)
+        discover=source('cortexDiscover')
+        self.assertIn('private _groundEligible = [_group,false,true] call Waldo_fnc_CortexIsEligible',discover)
+        self.assertIn('[_group,true,"AIRCRAFT_DEDICATED"] call Waldo_fnc_CortexReleaseGroup',discover)
+        self.assertIn('private _eligible = _groundEligible',discover)
+        tick=source('cortexGroupTick')
+        self.assertIn('private _groundPassEligible=[_group,false,true] call Waldo_fnc_CortexIsEligible',tick)
+        self.assertIn('[_group,true,"AIRCRAFT_DEDICATED"] call Waldo_fnc_CortexReleaseGroup',tick)
+        locality=source('cortexLocality')
+        air_guard=locality.split('call Waldo_fnc_CortexRestoreCalm;',1)[1].split('// A delegated building task',1)[0]
+        self.assertIn('vehicle _x isKindOf "Air"',air_guard)
+        self.assertIn('exitWith {}',air_guard)
 
     def test_air_attack_lease_excludes_other_flight_controllers(self):
         for name in ['helicopterDecelerationTrackLocal','helicopterDecelerationCorrectLocal',
