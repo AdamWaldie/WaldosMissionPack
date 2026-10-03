@@ -67,10 +67,11 @@ private _finish={
             private _handoverLeasedBehaviour="";
             private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
-            // Re-issue the current authored destination once at group level, after retiring Cortex
-            // targeting. An individual driver doMove can compete with the active group waypoint and
-            // leave a helicopter reversing in place. The group move uses Zeus's exact destination;
-            // Cortex does not invent or replace a route.
+            // Retire the scripted attack command while preserving the active curator waypoint. Do
+            // not also issue group move: that creates a second group flight plan beside the selected
+            // Zeus waypoint and can leave helicopters translating along one axis before hovering.
+            // The pilot destination below only clears Cortex's former owner-local doMove and matches
+            // the already-selected Zeus point exactly.
             private _handoverGroup=group driver _aircraft;
             private _handoverGroupCombatMode=combatMode _handoverGroup;
             private _handoverAttackEnabled=attackEnabled _handoverGroup;
@@ -154,7 +155,6 @@ private _finish={
                         _handoverGroup setCurrentWaypoint [_handoverGroup,_handoverIndex];
                     };
                 };
-                _handoverGroup move _handoverPosition;
                 _handoverPilot doMove _handoverPosition;
             };
             [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverPosition,
@@ -203,7 +203,6 @@ private _finish={
                                     if (_authoredSpeed in ["LIMITED","NORMAL","FULL"]) then {
                                         _handoverGroup setSpeedMode _authoredSpeed;
                                     };
-                                    _handoverGroup move _handoverPosition;
                                 };
                                 _handoverPilot doMove _handoverPosition;
                             };

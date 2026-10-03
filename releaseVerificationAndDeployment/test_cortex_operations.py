@@ -2699,7 +2699,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (!_snapshotMatches',controller)
         self.assertIn('_handoverGroup setCurrentWaypoint [_handoverGroup,_handoverIndex]',controller)
         self.assertIn('_handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex]',controller)
-        self.assertIn('_handoverGroup move _handoverPosition',controller)
+        self.assertNotIn('_handoverGroup move _handoverPosition',controller)
         self.assertIn('_handoverPilot doMove _handoverPosition',controller)
         self.assertNotIn('(driver _aircraft) doMove _handoverPosition',controller)
         self.assertIn('_finishGroup forgetTarget _leasedTarget',controller)
