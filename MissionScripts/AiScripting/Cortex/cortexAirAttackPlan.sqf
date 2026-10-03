@@ -90,9 +90,14 @@ private _groundCandidates=[];
 {
     private _turret=_x;
     // Arma exposes fixed-wing and other driver-controlled weapons through `weapons`, while
-    // `weaponsTurret [-1]` can be empty. Treat the driver station explicitly so an armed aircraft
-    // cannot be misclassified as weaponless and fall back to an uncontrolled native engagement.
-    private _stationWeapons=if (_turret isEqualTo [-1]) then {weapons _aircraft} else {_aircraft weaponsTurret _turret};
+    // Bohemia defines [-1] as the driver weapon station. Some aircraft expose those weapons through
+    // weaponsTurret, while other vehicle/config combinations expose part of the same station through
+    // weapons. Use the union: choosing only either command misclassified the armed CAS jet as
+    // weaponless and prevented the attack plan from existing at all.
+    private _stationWeapons=if (_turret isEqualTo [-1]) then {
+        private _driverWeapons=(weapons _aircraft)+(_aircraft weaponsTurret [-1]);
+        _driverWeapons arrayIntersect _driverWeapons
+    } else {_aircraft weaponsTurret _turret};
     {
         private _weapon=_x;
         private _compatible=compatibleMagazines _weapon;

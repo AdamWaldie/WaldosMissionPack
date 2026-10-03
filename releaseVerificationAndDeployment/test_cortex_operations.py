@@ -2460,7 +2460,8 @@ class CortexOperations(unittest.TestCase):
 
     def test_air_attack_reads_driver_weapons_outside_turret_inventory(self):
         text=(ROOT/'MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf').read_text(encoding='utf-8')
-        self.assertIn('if (_turret isEqualTo [-1]) then {weapons _aircraft}',text)
+        self.assertIn('(weapons _aircraft)+(_aircraft weaponsTurret [-1])',text)
+        self.assertIn('_driverWeapons arrayIntersect _driverWeapons',text)
         self.assertIn('forEach _stationWeapons',text)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text(encoding='utf-8')
         self.assertIn('private _ended=if (!_started) then {false}',qa)
@@ -2856,6 +2857,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_operator commandTarget _target',controller)
         self.assertIn('case "BOMB"',controller)
         self.assertIn('"TARGET_DESTROYED"',controller)
+        self.assertIn('_job set ["targetDestroyed",true]',controller)
+        self.assertIn('[_group,_job,"EGRESS","TARGET_DESTROYED"]',controller)
+        self.assertIn('_reason == "COMPLETE" && {_job getOrDefault ["targetDestroyed",false]}',controller)
         self.assertNotIn('ACTUAL_FIRE_NONPROGRESS',controller)
         aircraft_qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
         self.assertIn('private _physicalTransitions=',aircraft_qa)

@@ -454,7 +454,11 @@ private _observedProfiles=createHashMap;
     [_id,"Watch the aircraft physically fly its labelled pattern, fire real weapons and exit safely. The cyan leg and red target line are live geometry; an assigned target or elapsed timer cannot pass.",getPosATL _aircraft] call _phase;
     private _origin=getPosATL _aircraft;
     private _started=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []},35] call _wait;
-    [_id+"-physical-plan-start",_started,str (_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _recordCheck;
+    [_id+"-physical-plan-start",_started,str [
+        _aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]],
+        weapons _aircraft,_aircraft weaponsTurret [-1],magazinesAllTurrets _aircraft,
+        getPylonMagazines _aircraft
+    ]] call _recordCheck;
     _aircraft setVariable ["Waldo_CortexQA_ProfileSamples",[],true];
     [_aircraft] spawn {
         params ["_sampleAircraft"];

@@ -38,6 +38,11 @@ private _aircraft=_job getOrDefault ["aircraft",objNull];
 if (isNull _aircraft) exitWith {-1};
 private _finish={
     params ["_reason",["_resume",false]];
+    // A kill completes the weapon phase, not the flight lease. Preserve that semantic result after
+    // the aircraft has flown its real egress instead of ending control over the target wreck.
+    if (_reason == "COMPLETE" && {_job getOrDefault ["targetDestroyed",false]}) then {
+        _reason="TARGET_DESTROYED";
+    };
     private _finishGroup=group driver _aircraft;
     if (!isNull _finishGroup && {"token" in _job}) then {[_finishGroup,_job,"ENDED",_reason] call Waldo_fnc_CortexDrillSetStage};
     private _handler=_job getOrDefault ["firedHandler",-1];
@@ -217,9 +222,22 @@ if (_startFailure != "") exitWith {[_startFailure] call _finish};
 private _currentRoute=waypoints _group apply {[waypointPosition _x,waypointType _x]};
 if (_currentRoute isNotEqualTo (_job getOrDefault ["routeSignature",_currentRoute])) exitWith {["AUTHORED_ROUTE_CHANGED"] call _finish};
 private _target=_job getOrDefault ["target",objNull];
-if (isNull _target || {!alive _target}) exitWith {
-    [["TARGET_LOST","TARGET_DESTROYED"] select ((_job getOrDefault ["shots",0]) > 0),true] call _finish
+if (isNull _target) exitWith {["TARGET_LOST",true] call _finish};
+// Destroying the target must not strand the aircraft at the firing point. Complete the full
+// INGRESS -> ATTACK -> EGRESS contract, using the wreck's stable position for departure geometry.
+// A target lost before an actual attack remains a failed run and hands native control back at once.
+if (!alive _target && {!(_job getOrDefault ["targetDestroyed",false])}) then {
+    if (_stage == "ATTACK" && {(_job getOrDefault ["shots",0]) > (_job getOrDefault ["attackShotBaseline",0])}) then {
+        _job set ["targetDestroyed",true];
+        [_group,_job,"EGRESS","TARGET_DESTROYED"] call Waldo_fnc_CortexDrillSetStage;
+        _job set ["commandedStage",""];
+        _job set ["egressStartPosition",getPosATL _aircraft];
+        _job set ["egressStartedAt",serverTime];
+        _job set ["deadline",serverTime+75];
+        _stage="EGRESS";
+    };
 };
+if (!alive _target && {!(_job getOrDefault ["targetDestroyed",false])}) exitWith {["TARGET_LOST",true] call _finish};
 if ((getPosATL _aircraft select 2) < 25) exitWith {["GROUND_CLEARANCE"] call _finish};
 private _points=_job get "points";
 private _stageIndex=["INGRESS","ATTACK","EGRESS"] find _stage;
