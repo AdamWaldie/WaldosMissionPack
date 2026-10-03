@@ -8,8 +8,9 @@
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * If Arma retains a completed helicopter doMove as a zero-thrust hover during a direct Zeus
- * handover, one measured-stagnation recovery supplies forward velocity along the authenticated
- * curator route without moving the aircraft position or creating a replacement order.
+ * handover, measured-stagnation recovery first replaces it with one commandMove to the exact
+ * authenticated curator destination. A second verified stall receives one forward-velocity
+ * impulse along that same route. Neither step moves the aircraft position or creates a waypoint.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -70,6 +71,7 @@ private _finish={
             private _handoverLeasedBehaviour="";
             private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
+            _aircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",nil,true];
             // Retire the scripted attack command while preserving the active curator waypoint. Do
             // not issue another group move or another pilot doMove: either creates a second flight
             // plan beside the selected Zeus waypoint. A leader given doMove remains on that private
@@ -178,7 +180,7 @@ private _finish={
                 private _deadline=serverTime+([8,100] select (count _handoverPosition >= 2));
                 private _progressPosition=getPosATL _handoverAircraft;
                 private _progressAt=serverTime;
-                private _departureImpulseApplied=false;
+                private _recoveryStage=0;
                 private _finished=false;
                 waitUntil {
                     sleep 0.5;
@@ -223,11 +225,25 @@ private _finish={
                                 // Arma can retain the final zero-thrust hover of a completed
                                 // actor-level helicopter doMove even after expectedDestination,
                                 // currentWaypoint and facing all agree with the replacement Zeus
-                                // waypoint. Recover that engine deadlock once, after physical
-                                // stagnation proves it exists. This is a velocity handover along
-                                // Zeus's unchanged route, not a teleport or a synthesized order;
+                                // waypoint. commandMove is the next higher command layer and can
+                                // retire that stale doMove. It repeats Zeus's exact authenticated
+                                // destination once; it does not invent or replace a waypoint.
+                                if (_recoveryStage == 0
+                                    && {_handoverAircraft isKindOf "Helicopter"}
+                                    && {!isTouchingGround _handoverAircraft}
+                                    && {abs speed _handoverAircraft < 5}
+                                    && {_handoverAircraft distance2D _handoverPosition > 150}) then {
+                                    _handoverPilot commandMove _handoverPosition;
+                                    _recoveryStage=1;
+                                    _handoverAircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",[
+                                        serverTime,"COMMAND_MOVE",+_handoverPosition,+getPosATL _handoverAircraft
+                                    ],true];
+                                } else {
+                                // If the higher command layer also remains physically stalled for
+                                // another complete observation window, supply one bounded velocity
+                                // handover along Zeus's unchanged route. This is not a teleport:
                                 // position, waypoint ownership and vertical motion remain intact.
-                                if (!_departureImpulseApplied
+                                if (_recoveryStage == 1
                                     && {_handoverAircraft isKindOf "Helicopter"}
                                     && {!isTouchingGround _handoverAircraft}
                                     && {abs speed _handoverAircraft < 5}
@@ -242,11 +258,12 @@ private _finish={
                                             10*(_routeVector select 1)/_routeLength,
                                             _velocity select 2
                                         ];
-                                        _departureImpulseApplied=true;
+                                        _recoveryStage=2;
                                         _handoverAircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",[
-                                            serverTime,+_handoverPosition,+_currentPosition
+                                            serverTime,"FORWARD_IMPULSE",+_handoverPosition,+_currentPosition
                                         ],true];
                                     };
+                                };
                                 };
                             };
                             _progressPosition=getPosATL _handoverAircraft;
@@ -262,7 +279,7 @@ private _finish={
                     behaviour _handoverPilot,
                     unitCombatMode _handoverPilot,
                     currentCommand _handoverPilot,
-                    _departureImpulseApplied
+                    _recoveryStage
                 ],true];
                 if (local _handoverAircraft) then {
                     [_handoverAircraft,_handoverPilot,_handoverToken,_handoverFeatures,

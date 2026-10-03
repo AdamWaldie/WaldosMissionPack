@@ -2723,8 +2723,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _handoverZeusToken=-1',controller)
         self.assertIn('(_currentHold param [0,-2]) != _handoverZeusToken',controller)
         self.assertIn('_handoverAircraft distance2D _progressPosition < 15',controller)
-        self.assertIn('private _departureImpulseApplied=false',controller)
+        self.assertIn('private _recoveryStage=0',controller)
         self.assertIn('abs speed _handoverAircraft < 5',controller)
+        self.assertIn('_handoverPilot commandMove _handoverPosition',controller)
+        self.assertIn('"COMMAND_MOVE"',controller)
+        self.assertIn('"FORWARD_IMPULSE"',controller)
         self.assertIn('_handoverAircraft setVelocity [',controller)
         self.assertIn('Waldo_Cortex_AirHandoverRecovery',controller)
         self.assertIn('combatBehaviour _handoverPilot != _handoverLeasedBehaviour',controller)
@@ -2809,7 +2812,8 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(item,text)
         for item in ['Waldo_Cortex_AirHandoverRecovery','Waldo_ImprovedHelicopterLanding_Active',
                      'Waldo_ImprovedHelicopterLanding_LastResult','Waldo_HelicopterDeceleration_Active',
-                     'Waldo_HelicopterDeceleration_LastResult']:
+                     'Waldo_HelicopterDeceleration_LastResult','checkAIFeature _x','unitReady _handoverPilot',
+                     'canMove _aircraft','isEngineOn _aircraft','fuel _aircraft','damage _aircraft']:
             self.assertIn(item,text)
         self.assertIn('[_group,true,_replacementWaypoint select 1] call Waldo_fnc_CortexZeusMark',text)
         self.assertIn('private _replacementWaypoint=_group addWaypoint [_replacement,0]',text)

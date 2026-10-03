@@ -346,7 +346,9 @@ private _cortex=_results select 1;
             _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active",false],
             _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_LastResult",[]],
             _aircraft getVariable ["Waldo_HelicopterDeceleration_Active",false],
-            _aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]]
+            _aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]],
+            ["MOVE","PATH","FSM"] apply {_handoverPilot checkAIFeature _x},
+            unitReady _handoverPilot,canMove _aircraft,isEngineOn _aircraft,fuel _aircraft,damage _aircraft
         ]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
         [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;
