@@ -177,15 +177,18 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                     if (!isNull _candidate && {alive _candidate} && {(side group _pilot) getFriend side _candidate < 0.6}) exitWith {_airAttackTarget=_candidate};
                 } forEach ([effectiveCommander _vehicle,driver _vehicle,gunner _vehicle,commander _vehicle]+crew _vehicle);
                 // A contact can be detected and shared before the engine assigns it to a particular
-                // seat. Requiring assignedTarget made the adaptive attack path wait for native AI to
-                // start the engagement it was intended to improve. Use the pilot's normal knowledge
-                // list as the fallback and pass that concrete contact into the finite job.
+                // seat. Requiring assignedTarget or the pilot's transient current-target list made
+                // the adaptive attack wait for native AI to start the engagement it was intended to
+                // improve. Read the bounded known-contact table used by the planner and pass that
+                // concrete contact into the finite job.
                 if (isNull _airAttackTarget) then {
-                    private _knownTargets=_pilot targets [true,[8000,5000] select !(_vehicle isKindOf "Plane")];
+                    private _knownTargets=(_pilot nearTargets ([8000,5000] select !(_vehicle isKindOf "Plane"))) select [0,16];
                     private _knownIndex=_knownTargets findIf {
-                        alive _x && {(side group _pilot) getFriend side _x < 0.6}
+                        private _knownObject=_x param [4,objNull];
+                        !isNull _knownObject && {alive _knownObject}
+                            && {(side group _pilot) getFriend side _knownObject < 0.6}
                     };
-                    if (_knownIndex >= 0) then {_airAttackTarget=_knownTargets select _knownIndex};
+                    if (_knownIndex >= 0) then {_airAttackTarget=(_knownTargets select _knownIndex) param [4,objNull]};
                 };
             };
             if (_airAttackEligible && {!isNull _airAttackTarget} && {!(_vehicle getVariable ["Waldo_Cortex_AirAttackJob",false])}) then {
