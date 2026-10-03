@@ -23,6 +23,8 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AI_ApplyMode` | `"BOTH"` | STRING: EXISTING, NEW or BOTH AI populations. |
 | `Waldo_AI_RestoreOnStop` | `true` | ADVANCED: restore captured vanilla/mission skills on stop. |
 | `Waldo_AI_SkillVariance` | `0` | ADVANCED: one stable per-AI offset; 0 disables variation. |
+| `Waldo_AI_VehicleCrewAimMultiplier` | `0.75` | Final aiming-skill multiplier for ordinary operating vehicle and aircraft crew. Named Dynamic AA crews are exempt. |
+| `Waldo_AI_VehicleCrewDispersion` | `2.5` | Owner-local aim coefficient for ordinary operating crew when LAMBS Turrets is absent. Named Dynamic AA crews retain their authored coefficient. |
 | `Waldo_AI_IncludedSides` | `[]` | ARRAY of WEST/EAST/GUER/CIV strings; [] permits every side. |
 | `Waldo_AI_IncludedFactions` | `[]` | ARRAY of CfgFactionClasses names; [] permits every faction. |
 | `Waldo_AI_ExcludedFactions` | `[]` | ARRAY of faction names removed after the include filter. |
@@ -163,7 +165,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Garrison_DynamicAO` | `false` | BOOL: WMP garrison handling for Dynamic AO garrisons. |
 | `Waldo_AIPass_Garrison_BreakFraction` | `0.5` | 0-1: a garrison breaks at this share of its strength. |
 | `Waldo_Cortex_AttackRunFlares_Enable` | `true` | BOOL: finite countermeasure requests while eligible AI aircraft approach and leave assigned attack targets. |
-| `Waldo_Cortex_AirAttack_Enable` | `true` | BOOL: finite threat-aware strafe, offset, helicopter-hook and standoff attack patterns. |
+| `Waldo_Cortex_AirAttack_Enable` | `true` | BOOL: finite threat-aware strafe, offset, hook, capability-gated lateral and aimed standoff attack patterns. |
 | `Waldo_AIPass_AircraftFlares_Enable` | `false` | BOOL: WMP gunships and Dynamic AA fighters flare at missiles. |
 | `Waldo_AIPass_FactionProfiles` | `createHashMap` | MAP: CfgFactionClasses name to behaviour profile, for example OPF_F to ELITE. |
 | `Waldo_AIPass_ZeusHoldSeconds` | `120` | SECONDS: the pass leaves a group alone this long after Zeus selects or edits it. |

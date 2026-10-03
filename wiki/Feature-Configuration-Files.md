@@ -326,6 +326,8 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AI_ApplyMode` | Which existing/new AI populations receive the profile. |
 | `Waldo_AI_RestoreOnStop` | Restores recorded skills when the handler stops. |
 | `Waldo_AI_SkillVariance` | Random variation applied around the selected profile. |
+| `Waldo_AI_VehicleCrewAimMultiplier` | Final aiming-skill multiplier for drivers, commanders and turret operators. Cargo keeps the infantry profile. Default `0.75`. |
+| `Waldo_AI_VehicleCrewDispersion` | Owner-local custom aim coefficient for operating crew. Default `2.5`; WMP skips this extra layer when LAMBS Turrets is loaded. |
 | `Waldo_AI_IncludedSides` | Optional side allowlist. |
 | `Waldo_AI_IncludedFactions` | Optional faction allowlist. |
 | `Waldo_AI_ExcludedFactions` | Factions never altered. |
@@ -469,7 +471,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Garrison_DynamicAO` | Dynamic AO garrisons duck under fire, watch outward and break at losses. Default `false`. |
 | `Waldo_AIPass_Garrison_BreakFraction` | A garrison or defence line breaks when down to this share of its strength at the time of the order. Default `0.5`. |
 | `Waldo_Cortex_AttackRunFlares_Enable` | AI planes and helicopters with an assigned hostile target make finite countermeasure requests on approach and after their closest pass. It uses onboard ammunition and does not alter the flight path. Default `true`. |
-| `Waldo_Cortex_AirAttack_Enable` | Eligible airborne AI choose a finite strafe, offset, helicopter-hook or standoff pattern from observed AA and usable weapons. The controller requires physical travel and real firing, aborts unsafe or stuck runs, and yields immediately to Zeus. Default `true`. |
+| `Waldo_Cortex_AirAttack_Enable` | Eligible airborne AI choose a finite strafe, offset, hook, turret-capable lateral or standoff pattern from observed AA and usable weapons. Lateral passes require a living armed independent turret and command that operator rather than fixed-forward pilot weapons. Standoff fire retains the loaded weapon/turret pair and waits for an engine firing solution; a failed solution temporarily removes standoff from that aircraft's next plan. The controller requires physical travel and real firing, aborts unsafe or stuck runs, and yields immediately to Zeus. Default `true`. |
 | `Waldo_AIPass_AircraftFlares_Enable` | WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first. Default `false`. |
 | `Waldo_AIPass_ProfileBehaviour` | Behaviour per profile name, alongside AI Rebalance's skill values (which are never changed by the pass): investigation and optional assault-grenade preparation chances, morale thresholds, retreat distance scale and the largest squad that may surrender. Cortex chooses flank, advance and coordinated movement from live orders, contact geometry, communication, available actors and safe avenues; it does not assign fixed movement profiles or wait for a scheduled rally. Legacy `flankChance`, `advanceChance` and `coordinatedChance` entries remain accepted for configuration compatibility but no longer select or veto movement. The group uses Waldo_AIPass_Profile on the group, then Waldo_AIPass_FactionProfiles, then the active Waldo_AIRebalance_Profile, then LINE. Default `per profile`. |
 | `Waldo_AIPass_FactionProfiles` | Optional map of faction classname to behaviour profile name, overriding the AI Rebalance profile for that faction's squads. Default `empty`. |

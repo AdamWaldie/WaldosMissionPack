@@ -191,7 +191,9 @@ private _consolidated=[{
     _flow isNotEqualTo [] && {(_flow select 0) in ["COHESIVE","INCOMPLETE"]}
 },150] call _wait;
 private _together=_flowMembers findIf {!alive _x || {_x distance2D _flowLeader > 20}} < 0;
-["POST-physical-consolidation",_detected && {_consolidated} && {_together},str (_flowMembers apply {_x distance2D _flowLeader})] call _check;
+["POST-physical-consolidation",_detected && {_consolidated} && {_together},str (_flowMembers apply {
+    [_x distance2D _flowLeader,currentCommand _x,expectedDestination _x,_x checkAIFeature "MOVE"]
+})] call _check;
 ["POST-cohesion-outcome",((_flowGroup getVariable ["Waldo_Cortex_Consolidation",[]]) param [0,""]) == "COHESIVE"] call _check;
 private _zeusTarget=[1200,1260,0];
 private _zeusWaypoint=_flowGroup addWaypoint [_zeusTarget,0];
@@ -226,6 +228,47 @@ private _militia=_skillUnit skill "aimingAccuracy";
 ["Skill profile: elite","Actual aiming accuracy must differ from the recorded militia value. A profile name or applied flag alone does not pass.",[1200,1100,0]] call _phase;
 private _skillChanged=[{abs ((_skillUnit skill "aimingAccuracy")-_militia) > 0.001},20] call _wait;
 ["SKILL-actual-value-changed",_skillChanged,format ["militia=%1 elite=%2",_militia,_skillUnit skill "aimingAccuracy"]] call _check;
+private _crewVehicle=createVehicle ["O_APC_Tracked_02_cannon_F",[1240,1100,0],[],0,"NONE"];
+private _crewGroup=east createVehicleCrew _crewVehicle;
+_groups pushBack _crewGroup;
+private _operatingCrew=crew _crewVehicle;
+{_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]; _objects pushBack _x} forEach _operatingCrew;
+_objects pushBack _crewVehicle;
+private _cargoGroup=[east] call _newGroup;
+private _cargo=[_cargoGroup,[1245,1100,0],"VEHICLE CARGO PROFILE"] call _newUnit;
+_cargo moveInCargo _crewVehicle;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_skillUnit,_crewVehicle],true];
+["Skill profile: operating crew and cargo","Vehicle operators must retain the selected Elite profile at lower precision. Cargo must keep the ordinary infantry profile. The label is backed by measured skills and aim coefficient, not vehicle occupancy alone.",getPosATL _crewVehicle] call _phase;
+private _crewApplied=[{
+    _operatingCrew findIf {
+        toUpperANSI ((assignedVehicleRole _x) param [0,""]) != "CARGO"
+            && {(_x skill "aimingAccuracy") >= (_skillUnit skill "aimingAccuracy")}
+    } < 0 && {abs ((_cargo skill "aimingAccuracy")-(_skillUnit skill "aimingAccuracy")) < 0.02}
+},20] call _wait;
+["SKILL-vehicle-crew-profile",_crewApplied,format ["infantry=%1 crew=%2 cargo=%3",_skillUnit skill "aimingAccuracy",_operatingCrew apply {_x skill "aimingAccuracy"},_cargo skill "aimingAccuracy"]] call _check;
+private _lambsTurrets=isClass (configFile >> "CfgPatches" >> "lambs_turrets");
+private _dispersionApplied=_operatingCrew findIf {
+    private _original=_x getVariable ["Waldo_AI_OriginalAimCoef",getCustomAimCoef _x];
+    if (_lambsTurrets) then {abs (getCustomAimCoef _x-_original) > 0.01} else {getCustomAimCoef _x <= _original}
+} < 0;
+["SKILL-vehicle-dispersion-layer",_dispersionApplied,format ["lambsTurrets=%1 coefficients=%2",_lambsTurrets,_operatingCrew apply {[getCustomAimCoef _x,_x getVariable ["Waldo_AI_OriginalAimCoef",-1]]}]] call _check;
+private _aaVehicle=createVehicle ["O_APC_Tracked_02_AA_F",[1280,1100,0],[],0,"NONE"];
+_aaVehicle setVariable ["Waldo_DynamicAA_SystemId","CORTEX_QA_AA",true];
+private _aaGroup=east createVehicleCrew _aaVehicle;
+_groups pushBack _aaGroup;
+private _aaCrew=crew _aaVehicle;
+{_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]; _objects pushBack _x} forEach _aaCrew;
+_objects pushBack _aaVehicle;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_crewVehicle,_aaVehicle],true];
+["Skill profile: Dynamic AA preservation","The ordinary APC shows the configured general crew reduction. The marked Dynamic AA vehicle must retain the selected profile and its original aim coefficient because its own network controls detection and fire.",getPosATL _aaVehicle] call _phase;
+private _aaPreserved=[{
+    _aaCrew findIf {
+        private _original=_x getVariable ["Waldo_AI_OriginalAimCoef",-1];
+        _original < 0 || {abs (getCustomAimCoef _x-_original) > 0.01}
+            || {(_x skill "aimingAccuracy") <= (((_operatingCrew select 0) skill "aimingAccuracy")+0.02)}
+    } < 0
+},20] call _wait;
+["SKILL-dynamic-aa-preserved",_aaPreserved,format ["ordinaryCrew=%1 dynamicAA=%2",_operatingCrew apply {[_x skill "aimingAccuracy",getCustomAimCoef _x]},_aaCrew apply {[_x skill "aimingAccuracy",getCustomAimCoef _x,_x getVariable ["Waldo_AI_OriginalAimCoef",-1]]}]] call _check;
 sleep 15;
 {deleteVehicle _x} forEach _objects; {deleteGroup _x} forEach _groups;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];

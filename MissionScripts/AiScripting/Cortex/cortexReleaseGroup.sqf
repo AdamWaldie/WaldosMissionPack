@@ -39,16 +39,25 @@ if (isNull _group) exitWith {};
 private _state = _group getVariable ["Waldo_AIPass_State", createHashMap];
 private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld};
 if (_reason == "") then {_reason=["RELEASED","ZEUS_TAKEOVER"] select _yieldToExternal};
+private _externalTakeover=_yieldToExternal || {_reason == "ZEUS_TAKEOVER"};
+// Defence in depth for every caller, including a release delivered after locality migration. The
+// curator client normally retires these public tokens before dispatch, but cleanup must never depend
+// on that client-side write arriving first.
+if (_externalTakeover) then {
+    _group setVariable ["Waldo_Cortex_CombinedRole",nil,true];
+    _group setVariable ["Waldo_Cortex_CombinedApplied",nil,true];
+    _group setVariable ["Waldo_Cortex_CombinedOpportunity",nil,true];
+};
 // Explicit building controllers are movement owners too. Zeus replacement orders must terminate the
 // delegated LAMBS loop or native building job before general Cortex state is restored.
-if (_yieldToExternal) then {
+if (_externalTakeover) then {
     [_group,false] call Waldo_fnc_CortexLambsBuildingRelease;
     [_group,false] call Waldo_fnc_CortexClearRelease;
     [_group,false] call Waldo_fnc_CortexGarrisonRelease;
 };
 if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
-    if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _yieldToExternal] call Waldo_fnc_CortexFlankEnd};
-    [_group, _state, false, _yieldToExternal, _reason] call Waldo_fnc_CortexRestoreCalm;
+    if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _externalTakeover] call Waldo_fnc_CortexFlankEnd};
+    [_group, _state, false, _externalTakeover, _reason] call Waldo_fnc_CortexRestoreCalm;
 };
 if (local _group) then {[_group,"",false] call Waldo_fnc_CortexLambsLease};
 // Release an interrupted cross-group dismount without stranding the vehicle at forced speed zero.

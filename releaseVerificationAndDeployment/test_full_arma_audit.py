@@ -1771,6 +1771,15 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_AI_SkillVarianceOffsets', ai_apply)
         self.assertNotIn('current + random', ai_apply)
         self.assertIn('["Waldo_AI_SkillVarianceOffsets", nil, true]', ai_stop)
+        for token in ['assignedVehicleRole','Waldo_AI_VehicleCrewAimMultiplier',
+                      'Waldo_AI_VehicleCrewDispersion','Waldo_AI_OriginalAimCoef',
+                      'CfgPatches" >> "lambs_turrets','setCustomAimCoef',
+                      'Waldo_DynamicAA_SystemId','_operatingCrew && {!_dynamicAA}']:
+            self.assertIn(token, ai_apply)
+        self.assertIn('netId _profileVehicle', ai_init)
+        self.assertIn('_profileSeat,_dynamicAA', ai_init)
+        self.assertIn('Waldo_AI_OriginalAimCoef', ai_stop)
+        self.assertIn('ai-vehicle-precision', ai_diagnostics)
         self.assertIn('Waldo_Headless_ExternalScheduler', register)
         self.assertIn('CfgPatches" >> "ace_headless', register)
         detect = (headless / "headlessDetectLocal.sqf").read_text(encoding="utf-8")

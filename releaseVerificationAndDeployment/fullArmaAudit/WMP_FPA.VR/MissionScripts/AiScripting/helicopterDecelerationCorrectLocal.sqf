@@ -5,9 +5,11 @@
  * no velocity, waypoint, AI feature or flight-height setting is overwritten.
  *
  * Improved Helicopter Landing is authoritative. A supported landing order or active landing
- * controller cancels this correction before another impulse is applied. Terrain clearance, pilot,
- * damage, sling-load, locality and timeout checks also fail safe by releasing immediately.
- * Pilot/group replacement, waypoint edits and external-control handover cancel the current correction.
+ * controller or active Cortex attack lease cancels this correction before another impulse is
+ * applied. Terrain clearance, pilot, damage, sling-load, locality and timeout checks also fail safe
+ * by releasing immediately.
+ * Pilot/group replacement, waypoint edits, a direct Zeus hold and external-control handover cancel
+ * the current correction.
  * Locality and authority: Scheduled only on the current aircraft owner. It changes velocity
  * only while that owner still controls an eligible AI helicopter.
  * Repeat/JIP: A bounded correction exits on timeout or locality change. The owner-local
@@ -55,6 +57,7 @@ private _ownsOrder={
     local _aircraft && {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) == _generation}
         && {currentPilot _aircraft == _entryPilot} && {group _entryPilot == _entryGroup}
         && {(call _orderSignature) isEqualTo _entryOrder}
+        && {!([_entryGroup] call Waldo_fnc_CortexZeusHeld)}
         && {!(_entryGroup getVariable ["Waldo_AI_ExternalControl",false])}
         && {isNull (_entryPilot getVariable ["bis_fnc_moduleRemoteControl_owner",objNull])}
 };
@@ -95,6 +98,7 @@ while {_correcting && {diag_tickTime < _deadline}} do {
         || {!(missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false])}
         || {!(_aircraft isKindOf "Helicopter") && {!(missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL",false]) || {!(_aircraft isKindOf "VTOL_Base_F")}}}
         || {_aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false]}
+        || {!isNil {_aircraft getVariable "Waldo_Cortex_AirAttackToken"}}
         || {_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}
         || {[_aircraft] call _isLandingOrder}
         || {isNull _pilot} || {!alive _pilot} || {!_pilotAwake} || {isPlayer _pilot}
@@ -135,6 +139,7 @@ while {_correcting && {diag_tickTime < _deadline}} do {
             if (
                 _acceleration > 0
                 && {call _ownsOrder}
+                && {isNil {_aircraft getVariable "Waldo_Cortex_AirAttackToken"}}
                 && {!(_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
                 && {!([_aircraft] call _isLandingOrder)}
             ) then {

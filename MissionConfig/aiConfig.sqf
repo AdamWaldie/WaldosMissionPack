@@ -49,6 +49,8 @@
  * - Waldo_AI_ApplyMode (MISSION MAKER): EXISTING, NEW or BOTH; choose which AI population receives the profile.
  * - Waldo_AI_RestoreOnStop (ADVANCED): true restores the skills WMP recorded when its handler is stopped.
  * - Waldo_AI_SkillVariance (ADVANCED): stable random offset chosen once per AI; 0 disables variation.
+ * - Waldo_AI_VehicleCrewAimMultiplier (ADVANCED): final aiming-skill multiplier for operating vehicle and aircraft crew.
+ * - Waldo_AI_VehicleCrewDispersion (ADVANCED): script-level aim coefficient for operating crew when LAMBS Turrets is absent.
  * - Waldo_AI_IncludedSides (MISSION MAKER): [] allows every side; example ["WEST", "GUER"] limits application.
  * - Waldo_AI_IncludedFactions (MISSION MAKER): [] allows all; otherwise list CfgFactionClasses names.
  * - Waldo_AI_ExcludedFactions (MISSION MAKER): listed factions are always skipped after the include checks.
@@ -248,6 +250,8 @@ createHashMapFromArray [
         ["Waldo_AI_ApplyMode", "BOTH"],             // STRING: EXISTING, NEW or BOTH AI populations.
         ["Waldo_AI_RestoreOnStop", true],            // ADVANCED: restore captured vanilla/mission skills on stop.
         ["Waldo_AI_SkillVariance", 0],               // ADVANCED: one stable per-AI offset; 0 disables variation.
+        ["Waldo_AI_VehicleCrewAimMultiplier", 0.75], // ADVANCED: vehicle/aircraft operating crew retain the selected profile at reduced precision.
+        ["Waldo_AI_VehicleCrewDispersion", 2.5],     // ADVANCED: owner-local aim coefficient; skipped when LAMBS Turrets supplies config dispersion.
         ["Waldo_AI_IncludedSides", []],             // ARRAY of WEST/EAST/GUER/CIV strings; [] permits every side.
         ["Waldo_AI_IncludedFactions", []],          // ARRAY of CfgFactionClasses names; [] permits every faction.
         ["Waldo_AI_ExcludedFactions", []],          // ARRAY of faction names removed after the include filter.

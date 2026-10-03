@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Configures AI skill profiles once per machine and applies the selected profile to local AI.
- * Repeat/JIP: one repeat-safe lighting worker refreshes ten registered local units per second;
- * unchanged lighting/equipment causes no skill writes. Stop removes the worker; replay reinstalls it.
+ * Repeat/JIP: one repeat-safe lighting/seat worker refreshes ten registered local units per second;
+ * unchanged lighting/equipment/vehicle seat causes no skill writes. Stop removes the worker; replay reinstalls it.
  *
  * Existing local AI are processed immediately. A CBA CAManBase init handler catches newly created
  * units, including Zeus placements, and a per-unit Local event handler reapplies the active profile
@@ -187,7 +187,13 @@ if (isNil "Waldo_Cortex_LightingPFH") then {
         private _dark = (getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold",5]);
         for "_i" from _cursor to ((_cursor + 9) min ((count _units)-1)) do {
             private _unit = _units select _i;
-            if (local _unit && {alive _unit} && {[_mode,_dark,hmd _unit] isNotEqualTo (_unit getVariable ["Waldo_Cortex_LightingSignature",[]])}) then {
+            private _seat = assignedVehicleRole _unit;
+            private _profileVehicle = vehicle _unit;
+            private _profileSeat = toUpperANSI (_seat param [0,""]);
+            private _dynamicAA = _profileVehicle != _unit && {_profileSeat != "CARGO"}
+                && {(_profileVehicle getVariable ["Waldo_DynamicAA_SystemId",""]) != ""};
+            private _signature = [_mode,_dark,hmd _unit,netId _profileVehicle,_profileSeat,_dynamicAA];
+            if (local _unit && {alive _unit} && {_signature isNotEqualTo (_unit getVariable ["Waldo_Cortex_LightingSignature",[]])}) then {
                 [_unit] call Waldo_fnc_AIApplyProfile;
             };
         };

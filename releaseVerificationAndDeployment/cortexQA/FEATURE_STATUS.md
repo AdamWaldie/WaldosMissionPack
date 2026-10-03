@@ -11,7 +11,7 @@ Feature cases: **60**. Required variant categories: **13**.
 | LAMBS - LAMBS coexistence and Cortex fallback | 1 | 0 | 3 | `runLambs.sqf`, `runBuildingComparison.sqf` | 2 | implemented_partial |
 | SCHED - Scheduler and distance tiers | 11 | 0 | 4 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
 | PROFILE - Behaviour profiles and aggression | 4 | 1 | 1 | `runProfiles.sqf` | 1 | implemented_partial |
-| SKILL - AI skill rebalance | 10 | 0 | 4 | `runMechanics.sqf` | 0 | implemented_partial |
+| SKILL - AI skill rebalance | 12 | 0 | 4 | `runMechanics.sqf` | 0 | implemented_partial |
 | LAND - Helicopter landing | 21 | 0 | 7 | `runLanding.sqf` | 1 | implemented_partial |
 | DECEL - Helicopter braking | 14 | 1 | 3 | `runDeceleration.sqf` | 0 | implemented_partial |
 | REGROUP - Survivor regroup | 9 | 0 | 2 | `runMechanics.sqf` | 0 | implemented_partial |
@@ -65,8 +65,8 @@ Feature cases: **60**. Required variant categories: **13**.
 | DRILL-RECOVERY - Bound continuation and straggler rejoin | 0 | 0 | 0 | `runCombat.sqf` | 2 | implemented_partial |
 | COMBINED-ARMS - Contact-led combined-arms opportunity | 1 | 0 | 3 | `runCombinedArms.sqf` | 0 | implemented_partial |
 | COMBINED-OPERATION - Dynamic multi-squad combined operation | 0 | 0 | 0 | `runCombinedOperation.sqf` | 0 | implemented_partial |
-| ATTACK-FLARES - Attack-run approach and departure flares | 1 | 0 | 1 | `runAircraft.sqf` | 0 | implemented_partial |
-| AIR-ATTACK - Threat-aware finite aircraft attack patterns | 1 | 0 | 2 | `runAircraft.sqf` | 0 | implemented_partial |
+| ATTACK-FLARES - Attack-run approach and departure flares | 1 | 0 | 1 | `runAircraft.sqf` | 1 | implemented_partial |
+| AIR-ATTACK - Threat-aware finite aircraft attack patterns | 1 | 0 | 3 | `runAircraft.sqf` | 1 | implemented_partial |
 
 ## Required variants
 
@@ -114,7 +114,7 @@ Feature cases: **60**. Required variant categories: **13**.
 
 **Expected:** Expected units receive configured skills once, variance remains stable, excluded/player units retain their values and stop restores captured values.
 
-**Automation and open work:** runMechanics.sqf: SKILL- engine aiming skill after profile change (partial variants; fresh live acceptance required)
+**Automation and open work:** runMechanics.sqf now compares ordinary operating crew, cargo and a named Dynamic AA crew. It requires the ordinary crew multiplier/aim coefficient, unchanged cargo treatment and retained Dynamic AA profile/aim coefficient. This expanded fixture is saved and awaits a rebuilt live run.
 
 ### LAND - Helicopter landing
 
@@ -438,10 +438,10 @@ Feature cases: **60**. Required variant categories: **13**.
 
 **Expected:** Actual countermeasure releases on approach and departure with finite ammunition, no flight-path intervention, and no releases for excluded or interrupted aircraft.
 
-**Automation and open work:** runAircraft.sqf adds paired moving helicopter/plane cases, Fired events tagged by leg, physical flight and ammunition checks. Empty ammunition, target replacement, Zeus interruption, owner migration and repeated-run acceptance remain outstanding.
+**Automation and open work:** runAircraft.sqf adds paired moving helicopter/plane cases, Fired events tagged by leg, physical flight and ammunition checks. The helicopter altitude prerequisite was too strict for its valid moving fixture and has been corrected from 100 m to 30 m. Empty ammunition, target replacement, owner migration and repeated-run acceptance remain outstanding.
 
 ### AIR-ATTACK - Threat-aware finite aircraft attack patterns
 
-**Expected:** Aircraft select strafe, hook, offset or standoff geometry from type, observed AA and live ammunition; physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.
+**Expected:** Aircraft select strafe, hook, offset, standoff or capability-gated helicopter lateral geometry from type, observed AA and live ammunition; physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.
 
-**Automation and open work:** runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence. Threat-pattern selection, stuck replan, target loss, Zeus replacement and HC migration require rebuilt live acceptance.
+**Automation and open work:** runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence, including a forced valid lateral-turret pass and Zeus replacement. Source fixes now retain real weapon/turret pairs, command the lateral operator, gate standoff fire on aimedAtTarget, cool down failed standoff selection, continue fixed-wing egress forward, compare authored waypoint content and call Zeus marking with the correct boolean argument. These changes await a rebuilt live run; stuck replan, target loss and HC migration remain open.

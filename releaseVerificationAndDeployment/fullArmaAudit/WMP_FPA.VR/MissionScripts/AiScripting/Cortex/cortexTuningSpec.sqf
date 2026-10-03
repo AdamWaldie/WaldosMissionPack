@@ -38,6 +38,8 @@ private _skillNames = missionNamespace getVariable ["Waldo_AI_ProfileDisplayName
 private _skillLabels = _skillProfiles apply {_skillNames getOrDefault [_x,_x]};
 private _spec = [
     ["Waldo_AIRebalance_Enable", "Apply WMP skill profiles", "Master control for WMP skill adjustment. When enabled, the selected skill profile is applied by the machine that owns each AI unit.", "CHECKBOX", [], true],
+    ["Waldo_AI_VehicleCrewAimMultiplier", "Vehicle crew precision", "Final multiplier for operating vehicle and aircraft crew aiming skills. Cargo keeps the normal infantry profile.", "SLIDER", [0.25,1,2], 0.75],
+    ["Waldo_AI_VehicleCrewDispersion", "Vehicle weapon dispersion", "Owner-local aim coefficient for operating vehicle and aircraft crew. WMP skips this layer when LAMBS Turrets is loaded to avoid double stacking.", "SLIDER", [1,5,2], 2.5],
     ["Waldo_AIPass_Enable", "Enable Cortex automatic tactics", "Master control for Cortex actions and reactions. The purpose switches below choose which tactics Cortex may use; convoy control remains independent.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Regroup_Enable", "Survivor regroup", "Survivors of a destroyed squad walk to and join a nearby friendly squad.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Contact_Enable", "Contact handling", "Squads switch to combat on contact and return to their previous behaviour and waypoints afterwards. Needed by every combat option below.", "CHECKBOX", [], true],

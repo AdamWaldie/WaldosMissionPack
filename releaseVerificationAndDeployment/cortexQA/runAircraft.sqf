@@ -145,7 +145,8 @@ private _cortex=_results select 1;
         private _enabled=_x;
         private _id=format ["ATTACK-FLARE-%1-%2",_class,["OFF","ON"] select _enabled];
         [createHashMapFromArray [["Waldo_Cortex_AttackRunFlares_Enable",_enabled],
-            ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]]] call Waldo_fnc_CortexTuning;
+            ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false],
+            ["Waldo_Cortex_AirAttack_Enable",false]]] call Waldo_fnc_CortexTuning;
         private _plane=createVehicle [_class,[6500,5500,150],[],0,"FLY"];
         _plane setDir 0;
         createVehicleCrew _plane;
@@ -187,11 +188,18 @@ private _cortex=_results select 1;
         [_id,"Watch a moving aircraft approach and pass the target. Enabled runs need actual flare release on both legs and ammunition consumption; phase labels alone cannot pass.",getPosATL _plane] call _phase;
         private _origin=getPosASL _plane;
         private _minimumSpeed=[80,200] select (_plane isKindOf "Plane");
+        private _minimumAltitude=[30,100] select (_plane isKindOf "Plane");
         private _airborne=[{alive _plane && {speed _plane >= _minimumSpeed}
-            && {(getPosATL _plane select 2) >= 100} && {_plane distance2D _origin >= 50}},30] call _wait;
+            && {(getPosATL _plane select 2) >= _minimumAltitude} && {_plane distance2D _origin >= 50}},30] call _wait;
         [_id+"-moving-airborne-precondition",_airborne,
             str [speed _plane,getPosATL _plane,_plane distance2D _origin]] call _recordCheck;
         private _passed=[{(_plane distance2D _origin > 1500) || {!alive _plane}},180] call _wait;
+        // The scheduler samples once per second. Keep the completed physical pass alive long enough
+        // for the production worker to observe that distance is increasing and release departure
+        // countermeasures; deleting the aircraft on the same frame made fast jets race the audit.
+        if (_enabled && {alive _plane}) then {
+            [{(_plane getVariable ["Waldo_CortexQA_AttackFlares",[]]) findIf {(_x select 1) == "DEPARTURE"} >= 0},6] call _wait;
+        };
         private _events=_plane getVariable ["Waldo_CortexQA_AttackFlares",[]];
         [_id+"-physical-flight",_airborne && {alive _plane} && {_plane distance2D _origin > 500}
             && {(getPosATL _plane select 2) >= 30},str [_plane distance2D _origin,speed _plane,getPosATL _plane]] call _recordCheck;
@@ -218,13 +226,14 @@ private _cortex=_results select 1;
 // the production planner/worker directly: ordinary targets, knowledge and flight orders provide the
 // stimulus, and discovery must acquire the aircraft on its normal interval.
 {
-    _x params ["_id","_class","_withAA","_interrupt"];
+    _x params ["_id","_class","_withAA","_interrupt",["_patternOverride","AUTO"]];
     [createHashMapFromArray [
         ["Waldo_Cortex_AirAttack_Enable",true],["Waldo_Cortex_AttackRunFlares_Enable",true],
         ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]
     ]] call Waldo_fnc_CortexTuning;
     private _aircraft=createVehicle [_class,[8200,5000,260],[],0,"FLY"];
     _aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
+    _aircraft setVariable ["Waldo_Cortex_AirAttackPattern",_patternOverride,true];
     private _crew=crew _aircraft;
     private _group=group driver _aircraft;
     _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
@@ -275,27 +284,80 @@ private _cortex=_results select 1;
     private _origin=getPosATL _aircraft;
     private _started=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []},35] call _wait;
     [_id+"-physical-plan-start",_started,str (_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _recordCheck;
+    [_id+"-exclusive-flight-controller",!(_aircraft getVariable ["Waldo_HelicopterDeceleration_Active",false])
+        && {!(_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active",false])},
+        str [_aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]],
+            _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_LastResult",[]]]] call _recordCheck;
     private _initialPlan=_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
     private _pattern=_initialPlan param [1,""];
     if (_withAA) then {
         [_id+"-aa-aware-pattern",_pattern in ["OFFSET","STANDOFF"] && {(_initialPlan param [7,0]) > 0},str _initialPlan] call _recordCheck;
     } else {
+        if (!_interrupt) then {
         [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK","LATERAL"],str _initialPlan] call _recordCheck;
+        if (_patternOverride == "LATERAL") then {
+            [_id+"-lateral-capable-turret",_pattern == "LATERAL" && {_initialPlan param [13,false]},str _initialPlan] call _recordCheck;
+        };
+        };
     };
     if (_interrupt && {_started}) then {
+        private _handoverPilot=driver _aircraft;
+        private _handoverFeaturesBefore=["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {
+            _handoverPilot checkAIFeature _x
+        };
+        private _handoverCombatModeBefore=unitCombatMode _handoverPilot;
+        private _handoverGroupCombatModeBefore=combatMode _group;
         private _moved=[{_aircraft distance2D _origin >= 100},60] call _wait;
         [_id+"-interrupt-physical-prerequisite",_moved,str (_aircraft distance2D _origin)] call _recordCheck;
-        [_group,missionNamespace getVariable ["Waldo_AIPass_ZeusHoldSeconds",120],"CORTEX_QA_REPLACEMENT"] call Waldo_fnc_CortexZeusMark;
         private _replacement=(getPosATL _aircraft) vectorAdd [600,250,0];
-        (driver _aircraft) doMove _replacement;
+        // Model the waypoint Zeus actually creates and selects. Editing currentWaypoint while a
+        // scripted aircraft attack is active can mutate an engine/Cortex destination rather than a
+        // curator waypoint, producing a false handover failure against the old ingress position.
+        private _replacementWaypoint=_group addWaypoint [_replacement,0];
+        _replacementWaypoint setWaypointType "MOVE";
+        _replacementWaypoint setWaypointBehaviour "AWARE";
+        _replacementWaypoint setWaypointSpeed "FULL";
+        _group setCurrentWaypoint _replacementWaypoint;
+        private _handoverBehaviourExpected=waypointBehaviour _replacementWaypoint;
+        // Curator waypoint events arrive after the engine has applied the edit. Keep this fixture in
+        // that production order so cleanup can hand control to the selected replacement route.
+        [_group,true,_replacementWaypoint select 1] call Waldo_fnc_CortexZeusMark;
+        private _zeusSnapshot=_group getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]];
+        [_id+"-zeus-snapshot-exact",_zeusSnapshot isNotEqualTo []
+            && {(_zeusSnapshot param [1,[]]) distance2D _replacement < 1}
+            && {_zeusSnapshot param [2,""] == "AWARE"}
+            && {_zeusSnapshot param [3,""] == "FULL"},
+            str [_replacement,_replacementWaypoint,_group getVariable ["Waldo_AIPass_ZeusHold",[]],_zeusSnapshot]] call _recordCheck;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
-        [_id+"-zeus-replacement-travel",_released && {_travelled},str [_aircraft distance2D _replacement,getPosATL _aircraft]] call _recordCheck;
+        [_id+"-zeus-replacement-travel",_released && {_travelled},str [
+            _aircraft distance2D _replacement,getPosATL _aircraft,currentCommand (driver _aircraft),
+            assignedTarget (driver _aircraft),expectedDestination (driver _aircraft),
+            _group knowsAbout _target,combatMode _group,behaviour (driver _aircraft),
+            combatBehaviour _group,combatBehaviour (driver _aircraft),
+            attackEnabled _group,speedMode _group,speed _aircraft,
+            _replacement,_group getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]],
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]
+        ]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
         [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;
-        sleep 8;
+        // The production handover owns a bounded 100-second lease so a slow aircraft can finish
+        // turning onto the curator leg. Wait for that real cleanup instead of sampling just before
+        // its deadline and misreporting an active lease as a restoration failure.
+        private _handoverRestored=[{(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []},15] call _wait;
         [_id+"-no-old-plan-resurrection",(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo [],str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
+        [_id+"-pilot-features-restored",
+            (["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x}) isEqualTo _handoverFeaturesBefore
+                && {unitCombatMode _handoverPilot == _handoverCombatModeBefore}
+                && {combatMode _group == _handoverGroupCombatModeBefore}
+                && {_handoverRestored},
+            str [_handoverFeaturesBefore,["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x},
+                [_handoverBehaviourExpected,behaviour _handoverPilot],[_handoverCombatModeBefore,unitCombatMode _handoverPilot],
+                [_handoverGroupCombatModeBefore,combatMode _group],
+                _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
+                _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]]] call _recordCheck;
     } else {
         private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in ["COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE"]},210] call _wait;
         private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
@@ -313,9 +375,9 @@ private _cortex=_results select 1;
     {deleteVehicle _x} forEach (_crew+_targetCrew+_aaCrew+[_aircraft,_target,_aa]);
     deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
 } forEach [
-    ["AIR-ATTACK-HELI-LOW","O_Heli_Attack_02_dynamicLoadout_F",false,false],
-    ["AIR-ATTACK-PLANE-AA","O_Plane_CAS_02_dynamicLoadout_F",true,false],
-    ["AIR-ATTACK-ZEUS-HANDOVER","O_Heli_Attack_02_dynamicLoadout_F",false,true]
+    ["AIR-ATTACK-HELI-LATERAL","O_Heli_Attack_02_dynamicLoadout_F",false,false,"LATERAL"],
+    ["AIR-ATTACK-PLANE-AA","O_Plane_CAS_02_dynamicLoadout_F",true,false,"AUTO"],
+    ["AIR-ATTACK-ZEUS-HANDOVER","O_Heli_Attack_02_dynamicLoadout_F",false,true,"AUTO"]
 ];
 
 // The adaptive controller's disabled boundary must preserve an ordinary authored flight. This is a

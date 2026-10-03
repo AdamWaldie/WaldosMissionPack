@@ -45,7 +45,8 @@ class AIModularityContracts(unittest.TestCase):
         self.assertIn('"OWNERSHIP_ADOPTED"',locality)
         self.assertIn('call Waldo_fnc_CortexRestoreCalm',locality)
         release=src('cortexReleaseGroup')
-        self.assertIn('[_group, _state, false, _yieldToExternal, _reason] call Waldo_fnc_CortexRestoreCalm',release)
+        self.assertIn('[_group, _state, false, _externalTakeover, _reason] call Waldo_fnc_CortexRestoreCalm',release)
+        self.assertIn('_externalTakeover=_yieldToExternal || {_reason == "ZEUS_TAKEOVER"}',release)
         self.assertIn('Waldo_fnc_CortexZeusHeld',release)
     def test_report_transport_contains_positions_not_enemy_objects(self):
         report = src('cortexContactReport')

@@ -108,7 +108,11 @@ if (_phase == "EVALUATE") exitWith {
         if (time - (_state get "firstEvaluation") >= _timeout) then {call _finish} else {20}
     };
     private _target = getPosATL leader _host;
-    {doStop _x; _x doMove _target} forEach _movers;
+    // Arma can retain a dead group leader for several scheduler frames after casualties. Elect a
+    // living survivor before issuing one coherent group move; doStop followed by individual doMove
+    // left remnants stationary with an expected destination beside their current position.
+    if (!alive leader _group) then {_group selectLeader (_movers select 0)};
+    _group move _target;
     _state set ["held",+_movers];
     _group setVariable ["Waldo_AIPass_RegroupHost", _host];
     _state set ["phase", "MOVE"];
@@ -164,7 +168,8 @@ if (_farthest < (_state get "bestDistance") - 5) then {
 if (time - (_state get "lastProgress") >= (missionNamespace getVariable ["Waldo_AIPass_Regroup_StuckSeconds", 20])
     || {time - (_state get "moveStarted") >= _timeout}) exitWith {
     if ((_state getOrDefault ["moveRetries",0]) == 0 && {time-(_state get "moveStarted") < _timeout}) exitWith {
-        {doStop _x; _x doMove (getPosATL _hostLeader)} forEach _remaining;
+        if (!alive leader _group) then {_group selectLeader (_remaining select 0)};
+        _group move (getPosATL _hostLeader);
         _state set ["moveRetries",1];
         _state set ["lastProgress",time];
         3
@@ -176,7 +181,7 @@ if (time - (_state get "lastProgress") >= (missionNamespace getVariable ["Waldo_
 
 private _target = getPosATL _hostLeader;
 if (_target distance2D (_state get "target") > 25) then {
-    {_x doMove _target} forEach _remaining;
+    _group move _target;
     _state set ["target", _target];
 };
 3

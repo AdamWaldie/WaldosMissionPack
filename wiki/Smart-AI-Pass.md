@@ -148,6 +148,14 @@ join a coordinated action from their current positions without waiting for an as
 rally movement. Legacy `flankChance`, `advanceChance` and `coordinatedChance` keys remain accepted so
 older mission configuration does not break, but they no longer select or veto movement.
 
+Skill profiles also apply to vehicle and aircraft crews. Drivers, commanders and turret operators
+receive the selected profile followed by `Waldo_AI_VehicleCrewAimMultiplier` (default `0.75`) on the
+three aiming subskills; transported cargo retains the ordinary infantry profile. Without LAMBS
+Turrets, WMP additionally applies `Waldo_AI_VehicleCrewDispersion` (default `2.5`) as an owner-local
+custom aim coefficient. Seat and locality changes are detected by the same bounded worker, so a
+dismounted crew member recovers the infantry coefficient. When LAMBS Turrets is installed, its
+config dispersion remains authoritative and WMP omits only this additional coefficient.
+
 ## Dynamic combined arms
 
 Combined arms uses the same opportunity model as infantry coordination. A squad with a fresh visual
@@ -392,7 +400,7 @@ different ownership implications:
 |---|---|
 | [LAMBS_Danger.fsm](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Active behaviour controller. Cortex uses the group-level LAMBS switch for explicit movement handover. |
 | [LAMBS Waypoints](https://steamcommunity.com/sharedfiles/filedetails/?id=1858075458) | Its public garrison and CQB functions are the preferred backend for Cortex building orders whenever installed. |
-| [LAMBS_Turrets](https://steamcommunity.com/sharedfiles/filedetails/?id=1862208264) | Config-only turret dispersion changes remain active in every mode. |
+| [LAMBS_Turrets](https://steamcommunity.com/sharedfiles/filedetails/?id=1862208264) | Config-only turret dispersion changes remain active in every mode. WMP retains its vehicle-crew skill multiplier but disables its additional owner-local aim coefficient while this addon is present, avoiding a stacked penalty. |
 | [LAMBS_Suppression](https://steamcommunity.com/sharedfiles/filedetails/?id=1808238502) | Config-only AI suppression/stress changes remain active in every mode. |
 | [LAMBS_RPG](https://steamcommunity.com/sharedfiles/filedetails/?id=1858070328) | Config-only launcher target and dispersion changes remain active in every mode. Cortex still applies its own live ammunition and backblast safety checks before an owned anti-armour shot. |
 
@@ -784,7 +792,9 @@ Required live acceptance: moving plane and helicopter approach and departure, ac
 
 ### Adaptive aircraft attacks (awaiting live acceptance)
 
-`Waldo_Cortex_AirAttack_Enable` defaults to true. An eligible moving AI aircraft with a hostile assigned target receives one finite owner-local attack lease. The planner samples at most sixteen contacts already known to the pilot within 2,500 m; it does not reveal or globally scan for enemies. It identifies observed AA from live launcher ammunition and chooses strafe, offset, helicopter-hook or standoff geometry from aircraft type and usable guided-ground ammunition. Offset geometry is placed away from the observed AA sector. This is an independent WMP implementation of general attack-planning principles: ingress, attack, egress, threat avoidance and re-attack decisions remain explicit rather than one endless movement order.
+`Waldo_Cortex_AirAttack_Enable` defaults to true. An eligible moving AI aircraft with a hostile assigned target receives one finite owner-local attack lease. The planner samples at most sixteen contacts already known to the pilot within 2,500 m; it does not reveal or globally scan for enemies. It identifies observed AA from live launcher ammunition and chooses strafe, offset, hook, lateral or standoff geometry from aircraft type and usable weapons. STRAFE is a running nose-on pass; OFFSET approaches and escapes on an AA-safer oblique axis; HOOK changes sides after the firing leg; LATERAL keeps a helicopter abeam of the target. A lateral pass is available only when a living crew member occupies an armed independent turret, and only that operator receives the firing command. Fixed-forward helicopters cannot receive that pattern. STANDOFF retains the actual loaded guided weapon and turret, waits for `aimedAtTarget` before `fireAtTarget`, and abandons the pattern for 90 seconds if no firing solution develops. Planes continue through their standoff release rather than reversing into a low-energy loop. Offset geometry is placed away from the observed AA sector. Mission makers may set `Waldo_Cortex_AirAttackPattern` on an aircraft to a valid pattern name for a finite authored run; incompatible overrides fall back to automatic selection. This is an independent WMP implementation of general attack-planning principles: ingress, attack, egress, threat avoidance and re-attack decisions remain explicit rather than one endless movement order.
+
+The AI skill profile also applies to operating vehicle and aircraft crew. Ordinary crew receive the configured final aiming multiplier and, when LAMBS Turrets is absent, the bounded owner-local aim coefficient. Crews attached to a named Dynamic AA system are exempt from both generic reductions so the system's own detection, fire gate, ammunition and authored effectiveness remain intact. LAMBS Turrets keeps its config-level dispersion and angular-error changes without WMP stacking another aim coefficient.
 
 The controller flies physical ingress, attack and egress legs without creating or deleting waypoints. It requires actual non-countermeasure `Fired` events before leaving the attack phase. It requests two approach and two departure countermeasures when enabled, uses only onboard ammunition, monitors ground clearance and forward progress, replans once after a genuine stall, then aborts and releases control. Target loss, locality migration, Cortex stop, feature disable or Zeus priority removes the temporary handler and speed limit. A successful run resumes toward the original waypoint only when that route remains unchanged.
 

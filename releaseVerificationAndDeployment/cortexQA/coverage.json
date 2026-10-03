@@ -158,11 +158,13 @@
         "Waldo_AI_IncludedSides",
         "Waldo_AI_ProfileDisplayNames",
         "Waldo_AI_RestoreOnStop",
-        "Waldo_AI_SkillVariance"
+        "Waldo_AI_SkillVariance",
+        "Waldo_AI_VehicleCrewAimMultiplier",
+        "Waldo_AI_VehicleCrewDispersion"
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runMechanics.sqf: SKILL- engine aiming skill after profile change (partial variants; fresh live acceptance required)",
+      "automation": "runMechanics.sqf now compares ordinary operating crew, cargo and a named Dynamic AA crew. It requires the ordinary crew multiplier/aim coefficient, unchanged cargo treatment and retained Dynamic AA profile/aim coefficient. This expanded fixture is saved and awaits a rebuilt live run.",
       "executable_sources": [
         "runMechanics.sqf"
       ],
@@ -1345,8 +1347,10 @@
         "Waldo_Cortex_AttackRunFlares_Enable"
       ],
       "status": "implemented_partial",
-      "live_evidence": [],
-      "automation": "runAircraft.sqf adds paired moving helicopter/plane cases, Fired events tagged by leg, physical flight and ammunition checks. Empty ammunition, target replacement, Zeus interruption, owner migration and repeated-run acceptance remain outstanding.",
+      "live_evidence": [
+        "runtime-20261002-043144: helicopter approach/departure releases and plane approach release passed, but plane departure release failed. The run was stopped with outstanding findings and is not acceptance."
+      ],
+      "automation": "runAircraft.sqf adds paired moving helicopter/plane cases, Fired events tagged by leg, physical flight and ammunition checks. The helicopter altitude prerequisite was too strict for its valid moving fixture and has been corrected from 100 m to 30 m. Empty ammunition, target replacement, owner migration and repeated-run acceptance remain outstanding.",
       "executable_sources": [
         "runAircraft.sqf"
       ],
@@ -1358,19 +1362,22 @@
       "id": "AIR-ATTACK",
       "title": "Threat-aware finite aircraft attack patterns",
       "setup": "Launch moving armed helicopters and planes against live hostile targets with low-threat and observed-AA variants. Interrupt one active run with a replacement Zeus order.",
-      "expected": "Aircraft select strafe, hook, offset or standoff geometry from type, observed AA and live ammunition; physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.",
+      "expected": "Aircraft select strafe, hook, offset, standoff or capability-gated helicopter lateral geometry from type, observed AA and live ammunition; physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.",
       "settings": [
         "Waldo_Cortex_AirAttack_Enable"
       ],
       "status": "implemented_partial",
-      "live_evidence": [],
-      "automation": "runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence. Threat-pattern selection, stuck replan, target loss, Zeus replacement and HC migration require rebuilt live acceptance.",
+      "live_evidence": [
+        "runtime-20261002-043144: forced helicopter LATERAL was rejected as STANDOFF, helicopter STANDOFF timed out in INGRESS, plane AA STANDOFF reached ATTACK but fired zero, natural waypoint-index progress was misread as authored route replacement, and the Zeus fixture passed an invalid argument type. This failed/stopped run is diagnostic evidence only."
+      ],
+      "automation": "runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence, including a forced valid lateral-turret pass and Zeus replacement. Source fixes now retain real weapon/turret pairs, command the lateral operator, gate standoff fire on aimedAtTarget, cool down failed standoff selection, continue fixed-wing egress forward, compare authored waypoint content and call Zeus marking with the correct boolean argument. These changes await a rebuilt live run; stuck replan, target loss and HC migration remain open.",
       "executable_sources": [
         "runAircraft.sqf"
       ],
       "production_sources": [
         "MissionScripts/AiScripting/Cortex/cortexAirAttack.sqf",
-        "MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf"
+        "MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexAirHandoverRestoreLocal.sqf"
       ]
     }
   ]

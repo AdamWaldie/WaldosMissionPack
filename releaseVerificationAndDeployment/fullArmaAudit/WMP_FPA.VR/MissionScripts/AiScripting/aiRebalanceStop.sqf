@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Stops future automatic AI profile application and optionally restores captured skills. Captured
- * original values and stable variance offsets are cleared publicly after restoration so a later
+ * original values, custom aim coefficient and stable variance offsets are cleared publicly after restoration so a later
  * explicit restart creates a fresh baseline and one new per-unit variation.
  * Locality and authority: invoked on every AI-owning machine by the authoritative server; each
  * machine restores only its local AI. Server state and the keyed JIP initializer are cleared once.
@@ -40,7 +40,9 @@ if (missionNamespace getVariable ["Waldo_AI_RestoreOnStop", true]) then {
             private _unit = _x;
             private _original = _unit getVariable ["Waldo_AI_OriginalSkills", createHashMap];
             {_unit setSkill [_x, _original get _x]} forEach keys _original;
+            _unit setCustomAimCoef (_unit getVariable ["Waldo_AI_OriginalAimCoef", getCustomAimCoef _unit]);
             _unit setVariable ["Waldo_AI_OriginalSkills", nil, true];
+            _unit setVariable ["Waldo_AI_OriginalAimCoef", nil, true];
             _unit setVariable ["Waldo_AI_SkillVarianceOffsets", nil, true];
         };
     } forEach allUnits;

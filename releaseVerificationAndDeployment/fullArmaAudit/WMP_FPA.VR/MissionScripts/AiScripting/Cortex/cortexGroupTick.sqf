@@ -631,12 +631,17 @@ switch (_state get "phase") do {
                 && {_x checkAIFeature "PATH"} && {_x checkAIFeature "MOVE"}
         };
         private _reserved = _members select {_x call _hasLiveActorMove};
-        // Preserve authored waypoints and combat targets. Recall only a separated member; repeatedly
-        // clearing targets and reissuing formation commands made cohesive squads stop fighting and
-        // oscillate around their leader while Cortex waited for the next state transition.
+        // Preserve authored waypoints and combat targets. Give only separated members a nearby,
+        // finite destination around the living leader. doFollow does not reliably cancel an earlier
+        // doStop (including a casualty, cover or Zeus-interrupted order), which left otherwise healthy
+        // soldiers standing at their old positions until this state timed out. Individual destinations
+        // avoid replacing the group's authored route and avoid collapsing everyone onto one point.
         if (_now - (_state getOrDefault ["consolidateIssued", -1e6]) >= 8) then {
             {
-                if (_x != _leader && {_x distance2D _leader > 8}) then {_x doFollow _leader};
+                if (_x != _leader && {_x distance2D _leader > 8}) then {
+                    private _slot=4+((_forEachIndex mod 3)*2);
+                    _x doMove ((getPosATL _leader) getPos [_slot,(_forEachIndex*137) mod 360]);
+                };
             } forEach (_members - _reserved);
             _state set ["consolidateIssued", _now];
             _state set ["holders", []];

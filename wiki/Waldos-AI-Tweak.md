@@ -11,7 +11,7 @@ The AI rebalance applies named, bounded skill profiles to editor, scripted and Z
 ## Set up AI tuning
 
 Edit `MissionConfig/aiConfig.sqf`. The shipped pack enables AI tuning with the `LINE`
-profile in `DAY` mode. WMP waits for the server's feature settings and starts the
+profile in `AUTO` mode. WMP waits for the server's feature settings and starts the
 wrapper automatically on each machine that can own AI. Do not add a second call to
 multiplayer `init.sqf` for normal setup.
 
@@ -19,10 +19,12 @@ multiplayer `init.sqf` for normal setup.
 | --- | --- | --- | --- |
 | `Waldo_AIRebalance_Enable` | Boolean | `true` | Enables WMP skill profiles. |
 | `Waldo_AIRebalance_Profile` | String | `"LINE"` | Built-in or mission-defined profile key. |
-| `Waldo_AIRebalance_Mode` | String | `"DAY"` | `DAY` or illumination-aware `NIGHT`. |
+| `Waldo_AIRebalance_Mode` | String | `"AUTO"` | Ambient-darkness/NVG-aware by default; `DAY` suppresses the extra penalty and `NIGHT` retains the legacy night tiers. |
 | `Waldo_AI_ApplyMode` | String | `"BOTH"` | Existing AI, newly created AI, or both: `EXISTING`, `NEW`, `BOTH`. |
 | `Waldo_AI_RestoreOnStop` | Boolean | `true` | Restore each unit's captured skills when this feature stops. |
 | `Waldo_AI_SkillVariance` | Number | `0` | Stable per-unit variance; zero disables it. |
+| `Waldo_AI_VehicleCrewAimMultiplier` | Number | `0.75` | Final aiming-skill multiplier for ordinary operating vehicle and aircraft crew. Named Dynamic AA crews are exempt. |
+| `Waldo_AI_VehicleCrewDispersion` | Number | `2.5` | Owner-local aim coefficient for ordinary operating crew when LAMBS Turrets is absent. Named Dynamic AA crews retain their authored coefficient. |
 | `Waldo_AI_IncludedSides` | Array of side-ID Strings | `[]` | Empty allows every side. |
 | `Waldo_AI_IncludedFactions` | Array of `CfgFactionClasses` Strings | `[]` | Empty allows every faction. |
 | `Waldo_AI_ExcludedFactions` | Array of `CfgFactionClasses` Strings | `[]` | Skip these factions after include filtering. |
@@ -75,6 +77,17 @@ These are requested inputs, not guaranteed final values. The engine interpolates
 `DAY` uses the selected base profile. `NIGHT` waits until illumination is below `Waldo_AI_DarknessThreshold`, then reduces the modern WMP profiles' combat, sensing, target-sharing and decision inputs. AI with an assigned NVG/HMD receive the gentler `Waldo_AI_NightNVGMultipliers`; unaided AI use `Waldo_AI_NightUnaidedMultipliers`. Equipping the unit is therefore the explicit way to offset low-light degradation. The compatibility profile retains its established absolute spotting controls through `Waldo_AI_NightSpotWithNVG` and `Waldo_AI_NightSpotWithoutNVG`.
 
 AI behaviour mods can still change tactical decisions independently of these skill inputs. WMP does not assume or require one.
+
+## Vehicle and aircraft crew
+
+Drivers, commanders and turret operators receive the selected profile first, then the bounded
+vehicle-crew aiming multiplier. Cargo retains the ordinary infantry profile. When LAMBS Turrets is
+absent, WMP also applies the configured owner-local aim coefficient; when the addon is present, WMP
+leaves its config-level turret dispersion and angular error in charge instead of stacking another
+coefficient. Crews belonging to a named WMP Dynamic AA system retain the selected profile and their
+original aim coefficient because that system owns its own detection, fire-gate and ammunition policy.
+Seat and Dynamic AA membership are included in the bounded refresh signature, so locality or seat
+changes are corrected without installing a loop per unit.
 
 ## Settings: mission overrides
 

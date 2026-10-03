@@ -3,7 +3,9 @@
  * Runs disposable Cortex acceptance cases through real public functions and records RPT results.
  * Locality/authority: dedicated server only; only staged by the audit launcher's explicit CortexAudit switch.
  * Repeat/JIP: one run per machine; fresh fixtures are cleaned up, no production JIP replay.
- * Arguments: None. Return: Nothing (scheduled script).
+ * Arguments: None. Waldo_CortexQA_Focus selects the staged batch; airskills runs aircraft and
+ * AI-profile/vehicle-crew mechanics together without the unrelated feature suites.
+ * Return: Nothing (scheduled script).
  * Current callers: staged audit continuation. Example: [] execVM "cortexQAServer.sqf";
  */
 if (!isServer || {missionNamespace getVariable ["Waldo_CortexQA_ServerRunning",false]}) exitWith {};
@@ -439,7 +441,7 @@ deleteGroup _gunGroup;
 if (_focus in ["all","features","convoyseats","extensions"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQASeats.sqf"};
 if (_focus in ["all","features","avoidance"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAAvoidance.sqf"};
 if (_focus in ["all","features","deceleration"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQADeceleration.sqf"};
-if (_focus in ["all","features","aircraft"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAAircraft.sqf"};
+if (_focus in ["all","features","aircraft","airskills"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAAircraft.sqf"};
 if (_focus in ["all","features","lifecycle","stateflows"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALifecycle.sqf"};
 if (_focus in ["all","features","lambs"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQALambs.sqf"};
 if (_focus in ["all","features","performance"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAPerformance.sqf"};
@@ -467,7 +469,7 @@ if (_focus in ["all","features","landing"]) then {[_check,_phase,_wait] call com
 if (_focus in ["all","features","gates","extensions"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAGates.sqf"};
 if (_focus in ["all","features","gunnery","extensions"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAGunnery.sqf"};
 if (_focus in ["all","features","combat"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACombat.sqf"};
-if (_focus in ["all","features","mechanics"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAMechanics.sqf"};
+if (_focus in ["all","features","mechanics","airskills"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAMechanics.sqf"};
 if (_focus in ["all","features","mechanics","reactions"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAReactions.sqf"};
 if (_focus in ["all","features","mechanics","support"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQASupport.sqf"};
 if (_focus in ["all","features","combinedarms"]) then {

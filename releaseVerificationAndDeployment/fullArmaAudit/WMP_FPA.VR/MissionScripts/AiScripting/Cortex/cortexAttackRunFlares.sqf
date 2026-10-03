@@ -45,7 +45,9 @@ if (isNull _target) then {
         _job set ["target",_target];
         _job set ["expires",serverTime+90];
         _job set ["closest",_aircraft distance _target];
-        _job set ["burst",2];
+        _job set ["burst",3];
+        _job set ["burstExpires",serverTime+8];
+        _job set ["burstNext",serverTime];
         _aircraft setVariable ["Waldo_Cortex_AttackFlareCooldown",serverTime+30,true];
         _aircraft setVariable ["Waldo_Cortex_AttackFlarePhase","APPROACH",true];
     };
@@ -54,7 +56,9 @@ if (isNull _target) then {
     private _closest=_job getOrDefault ["closest",_distance];
     _job set ["closest",_closest min _distance];
     if (_distance > _closest+100 && {(velocity _aircraft) vectorDotProduct ((getPosASL _target) vectorDiff (getPosASL _aircraft)) < 0}) then {
-        _job set ["burst",2];
+        _job set ["burst",3];
+        _job set ["burstExpires",serverTime+8];
+        _job set ["burstNext",serverTime];
         _job deleteAt "target";
         _aircraft setVariable ["Waldo_Cortex_AttackFlareCooldown",serverTime+30,true];
         _aircraft setVariable ["Waldo_Cortex_AttackFlarePhase","DEPARTURE",true];
@@ -63,8 +67,16 @@ if (isNull _target) then {
     };
 };
 private _burst=_job getOrDefault ["burst",0];
-if (_burst > 0) then {
-    [_aircraft] call Waldo_fnc_CortexFireCountermeasure;
-    _job set ["burst",_burst-1];
+if (_burst > 0 && {serverTime <= (_job getOrDefault ["burstExpires",serverTime])}
+    && {serverTime >= (_job getOrDefault ["burstNext",0])}) then {
+    // A launcher may reject a request while cycling. Count only an actual release; bounded retries
+    // keep fast jets from silently spending their whole departure burst between scheduler samples.
+    if ([_aircraft] call Waldo_fnc_CortexFireCountermeasure) then {
+        _job set ["burst",_burst-1];
+    };
+    _job set ["burstNext",serverTime+0.8+random 0.8];
+};
+if (_burst > 0 && {serverTime > (_job getOrDefault ["burstExpires",serverTime])}) then {
+    _job set ["burst",0];
 };
 1

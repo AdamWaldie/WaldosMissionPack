@@ -229,6 +229,7 @@ class CfgFunctions
             class CortexAttackRunFlares {file = "MissionScripts\AiScripting\Cortex\cortexAttackRunFlares.sqf";};
             class CortexAirAttackPlan {file = "MissionScripts\AiScripting\Cortex\cortexAirAttackPlan.sqf";};
             class CortexAirAttack {file = "MissionScripts\AiScripting\Cortex\cortexAirAttack.sqf";};
+            class CortexAirHandoverRestoreLocal {file = "MissionScripts\AiScripting\Cortex\cortexAirHandoverRestoreLocal.sqf";};
             class CortexAircraftEligible {file = "MissionScripts\AiScripting\Cortex\cortexAircraftEligible.sqf";};
             class CortexDiscover {file = "MissionScripts\AiScripting\Cortex\cortexDiscover.sqf";};
             class CortexFindCover {file = "MissionScripts\AiScripting\Cortex\cortexFindCover.sqf";};

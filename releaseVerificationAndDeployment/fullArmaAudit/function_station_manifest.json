@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1352,
+  "registeredFunctionCount": 1353,
   "runtimeFunctionCount": 383,
-  "functionCount": 1735,
+  "functionCount": 1736,
   "stations": [
     {
       "id": "control",
@@ -1279,6 +1279,12 @@
     {
       "name": "Waldo_fnc_CortexAirAttack",
       "file": "MissionScripts/AiScripting/Cortex/cortexAirAttack.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CortexAirHandoverRestoreLocal",
+      "file": "MissionScripts/AiScripting/Cortex/cortexAirHandoverRestoreLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },
