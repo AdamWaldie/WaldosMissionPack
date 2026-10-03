@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Executes one finite Cortex aircraft attack as ingress, attack and egress phases.
+ * Executes one finite Cortex aircraft attack as ingress, attack and egress phases. Against an
+ * airborne hostile these phases mean intercept, engage and disengage/rejoin: the first two
+ * destinations lead the contact's measured velocity while egress remains finite and returns the
+ * aircraft to its unchanged authored route. This provides responsive air-to-air contact handling
+ * without pretending that fixed script geometry implements full basic fighter manoeuvring.
  * It flies physical route legs, repeatedly presents the live target to operating crew, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Standoff weapons
  * fire only after the engine reports an aim solution; lateral runs command only the retained turret
@@ -241,7 +245,14 @@ if (_stage == "") then {
     _job set ["lateralWeapon",_plan getOrDefault ["lateralWeapon",""]];
     _job set ["standoffWeapon",_plan getOrDefault ["standoffWeapon",""]];
     _job set ["standoffTurret",_plan getOrDefault ["standoffTurret",[]]];
+    _job set ["airToAir",_plan getOrDefault ["airToAir",false]];
+    _job set ["airWeapon",_plan getOrDefault ["airWeapon",""]];
+    _job set ["airWeaponTurret",_plan getOrDefault ["airWeaponTurret",[]]];
     _job set ["altitude",_plan get "altitude"]; _job set ["speed",_plan get "speed"];
+    _job set ["stageAltitudes",_plan getOrDefault ["stageAltitudes",[_plan get "altitude",_plan get "altitude",_plan get "altitude"]]];
+    _job set ["stageSpeeds",_plan getOrDefault ["stageSpeeds",[_plan get "speed",_plan get "speed",_plan get "speed"]]];
+    _job set ["captureRadii",_plan getOrDefault ["captureRadii",[450,450,450]]];
+    _job set ["attackMinimum",_plan getOrDefault ["attackMinimum",2]];
     _job set ["type","AIR_ATTACK"]; _job set ["stage",""]; _job set ["deadline",serverTime+75]; _job set ["shots",0];
     _job set ["origin",getPosATL _aircraft]; _job set ["resumePosition",_resumePosition]; _job set ["routeSignature",_routeSignature];
     _job set ["progressPosition",getPosATL _aircraft]; _job set ["progressAt",serverTime]; _job set ["replans",0];
@@ -279,6 +290,13 @@ if (serverTime >= (_job getOrDefault ["progressAt",serverTime])+12) then {
                 _job set ["lateralWeapon",_replacement getOrDefault ["lateralWeapon",""]];
                 _job set ["standoffWeapon",_replacement getOrDefault ["standoffWeapon",""]];
                 _job set ["standoffTurret",_replacement getOrDefault ["standoffTurret",[]]];
+                _job set ["airToAir",_replacement getOrDefault ["airToAir",false]];
+                _job set ["airWeapon",_replacement getOrDefault ["airWeapon",""]];
+                _job set ["airWeaponTurret",_replacement getOrDefault ["airWeaponTurret",[]]];
+                _job set ["stageAltitudes",_replacement getOrDefault ["stageAltitudes",[]]];
+                _job set ["stageSpeeds",_replacement getOrDefault ["stageSpeeds",[]]];
+                _job set ["captureRadii",_replacement getOrDefault ["captureRadii",[]]];
+                _job set ["attackMinimum",_replacement getOrDefault ["attackMinimum",2]];
                 [_group,_job,"REPLAN","STUCK_DETECTED"] call Waldo_fnc_CortexDrillSetStage;
                 [_group,_job,"INGRESS","REPLAN_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
                 _job set ["deadline",serverTime+75]; _job set ["replans",_replans+1]; _stage="INGRESS";
@@ -292,18 +310,46 @@ private _points=_job get "points";
 private _stageIndex=["INGRESS","ATTACK","EGRESS"] find _stage;
 if (_stageIndex < 0) exitWith {["BAD_STAGE"] call _finish};
 private _destination=_points select _stageIndex;
+// Air contacts do not remain at the point captured when the plan was built. Refresh only the
+// intercept and engagement points from current target velocity; disengagement stays immutable so
+// the lease has a real end and cannot orbit indefinitely.
+if (_job getOrDefault ["airToAir",false] && {_stage in ["INGRESS","ATTACK"]}) then {
+    private _leadSeconds=[8,3] select (_stage == "ATTACK");
+    _destination=(getPosATL _target) vectorAdd ((velocity _target) vectorMultiply _leadSeconds);
+    _destination set [2,(_job getOrDefault ["stageAltitudes",[_job get "altitude",_job get "altitude",_job get "altitude"]]) select _stageIndex];
+    _points set [_stageIndex,_destination];
+    _job set ["points",_points];
+};
 private _stageDistance=_aircraft distance2D _destination;
 private _closestKey="closest"+_stage;
 private _stageClosest=(_job getOrDefault [_closestKey,_stageDistance]) min _stageDistance;
 _job set [_closestKey,_stageClosest];
 private _shots=_aircraft getVariable ["Waldo_Cortex_AirAttackShots",0];
 _job set ["shots",_shots];
-_aircraft flyInHeight (_job get "altitude");
-_aircraft limitSpeed (_job get "speed");
+private _stageAltitudes=_job getOrDefault ["stageAltitudes",[_job get "altitude",_job get "altitude",_job get "altitude"]];
+private _stageSpeeds=_job getOrDefault ["stageSpeeds",[_job get "speed",_job get "speed",_job get "speed"]];
+_aircraft flyInHeight (_stageAltitudes select _stageIndex);
+_aircraft limitSpeed (_stageSpeeds select _stageIndex);
 _pilot doMove _destination;
 {if (alive _x) then {_x doTarget _target}} forEach crew _aircraft;
 if (_stage == "ATTACK") then {
-    if ((_job getOrDefault ["pattern",""]) == "STANDOFF") then {
+    if (_job getOrDefault ["airToAir",false]) then {
+        private _weapon=_job getOrDefault ["airWeapon",""];
+        private _turret=_job getOrDefault ["airWeaponTurret",[]];
+        private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
+        _group reveal [_target,4];
+        if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
+        if (!isNull _operator && {alive _operator}) then {
+            _operator doTarget _target;
+            if (_weapon == "") then {_operator doFire _target}
+            else {
+                if (serverTime >= (_job getOrDefault ["nextAirFire",0])) then {
+                    _aircraft fireAtTarget [_target,_weapon];
+                    _job set ["nextAirFire",serverTime+1.5+random 1.5];
+                };
+            };
+        };
+    } else {if ((_job getOrDefault ["pattern",""]) == "STANDOFF") then {
         private _weapon=_job getOrDefault ["standoffWeapon",""];
         private _turret=_job getOrDefault ["standoffTurret",[]];
         // Pilot weapons use the virtual [-1] turret. turretUnit [-1] is not portable across
@@ -330,7 +376,7 @@ if (_stage == "ATTACK") then {
         } else {
         {if (alive _x) then {_x doFire _target}} forEach crew _aircraft;
         };
-    };
+    }};
 };
 
 private _flareSetting=[_group,"Waldo_Cortex_AttackRunFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled;
@@ -352,7 +398,10 @@ _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     _job getOrDefault ["flareINGRESS",0],_job getOrDefault ["flareEGRESS",0],
     ["HELICOPTER","PLANE"] select _isPlane,_job getOrDefault ["lateralTurret",false]
     ,_job getOrDefault ["standoffWeapon",""],_job getOrDefault ["standoffTurret",[]],
-    _job getOrDefault ["fireSolution",0]
+    _job getOrDefault ["fireSolution",0],
+    _job getOrDefault ["stageAltitudes",[]],_job getOrDefault ["stageSpeeds",[]],
+    _job getOrDefault ["captureRadii",[]],_job getOrDefault ["attackMinimum",0],
+    +(_job getOrDefault ["points",[]])
 ],true];
 
 private _attackShots=_shots-(_job getOrDefault ["attackShotBaseline",0]);
@@ -362,7 +411,8 @@ if ((_job getOrDefault ["pattern",""]) == "STANDOFF" && {_stage == "ATTACK"} && 
     ["NO_FIRE_SOLUTION",true] call _finish
 };
 if (serverTime > (_job get "deadline")) exitWith {["STAGE_TIMEOUT"] call _finish};
-private _captureRadius=if (_isPlane) then {700} else {450};
+private _captureRadii=_job getOrDefault ["captureRadii",[if (_isPlane) then {700} else {450},if (_isPlane) then {700} else {450},if (_isPlane) then {700} else {450}]];
+private _captureRadius=_captureRadii select _stageIndex;
 private _stagePassed=_stageClosest <= _captureRadius && {_stageDistance >= _stageClosest+([120,75] select !_isPlane)};
 // Discovery can acquire a fast jet after it has already flown past the nominal ingress point.
 // Continue into the firing leg when that point is physically behind the jet; ordering a turn back
@@ -392,7 +442,9 @@ switch _stage do {
         };
     };
     case "ATTACK": {
-        if (_attackShots > 0 && {(_stageDistance <= _captureRadius || {_stagePassed})}) then {
+        private _attackDwell=serverTime-(_job getOrDefault ["attackStartedAt",serverTime]);
+        if (_attackShots > 0 && {_attackDwell >= (_job getOrDefault ["attackMinimum",2])}
+            && {(_stageDistance <= _captureRadius || {_stagePassed})}) then {
             [_group,_job,"EGRESS","ACTUAL_FIRE"] call Waldo_fnc_CortexDrillSetStage;
             _job set ["egressStartPosition",getPosATL _aircraft];
             _job set ["egressStartedAt",serverTime];

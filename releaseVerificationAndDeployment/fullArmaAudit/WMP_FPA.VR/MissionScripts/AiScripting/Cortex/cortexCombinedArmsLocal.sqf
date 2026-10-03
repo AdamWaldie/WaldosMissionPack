@@ -1,24 +1,26 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies one expiring combined-arms contact role on the selected asset owner.
- * Ground vehicles receive target knowledge and use the existing gunnery layer without a movement
- * order. Airborne aircraft receive the same target and may start their existing finite attack-run job;
+ * A direct-fire ground vehicle receives target knowledge without losing its authored route. A second
+ * ground vehicle receives a finite safe-side manoeuvre destination and is maintained by the shared
+ * Cortex scheduler. Airborne aircraft receive the same target and may start their existing finite attack-run job;
  * its controller, rather than a single instantaneous speed sample, proves progress or handles a stall.
  * Locality/authority: current group owner only; server-issued public token must still match. Asset
  * discovery accepts the effective commander's or driver's group but never a passenger-only group.
  * Repeat/JIP: duplicate roles are harmless; expiry, Zeus takeover, feature closure and token replacement reject stale calls.
- * Arguments: 0: asset group <GROUP>; 1: opportunity <ARRAY> [token,requester,target,position,role,expiry].
+ * Arguments: 0: asset group <GROUP>; 1: opportunity <ARRAY>
+ * [token,requester,target,position,role,expiry,ground-fire anchor].
  * Return Value: Boolean, true when the role was applied.
  * Current callers: Waldo_fnc_CortexCombinedArmsServer through remote execution.
  * Example: [_vehicleGroup,_opportunity] remoteExecCall ["Waldo_fnc_CortexCombinedArmsLocal",groupOwner _vehicleGroup];
  */
 params [["_group",grpNull,[grpNull]],["_opportunity",[],[[]]]];
-if (!local _group || {count _opportunity != 6} || {!([_group] call Waldo_fnc_CortexIsEligible)}) exitWith {false};
-_opportunity params ["_token","_requester","_target","_position","_role","_expiry"];
+if (!local _group || {count _opportunity != 7} || {!([_group] call Waldo_fnc_CortexIsEligible)}) exitWith {false};
+_opportunity params ["_token","_requester","_target","_position","_role","_expiry","_context"];
 if ((_group getVariable ["Waldo_Cortex_CombinedRole",[]]) isNotEqualTo _opportunity
     || {serverTime >= _expiry} || {isNull _requester} || {isNull _target} || {!alive _target}
     || {side _group != side _requester} || {(side _group) getFriend side _target >= 0.6}
-    || {!(_role in ["GROUND_FIRE","AIR_ATTACK"])}) exitWith {false};
+    || {!(_role in ["GROUND_FIRE","GROUND_MANOEUVRE","AIR_ATTACK"])}) exitWith {false};
 private _asset=objNull;
 {
     private _vehicle=vehicle _x;
@@ -29,7 +31,7 @@ private _asset=objNull;
             || {!isNull _driver && {group _driver == _group}}}) exitWith {_asset=_vehicle};
 } forEach units _group;
 if (isNull _asset) exitWith {false};
-if (_role == "GROUND_FIRE" && {
+if (_role in ["GROUND_FIRE","GROUND_MANOEUVRE"] && {
     !(_asset isKindOf "LandVehicle") || {_asset isKindOf "StaticWeapon"}
         || {!([_group,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
         || {!([_group,"Waldo_AIPass_VehicleGunnery_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
@@ -47,6 +49,31 @@ if (_role == "GROUND_FIRE") exitWith {
     if (!isNull _gunner && {alive _gunner} && {local _gunner} && {combatMode _group in ["YELLOW","RED"]}) then {_gunner doFire _target};
     _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
     _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"APPLIED",serverTime,_target],true];
+    true
+};
+if (_role == "GROUND_MANOEUVRE") exitWith {
+    private _targetPosition=getPosATL _target;
+    private _supportPosition=if (count _context >= 2) then {+_context} else {getPosATL leader _requester};
+    private _axis=_targetPosition vectorDiff _supportPosition;
+    _axis set [2,0];
+    if (vectorMagnitude _axis < 1) then {_axis=[sin getDir _asset,cos getDir _asset,0]};
+    _axis=vectorNormalized _axis;
+    private _left=[-(_axis select 1),_axis select 0,0];
+    private _relative=(getPosATL _asset) vectorDiff _supportPosition;
+    private _side=if ((_relative vectorDotProduct _left) < 0) then {_left vectorMultiply -1} else {_left};
+    private _destination=_targetPosition vectorAdd (_axis vectorMultiply -220);
+    _destination=_destination vectorAdd (_side vectorMultiply 320);
+    _destination set [2,0];
+    [_group,_destination,55] call Waldo_fnc_CortexGroupMove;
+    private _state=[_group] call Waldo_fnc_CortexGroupState;
+    _state set ["movementLease",["COMBINED_GROUND",time+((_expiry-serverTime) max 5)]];
+    [Waldo_fnc_CortexCombinedGroundStep,createHashMapFromArray [
+        ["group",_group],["asset",_asset],["target",_target],["token",_token],
+        ["expiry",_expiry],["destination",_destination],["lastPosition",getPosATL _asset],
+        ["progressAt",time],["stalls",0]
+    ],1] call Waldo_fnc_CortexQueueJob;
+    _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
+    _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"APPLIED",serverTime,_target,_destination],true];
     true
 };
 if (_role == "AIR_ATTACK") exitWith {

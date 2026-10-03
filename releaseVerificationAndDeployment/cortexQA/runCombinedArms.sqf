@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Runs an additive, phase-visible contact-led combined-arms scenario with infantry, an APC and an attack helicopter.
+ * Runs an additive, phase-visible contact-led combined-arms scenario with infantry, two ground vehicles and an attack helicopter.
  * No rally, readiness flag, waypoint or scripted assembly is injected. The infantry must acquire the
  * hostile naturally; production communication then gives each nearby capable asset an independent role.
  * Locality/authority: scheduled dedicated-server fixture with server-owned groups and normal production calls.
@@ -55,6 +55,18 @@ private _groundRouteTarget=[4000,3600,0];
 private _groundRouteStart=_apc distance2D _groundRouteTarget;
 _apc limitSpeed 30;
 (driver _apc) doMove _groundRouteTarget;
+private _ifv=createVehicle ["O_APC_Wheeled_02_rcws_v2_F",[3200,3480,0],[],0,"NONE"];
+_ifv setDir 90; createVehicleCrew _ifv; private _ifvGroup=group driver _ifv; _groups pushBackUnique _ifvGroup;
+_ifvGroup setGroupIdGlobal ["Cortex QA ground manoeuvre"];
+_ifvGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _ifvGroup setCombatMode "RED"; _ifv allowDamage false;
+_ifv setVariable ["Waldo_CortexQA_Label","IFV / safe-side manoeuvre",true]; _ifv setVariable ["Waldo_CortexQA_Shots",[],true];
+_ifv addEventHandler ["Fired",{params ["_vehicle"]; private _shots=_vehicle getVariable ["Waldo_CortexQA_Shots",[]]; _shots pushBack serverTime; _vehicle setVariable ["Waldo_CortexQA_Shots",_shots,true]}];
+private _ifvStart=getPosATL _ifv;
+private _ifvRouteTarget=[4000,3480,0];
+private _ifvRouteStart=_ifv distance2D _ifvRouteTarget;
+_ifv limitSpeed 30;
+(driver _ifv) doMove _ifvRouteTarget;
+_objects pushBack _ifv; _objects append crew _ifv;
 sleep 1;
 private _heli=createVehicle ["O_Heli_Attack_02_dynamicLoadout_F",[3300,3300,140],[],0,"FLY"];
 _heli setDir 45; _heli setVelocityModelSpace [0,55,0]; createVehicleCrew _heli; private _heliGroup=group driver _heli; _groups pushBackUnique _heliGroup;
@@ -62,8 +74,8 @@ _heliGroup setGroupIdGlobal ["Cortex QA air support"];
 _heliGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true]; _heliGroup setCombatMode "RED"; _heli allowDamage false;
 _heli flyInHeight 140; _heli limitSpeed 170; (driver _heli) doMove [3900,3900,140];
 _heli setVariable ["Waldo_CortexQA_Label","HELICOPTER / opportunity attack",true]; _objects pushBack _heli; _objects append crew _heli;
-private _assets=[[_apcGroup,_apc,"GROUND FIRE"],[_heliGroup,_heli,"AIR ATTACK"]];
-missionNamespace setVariable ["Waldo_CortexQA_Actors",(units _infantry)+[_enemy,_apc,_heli],true];
+private _assets=[[_apcGroup,_apc,"GROUND FIRE"],[_ifvGroup,_ifv,"GROUND MANOEUVRE"],[_heliGroup,_heli,"AIR ATTACK"]];
+missionNamespace setVariable ["Waldo_CortexQA_Actors",(units _infantry)+[_enemy,_apc,_ifv,_heli],true];
 ["DETECT",_infantry,_enemy,_assets,"No Cortex support role exists yet. The infantry must see the hostile without injected knowledge."] call _publish;
 ["Combined arms / 1. Detect","The observer squad must acquire the live hostile through the engine. No readiness flag, rally point or support lease is created. Cyan trails show physical travel; blue links show communication candidates, not orders.",[3600,3650,0]] call _phase;
 ["COMBINED-air-fixture-moving",!isTouchingGround _heli && {speed _heli >= 40} && {(getPosATL _heli select 2) >= 80} && {alive driver _heli},
@@ -72,17 +84,34 @@ private _seen=[{(leader _infantry knowsAbout _enemy) >= 1},35] call _wait;
 ["COMBINED-natural-contact",_seen,str (leader _infantry targetKnowledge _enemy)] call _check;
 
 ["DISTRIBUTE",_infantry,_enemy,_assets,"Fresh contact may be shared immediately. Each arm accepts or refuses independently."] call _publish;
-["Combined arms / 2. Distribute","The fresh contact should create one short-lived opportunity. The APC and flying helicopter may receive independent roles immediately; the infantry does not wait for either asset.",[3600,3650,0]] call _phase;
+["Combined arms / 2. Distribute","The fresh contact should create one short-lived opportunity. One ground vehicle provides fire, the other manoeuvres on a safe side, and the flying helicopter may attack independently; the infantry does not wait for any support asset.",[3600,3650,0]] call _phase;
 private _opportunity=[{count (_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]]) >= 5},25] call _wait;
 ["COMBINED-opportunity-created",_opportunity,str (_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]])] call _check;
-private _groundRole=[{((_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""]) == "GROUND_FIRE"},20] call _wait;
+private _groundEntries=[
+    [_apcGroup,_apc,_groundRouteTarget,_groundRouteStart,getPosATL _apc],
+    [_ifvGroup,_ifv,_ifvRouteTarget,_ifvRouteStart,_ifvStart]
+];
+private _groundRoles=[{
+    (_groundEntries findIf {((_x select 0) getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""] == "GROUND_FIRE"}) >= 0
+        && {(_groundEntries findIf {((_x select 0) getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""] == "GROUND_MANOEUVRE"}) >= 0}
+},20] call _wait;
+private _fireIndex=_groundEntries findIf {((_x select 0) getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""] == "GROUND_FIRE"};
+private _manoeuvreIndex=_groundEntries findIf {((_x select 0) getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""] == "GROUND_MANOEUVRE"};
+// Keep later diagnostics safe when dispatch itself fails; the role assertions remain false and
+// the fallback assets expose physical state without generating secondary null-object errors.
+private _fireEntry=if (_fireIndex >= 0) then {_groundEntries select _fireIndex} else {_groundEntries select 0};
+private _manoeuvreEntry=if (_manoeuvreIndex >= 0) then {_groundEntries select _manoeuvreIndex} else {_groundEntries select 1};
+_fireEntry params ["_fireGroup","_fireAsset","_fireRouteTarget","_fireRouteStart","_fireStart"];
+_manoeuvreEntry params ["_manoeuvreGroup","_manoeuvreAsset","_manoeuvreRouteTarget","_manoeuvreRouteStart","_manoeuvreStart"];
 private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) param [4,""]) == "AIR_ATTACK"},20] call _wait;
-["COMBINED-ground-role",_groundRole,str (_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
+["COMBINED-ground-role",_groundRoles,str (_groundEntries apply {(_x select 0) getVariable ["Waldo_Cortex_CombinedRole",[]]})] call _check;
+["COMBINED-ground-manoeuvre-role",_manoeuvreIndex >= 0,str (_groundEntries apply {(_x select 0) getVariable ["Waldo_Cortex_CombinedRole",[]]})] call _check;
 ["COMBINED-air-role",_airRole,str (_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]])] call _check;
-["COMBINED-independent-feature-gates",_groundRole && {_airRole}
+["COMBINED-independent-feature-gates",_groundRoles && {_airRole}
     && {!(missionNamespace getVariable ["Waldo_AIPass_CoordinatedAssault_Enable",true])},
     str [_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]],_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]]] call _check;
-["COMBINED-ground-applied",[{((_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_apcGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
+["COMBINED-ground-applied",[{!isNull _fireGroup && {((_fireGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"}},15] call _wait,str (_fireGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
+["COMBINED-ground-manoeuvre-applied",[{!isNull _manoeuvreGroup && {((_manoeuvreGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"}},15] call _wait,str (_manoeuvreGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 ["COMBINED-air-applied",[{((_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]]) param [2,""]) == "APPLIED"},15] call _wait,str (_heliGroup getVariable ["Waldo_Cortex_CombinedResult",[]])] call _check;
 
 ["ACT",_infantry,_enemy,_assets,"Roles are finite. Watch real ground fire and the aircraft controller while the observer remains unblocked."] call _publish;
@@ -93,17 +122,20 @@ private _airRole=[{((_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) pa
         && {(waypoints _infantry) findIf {waypointDescription _x == "WMP AI PASS"} < 0},
     format ["supportLease=%1 waypoints=%2",_infantry getVariable ["Waldo_AIPass_SupportLease",[]],waypoints _infantry]
 ] call _check;
-private _groundRemaining=_apc distance2D _groundRouteTarget;
-private _groundState=_apcGroup getVariable ["Waldo_AIPass_State",createHashMap];
+private _groundRemaining=_fireAsset distance2D _fireRouteTarget;
+private _groundState=_fireGroup getVariable ["Waldo_AIPass_State",createHashMap];
 private _groundLease=_groundState getOrDefault ["movementLease",[]];
-private _groundWmpWaypoint=(waypoints _apcGroup) findIf {waypointDescription _x == "WMP AI PASS"};
-["COMBINED-ground-route-preserved",_groundRemaining < _groundRouteStart-50 && {_groundLease isEqualTo []} && {_groundWmpWaypoint < 0},
+private _groundWmpWaypoint=(waypoints _fireGroup) findIf {waypointDescription _x == "WMP AI PASS"};
+["COMBINED-ground-route-preserved",_groundRemaining < _fireRouteStart-50 && {_groundLease isEqualTo []} && {_groundWmpWaypoint < 0},
     format ["target=%1 startRemaining=%2m nowRemaining=%3m lease=%4 current=%5 expected=%6",
-        _groundRouteTarget,round _groundRouteStart,round _groundRemaining,_groundLease,currentCommand driver _apc,expectedDestination driver _apc]] call _check;
-["COMBINED-ground-target-shared",[{_apcGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _apc}},15] call _wait,
-    format ["knowledge=%1 target=%2",_apcGroup knowsAbout _enemy,assignedTarget gunner _apc]] call _check;
-["COMBINED-ground-actual-fire",[{count (_apc getVariable ["Waldo_CortexQA_Shots",[]]) > 0},20] call _wait,
-    str (_apc getVariable ["Waldo_CortexQA_Shots",[]])] call _check;
+        _fireRouteTarget,round _fireRouteStart,round _groundRemaining,_groundLease,currentCommand driver _fireAsset,expectedDestination driver _fireAsset]] call _check;
+["COMBINED-ground-target-shared",[{_fireGroup knowsAbout _enemy >= 2 || {!isNull assignedTarget gunner _fireAsset}},15] call _wait,
+    format ["knowledge=%1 target=%2",_fireGroup knowsAbout _enemy,assignedTarget gunner _fireAsset]] call _check;
+["COMBINED-ground-actual-fire",[{count (_fireAsset getVariable ["Waldo_CortexQA_Shots",[]]) > 0},20] call _wait,
+    str (_fireAsset getVariable ["Waldo_CortexQA_Shots",[]])] call _check;
+["COMBINED-ground-manoeuvre-physical-travel",[{_manoeuvreAsset distance2D _manoeuvreStart >= 60},35] call _wait,
+    format ["travel=%1m result=%2 command=%3 expected=%4",round (_manoeuvreAsset distance2D _manoeuvreStart),
+        _manoeuvreGroup getVariable ["Waldo_Cortex_CombinedResult",[]],currentCommand driver _manoeuvreAsset,expectedDestination driver _manoeuvreAsset]] call _check;
 ["COMBINED-air-controller-started",[{_heli getVariable ["Waldo_Cortex_AirAttackJob",false] || {(_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []}},20] call _wait,str (_heli getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _check;
 
 ["HANDOVER",_infantry,_enemy,_assets,"The opportunity expires by itself. No arm may leave an infantry movement lease or permanent role behind."] call _publish;
@@ -111,11 +143,12 @@ private _groundWmpWaypoint=(waypoints _apcGroup) findIf {waypointDescription _x 
 private _expired=[{
     (_infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]]) isEqualTo []
         && {(_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) isEqualTo []}
+        && {(_ifvGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) isEqualTo []}
         && {(_heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]) isEqualTo []}
 },45] call _wait;
 ["COMBINED-finite-cleanup",_expired,format ["requester=%1 ground=%2 air=%3",
     _infantry getVariable ["Waldo_Cortex_CombinedOpportunity",[]],
-    _apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]],
+    [_apcGroup getVariable ["Waldo_Cortex_CombinedRole",[]],_ifvGroup getVariable ["Waldo_Cortex_CombinedRole",[]]],
     _heliGroup getVariable ["Waldo_Cortex_CombinedRole",[]]
 ]] call _check;
 ["COMBINED-no-blocking-state",

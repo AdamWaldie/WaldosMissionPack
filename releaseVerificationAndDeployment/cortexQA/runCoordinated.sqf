@@ -7,7 +7,8 @@
  * release to new ordinary group orders after both support switches are disabled.
  * Locality/authority: scheduled server fixture using normal discovery, support and assault paths.
  * Optional responder owners use WMP migration before contact; return to server after release for
- * fresh ordinary waypoint commands. No owner-local command is executed from the wrong machine.
+ * fresh ordinary waypoint commands. Fire posture, event sampling and movement execute on the
+ * current owner, while public receipts let the server distinguish remote evidence from missing QA.
  * Repeat/JIP: fresh pinned groups and public destinations; caller restores tuning, actors cleaned here.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required callbacks.
  * 3: responderOwners <ARRAY of NUMBER>, default []; two HC owners for the migration variant.
@@ -41,10 +42,18 @@ Waldo_fnc_CortexQAInstallShotCounter = {
                 };
             }];
             _unit setVariable ["Waldo_CortexQA_FiredManEH",_handler];
+            _unit setVariable ["Waldo_CortexQA_FiredManOwner",[clientOwner,serverTime],true];
         };
     } forEach _units;
 };
 publicVariable "Waldo_fnc_CortexQAInstallShotCounter";
+Waldo_fnc_CortexQASetCombatMode = {
+    params [["_group",grpNull,[grpNull]],["_mode","YELLOW",[""]]];
+    if (isNull _group || {!local _group} || {!(_mode in ["BLUE","GREEN","WHITE","YELLOW","RED"])}) exitWith {};
+    _group setCombatMode _mode;
+    _group setVariable ["Waldo_CortexQA_CombatModeReceipt",[_mode,clientOwner,serverTime],true];
+};
+publicVariable "Waldo_fnc_CortexQASetCombatMode";
 [createHashMapFromArray [
     ["Waldo_AIPass_Enable",true],["Waldo_AIPass_LambsMode","WMP"],["Waldo_AIPass_Contact_Enable",true],
     ["Waldo_AIPass_Reinforce_Enable",true],["Waldo_AIPass_Reinforce_MaxResponders",2],
@@ -119,7 +128,12 @@ private _migrateTeam={
     private _requested=[_g,_owner] call Waldo_fnc_HeadlessMigrateGroup;
     private _adopted=[{groupOwner _g == _owner && {(_members findIf {owner _x != _owner}) < 0}},30] call _wait;
     if (_adopted) then {[_members] remoteExecCall ["Waldo_fnc_CortexQAInstallShotCounter",_owner]};
+    private _sampled=[{(_members findIf {
+        private _receipt=_x getVariable ["Waldo_CortexQA_FiredManOwner",[]];
+        count _receipt != 2 || {(_receipt select 0) != _owner}
+    }) < 0},10] call _wait;
     ["COORD-owner-"+_stage,_requested && {_adopted},str [groupOwner _g,_members apply {owner _x}]] call _check;
+    ["COORD-shot-sampler-"+_stage,_sampled,str (_members apply {_x getVariable ["Waldo_CortexQA_FiredManOwner",[]]})] call _check;
     _g setVariable ["Waldo_Headless_ExcludeGroup",true,true];
 };
 if (count _responderOwners == 2) then {
@@ -228,9 +242,21 @@ _requester ignoreTarget [_enemy,false];
 _requester reveal [_enemy,4];
 _enemy hideObjectGlobal false;
 _enemy setUnitPos "AUTO";
-// Open fire only after the independently measured rally stage. Combat mode is global;
-// the production owner-local fire controller issues the actual engagement commands.
-{_x setCombatMode "RED"} forEach ([_requester]+(_teams apply {group (_x select 0)}));
+// Open fire only after the independently measured rally stage. Apply the group posture on its
+// current owner; issuing this on the server left HC-owned groups in BLUE and manufactured a
+// zero-fire result before the production controller was exercised.
+{
+    [_x,"RED"] remoteExecCall ["Waldo_fnc_CortexQASetCombatMode",groupOwner _x];
+} forEach ([_requester]+(_teams apply {group (_x select 0)}));
+private _combatReady=[{
+    ([_requester]+(_teams apply {group (_x select 0)})) findIf {
+        private _receipt=_x getVariable ["Waldo_CortexQA_CombatModeReceipt",[]];
+        count _receipt != 3 || {(_receipt select 0) != "RED"} || {(_receipt select 1) != groupOwner _x}
+    } < 0
+},10] call _wait;
+["COORD-owner-local-fire-posture",_combatReady,str (([_requester]+(_teams apply {group (_x select 0)})) apply {
+    [_x getVariable ["Waldo_CortexQA_CombatModeReceipt",[]],groupOwner _x,combatMode _x]
+})] call _check;
 {_x setVariable ["Waldo_CortexQA_Target",getPosATL _enemy,true]} forEach _helpers;
 ["Movement diagnostic: concurrent coordinated bounds","DIAGNOSTIC ONLY: invulnerable actors and a non-firing target. This does not validate combat effectiveness. Two squads may advance concurrently on separated lanes while the requester remains the base of fire. Inside each moving squad, one fire team bounds while the other covers, then follows. Watch role labels, actual shots and cyan trails. Both squads must travel at least 60 m and reach within 50 m of the objective. No lease or waypoint is injected by this test.",[1500,1550,0]] call _phase;
 private _lastSample=-1;
@@ -317,9 +343,8 @@ private _movementWindowEnded=[{
                 // After role completion the engine may immediately resume its native combat task;
                 // recording that as a Cortex movement failure produced false positives long after
                 // the pass had deliberately relinquished the element.
-                private _state=_g getVariable ["Waldo_AIPass_State",createHashMap];
-                private _drill=_state getOrDefault ["drill",createHashMap];
-                private _stage=_drill getOrDefault ["stage",""];
+                private _transition=_g getVariable ["Waldo_Cortex_DrillTransition",[]];
+                private _stage=if (count _transition >= 5) then {_transition select 4} else {""};
                 if (_stage == "MOVE") then {
                     _movementRoeSamples set [_ti,(_movementRoeSamples select _ti)+1];
                     if (combatMode _g != "YELLOW") then {
@@ -374,11 +399,11 @@ private _movementWindowEnded=[{
         _lastMovementDiagnostic=diag_tickTime;
         {
             private _g=group (_x select 0);
-            private _state=_g getVariable ["Waldo_AIPass_State",createHashMap];
-            private _drill=_state getOrDefault ["drill",createHashMap];
+            private _transition=_g getVariable ["Waldo_Cortex_DrillTransition",[]];
             diag_log format ["WMP CORTEX QA COORD MOVEMENT: group=%1 owner=%2 role=%3 stage=%4 result=%5 actors=%6",
                 _g,groupOwner _g,_g getVariable ["Waldo_Cortex_SupportRole",[]],
-                _drill getOrDefault ["stage","REMOTE_OR_NONE"],_g getVariable ["Waldo_Cortex_SupportBoundResult",[]],
+                if (count _transition >= 5) then {_transition select 4} else {"NONE"},
+                _g getVariable ["Waldo_Cortex_SupportBoundResult",[]],
                 _x apply {[netId _x,getPosATL _x,currentCommand _x,expectedDestination _x,
                     _x checkAIFeature "PATH",behaviour _x,unitCombatMode _x]}];
         } forEach _teams;

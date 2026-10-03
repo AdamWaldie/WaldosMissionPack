@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Exercises aircraft missile defence and adaptive attack patterns using live aircraft, targets,
- * weapon fire, countermeasure events and physical flight.
+ * Exercises aircraft missile defence, surface attack patterns and airborne interception using live
+ * aircraft, moving targets, weapon fire, countermeasure events and physical flight.
  * Locality/authority: scheduled server fixtures; defensive response runs through normal discovery.
  * Repeat/JIP: fresh actors, public trails/labels; removes actors and their event handlers on completion.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required callbacks.
@@ -276,8 +276,10 @@ deleteGroup _nativeHandoverGroup;
 // Adaptive attacks remain separate from the flare-only comparison above. These cases never invoke
 // the production planner/worker directly: ordinary targets, knowledge and flight orders provide the
 // stimulus, and discovery must acquire the aircraft on its normal interval.
+private _observedProfiles=createHashMap;
 {
     _x params ["_id","_class","_withAA","_interrupt",["_patternOverride","AUTO"]];
+    private _airTarget=_x param [5,false];
     [createHashMapFromArray [
         ["Waldo_Cortex_AirAttack_Enable",true],["Waldo_Cortex_AttackRunFlares_Enable",true],
         ["Waldo_AIPass_AircraftFlares_Enable",false],["Waldo_AIPass_AircraftBreak_Enable",false]
@@ -293,12 +295,24 @@ deleteGroup _nativeHandoverGroup;
     private _launchSpeed=[55,105] select (_aircraft isKindOf "Plane");
     _aircraft setVelocityModelSpace [0,_launchSpeed,0];
     _aircraft flyInHeight ([120,260] select (_aircraft isKindOf "Plane"));
-    private _target=createVehicle ["B_APC_Tracked_01_rcws_F",[8200,6500,0],[],0,"NONE"];
+    private _targetClass=["B_APC_Tracked_01_rcws_F","B_Plane_CAS_01_dynamicLoadout_F"] select _airTarget;
+    private _targetPosition=[[8200,6500,0],[8500,6400,320]] select _airTarget;
+    private _target=createVehicle [_targetClass,_targetPosition,[],0,["NONE","FLY"] select _airTarget];
     createVehicleCrew _target; _target allowDamage false;
     private _targetCrew=crew _target;
     private _targetGroup=group driver _target;
     _targetGroup setVariable ["Waldo_AIPass_Exclude",true,true];
-    {_x allowDamage false; _x disableAI "PATH"} forEach _targetCrew;
+    {_x allowDamage false; if (!_airTarget) then {_x disableAI "PATH"}} forEach _targetCrew;
+    if (_airTarget) then {
+        _target setDir 180;
+        _target setVelocityModelSpace [0,110,0];
+        _target flyInHeight 320;
+        _targetGroup setCombatMode "BLUE";
+        private _targetWaypoint=_targetGroup addWaypoint [[7600,4200,320],0];
+        _targetWaypoint setWaypointType "MOVE";
+        _targetWaypoint setWaypointBehaviour "AWARE";
+        _targetWaypoint setWaypointSpeed "FULL";
+    };
     private _aa=objNull;
     private _aaCrew=[];
     private _aaGroup=grpNull;
@@ -318,7 +332,7 @@ deleteGroup _nativeHandoverGroup;
     private _waypoint=_group addWaypoint [_authoredDestination,0];
     _waypoint setWaypointType "MOVE"; _waypoint setWaypointBehaviour "COMBAT";
     _aircraft setVariable ["Waldo_CortexQA_Label",_id,true];
-    _target setVariable ["Waldo_CortexQA_Label","LIVE ARMOURED ATTACK TARGET",true];
+    _target setVariable ["Waldo_CortexQA_Label",["LIVE ARMOURED ATTACK TARGET","LIVE AIR INTERCEPT TARGET"] select _airTarget,true];
     _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",0,true];
     _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",0,true];
     _aircraft addEventHandler ["Fired",{
@@ -335,6 +349,20 @@ deleteGroup _nativeHandoverGroup;
     private _origin=getPosATL _aircraft;
     private _started=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []},35] call _wait;
     [_id+"-physical-plan-start",_started,str (_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]])] call _recordCheck;
+    _aircraft setVariable ["Waldo_CortexQA_ProfileSamples",[],true];
+    [_aircraft] spawn {
+        params ["_sampleAircraft"];
+        while {alive _sampleAircraft && {(_sampleAircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []}} do {
+            private _planSample=_sampleAircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
+            private _samples=_sampleAircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
+            _samples pushBack [
+                serverTime,_planSample param [2,""],speed _sampleAircraft,
+                (getPosATL _sampleAircraft) select 2,_planSample param [4,[]]
+            ];
+            _sampleAircraft setVariable ["Waldo_CortexQA_ProfileSamples",_samples,true];
+            sleep 1;
+        };
+    };
     [_id+"-dedicated-aircraft-owner",
         !(_group getVariable ["Waldo_AIPass_Managed",false])
             && {count (_group getVariable ["Waldo_AIPass_State",createHashMap]) == 0},
@@ -347,10 +375,27 @@ deleteGroup _nativeHandoverGroup;
             _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_LastResult",[]]]] call _recordCheck;
     private _initialPlan=_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
     private _pattern=_initialPlan param [1,""];
+    private _profileAltitudes=_initialPlan param [17,[]];
+    private _profileSpeeds=_initialPlan param [18,[]];
+    private _profileRadii=_initialPlan param [19,[]];
+    private _profileDwell=_initialPlan param [20,0];
+    private _profilePoints=_initialPlan param [21,[]];
+    if (_pattern != "") then {_observedProfiles set [_pattern,[_profilePoints,_profileAltitudes,_profileSpeeds]]};
+    [_id+"-pattern-specific-flight-profile",count _profileAltitudes == 3
+        && {count _profileSpeeds == 3} && {count _profileRadii == 3}
+        && {_profileDwell >= 2}
+        && {count (_profileAltitudes arrayIntersect _profileAltitudes) > 1
+            || {count (_profileSpeeds arrayIntersect _profileSpeeds) > 1}},
+        str [_pattern,_profileAltitudes,_profileSpeeds,_profileRadii,_profileDwell,_profilePoints]] call _recordCheck;
+    if (_airTarget) then {
+        [_id+"-air-contact-intercept-plan",_pattern == "INTERCEPT"
+            && {_initialPlan param [3,objNull] == _target}
+            && {speed _target >= 40},str [_initialPlan,speed _target,getPosATL _target]] call _recordCheck;
+    };
     if (_withAA) then {
         [_id+"-aa-aware-pattern",_pattern in ["OFFSET","STANDOFF"] && {(_initialPlan param [7,0]) > 0},str _initialPlan] call _recordCheck;
     } else {
-        if (!_interrupt) then {
+        if (!_interrupt && {!_airTarget}) then {
         [_id+"-low-threat-pattern",_pattern in ["STRAFE","OFFSET","HOOK","LATERAL"],str _initialPlan] call _recordCheck;
         if (_patternOverride == "LATERAL") then {
             [_id+"-lateral-capable-turret",_pattern == "LATERAL" && {_initialPlan param [13,false]},str _initialPlan] call _recordCheck;
@@ -443,6 +488,16 @@ deleteGroup _nativeHandoverGroup;
     } else {
         private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in ["COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE"]},210] call _wait;
         private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
+        private _profileSamples=_aircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
+        private _sampleStages=_profileSamples apply {_x select 1};
+        private _sampleSpeeds=_profileSamples apply {_x select 2};
+        private _sampleAltitudes=_profileSamples apply {_x select 3};
+        [_id+"-physical-profile-change",count (_sampleStages arrayIntersect _sampleStages) >= 2
+            && {_sampleSpeeds isNotEqualTo []} && {_sampleAltitudes isNotEqualTo []}
+            && {(selectMax _sampleSpeeds)-(selectMin _sampleSpeeds) >= 5
+                || {(selectMax _sampleAltitudes)-(selectMin _sampleAltitudes) >= 5}},
+            str [_sampleStages,selectMin _sampleSpeeds,selectMax _sampleSpeeds,
+                selectMin _sampleAltitudes,selectMax _sampleAltitudes]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] == "COMPLETE"},str _outcome] call _recordCheck;
         [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,str (_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])] call _recordCheck;
         [_id+"-visible-countermeasures",_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0] >= 2,
@@ -458,9 +513,23 @@ deleteGroup _nativeHandoverGroup;
     deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
 } forEach [
     ["AIR-ATTACK-HELI-LATERAL","O_Heli_Attack_02_dynamicLoadout_F",false,false,"LATERAL"],
+    ["AIR-ATTACK-PLANE-STRAFE","O_Plane_CAS_02_dynamicLoadout_F",false,false,"STRAFE"],
+    ["AIR-ATTACK-PLANE-OFFSET","O_Plane_CAS_02_dynamicLoadout_F",false,false,"OFFSET"],
+    ["AIR-ATTACK-PLANE-HOOK","O_Plane_CAS_02_dynamicLoadout_F",false,false,"HOOK"],
     ["AIR-ATTACK-PLANE-AA","O_Plane_CAS_02_dynamicLoadout_F",true,false,"AUTO"],
+    ["AIR-ATTACK-PLANE-INTERCEPT","O_Plane_CAS_02_dynamicLoadout_F",false,false,"AUTO",true],
     ["AIR-ATTACK-ZEUS-HANDOVER","O_Heli_Attack_02_dynamicLoadout_F",false,true,"AUTO"]
 ];
+private _strafeProfile=_observedProfiles getOrDefault ["STRAFE",[]];
+private _offsetProfile=_observedProfiles getOrDefault ["OFFSET",[]];
+private _hookProfile=_observedProfiles getOrDefault ["HOOK",[]];
+["AIR-ATTACK-distinct-fixed-wing-profiles",
+    _strafeProfile isNotEqualTo [] && {_offsetProfile isNotEqualTo []} && {_hookProfile isNotEqualTo []}
+        && {(_strafeProfile select 0) isNotEqualTo (_offsetProfile select 0)}
+        && {(_offsetProfile select 0) isNotEqualTo (_hookProfile select 0)}
+        && {(_strafeProfile select 1) isNotEqualTo (_offsetProfile select 1)}
+        && {(_offsetProfile select 2) isNotEqualTo (_hookProfile select 2)},
+    str _observedProfiles] call _recordCheck;
 
 // The adaptive controller's disabled boundary must preserve an ordinary authored flight. This is a
 // physical comparison rather than an absence-only assertion: the aircraft must keep moving while no

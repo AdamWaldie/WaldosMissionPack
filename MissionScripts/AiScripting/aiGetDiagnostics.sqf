@@ -365,9 +365,9 @@ _checks pushBack ["ai","cortex-snapshot-scope","LOADED",format ["Snapshot server
         private _combinedTarget=_combinedRole param [2,objNull];
         private _combinedName=_combinedRole param [4,""];
         private _combinedExpiry=_combinedRole param [5,0];
-        private _combinedHealthy=count _combinedRole == 6 && {serverTime < _combinedExpiry}
+        private _combinedHealthy=count _combinedRole == 7 && {serverTime < _combinedExpiry}
             && {!isNull _combinedRequester} && {!isNull _combinedTarget} && {alive _combinedTarget}
-            && {side _combinedRequester == side _group} && {_combinedName in ["GROUND_FIRE","AIR_ATTACK"]};
+            && {side _combinedRequester == side _group} && {_combinedName in ["GROUND_FIRE","GROUND_MANOEUVRE","AIR_ATTACK"]};
         _checks pushBack ["ai",format ["cortex-combined-role-%1",netId _group],["ERROR","LOADED"] select _combinedHealthy,format ["group=%1 token=%2 role=%3 requester=%4 target=%5 secondsRemaining=%6 applied=%7 result=%8. Combined roles share an opportunity only; they contain no assembly readiness or infantry movement gate.",groupId _group,_combinedRole param [0,""],_combinedName,groupId _combinedRequester,_combinedTarget,(_combinedExpiry-serverTime) max 0,_group getVariable ["Waldo_Cortex_CombinedApplied",[]],_group getVariable ["Waldo_Cortex_CombinedResult",[]]]];
     };
     _checks pushBack ["ai",format ["cortex-group-context-%1",netId _group],"LOADED",format ["group=%1 phaseAgeSeconds=%2 lastSeenAgeSeconds=%3 morale=%4 moraleState=%5 investigating=%6 searchMembers=%7 reinforcementResponding=%8 dismounted=%9 withdrawnVehicles=%10 disabledFeatures=%11 externalControl=%12. Ages are owner-local; unknown uses -1. Stored intentions are not physical completion.",groupId _group,if ("phaseStart" in _state) then {time-(_state get "phaseStart")} else {-1},if ("lastSeen" in _state) then {time-(_state get "lastSeen")} else {-1},_state getOrDefault ["morale",-1],_state getOrDefault ["moraleState","UNKNOWN"],_state getOrDefault ["areaInvestigation",""],count (_state getOrDefault ["searchTeam",[]]),_state getOrDefault ["responding",false],count (_state getOrDefault ["dismounted",[]]),count (_state getOrDefault ["withdrawn",[]]),_group getVariable ["Waldo_AIPass_DisabledFeatures",[]],_group getVariable ["Waldo_AI_ExternalControl",false]]];

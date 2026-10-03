@@ -1307,21 +1307,22 @@
     {
       "id": "COMBINED-ARMS",
       "title": "Contact-led combined-arms opportunity",
-      "setup": "Place an observing infantry squad, a communicating armed ground vehicle and a moving armed aircraft near a naturally observed hostile. Do not inject rally points, role waypoints or readiness flags.",
-      "expected": "Fresh contact immediately offers independent finite roles to capable nearby assets. Infantry continues without waiting; ground vehicles retain their route and use existing gunnery; aircraft use the finite attack controller. Missing, rejected or interrupted support cannot block infantry action.",
+      "setup": "Place an observing infantry squad, two communicating armed ground vehicles and a moving armed aircraft near a naturally observed hostile. Do not inject rally points, role waypoints or readiness flags.",
+      "expected": "Fresh contact immediately offers independent finite roles to capable nearby assets. Infantry continues without waiting; one ground vehicle retains its route as direct fire while the second physically manoeuvres on a safe side of that fire lane; aircraft use the finite attack controller. Missing, rejected or interrupted support cannot block infantry action.",
       "settings": [
         "Waldo_Cortex_CombinedArms_AirRange"
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runCombinedArms.sqf preserves the common audit plot as visible DETECT, DISTRIBUTE, ACT, HANDOVER and CLEANUP phases. The dedicated renderer shows the observer-to-target line, communication links, offered roles, live roles and results alongside capped physical trails. Assertions require a physically moving airborne fixture, natural contact, finite public opportunity and role tokens, no infantry support lease or assembly waypoint, physical progress on the APC authored route without a Cortex movement owner, actual APC fire, an active aircraft controller and automatic role cleanup. Artillery remains independently asynchronous through the existing qualified-spotter path. HC ownership, real jamming and voice fallback, Zeus interruption, absent-arm, artillery and mixed 50-group performance variants await batched live acceptance.",
+      "automation": "runCombinedArms.sqf preserves the common audit plot as visible DETECT, DISTRIBUTE, ACT, HANDOVER and CLEANUP phases. The dedicated renderer shows the observer-to-target line, communication links, offered roles, live roles and results alongside capped physical trails. Assertions require a physically moving airborne fixture, natural contact, finite public opportunity and role tokens, no infantry support lease or assembly waypoint, physical progress and actual fire from the direct-fire APC, distinct physical travel by the safe-side manoeuvre vehicle, an active aircraft controller and automatic role cleanup. Artillery remains independently asynchronous through the existing qualified-spotter path. HC ownership, real jamming and voice fallback, Zeus interruption, absent-arm, artillery and mixed 50-group performance variants await batched live acceptance.",
       "executable_sources": [
         "runCombinedArms.sqf"
       ],
       "production_sources": [
         "MissionScripts/AiScripting/Cortex/cortexCombinedArmsRequest.sqf",
         "MissionScripts/AiScripting/Cortex/cortexCombinedArmsServer.sqf",
-        "MissionScripts/AiScripting/Cortex/cortexCombinedArmsLocal.sqf"
+        "MissionScripts/AiScripting/Cortex/cortexCombinedArmsLocal.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexCombinedGroundStep.sqf"
       ]
     },
     {
@@ -1361,8 +1362,8 @@
     {
       "id": "AIR-ATTACK",
       "title": "Threat-aware finite aircraft attack patterns",
-      "setup": "Launch moving armed helicopters and planes against live hostile targets with low-threat and observed-AA variants. Interrupt one active run with a replacement Zeus order.",
-      "expected": "Aircraft select strafe, hook, offset, standoff or capability-gated helicopter lateral geometry from type, observed AA and live ammunition; physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.",
+      "setup": "Launch moving armed helicopters and planes against live ground and airborne hostile targets with forced-pattern, low-threat and observed-AA variants. Interrupt one active run with a replacement Zeus order.",
+      "expected": "Aircraft select strafe, hook, offset, standoff, capability-gated helicopter lateral or air-contact intercept geometry from platform, observed AA and live ammunition. Every pattern has distinct three-leg positions, altitude, speed, capture and firing dwell; the aircraft must physically fly ingress/attack/egress, fire real weapons, retain crew and safe clearance, then hand back to an unchanged route. Zeus interruption retires the pattern without reviving it.",
       "settings": [
         "Waldo_Cortex_AirAttack_Enable"
       ],
@@ -1370,7 +1371,7 @@
       "live_evidence": [
         "runtime-20261002-043144: forced helicopter LATERAL was rejected as STANDOFF, helicopter STANDOFF timed out in INGRESS, plane AA STANDOFF reached ATTACK but fired zero, natural waypoint-index progress was misread as authored route replacement, and the Zeus fixture passed an invalid argument type. This failed/stopped run is diagnostic evidence only."
       ],
-      "automation": "runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence, including a forced valid lateral-turret pass and Zeus replacement. Source fixes now retain real weapon/turret pairs, command the lateral operator, gate standoff fire on aimedAtTarget, cool down failed standoff selection, continue fixed-wing egress forward, compare authored waypoint content and call Zeus marking with the correct boolean argument. These changes await a rebuilt live run; stuck replan, target loss and HC migration remain open.",
+      "automation": "runAircraft.sqf provides moving airborne fixtures and physical flight/fire/countermeasure evidence, including forced helicopter lateral and fixed-wing strafe, offset and hook passes, an observed-AA variant, a moving airborne intercept and Zeus replacement. It records the entire three-leg profile and one-second physical speed, altitude and destination samples; forced patterns must expose distinct geometry as well as produce physical profile change. Source fixes retain real weapon/turret pairs, command the lateral operator, cool down failed standoff selection, continue fixed-wing egress forward and compare authored waypoint content. These changes await a rebuilt live run; target loss and HC migration remain open.",
       "executable_sources": [
         "runAircraft.sqf"
       ],

@@ -194,7 +194,7 @@ private _get = {
 // Combined-arms roles are public finite intent. Reapply once when a group moves to a new owner;
 // the token prevents an obsolete owner or an older opportunity from reviving work.
 private _combinedRole=_group getVariable ["Waldo_Cortex_CombinedRole",[]];
-if (count _combinedRole == 6 && {serverTime < (_combinedRole select 5)}) then {
+if (count _combinedRole == 7 && {serverTime < (_combinedRole select 5)}) then {
     private _combinedApplied=_group getVariable ["Waldo_Cortex_CombinedApplied",[]];
     if ((_combinedApplied param [0,""]) != (_combinedRole select 0)
         || {(_combinedApplied param [1,-1]) != clientOwner}) then {

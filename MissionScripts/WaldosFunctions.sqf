@@ -224,6 +224,7 @@ class CfgFunctions
             class CortexCombinedArmsRequest {file = "MissionScripts\AiScripting\Cortex\cortexCombinedArmsRequest.sqf";};
             class CortexCombinedArmsServer {file = "MissionScripts\AiScripting\Cortex\cortexCombinedArmsServer.sqf";};
             class CortexCombinedArmsLocal {file = "MissionScripts\AiScripting\Cortex\cortexCombinedArmsLocal.sqf";};
+            class CortexCombinedGroundStep {file = "MissionScripts\AiScripting\Cortex\cortexCombinedGroundStep.sqf";};
             class CortexCooldown {file = "MissionScripts\AiScripting\Cortex\cortexCooldown.sqf";};
             class CortexCounterBattery {file = "MissionScripts\AiScripting\Cortex\cortexCounterBattery.sqf";};
             class CortexAttackRunFlares {file = "MissionScripts\AiScripting\Cortex\cortexAttackRunFlares.sqf";};

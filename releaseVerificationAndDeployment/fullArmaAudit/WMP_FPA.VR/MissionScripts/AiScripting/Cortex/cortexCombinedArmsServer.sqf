@@ -1,7 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Converts a verified fresh contact into finite, independent combined-arms roles.
- * The server selects at most two nearby ground-vehicle groups and one airborne group. Aircraft are
+ * The server selects at most two nearby ground-vehicle groups and one airborne group. The first
+ * capable ground asset supplies direct fire; a second receives a distinct, finite manoeuvre role
+ * whose route is kept on one side of the support-to-target fire lane. Aircraft are
  * not rejected for a momentary low-speed sample; the finite attack controller owns acceleration,
  * progress and stuck detection after accepting an aircraft that is physically off the ground. Each
  * role is dispatched immediately; infantry never waits for acceptance and no shared assembly state exists.
@@ -36,6 +38,7 @@ missionNamespace setVariable ["Waldo_Cortex_CombinedSerial",_serial];
 private _token=format ["%1:%2",netId _requester,_serial];
 private _expiry=serverTime+35;
 private _ground=0;
+private _groundAnchor=[];
 private _air=0;
 private _dispatched=0;
 private _roleGroups=[];
@@ -69,11 +72,14 @@ private _senderRadio=[leader _requester] call Waldo_fnc_CortexCanTransmit;
                 && {_ground < 2} && {canFire _asset} && {!(_asset getVariable ["Waldo_Convoy_Active",false])}
                 && {[_candidate,"Waldo_AIPass_Vehicles_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
                 && {[_candidate,"Waldo_AIPass_VehicleGunnery_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
-                _role="GROUND_FIRE"; _ground=_ground+1;
+                _role=["GROUND_FIRE","GROUND_MANOEUVRE"] select (_ground > 0);
+                if (_ground == 0) then {_groundAnchor=getPosATL _asset};
+                _ground=_ground+1;
             };
         };
         if (_role != "") then {
-            private _opportunity=[_token,_requester,_target,+_position,_role,_expiry];
+            private _context=if (_role == "GROUND_MANOEUVRE") then {+_groundAnchor} else {[]};
+            private _opportunity=[_token,_requester,_target,+_position,_role,_expiry,_context];
             _candidate setVariable ["Waldo_Cortex_CombinedRole",_opportunity,true];
             _candidate setVariable ["Waldo_Cortex_CombinedApplied",nil,true];
             _candidate setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"DISPATCHED",serverTime,_target],true];

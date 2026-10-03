@@ -702,7 +702,7 @@ class CortexOperations(unittest.TestCase):
             for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
         }
         assigned=[path for case in data['cases'] for path in case['production_sources']]
-        self.assertEqual(145,len(production))
+        self.assertEqual(146,len(production))
         self.assertEqual(production,set(assigned))
         self.assertEqual(len(assigned),len(set(assigned)))
         self.assertTrue(all((ROOT/path).is_file() for path in assigned))
@@ -713,14 +713,18 @@ class CortexOperations(unittest.TestCase):
         combined=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedArms.sqf').read_text()
         for marker in ['COMBINED-air-fixture-moving','COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
                        'COMBINED-ground-route-preserved','COMBINED-ground-target-shared',
-                       'COMBINED-ground-actual-fire','COMBINED-air-controller-started',
+                       'COMBINED-ground-actual-fire','COMBINED-ground-manoeuvre-role',
+                       'COMBINED-ground-manoeuvre-physical-travel','COMBINED-air-controller-started',
                        'COMBINED-independent-feature-gates','COMBINED-finite-cleanup','COMBINED-no-blocking-state']:
             self.assertIn(marker,combined)
         self.assertNotIn(' addWaypoint ',combined.split('*/',1)[1])
         self.assertIn('waypointDescription _x == "WMP AI PASS"',combined)
-        self.assertIn('_groundRemaining < _groundRouteStart-50',combined)
+        self.assertIn('_groundRemaining < _fireRouteStart-50',combined)
         self.assertIn('_groundLease isEqualTo []',combined)
         self.assertIn('_apc limitSpeed 30',combined)
+        self.assertIn('_ifv limitSpeed 30',combined)
+        self.assertIn('private _fireIndex=_groundEntries findIf',combined)
+        self.assertIn('private _manoeuvreIndex=_groundEntries findIf',combined)
         self.assertIn('_heli flyInHeight 140',combined)
         self.assertIn('_heli limitSpeed 170',combined)
         self.assertIn('(driver _heli) doMove [3900,3900,140]',combined)
@@ -1475,6 +1479,7 @@ class CortexOperations(unittest.TestCase):
         request=source('cortexCombinedArmsRequest')
         server=source('cortexCombinedArmsServer')
         local=source('cortexCombinedArmsLocal')
+        ground_step=source('cortexCombinedGroundStep')
         tick=source('cortexGroupTick')
         self.assertIn('serverTime+20+random 8',request)
         self.assertIn('remoteExecCall ["Waldo_fnc_CortexCombinedArmsServer",2]',request)
@@ -1495,12 +1500,18 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('speed _asset',server+local)
         self.assertNotIn('waitUntil',server+local)
         self.assertNotIn('addWaypoint',server+local)
-        self.assertNotIn('CortexGroupMove',server+local)
         self.assertIn('CBA_fnc_waitAndExecute',server)
         self.assertIn('setVariable ["Waldo_Cortex_CombinedRole",nil,true]',server)
         self.assertIn('"DISPATCHED"',server)
         self.assertIn('"EXPIRED"',server)
-        self.assertIn('_role in ["GROUND_FIRE","AIR_ATTACK"]',local)
+        self.assertIn('["GROUND_FIRE","GROUND_MANOEUVRE"]',server)
+        self.assertIn('_role in ["GROUND_FIRE","GROUND_MANOEUVRE","AIR_ATTACK"]',local)
+        self.assertIn('Waldo_fnc_CortexCombinedGroundStep',local)
+        self.assertIn('"COMBINED_GROUND"',local+ground_step)
+        self.assertIn('Waldo_fnc_CortexZeusHeld',ground_step)
+        self.assertIn('if (_stalls >= 1)',ground_step)
+        self.assertNotIn('setPos',ground_step)
+        self.assertNotIn('setVelocity',ground_step)
         self.assertNotIn('CortexCanTransmit',local)
         self.assertGreaterEqual(local.count('"APPLIED"'),2)
         self.assertIn('Waldo_Cortex_CombinedApplied',tick)
@@ -2516,7 +2527,9 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_disabled pushBack [_unit,"AUTOTARGET"]',step)
         fire=source('cortexFireControl')
         self.assertIn('private _movingMembers = _eligible arrayIntersect _drillUnits',fire)
-        self.assertIn('} forEach (_members + _movingMembers);',fire)
+        self.assertIn('} forEach _members;',fire)
+        self.assertNotIn('} forEach (_members + _movingMembers);',fire)
+        self.assertIn('replace their owned LEADER PLANNED destination with native ATTACK pursuit',fire)
         self.assertNotIn('_disabled pushBack [_unit,"TARGET"]',step)
         for capability in ['WEAPONAIM', 'FIREWEAPON']:
             self.assertNotIn(f'_unit disableAI "{capability}"',step)
@@ -2525,6 +2538,12 @@ class CortexOperations(unittest.TestCase):
         coordinated=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
         for marker in ['COORD-base-actual-supporting-fire','COORD-team-%1-actual-fire','from 0 to 5','from 1 to 5']:
             self.assertIn(marker,coordinated)
+        for marker in ['Waldo_fnc_CortexQASetCombatMode','Waldo_CortexQA_CombatModeReceipt',
+                       'Waldo_CortexQA_FiredManOwner','COORD-shot-sampler-',
+                       'Waldo_Cortex_DrillTransition']:
+            self.assertIn(marker,coordinated)
+        self.assertNotIn('{_x setCombatMode "RED"} forEach',coordinated)
+        self.assertNotIn('private _state=_g getVariable ["Waldo_AIPass_State"',coordinated)
 
     def test_successive_advance_exchanges_only_after_arrival(self):
         start=source('cortexAdvanceStart')
@@ -2748,7 +2767,8 @@ class CortexOperations(unittest.TestCase):
     def test_adaptive_air_attack_is_bounded_physical_and_zeus_safe(self):
         planner=source('cortexAirAttackPlan')
         for requirement in ['nearTargets 2500','select [0,16]','Waldo_Cortex_AirAmmoFacts',
-                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','LATERAL']:
+                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','LATERAL',
+                            'INTERCEPT','_airToAir','airWeapon','airWeaponTurret']:
             self.assertIn(requirement,planner)
         self.assertNotIn('allUnits',planner)
         self.assertNotIn('nearEntities',planner)
@@ -2770,11 +2790,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('waypoints _group apply {[waypointPosition _x,waypointType _x]}',controller)
         self.assertNotIn('[count waypoints _group,_waypointIndex,_resumePosition',controller)
         self.assertIn('private _target=_job getOrDefault ["target",objNull]',controller)
+        self.assertIn('private _leadSeconds=[8,3] select (_stage == "ATTACK")',controller)
+        self.assertIn('_job getOrDefault ["airToAir",false]',controller)
+        self.assertIn('_job getOrDefault ["airWeapon",""]',controller)
         self.assertIn('_isPlane && {speed _aircraft < 40}',controller)
         self.assertIn('serverTime+0.8+random 0.8',controller)
         self.assertIn('flareINGRESS',controller)
         self.assertIn('flareEGRESS',controller)
-        self.assertIn('private _captureRadius=if (_isPlane) then {700} else {450}',controller)
+        self.assertIn('private _captureRadii=_job getOrDefault',controller)
+        self.assertIn('private _captureRadius=_captureRadii select _stageIndex',controller)
+        for profile in ['stageAltitudes','stageSpeeds','captureRadii','attackMinimum']:
+            self.assertIn(profile,planner)
+            self.assertIn(profile,controller)
         self.assertIn('private _stagePassed=',controller)
         self.assertIn('private _ingressBehind=',controller)
         self.assertIn('vectorDotProduct (_destination vectorDiff getPosATL _aircraft)',controller)
@@ -2933,8 +2960,11 @@ class CortexOperations(unittest.TestCase):
 
     def test_air_attack_audit_proves_patterns_fire_flares_and_handover(self):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
-        for item in ['AIR-ATTACK-HELI-LATERAL','AIR-ATTACK-PLANE-AA','AIR-ATTACK-ZEUS-HANDOVER','AIR-ATTACK-DISABLED',
+        for item in ['AIR-ATTACK-HELI-LATERAL','AIR-ATTACK-PLANE-STRAFE','AIR-ATTACK-PLANE-OFFSET',
+                     'AIR-ATTACK-PLANE-HOOK','AIR-ATTACK-PLANE-AA','AIR-ATTACK-PLANE-INTERCEPT',
+                     'AIR-ATTACK-ZEUS-HANDOVER','AIR-ATTACK-DISABLED','-air-contact-intercept-plan',
                      '-physical-plan-start','-aa-aware-pattern','-actual-weapon-fire',
+                     '-pattern-specific-flight-profile','-physical-profile-change','AIR-ATTACK-distinct-fixed-wing-profiles',
                      '-visible-countermeasures','-safe-crew-egress','CortexZeusMark',
                      '-zeus-snapshot-exact','-zeus-replacement-travel','-no-old-plan-resurrection','-explicit-state-flow',
                      '-explicit-interruption-transition','-pilot-features-restored','-lateral-capable-turret','setVelocityModelSpace']:

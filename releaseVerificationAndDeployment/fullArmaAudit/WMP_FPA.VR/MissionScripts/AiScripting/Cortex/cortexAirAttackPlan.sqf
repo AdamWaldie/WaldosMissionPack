@@ -1,14 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
  * Builds one finite, threat-aware Cortex attack plan for an AI aircraft and its assigned target.
- * The planner chooses a strafe, offset, hook, standoff or helicopter lateral run from aircraft type, live
- * guided-ground ammunition and a bounded sample of targets already known to the pilot. A standoff
+ * An airborne hostile receives an intercept plan; a surface target receives a strafe, offset, hook,
+ * standoff or helicopter lateral run from aircraft type, live guided-ground ammunition and a bounded
+ * sample of targets already known to the pilot. Intercept geometry leads the target's measured velocity,
+ * varies height inside a platform-safe envelope and retains a real loaded air-to-air weapon when present.
+ * This is an intercept/engage/disengage controller, not a scripted claim to full BFM. A standoff
  * plan retains the real loaded weapon/turret pair; a lateral pass retains the real independent turret
  * and operator weapon. Observed AA shifts the run away from the threat sector and prefers a usable
  * standoff pair unless that aircraft recently failed to acquire a firing solution.
  * Locality/authority: read-only; called on the aircraft owner. It does not reveal enemies, add
  * waypoints, move the aircraft or change crew orders. Immutable magazine facts are cached locally.
- * Repeat/JIP: safe to repeat. Each result is a new owner-local plan and has no JIP side effects.
+ * Each pattern carries separate ingress/attack/egress height, speed, capture radius and minimum
+ * firing-leg time. STRAFE dives and accelerates through; OFFSET remains oblique; HOOK crosses the
+ * target axis on a climbing exit; LATERAL stays abeam long enough for its retained turret; STANDOFF
+ * uses a stable release leg and accelerates away. Repeat/JIP: safe to repeat. Each result is a new
+ * owner-local plan and has no JIP side effects.
  * Aircraft may set Waldo_Cortex_AirAttackPattern to STRAFE, OFFSET, HOOK, STANDOFF or LATERAL
  * for a finite mission-maker/test override. Invalid or platform-incompatible values fall back to
  * automatic selection; LATERAL still requires a living armed independent turret.
@@ -23,6 +30,7 @@ private _pilot=driver _aircraft;
 if (isNull _pilot || {!alive _pilot} || {!local _aircraft}) exitWith {createHashMap};
 private _side=side group _pilot;
 if (_side getFriend side _target >= 0.6) exitWith {createHashMap};
+private _airToAir=_target isKindOf "Air" && {!isTouchingGround _target};
 
 private _ammoCache=missionNamespace getVariable ["Waldo_Cortex_AirAmmoFacts",createHashMap];
 private _ammoFacts={
@@ -45,6 +53,8 @@ private _ammoFacts={
 private _standoff=false;
 private _standoffWeapon="";
 private _standoffTurret=[];
+private _airWeapon="";
+private _airWeaponTurret=[];
 // Retain the actual muzzle/turret pair. Magazine metadata alone cannot fire a weapon and previously
 // allowed STANDOFF plans that sprayed rockets or waited forever with no usable target solution.
 {
@@ -52,6 +62,13 @@ private _standoffTurret=[];
     {
         private _weapon=_x;
         private _compatible=compatibleMagazines _weapon;
+        if (_airWeapon == "") then {
+            private _airLoaded=(magazinesAllTurrets _aircraft) findIf {
+                (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
+                    && {([_x select 0] call _ammoFacts) select 0}
+            };
+            if (_airLoaded >= 0) then {_airWeapon=_weapon; _airWeaponTurret=_turret};
+        };
         private _loaded=(magazinesAllTurrets _aircraft) findIf {
             (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
                 && {([_x select 0] call _ammoFacts) select 1}
@@ -122,7 +139,7 @@ private _threatSide=0;
 private _sideVector=if (_threatSide > 0) then {_right} else {if (_threatSide < 0) then {_left} else {[ _left,_right] select (random 1 >= 0.5)}};
 private _isPlane=_aircraft isKindOf "Plane";
 private _standoffAvailable=_standoff && {serverTime >= (_aircraft getVariable ["Waldo_Cortex_AirStandoffBlockedUntil",0])};
-private _pattern=if (_aaPositions isNotEqualTo []) then {
+private _pattern=if (_airToAir) then {"INTERCEPT"} else {if (_aaPositions isNotEqualTo []) then {
     if (_standoffAvailable) then {"STANDOFF"} else {"OFFSET"}
 } else {
     if (_isPlane) then {
@@ -133,19 +150,53 @@ private _pattern=if (_aaPositions isNotEqualTo []) then {
         if (_standoffAvailable) then {_choices append ["STANDOFF",0.1]};
         selectRandomWeighted _choices
     }
-};
+}};
 private _patternOverride=toUpperANSI (_aircraft getVariable ["Waldo_Cortex_AirAttackPattern","AUTO"]);
 private _overrideValid=_patternOverride in ["STRAFE","OFFSET","HOOK","STANDOFF","LATERAL"]
     && {!(_patternOverride == "LATERAL") || {!_isPlane && {_lateralTurret}}}
     && {!(_patternOverride == "STANDOFF") || {_standoffAvailable}};
-if (_overrideValid) then {_pattern=_patternOverride};
-private _altitude=if (_isPlane) then {if (_aaPositions isNotEqualTo []) then {450} else {260}} else {if (_aaPositions isNotEqualTo []) then {180} else {110}};
-private _speed=if (_isPlane) then {430} else {if (_pattern == "LATERAL") then {110} else {if (_pattern == "STANDOFF") then {90} else {170}}};
+if (_overrideValid && {!_airToAir}) then {_pattern=_patternOverride};
+// Sample once per finite plan. Bounded variation avoids identical attack profiles without adding
+// per-frame work or accepting unsafe arbitrary heights.
+private _altitude=if (_airToAir) then {
+    private _targetHeight=(getPosATL _target) select 2;
+    if (_isPlane) then {((_targetHeight-80+random 240) max 120) min 900}
+    else {((_targetHeight-50+random 140) max 60) min 500}
+} else {
+    if (_isPlane) then {
+        if (_aaPositions isNotEqualTo []) then {380+random 270} else {220+random 160}
+    } else {
+        if (_aaPositions isNotEqualTo []) then {140+random 120} else {70+random 90}
+    }
+};
+private _speed=if (_airToAir) then {
+    if (_isPlane) then {400+random 150} else {130+random 70}
+} else {
+    if (_isPlane) then {400+random 90}
+    else {if (_pattern == "LATERAL") then {100+random 30} else {if (_pattern == "STANDOFF") then {80+random 30} else {150+random 50}}}
+};
 private _point={params ["_along","_lateral"]; private _p=_targetPos vectorAdd (_axis vectorMultiply _along); _p=_p vectorAdd (_sideVector vectorMultiply _lateral); _p set [2,_altitude]; _p};
 private _ingress=[];
 private _attack=[];
 private _egress=[];
 switch _pattern do {
+    case "INTERCEPT": {
+        private _targetVelocity=velocity _target;
+        private _lead=if (_isPlane) then {10+random 5} else {6+random 4};
+        private _predicted=_targetPos vectorAdd (_targetVelocity vectorMultiply _lead);
+        _predicted set [2,_altitude];
+        private _attackLead=_targetPos vectorAdd (_targetVelocity vectorMultiply (_lead*0.35));
+        _attackLead set [2,_altitude];
+        private _escapeAxis=_airPos vectorDiff _targetPos;
+        _escapeAxis set [2,0];
+        if (vectorMagnitude _escapeAxis < 1) then {_escapeAxis=_sideVector};
+        _escapeAxis=vectorNormalized _escapeAxis;
+        _ingress=_predicted vectorAdd (_sideVector vectorMultiply ([450,220] select !_isPlane));
+        _attack=_attackLead;
+        _egress=_targetPos vectorAdd (_escapeAxis vectorMultiply ([1100,650] select !_isPlane));
+        _egress=_egress vectorAdd (_sideVector vectorMultiply ([500,250] select !_isPlane));
+        _egress set [2,_altitude];
+    };
     case "STANDOFF": {
         // Fixed-wing aircraft launch on a stable inbound leg and continue through an offset escape.
         // Build the release leg ahead of the aircraft when contact is acquired inside the nominal
@@ -176,11 +227,95 @@ switch _pattern do {
         else {_ingress=[-650,0] call _point; _attack=[-140,0] call _point; _egress=[650,0] call _point};
     };
 };
+private _stageAltitudes=[];
+private _stageSpeeds=[];
+private _captureRadii=[];
+private _attackMinimum=2;
+if (_isPlane) then {
+    switch _pattern do {
+        case "INTERCEPT": {
+            _stageAltitudes=[_altitude,_altitude,_altitude+120];
+            _stageSpeeds=[_speed,_speed+40,_speed+80];
+            _captureRadii=[450,600,700];
+            _attackMinimum=3;
+        };
+        case "STANDOFF": {
+            _stageAltitudes=[_altitude+60,_altitude,_altitude+160];
+            _stageSpeeds=[_speed,_speed+20,_speed+100];
+            _captureRadii=[350,450,650];
+        };
+        case "OFFSET": {
+            _stageAltitudes=[_altitude+100,_altitude,_altitude+180];
+            _stageSpeeds=[_speed,_speed+40,_speed+80];
+            _captureRadii=[320,420,600];
+            _attackMinimum=3;
+        };
+        case "HOOK": {
+            _stageAltitudes=[_altitude+120,(_altitude-40) max 140,_altitude+220];
+            _stageSpeeds=[_speed,_speed+30,_speed+100];
+            _captureRadii=[320,420,650];
+            _attackMinimum=3;
+        };
+        default {
+            _stageAltitudes=[_altitude+80,(_altitude*0.55) max 120,_altitude+220];
+            _stageSpeeds=[_speed,_speed+80,_speed+60];
+            _captureRadii=[300,380,650];
+            _attackMinimum=2;
+        };
+    };
+} else {
+    switch _pattern do {
+        case "INTERCEPT": {
+            _stageAltitudes=[_altitude,_altitude,_altitude+60];
+            _stageSpeeds=[_speed,_speed+20,_speed+40];
+            _captureRadii=[220,260,320];
+            _attackMinimum=4;
+        };
+        case "STANDOFF": {
+            _stageAltitudes=[_altitude+30,_altitude,_altitude+70];
+            _stageSpeeds=[_speed+20,_speed,_speed+70];
+            _captureRadii=[180,220,300];
+            _attackMinimum=3;
+        };
+        case "OFFSET": {
+            _stageAltitudes=[_altitude+35,_altitude,_altitude+80];
+            _stageSpeeds=[_speed,_speed+20,_speed+50];
+            _captureRadii=[160,200,280];
+            _attackMinimum=4;
+        };
+        case "HOOK": {
+            _stageAltitudes=[_altitude+45,(_altitude-20) max 50,_altitude+100];
+            _stageSpeeds=[_speed,_speed+15,_speed+60];
+            _captureRadii=[160,190,300];
+            _attackMinimum=5;
+        };
+        case "LATERAL": {
+            _stageAltitudes=[_altitude,_altitude,_altitude+40];
+            _stageSpeeds=[_speed,(_speed-15) max 70,_speed+45];
+            _captureRadii=[140,160,240];
+            _attackMinimum=8;
+        };
+        default {
+            _stageAltitudes=[_altitude+30,(_altitude*0.55) max 45,_altitude+100];
+            _stageSpeeds=[_speed,_speed+45,_speed+30];
+            _captureRadii=[150,180,280];
+            _attackMinimum=3;
+        };
+    };
+};
+{
+    private _pointValue=_x;
+    _pointValue set [2,_stageAltitudes select _forEachIndex];
+} forEach [_ingress,_attack,_egress];
 createHashMapFromArray [
     ["token",format ["%1:%2:%3",netId _aircraft,round serverTime,round random 1e6]],
     ["pattern",_pattern],["target",_target],["aaPositions",_aaPositions],["standoff",_standoff],
     ["points",[_ingress,_attack,_egress]],["altitude",_altitude],["speed",_speed],
+    ["stageAltitudes",_stageAltitudes],["stageSpeeds",_stageSpeeds],
+    ["captureRadii",_captureRadii],["attackMinimum",_attackMinimum],
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
     ["lateralWeapon",_lateralWeapon],["standoffWeapon",_standoffWeapon],
-    ["standoffTurret",_standoffTurret],["platform",["HELICOPTER","PLANE"] select _isPlane]
+    ["standoffTurret",_standoffTurret],["airToAir",_airToAir],
+    ["airWeapon",_airWeapon],["airWeaponTurret",_airWeaponTurret],
+    ["platform",["HELICOPTER","PLANE"] select _isPlane]
 ]

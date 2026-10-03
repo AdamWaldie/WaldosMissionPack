@@ -3,7 +3,11 @@
  * Squad fire control while in contact: close-threat priority, target distribution and disciplined
  * suppression.
  *
- * Close threat: a soldier with an enemy believed within 20 m targets it immediately.
+ * Close threat: a stationary or covering soldier with an enemy believed within 20 m targets it
+ * immediately. Actors whose finite tactical movement Cortex currently owns keep TARGET, AUTOTARGET
+ * and FIREWEAPON available and may engage naturally, but this function never injects doTarget/doFire
+ * into them. Arma translates that pair into an ATTACK pursuit command which replaces their doMove,
+ * fragments the fire team and makes movement recovery fight Cortex's own fire-control order.
  * Target distribution: when two or more enemies are visible, soldiers whose target already has more
  * than Waldo_AIPass_FireControl_MaxShootersPerTarget shooters switch to an enemy nobody is engaging.
  * A switched soldier keeps his target for 6 s, so orders do not flicker.
@@ -23,7 +27,7 @@
  * An opportunistic drill grenade thrower is not retargeted during its two-second action window;
  * the grenade never blocks the squad manoeuvre state.
  * Repeat/JIP: checks current ownership, eligibility and gates on every call. START/MOVE
- * actors may receive only the immediate close-threat order; distribution and suppression
+ * actors are left to normal target acquisition; explicit priority, distribution and suppression
  * remain with stationary elements. Recovering stragglers are excluded. This function creates no JIP actions.
  *
  * Arguments:
@@ -85,7 +89,9 @@ if (_members isEqualTo [] && {_movingMembers isEqualTo []}) exitWith {0};
 private _orders = 0;
 private _held = {(_this getVariable ["Waldo_AIPass_TargetHold", -1]) > _now};
 
-// Close threat first.
+// Close threat first for stationary and covering members. Moving actors retain normal
+// TARGET/AUTOTARGET/FIREWEAPON behavior, but an explicit doTarget/doFire pair would
+// replace their owned LEADER PLANNED destination with native ATTACK pursuit.
 {
     private _unit = _x;
     private _closest = objNull;
@@ -100,7 +106,7 @@ private _held = {(_this getVariable ["Waldo_AIPass_TargetHold", -1]) > _now};
         _unit setVariable ["Waldo_AIPass_TargetHold", _now + 6];
         _orders = _orders + 1;
     };
-} forEach (_members + _movingMembers);
+} forEach _members;
 
 // Target distribution across visible enemies.
 private _visible = (_enemies select {(_x select 2) <= 3}) apply {_x select 0};
