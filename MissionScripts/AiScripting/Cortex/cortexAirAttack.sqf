@@ -8,7 +8,7 @@
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * If Arma retains a completed helicopter doMove as a zero-thrust hover during a direct Zeus
- * handover, measured-stagnation recovery first replaces it with one commandMove to the exact
+ * handover, cleanup replaces that old actor command with one doMove to the exact
  * authenticated curator destination. A second verified stall receives one forward-velocity
  * impulse along that same route. During this bounded lease CARELESS suppresses Arma's combat-flight
  * hover, then cleanup restores the curator-authored behaviour. Neither recovery step moves the
@@ -145,11 +145,11 @@ private _finish={
                     _handoverGroup setSpeedMode _authoredSpeed;
                 };
                 // A Cortex attack drives the pilot with doMove, so changing only the group route
-                // leaves that old individual destination active. Return the pilot to formation,
-                // then reactivate the exact waypoint captured at the curator event boundary. The
-                // snapshot position guard prevents a deleted/reused index from reviving Cortex's
-                // former ingress. Zeus remains the sole movement owner throughout handover.
-                _handoverPilot doFollow leader _handoverGroup;
+                // leaves that old individual destination active. Replace it with the exact
+                // curator destination. doFollow is deliberately avoided: the group leader can be
+                // another crew member in the same aircraft, which makes the pilot hover to remain
+                // co-located with that leader instead of flying the waypoint.
+                _handoverPilot doMove _handoverPosition;
                 if (_snapshotMatches
                     && {_authoredWaypointIndex >= 0}
                     && {_authoredWaypointIndex < count waypoints _handoverGroup}
@@ -209,31 +209,27 @@ private _finish={
                                         _handoverGroup setSpeedMode _authoredSpeed;
                                     };
                                 };
-                                // Keep the pilot attached to group movement and reselect only the
-                                // authenticated curator waypoint. Never synthesize a competing
-                                // actor-level destination during a direct Zeus handover.
-                                _handoverPilot doFollow leader _handoverGroup;
+                                // Keep the authenticated group route selected. The actor-level
+                                // destination below is the same point and exists only to supersede
+                                // Cortex's old attack doMove; no alternate route is invented.
                                 if (_authoredWaypointIndex >= 0
                                     && {_authoredWaypointIndex < count waypoints _handoverGroup}
                                     && {waypointPosition [_handoverGroup,_authoredWaypointIndex]
                                         distance2D _handoverPosition <= 2}) then {
                                     _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
                                 };
-                                // Arma can retain the final zero-thrust hover of a completed
-                                // actor-level helicopter doMove even after expectedDestination,
-                                // currentWaypoint and facing all agree with the replacement Zeus
-                                // waypoint. commandMove is the next higher command layer and can
-                                // retire that stale doMove. It repeats Zeus's exact authenticated
-                                // destination once; it does not invent or replace a waypoint.
+                                // Repeat the exact Zeus destination once after measured physical
+                                // stagnation. This supersedes any actor command the engine retained
+                                // from the completed Cortex leg and does not create a waypoint.
                                 if (_recoveryStage == 0
                                     && {_handoverAircraft isKindOf "Helicopter"}
                                     && {!isTouchingGround _handoverAircraft}
                                     && {abs speed _handoverAircraft < 5}
                                     && {_handoverAircraft distance2D _handoverPosition > 150}) then {
-                                    _handoverPilot commandMove _handoverPosition;
+                                    _handoverPilot doMove _handoverPosition;
                                     _recoveryStage=1;
                                     _handoverAircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",[
-                                        serverTime,"COMMAND_MOVE",+_handoverPosition,+getPosATL _handoverAircraft
+                                        serverTime,"DO_MOVE",+_handoverPosition,+getPosATL _handoverAircraft
                                     ],true];
                                 } else {
                                 // If the higher command layer also remains physically stalled for
