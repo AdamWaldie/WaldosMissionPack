@@ -54,7 +54,7 @@ private _finish={
             // Direct sight can immediately rebuild engine knowledge after forgetTarget. Lease the
             // pilot's autonomous combat and target selection while the curator route takes hold.
             // Without AUTOCOMBAT suppression Arma immediately forces an AWARE Zeus waypoint back
-            // into COMBAT and the helicopter hovers despite having the exact replacement doMove.
+            // into COMBAT and the helicopter hovers despite having the exact replacement waypoint.
             // The pilot still flies the authored destination; gunners remain untouched and continue
             // sensing, aiming and returning fire. The bounded restore below returns every feature.
             private _handoverPilot=driver _aircraft;
@@ -68,10 +68,12 @@ private _finish={
             private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
             // Retire the scripted attack command while preserving the active curator waypoint. Do
-            // not also issue group move: that creates a second group flight plan beside the selected
-            // Zeus waypoint and can leave helicopters translating along one axis before hovering.
-            // The pilot destination below only clears Cortex's former owner-local doMove and matches
-            // the already-selected Zeus point exactly.
+            // not issue another group move or another pilot doMove: either creates a second flight
+            // plan beside the selected Zeus waypoint. A leader given doMove remains on that private
+            // order even though setCurrentWaypoint correctly changes the group's route; observed
+            // helicopters then finish one axis of the old attack leg and hover. doFollow is the
+            // engine-supported return-to-formation operation even for the leader itself, so it
+            // releases Cortex's private order and lets the already-selected Zeus waypoint own flight.
             private _handoverGroup=group driver _aircraft;
             private _handoverGroupCombatMode=combatMode _handoverGroup;
             private _handoverAttackEnabled=attackEnabled _handoverGroup;
@@ -141,10 +143,11 @@ private _finish={
                     _handoverGroup setSpeedMode _authoredSpeed;
                 };
                 // A Cortex attack drives the pilot with doMove, so changing only the group route
-                // leaves that old individual destination active. Reactivate the exact waypoint
-                // captured at the curator event boundary and replace the pilot destination with
-                // the same point. Both command layers then agree with Zeus. The snapshot position
-                // guard prevents a deleted/reused index from reviving Cortex's former ingress.
+                // leaves that old individual destination active. Return the pilot to formation,
+                // then reactivate the exact waypoint captured at the curator event boundary. The
+                // snapshot position guard prevents a deleted/reused index from reviving Cortex's
+                // former ingress. Zeus remains the sole movement owner throughout handover.
+                _handoverPilot doFollow leader _handoverGroup;
                 if (_snapshotMatches
                     && {_authoredWaypointIndex >= 0}
                     && {_authoredWaypointIndex < count waypoints _handoverGroup}
@@ -155,21 +158,20 @@ private _finish={
                         _handoverGroup setCurrentWaypoint [_handoverGroup,_handoverIndex];
                     };
                 };
-                _handoverPilot doMove _handoverPosition;
             };
             [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverPosition,
                 _handoverCombatMode,_handoverGroupCombatMode,_handoverAttackEnabled,
                 _handoverLeasedBehaviour,_handoverPilotBehaviour,_authoredSpeed,
-                _handoverZeusToken] spawn {
+                _handoverZeusToken,_authoredWaypointIndex] spawn {
                 params ["_handoverAircraft","_handoverPilot","_handoverToken","_handoverFeatures",
                     "_handoverPosition","_handoverCombatMode","_handoverGroupCombatMode",
                     "_handoverAttackEnabled","_handoverLeasedBehaviour","_handoverPilotBehaviour",
-                    "_authoredSpeed","_handoverZeusToken"];
+                    "_authoredSpeed","_handoverZeusToken","_authoredWaypointIndex"];
                 // This is a bounded handover monitor, not a new Cortex movement profile. Arma can
                 // rebuild the pilot's COMBAT state after the first command even while AUTOCOMBAT is
                 // disabled. Keep only the pilot aligned with the exact curator order and reassert
-                // that same leg after measured physical stagnation. A newer Zeus hold token ends
-                // the monitor before it can repeat an obsolete destination.
+                // that same waypoint after measured physical stagnation. A newer Zeus hold token
+                // ends the monitor before it can repeat an obsolete destination.
                 private _deadline=serverTime+([8,100] select (count _handoverPosition >= 2));
                 private _progressPosition=getPosATL _handoverAircraft;
                 private _progressAt=serverTime;
@@ -204,7 +206,16 @@ private _finish={
                                         _handoverGroup setSpeedMode _authoredSpeed;
                                     };
                                 };
-                                _handoverPilot doMove _handoverPosition;
+                                // Keep the pilot attached to group movement and reselect only the
+                                // authenticated curator waypoint. Never synthesize a competing
+                                // actor-level destination during a direct Zeus handover.
+                                _handoverPilot doFollow leader _handoverGroup;
+                                if (_authoredWaypointIndex >= 0
+                                    && {_authoredWaypointIndex < count waypoints _handoverGroup}
+                                    && {waypointPosition [_handoverGroup,_authoredWaypointIndex]
+                                        distance2D _handoverPosition <= 2}) then {
+                                    _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
+                                };
                             };
                             _progressPosition=getPosATL _handoverAircraft;
                             _progressAt=serverTime;

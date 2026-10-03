@@ -337,6 +337,8 @@ private _cortex=_results select 1;
             _group knowsAbout _target,combatMode _group,behaviour (driver _aircraft),
             combatBehaviour _group,combatBehaviour (driver _aircraft),
             attackEnabled _group,speedMode _group,speed _aircraft,
+            getForcedSpeed _aircraft,vectorDir _aircraft,velocityModelSpace _aircraft,
+            currentWaypoint _group,waypoints _group apply {waypointPosition _x},
             _replacement,_group getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]
