@@ -9,7 +9,8 @@
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * If Arma retains a completed helicopter doMove as a zero-thrust hover during a direct Zeus
  * handover, cleanup replaces that old actor command with one doMove to the exact
- * authenticated curator destination. A second verified stall receives one forward-velocity
+ * authenticated curator destination and requests a fresh engine path to that same point. A second
+ * verified stall receives one forward-velocity
  * impulse along that same route. During this bounded lease CARELESS suppresses Arma's combat-flight
  * hover, then cleanup restores the curator-authored behaviour. Neither recovery step moves the
  * aircraft position or creates a waypoint.
@@ -150,6 +151,7 @@ private _finish={
                 // another crew member in the same aircraft, which makes the pilot hover to remain
                 // co-located with that leader instead of flying the waypoint.
                 _handoverPilot doMove _handoverPosition;
+                _handoverPilot setDestination [_handoverPosition,"LEADER PLANNED",true];
                 if (_snapshotMatches
                     && {_authoredWaypointIndex >= 0}
                     && {_authoredWaypointIndex < count waypoints _handoverGroup}
@@ -219,17 +221,19 @@ private _finish={
                                     _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
                                 };
                                 // Repeat the exact Zeus destination once after measured physical
-                                // stagnation. This supersedes any actor command the engine retained
-                                // from the completed Cortex leg and does not create a waypoint.
+                                // stagnation and force a new engine path. This supersedes any actor
+                                // command/path retained from the completed Cortex leg and does not
+                                // create a waypoint.
                                 if (_recoveryStage == 0
                                     && {_handoverAircraft isKindOf "Helicopter"}
                                     && {!isTouchingGround _handoverAircraft}
                                     && {abs speed _handoverAircraft < 5}
                                     && {_handoverAircraft distance2D _handoverPosition > 150}) then {
                                     _handoverPilot doMove _handoverPosition;
+                                    _handoverPilot setDestination [_handoverPosition,"LEADER PLANNED",true];
                                     _recoveryStage=1;
                                     _handoverAircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",[
-                                        serverTime,"DO_MOVE",+_handoverPosition,+getPosATL _handoverAircraft
+                                        serverTime,"FORCE_REPLAN",+_handoverPosition,+getPosATL _handoverAircraft
                                     ],true];
                                 } else {
                                 // If the higher command layer also remains physically stalled for
