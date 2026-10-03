@@ -2462,7 +2462,10 @@ class CortexOperations(unittest.TestCase):
         text=(ROOT/'MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf').read_text(encoding='utf-8')
         self.assertIn('(weapons _aircraft)+(_aircraft weaponsTurret [-1])',text)
         self.assertIn('_driverWeapons arrayIntersect _driverWeapons',text)
-        self.assertIn('forEach _stationWeapons',text)
+        self.assertIn('private _loadedMagazines=magazinesAllTurrets _aircraft',text)
+        self.assertIn('CfgMagazines" >> _loadedMagazine >> "pylonWeapon',text)
+        self.assertIn('_pylonWeapon in _stationWeapons',text)
+        self.assertIn('forEach _loadedMagazines',text)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text(encoding='utf-8')
         self.assertIn('private _ended=if (!_started) then {false}',qa)
         self.assertNotIn('moveInTurret',qa)
@@ -2780,7 +2783,7 @@ class CortexOperations(unittest.TestCase):
         planner=source('cortexAirAttackPlan')
         for requirement in ['nearTargets ([8000,5000]','select [0,16]','Waldo_Cortex_AirAmmoFacts',
                             'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','BOMB','LATERAL',
-                            'INTERCEPT','_airToAir','airWeapon','airWeaponTurret']:
+                            'INTERCEPT','_airToAir','airWeapon','airWeaponTurret','pylonWeapon','hardpoints','indirectHit']:
             self.assertIn(requirement,planner)
         for requirement in ['groundWeapon','groundTurret','_groundCandidates','shotbullet','shotshell',
                             'shotrocket','shotmissile','shotbomb','selectedWeapon','selectedSimulation','selectedWeaponClass',
@@ -2788,6 +2791,8 @@ class CortexOperations(unittest.TestCase):
                             '_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]']:
             self.assertIn(requirement,planner)
         self.assertIn('private _standoff=_simulation == "shotmissile"',planner)
+        self.assertIn('&& {_guidedGround} && {!_antiAir} && {!_bombHint}',planner)
+        self.assertIn('_bombHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]',planner)
         self.assertNotIn('allUnits',planner)
         self.assertNotIn('nearEntities',planner)
         for requirement in ['fullCrew _aircraft','_aircraft weaponsTurret _turret','_personTurret',
@@ -2851,6 +2856,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_stage != "" || {[_group] call Waldo_fnc_CortexIsEligible}',controller)
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_target,_weapon]',controller)
+        self.assertIn('_projectile setMissileTarget _guidedTarget',controller)
+        self.assertIn('case "GUN": {0.15+random 0.25}',controller)
+        self.assertIn('case "ROCKET": {0.45+random 0.55}',controller)
+        self.assertIn('(_x select 0) == _selectedMagazine',controller)
         self.assertIn('_job set ["lateralPilotFeatures",_lateralPilotFeatures]',controller)
         self.assertNotIn('_group enableAttack false',controller)
         self.assertIn('_finishGroup enableAttack (_job getOrDefault ["previousAttackEnabled",true])',controller)
@@ -2913,6 +2922,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('["target",_airAttackTarget]',discover)
         stop=source('cortexStop')
         for requirement in ['Waldo_Cortex_AirAttackPlan','Waldo_Cortex_AirAttackJob','Waldo_Cortex_AirFireSolution',
+                            'Waldo_Cortex_AirAttackTarget','Waldo_Cortex_AirAttackGuidedWeapon',
                             'removeEventHandler ["Fired"','limitSpeed -1','previousAttackEnabled']:
             self.assertIn(requirement,stop)
         for name in ['featureRuntimeApply','featureRuntimeRequestState']:

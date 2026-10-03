@@ -39,9 +39,16 @@ private _ammoFacts={
     params ["_magazine"];
     private _facts=_ammoCache getOrDefault [_magazine,[]];
     if (count _facts < 8) then {
-        private _ammo=configFile >> "CfgAmmo" >> getText (configFile >> "CfgMagazines" >> _magazine >> "ammo");
+        private _magazineConfig=configFile >> "CfgMagazines" >> _magazine;
+        private _ammo=configFile >> "CfgAmmo" >> getText (_magazineConfig >> "ammo");
         private _flags=getNumber (_ammo >> "aiAmmoUsageFlags");
         private _simulation=toLowerANSI getText (_ammo >> "simulation");
+        private _pylonWeapon=toUpperANSI getText (_magazineConfig >> "pylonWeapon");
+        private _hardpoints=(getArray (_magazineConfig >> "hardpoints")) apply {toUpperANSI _x};
+        // Pylon bombs are not consistently represented by shotBomb. The magazine is the authoritative
+        // loadout item, so retain its pylon metadata instead of inferring delivery solely from CfgAmmo.
+        private _bombHint="BOMB" in (toUpperANSI _magazine) || {"BOMB" in _pylonWeapon}
+            || {_hardpoints findIf {"BOMB" in _x} >= 0};
         // aiAmmoUsageFlags alone marks some air-to-ground ordnance as useful against aircraft.
         // Require a real air lock for missiles; guns may use the engine's anti-air usage hint.
         private _antiAir=getNumber (_ammo >> "airLock") > 0
@@ -50,23 +57,26 @@ private _ammoFacts={
             || {getNumber (_ammo >> "nvLock") > 0} || {(floor (_flags/512) mod 2) == 1};
         // STANDOFF is reserved for a guided missile. Guided rockets still need a forward run and
         // belong to OFFSET/HOOK; treating them as stand-off ordnance created long-range overshoots.
-        private _standoff=_simulation == "shotmissile" && {getNumber (_ammo >> "hit") >= 100}
-            && {_guidedGround};
-        private _hit=getNumber (_ammo >> "hit");
+        private _hit=(getNumber (_ammo >> "hit")) max (getNumber (_ammo >> "indirectHit"));
+        private _standoff=_simulation == "shotmissile" && {_hit >= 100}
+            && {_guidedGround} && {!_antiAir} && {!_bombHint};
         // Cannons are commonly dual-purpose. An anti-air usage hint must not exclude the same
         // loaded gun from a ground attack. Missiles need a real ground seeker; bombs and fixed
         // rockets use their own delivery geometry rather than a lock classification.
         private _surface=_hit > 0 && {
-            _simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]
+            _bombHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]
                 || {_simulation == "shotmissile" && {_guidedGround}}
+            }
         };
-        private _weaponClass=switch _simulation do {
-            case "shotbullet";
-            case "shotshell": {"GUN"};
-            case "shotrocket": {"ROCKET"};
-            case "shotmissile": {"GUIDED"};
-            case "shotbomb": {"BOMB"};
-            default {""};
+        private _weaponClass=if (_bombHint) then {"BOMB"} else {
+            switch _simulation do {
+                case "shotbullet";
+                case "shotshell": {"GUN"};
+                case "shotrocket": {"ROCKET"};
+                case "shotmissile": {"GUIDED"};
+                case "shotbomb": {"BOMB"};
+                default {""};
+            }
         };
         _facts=[_antiAir,_standoff,_surface,_simulation,_hit,_guidedGround,_weaponClass,_magazine];
         _ammoCache set [_magazine,_facts];
@@ -78,6 +88,7 @@ private _standoffWeapon="";
 private _standoffTurret=[];
 private _standoffSimulation="";
 private _standoffMagazine="";
+private _standoffScore=-1;
 private _airWeapon="";
 private _airWeaponTurret=[];
 private _airSimulation="";
@@ -85,8 +96,10 @@ private _airWeaponClass="";
 private _airMagazine="";
 private _airWeaponScore=-1;
 private _groundCandidates=[];
-// Retain the actual muzzle/turret pair. Magazine metadata alone cannot fire a weapon and previously
-// allowed STANDOFF plans that sprayed rockets or waited forever with no usable target solution.
+private _loadedMagazines=magazinesAllTurrets _aircraft;
+// Start from actual loaded magazines. Dynamic pylons define their firing weapon through pylonWeapon;
+// compatibleMagazines alone omits valid rocket and bomb racks on several vanilla and modded aircraft.
+// The retained station still has to expose that weapon, preserving a real operator/muzzle pair.
 {
     private _turret=_x;
     // Arma exposes fixed-wing and other driver-controlled weapons through `weapons`, while
@@ -99,15 +112,19 @@ private _groundCandidates=[];
         _driverWeapons arrayIntersect _driverWeapons
     } else {_aircraft weaponsTurret _turret};
     {
-        private _weapon=_x;
-        private _compatible=compatibleMagazines _weapon;
-        private _airLoaded=(magazinesAllTurrets _aircraft) findIf {
-                (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
-                    && {([_x select 0] call _ammoFacts) select 0}
-        };
-        if (_airLoaded >= 0) then {
-            private _loadedAirMagazine=((magazinesAllTurrets _aircraft) select _airLoaded) select 0;
-            private _airFacts=[_loadedAirMagazine] call _ammoFacts;
+        _x params ["_loadedMagazine","_loadedTurret","_rounds"];
+        if (_loadedTurret isEqualTo _turret && {_rounds > 0}) then {
+            private _pylonWeapon=getText (configFile >> "CfgMagazines" >> _loadedMagazine >> "pylonWeapon");
+            private _weapon="";
+            if (_pylonWeapon != "" && {_pylonWeapon in _stationWeapons}) then {
+                _weapon=_pylonWeapon;
+            } else {
+                private _weaponIndex=_stationWeapons findIf {_loadedMagazine in compatibleMagazines _x};
+                if (_weaponIndex >= 0) then {_weapon=_stationWeapons select _weaponIndex};
+            };
+            if (_weapon != "") then {
+                private _airFacts=[_loadedMagazine] call _ammoFacts;
+                if (_airFacts select 0) then {
             private _airScore=(_airFacts select 4)+([0,1000] select ((_airFacts select 6) == "GUIDED"));
             if (_airScore > _airWeaponScore) then {
                 _airWeaponScore=_airScore;
@@ -115,30 +132,24 @@ private _groundCandidates=[];
                 _airWeaponTurret=_turret;
                 _airSimulation=_airFacts select 3;
                 _airWeaponClass=_airFacts select 6;
-                _airMagazine=_loadedAirMagazine;
+                        _airMagazine=_loadedMagazine;
+                    };
+                };
+                if ((_airFacts select 1) && {(_airFacts select 4) > _standoffScore}) then {
+                    _standoffScore=_airFacts select 4;
+                    _standoff=true;
+                    _standoffWeapon=_weapon;
+                    _standoffTurret=_turret;
+                    _standoffSimulation=_airFacts select 3;
+                    _standoffMagazine=_loadedMagazine;
+                };
+                if (_airFacts select 2) then {
+                    _groundCandidates pushBack [_weapon,_turret,_airFacts select 3,_airFacts select 4,
+                        _airFacts select 6,_loadedMagazine];
+                };
             };
         };
-        private _loaded=(magazinesAllTurrets _aircraft) findIf {
-            (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
-                && {([_x select 0] call _ammoFacts) select 1}
-        };
-        if (_loaded >= 0 && {!_standoff}) then {
-            _standoffMagazine=((magazinesAllTurrets _aircraft) select _loaded) select 0;
-            _standoff=true;
-            _standoffWeapon=_weapon;
-            _standoffTurret=_turret;
-            _standoffSimulation=([_standoffMagazine] call _ammoFacts) select 3;
-        };
-        private _surfaceLoaded=(magazinesAllTurrets _aircraft) findIf {
-            (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
-                && {([_x select 0] call _ammoFacts) select 2}
-        };
-        if (_surfaceLoaded >= 0) then {
-            private _facts=[((magazinesAllTurrets _aircraft) select _surfaceLoaded) select 0] call _ammoFacts;
-            _groundCandidates pushBack [_weapon,_turret,_facts select 3,_facts select 4,_facts select 6,
-                ((magazinesAllTurrets _aircraft) select _surfaceLoaded) select 0];
-        };
-    } forEach _stationWeapons;
+    } forEach _loadedMagazines;
 } forEach ([[-1]] + allTurrets [_aircraft,true]);
 // A lateral pass needs an independently aimed, occupied turret. A fixed-forward pilot weapon cannot
 // engage abeam and previously made LATERAL a label on an impossible route. Person turrets are troop

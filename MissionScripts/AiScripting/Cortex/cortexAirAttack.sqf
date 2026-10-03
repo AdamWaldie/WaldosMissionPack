@@ -106,6 +106,8 @@ private _finish={
     ],true];
     _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",nil,true];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",nil,true];
+    _aircraft setVariable ["Waldo_Cortex_AirAttackTarget",nil];
+    _aircraft setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",nil];
     _aircraft setVariable ["Waldo_Cortex_AirAttackJob",nil];
     _aircraft setVariable ["Waldo_Cortex_AirAttackToken",nil];
     -1
@@ -206,10 +208,21 @@ if (_stage == "") then {
     // Record the authored policy for exact cleanup, but do not disable it. Disabling group attacks
     // prevented native pilots and turrets from building a valid solution while Cortex waited to fire.
     _aircraft setVariable ["Waldo_Cortex_AirAttackToken",_plan get "token"];
+    _aircraft setVariable ["Waldo_Cortex_AirAttackTarget",_target];
+    _aircraft setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",
+        ["",_plan getOrDefault ["selectedWeapon",""]] select ((_plan getOrDefault ["selectedSimulation",""]) == "shotmissile")];
     private _handler=_aircraft addEventHandler ["Fired",{
-        params ["_aircraft","_weapon"];
+        params ["_aircraft","_weapon","","","","","_projectile"];
         if (toLowerANSI getText (configFile >> "CfgWeapons" >> _weapon >> "simulation") != "cmlauncher") then {
             _aircraft setVariable ["Waldo_Cortex_AirAttackShots",(_aircraft getVariable ["Waldo_Cortex_AirAttackShots",0])+1];
+            // Preserve native ballistics and seeker behaviour, but give the projectile the hostile
+            // already selected by its operator. fireAtTarget alone can launch a guided pylon round
+            // without a missile target, producing the observed straight-line ground and A2A misses.
+            private _guidedWeapon=_aircraft getVariable ["Waldo_Cortex_AirAttackGuidedWeapon",""];
+            private _guidedTarget=_aircraft getVariable ["Waldo_Cortex_AirAttackTarget",objNull];
+            if (_weapon == _guidedWeapon && {!isNull _projectile} && {!isNull _guidedTarget} && {alive _guidedTarget}) then {
+                _projectile setMissileTarget _guidedTarget;
+            };
         };
     }];
     _aircraft setVariable ["Waldo_Cortex_AirAttackShots",0];
@@ -326,9 +339,10 @@ if (_stage == "ATTACK") then {
         (vectorNormalized _weaponVector) vectorDotProduct (vectorNormalized _targetVector)
     } else {-1};
     private _aimed=if (_weapon == "") then {0} else {_aircraft aimedAtTarget [_target,_weapon]};
+    private _selectedMagazine=_job getOrDefault ["selectedMagazine",""];
     private _loaded=(magazinesAllTurrets _aircraft) findIf {
         (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
-            && {(_x select 0) in compatibleMagazines _weapon}
+            && {(_x select 0) == _selectedMagazine || {(_x select 0) in compatibleMagazines _weapon}}
     } >= 0;
     private _envelope=switch _weaponClass do {
         case "GUN": {if (_airContact) then {[100,1800,0.995]} else {[120,1800,0.992]}};
@@ -367,7 +381,14 @@ if (_stage == "ATTACK") then {
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
     if (_validSolution && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
         private _fired=_aircraft fireAtTarget [_target,_weapon];
-        _job set ["nextWeaponFire",serverTime+([0.7+random 0.8,2+random 1.5] select _fired)];
+        private _fireDelay=if (!_fired) then {0.7+random 0.8} else {
+            switch _weaponClass do {
+                case "GUN": {0.15+random 0.25};
+                case "ROCKET": {0.45+random 0.55};
+                default {2+random 1.5};
+            }
+        };
+        _job set ["nextWeaponFire",serverTime+_fireDelay];
     };
 };
 

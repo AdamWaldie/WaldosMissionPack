@@ -70,6 +70,8 @@ if (isServer) then {
             _x setVariable ["Waldo_Cortex_AttackFlareCooldown",nil,true];
             _x setVariable ["Waldo_Cortex_AirAttackPlan",nil,true];
             _x setVariable ["Waldo_Cortex_AirFireSolution",nil,true];
+            _x setVariable ["Waldo_Cortex_AirAttackTarget",nil];
+            _x setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",nil];
         };
     } forEach vehicles;
     [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
@@ -143,6 +145,8 @@ private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (miss
         _flareAircraft setVariable ["Waldo_Cortex_AttackFlareJob",nil];
         _flareAircraft setVariable ["Waldo_Cortex_AirAttackJob",nil];
         _flareAircraft setVariable ["Waldo_Cortex_AirAttackToken",nil];
+        _flareAircraft setVariable ["Waldo_Cortex_AirAttackTarget",nil];
+        _flareAircraft setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",nil];
         private _airHandler=_state getOrDefault ["firedHandler",-1];
         if (_airHandler >= 0 && {local _flareAircraft}) then {_flareAircraft removeEventHandler ["Fired",_airHandler]};
         if (local _flareAircraft) then {
