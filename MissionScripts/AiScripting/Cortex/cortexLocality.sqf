@@ -1,8 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Passenger, pending calm remount, post-contact movement and active withdrawal intent survive migration without replaying
- * old owner jobs. Invalidates old jobs, restores interrupted transient behaviour and resumes a
- * bounded investigation, search or withdrawal after WMP or ACE migration. A Zeus hold or the
+ * Passenger, pending calm remount, active coordinated-support, post-contact movement and active
+ * withdrawal intent survive migration without replaying old owner jobs. Invalidates old jobs,
+ * restores interrupted transient behaviour and resumes a bounded support assignment,
+ * investigation, search or withdrawal after WMP or ACE migration. A Zeus hold or the
  * matching infantry-morale/vehicle-withdrawal gate cancels restoration so migration cannot revive
  * superseded work or incorrectly couple the two withdrawal types.
  * Locality/authority: current group owner unless stated otherwise below.
@@ -15,12 +16,15 @@
  * Return Value: Nothing unless a value is explicitly returned below.
  * Current callers: group Local handler and discovery.
  * Example: [_group, local _group] call Waldo_fnc_CortexLocality;
+ * Result: the new owner releases stale transient controls and resumes one valid durable intent.
  */
 params [["_group", grpNull, [grpNull]], ["_gained", false, [true]]];
 if (isNull _group) exitWith {};
 private _withdrawalIntent = _group getVariable ["Waldo_Cortex_WithdrawalIntent",[]];
 private _transitionIntent = _group getVariable ["Waldo_Cortex_TransitionIntent",[]];
 private _remountIntent = _group getVariable ["Waldo_Cortex_Remount",[]];
+private _supportLease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
+private _supportStatus = _group getVariable ["Waldo_AIPass_SupportStatus",[]];
 [_group,true] call Waldo_fnc_CortexHearingLocal;
 {
         private _unit = _x;
@@ -136,6 +140,22 @@ if (count _buildingIntent >= 3 && {isClass (configFile >> "CfgPatches" >> "lambs
     if (_buildingKind == "CQB" && {_buildingTarget isEqualType objNull} && {!isNull _buildingTarget}) then {
         [_group,_buildingTarget,createHashMapFromArray [["radius",_buildingRadius]]] call Waldo_fnc_CortexClearBuilding;
     };
+};
+// The server-owned lease/status pair is the durable assignment. Reuse the normal support
+// acceptance path so every feature gate, vehicle exclusion, LAMBS handover and movement flag keeps
+// exactly one implementation. The new owner reconstructs semantics; it never replays an old job.
+private _supportAdoptable=_withdrawalIntent isEqualTo [] && {_transitionIntent isEqualTo []}
+    && {count _supportLease == 6} && {count _supportStatus == 4}
+    && {(_supportLease select 0) == (_supportStatus select 0)}
+    && {serverTime < (_supportLease select 2)} && {_supportStatus select 2}
+    && {!([_group] call Waldo_fnc_CortexZeusHeld)};
+if (_supportAdoptable) then {
+    [createHashMapFromArray [
+        ["group",_group],["lease",_supportLease],["waitUntil",serverTime],["adopt",true]
+    ]] call Waldo_fnc_CortexSupportApply;
+};
+if (([_group] call Waldo_fnc_CortexGroupState) getOrDefault ["supportToken",""] != "") exitWith {
+    _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
 };
 if (_passengers isNotEqualTo [] && {[_group] call Waldo_fnc_CortexIsEligible}) then {
     private _adopted=[_group] call Waldo_fnc_CortexGroupState;

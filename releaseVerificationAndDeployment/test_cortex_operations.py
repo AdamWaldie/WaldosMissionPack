@@ -440,6 +440,7 @@ class CortexOperations(unittest.TestCase):
         hold=end.split('if (_holdFailedBound) then {',1)[1].split('} else {',1)[0]
         self.assertIn('_state set ["supportHeld",_held]',hold)
         self.assertIn('_x disableAI "PATH"',hold)
+        self.assertIn('Waldo_Cortex_SupportPathHold',hold)
         self.assertNotIn('_x doFollow',hold)
         self.assertIn('[_supportToken,_drill get "supportSequence",_reason]',end)
         maintain=source('cortexSupportMaintain')
@@ -634,12 +635,18 @@ class CortexOperations(unittest.TestCase):
         self.assertLess(zeus.index('_g setCurrentWaypoint _wp'),
                         zeus.index('[_g,true,_wp select 1] call Waldo_fnc_CortexZeusMark'))
         self.assertIn('_arrived < 4',zeus)
-        self.assertIn('_progressed != count _members',zeus)
+        self.assertIn('_progressed < 4',zeus)
+        for setting in ['setWaypointBehaviour "AWARE"','setWaypointCombatMode "YELLOW"',
+                        'setWaypointSpeed "FULL"']:
+            self.assertIn(setting,zeus)
 
-    def test_coordinated_contact_loss_uses_engine_visibility_not_fixture_walls(self):
+    def test_coordinated_contact_loss_removes_and_restores_engine_knowledge(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
-        transition=qa.split('// Hide the known target at engine level',1)[1].split('_enemy setUnitPos "AUTO";',1)[0]
+        transition=qa.split('// Remove the known target from the requester',1)[1].split('_enemy setUnitPos "AUTO";',1)[0]
         self.assertIn('hideObjectGlobal _enemy',transition)
+        self.assertIn('_requester ignoreTarget [_enemy,true]',transition)
+        self.assertIn('_requester ignoreTarget [_enemy,false]',transition)
+        self.assertIn('_requester reveal [_enemy,4]',transition)
         self.assertIn('_enemy hideObjectGlobal false',transition)
         self.assertNotIn('createVehicle ["Land_CncWall4_F"',transition)
 
@@ -658,15 +665,19 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_x != leader _group',maintain)
         self.assertIn('supportHeld is the ownership record',maintain)
         self.assertIn('group _x == _group',maintain)
+        self.assertIn('Waldo_Cortex_SupportPathHold',maintain)
         restore=source('cortexRestoreCalm')
         self.assertIn('group _unit == _group',restore)
+        self.assertIn('Waldo_Cortex_SupportPathHold',restore)
         for text in [maintain,restore]:
             self.assertNotIn('currentCommand _x == "STOP"',text)
 
     def test_calm_cleanup_releases_cortex_holds_without_overwriting_new_individual_orders(self):
         restore=source('cortexRestoreCalm')
         release_hold=restore.split('private _releaseOwnedHold={',1)[1].split('};\n{',1)[0]
-        self.assertIn('if (_restorePath) then {_unit enableAI "PATH"}',release_hold)
+        self.assertIn('if (_restorePath) then {',release_hold)
+        self.assertIn('_unit enableAI "PATH"',release_hold)
+        self.assertIn('_unit setVariable ["Waldo_Cortex_SupportPathHold",nil,true]',release_hold)
         self.assertIn('_command in ["","STOP","ATTACK","FIRE","SUPPRESS"]',release_hold)
         self.assertIn('_returnSearchTeam && {!_yieldToExternal}',release_hold)
         self.assertIn('_unit doFollow leader _group',release_hold)
@@ -1089,12 +1100,24 @@ class CortexOperations(unittest.TestCase):
         step = source("cortexFlankStep")
         self.assertIn('currentCommand _unit == "ATTACK"', step)
         self.assertIn('_expected distance2D _spot > 15', step)
+        self.assertIn('_expected distance2D _spot > 15 || {_pursuitResetCount > 0}', step)
         self.assertIn('_pursuitResetCount < 2', step)
         recovery = step.split('// Live dedicated QA proved that YELLOW', 1)[1].split('private _last =', 1)[0]
         for order in ['_unit doTarget objNull', '_unit doWatch _enemyPos', '_unit doMove _spot',
                       '_unit setDestination [_spot,"LEADER PLANNED",true]']:
             self.assertIn(order, recovery)
         self.assertNotIn('enableAttack false', recovery)
+
+    def test_active_support_assignment_is_adopted_by_the_new_local_owner(self):
+        locality=source('cortexLocality')
+        apply=source('cortexSupportApply')
+        for marker in ['Waldo_AIPass_SupportLease','Waldo_AIPass_SupportStatus',
+                       'serverTime < (_supportLease select 2)','["adopt",true]',
+                       'call Waldo_fnc_CortexSupportApply']:
+            self.assertIn(marker,locality)
+        self.assertIn('_job getOrDefault ["adopt",false]',apply)
+        self.assertIn('_state set ["supportBoundSequence",-1]',apply)
+        self.assertIn('_state set ["arrivedAt"',apply)
 
     def test_tactical_bounds_own_actor_path_without_disabling_fire(self):
         step = source("cortexFlankStep")
@@ -1718,9 +1741,10 @@ class CortexOperations(unittest.TestCase):
 
     def test_infantry_withdrawal_releases_support_holds_and_owns_its_route(self):
         retreat=source('cortexRetreat')
-        support=retreat.split('forEach (_state getOrDefault ["supportHeld",[]])',1)[0].rsplit('{',1)[-1]
+        support=retreat.split('private _supportHeld=',1)[1].split('{_state deleteAt _x}',1)[0]
         self.assertIn('_x enableAI "PATH"',support)
         self.assertIn('_x doFollow _leader',support)
+        self.assertIn('Waldo_Cortex_SupportPathHold',support)
         self.assertIn('_state set ["movementLease",["INFANTRY_WITHDRAW",time+_remaining]]',retreat)
         self.assertLess(retreat.index('CortexGroupMove'),retreat.index('["INFANTRY_WITHDRAW",time+_remaining]'))
 

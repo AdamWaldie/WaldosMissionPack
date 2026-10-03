@@ -23,10 +23,14 @@
  * the requester and responder to share the mode which will consume the lease. A mismatched pair is
  * rejected instead of entering RESPONDING with no possible successor state.
  * Rally movement also uses 10 m completion; readiness requires physical squad arrival in GroupTick.
- * Arguments: 0: job <HASHMAP> containing group, lease and waitUntil.
+ * Ownership adoption reuses a matching public lease/status pair rather than inventing a second
+ * support lifecycle. It reconstructs only semantic state and lets SupportMaintain consume the
+ * current public role on the new owner.
+ * Arguments: 0: job <HASHMAP> containing group, lease, waitUntil and optional adopt <BOOL>.
  * Return Value: Retry delay in seconds or -1 after acknowledgement.
  * Current callers: SupportLocal through the existing scheduler.
  * Example: [_job] call Waldo_fnc_CortexSupportApply;
+ * Result: a valid reservation becomes one owner-local rally or coordinated-assault assignment.
  */
 params ["_job"];
 private _group = _job get "group";
@@ -41,7 +45,12 @@ if (_current isNotEqualTo _lease) exitWith {
 };
 _lease params ["_token","_requester","_expiry","_rally","_needAT","_attack"];
 private _state = [_group] call Waldo_fnc_CortexGroupState;
-private _same = (_state getOrDefault ["supportToken",""]) == _token;
+private _publicStatus=_group getVariable ["Waldo_AIPass_SupportStatus",[]];
+private _adopting=_job getOrDefault ["adopt",false]
+    && {count _publicStatus == 4}
+    && {(_publicStatus select 0) == _token}
+    && {_publicStatus select 2};
+private _same = (_state getOrDefault ["supportToken",""]) == _token || {_adopting};
 private _movementLease = _state getOrDefault ["movementLease",[]];
 private _movementOwner = _movementLease param [0,""];
 private _movementLeaseActive = count _movementLease == 2 && {time < (_movementLease select 1)};
@@ -78,7 +87,7 @@ private _directCoordinationPending = _attack isEqualTo [] && {_sharedCoordinated
 if (_okay) then {
     _okay = [_group,"SUPPORT",true,_expiry] call Waldo_fnc_CortexLambsLease;
 };
-if (_okay && {!_same || {_attackAllowed && {!(_state getOrDefault ["assaulting",false])}}}) then {
+if (_okay && {_adopting || {!_same} || {_attackAllowed && {!(_state getOrDefault ["assaulting",false])}}}) then {
     if (_attackAllowed) then {
         [_group] call Waldo_fnc_CortexGroupMoveClear;
         _state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]];
@@ -91,6 +100,11 @@ if (_okay && {!_same || {_attackAllowed && {!(_state getOrDefault ["assaulting",
     _state set ["assaulting",_attackAllowed];
     _state set ["responding",true]; _state set ["respondingTo",_requester];
     _state set ["respondUntil",time+(_expiry-serverTime)]; _state set ["supportToken",_token];
+    if (_adopting) then {
+        private _arrivedServerTime=_publicStatus select 1;
+        _state set ["arrivedAt",if (_arrivedServerTime < 0) then {-1} else {time-((serverTime-_arrivedServerTime) max 0)}];
+        _state set ["supportBoundSequence",-1];
+    };
 };
 [_group,_token,_okay,_lease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 -1

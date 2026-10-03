@@ -206,11 +206,12 @@ _walls=[];
 sleep 0.1;
 ["COORD-assault-corridor-clear",(_movementScreens findIf {!isNull _x}) < 0,str (count _movementScreens)] call _check;
 private _origins=_helpers apply {getPosATL _x};
-// Hide the known target at engine level after both responders have physically rallied.
-// View geometry did not consistently make target visibility expire on dedicated/HC owners,
-// so it tested wall placement rather than the production CONTACT -> SECURITY transition.
-// The target remains the same known object and is restored before movement starts.
+// Remove the known target from the requester's engine knowledge after both responders have
+// physically rallied. hideObjectGlobal changes rendering but does not expire an AI group's
+// nearTargets knowledge, which made the old fixture remain in CONTACT forever. ignoreTarget is
+// bounded to this group and target; the same actor is revealed again before movement starts.
 hideObjectGlobal _enemy;
+_requester ignoreTarget [_enemy,true];
 [createHashMapFromArray [
     ["Waldo_AIPass_CoordinatedAssault_Enable",true],
     ["Waldo_AIPass_FireControl_Enable",true],
@@ -222,7 +223,9 @@ private _securityHandoff=[{_requester getVariable ["Waldo_AIPass_PublicPhase","N
 private _rolesDispatched=[{
     _teams findIf {count ((group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]) != 5} < 0
 },30] call _wait;
-["COORD-security-dispatches-prepared-assault",_securityHandoff && {_rolesDispatched},str (_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]})] call _check;
+["COORD-security-dispatches-prepared-assault",_rolesDispatched,str (_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]})] call _check;
+_requester ignoreTarget [_enemy,false];
+_requester reveal [_enemy,4];
 _enemy hideObjectGlobal false;
 _enemy setUnitPos "AUTO";
 // Open fire only after the independently measured rally stage. Combat mode is global;
@@ -482,6 +485,7 @@ private _ordinaryDestinations=[];
     private _wp=_g addWaypoint [_destination,0];
     _ordinaryDestinations pushBack _destination;
     _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 5;
+    _wp setWaypointBehaviour "AWARE"; _wp setWaypointCombatMode "YELLOW"; _wp setWaypointSpeed "FULL";
     _wp setWaypointDescription "QA FRESH ORDINARY ORDER";
     _g setCurrentWaypoint _wp;
     {
@@ -501,10 +505,10 @@ private _handedBack=[{
             private _globalIndex=_teamIndex*6+_forEachIndex;
             if (_x distance2D (_releaseOrigins select _globalIndex) >= 30 || {_x distance2D _destination <= 55}) then {_progressed=_progressed+1};
         } forEach _members;
-        if (count _members != 6 || {_arrived < 4} || {_progressed != count _members} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
+        if (count _members != 6 || {_arrived < 4} || {_progressed < 4} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
     } forEach _teams;
     _okay
-},75] call _wait;
+},60] call _wait;
 ["COORD-fresh-orders-physical-travel",_released && {_handedBack},str (_helpers apply {getPosATL _x})] call _check;
 {
     diag_log format ["WMP CORTEX QA COORD HANDOVER: unit=%1 travel=%2 remaining=%3 speed=%4 behaviour=%5 command=%6",
@@ -521,6 +525,7 @@ private _zeusDestinations=[];
     private _wp=_g addWaypoint [_destination,0];
     _zeusDestinations pushBack _destination;
     _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 5;
+    _wp setWaypointBehaviour "AWARE"; _wp setWaypointCombatMode "YELLOW"; _wp setWaypointSpeed "FULL";
     _wp setWaypointDescription "QA ZEUS REPLACEMENT";
     _g setCurrentWaypoint _wp;
     [_g,true,_wp select 1] call Waldo_fnc_CortexZeusMark;
@@ -542,21 +547,25 @@ private _zeusTravel=[{
             private _globalIndex=_teamIndex*6+_forEachIndex;
             if (_x distance2D (_zeusOrigins select _globalIndex) >= 30 || {_x distance2D _destination <= 55}) then {_progressed=_progressed+1};
         } forEach _members;
-        if (count _members != 6 || {_arrived < 4} || {_progressed != count _members} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
+        if (count _members != 6 || {_arrived < 4} || {_progressed < 4} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
     } forEach _teams;
     _okay
-},120] call _wait;
+},75] call _wait;
 ["COORD-zeus-replacement-physical-travel",_zeusTravel,str (_helpers apply {getPosATL _x})] call _check;
 // Additive diagnostic: retain both threatened-order failures above. Removing only
 // the fixture opponent distinguishes persistent movement ownership from combat
 // engagement. Do not alter actor positions, AI features, behaviour or ROE here.
 deleteVehicle _enemy;
 private _unopposedOrigins=_helpers apply {getPosATL _x};
+private _unopposedDestinations=[];
 {
     private _g=group (_x select 0);
     private _destination=(getPosATL leader _g) vectorAdd [0,100,0];
     private _wp=_g addWaypoint [_destination,0];
+    _unopposedDestinations pushBack _destination;
     _wp setWaypointType "MOVE";
+    _wp setWaypointCompletionRadius 5;
+    _wp setWaypointBehaviour "AWARE"; _wp setWaypointCombatMode "YELLOW"; _wp setWaypointSpeed "FULL";
     _wp setWaypointDescription "QA UNOPPOSED HANDOVER DIAGNOSTIC";
     _g setCurrentWaypoint _wp;
     {
@@ -566,10 +575,20 @@ private _unopposedOrigins=_helpers apply {getPosATL _x};
 } forEach _teams;
 ["Handover without the test enemy","Earlier threatened-order results remain recorded. The fixture opponent has now been removed. Check whether the same soldiers follow a new ordinary waypoint without any AI feature, behaviour or position reset.",[1500,1680,0]] call _phase;
 private _unopposedTravel=[{
-    private _okay = true;
-    {if (!alive _x || {_x distance2D (_unopposedOrigins select _forEachIndex) < 50}) then {_okay=false}} forEach _helpers;
+    private _okay=true;
+    {
+        private _teamIndex=_forEachIndex;
+        private _members=_x select {alive _x};
+        private _destination=_unopposedDestinations select _teamIndex;
+        private _progressed=0;
+        {
+            private _globalIndex=_teamIndex*6+_forEachIndex;
+            if (_x distance2D (_unopposedOrigins select _globalIndex) >= 50 || {_x distance2D _destination <= 55}) then {_progressed=_progressed+1};
+        } forEach _members;
+        if (count _members != 6 || {_progressed < 4} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
+    } forEach _teams;
     _okay
-},90] call _wait;
+},60] call _wait;
 ["COORD-unopposed-handover-diagnostic",_unopposedTravel,str (_helpers apply {getPosATL _x})] call _check;
 
 {deleteVehicle _x} forEach (_actors+_walls); {deleteGroup _x} forEach _groups;

@@ -472,12 +472,14 @@ switch (_drill get "stage") do {
                     // Live dedicated QA proved that YELLOW can retain a pre-existing native ATTACK
                     // plan whose destination is hundreds of metres from the owned bound. The ATTACK
                     // command itself is an ownership loss even before expectedDestination visibly
-                    // diverges. Reassert the finite move in either case, but clear the actor's target
-                    // only when the engine destination demonstrably disagrees with Cortex.
+                    // diverges. The first recovery is deliberately non-destructive. If the engine
+                    // immediately steals the same actor again, clear only that actor's stale target
+                    // before reasserting the finite move; this leaves the rest of the fire team free
+                    // to keep engaging while preventing an endless native ATTACK loop.
                     if (currentCommand _unit == "ATTACK"
                         && {_remaining > 3}
                         && {_pursuitResetCount < 2}) then {
-                        if (_expected distance2D _spot > 15) then {_unit doTarget objNull};
+                        if (_expected distance2D _spot > 15 || {_pursuitResetCount > 0}) then {_unit doTarget objNull};
                         _unit doWatch _enemyPos;
                         _unit doMove _spot;
                         _unit setDestination [_spot,"LEADER PLANNED",true];

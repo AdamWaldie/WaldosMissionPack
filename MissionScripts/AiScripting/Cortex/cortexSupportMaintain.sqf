@@ -9,7 +9,8 @@
  * Measures physical rally arrival in both calm and contact phases; seeing an enemy
  * does not cancel an accepted reinforcement reservation.
  * A failed bound keeps its PATH holds until a new MOVE sequence or reservation release;
- * the old MOVE role must not release them on the next group tick.
+ * the old MOVE role must not release them on the next group tick. A public per-actor ownership
+ * marker survives HC migration and is cleared only when Cortex restores PATH.
  * A live actor-level grenade evasion temporarily outranks the covering PATH hold; the next cover
  * step reacquires that soldier only after the six-second safety move expires.
  * A MOVE role which cannot form two viable local teams reports NOT_READY immediately;
@@ -31,6 +32,7 @@
  * Return Value: Nothing.
  * Current callers: GroupTick.
  * Example: [_group, _state] call Waldo_fnc_CortexSupportMaintain;
+ * Result: the active assignment advances, holds, or releases without competing movement owners.
  */
 params ["_group","_state"];
 if (!local _group) exitWith {};
@@ -119,12 +121,19 @@ private _role=_group getVariable ["Waldo_Cortex_SupportRole",[]];
 private _coordinating=(_state getOrDefault ["supportToken",""]) == _token
     && {_state getOrDefault ["assaulting",false]} && {count _role == 5} && {(_role select 0) == _token};
 private _moving=_coordinating && {(_role select 2) == "MOVE"};
+// The public actor marker is the durable ownership record. Local HashMap state disappears during
+// HC migration, while the marker follows the actor and proves that Cortex, rather than a mission
+// maker, disabled PATH. Merge both records before release so locality changes cannot strand a unit.
 private _held=_state getOrDefault ["supportHeld",[]];
+{
+    if (_x getVariable ["Waldo_Cortex_SupportPathHold",false]) then {_held pushBackUnique _x};
+} forEach units _group;
 private _newMove=_moving && {(_state getOrDefault ["supportBoundSequence",-1]) != (_role select 1)};
 if (_newMove || {!_coordinating}) then {
     {
         if (local _x && {group _x == _group}) then {
             _x enableAI "PATH";
+            _x setVariable ["Waldo_Cortex_SupportPathHold",nil,true];
             // supportHeld is the ownership record. Combat can relabel our doStop
             // as ATTACK or FIRE without cancelling it, so currentCommand == STOP
             // is not a valid ownership check. Preserve commands which cannot be a
@@ -154,7 +163,10 @@ if (_coordinating) then {
             private _actorMove=_x getVariable ["Waldo_Cortex_ActorMove",[]];
             if (local _x && {vehicle _x == _x} && {[_x] call Waldo_fnc_CortexCombatEffective}
                 && {_x checkAIFeature "PATH"} && {count _actorMove != 3 || {time >= (_actorMove select 2)}}) then {
-                doStop _x; _x disableAI "PATH"; _held pushBackUnique _x;
+                doStop _x;
+                _x disableAI "PATH";
+                _x setVariable ["Waldo_Cortex_SupportPathHold",true,true];
+                _held pushBackUnique _x;
             };
         } forEach units _group;
         _state set ["supportHeld",_held];
