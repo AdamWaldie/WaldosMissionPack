@@ -2817,6 +2817,12 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_group reveal [_target,4]',controller)
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_target,_weapon]',controller)
+        self.assertIn('_job set ["lateralPilotFeatures",_lateralPilotFeatures]',controller)
+        self.assertIn('_handoverGroup enableAttack false',controller)
+        self.assertIn('private _deadline=serverTime+90',controller)
+        aircraft_qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
+        self.assertIn('private _physicalTransitions=',aircraft_qa)
+        self.assertIn('count (_physicalTransitions arrayIntersect _physicalTransitions) >= 2',aircraft_qa)
         self.assertNotIn('_solution >= 0.35',controller)
         self.assertIn('Waldo_Cortex_ZeusOrderSnapshot',controller)
         self.assertIn('private _snapshotMatches=',controller)
@@ -2843,7 +2849,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_handoverPilot setCombatBehaviour _authoredBehaviour',controller)
         self.assertIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
         self.assertNotIn('_handoverGroup setCombatMode "BLUE"',controller)
-        self.assertNotIn('_handoverGroup enableAttack false',controller)
+        # The bounded handover guard temporarily disables native attack delegation so the
+        # replacement Zeus MOVE is not immediately replaced by the retired attack target.
+        # cortexAirHandoverRestoreLocal restores the exact prior group value afterwards.
+        self.assertIn('_handoverGroup enableAttack false',controller)
         self.assertIn('_aircraft flyInHeight (((getPosATL _aircraft) select 2) max 25)',controller)
         self.assertIn('Waldo_fnc_CortexAirHandoverRestoreLocal',controller)
         self.assertNotIn('_handoverPilot doMove _handoverPosition',controller)
@@ -2854,7 +2863,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_Cortex_AirHandoverResult',controller)
         self.assertIn('expectedDestination _handoverPilot',controller)
         self.assertIn('"ZEUS_TRANSIT_GUARD"',controller)
-        self.assertIn('private _deadline=serverTime+30',controller)
+        self.assertIn('private _deadline=serverTime+90',controller)
         self.assertIn('_guardAircraft distance2D _guardPosition <= 150',controller)
         self.assertIn('_holdToken != _guardZeusToken',controller)
         guard=controller.split('] spawn {',1)[1].split('};\n            } else {',1)[0]

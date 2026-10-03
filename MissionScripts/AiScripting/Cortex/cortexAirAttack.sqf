@@ -8,7 +8,9 @@
  * It flies physical route legs, repeatedly presents the live target to operating crew, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
  * selects and explicitly requests fire from its retained loaded weapon; lateral runs command only
- * the retained turret operator. A lack of travel, solution or fire aborts the run; elapsed time alone
+ * the retained turret operator. During that lateral lease only, the pilot's autonomous combat/target
+ * selection is suspended and restored so it cannot cancel movement while the independent gunner fires.
+ * A lack of travel, solution or fire aborts the run; elapsed time alone
  * never completes it. Zeus priority, locality loss,
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
@@ -18,8 +20,9 @@
  * updates the pilot's movement planner once to the identical point;
  * cleanup releases the attack target at both individual and group-command layers, then
  * a short token-bound transit guard prevents the pilot from autonomously selecting the retired target
- * while that move takes hold. It never changes the route, combat mode, group attack permission, FSM,
- * MOVE/PATH, gunner AI or velocity, and it never repeats the movement order. A newer Zeus order ends
+ * while that move takes hold. The guard temporarily suspends group attack delegation, then restores
+ * its exact prior value. It never changes the route, combat mode, FSM, MOVE/PATH, gunner AI or velocity,
+ * and it never repeats the movement order. A newer Zeus order ends
  * the guard immediately.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
@@ -42,6 +45,10 @@ private _finish={
     if (_handler >= 0) then {_aircraft removeEventHandler ["Fired",_handler]};
     if (local _aircraft) then {
         _aircraft limitSpeed -1;
+        private _finishPilot=driver _aircraft;
+        if (!isNull _finishPilot && {alive _finishPilot}) then {
+            {_finishPilot enableAI _x} forEach (_job getOrDefault ["lateralPilotFeatures",[]]);
+        };
         // Every targeting command below is issued by this finite Cortex lease. Retire those commands
         // before handover so a curator MOVE does not keep competing with the old attack target.
         // The engine remains free to reacquire under the replacement waypoint and combat mode.
@@ -107,6 +114,7 @@ private _finish={
                 private _handoverAttackEnabled=attackEnabled _handoverGroup;
                 private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
                 {_handoverPilot disableAI _x} forEach _handoverFeatures;
+                _handoverGroup enableAttack false;
                 _handoverPilot doTarget objNull;
                 _handoverPilot doWatch objNull;
                 // doTarget clears only the actor-level target. The attack controller's group-issued
@@ -142,7 +150,7 @@ private _finish={
                     params ["_guardAircraft","_guardPilot","_guardToken","_guardFeatures",
                         "_previousPilotMode","_previousGroupMode","_previousAttackEnabled",
                         "_guardPosition","_guardZeusToken"];
-                    private _deadline=serverTime+30;
+                    private _deadline=serverTime+90;
                     private _superseded=false;
                     waitUntil {
                         sleep 0.25;
@@ -240,6 +248,13 @@ if (_stage == "") then {
     private _routeSignature=waypoints _group apply {[waypointPosition _x,waypointType _x]};
     _job set ["target",_target]; _job set ["points",_plan get "points"];
     _job set ["pattern",_plan get "pattern"]; _job set ["token",_plan get "token"];
+    if ((_plan get "pattern") == "LATERAL") then {
+        private _lateralPilotFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {_pilot checkAIFeature _x};
+        _job set ["lateralPilotFeatures",_lateralPilotFeatures];
+        {_pilot disableAI _x} forEach _lateralPilotFeatures;
+        _pilot doTarget objNull;
+        _pilot doWatch objNull;
+    };
     _job set ["aaPositions",_plan get "aaPositions"];
     _job set ["lateralTurret",_plan getOrDefault ["lateralTurret",false]];
     _job set ["lateralTurretPath",_plan getOrDefault ["lateralTurretPath",[]]];
@@ -286,7 +301,20 @@ if (serverTime >= (_job getOrDefault ["progressAt",serverTime])+12) then {
         if (_replans >= 1) then {_recoveryFailure="STUCK"} else {
             private _replacement=[_aircraft,_target] call Waldo_fnc_CortexAirAttackPlan;
             if (count _replacement == 0) then {_recoveryFailure="REPLAN_FAILED"} else {
+                // Replanning may change the attack pattern. Release the old lateral flight lease
+                // before applying the replacement, then reacquire it only when the new plan needs
+                // deterministic side-on flight. Preserve features that were already disabled by
+                // the mission or another mod.
+                {_pilot enableAI _x} forEach (_job getOrDefault ["lateralPilotFeatures",[]]);
+                _job set ["lateralPilotFeatures",[]];
                 _job set ["points",_replacement get "points"]; _job set ["pattern",_replacement get "pattern"];
+                if ((_replacement get "pattern") == "LATERAL") then {
+                    private _replacementLateralFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {_pilot checkAIFeature _x};
+                    _job set ["lateralPilotFeatures",_replacementLateralFeatures];
+                    {_pilot disableAI _x} forEach _replacementLateralFeatures;
+                    _pilot doTarget objNull;
+                    _pilot doWatch objNull;
+                };
                 _job set ["aaPositions",_replacement get "aaPositions"];
                 _job set ["lateralTurret",_replacement getOrDefault ["lateralTurret",false]];
                 _job set ["lateralTurretPath",_replacement getOrDefault ["lateralTurretPath",[]]];

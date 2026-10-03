@@ -492,11 +492,14 @@ private _observedProfiles=createHashMap;
         private _sampleStages=_profileSamples apply {_x select 1};
         private _sampleSpeeds=_profileSamples apply {_x select 2};
         private _sampleAltitudes=_profileSamples apply {_x select 3};
-        [_id+"-physical-profile-change",count (_sampleStages arrayIntersect _sampleStages) >= 2
+        private _physicalTransitions=(_group getVariable ["Waldo_Cortex_DrillTransitions",[]]) select {
+            (_x select 2) == "AIR_ATTACK" && {(_x select 4) in ["INGRESS","ATTACK","EGRESS"]}
+        } apply {_x select 4};
+        [_id+"-physical-profile-change",count (_physicalTransitions arrayIntersect _physicalTransitions) >= 2
             && {_sampleSpeeds isNotEqualTo []} && {_sampleAltitudes isNotEqualTo []}
             && {(selectMax _sampleSpeeds)-(selectMin _sampleSpeeds) >= 5
                 || {(selectMax _sampleAltitudes)-(selectMin _sampleAltitudes) >= 5}},
-            str [_sampleStages,selectMin _sampleSpeeds,selectMax _sampleSpeeds,
+            str [_sampleStages,_physicalTransitions,selectMin _sampleSpeeds,selectMax _sampleSpeeds,
                 selectMin _sampleAltitudes,selectMax _sampleAltitudes]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] == "COMPLETE"},str _outcome] call _recordCheck;
         [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,str (_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])] call _recordCheck;

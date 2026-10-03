@@ -3946,6 +3946,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('private _blockedGroundShots', automated_audit)
         self.assertIn('private _airShots', automated_audit)
         self.assertIn('private _realFireGate', automated_audit)
+        self.assertIn('_requested = _vehicle fireAtTarget [_ground, _weapon]', automated_audit)
+        self.assertIn('private _groundFireDenied = _groundFireAttempts > 0', automated_audit)
+        self.assertIn('_groundFireAcceptedRequests == 0 || {_blockedGroundShots > 0}', automated_audit)
 
     def test_shared_interaction_selectors_expose_the_complete_catalogue(self):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
