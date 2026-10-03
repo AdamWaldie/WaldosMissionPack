@@ -8,7 +8,9 @@
  * Locality/authority: scheduled dedicated-server fixture owns all disposable groups and vehicles;
  * production functions run on their normal group/object owners and public state feeds the client overlay.
  * Repeat/JIP: every run creates fresh actors, publishes bounded diagnostics and deletes all fixtures;
- * a joining observer can render the current public phase without replaying any orders.
+ * a joining observer can render the current public phase without replaying any orders. Ordinary
+ * reinforcement is disabled and its responder count is zero, proving coordinated composition owns
+ * its own two manoeuvre slots instead of inheriting a contradictory reinforcement limit.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>.
  * Return Value: Nothing.
  * Current callers: cortexQA/runServer.sqf after the smaller combined-arms component diagnostic.
@@ -46,13 +48,15 @@ private _publish={
     ["Waldo_AIPass_VehicleGunnery_Enable",true],["Waldo_Cortex_AirAttack_Enable",true],
     ["Waldo_AIPass_Aggression",2],["Waldo_AIPass_Regroup_Enable",true],
     // Prove coordinated composition does not silently depend on ordinary reinforcement movement.
-    ["Waldo_AIPass_Reinforce_Enable",false],["Waldo_AIPass_Morale_Enable",false],
+    ["Waldo_AIPass_Reinforce_Enable",false],["Waldo_AIPass_Reinforce_MaxResponders",0],
+    ["Waldo_AIPass_Morale_Enable",false],
     ["Waldo_AIPass_Artillery_Enable",false]
 ]] call Waldo_fnc_CortexTuning;
 ["COMBINED-OP-independent-coordination-gate",
     missionNamespace getVariable ["Waldo_AIPass_CoordinatedAssault_Enable",false]
-        && {!(missionNamespace getVariable ["Waldo_AIPass_Reinforce_Enable",true])},
-    "Coordinated assault enabled while ordinary reinforcement is disabled"] call _check;
+        && {!(missionNamespace getVariable ["Waldo_AIPass_Reinforce_Enable",true])}
+        && {(missionNamespace getVariable ["Waldo_AIPass_Reinforce_MaxResponders",-1]) == 0},
+    "Coordinated assault enabled while ordinary reinforcement is disabled and capped at zero"] call _check;
 
 // The squads begin on separate axes and share only the defended objective. The ordinary SAD
 // waypoint represents a Zeus/mission task; Cortex chooses how each group fights toward it.

@@ -10,8 +10,9 @@
  * Publishes only the request's at-most-six responder identities for owner-side tactical selection.
  * This separation is not terrain-aware approach routing. No shared-point fallback is used.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
- * Reinforcement and coordinated assault independently keep the shared discovery request alive; a
- * responder may therefore join a coordinated action while ordinary reinforcement movement is off.
+ * Reinforcement and coordinated assault independently keep the shared discovery request alive, but
+ * each reservation requires a mode shared by requester and responder. Mismatched settings therefore
+ * cannot create an accepted lease with no executable rally or coordinated successor state.
  * When every candidate is exhausted without an accepted lease, publishes NO_RESPONDER once so the
  * requester owner can make its single bounded retry instead of remaining inert for the engagement.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
@@ -27,8 +28,9 @@ private _leases = _job get "leases";
 private _requests = missionNamespace getVariable ["Waldo_AIPass_SupportRequests",createHashMap];
 private _observedPhase = _requester getVariable ["Waldo_AIPass_PublicPhase","CALM"];
 if (_observedPhase != "CALM") then {_job set ["sawContact",true]};
-private _requesterSupport = [_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
-    || {[_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _requesterReinforce = !isNull _requester && {[_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _requesterCoordinated = !isNull _requester && {[_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _requesterSupport = _requesterReinforce || {_requesterCoordinated};
 private _valid = !isNull _requester && {alive leader _requester} && {serverTime < (_job get "expiry")}
     && {missionNamespace getVariable ["Waldo_AIPass_Enable",false]}
     && {[_requester,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
@@ -40,10 +42,11 @@ private _kept = [];
     _x params ["_helper","_token","_owner","_ackBy","_status"];
     private _lease = _helper getVariable ["Waldo_AIPass_SupportLease",[]];
     private _footFit = (units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}};
-    private _helperSupport = !isNull _helper && {
-        [_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
-            || {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-    };
+    private _helperReinforce = !isNull _helper && {[_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+    private _helperCoordinated = !isNull _helper && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+    private _sharedReinforce = _requesterReinforce && {_helperReinforce};
+    private _sharedCoordinated = _requesterCoordinated && {_helperCoordinated};
+    private _helperSupport = _sharedReinforce || {_sharedCoordinated};
     private _keep = _valid && {!isNull _helper} && {alive leader _helper} && {_status != "REJECTED"}
         && {count _footFit >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible}
@@ -72,10 +75,11 @@ for "_i" from 1 to 8 do {
     if (_cursor >= count _candidates || {count _kept >= (_job get "maximum")}) exitWith {};
     private _helper = (_candidates select _cursor) select 2;
     _cursor = _cursor+1;
-    private _helperSupport = !isNull _helper && {
-        [_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
-            || {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-    };
+    private _helperReinforce = !isNull _helper && {[_helper,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+    private _helperCoordinated = !isNull _helper && {[_helper,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+    private _sharedReinforce = _requesterReinforce && {_helperReinforce};
+    private _sharedCoordinated = _requesterCoordinated && {_helperCoordinated};
+    private _helperSupport = _sharedReinforce || {_sharedCoordinated};
     if (!isNull _helper && {alive leader _helper} && {(_helper getVariable ["Waldo_AIPass_SupportLease",[]]) isEqualTo []}
         && {count ((units _helper) select {[_x] call Waldo_fnc_CortexCombatEffective && {vehicle _x == _x}}) >= 3}
         && {[_helper] call Waldo_fnc_CortexIsEligible} && {[_helper,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
@@ -101,6 +105,8 @@ for "_i" from 1 to 8 do {
         if (_rally isNotEqualTo []) then {
             private _token = format ["%1:%2",_job get "serial",_cursor];
             private _lease = [_token,_requester,_job get "expiry",_rally,_job get "at",[]];
+            // A retired older operation must not abort this replacement reservation.
+            _helper setVariable ["Waldo_Cortex_SupportAbort",nil,true];
             _helper setVariable ["Waldo_AIPass_SupportLease",_lease,true];
             _kept pushBack [_helper,_token,groupOwner _helper,serverTime+15,"PENDING"];
             [_helper,_lease] remoteExecCall ["Waldo_fnc_CortexSupportLocal",groupOwner _helper];

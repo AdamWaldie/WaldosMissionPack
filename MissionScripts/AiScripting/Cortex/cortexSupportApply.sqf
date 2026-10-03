@@ -19,7 +19,9 @@
  * and operating vehicle crews reject this lease instead of executing infantry movement in vehicles.
  * In LAMBS SPLIT mode, the finite support lease temporarily pauses LAMBS group manoeuvres for the
  * responder only. The base-of-fire group and every config-only LAMBS add-on remain active.
- * Reinforcement and coordinated assault independently authorize this shared responder channel.
+ * Reinforcement and coordinated assault independently authorize discovery, while acceptance requires
+ * the requester and responder to share the mode which will consume the lease. A mismatched pair is
+ * rejected instead of entering RESPONDING with no possible successor state.
  * Rally movement also uses 10 m completion; readiness requires physical squad arrival in GroupTick.
  * Arguments: 0: job <HASHMAP> containing group, lease and waitUntil.
  * Return Value: Retry delay in seconds or -1 after acknowledgement.
@@ -47,10 +49,14 @@ private _supportOwnsMovement = _same && {_movementOwner in ["SUPPORT_RALLY","COO
 private _fit = (units _group) select {[_x] call Waldo_fnc_CortexCombatEffective};
 private _footFit = _fit select {vehicle _x == _x};
 private _phase = _state getOrDefault ["phase","CALM"];
-private _contactPeer = _phase in ["CONTACT","SECURITY"]
-    && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
-private _supportEnabled = [_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
-    || {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _requesterReinforce = !isNull _requester && {[_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _requesterCoordinated = !isNull _requester && {[_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _responderReinforce = [_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled;
+private _responderCoordinated = [_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled;
+private _sharedReinforce = _requesterReinforce && {_responderReinforce};
+private _sharedCoordinated = _requesterCoordinated && {_responderCoordinated};
+private _contactPeer = _phase in ["CONTACT","SECURITY"] && {_sharedCoordinated};
+private _supportEnabled = _sharedReinforce || {_sharedCoordinated};
 private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!([] call Waldo_fnc_CortexIsPaused)}
     && {serverTime < _expiry} && {!isNull _requester} && {side _requester == side _group}
     && {[leader _group] call Waldo_fnc_CortexCanTransmit}
@@ -67,9 +73,8 @@ private _okay = missionNamespace getVariable ["Waldo_AIPass_Active",false] && {!
     && {!_movementLeaseActive || {_supportOwnsMovement}}
     && {_fit findIf {private _v = vehicle _x; _v isKindOf "Air" || {_v isKindOf "StaticWeapon"} || {getNumber (configOf _v >> "artilleryScanner") == 1}} < 0}
     && {!_needAT || {_footFit findIf {"AT" in ([_x] call Waldo_fnc_CortexCapabilities)} >= 0}};
-private _attackAllowed = _attack isNotEqualTo [] && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
-private _directCoordinationPending = _attack isEqualTo []
-    && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _attackAllowed = _attack isNotEqualTo [] && {_sharedCoordinated};
+private _directCoordinationPending = _attack isEqualTo [] && {_sharedCoordinated};
 if (_okay) then {
     _okay = [_group,"SUPPORT",true,_expiry] call Waldo_fnc_CortexLambsLease;
 };

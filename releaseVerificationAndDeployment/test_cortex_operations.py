@@ -1501,6 +1501,8 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_job set ["coordinationAborted",true]',coordinator)
         self.assertIn('private _boundLength=(_remaining*0.35) max 45 min 70',coordinator)
         self.assertIn('"INSUFFICIENT_STRENGTH"',coordinator)
+        self.assertIn('[_token,serverTime,"BOUND_FAILURES",_failures]',coordinator)
+        self.assertIn('[_token,serverTime,"INSUFFICIENT_STRENGTH",count _fit]',coordinator)
         self.assertIn('private _watchdog=(((_boundTimeout max 10)*4)+15) min 180',coordinator)
         self.assertNotIn('serverTime+180',coordinator)
         self.assertIn('private _maxConcurrent=(count _teams) min 2',coordinator)
@@ -1516,6 +1518,11 @@ class CortexOperations(unittest.TestCase):
         for name in ['cortexRetreat','cortexRestoreCalm']:
             self.assertIn('"supportHeld"',source(name))
             self.assertIn('Waldo_fnc_CortexSupportAck',source(name))
+        maintain=source('cortexSupportMaintain')
+        self.assertIn('private _abort = _group getVariable ["Waldo_Cortex_SupportAbort",[]]',maintain)
+        self.assertIn('count _abort == 4 && {(_abort select 0) == _token}',maintain)
+        self.assertIn('call _releaseSupport;',maintain)
+        self.assertIn('_helper setVariable ["Waldo_Cortex_SupportAbort",nil,true]',source('cortexSupportStep'))
 
     def test_contacted_peer_can_join_coordinated_assault_without_calm_rally_gate(self):
         apply=source('cortexSupportApply')
@@ -1546,6 +1553,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_shots-(_shotCounts select _i)',qa)
         operation=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedOperation.sqf').read_text(encoding='utf-8')
         self.assertIn('["Waldo_AIPass_Reinforce_Enable",false]',operation)
+        self.assertIn('["Waldo_AIPass_Reinforce_MaxResponders",0]',operation)
         self.assertIn('COMBINED-OP-independent-coordination-gate',operation)
         self.assertIn('private _lastInfantryShotCount=0',operation)
         self.assertIn('_movingGroups == 0 && {_infantryShotCount == _lastInfantryShotCount}',operation)
@@ -1558,10 +1566,25 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('enableAttack false',source('cortexSupportBoundStart'))
         maintain=source('cortexSupportMaintain')
         self.assertEqual(1, maintain.count('call _restoreAttack;'))
-        self.assertEqual(2, maintain.count('call _releaseSupport;'))
+        self.assertEqual(3, maintain.count('call _releaseSupport;'))
         self.assertIn('enableAttack (_state getOrDefault ["baseAttack",true])', maintain)
         self.assertIn('"baseAttack", "attackChanged"', source('cortexCheckpoint'))
         self.assertIn('enableAttack (_state getOrDefault ["baseAttack",true])', source('cortexRestoreCalm'))
+
+    def test_support_reservation_requires_a_shared_executable_mode(self):
+        server=source('cortexSupportServer')
+        step=source('cortexSupportStep')
+        apply=source('cortexSupportApply')
+        maintain=source('cortexSupportMaintain')
+        self.assertIn('private _requesterReinforce',server)
+        self.assertIn('private _requesterCoordinated',server)
+        self.assertIn('[_configuredMaximum,_configuredMaximum max 2] select _requesterCoordinated',server)
+        for text in [step,apply,maintain]:
+            self.assertIn('private _sharedReinforce',text)
+            self.assertIn('private _sharedCoordinated',text)
+            self.assertIn('_sharedReinforce || {_sharedCoordinated}',text)
+        self.assertIn('private _directCoordinationPending = _attack isEqualTo [] && {_sharedCoordinated}',apply)
+        self.assertIn('private _attackAllowed = _attack isNotEqualTo [] && {_sharedCoordinated}',apply)
 
     def test_zeus_handover_preserves_replacement_attack_setting(self):
         restore=source('cortexRestoreCalm')
