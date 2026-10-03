@@ -1,8 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Restores legacy pilot AI features from an aircraft handover lease created by an older Cortex
- * runtime. Current attacks release directly to Zeus without creating this lease. The token prevents
- * stale delayed cleanup from altering a newer order, and gunners are untouched.
+ * Restores pilot AI features after the short Cortex-to-Zeus aircraft transit guard. The token
+ * prevents stale delayed cleanup from altering a newer guard, and gunners are untouched.
  * Locality/authority: current aircraft owner. A local caller, the server, or the owner recorded when
  * the lease began may request restoration after locality migration.
  * Repeat/JIP: token guarded and repeat safe. The short lease is transient and is never replayed to
@@ -10,14 +9,14 @@
  * Arguments: 0: aircraft <OBJECT>; 1: leased pilot <OBJECT>; 2: lease token <STRING>;
  * 3: originally enabled AI feature names <ARRAY>, default []; 4: original pilot combat mode
  * <STRING>, default "YELLOW"; 5: original group combat mode <STRING>, default "YELLOW";
- * 6: original autonomous attack permission <BOOL>, default true; 7: leased pilot combat behaviour
- * <STRING>, default ""; 8: original pilot combat behaviour <STRING>, default ""; 9: final
- * curator-authored behaviour <STRING>, default "". A valid final behaviour is restored to both
- * the group and pilot after the bounded CARELESS transit lease.
+ * 6: original autonomous attack permission <BOOL>, default true; 7: guard-owned pilot combat
+ * behaviour <STRING>, default ""; 8: original pilot combat behaviour <STRING>, default ""; 9:
+ * final curator-authored behaviour <STRING>, default "". A valid final behaviour is restored to
+ * both the group and pilot after the bounded target-suppression guard.
  * Return Value: BOOL true when the current lease was restored, otherwise false.
- * Current callers: function registry and compatibility cleanup for missions already carrying a
- * pre-direct-release Waldo_Cortex_AirHandoverLease.
- * Example: [_heli,driver _heli,"heli:2:10.5",[],"RED","RED",true,"CARELESS","COMBAT","AWARE"]
+ * Current callers: bounded Zeus transit-guard cleanup in Waldo_fnc_CortexAirAttack and compatibility
+ * cleanup for missions already carrying Waldo_Cortex_AirHandoverLease.
+ * Example: [_heli,driver _heli,"heli:2:10.5",["AUTOTARGET"],"RED","RED",true,"","","AWARE"]
  *     call Waldo_fnc_CortexAirHandoverRestoreLocal;
  */
 params [

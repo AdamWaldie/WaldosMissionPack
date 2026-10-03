@@ -9,8 +9,9 @@
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
  * authenticated curator waypoint and replaces the pilot's private Cortex doMove once with that same
- * destination. It then releases immediately to native group control. No protected transit lease,
- * behaviour suppression, scheduled monitor, velocity correction or extra waypoint survives cleanup.
+ * destination. A short token-bound transit guard prevents the pilot from immediately replacing that
+ * move with the retired attack target; it never changes the route, suppresses gunners, retries
+ * movement or applies velocity. A newer Zeus order ends the guard immediately.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -66,9 +67,11 @@ private _finish={
             private _authoredBehaviour="";
             private _authoredSpeed="";
             private _authoredWaypointIndex=-1;
+            private _handoverZeusToken=-1;
             private _zeusSnapshot=_handoverGroup getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]];
             private _snapshotMatches=_zeusSnapshot isNotEqualTo [];
             if (_snapshotMatches) then {
+                _handoverZeusToken=_zeusSnapshot param [0,-1];
                 _handoverPosition=+(_zeusSnapshot param [1,[]]);
                 _authoredBehaviour=_zeusSnapshot param [2,""];
                 _authoredSpeed=_zeusSnapshot param [3,""];
@@ -82,6 +85,24 @@ private _finish={
                 };
             };
             if (count _handoverPosition >= 2) then {
+                // The engine can instantly turn an ordinary Zeus MOVE back into ATTACK while the
+                // target revealed by the retired Cortex run remains visible. Guard only the pilot's
+                // autonomous target selection and group attack delegation while the selected route
+                // takes hold. The turret crew remains enabled, and no movement is issued after the
+                // single exact doMove below.
+                private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {
+                    _handoverPilot checkAIFeature _x
+                };
+                private _handoverCombatMode=unitCombatMode _handoverPilot;
+                private _handoverGroupCombatMode=combatMode _handoverGroup;
+                private _handoverAttackEnabled=attackEnabled _handoverGroup;
+                private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
+                {_handoverPilot disableAI _x} forEach _handoverFeatures;
+                _handoverPilot doTarget objNull;
+                _handoverPilot doWatch objNull;
+                _handoverPilot setUnitCombatMode "BLUE";
+                _handoverGroup setCombatMode "BLUE";
+                _handoverGroup enableAttack false;
                 if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
                     _handoverGroup setBehaviourStrong _authoredBehaviour;
                     _handoverPilot setCombatBehaviour _authoredBehaviour;
@@ -97,10 +118,54 @@ private _finish={
                 };
                 // The attack controller owned the previous pilot doMove. Replacing it once is
                 // cleanup, not a continuing tactic: this point is byte-for-byte the Zeus waypoint
-                // and no scheduled monitor, behaviour suppression or velocity correction survives.
+                // and the guard never invents or repeats a movement command.
                 _handoverPilot doMove _handoverPosition;
+                _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
+                [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverCombatMode,
+                    _handoverGroupCombatMode,_handoverAttackEnabled,_handoverPosition,
+                    _handoverZeusToken] spawn {
+                    params ["_guardAircraft","_guardPilot","_guardToken","_guardFeatures",
+                        "_previousPilotMode","_previousGroupMode","_previousAttackEnabled",
+                        "_guardPosition","_guardZeusToken"];
+                    private _deadline=serverTime+30;
+                    private _superseded=false;
+                    waitUntil {
+                        sleep 0.25;
+                        private _guardGroup=group _guardPilot;
+                        private _holdToken=(_guardGroup getVariable ["Waldo_AIPass_ZeusHold",[]]) param [0,-2];
+                        _superseded=_guardZeusToken >= 0 && {_holdToken != _guardZeusToken};
+                        isNull _guardAircraft
+                            || {!alive _guardAircraft}
+                            || {isNull _guardPilot}
+                            || {!alive _guardPilot}
+                            || {(_guardAircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) param [0,""] != _guardToken}
+                            || {_superseded}
+                            || {_guardAircraft distance2D _guardPosition <= 150}
+                            || {serverTime >= _deadline}
+                    };
+                    if (isNull _guardAircraft) exitWith {};
+                    if (_superseded) then {
+                        // Do not restore modes across a newer curator order. Only release the AI
+                        // features this guard disabled; the new order owns every semantic setting.
+                        if (!isNull _guardPilot && {local _guardPilot}) then {
+                            {_guardPilot enableAI _x} forEach _guardFeatures;
+                        };
+                        _guardAircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
+                    } else {
+                        if (local _guardAircraft) then {
+                            [_guardAircraft,_guardPilot,_guardToken,_guardFeatures,
+                                _previousPilotMode,_previousGroupMode,_previousAttackEnabled,
+                                "","",""] call Waldo_fnc_CortexAirHandoverRestoreLocal;
+                        } else {
+                            [_guardAircraft,_guardPilot,_guardToken,_guardFeatures,
+                                _previousPilotMode,_previousGroupMode,_previousAttackEnabled,
+                                "","",""] remoteExecCall ["Waldo_fnc_CortexAirHandoverRestoreLocal",owner _guardAircraft];
+                        };
+                    };
+                };
+            } else {
+                _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
             };
-            _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverResult",[
                 serverTime,
@@ -108,7 +173,7 @@ private _finish={
                 behaviour _handoverPilot,
                 unitCombatMode _handoverPilot,
                 currentCommand _handoverPilot,
-                "DIRECT_RELEASE"
+                "ZEUS_TRANSIT_GUARD"
             ],true];
         };
         if (_resume) then {

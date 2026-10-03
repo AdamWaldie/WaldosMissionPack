@@ -386,12 +386,13 @@ deleteGroup _nativeHandoverGroup;
             && {_zeusSnapshot param [3,""] == "FULL"},
             str [_replacement,_replacementWaypoint,_group getVariable ["Waldo_AIPass_ZeusHold",[]],_zeusSnapshot]] call _recordCheck;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
-        private _handoverReleased=(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []
+        private _handoverGuard=_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]];
+        private _handoverGuardValid=count _handoverGuard == 2
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
-            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [5,""] == "DIRECT_RELEASE"};
+            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [5,""] == "ZEUS_TRANSIT_GUARD"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
-        [_id+"-no-protected-cortex-lease",_released && {_handoverReleased},str [
+        [_id+"-bounded-zeus-transit-guard",_released && {_handoverGuardValid},str [
             _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]
@@ -422,12 +423,13 @@ deleteGroup _nativeHandoverGroup;
         ]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
         [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;
+        private _handoverRestored=[{(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []},35] call _wait;
         [_id+"-no-old-plan-resurrection",(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo [],str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
         [_id+"-pilot-features-restored",
             (["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x}) isEqualTo _handoverFeaturesBefore
                 && {unitCombatMode _handoverPilot == _handoverCombatModeBefore}
                 && {combatMode _group == _handoverGroupCombatModeBefore}
-                && {_handoverReleased},
+                && {_handoverRestored},
             str [_handoverFeaturesBefore,["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x},
                 [_handoverBehaviourExpected,behaviour _handoverPilot],[_handoverCombatModeBefore,unitCombatMode _handoverPilot],
                 [_handoverGroupCombatModeBefore,combatMode _group],
