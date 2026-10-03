@@ -335,7 +335,9 @@ if (_stage == "ATTACK") then {
     // weaponDirection is physically on the target. Geometry remains the release authority for
     // unguided weapons; otherwise a correct pass flies through without firing.
     private _minimumAim=if (_guided) then {0.35} else {0};
-    private _closing=_forwardAlignment > 0.35;
+    // A nose-mounted weapon needs forward closure. A retained lateral turret is specifically
+    // selected to fire abeam, so forcing the helicopter nose onto the target defeats that pattern.
+    private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
         && {_closing} && {_alignment >= _minimumAlignment}
@@ -398,6 +400,13 @@ private _stagePassed=_stageClosest <= _captureRadius && {_stageDistance >= _stag
 // creates the observed pre-run loop and can never improve a fixed-wing attack solution.
 private _ingressBehind=_isPlane && {_stage == "INGRESS"} && {_stageDistance <= 2000}
     && {(velocity _aircraft) vectorDotProduct (_destination vectorDiff getPosATL _aircraft) <= 0};
+// A lateral helicopter ingress is complete when the live aircraft enters its turret's practical
+// engagement range. Native rotary-wing combat flight does not reliably capture an arbitrary offset
+// point while a gunner is tracking a contact; waiting for that coordinate caused useful flight and
+// gunfire to be labelled INGRESS_NONPROGRESS instead of beginning the abeam attack.
+private _lateralWeaponEntry=!_isPlane && {_stage == "INGRESS"}
+    && {(_job getOrDefault ["pattern",""]) == "LATERAL"}
+    && {_aircraft distance2D _target <= 1800};
 if (_stage == "EGRESS" && {(_stageDistance <= _effectiveCapture || {_stagePassed})}
     && {_aircraft distance2D (_points select 1) >= 400}) exitWith {["COMPLETE",true] call _finish};
 private _egressTravel=if (_stage == "EGRESS") then {
@@ -417,7 +426,7 @@ switch _stage do {
         // Aircraft rarely hit an exact doMove coordinate, especially at fixed-wing turn radius.
         // Accept entering or physically passing a bounded capture area; elapsed time alone still
         // cannot advance the state.
-        if (_stageDistance <= _effectiveCapture || {_stagePassed} || {_ingressBehind}) then {
+        if (_stageDistance <= _effectiveCapture || {_stagePassed} || {_ingressBehind} || {_lateralWeaponEntry}) then {
             [_group,_job,"ATTACK","INGRESS_ARRIVAL"] call Waldo_fnc_CortexDrillSetStage;
             _job set ["commandedStage",""];
             _job set ["deadline",serverTime+50];

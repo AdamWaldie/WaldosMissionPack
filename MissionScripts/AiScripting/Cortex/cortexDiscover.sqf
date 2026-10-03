@@ -21,7 +21,7 @@
  *   stops the aircraft or rewrites the native planner every frame.
  * - reserves aircraft crews from the generic group domain, then queues proactive attack-run flare
  *   sampling and the finite adaptive attack controller only for a
- *   currently eligible, crewed AI aircraft;
+ *   currently eligible, crewed AI aircraft with an assigned or naturally known hostile contact;
  *   empty, player, UAV and excluded aircraft are reconsidered on later sweeps without job churn.
  * Locality and authority: discovery is machine-local; orders, restoration checkpoints and LAMBS markers are public.
  *
@@ -170,16 +170,29 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                 && {combatMode group _pilot in ["YELLOW","RED"]}
                 && {[group _pilot,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
                 && {[group _pilot] call Waldo_fnc_CortexIsEligible};
-            private _hasHostileTarget=false;
+            private _airAttackTarget=objNull;
             if (_airAttackEligible) then {
                 {
                     private _candidate=assignedTarget _x;
-                    if (!isNull _candidate && {alive _candidate} && {(side group _pilot) getFriend side _candidate < 0.6}) exitWith {_hasHostileTarget=true};
+                    if (!isNull _candidate && {alive _candidate} && {(side group _pilot) getFriend side _candidate < 0.6}) exitWith {_airAttackTarget=_candidate};
                 } forEach ([effectiveCommander _vehicle,driver _vehicle,gunner _vehicle,commander _vehicle]+crew _vehicle);
+                // A contact can be detected and shared before the engine assigns it to a particular
+                // seat. Requiring assignedTarget made the adaptive attack path wait for native AI to
+                // start the engagement it was intended to improve. Use the pilot's normal knowledge
+                // list as the fallback and pass that concrete contact into the finite job.
+                if (isNull _airAttackTarget) then {
+                    private _knownTargets=_pilot targets [true,[8000,5000] select !(_vehicle isKindOf "Plane")];
+                    private _knownIndex=_knownTargets findIf {
+                        alive _x && {(side group _pilot) getFriend side _x < 0.6}
+                    };
+                    if (_knownIndex >= 0) then {_airAttackTarget=_knownTargets select _knownIndex};
+                };
             };
-            if (_airAttackEligible && {_hasHostileTarget} && {!(_vehicle getVariable ["Waldo_Cortex_AirAttackJob",false])}) then {
+            if (_airAttackEligible && {!isNull _airAttackTarget} && {!(_vehicle getVariable ["Waldo_Cortex_AirAttackJob",false])}) then {
                 _vehicle setVariable ["Waldo_Cortex_AirAttackJob",true];
-                [Waldo_fnc_CortexAirAttack,createHashMapFromArray [["aircraft",_vehicle],["group",group _pilot]],0] call Waldo_fnc_CortexQueueJob;
+                [Waldo_fnc_CortexAirAttack,createHashMapFromArray [
+                    ["aircraft",_vehicle],["group",group _pilot],["target",_airAttackTarget]
+                ],0] call Waldo_fnc_CortexQueueJob;
             };
             if (_wantArtillery && {getNumber (configOf _vehicle >> "artilleryScanner") == 1}) then {
                 private _gunner = gunner _vehicle;

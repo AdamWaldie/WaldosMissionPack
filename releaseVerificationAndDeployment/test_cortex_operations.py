@@ -2845,6 +2845,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_job getOrDefault ["releaseDetail",[]]',controller)
         self.assertIn('"vehicleOwner",owner _aircraft,"groupOwner",groupOwner _group',controller)
         self.assertIn('private _effectiveCapture=_captureRadius+([0,150] select !_isPlane)',controller)
+        self.assertIn('private _lateralWeaponEntry=!_isPlane',controller)
+        self.assertIn('_pattern == "LATERAL" || {_forwardAlignment > 0.35}',controller)
         self.assertIn('_stage != "" || {[_group] call Waldo_fnc_CortexIsEligible}',controller)
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_target,_weapon]',controller)
@@ -2899,6 +2901,8 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('deleteWaypoint',controller)
         self.assertIn('Waldo_Cortex_AirAttackJob',discover)
         self.assertIn('Waldo_fnc_CortexAirAttack',discover)
+        self.assertIn('_pilot targets [true,[8000,5000] select !(_vehicle isKindOf "Plane")]',discover)
+        self.assertIn('["target",_airAttackTarget]',discover)
         stop=source('cortexStop')
         for requirement in ['Waldo_Cortex_AirAttackPlan','Waldo_Cortex_AirAttackJob','Waldo_Cortex_AirFireSolution',
                             'removeEventHandler ["Fired"','limitSpeed -1','previousAttackEnabled']:
@@ -2989,7 +2993,7 @@ class CortexOperations(unittest.TestCase):
                      'O_Heli_Attack_02_dynamicLoadout_F','O_Plane_CAS_02_dynamicLoadout_F',
                      '-moving-airborne-precondition','setVelocityModelSpace','-physical-flight',
                      '-approach-release','-departure-release','-ammunition-consumed','-no-cortex-release',
-                     'addEventHandler ["Fired"','{_x doTarget _target} forEach _crew']:
+                     'addEventHandler ["Fired"','_group reveal [_target,4]']:
             self.assertIn(item,text)
         self.assertIn('["Waldo_Cortex_AirAttack_Enable",false]',text)
         self.assertNotIn('call Waldo_fnc_CortexAttackRunFlares',text)
@@ -3009,6 +3013,7 @@ class CortexOperations(unittest.TestCase):
                       '-physical-profile-change','AIR-ATTACK-distinct-fixed-wing-profiles',
                      '-continuous-useful-flight',
                      '-visible-countermeasures','-safe-crew-egress','CortexZeusMark',
+                     'Waldo_CortexQA_AttackStageShots','_attackStageShots find "ATTACK" >= 0',
                      '-zeus-snapshot-exact','-zeus-replacement-travel','-no-old-plan-resurrection','-explicit-state-flow',
                      '-explicit-interruption-transition','-pilot-features-restored','-lateral-capable-turret','setVelocityModelSpace']:
             self.assertIn(item,text)

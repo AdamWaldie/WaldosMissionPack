@@ -390,13 +390,17 @@ private _observedProfiles=createHashMap;
         _aa setVariable ["Waldo_CortexQA_Label","OBSERVED AA THREAT",true];
     };
     _group setCombatMode "RED";
-    {_x doTarget _target} forEach _crew;
+    // Declare a detected contact without pre-commanding every seat to attack it. The production
+    // discovery path must turn normal group knowledge into the finite job; otherwise native fire
+    // can make a controller that never reaches ATTACK appear successful.
+    _group reveal [_target,4];
     private _authoredDestination=[8200,12500,[180,650] select (_aircraft isKindOf "Plane")];
     private _waypoint=_group addWaypoint [_authoredDestination,0];
     _waypoint setWaypointType "MOVE"; _waypoint setWaypointBehaviour "COMBAT";
     _aircraft setVariable ["Waldo_CortexQA_Label",_id,true];
     _target setVariable ["Waldo_CortexQA_Label",["LIVE ARMOURED ATTACK TARGET","LIVE AIR INTERCEPT TARGET"] select _airTarget,true];
     _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",0,true];
+    _aircraft setVariable ["Waldo_CortexQA_AttackStageShots",[],true];
     _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",0,true];
     _aircraft setVariable ["Waldo_CortexQA_AttackTarget",_target,true];
     _aircraft setVariable ["Waldo_CortexQA_ReleaseResults",[],true];
@@ -416,6 +420,9 @@ private _observedProfiles=createHashMap;
             _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0])+1,true];
         } else {
             _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])+1,true];
+            private _stages=_aircraft getVariable ["Waldo_CortexQA_AttackStageShots",[]];
+            _stages pushBack ((_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) param [2,""]);
+            _aircraft setVariable ["Waldo_CortexQA_AttackStageShots",_stages,true];
             private _target=_aircraft getVariable ["Waldo_CortexQA_AttackTarget",objNull];
             private _startedSamples=_aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0];
             if (!isNull _target && {_startedSamples < 12}) then {
@@ -652,8 +659,9 @@ private _observedProfiles=createHashMap;
         sleep 2;
         private _releaseResults=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];
         private _weaponHits=_target getVariable ["Waldo_CortexQA_WeaponHits",0];
-        [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,
-            str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_releaseResults]] call _recordCheck;
+        private _attackStageShots=_aircraft getVariable ["Waldo_CortexQA_AttackStageShots",[]];
+        [_id+"-actual-weapon-fire",_attackStageShots find "ATTACK" >= 0,
+            str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_attackStageShots,_releaseResults]] call _recordCheck;
         [_id+"-effective-release",_weaponHits > 0,
             str [_weaponHits,_releaseResults,_aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
         [_id+"-target-destroyed",!_mustDestroy || {!alive _target},
