@@ -89,6 +89,10 @@ private _groundCandidates=[];
 // allowed STANDOFF plans that sprayed rockets or waited forever with no usable target solution.
 {
     private _turret=_x;
+    // Arma exposes fixed-wing and other driver-controlled weapons through `weapons`, while
+    // `weaponsTurret [-1]` can be empty. Treat the driver station explicitly so an armed aircraft
+    // cannot be misclassified as weaponless and fall back to an uncontrolled native engagement.
+    private _stationWeapons=if (_turret isEqualTo [-1]) then {weapons _aircraft} else {_aircraft weaponsTurret _turret};
     {
         private _weapon=_x;
         private _compatible=compatibleMagazines _weapon;
@@ -129,7 +133,7 @@ private _groundCandidates=[];
             _groundCandidates pushBack [_weapon,_turret,_facts select 3,_facts select 4,_facts select 6,
                 ((magazinesAllTurrets _aircraft) select _surfaceLoaded) select 0];
         };
-    } forEach (_aircraft weaponsTurret _turret);
+    } forEach _stationWeapons;
 } forEach ([[-1]] + allTurrets [_aircraft,true]);
 // A lateral pass needs an independently aimed, occupied turret. A fixed-forward pilot weapon cannot
 // engage abeam and previously made LATERAL a label on an impossible route. Person turrets are troop

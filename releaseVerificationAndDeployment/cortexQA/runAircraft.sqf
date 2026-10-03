@@ -613,10 +613,14 @@ private _observedProfiles=createHashMap;
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]]] call _recordCheck;
     } else {
-        private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in [
-            "COMPLETE","TARGET_DESTROYED","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE",
-            "INGRESS_NONPROGRESS","ATTACK_NONPROGRESS","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION","NO_PLAN"
-        ]},210] call _wait;
+        // A rejected prerequisite already failed above. Do not spend another 210 seconds watching
+        // native flight and then misattribute its fire to a Cortex run that never existed.
+        private _ended=if (!_started) then {false} else {
+            [{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in [
+                "COMPLETE","TARGET_DESTROYED","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE",
+                "INGRESS_NONPROGRESS","ATTACK_NONPROGRESS","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION","NO_PLAN"
+            ]},210] call _wait
+        };
         private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
         private _profileSamples=_aircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
         private _sampleStages=_profileSamples apply {_x select 1};
@@ -677,7 +681,7 @@ private _observedProfiles=createHashMap;
     {deleteVehicle _x} forEach (_crew+_targetCrew+_aaCrew+[_aircraft,_target,_aa]);
     deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
 } forEach [
-    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Transport_01_F",false,false,"LATERAL",false,"GUN",true,"O_Quadbike_01_F"],
+    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Attack_01_dynamicLoadout_F",false,false,"LATERAL",false,"GUN",true,"O_Quadbike_01_F"],
     ["AIR-ATTACK-PLANE-STRAFE","O_Plane_CAS_02_dynamicLoadout_F",false,false,"STRAFE",false,"GUN",true,"B_MRAP_01_F"],
     ["AIR-ATTACK-PLANE-OFFSET","O_Plane_CAS_02_dynamicLoadout_F",false,false,"OFFSET",false,"ROCKET",true,"B_MRAP_01_F"],
     ["AIR-ATTACK-PLANE-HOOK","O_Plane_CAS_02_dynamicLoadout_F",false,false,"HOOK",false,"ROCKET",true,"B_MRAP_01_F"],

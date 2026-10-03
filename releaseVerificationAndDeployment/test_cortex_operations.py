@@ -2449,12 +2449,20 @@ class CortexOperations(unittest.TestCase):
         for name in ['helicopterDecelerationTrackLocal.sqf','helicopterDecelerationCorrectLocal.sqf']:
             text=(base/name).read_text(encoding='utf-8')
             self.assertIn('["_generation",-1,[0]]',text)
+            self.assertIn('Waldo_Cortex_AirAttackJob',text)
             cleanup=text[text.rindex('if (!isNull _aircraft'):]
             self.assertIn('local _aircraft',cleanup)
             self.assertIn('== _generation',cleanup)
         tracker=(base/'helicopterDecelerationTrackLocal.sqf').read_text(encoding='utf-8')
         after_sleep=tracker.split('uiSleep _sampleInterval;',1)[1]
         self.assertLess(after_sleep.index('!= _generation'),after_sleep.index('private _speed'))
+
+    def test_air_attack_reads_driver_weapons_outside_turret_inventory(self):
+        text=(ROOT/'MissionScripts/AiScripting/Cortex/cortexAirAttackPlan.sqf').read_text(encoding='utf-8')
+        self.assertIn('if (_turret isEqualTo [-1]) then {weapons _aircraft}',text)
+        self.assertIn('forEach _stationWeapons',text)
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text(encoding='utf-8')
+        self.assertIn('private _ended=if (!_started) then {false}',qa)
 
     def test_deceleration_releases_changed_order_before_impulse(self):
         text=(ROOT/'MissionScripts/AiScripting/helicopterDecelerationCorrectLocal.sqf').read_text(encoding='utf-8')

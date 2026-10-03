@@ -5,7 +5,7 @@
  * no velocity, waypoint, AI feature or flight-height setting is overwritten.
  *
  * Improved Helicopter Landing is authoritative. A supported landing order or active landing
- * controller or active Cortex attack or missile-defence lease cancels this correction before
+ * controller, pending/active Cortex attack, or missile-defence lease cancels this correction before
  * another impulse is applied. Terrain clearance, pilot, damage, sling-load, locality and timeout
  * checks also fail safe by releasing immediately.
  * Pilot/group replacement, waypoint edits, a direct Zeus hold and external-control handover cancel
@@ -98,6 +98,7 @@ while {_correcting && {diag_tickTime < _deadline}} do {
         || {!(missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false])}
         || {!(_aircraft isKindOf "Helicopter") && {!(missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL",false]) || {!(_aircraft isKindOf "VTOL_Base_F")}}}
         || {_aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false]}
+        || {_aircraft getVariable ["Waldo_Cortex_AirAttackJob", false]}
         || {!isNil {_aircraft getVariable "Waldo_Cortex_AirAttackToken"}}
         || {!isNil {_aircraft getVariable "Waldo_Cortex_MissileDefenceActive"}}
         || {_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}
@@ -140,6 +141,7 @@ while {_correcting && {diag_tickTime < _deadline}} do {
             if (
                 _acceleration > 0
                 && {call _ownsOrder}
+                && {!(_aircraft getVariable ["Waldo_Cortex_AirAttackJob", false])}
                 && {isNil {_aircraft getVariable "Waldo_Cortex_AirAttackToken"}}
                 && {isNil {_aircraft getVariable "Waldo_Cortex_MissileDefenceActive"}}
                 && {!(_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
