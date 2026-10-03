@@ -71,9 +71,9 @@ private _ammoFacts={
         // loaded gun from a ground attack. Missiles need a real ground seeker; bombs and fixed
         // rockets use their own delivery geometry rather than a lock classification.
         private _surface=_hit > 0 && {
-            _bombHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]
+            _bombHint || {_rocketHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]
                 || {_simulation == "shotmissile" && {_guidedGround}}
-            }
+            }}
         };
         private _weaponClass=if (_bombHint) then {"BOMB"} else {if (_rocketHint) then {"ROCKET"} else {
             switch _simulation do {
@@ -338,8 +338,8 @@ private _altitude=if (_airToAir) then {
     else {((_targetHeight+80+random 420) max 80) min 900}
 } else {
     if (_isPlane) then {
-        if (_pattern == "BOMB") then {1400+random 1800}
-        else {if (_aaPositions isNotEqualTo [] || {_pattern == "STANDOFF"}) then {900+random 1500} else {450+random 750}}
+        if (_pattern == "BOMB") then {2200+random 2400}
+        else {if (_aaPositions isNotEqualTo [] || {_pattern == "STANDOFF"}) then {1600+random 1800} else {800+random 900}}
     } else {
         if (_aaPositions isNotEqualTo [] || {_pattern == "STANDOFF"}) then {120+random 380} else {50+random 220}
     }
@@ -376,28 +376,28 @@ switch _pattern do {
         // Guided standoff uses a long, stable inbound leg to a release basket and then turns away.
         // It never commands a close target overflight: the shot itself ends the firing leg.
         if (_isPlane) then {
-            _ingress=[-6500,1400] call _point;
-            _attack=[-2800,300] call _point;
-            _egress=[-6500,-2200] call _point
+            _ingress=[-10000,2200] call _point;
+            _attack=[-5500,400] call _point;
+            _egress=[-9500,-3500] call _point
         }
         else {_ingress=[-2600,800] call _point; _attack=[-1400,350] call _point; _egress=[-2600,-900] call _point};
     };
     case "STRAFE": {
-        if (_isPlane) then {_ingress=[-4200,350] call _point; _attack=[1300,0] call _point; _egress=[5500,900] call _point}
+        if (_isPlane) then {_ingress=[-7000,600] call _point; _attack=[2200,0] call _point; _egress=[8000,1400] call _point}
         else {_ingress=[-1900,250] call _point; _attack=[550,0] call _point; _egress=[2200,500] call _point};
     };
     case "OFFSET": {
-        if (_isPlane) then {_ingress=[-5000,1400] call _point; _attack=[1500,250] call _point; _egress=[6000,1800] call _point}
+        if (_isPlane) then {_ingress=[-8000,2600] call _point; _attack=[2200,350] call _point; _egress=[8500,3200] call _point}
         else {_ingress=[-2200,750] call _point; _attack=[650,200] call _point; _egress=[2500,900] call _point};
     };
     case "HOOK": {
-        if (_isPlane) then {_ingress=[-5200,1700] call _point; _attack=[1700,300] call _point; _egress=[5600,-2400] call _point}
+        if (_isPlane) then {_ingress=[-8500,3000] call _point; _attack=[2300,400] call _point; _egress=[8000,-3800] call _point}
         else {_ingress=[-2300,900] call _point; _attack=[700,220] call _point; _egress=[2200,-1100] call _point};
     };
     case "BOMB": {
-        _ingress=[-7000,700] call _point;
-        _attack=[2200,0] call _point;
-        _egress=[7000,1800] call _point;
+        _ingress=[-11000,1200] call _point;
+        _attack=[3800,0] call _point;
+        _egress=[11000,3500] call _point;
     };
     // Remain on one side of the target and translate along the attack axis. This keeps the target
     // abeam throughout the firing leg instead of crossing its position and becoming a nose-on pass.
@@ -436,30 +436,30 @@ if (_isPlane) then {
             _attackMinimum=3;
         };
         case "STANDOFF": {
-            _stageAltitudes=[_altitude+400,_altitude,_altitude+700];
+            _stageAltitudes=[_altitude+600,_altitude,_altitude+1000];
             _stageSpeeds=[_speed,_speed+30,_speed+120];
             _captureRadii=[750,900,1200];
         };
         case "BOMB": {
-            _stageAltitudes=[_altitude+500,_altitude,_altitude+900];
+            _stageAltitudes=[_altitude+800,_altitude,_altitude+1200];
             _stageSpeeds=[_speed,_speed+50,_speed+140];
             _captureRadii=[900,1100,1400];
             _attackMinimum=2;
         };
         case "OFFSET": {
-            _stageAltitudes=[_altitude+300,(_altitude*0.45) max 150,_altitude+500];
+            _stageAltitudes=[_altitude+500,(_altitude*0.55) max 550,_altitude+900];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[700,900,1200];
             _attackMinimum=3;
         };
         case "HOOK": {
-            _stageAltitudes=[_altitude+350,(_altitude*0.4) max 130,_altitude+650];
+            _stageAltitudes=[_altitude+600,(_altitude*0.5) max 500,_altitude+1000];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[700,900,1250];
             _attackMinimum=3;
         };
         default {
-            _stageAltitudes=[_altitude+280,(_altitude*0.35) max 110,_altitude+600];
+            _stageAltitudes=[_altitude+450,(_altitude*0.5) max 450,_altitude+900];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];
             _attackMinimum=2;

@@ -8,9 +8,10 @@
  * It flies physical route legs, presents the live target only to the retained weapon operator, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
  * uses a compatible loaded weapon and opens fire only inside a live range and alignment envelope.
- * On attack entry the selected living operator receives one native reveal/target/fire instruction;
- * this joins route geometry to the engine's weapon FSM instead of treating an ATTACK label as an
- * attack. The engine remains the flight controller; Cortex issues one native move per finite leg
+ * On attack entry the selected living operator receives one native reveal/target instruction;
+ * Cortex then releases the selected weapon only after live range, alignment, ammunition and seeker
+ * checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
+ * label as an attack. The engine remains the flight controller; Cortex issues one native move per finite leg
  * and leaves the engine's attack delegation enabled so ordinary combat and turret tracking continue.
  * Each leg is issued once as a group-level native movement order. Progress is measured toward
  * that leg, so broad turns are accepted while hovering, local circles and repeated replans cannot keep
@@ -325,9 +326,9 @@ if (_stage == "ATTACK") then {
     private _simulation=_job getOrDefault ["selectedSimulation",""];
     private _weaponClass=_job getOrDefault ["selectedWeaponClass",""];
     private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
-    // Selection precedes the one-shot native fire command. Issuing doFire first left the operator
-    // trying its previous countermeasure or navigation weapon and produced a valid ATTACK state with
-    // no attack.
+    // Select and acquire once at attack entry. Do not issue doFire here: that command can release a
+    // fixed or guided weapon before the live delivery basket below is valid. fireAtTarget behind the
+    // validated solution is the sole weapon-release authority for this finite run.
     if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
     if (!isNull _operator && {alive _operator} && {!(_job getOrDefault ["targetCommanded",false])}) then {
         // A MOVE leg alone never asks the engine weapon FSM to prosecute the contact. Reveal only
@@ -337,7 +338,6 @@ if (_stage == "ATTACK") then {
         _operator doWatch _target;
         _operator doTarget _target;
         _operator commandTarget _target;
-        _operator doFire _target;
         _job set ["targetCommanded",true];
     };
     private _range=_aircraft distance _target;

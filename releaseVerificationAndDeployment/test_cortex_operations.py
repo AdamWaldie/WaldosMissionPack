@@ -2792,7 +2792,7 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(requirement,planner)
         self.assertIn('private _standoff=_simulation == "shotmissile"',planner)
         self.assertIn('&& {_guidedGround} && {!_antiAir} && {!_bombHint}',planner)
-        self.assertIn('_bombHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]',planner)
+        self.assertIn('_bombHint || {_rocketHint || {_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]',planner)
         self.assertIn('private _armouredTarget=_targetArmour >= 180',planner)
         self.assertIn('if (_standoffAvailable) then {"STANDOFF"} else {if (_hasRocket) then {"OFFSET"} else {""}}',planner)
         self.assertIn('if (_hasRocket) then {_choices append ["OFFSET",0.18,"HOOK",0.22]}',planner)
@@ -2803,7 +2803,7 @@ class CortexOperations(unittest.TestCase):
                             'Waldo_Cortex_AirAttackPattern','_lateralTurret','_lateralTurretPath',
                             'toLowerANSI _role in ["gunner","commander","turret"]',
                             'standoffWeapon','Waldo_Cortex_AirStandoffBlockedUntil',
-                            '[-1200,750]','[900,750]','[2200,1100]','[-6500,-2200]',
+                            '[-1200,750]','[900,750]','[2200,1100]','[-9500,-3500]',
                             '["BOMB",[0.08,0.22] select _armouredTarget]',
                             'private _forwardIngress=(_toIngress vectorDotProduct _axis) >= 100',
                             'vectorNormalized _toAttack']:
@@ -2847,10 +2847,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_x doTarget objNull',controller)
         self.assertIn('_x doWatch objNull',controller)
         self.assertIn('_group reveal [_target,4]',controller)
-        self.assertIn('_operator doFire _target',controller)
+        self.assertNotIn('_operator doFire _target',controller)
         self.assertLess(
-            controller.index('_aircraft selectWeaponTurret [_weapon,_turret]'),
-            controller.index('_operator doFire _target'),
+            controller.index('_operator commandTarget _target'),
+            controller.index('private _fired=_aircraft fireAtTarget [_target,_weapon]'),
         )
         self.assertIn('_job getOrDefault ["releaseDetail",[]]',controller)
         self.assertIn('"vehicleOwner",owner _aircraft,"groupOwner",groupOwner _group',controller)
