@@ -2766,14 +2766,14 @@ class CortexOperations(unittest.TestCase):
 
     def test_adaptive_air_attack_is_bounded_physical_and_zeus_safe(self):
         planner=source('cortexAirAttackPlan')
-        for requirement in ['nearTargets 2500','select [0,16]','Waldo_Cortex_AirAmmoFacts',
-                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','LATERAL',
+        for requirement in ['nearTargets ([8000,5000]','select [0,16]','Waldo_Cortex_AirAmmoFacts',
+                            'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','BOMB','LATERAL',
                             'INTERCEPT','_airToAir','airWeapon','airWeaponTurret']:
             self.assertIn(requirement,planner)
         for requirement in ['groundWeapon','groundTurret','_groundCandidates','shotbullet','shotshell',
-                            'shotrocket','shotmissile','selectedWeapon','selectedSimulation',
+                            'shotrocket','shotmissile','shotbomb','selectedWeapon','selectedSimulation','selectedWeaponClass',
                             '_simulation in ["shotbullet","shotshell"]',
-                            '_simulation in ["shotbullet","shotshell","shotrocket"]']:
+                            '_simulation in ["shotbullet","shotshell","shotrocket","shotbomb"]']:
             self.assertIn(requirement,planner)
         self.assertIn('private _standoff=_simulation == "shotmissile"',planner)
         self.assertNotIn('allUnits',planner)
@@ -2782,8 +2782,8 @@ class CortexOperations(unittest.TestCase):
                             'Waldo_Cortex_AirAttackPattern','_lateralTurret','_lateralTurretPath',
                             'toLowerANSI _role in ["gunner","commander","turret"]',
                             'standoffWeapon','Waldo_Cortex_AirStandoffBlockedUntil',
-                            '[-650,420]','[0,340]','[650,420]','[1200,1000]',
-                            '((_targetDistance-450) max 1200) min 2400',
+                            '[-1200,750]','[900,750]','[2200,1100]','[-6500,-2200]',
+                            '["BOMB",0.25]',
                             'private _forwardIngress=(_toIngress vectorDotProduct _axis) >= 100',
                             'vectorNormalized _toAttack']:
             self.assertIn(requirement,planner)
@@ -2804,11 +2804,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('waypoints _group apply {[waypointPosition _x,waypointType _x]}',controller)
         self.assertNotIn('[count waypoints _group,_waypointIndex,_resumePosition',controller)
         self.assertIn('private _target=_job getOrDefault ["target",objNull]',controller)
-        self.assertIn('private _leadSeconds=[8,3] select (_stage == "ATTACK")',controller)
+        self.assertIn('private _leadSeconds=[16,5] select (_stage == "ATTACK")',controller)
         self.assertIn('_job getOrDefault ["airToAir",false]',controller)
-        self.assertIn('_job getOrDefault ["airWeapon",""]',controller)
-        self.assertIn('_job getOrDefault ["groundWeapon",""]',controller)
-        self.assertIn('_job getOrDefault ["groundTurret",[]]',controller)
+        self.assertIn('_job getOrDefault ["selectedWeapon",""]',controller)
+        self.assertIn('_job set ["groundWeapon",_plan getOrDefault ["groundWeapon",""]]',controller)
+        self.assertIn('_job set ["groundTurret",_plan getOrDefault ["groundTurret",[]]]',controller)
         self.assertIn('_isPlane && {speed _aircraft < 40}',controller)
         self.assertIn('serverTime+0.8+random 0.8',controller)
         self.assertIn('flareINGRESS',controller)
@@ -2829,8 +2829,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_target,_weapon]',controller)
         self.assertIn('_job set ["lateralPilotFeatures",_lateralPilotFeatures]',controller)
-        self.assertIn('_group enableAttack false',controller)
+        self.assertNotIn('_group enableAttack false',controller)
         self.assertIn('_finishGroup enableAttack (_job getOrDefault ["previousAttackEnabled",true])',controller)
+        self.assertIn('_operator commandTarget _target',controller)
+        self.assertIn('case "BOMB"',controller)
+        self.assertIn('"TARGET_DESTROYED"',controller)
         self.assertNotIn('ACTUAL_FIRE_NONPROGRESS',controller)
         aircraft_qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
         self.assertIn('private _physicalTransitions=',aircraft_qa)
@@ -2978,6 +2981,8 @@ class CortexOperations(unittest.TestCase):
         text=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
         for item in ['AIR-ATTACK-HELI-LATERAL','AIR-ATTACK-PLANE-STRAFE','AIR-ATTACK-PLANE-OFFSET',
                      'AIR-ATTACK-PLANE-HOOK','AIR-ATTACK-PLANE-AA','AIR-ATTACK-PLANE-INTERCEPT',
+                     'AIR-ATTACK-PLANE-BOMB','AIR-ATTACK-PLANE-GUIDED','-target-destroyed',
+                     '-armed-live-operator','-damageable-target-prerequisite',
                      'AIR-ATTACK-ZEUS-HANDOVER','AIR-ATTACK-DISABLED','-air-contact-intercept-plan',
                      '-physical-plan-start','-aa-aware-pattern','-actual-weapon-fire',
                       '-pattern-specific-flight-profile','-weapon-matches-manoeuvre','-effective-release',

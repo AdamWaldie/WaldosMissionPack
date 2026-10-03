@@ -8,8 +8,8 @@
  * It flies physical route legs, presents the live target only to the retained weapon operator, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
  * uses a compatible loaded weapon and opens fire only inside a live range, alignment and engine aim
- * envelope. The engine remains the flight controller; Cortex issues one native move per finite leg.
- * Autonomous group attack delegation is suspended only for that lease and restored exactly on exit.
+ * envelope. The engine remains the flight controller; Cortex issues one native move per finite leg
+ * and leaves the engine's attack delegation enabled so ordinary combat and turret tracking continue.
  * Each leg is issued once as a group-level native movement order. Progress is measured toward
  * that leg, so broad turns are accepted while hovering, local circles and repeated replans cannot keep
  * an attack alive. Non-progress in any phase aborts rather than fabricating a transition; a validly
@@ -42,9 +42,7 @@ private _finish={
     if (_handler >= 0) then {_aircraft removeEventHandler ["Fired",_handler]};
     if (local _aircraft) then {
         _aircraft limitSpeed -1;
-        if (!isNull _finishGroup) then {
-            _finishGroup enableAttack (_job getOrDefault ["previousAttackEnabled",true]);
-        };
+        if (!isNull _finishGroup) then {_finishGroup enableAttack (_job getOrDefault ["previousAttackEnabled",true])};
         private _finishPilot=driver _aircraft;
         if (!isNull _finishPilot && {alive _finishPilot}) then {
             {_finishPilot enableAI _x} forEach (_job getOrDefault ["lateralPilotFeatures",[]]);
@@ -164,6 +162,8 @@ if (_stage == "") then {
     _job set ["selectedWeapon",_plan getOrDefault ["selectedWeapon",""]];
     _job set ["selectedTurret",_plan getOrDefault ["selectedTurret",[]]];
     _job set ["selectedSimulation",_plan getOrDefault ["selectedSimulation",""]];
+    _job set ["selectedWeaponClass",_plan getOrDefault ["selectedWeaponClass",""]];
+    _job set ["selectedMagazine",_plan getOrDefault ["selectedMagazine",""]];
     _job set ["altitude",_plan get "altitude"]; _job set ["speed",_plan get "speed"];
     _job set ["stageAltitudes",_plan getOrDefault ["stageAltitudes",[_plan get "altitude",_plan get "altitude",_plan get "altitude"]]];
     _job set ["stageSpeeds",_plan getOrDefault ["stageSpeeds",[_plan get "speed",_plan get "speed",_plan get "speed"]]];
@@ -173,10 +173,8 @@ if (_stage == "") then {
     _job set ["origin",getPosATL _aircraft]; _job set ["resumePosition",_resumePosition];
     _job set ["resumeWaypointIndex",_waypointIndex]; _job set ["routeSignature",_routeSignature];
     _job set ["previousAttackEnabled",attackEnabled _group];
-    // Suspend only the engine's autonomous attack delegation while the finite route is active.
-    // Turret tracking and the validated release window remain live; ordinary control is restored
-    // exactly on every exit, including immediate Zeus handover.
-    _group enableAttack false;
+    // Record the authored policy for exact cleanup, but do not disable it. Disabling group attacks
+    // prevented native pilots and turrets from building a valid solution while Cortex waited to fire.
     _aircraft setVariable ["Waldo_Cortex_AirAttackToken",_plan get "token"];
     private _handler=_aircraft addEventHandler ["Fired",{
         params ["_aircraft","_weapon"];
@@ -194,7 +192,9 @@ if (_startFailure != "") exitWith {[_startFailure] call _finish};
 private _currentRoute=waypoints _group apply {[waypointPosition _x,waypointType _x]};
 if (_currentRoute isNotEqualTo (_job getOrDefault ["routeSignature",_currentRoute])) exitWith {["AUTHORED_ROUTE_CHANGED"] call _finish};
 private _target=_job getOrDefault ["target",objNull];
-if (isNull _target || {!alive _target}) exitWith {["TARGET_LOST",true] call _finish};
+if (isNull _target || {!alive _target}) exitWith {
+    [["TARGET_LOST","TARGET_DESTROYED"] select ((_job getOrDefault ["shots",0]) > 0),true] call _finish
+};
 if ((getPosATL _aircraft select 2) < 25) exitWith {["GROUND_CLEARANCE"] call _finish};
 private _points=_job get "points";
 private _stageIndex=["INGRESS","ATTACK","EGRESS"] find _stage;
@@ -204,7 +204,7 @@ private _destination=_points select _stageIndex;
 // intercept and engagement points from current target velocity; disengagement stays immutable so
 // the lease has a real end and cannot orbit indefinitely.
 if (_job getOrDefault ["airToAir",false] && {_stage in ["INGRESS","ATTACK"]}) then {
-    private _leadSeconds=[8,3] select (_stage == "ATTACK");
+    private _leadSeconds=[16,5] select (_stage == "ATTACK");
     _destination=(getPosATL _target) vectorAdd ((velocity _target) vectorMultiply _leadSeconds);
     _destination set [2,(_job getOrDefault ["stageAltitudes",[_job get "altitude",_job get "altitude",_job get "altitude"]]) select _stageIndex];
     _points set [_stageIndex,_destination];
@@ -225,8 +225,8 @@ private _commandedStage=_job getOrDefault ["commandedStage",""];
 private _commandedDestination=_job getOrDefault ["commandedDestination",[]];
 private _refreshIntercept=_job getOrDefault ["airToAir",false]
     && {count _commandedDestination >= 2}
-    && {_commandedDestination distance2D _destination >= 250}
-    && {serverTime >= (_job getOrDefault ["commandedAt",0])+3};
+    && {_commandedDestination distance2D _destination >= ([800,350] select !_isPlane)}
+    && {serverTime >= (_job getOrDefault ["commandedAt",0])+6};
 if (_commandedStage != _stage || {_refreshIntercept}) then {
     _aircraft flyInHeight (_stageAltitudes select _stageIndex);
     _aircraft limitSpeed (_stageSpeeds select _stageIndex);
@@ -252,34 +252,19 @@ if (_stageDistance <= _stageBest-40) then {
     _job set ["stageBestDistance",_stageBest];
     _job set ["stageProgressAt",serverTime];
 };
-private _routeStalled=serverTime >= (_job getOrDefault ["stageProgressAt",serverTime])+18;
+private _routeStalled=serverTime >= (_job getOrDefault ["stageProgressAt",serverTime])+([35,24] select !_isPlane);
 if (_stage == "ATTACK") then {
     private _pattern=_job getOrDefault ["pattern",""];
     private _airContact=_job getOrDefault ["airToAir",false];
-    private _lateral=_pattern == "LATERAL";
-    private _standoff=_pattern == "STANDOFF";
-    private _weapon=if (_airContact) then {_job getOrDefault ["airWeapon",""]} else {
-        if (_lateral) then {_job getOrDefault ["lateralWeapon",""]} else {
-            if (_standoff) then {_job getOrDefault ["standoffWeapon",""]}
-            else {_job getOrDefault ["groundWeapon",""]}
-        }
-    };
-    private _turret=if (_airContact) then {_job getOrDefault ["airWeaponTurret",[]]} else {
-        if (_lateral) then {_job getOrDefault ["lateralTurretPath",[]]} else {
-            if (_standoff) then {_job getOrDefault ["standoffTurret",[]]}
-            else {_job getOrDefault ["groundTurret",[]]}
-        }
-    };
-    private _simulation=if (_airContact) then {_job getOrDefault ["airSimulation",""]} else {
-        if (_lateral) then {_job getOrDefault ["lateralSimulation",""]} else {
-            if (_standoff) then {_job getOrDefault ["standoffSimulation",""]}
-            else {_job getOrDefault ["groundSimulation",""]}
-        }
-    };
+    private _weapon=_job getOrDefault ["selectedWeapon",""];
+    private _turret=_job getOrDefault ["selectedTurret",[]];
+    private _simulation=_job getOrDefault ["selectedSimulation",""];
+    private _weaponClass=_job getOrDefault ["selectedWeaponClass",""];
     private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
     if (!isNull _operator && {alive _operator} && {!(_job getOrDefault ["targetCommanded",false])}) then {
         _operator doWatch _target;
         _operator doTarget _target;
+        _operator commandTarget _target;
         _job set ["targetCommanded",true];
     };
     if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
@@ -294,21 +279,36 @@ if (_stage == "ATTACK") then {
         (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
             && {(_x select 0) in compatibleMagazines _weapon}
     } >= 0;
-    private _envelope=switch _simulation do {
-        case "shotbullet": {[80,1400,0.985]};
-        case "shotshell": {[100,1800,0.985]};
-        case "shotrocket": {[300,2200,0.992]};
-        case "shotmissile": {[500,5000,0.94]};
+    private _envelope=switch _weaponClass do {
+        case "GUN": {if (_airContact) then {[100,1800,0.995]} else {[120,1800,0.992]}};
+        case "ROCKET": {[450,3000,0.998]};
+        case "GUIDED": {if (_airContact) then {[700,7000,0.985]} else {[900,6500,0.985]}};
+        case "BOMB": {[900,5000,0.975]};
         default {[0,0,1]};
     };
     _envelope params ["_minimumRange","_maximumRange","_minimumAlignment"];
-    private _guided=_simulation == "shotmissile";
+    private _guided=_weaponClass == "GUIDED";
+    private _bomb=_weaponClass == "BOMB";
+    private _airForward=vectorDir _aircraft;
+    private _horizontalTarget=+_targetVector;
+    _horizontalTarget set [2,0];
+    private _horizontalForward=+_airForward;
+    _horizontalForward set [2,0];
+    private _forwardAlignment=if (vectorMagnitude _horizontalTarget > 0.01 && {vectorMagnitude _horizontalForward > 0.01}) then {
+        (vectorNormalized _horizontalForward) vectorDotProduct (vectorNormalized _horizontalTarget)
+    } else {-1};
+    private _deliveryAngle=acos ((_alignment max -1) min 1);
+    private _minimumAim=if (_guided) then {0.45} else {if (_bomb) then {0.15} else {0.05}};
+    private _closing=_forwardAlignment > 0.35;
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
-        && {_alignment >= _minimumAlignment}
-        && {!_guided || {_aimed > 0}};
-    _job set ["fireSolution",[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded]];
-    _aircraft setVariable ["Waldo_Cortex_AirFireSolution",[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded],true];
+        && {_closing} && {_alignment >= _minimumAlignment}
+        && {!_bomb || {(getPosATL _aircraft select 2) >= 350}}
+        && {_aimed >= _minimumAim};
+    private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
+        _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing];
+    _job set ["fireSolution",_solution];
+    _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
     if (_validSolution && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
         private _fired=_aircraft fireAtTarget [_target,_weapon];
         _job set ["nextWeaponFire",serverTime+([0.7+random 0.8,2+random 1.5] select _fired)];
@@ -339,7 +339,8 @@ _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     _job getOrDefault ["captureRadii",[]],_job getOrDefault ["attackMinimum",0],
     +(_job getOrDefault ["points",[]]),
     _job getOrDefault ["selectedWeapon",""],_job getOrDefault ["selectedSimulation",""],
-    _job getOrDefault ["selectedTurret",[]]
+    _job getOrDefault ["selectedTurret",[]],_job getOrDefault ["selectedWeaponClass",""],
+    _job getOrDefault ["selectedMagazine",""]
 ],true];
 
 private _attackShots=_shots-(_job getOrDefault ["attackShotBaseline",0]);
@@ -386,8 +387,10 @@ switch _stage do {
     };
     case "ATTACK": {
         private _attackDwell=serverTime-(_job getOrDefault ["attackStartedAt",serverTime]);
+        private _deliveryComplete=(_job getOrDefault ["selectedWeaponClass",""]) in ["GUIDED","BOMB"]
+            || {_stageDistance <= _captureRadius || {_stagePassed}};
         if (_attackShots > 0 && {_attackDwell >= (_job getOrDefault ["attackMinimum",2])}
-            && {(_stageDistance <= _captureRadius || {_stagePassed})}) then {
+            && {_deliveryComplete}) then {
             [_group,_job,"EGRESS","ACTUAL_FIRE"] call Waldo_fnc_CortexDrillSetStage;
             _job set ["commandedStage",""];
             _job set ["egressStartPosition",getPosATL _aircraft];
