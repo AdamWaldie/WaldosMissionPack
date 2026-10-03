@@ -6,8 +6,9 @@
  * lease expiry, exclusion and Zeus cancellation remain authoritative. At most six groups are read.
  * A partial bound is useful progress and hands movement to the next squad. Stalls are counted per
  * squad; one unreliable element can recover or retire without cancelling the other manoeuvre and
- * base-of-fire roles. A squad which can no longer form two viable fire teams is retired immediately
- * instead of keeping the whole action alive until lease expiry. The server watchdog follows the
+ * base-of-fire roles. Retirement publishes the exact reservation token for owner-side release; an
+ * older abort cannot cancel a replacement task. A squad which can no longer form two viable fire
+ * teams is retired immediately instead of keeping the whole action alive until lease expiry. The server watchdog follows the
  * configured owner-side bound timeout and retries after eight seconds. Bound length scales with
  * remaining distance to avoid slow fixed-step movement. Up to two squads on separated approaches
  * may bound concurrently; each still alternates its own moving and covering fire teams. This removes
@@ -55,7 +56,7 @@ private _stillActive=[];
                 _retired pushBackUnique _token;
                 _job set ["boundRetired",_retired];
                 _group setVariable ["Waldo_Cortex_SupportAbort",
-                    [serverTime,"BOUND_FAILURES",_failures],true];
+                    [_token,serverTime,"BOUND_FAILURES",_failures],true];
             };
         };
         if (_progressed && {_final}) then {_completed pushBackUnique _token; _job set ["boundCompleted",_completed]};
@@ -74,7 +75,7 @@ private _sequence=_job getOrDefault ["boundSequence",0];
     if (count _fit < 4 && {!(_token in _completed)} && {!(_token in _retired)}) then {
         _retired pushBackUnique _token;
         _group setVariable ["Waldo_Cortex_SupportAbort",
-            [serverTime,"INSUFFICIENT_STRENGTH",count _fit],true];
+            [_token,serverTime,"INSUFFICIENT_STRENGTH",count _fit],true];
     };
 } forEach _teams;
 _job set ["boundRetired",_retired];

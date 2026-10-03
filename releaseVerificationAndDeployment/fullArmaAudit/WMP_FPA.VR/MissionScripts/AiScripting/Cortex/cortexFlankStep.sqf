@@ -11,8 +11,9 @@
  * while their owned destination remains authoritative. Only AUTOCOMBAT is suspended so the engine
  * cannot replace the finite AWARE move with a new COMBAT movement plan. Every bound pairs doMove with an
  * actor-local LEADER PLANNED destination so the engine path planner retains the owned spot while the actor
- * continues firing. If a live ATTACK command still replaces that destination, the controller clears that
- * actor's target and reissues the same paired movement order at most twice per bound. This is a narrow
+ * continues firing. If a live ATTACK command still replaces the owned MOVE, the controller reissues the
+ * same paired movement order at most twice per bound. It clears that actor's target only when the engine
+ * destination has also diverged from the owned spot. This is a narrow
  * recovery for a measured engine override, not a blanket
  * targeting disable; other movers and every stationary fire element continue engaging.
  * A RED group first receives a finite YELLOW movement lease: it remains fire-at-will, but the engine must keep
@@ -469,13 +470,16 @@ switch (_drill get "stage") do {
                     private _expected = (expectedDestination _unit) select 0;
                     private _pursuitResetCount = _pursuitResets select _forEachIndex;
                     // Live dedicated QA proved that YELLOW can retain a pre-existing native ATTACK
-                    // plan whose destination is hundreds of metres from the owned bound. Reissuing
-                    // doMove alone does not dislodge it. Clear only that actor's target, only while
-                    // the engine destination demonstrably disagrees with Cortex, and cap the repair.
+                    // plan whose destination is hundreds of metres from the owned bound. The ATTACK
+                    // command itself is an ownership loss even before expectedDestination visibly
+                    // diverges. The first recovery is deliberately non-destructive. If the engine
+                    // immediately steals the same actor again, clear only that actor's stale target
+                    // before reasserting the finite move; this leaves the rest of the fire team free
+                    // to keep engaging while preventing an endless native ATTACK loop.
                     if (currentCommand _unit == "ATTACK"
-                        && {_expected distance2D _spot > 15}
+                        && {_remaining > 3}
                         && {_pursuitResetCount < 2}) then {
-                        _unit doTarget objNull;
+                        if (_expected distance2D _spot > 15 || {_pursuitResetCount > 0}) then {_unit doTarget objNull};
                         _unit doWatch _enemyPos;
                         _unit doMove _spot;
                         _unit setDestination [_spot,"LEADER PLANNED",true];

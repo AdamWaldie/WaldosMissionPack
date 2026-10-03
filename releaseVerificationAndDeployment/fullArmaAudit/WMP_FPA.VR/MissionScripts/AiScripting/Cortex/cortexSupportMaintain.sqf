@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
  * Releases only the current WMP support assignment when it expires, is revoked or loses every
- * feature gate capable of owning it. Reinforcement and coordinated assault independently keep the
- * shared reservation valid; disabling reinforcement must not cancel an active coordinated assault.
+ * feature gate capable of owning it. A mode must remain enabled at both ends of the reservation;
+ * independent requester/responder checks could otherwise preserve a lease whose next state no
+ * longer existed. Disabling reinforcement still cannot cancel a shared coordinated assault.
  * Locality/authority: server owns reservations; current group owners validate and execute orders.
  * Restores the recorded autonomous-attack setting when the support move is released.
  * Measures physical rally arrival in both calm and contact phases; seeing an enemy
  * does not cancel an accepted reinforcement reservation.
  * A failed bound keeps its PATH holds until a new MOVE sequence or reservation release;
- * the old MOVE role must not release them on the next group tick.
+ * the old MOVE role must not release them on the next group tick. A public per-actor ownership
+ * marker survives HC migration and is cleared only when Cortex restores PATH.
  * A live actor-level grenade evasion temporarily outranks the covering PATH hold; the next cover
  * step reacquires that soldier only after the six-second safety move expires.
  * A MOVE role which cannot form two viable local teams reports NOT_READY immediately;
  * the server can yield the turn instead of waiting for its 180-second safety timeout.
+ * A server retirement is consumed only when its token matches this local assignment, then releases
+ * its PATH holds and movement immediately while the other coordinated squads continue.
  * On release, actors held by Cortex resume formation even when engine combat has
  * relabelled the owned doStop as ATTACK/FIRE. Commands which can only have arrived
  * after the hold are preserved, and new-bound movement is not replaced.
@@ -28,6 +32,7 @@
  * Return Value: Nothing.
  * Current callers: GroupTick.
  * Example: [_group, _state] call Waldo_fnc_CortexSupportMaintain;
+ * Result: the active assignment advances, holds, or releases without competing movement owners.
  */
 params ["_group","_state"];
 if (!local _group) exitWith {};
@@ -59,8 +64,14 @@ private _restoreAttack={
     _state deleteAt "attackChanged"; _state deleteAt "baseAttack";
 };
 private _lease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
-private _supportEnabled = [_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled
-    || {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _requester = _lease param [1,grpNull,[grpNull]];
+private _sharedReinforce = !isNull _requester
+    && {[_requester,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    && {[_group,"Waldo_AIPass_Reinforce_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _sharedCoordinated = !isNull _requester
+    && {[_requester,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
+    && {[_group,"Waldo_AIPass_CoordinatedAssault_Enable",true] call Waldo_fnc_CortexFeatureEnabled};
+private _supportEnabled = _sharedReinforce || {_sharedCoordinated};
 private _releaseSupport={
     // Reject only the exact lease snapshot accepted by this owner. The server validates token,
     // snapshot and sender again, making repeated cleanup and a racing replacement lease harmless.
@@ -77,6 +88,11 @@ private _releaseSupport={
     [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
     call _restoreAttack;
     {_state deleteAt _x} forEach ["supportToken","responding","respondingTo","respondUntil","arrivedAt","assaulting"];
+};
+private _abort = _group getVariable ["Waldo_Cortex_SupportAbort",[]];
+if (count _abort == 4 && {(_abort select 0) == _token}) exitWith {
+    _group setVariable ["Waldo_Cortex_SupportAbort",nil,true];
+    call _releaseSupport;
 };
 if (_lease isEqualTo [] || {(_lease select 0) != _token} || {serverTime >= (_lease select 2)}
     || {!([_group,"Waldo_AIPass_Contact_Enable",true] call Waldo_fnc_CortexFeatureEnabled)}
@@ -105,12 +121,19 @@ private _role=_group getVariable ["Waldo_Cortex_SupportRole",[]];
 private _coordinating=(_state getOrDefault ["supportToken",""]) == _token
     && {_state getOrDefault ["assaulting",false]} && {count _role == 5} && {(_role select 0) == _token};
 private _moving=_coordinating && {(_role select 2) == "MOVE"};
+// The public actor marker is the durable ownership record. Local HashMap state disappears during
+// HC migration, while the marker follows the actor and proves that Cortex, rather than a mission
+// maker, disabled PATH. Merge both records before release so locality changes cannot strand a unit.
 private _held=_state getOrDefault ["supportHeld",[]];
+{
+    if (_x getVariable ["Waldo_Cortex_SupportPathHold",false]) then {_held pushBackUnique _x};
+} forEach units _group;
 private _newMove=_moving && {(_state getOrDefault ["supportBoundSequence",-1]) != (_role select 1)};
 if (_newMove || {!_coordinating}) then {
     {
         if (local _x && {group _x == _group}) then {
             _x enableAI "PATH";
+            _x setVariable ["Waldo_Cortex_SupportPathHold",nil,true];
             // supportHeld is the ownership record. Combat can relabel our doStop
             // as ATTACK or FIRE without cancelling it, so currentCommand == STOP
             // is not a valid ownership check. Preserve commands which cannot be a
@@ -140,7 +163,10 @@ if (_coordinating) then {
             private _actorMove=_x getVariable ["Waldo_Cortex_ActorMove",[]];
             if (local _x && {vehicle _x == _x} && {[_x] call Waldo_fnc_CortexCombatEffective}
                 && {_x checkAIFeature "PATH"} && {count _actorMove != 3 || {time >= (_actorMove select 2)}}) then {
-                doStop _x; _x disableAI "PATH"; _held pushBackUnique _x;
+                doStop _x;
+                _x disableAI "PATH";
+                _x setVariable ["Waldo_Cortex_SupportPathHold",true,true];
+                _held pushBackUnique _x;
             };
         } forEach units _group;
         _state set ["supportHeld",_held];

@@ -24,7 +24,8 @@
  * Locality and authority: call where the group is local; server selects and dispatches supporting artillery.
  * Repeat/JIP: caller phase prevents repeated entry. A public movement intent lets a new group owner
  * resume the same bounded withdrawal without repeating smoke or artillery effects.
- * A withdrawal releases an earlier coordinated-support LAMBS movement handover before replacing it.
+ * A withdrawal releases an earlier coordinated-support LAMBS movement handover and any durable
+ * Cortex PATH-hold markers before replacing them with the retreat route.
  *
  * Arguments:
  * 0: group <GROUP, default grpNull>
@@ -87,14 +88,19 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
     [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 };
 [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
+private _supportHeld=_state getOrDefault ["supportHeld",[]];
+{
+    if (_x getVariable ["Waldo_Cortex_SupportPathHold",false]) then {_supportHeld pushBackUnique _x};
+} forEach units _group;
 {
     if (local _x && {group _x == _group}) then {
         _x enableAI "PATH";
+        _x setVariable ["Waldo_Cortex_SupportPathHold",nil,true];
         // supportHeld is an explicit Cortex ownership record. A withdrawal replaces that
         // hold with a group route, so every surviving member must rejoin the leader first.
         _x doFollow _leader;
     };
-} forEach (_state getOrDefault ["supportHeld",[]]);
+} forEach _supportHeld;
 {_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
 if (!("baseAttack" in _state)) then {
     _state set ["baseAttack",attackEnabled _group];

@@ -8,11 +8,14 @@
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
- * authenticated curator waypoint and replaces the pilot's private Cortex doMove once with that same
- * destination. Cleanup releases the attack target at both individual and group-command layers, then
+ * authenticated curator waypoint, returns the crew from the Cortex engage task to normal formation,
+ * and replaces the Cortex group ATTACK once with a group MOVE to that same destination. It also
+ * updates the pilot's movement planner once to the identical point;
+ * cleanup releases the attack target at both individual and group-command layers, then
  * a short token-bound transit guard prevents the pilot from autonomously selecting the retired target
- * while that direct move takes hold. It never changes the route, combat mode, group attack permission,
- * FSM, MOVE/PATH, gunner AI, velocity or movement order. A newer Zeus order ends the guard immediately.
+ * while that move takes hold. It never changes the route, combat mode, group attack permission, FSM,
+ * MOVE/PATH, gunner AI or velocity, and it never repeats the movement order. A newer Zeus order ends
+ * the guard immediately.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -59,8 +62,8 @@ private _finish={
             };
             // Direct Zeus input is the new owner, so cleanup must not create another long-lived
             // Cortex movement lease. Read the authenticated snapshot, apply its ordinary waypoint
-            // attributes, replace the one pilot doMove owned by this attack with the same exact
-            // destination, and return immediately to native group control.
+            // attributes, replace the one group ATTACK owned by this attack with a group MOVE to the
+            // same exact destination, and return immediately to native group control.
             private _handoverPilot=driver _aircraft;
             private _handoverGroup=group _handoverPilot;
             private _handoverIndex=currentWaypoint _handoverGroup;
@@ -90,7 +93,7 @@ private _finish={
                 // target revealed by the retired Cortex run remains visible. Guard only the pilot's
                 // autonomous target selection and group attack delegation while the selected route
                 // takes hold. The turret crew remains enabled, and no movement is issued after the
-                // single exact doMove below.
+                // single exact commandMove below.
                 private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {
                     _handoverPilot checkAIFeature _x
                 };
@@ -102,7 +105,7 @@ private _finish={
                 _handoverPilot doTarget objNull;
                 _handoverPilot doWatch objNull;
                 // doTarget clears only the actor-level target. The attack controller's group-issued
-                // ATTACK command can otherwise survive and reject the replacement doMove before the
+                // ATTACK command can otherwise survive and reject the replacement MOVE before the
                 // guard begins. Release that command once at the same authority layer.
                 (crew _aircraft) commandTarget objNull;
                 if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
@@ -118,10 +121,15 @@ private _finish={
                         distance2D _handoverPosition <= 2}) then {
                     _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
                 };
-                // The attack controller owned the previous pilot doMove. Replacing it once is
-                // cleanup, not a continuing tactic: this point is byte-for-byte the Zeus waypoint
-                // and the guard never invents or repeats a movement command.
-                _handoverPilot doMove _handoverPosition;
+                // ATTACK includes an engine formation/engage task. Return the vehicle crew to its
+                // ordinary formation first, then issue one group-command MOVE to the byte-for-byte
+                // Zeus waypoint and force the local movement planner to adopt that same point. Live
+                // dedicated evidence showed commandMove/setDestination alone could intermittently
+                // leave the engage task active. This is cleanup, not a continuing tactic; the guard
+                // never invents or repeats movement.
+                (crew _aircraft) doFollow leader _handoverGroup;
+                _handoverPilot commandMove _handoverPosition;
+                _handoverPilot setDestination [_handoverPosition,"LEADER PLANNED",true];
                 _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
                 [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverCombatMode,
                     _handoverGroupCombatMode,_handoverAttackEnabled,_handoverPosition,
@@ -175,7 +183,8 @@ private _finish={
                 behaviour _handoverPilot,
                 unitCombatMode _handoverPilot,
                 currentCommand _handoverPilot,
-                "ZEUS_TRANSIT_GUARD"
+                "ZEUS_TRANSIT_GUARD",
+                expectedDestination _handoverPilot
             ],true];
         };
         if (_resume) then {

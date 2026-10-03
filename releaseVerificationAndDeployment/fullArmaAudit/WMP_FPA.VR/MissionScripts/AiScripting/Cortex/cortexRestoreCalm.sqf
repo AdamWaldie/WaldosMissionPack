@@ -29,8 +29,9 @@
  * 5: force transition record <BOOL>, false; used only when a new owner must replace a stale public
  *    phase even though its fresh local state already begins in CALM.
  * Repeat/JIP: removes only WMP transient orders and restores recorded values.
- * Explicitly tracked Cortex holds restore PATH and resume formation even if combat relabelled doStop
- * as ATTACK/FIRE. Search teams never restore PATH because Cortex did not disable it for that action;
+ * Explicitly tracked Cortex holds and their public actor markers restore PATH and resume formation
+ * even if local state vanished during migration or combat relabelled doStop as ATTACK/FIRE.
+ * Search teams never restore PATH because Cortex did not disable it for that action;
  * ordinary cleanup ends their stale search move, while external takeover preserves a replacement
  * MOVE or other command. Commands which cannot be a combat-side effect of a hold survive.
  * Pending remount intent is public for owner migration; GroupTick retries for up to 60 seconds.
@@ -55,7 +56,10 @@ if (count (_state getOrDefault ["drill",createHashMap]) > 0) then {
 private _releaseOwnedHold={
     params ["_unit",["_restorePath",true],["_returnSearchTeam",false]];
     if (local _unit && {group _unit == _group}) then {
-        if (_restorePath) then {_unit enableAI "PATH"};
+        if (_restorePath) then {
+            _unit enableAI "PATH";
+            _unit setVariable ["Waldo_Cortex_SupportPathHold",nil,true];
+        };
         private _command=toUpperANSI currentCommand _unit;
         private _ownedHold=_command in ["","STOP","ATTACK","FIRE","SUPPRESS"];
         if (_ownedHold || {_returnSearchTeam && {!_yieldToExternal}}) then {
@@ -63,9 +67,11 @@ private _releaseOwnedHold={
         };
     };
 };
+private _supportHeld=_state getOrDefault ["supportHeld",[]];
 {
-    [_x,true,false] call _releaseOwnedHold;
-} forEach (_state getOrDefault ["supportHeld",[]]);
+    if (_x getVariable ["Waldo_Cortex_SupportPathHold",false]) then {_supportHeld pushBackUnique _x};
+} forEach units _group;
+{[_x,true,false] call _releaseOwnedHold} forEach _supportHeld;
 _state deleteAt "supportHeld";
 _state deleteAt "supportBoundSequence";
 // Withdrawals, calm restoration and external handovers retire the shared assignment.

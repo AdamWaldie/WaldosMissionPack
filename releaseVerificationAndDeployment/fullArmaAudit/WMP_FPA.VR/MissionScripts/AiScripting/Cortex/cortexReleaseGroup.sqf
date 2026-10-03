@@ -15,6 +15,7 @@
  * Cortex-owned AI feature switches and removing Cortex waypoints. Repeat/JIP: only tracked changes are
  * restored; repeated cleanup is harmless and never boards passengers.
  * Public remount intent is cancelled even when owner migration left no local behaviour map.
+ * A public actor marker likewise releases only PATH restrictions proven to belong to Cortex.
  * A crew owner also restores any forced speed borrowed for an onboard dismount safe stop.
  * Arguments:
  * 0: group <GROUP>
@@ -55,7 +56,8 @@ if (_externalTakeover) then {
     [_group,false] call Waldo_fnc_CortexClearRelease;
     [_group,false] call Waldo_fnc_CortexGarrisonRelease;
 };
-if (local _group && {count _state > 0 || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
+private _markedSupportHold=(units _group) findIf {_x getVariable ["Waldo_Cortex_SupportPathHold",false]} >= 0;
+if (local _group && {count _state > 0 || {_markedSupportHold} || {(_group getVariable ["Waldo_Cortex_Remount",[]]) isNotEqualTo []}}) then {
     if (count (_state getOrDefault ["drill", createHashMap]) > 0) then {[_group, _state, ["RELEASE","ZEUS"] select _externalTakeover] call Waldo_fnc_CortexFlankEnd};
     [_group, _state, false, _externalTakeover, _reason] call Waldo_fnc_CortexRestoreCalm;
 };
