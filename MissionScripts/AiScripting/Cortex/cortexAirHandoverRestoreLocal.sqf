@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Restores the pilot AI features temporarily leased while a direct Zeus aircraft order takes over
- * from a finite Cortex attack. The token prevents an older delayed restore from altering a newer
- * handover, and only features observed enabled at lease start are restored. Gunners are untouched.
+ * Restores legacy pilot AI features from an aircraft handover lease created by an older Cortex
+ * runtime. Current attacks release directly to Zeus without creating this lease. The token prevents
+ * stale delayed cleanup from altering a newer order, and gunners are untouched.
  * Locality/authority: current aircraft owner. A local caller, the server, or the owner recorded when
  * the lease began may request restoration after locality migration.
  * Repeat/JIP: token guarded and repeat safe. The short lease is transient and is never replayed to
@@ -15,7 +15,8 @@
  * curator-authored behaviour <STRING>, default "". A valid final behaviour is restored to both
  * the group and pilot after the bounded CARELESS transit lease.
  * Return Value: BOOL true when the current lease was restored, otherwise false.
- * Current callers: delayed Zeus-handover cleanup in Waldo_fnc_CortexAirAttack.
+ * Current callers: function registry and compatibility cleanup for missions already carrying a
+ * pre-direct-release Waldo_Cortex_AirHandoverLease.
  * Example: [_heli,driver _heli,"heli:2:10.5",[],"RED","RED",true,"CARELESS","COMBAT","AWARE"]
  *     call Waldo_fnc_CortexAirHandoverRestoreLocal;
  */

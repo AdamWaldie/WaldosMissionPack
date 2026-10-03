@@ -386,8 +386,16 @@ deleteGroup _nativeHandoverGroup;
             && {_zeusSnapshot param [3,""] == "FULL"},
             str [_replacement,_replacementWaypoint,_group getVariable ["Waldo_AIPass_ZeusHold",[]],_zeusSnapshot]] call _recordCheck;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
+        private _handoverReleased=(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []
+            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
+            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [5,""] == "DIRECT_RELEASE"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
+        [_id+"-no-protected-cortex-lease",_released && {_handoverReleased},str [
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]],
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]
+        ]] call _recordCheck;
         [_id+"-zeus-replacement-travel",_released && {_travelled},str [
             _aircraft distance2D _replacement,getPosATL _aircraft,currentCommand (driver _aircraft),
             assignedTarget (driver _aircraft),expectedDestination (driver _aircraft),
@@ -414,16 +422,12 @@ deleteGroup _nativeHandoverGroup;
         ]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
         [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;
-        // The production handover owns a bounded 100-second lease so a slow aircraft can finish
-        // turning onto the curator leg. Wait for that real cleanup instead of sampling just before
-        // its deadline and misreporting an active lease as a restoration failure.
-        private _handoverRestored=[{(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []},15] call _wait;
         [_id+"-no-old-plan-resurrection",(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo [],str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
         [_id+"-pilot-features-restored",
             (["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x}) isEqualTo _handoverFeaturesBefore
                 && {unitCombatMode _handoverPilot == _handoverCombatModeBefore}
                 && {combatMode _group == _handoverGroupCombatModeBefore}
-                && {_handoverRestored},
+                && {_handoverReleased},
             str [_handoverFeaturesBefore,["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x},
                 [_handoverBehaviourExpected,behaviour _handoverPilot],[_handoverCombatModeBefore,unitCombatMode _handoverPilot],
                 [_handoverGroupCombatModeBefore,combatMode _group],
