@@ -5,6 +5,10 @@
  * The server strips private hash-map state into a public array, broadcasts it for current/JIP
  * clients, then asks interface machines to reconcile markers and controller actions. It is called
  * after registration and every state/controller/orbit/service transition.
+ * Locality and authority: Server-only public summary publication; each interface client
+ * reconciles its own marker and controller actions from the published state.
+ * Repeat/JIP: Replaces the current summary and object/action replay rather than accumulating
+ * stale entries. Joining clients receive the latest complete system list.
  *
  * Arguments:
  * None
@@ -14,6 +18,8 @@
  *
  * Example:
  * private _summaries = [] call Waldo_fnc_GunshipPublishState;
+ * Current callers: GunshipRegister, GunshipServerHandle, GunshipSetState and GunshipDestroy.
+ * Result: Current and joining clients have the same gunship summaries and refreshed actions.
  */
 
 if !(isServer) exitWith {[]};

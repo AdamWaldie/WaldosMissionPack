@@ -1,6 +1,14 @@
 /*
- * NATO communications receiver tuning procedure.
- * Config: [channels(1..5), tolerance(0.02..0.15), holdTime, timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the communications receiver tuning procedure.
+ * Locality and authority: Runs in a private client display; the resolver reports its
+ * final outcome. Repeated attempts reset the tuning state and are not JIP replayed.
+ * Arguments: 0: config <ARRAY> [channels 1..5, tolerance 0.02..0.15, holdTime,
+ *   timeLimit, title] ([] defaults); 1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[3, 0.05, 1, 30, "COMMUNICATIONS UNIT"], {}] call Waldo_fnc_MiniGameRadioTune;
+ * Result: The player sees the radio-tuning procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

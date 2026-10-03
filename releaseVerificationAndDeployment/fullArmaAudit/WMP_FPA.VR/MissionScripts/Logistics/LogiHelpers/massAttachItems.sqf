@@ -1,25 +1,18 @@
 /*
-This script attaches multiple objects to a vehicle object.
-
-parameters:
-_targetObject - variable name of the vehicle/object you wish to attach the objects to.
-
-
-Setting Up in Eden;
-    - Place the vehicle or object that you want to attach all other items to.
-    - Place a Game Logic down as close as possible to the object. This can be found near the same menu as Modules.
-    - Place any objects you wish to attach.
-    - If you are using a vehicle as your primary object and any of your objects should be resting on the floor, then raise them about a foot, to allow for the drop of the vehicle's suspension once the game has initialised.
-    - Select all the objects that will be attached, right-click and synchronise them to the Game Logic.
-    - In the init of the vehicle, paste the example below, and alter it to suit the needs you have.
-
-Example call:
-
-In vehicle init:
-
-[variableNameOfObjectToAttachOthersTo] call Waldo_fnc_MassAttachRelative;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Purpose: Attach every object synchronized to the nearest Game Logic to one parent while
+ * keeping each child's authored relative position. This is a manual Eden layout helper.
+ * Locality/authority: intended for the parent object's Eden Init on each machine. There is no
+ * server authority check or owner dispatch; test movable vehicles in multiplayer.
+ * Repeat/JIP: no registration, action, or explicit state replay. Eden Init repeats for joining
+ * clients; dynamically spawned parents need their own setup path.
+ * Arguments:
+ * 0: parent <OBJECT> (required) - existing vehicle or other world object.
+ * Return Value: Nothing useful; the function iterates the synchronized objects.
+ * Current callers: mission-maker Eden parent Init fields and manual compositions.
+ * Example: [this] call Waldo_fnc_MassAttachRelative;
+ * Result: the nearest Logic's synchronized children are attached at their Eden offsets.
+ */
 
 params["_targetObject"];
 

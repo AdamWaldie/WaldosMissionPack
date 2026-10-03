@@ -8,7 +8,7 @@ Dynamic AO is a runtime-only, server-authoritative generator. It does not requir
 
 ## Quick setup in Zeus
 
-Open **Modules → WMP AI & Combat → Dynamic AO - Create** and place it at the intended centre. The dialog uses a live **enemy faction and side** selector. Entries are friendly names such as `[OPFOR] CSAT`; no config classname or separate side selection is required, so the two values cannot contradict each other.
+Open **Modules → WMP Cortex → Dynamic AO - Create** and place it at the intended centre. The dialog uses a live **enemy faction and side** selector. Entries are friendly names such as `[OPFOR] CSAT`; no config classname or separate side selection is required, so the two values cannot contradict each other.
 
 Vehicle and air percentages are relative weights. They do not need to total 100. Empty categories automatically fall through to a non-empty category belonging to the selected faction. Generated units use WMP's active AI profile (Line by default), including its faction, role, night-equipment and locality handling; Dynamic AO does not maintain a competing skill slider. Ground patrols begin in SAFE behaviour at LIMITED speed so they walk or drive as an ambient patrol until contact changes their state. Infantry select column, staggered column or wedge once per route; aircraft retain AWARE/NORMAL flight behaviour. The create module exposes every bounded AO option listed below.
 
@@ -72,7 +72,7 @@ Both destroy calls forward client requests and immediately return `true` there; 
 | `faction` | String (`CfgFactionClasses` classname) | required | Runtime faction containing public assets |
 | `radius` | Number (metres) | `500` | 100–2000 m |
 | `patrolGroups` | Number (whole) | `3` | 0–12; four to eight infantry per group |
-| `garrisonGroups` | Number (whole) | `3` | 0–30; two to four infantry per building, capped by usable buildings |
+| `garrisonGroups` | Number (whole) | `3` | 0–30; two to four infantry per building, capped by usable buildings. With Smart AI and `Waldo_AIPass_Garrison_DynamicAO` enabled, garrisons watch outward, duck under fire and break at heavy losses |
 | `staticTurrets` | Number (whole) | `0` | 0–20 manned faction static weapons |
 | `vehiclePatrols` | Number (whole) | `0` | 0–10 |
 | `vehicleMix` | Array of 3 numbers | `[34,33,33]` | Car/APC/tank relative weights |

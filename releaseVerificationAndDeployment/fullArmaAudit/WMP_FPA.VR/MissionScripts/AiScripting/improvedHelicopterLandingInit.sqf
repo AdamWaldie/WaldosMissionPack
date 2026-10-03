@@ -2,18 +2,25 @@
  * Author: WaldoTheWarfighter
  * Installs the repeat-safe event-driven handlers for improved AI helicopter landings. It mirrors
  * the AI skill system: a CBA class-init event catches editor, Zeus and scripted helicopters, while
- * client and player machines. On the server, every non-UAV helicopter is excluded from automatic
+ * client and player machines. Parachutes are excluded before installing any flight controller or pin.
+ * On the server, every non-UAV helicopter is excluded from automatic
  * ACE/WMP headless-client transfer before its crew is considered for balancing. Dedicated testing
  * showed airborne helicopters losing stable flight immediately after an ACE `setGroupOwner`
  * transition, before this landing controller ever activated. Keeping the aircraft group on the
  * server avoids that engine/locality transition while still allowing WMP AI skill values to be
  * applied to its crew. Only the machine owning an aircraft runs its tracker.
+ * Locality and authority: Each machine installs local class-init and ownership handlers. The
+ * current helicopter owner runs the flight tracker; server-side ownership exclusions remain
+ * with the server.
+ * Repeat/JIP: A local installed flag prevents duplicate handlers. JIP and new owners install
+ * their own handler but do not share a competing flight controller.
  *
  * Arguments: None.
  *
  * Return Value: BOOL - true when the handlers are installed or were already present.
  *
  * Example: [] call Waldo_fnc_ImprovedHelicopterLandingInit;
+ * Result: Returns true after handler installation or when they were already installed.
  * Current caller: init.sqf on every machine, including JIP and headless clients.
  */
 
@@ -22,7 +29,7 @@ missionNamespace setVariable ["Waldo_ImprovedHelicopterLanding_HandlerInstalledL
 
 private _install = {
     params [["_helicopter", objNull, [objNull]]];
-    if (isNull _helicopter || {!(_helicopter isKindOf "Helicopter")} || {getNumber (configOf _helicopter >> "isUav") != 0}) exitWith {};
+    if (isNull _helicopter || {!(_helicopter isKindOf "Helicopter")} || {_helicopter isKindOf "ParachuteBase"} || {getNumber (configOf _helicopter >> "isUav") != 0}) exitWith {};
     // ACE Headless checks this public vehicle flag before every automatic transfer. Set it on the
     // aircraft itself so it is already effective when an empty helicopter receives crew later.
     // The server is authoritative for this compatibility boundary; clients only install locality

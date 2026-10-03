@@ -8,7 +8,7 @@
  * the flare, while deletion or editing of that waypoint always releases the aircraft immediately.
  * LastResult is broadcast on the helicopter for locality-safe diagnostics and QA.
  * Locality and authority: Only the current helicopter owner may drive this AI approach.
- * It checks its pilot, waypoint and ownership before and during control.
+ * It checks its pilot, waypoint, direct Zeus hold and ownership before and during control.
  * Repeat/JIP: One control revision owns an approach. A changed waypoint, pilot or locality
  * aborts that run; the published LastResult is readable by joining clients.
  *
@@ -168,6 +168,7 @@ while {
             || {!_pilotAwake}
             || {isPlayer _pilot}
             || {!isNull (remoteControlled _pilot)}
+            || {[_group] call Waldo_fnc_CortexZeusHeld}
             || {!isEngineOn _helicopter}
             || {!isNull (getSlingLoad _helicopter)}
             || {!canMove _helicopter}

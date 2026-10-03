@@ -17,6 +17,9 @@
  * Return Value: Nothing.
  * Current caller: Create Custom 3D Marker ZEN module.
  * Example: [_modulePos, _objectPos] call Waldo_fnc_ZenCreate3DMarker;
+ * Result: The curator can submit a visible marker with named icon and audience choices.
+ * Locality and authority: Curator-local dialog; the server validates and publishes the
+ * chosen marker. Repeated placements create separate IDs, and JIP receives marker state.
  */
 params [["_modulePos", [], [[]]], ["_objectPos", objNull, [objNull]]];
 if (!hasInterface) exitWith {};

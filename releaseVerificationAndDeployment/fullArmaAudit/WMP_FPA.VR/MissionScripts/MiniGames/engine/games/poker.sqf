@@ -18,6 +18,7 @@
  * Return Value: Nothing; defines runtime values/functions.
  * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
  * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
+ * Result: Poker rules are available to registered tables.
  */
 
 Waldo_MG_fnc_pokerCardRank = {
@@ -2089,4 +2090,3 @@ Waldo_MG_fnc_openPokerLocal = {
     };
 }; 
  
-

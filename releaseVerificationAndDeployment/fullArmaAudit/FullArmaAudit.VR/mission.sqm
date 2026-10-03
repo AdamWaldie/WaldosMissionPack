@@ -1,8 +1,8 @@
 version=12;
 class Mission
 {
-    addOns[]={"A3_Characters_F_BLUFOR","A3_Map_VR"};
-    addOnsAuto[]={"A3_Characters_F_BLUFOR","A3_Map_VR"};
+    addOns[]={"A3_Characters_F_BLUFOR","A3_Map_VR","A3_Functions_F"};
+    addOnsAuto[]={"A3_Characters_F_BLUFOR","A3_Map_VR","A3_Functions_F"};
     randomSeed=210032;
     class Intel
     {
@@ -18,7 +18,7 @@ class Mission
     };
     class Groups
     {
-        items=1;
+        items=3;
         class Item0
         {
             side="WEST";
@@ -30,6 +30,24 @@ class Mission
                 class Item2 {position[]={4,0,0}; id=2; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
                 class Item3 {position[]={6,0,0}; id=3; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
                 class Item4 {position[]={8,0,0}; id=4; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
+            };
+        };
+        class Item1
+        {
+            side="LOGIC";
+            class Vehicles
+            {
+                items=1;
+                class Item0 {position[]={20,0,0}; id=5; side="LOGIC"; vehicle="HeadlessClient_F"; player="PLAY CDG"; leader=1; skill=0.6; text="WMPAuditHC1";};
+            };
+        };
+        class Item2
+        {
+            side="LOGIC";
+            class Vehicles
+            {
+                items=1;
+                class Item0 {position[]={22,0,0}; id=6; side="LOGIC"; vehicle="HeadlessClient_F"; player="PLAY CDG"; leader=1; skill=0.6; text="WMPAuditHC2";};
             };
         };
     };

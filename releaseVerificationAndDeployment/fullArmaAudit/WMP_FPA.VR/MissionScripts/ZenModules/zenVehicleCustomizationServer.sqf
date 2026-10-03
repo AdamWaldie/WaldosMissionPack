@@ -11,6 +11,10 @@
  * dispatches the Vehicle Customisation - Editor's whole Pending Changes list by row type in one call.
  * Turret/pylon rows are routed onward to the vehicle's current locality (server, player or headless
  * client); when that is asynchronous, the locality owner sends the result directly to the curator.
+ * Locality and authority: Server authenticates the curator and dispatches each operation to its
+ * required owner; weapon and pylon rows may complete on a remote vehicle owner.
+ * Repeat/JIP: Each Apply request validates live vehicle state again. The vehicle's resulting
+ * engine/customisation state is current state, not a replayed editor request.
  *
  * Arguments:
  * 0: Vehicle <OBJECT>
@@ -32,6 +36,8 @@
  *
  * Current caller: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Apply All Pending button).
+ * Result: Valid rows are applied or dispatched by type, and each synchronous outcome is reported
+ * to the curator; remote-owner weapon rows report separately.
  */
 
 params [["_vehicle", objNull, [objNull]], ["_rows", [], [[]]], ["_requester", objNull, [objNull]]];

@@ -4,18 +4,24 @@
  *
  * The registry entry is removed before world deletion so deleting the hidden AO anchor cannot
  * recursively start cleanup. Called directly by mission scripts, the ZEN cleanup module and the
- * anchor Deleted event handler.
+ * anchor Deleted event handler. Repeat calls are safe: a missing id returns false on the server.
+ * Server cleanup republishes the compact AO summary for current clients and JIP.
+
+ * Locality and authority: the server deletes AO state and world objects. A client call is forwarded
+ * to the server and returns before server cleanup finishes.
  *
  * Arguments:
- * 0: AO id <STRING>
+ * 0: AO id <STRING> (default empty) - exact id used at creation
  *
  * Return Value:
- * Boolean - true when a registered AO was removed
+ * Boolean - server: true if a registered AO was removed, false if absent. Client: true when sent,
+ * not confirmation that the id existed or cleanup finished.
  *
  * Current callers: mission scripts, DynamicAORemoveZen and centre-anchor Deleted handlers.
  *
  * Example:
  * ["AO_NORTH"] call Waldo_fnc_DynamicAODestroy;
+ * Result: the server removes AO_NORTH if registered and publishes the updated AO list.
  */
 params [["_id", "", [""]]];
 if !(isServer) exitWith {[_id] remoteExecCall ["Waldo_fnc_DynamicAODestroy", 2]; true};

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get build marker class.
+ * Resolves an icon path to a valid CfgMarkers type for a building marker.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _iconPath <STRING> - icon path (optional, default: "")
  *
  * Return Value:
- * Any - see function body
+ * <STRING> marker type, defaulting to mil_dot.
  *
  * Example:
  * [_iconPath] call Waldo_fnc_EcoBuild_getBuildMarkerClass;
+ * Locality/Authority: Any machine; pure marker-config lookup.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Building marker refresh.
+ * Result: Unknown icons use the vanilla dot marker.
  */
 
         params [["_iconPath", ""]];

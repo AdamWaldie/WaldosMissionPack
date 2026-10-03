@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Set build config tab.
+ * Switches the curator Construction editor between its supported tabs.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
  * 1: _tab <STRING> - tab (optional, default: "definitions")
  *
  * Return Value:
@@ -13,6 +13,10 @@
  *
  * Example:
  * [_disp, _tab] call Waldo_fnc_EcoBuild_setBuildConfigTab;
+ * Locality/Authority: Curator interface client; local UI only.
+ * Repeat/JIP Behaviour: Re-selecting a tab refreshes the same display; no JIP UI state.
+ * Current Callers: Construction editor tab buttons and initial setup.
+ * Result: Only controls for the selected tab remain visible.
  */
 
         params [["_disp", displayNull], ["_tab", "definitions"]];

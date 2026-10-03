@@ -14,6 +14,7 @@
  * Return Value: Boolean.
  * Current callers: initPlayerLocal.sqf.
  * Example: [] call Waldo_fnc_MiniGamesInitPlayerLocal;
+ * Result: This client installs table presentation and requests current server metadata.
  */
 
 if (!hasInterface) exitWith {false};

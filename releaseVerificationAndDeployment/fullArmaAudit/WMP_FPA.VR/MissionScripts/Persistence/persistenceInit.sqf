@@ -6,6 +6,10 @@
  * answers FOUND/NONE and any required ACRE restore/baseline has completed. A missing response fails
  * open for gameplay after 30 seconds while persistence writes remain closed, preventing an unread
  * database record from being overwritten. JIP clients perform the same bounded handshake.
+ * Locality and authority: Server owns database setup and registered-object state. Each interface
+ * client owns its local capture/apply loop after receiving runtime state.
+ * Repeat/JIP: Startup guards prevent duplicate loops. Joining players request their own saved
+ * state before writes are permitted.
  *
  * Arguments:
  * None
@@ -15,6 +19,9 @@
  *
  * Example:
  * [] spawn Waldo_fnc_PersistenceInit;
+ * Result: Returns true when this machine accepts or already has startup work, or false when
+ * disabled or unable to start; server and client branches perform different work.
+ * Current callers: initServer.sqf, initPlayerLocal.sqf and runtime feature activation.
  */
 
 if (!isServer && {hasInterface} && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {

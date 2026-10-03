@@ -6,6 +6,7 @@
  * Arguments: transfer display <DISPLAY>. Return Value: <BOOL> refreshed.
  * Current callers: panel open, queue buttons and server-result callback.
  * Example: [_display] call Waldo_fnc_SupplyTransfersRefreshLocal;
+ * Result: The open panel reflects current inventory, destination and queued transfer rows.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {false};

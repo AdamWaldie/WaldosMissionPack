@@ -6,6 +6,7 @@
  * Arguments: container <OBJECT>. Return Value: [items, weapons, magazines, backpacks] <ARRAY> or [].
  * Current callers: supply-transfer ACE children and server request/verification.
  * Example: private _contents = [crate] call Waldo_fnc_SupplyTransfersSnapshot;
+ * Result: Returns a lossless inventory snapshot, or [] when it cannot be represented safely.
  */
 params [["_container", objNull, [objNull]]];
 if (isNull _container) exitWith {[]};

@@ -1,0 +1,74 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Returns the behaviour profile values that apply to a group.
+ *
+ * Behaviour profiles sit alongside AI Rebalance's skill profiles and use the same names (MILITIA,
+ * LINE, VETERAN, ELITE, LEGACY), so choosing a WMP opposition profile changes morale and optional
+ * preparation details as well as how well squads shoot. Skill values are never changed here;
+ * live orders, contact geometry and safe avenues choose movement rather than this profile. Resolution order:
+ * 1. the group variable Waldo_AIPass_Profile (a mission maker's per-group choice);
+ * 2. Waldo_AIPass_FactionProfiles (a map of CfgFactionClasses name to profile) for the leader's faction;
+ * 3. Waldo_AIPass_BehaviourProfile, the mission-wide tuning choice ("" to follow AI Rebalance);
+ * 4. Waldo_AIRebalance_Profile, the active AI Rebalance profile (PUBLIC and STANDARD map to MILITIA
+ *    and LINE);
+ * 5. LINE.
+ * Waldo_AIPass_Aggression (default 1.2, set live by the AI Tuning Zeus module) then scales chance
+ * keys, capped at 1. Legacy movement keys are still resolved only for configuration compatibility.
+ * Missing keys in a mission-edited profile fall back to LINE's values, and an unknown profile name
+ * uses LINE.
+ * Legacy keys flankChance, advanceChance and coordinatedChance remain readable for mission/config
+ * compatibility but no longer assign a squad a movement pattern or block shared-contact action;
+ * investigateChance remains a 0-1 post-contact search roll;
+ * assaultChance is the 0-1 chance of preparing an eligible assault with a safe carried grenade,
+ * while the enabled assault transition itself remains deterministic after a successful manoeuvre.
+ * moraleShaken and moraleBroken (morale thresholds), retreatScale (multiplies
+ * Waldo_AIPass_Morale_RetreatDistance), surrenderSurvivors (largest squad that may surrender).
+ * Locality and authority: read-only; callable anywhere.
+ *
+ * Arguments:
+ * 0: group <GROUP>
+ * 1: key <STRING> - one value to return (optional, default: "" returns the whole map)
+ *
+ * Return Value:
+ * HashMap or Number - the resolved profile, or one value from it
+ *
+ * Example:
+ * private _chance = [_group, "assaultChance"] call Waldo_fnc_CortexProfile;
+ * Result: the chance of optional grenade preparation, not permission to begin moving.
+ *
+ * Current callers: assault preparation, investigation, morale and retreat.
+ */
+
+params [["_group", grpNull, [grpNull]], ["_key", "", [""]]];
+private _table = missionNamespace getVariable ["Waldo_AIPass_ProfileBehaviour", createHashMap];
+private _name = _group getVariable ["Waldo_AIPass_Profile", ""];
+if (_name == "") then {
+    _name = (missionNamespace getVariable ["Waldo_AIPass_FactionProfiles", createHashMap]) getOrDefault [faction leader _group, ""];
+};
+if (_name == "") then {_name = missionNamespace getVariable ["Waldo_AIPass_BehaviourProfile", ""]};
+if (_name == "") then {
+    _name = if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
+        missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
+    } else {"LINE"};
+};
+_name = toUpperANSI _name;
+if (_name == "PUBLIC") then {_name = "MILITIA"};
+if (_name == "STANDARD") then {_name = "LINE"};
+private _defaults = createHashMapFromArray [
+    ["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6],
+    ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]
+];
+private _line = _table getOrDefault ["LINE", createHashMap];
+private _profile = _table getOrDefault [_name, _line];
+private _aggression = (missionNamespace getVariable ["Waldo_AIPass_Aggression", 1.2]) max 0;
+private _chanceKeys = ["flankChance", "assaultChance", "advanceChance", "investigateChance", "coordinatedChance"];
+if (_key != "") exitWith {
+    private _value = _profile getOrDefault [_key, _line getOrDefault [_key, _defaults getOrDefault [_key, 0]]];
+    if (_key in _chanceKeys) then {_value = (_value * _aggression) min 1};
+    _value
+};
+private _merged = +_defaults;
+_merged merge [_line, true];
+_merged merge [_profile, true];
+{_merged set [_x, ((_merged get _x) * _aggression) min 1]} forEach _chanceKeys;
+_merged

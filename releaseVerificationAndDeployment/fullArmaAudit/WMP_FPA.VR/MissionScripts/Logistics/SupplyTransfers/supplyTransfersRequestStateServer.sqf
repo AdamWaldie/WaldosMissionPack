@@ -6,6 +6,7 @@
  * Arguments: player <OBJECT>. Return Value: <BOOL> sent.
  * Current caller: Waldo_fnc_SupplyTransfersSetupLocal during player startup.
  * Example: [player] remoteExecCall ["Waldo_fnc_SupplyTransfersRequestStateServer", 2];
+ * Result: The requester receives the current registered-container snapshot.
  */
 params [["_player", objNull, [objNull]]];
 if (!isServer || {isNull _player}) exitWith {false};

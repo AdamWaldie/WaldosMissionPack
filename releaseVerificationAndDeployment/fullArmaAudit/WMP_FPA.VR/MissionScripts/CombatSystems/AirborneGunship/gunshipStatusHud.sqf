@@ -26,6 +26,9 @@
  * Example:
  * [true, "SPECTRE 1", "SERVICING", "REQUEST", serverTime + 120] call Waldo_fnc_GunshipStatusHud;
  * [false] call Waldo_fnc_GunshipStatusHud;
+ * Repeat/JIP: Each call updates the same local controls; a disabled call hides them. Joining
+ * clients only see the panel if they request it through the current self-action.
+ * Result: The controller's reserved off-station panel is shown with current data or hidden.
  */
 
 if !(hasInterface) exitWith {false};

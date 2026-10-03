@@ -88,11 +88,12 @@
   },
   {
     "category": "core",
-    "module": "Convoy - Create Moving Group",
+    "module": "Create Convoy",
     "handler": "Waldo_fnc_ZenConvoyModule",
     "script_api": "Waldo_fnc_SimpleAiConvoy",
     "parity": "full",
-    "notes": "Speed, separation and push-through match the script API."
+    "notes": "Exact selected vehicle, configure/stop, speed, separation and push-through use the authenticated server script API. The owner applies registration asynchronously.",
+    "via": "Waldo_fnc_FeatureRuntimeApply"
   },
   {
     "category": "core",
@@ -422,12 +423,25 @@
   },
   {
     "category": "core",
-    "module": "AI Rebalance - Control",
+    "module": "Cortex Control",
     "handler": "Waldo_fnc_FeatureRuntimeZen",
     "via": "Waldo_fnc_FeatureRuntimeApply",
-    "script_api": "Waldo_fnc_AIRebalanceInit",
+    "script_api": "Waldo_fnc_CortexTuning",
     "parity": "adapter",
-    "notes": "Enable state, day or night mode and named profile are published before locality-aware application."
+    "notes": "Purpose pages combine feature switches and tuning. Named settings are validated against one specification and applied as an ordered revision before local workers react."
+  },
+  {
+    "category": "core",
+    "module": "Garrison Buildings",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_CortexOrderDispatch",
+      "Waldo_fnc_CortexOrderLocal"
+    ],
+    "script_api": "Waldo_fnc_CortexGarrison",
+    "parity": "adapter",
+    "notes": "Selected group receives one purpose-specific order through current-owner dispatch and acknowledgement."
   },
   {
     "category": "core",
@@ -766,5 +780,87 @@
       "anchor object or fixed position remains untouched",
       "REMOVE_3D_MARKER"
     ]
+  },
+  {
+    "category": "core",
+    "module": "Assign Artillery Spotter",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_CortexOrderDispatch"
+    ],
+    "script_api": "Waldo_fnc_CortexSetSpotter",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Configure Artillery Battery",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_CortexSetArtilleryRole",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Configure Counter-battery Radar",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_CortexRegisterRadar",
+    "parity": "adapter",
+    "notes": "Exact selected object, labelled setup controls, authenticated server validation and durable public state."
+  },
+  {
+    "category": "core",
+    "module": "Defend Position",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_CortexOrderDispatch",
+      "Waldo_fnc_CortexOrderLocal"
+    ],
+    "script_api": "Waldo_fnc_CortexDefend",
+    "parity": "adapter",
+    "notes": "Selected group receives one purpose-specific order through current-owner dispatch and acknowledgement."
+  },
+  {
+    "category": "core",
+    "module": "Clear Building",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_CortexOrderDispatch",
+      "Waldo_fnc_CortexOrderLocal"
+    ],
+    "script_api": "Waldo_fnc_CortexClearBuilding",
+    "parity": "adapter",
+    "notes": "Selected group receives one purpose-specific order through current-owner dispatch and acknowledgement."
+  },
+  {
+    "category": "core",
+    "module": "Parachute Passengers",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_CortexOrderDispatch",
+      "Waldo_fnc_CortexOrderLocal"
+    ],
+    "script_api": "Waldo_fnc_CortexAirborneDrop",
+    "parity": "adapter",
+    "notes": "Selected group receives one purpose-specific order through current-owner dispatch and acknowledgement."
+  },
+  {
+    "category": "core",
+    "module": "Manage Group Control",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": [
+      "Waldo_fnc_FeatureRuntimeApply",
+      "Waldo_fnc_CortexOrderDispatch",
+      "Waldo_fnc_CortexOrderLocal"
+    ],
+    "script_api": "Waldo_fnc_CortexGarrisonRelease",
+    "parity": "adapter",
+    "notes": "Selected group receives one purpose-specific order through current-owner dispatch and acknowledgement."
   }
 ]

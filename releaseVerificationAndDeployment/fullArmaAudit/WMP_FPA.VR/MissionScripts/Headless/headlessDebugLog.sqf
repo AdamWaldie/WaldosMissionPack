@@ -32,6 +32,8 @@
  *
  * Example:
  * ["REBALANCE", "eligible=4 excluded=2 queuedNow=1 loadByOwner=[[3,2],[4,2]]"] call Waldo_fnc_HeadlessDebugLog;
+ * Result: With extended debug enabled, writes one diagnostic line and shows it to connected
+ * curators. With debug off, returns without formatting or sending a message.
  *
  * Current callers: Waldo_fnc_HeadlessRegisterClient, Waldo_fnc_HeadlessRebalance,
  * Waldo_fnc_HeadlessMigrateGroup, Waldo_fnc_HeadlessReassignOnDisconnect.

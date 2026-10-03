@@ -10,6 +10,7 @@
  * Return Value: Boolean - true when the call was valid or the table was already absent.
  * Current callers: Mission scripts and the registered table Deleted event handler.
  * Example: [this] call Waldo_fnc_MiniGamesUnregisterTable;
+ * Result: The table leaves the server registry and clients remove its local actions.
  */
 
 params [["_table", objNull, [objNull]]];

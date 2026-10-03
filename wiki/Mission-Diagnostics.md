@@ -89,6 +89,12 @@ Each interface client reports:
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 
+For each sampled server-local Cortex group with an active flank, advance or coordinated bound,
+`cortex-drill-health-*` reports the scheduler heartbeat age, its bounded watchdog threshold, the
+current movement lease and any SafeStart/ENDEX resumption grace. An overdue heartbeat is `ERROR`.
+The owner restores its temporary AI restrictions through the common drill cleanup path; the row does
+not infer success from a waypoint, flag or stored order.
+
 **Related, but not a diagnostic check:** `initPlayerLocal.sqf` also calls
 `Waldo_fnc_AceSetNameRespawnBindingRepair` after CBA/ACE initialise, patching a real ACE 3.21.1 bug
 rather than merely reporting it - ACE's own respawn hook forwarded the engine's `[unit, corpse]`
@@ -179,6 +185,8 @@ private _dialogue = [] call Waldo_fnc_DialogueGetDiagnostics;
 ```
 
 Each returns `[featureName, checks]`; every check is `[area, feature, state, detail]`. The interaction helper optionally accepts an array of configured equipment objects. `RunDiagnostics` consumes these same helpers, preventing its interpretation from drifting away from the feature's own health report.
+
+The Cortex helper also reports bounded runtime ownership rather than only enabled switches. Its on-demand rows identify stale remount assignments, post-contact transition intents, coordinated-support token disagreements and pending artillery relocations whose deadline or owning gate has expired. These rows do not run a repair loop or prove physical movement; `ERROR` means retained work no longer agrees with its current owner, phase, assignment or feature gate.
 
 A feature small enough to be a single config flag (Corpse Traps, Object Scaling, Emergency
 Dismount's client loop, the Feature Runtime Control snapshot, UI Theme, Accessibility) does not need

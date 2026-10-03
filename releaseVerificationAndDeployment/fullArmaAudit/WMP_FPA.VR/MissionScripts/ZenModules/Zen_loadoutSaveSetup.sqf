@@ -4,15 +4,21 @@
  * ACE and vanilla routes may coexist because the visible vanilla action is a
  * useful discoverability cue. Both routes call the same loadout function.
  * Called via remoteExec (including JIP) from Waldo_fnc_ZenLoadoutSaveModule.
+ * Locality and authority: Interface-client only; the server chooses and publishes the target.
+ * Repeat/JIP: Tracks each object's local action state to prevent duplicates. Object-keyed JIP
+ * replay installs the same actions for joining players.
  *
  * Arguments:
  * 0: target <OBJECT> - Object to receive the action
  *
  * Return Value:
- * Nothing
+ * <BOOL> - true after local installation. Invalid or non-interface targets exit without a
+ * meaningful return value.
  *
  * Example:
  * [someBox] call Waldo_fnc_ZenAddLoadoutSaveAction;
+ * Current caller: Waldo_fnc_ZenLoadoutSaveModule object-keyed client/JIP remote execution.
+ * Result: The object gains its local save-loadout interactions without duplicate actions.
  */
 
 params ["_target"];

@@ -8,6 +8,7 @@
  * Return Value: BOOL - true when accepted/already current; false without an interface or revision.
  * Current caller: Waldo_fnc_Marker3DRequestStateServer via owner-targeted remoteExecCall.
  * Example: [4, [["hq", [0,0,0]]]] call Waldo_fnc_Marker3DReceiveStateLocal;
+ * Result: This client's marker renderer uses the newest complete server snapshot.
  */
 params [["_revision", -1, [0]], ["_registry", [], [[]]]];
 if (!hasInterface || {_revision < 0}) exitWith {false};

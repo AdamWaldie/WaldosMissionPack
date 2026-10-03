@@ -24,6 +24,9 @@
  * Current callers: vehicleWeaponLoadoutCatalogBuild.sqf (per-weapon catalog defaults),
  * vehicleCustomizationPromptEditor.sqf (live Magazine combo), and
  * vehicleCustomizationCollectTurretRow.sqf (final compatibility validation before queueing).
+ * Locality and authority: Read-only config query on the caller; repeated calls have no lasting
+ * state and need no JIP replay.
+ * Result: Returns compatible magazine classnames and their display names.
  */
 
 params [["_weaponClass", "", [""]]];

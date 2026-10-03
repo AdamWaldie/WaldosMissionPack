@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies a server-validated position, pitch/bank/yaw orientation and optional uniform scale.
+ * Locality and authority: Server validates remote curator requests and changes the object.
+ * A client forwards the request and receives its original Object before server acceptance.
+ * Repeat/JIP: Another valid call changes the same object again; a Simple Object conversion can
+ * replace it. Shared transform state reaches JIP, so retain a returned replacement on the server.
  *
  * Position and direction are applied before scaling because Arma direction commands reset scale.
  * Scaling an ordinary free-standing object requires explicit Simple Object conversion. Currently
@@ -19,6 +23,9 @@
  *
  * Example:
  * private _result = [prop, [100, 100, 0], [0, 0, 45], "ATL", 1.5, true] call Waldo_fnc_ObjectTransformSet;
+ * Result: The server returns the transformed Object or objNull. A client return is only the
+ * original Object while the server request is pending.
+ * Current callers: Waldo_fnc_ObjectTransformSpawn and the full-pack transform audit station.
  */
 
 params [["_object", objNull, [objNull]], ["_position", [], [[]]], ["_angles", [0, 0, 0], [[]]], ["_mode", "ATL", [""]], ["_scale", -1, [0]], ["_asSimple", false, [false]]];

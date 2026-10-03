@@ -11,8 +11,11 @@
  * occlusion, radio-power burn-through (stronger radios shrink the effective field) and a
  * linear or inverse-square falloff. Reads only broadcast state; never changes anything. Kept as
  * lean as the feature set allows because the ACRE2 path calls it often.
+ * Locality and authority: Pure local calculation from server-published jammer entries; no
+ * registry or UI state is changed.
+ * Repeat/JIP: Stateless on every call. A joining client uses its current received registry.
  *
- * Model toggles (missionNamespace, set in init.sqf):
+ * Model toggles (server-owned missionNamespace settings from MissionConfig/electronicWarfareConfig.sqf):
  *   Waldo_Jamming_LOS            - true = terrain blocks jamming (default true)
  *   Waldo_Jamming_BurnThrough    - true = radio power resists jamming (default true)
  *   Waldo_Jamming_BurnThroughRef - reference radio power in mW (default 500)
@@ -32,6 +35,8 @@
  * Example:
  * private _jam = [getPosASL player, side player, 45, 5000] call Waldo_fnc_JammingFactor;
  * private _uavJam = [getPosASL _drone, side _drone, -1, -1, true] call Waldo_fnc_JammingFactor;
+ * Current callers: ACRE signal hook, TFAR loop, EW HUD, RDF scan and UAV jamming workers.
+ * Result: The strongest applicable field contributes a number from 0 (clear) to 1 (blackout).
  */
 
 params ["_pos", "_side", ["_freq", -1], ["_power", -1], ["_uavMode", false]];

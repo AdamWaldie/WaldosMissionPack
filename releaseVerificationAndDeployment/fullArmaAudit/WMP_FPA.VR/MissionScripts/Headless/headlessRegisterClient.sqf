@@ -7,34 +7,34 @@
  * running two independent balancers against the same groups would create ownership races.
  *
  * Locality and authority:
- * Server-only. The registering machine's identity is taken from the engine-verified
- * remoteExecutedOwner, never from a caller-supplied id, so a compromised client cannot register a
- * spoofed headless client for itself. The caller must own an engine HeadlessClient_F virtual entity;
- * using allPlayers for this check is invalid because Arma includes headless clients in allPlayers.
+ * Server-only. Positive engine sender ids must match the claim. HC calls have engine sender zero,
+ * so their claimed id must currently own a HeadlessClient_F entity. This validates live ownership;
+ * it does not establish isolation between trusted headless processes running the same mission.
  * Rejects outright while
  * Waldo_Headless_Enable is false - a defense-in-depth check independent of
  * Waldo_fnc_HeadlessDetectLocal's own client-side gate, since this function is the actual authority
  * boundary.
  *
  * Arguments:
+ * 1: claimed owner <NUMBER>, default -1; HC callers supply clientOwner.
  * 0: label <STRING> - the reporting machine's profileName (or a fallback), for RPT/diagnostics only.
  *
  * Return Value:
  * Boolean - true when the client was registered (or already was, with its label refreshed).
  *
  * Example:
- * ["HC-1"] remoteExec ["Waldo_fnc_HeadlessRegisterClient", 2];
+ * ["HC-1", clientOwner] remoteExec ["Waldo_fnc_HeadlessRegisterClient", 2];
  * Result: the calling machine's network owner id is added to Waldo_Headless_Clients and a
  * rebalance pass runs.
  *
  * Current caller: Waldo_fnc_HeadlessDetectLocal, with bounded repeat-safe startup retries.
  */
 
-params [["_label", "", [""]]];
+params [["_label", "", [""]],["_claimedOwner",-1,[0]]];
 if !(isServer) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {false};
 
-private _owner = remoteExecutedOwner;
+private _owner = [_claimedOwner] call Waldo_fnc_HeadlessResolveSender;
 if (_owner <= 2) exitWith {false};
 private _headlessEntities = entities "HeadlessClient_F";
 private _headlessIndex = _headlessEntities findIf {owner _x == _owner};

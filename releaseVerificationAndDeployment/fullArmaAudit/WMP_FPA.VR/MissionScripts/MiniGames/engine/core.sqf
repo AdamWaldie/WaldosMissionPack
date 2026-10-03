@@ -13,6 +13,7 @@
  *
  * Example: #include "engine\core.sqf"
  * Current callers: Waldo_fnc_MiniGamesEnsureRuntime includes this fragment lazily for a registered table.
+ * Result: The shared game engine functions exist before any table-specific rules run.
  */
 
 Waldo_MG_fnc_getGame = {

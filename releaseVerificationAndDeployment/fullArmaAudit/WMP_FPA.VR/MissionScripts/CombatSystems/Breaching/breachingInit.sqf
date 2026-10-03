@@ -10,6 +10,11 @@
  *
  * Example:
  * [] call Waldo_fnc_BreachingInit;
+ * Locality and authority: Installs the explosive event listener on each relevant machine;
+ * the server validates and applies actual breaches. Repeated init avoids duplicate handlers;
+ * joining clients install their own local listener.
+ * Current caller: feature startup when breaching is enabled.
+ * Result: Breaching events can be detected and forwarded for server validation.
  */
 
 if (!isServer && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {

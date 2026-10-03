@@ -9,12 +9,15 @@
  * Locality and authority: interface-client display filtering only, matching
  * Waldo_fnc_TransportAvailableChildrenLocal's own pattern; the actual pronouncement remains
  * server-authoritative and idempotent per corpse.
+ * Repeat/JIP: Rebuilds the visible list each time ACE opens it. JIP players use their local
+ * copy of the current corpse and obituary state; no child action list is published.
  *
  * Arguments:
  * 0: Player <OBJECT>
  *
  * Return Value: <ARRAY> - ACE dynamic child-action rows, one per eligible nearby corpse.
  * Example: [player] call Waldo_fnc_ObituaryChildrenLocal;
+ * Result: Returns zero or more named ACE rows for qualifying corpses in range.
  * Current caller: the "Pronounce Dead" self-action root installed by
  * Waldo_fnc_ObituarySelfInteractionInit.
  */

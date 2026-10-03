@@ -2,6 +2,8 @@
  * Author: WaldoTheWarfighter
  * Runs the full-pack audit cases that require a local player interface and real interaction context.
  *
+ * Locality/authority: scheduled interface-client checks; no server gameplay state is changed.
+ * Repeat/JIP: each run records fresh assertions for its current interface; completion is published.
  * Arguments: None.
  * Return Value: Nothing; records assertions through Waldo_QA_fnc_assert and publishes client completion.
  *
@@ -59,9 +61,15 @@ if (_suite in ["all", "core"]) then {
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/all-module-families", {
+        private _expected=49;
+        if (missionNamespace getVariable ["Waldo_Hazard_Enable",false]) then {_expected=_expected+2};
+        if (missionNamespace getVariable ["Waldo_Headless_Enable",false]) then {_expected=_expected+3};
+        // Conditional families register after shared configuration readiness.
+        private _deadline=diag_tickTime+10;
+        waitUntil {uiSleep 0.1; (missionNamespace getVariable ["Waldo_ZenModuleCount",0]) == _expected || {diag_tickTime >= _deadline}};
         private _coreCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
         private _economyCount = missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0];
-        ["core/zen/all-module-families", _coreCount == 52 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
+        ["core/zen/all-module-families", _coreCount == _expected && {_economyCount == 19}, [_coreCount, _economyCount, _expected]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/icons-present", {
@@ -236,44 +244,51 @@ if (_suite in ["all", "core"]) then {
             private _nodesBefore = count (((_display call _definition) param [1, []]));
             (_nodeButtons select 0) call _press;
             ["part-add", count (((_display call _definition) param [1, []])) == _nodesBefore + 1] call _check;
-            private _addedPartId = (((( _display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [0, ""]);
+            private _nodesNow = (_display call _definition) param [1, []];
+            private _nodeIndex = _display getVariable ["WaldoConvAuthor_NodeIndex", 0];
+            private _addedPartId = (_nodesNow param [_nodeIndex, []]) param [0, ""];
             (_nodeButtons select 1) call _press;
-            private _copiedPartId = (((( _display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [0, ""]);
+            _nodesNow = (_display call _definition) param [1, []];
+            _nodeIndex = _display getVariable ["WaldoConvAuthor_NodeIndex", 0];
+            private _copiedPartId = (_nodesNow param [_nodeIndex, []]) param [0, ""];
             ["part-copy", count (((_display call _definition) param [1, []])) == _nodesBefore + 2 && {_copiedPartId != _addedPartId} && {(_display getVariable ["WaldoConvAuthor_LastActionFeedback", ""]) find "part copied" >= 0}] call _check;
             (_nodeButtons select 3) call _press;
-            ["part-up", (((( _display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [0, ""]) == _copiedPartId] call _check;
+            ["part-up", ((((_display call _definition) param [1, []]) param [_display getVariable ["WaldoConvAuthor_NodeIndex", 0], []]) param [0, ""]) == _copiedPartId] call _check;
             (_nodeButtons select 4) call _press;
-            ["part-down", (((( _display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [0, ""]) == _copiedPartId] call _check;
+            ["part-down", ((((_display call _definition) param [1, []]) param [_display getVariable ["WaldoConvAuthor_NodeIndex", 0], []]) param [0, ""]) == _copiedPartId] call _check;
             (_nodeButtons select 2) call _press;
             ["part-remove", count (((_display call _definition) param [1, []])) == _nodesBefore + 1 && {((( _display call _definition) param [1, []]) findIf {(_x param [0, ""]) == _copiedPartId}) < 0}] call _check;
 
-            private _linesBefore = count (((((_display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [1, []]));
+            _nodesNow = (_display call _definition) param [1, []];
+            _nodeIndex = _display getVariable ["WaldoConvAuthor_NodeIndex", 0];
+            private _linesBefore = count ((_nodesNow param [_nodeIndex, []]) param [1, []]);
             (_lineButtons select 0) call _press;
-            ["line-add", count (((((_display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [1, []])) == _linesBefore + 1] call _check;
+            ["line-add", count ((((_display call _definition) param [1, []]) param [_display getVariable ["WaldoConvAuthor_NodeIndex", 0], []]) param [1, []]) == _linesBefore + 1] call _check;
             (_lineButtons select 1) call _press;
             private _lineListText = (_display getVariable ["WaldoConvAuthor_LineList", controlNull]) lbText (_display getVariable ["WaldoConvAuthor_LineIndex", 0]);
-            ["line-copy", count (((((_display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [1, []])) == _linesBefore + 2 && {_lineListText find "LINE " == 0} && {_lineListText find "NPC " < 0} && {(_display getVariable ["WaldoConvAuthor_LastActionFeedback", ""]) find "NPC line copied" >= 0}] call _check;
+            ["line-copy", count ((((_display call _definition) param [1, []]) param [_display getVariable ["WaldoConvAuthor_NodeIndex", 0], []]) param [1, []]) == _linesBefore + 2 && {_lineListText find "LINE " == 0} && {_lineListText find "NPC " < 0} && {(_display getVariable ["WaldoConvAuthor_LastActionFeedback", ""]) find "NPC line copied" >= 0}] call _check;
             (_lineButtons select 3) call _press;
             ["line-up", (_display getVariable ["WaldoConvAuthor_LineIndex", -1]) == _linesBefore] call _check;
             (_lineButtons select 4) call _press;
             ["line-down", (_display getVariable ["WaldoConvAuthor_LineIndex", -1]) == _linesBefore + 1] call _check;
             (_lineButtons select 2) call _press;
-            ["line-remove", count (((((_display call _definition) param [1, []]) select (_display getVariable ["WaldoConvAuthor_NodeIndex", 0])) param [1, []])) == _linesBefore + 1] call _check;
+            ["line-remove", count ((((_display call _definition) param [1, []]) param [_display getVariable ["WaldoConvAuthor_NodeIndex", 0], []]) param [1, []]) == _linesBefore + 1] call _check;
 
             _display setVariable ["WaldoConvAuthor_NodeIndex", 0];
             _display setVariable ["WaldoConvAuthor_ChoiceIndex", 0];
             [_display] call Waldo_fnc_ConversationAuthorRefreshLocal;
-            private _choicesBefore = count (((((_display call _definition) param [1, []]) select 0) param [2, []]));
+            _nodesNow = (_display call _definition) param [1, []];
+            private _choicesBefore = count ((_nodesNow param [0, []]) param [2, []]);
             (_choiceButtons select 0) call _press;
-            ["answer-add", count (((((_display call _definition) param [1, []]) select 0) param [2, []])) == _choicesBefore + 1] call _check;
+            ["answer-add", count ((((_display call _definition) param [1, []]) param [0, []]) param [2, []]) == _choicesBefore + 1] call _check;
             (_choiceButtons select 1) call _press;
-            ["answer-copy", count (((((_display call _definition) param [1, []]) select 0) param [2, []])) == _choicesBefore + 2 && {(_display getVariable ["WaldoConvAuthor_LastActionFeedback", ""]) find "answer copied" >= 0}] call _check;
+            ["answer-copy", count ((((_display call _definition) param [1, []]) param [0, []]) param [2, []]) == _choicesBefore + 2 && {(_display getVariable ["WaldoConvAuthor_LastActionFeedback", ""]) find "answer copied" >= 0}] call _check;
             (_choiceButtons select 3) call _press;
             ["answer-up", (_display getVariable ["WaldoConvAuthor_ChoiceIndex", -1]) == _choicesBefore] call _check;
             (_choiceButtons select 4) call _press;
             ["answer-down", (_display getVariable ["WaldoConvAuthor_ChoiceIndex", -1]) == _choicesBefore + 1] call _check;
             (_choiceButtons select 2) call _press;
-            ["answer-remove", count (((((_display call _definition) param [1, []]) select 0) param [2, []])) == _choicesBefore + 1] call _check;
+            ["answer-remove", count ((((_display call _definition) param [1, []]) param [0, []]) param [2, []]) == _choicesBefore + 1] call _check;
 
             _display setVariable ["WaldoConvAuthor_NodeIndex", 1];
             [_display] call Waldo_fnc_ConversationAuthorRefreshLocal;
@@ -284,13 +299,13 @@ if (_suite in ["all", "core"]) then {
             uiSleep 0.1;
             private _renamedDefinition = _display call _definition;
             private _renamedNodes = _renamedDefinition param [1, []];
-            private _inboundUpdated = (((_renamedNodes select 0) param [2, []]) findIf {(_x param [1, ""]) == "DETAILS"}) >= 0;
-            ["part-rename-updates-routes", ((_renamedNodes select 1) param [0, ""]) == "DETAILS" && {_inboundUpdated}] call _check;
+            private _inboundUpdated = (((_renamedNodes param [0, []]) param [2, []]) findIf {(_x param [1, ""]) == "DETAILS"}) >= 0;
+            ["part-rename-updates-routes", ((_renamedNodes param [1, []]) param [0, ""]) == "DETAILS" && {_inboundUpdated}] call _check;
             ctrlSetFocus _partName;
             _partName ctrlSetText "BAD NAME!";
             ctrlSetFocus (_display getVariable ["WaldoConvAuthor_NodeList", controlNull]);
             uiSleep 0.1;
-            ["invalid-part-name-explained", ((((_display call _definition) param [1, []]) select 1) param [0, ""]) == "DETAILS" && {(_display getVariable ["WaldoConvAuthor_NameIssue", ""]) != ""}] call _check;
+            ["invalid-part-name-explained", ((((_display call _definition) param [1, []]) param [1, []]) param [0, ""]) == "DETAILS" && {(_display getVariable ["WaldoConvAuthor_NameIssue", ""]) != ""}] call _check;
 
             private _conversationName = _display getVariable ["WaldoConvAuthor_Id", controlNull];
             ctrlSetFocus _conversationName;
@@ -312,12 +327,12 @@ if (_suite in ["all", "core"]) then {
             private _gesture = _display getVariable ["WaldoConvAuthor_GestureCombo", controlNull];
             _gesture lbSetCurSel 1;
             [_display] call Waldo_fnc_ConversationAuthorSaveLocal;
-            private _editedLine = ((((_display call _definition) param [1, []]) select 0) param [1, []]) select 0;
+            private _editedLine = ((((_display call _definition) param [1, []]) param [0, []]) param [1, []]) param [0, []];
             ["line-fields-save", (_editedLine param [0, ""]) == "Edited NPC dialogue." && {(_editedLine param [2, -1]) == 2.5} && {(_editedLine param [3, -1]) == 3} && {(_editedLine param [4, ""]) == "GestureNod"}] call _check;
             _soundSeconds ctrlSetText "AUTO";
             _textSeconds ctrlSetText "AUTO";
             [_display] call Waldo_fnc_ConversationAuthorSaveLocal;
-            _editedLine = ((((_display call _definition) param [1, []]) select 0) param [1, []]) select 0;
+            _editedLine = ((((_display call _definition) param [1, []]) param [0, []]) param [1, []]) param [0, []];
             ["automatic-timing-saves", (_editedLine param [2, 0]) == -1 && {(_editedLine param [3, 0]) == -1}] call _check;
 
             (_display getVariable ["WaldoConvAuthor_ChoiceLabel", controlNull]) ctrlSetText "Show me the details.";
@@ -325,7 +340,7 @@ if (_suite in ["all", "core"]) then {
             private _destination = _display getVariable ["WaldoConvAuthor_ChoiceDestination", controlNull];
             for "_row" from 0 to (lbSize _destination - 1) do {if (_destination lbData _row == "DETAILS") exitWith {_destination lbSetCurSel _row}};
             [_display] call Waldo_fnc_ConversationAuthorSaveLocal;
-            private _editedChoice = ((((_display call _definition) param [1, []]) select 0) param [2, []]) select 0;
+            private _editedChoice = ((((_display call _definition) param [1, []]) param [0, []]) param [2, []]) param [0, []];
             ["answer-fields-and-route-save", _editedChoice isEqualTo ["Show me the details.", "DETAILS", "SHOW_DETAILS"]] call _check;
 
             private _cleanDefinition = ["QA_AUTHOR_REGISTER", [
@@ -346,15 +361,17 @@ if (_suite in ["all", "core"]) then {
             private _configPreview = _display getVariable ["WaldoConvAuthor_ExportPreviewControls", []];
             private _configPreviewButtons = _display getVariable ["WaldoConvAuthor_ExportPreviewButtons", []];
             ["config-export-visible-fallback", count _configPreview == 7 && {count _configPreviewButtons == 2} && {ctrlText (_configPreview select 4) find "QA_AUTHOR_REGISTER" >= 0}] call _check;
-            (_configPreviewButtons select 0) call _press;
-            (_configPreviewButtons select 1) call _press;
+            if (count _configPreviewButtons == 2) then {
+                (_configPreviewButtons select 0) call _press;
+                (_configPreviewButtons select 1) call _press;
+            };
             ["config-export-back-to-editor", (_display getVariable ["WaldoConvAuthor_ExportPreviewControls", []]) isEqualTo []] call _check;
             (_actionButtons select 5) call _press;
             private _scriptExport = missionNamespace getVariable ["Waldo_Conversation_AuthorLastExport", []];
             private _scriptPreview = _display getVariable ["WaldoConvAuthor_ExportPreviewControls", []];
             private _scriptPreviewButtons = _display getVariable ["WaldoConvAuthor_ExportPreviewButtons", []];
             ["script-export-visible-fallback", count _scriptPreview == 7 && {count _scriptPreviewButtons == 2} && {ctrlText (_scriptPreview select 4) find "Waldo_fnc_ConversationCreate" >= 0}] call _check;
-            (_scriptPreviewButtons select 1) call _press;
+            if (count _scriptPreviewButtons == 2) then {(_scriptPreviewButtons select 1) call _press};
             ["both-export-actions", (_configExport param [0, ""]) == "CONFIG" && {(_configExport param [1, ""]) find "QA_AUTHOR_REGISTER" >= 0} && {(_scriptExport param [0, ""]) == "SCRIPT"} && {(_scriptExport param [1, ""]) find "Waldo_fnc_ConversationCreate" >= 0} && {(_display getVariable ["WaldoConvAuthor_LastWorkflowState", ""]) == "CODE_ONLY"}] call _check;
 
             missionNamespace setVariable ["Waldo_Conversation_AuthorLastResult", []];

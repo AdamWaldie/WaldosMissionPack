@@ -11,6 +11,10 @@
  *
  * Example:
  * private _pool = [_config, east] call Waldo_fnc_DynamicAAResolveAssetPool;
+ * Locality and authority: Resolves available loaded-mod classes on the server during AA
+ * creation. Repeated resolution needs no JIP publication; DynamicAACreate validates assets.
+ * Current caller: DynamicAACreate.
+ * Result: Returns available radar, site, mobile and fighter class pools.
  */
 
 params [

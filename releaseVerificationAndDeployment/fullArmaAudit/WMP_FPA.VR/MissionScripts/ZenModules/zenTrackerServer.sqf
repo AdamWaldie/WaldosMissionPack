@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Authenticates a ZEN curator request before invoking the normal server tracker registry API.
  * The target, active state and JIP-visible registry remain server-owned.
+ * Locality and authority: Server-only; authenticates the curator and registers a tracker on
+ * the exact object selected by the module.
+ * Repeat/JIP: Each accepted registration updates tracker state in the server registry, which
+ * the tracker feature publishes for joining clients.
  *
  * Arguments:
  * 0: target <OBJECT>; 1: tracking side <STRING>; 2: label <STRING>;
@@ -9,6 +13,7 @@
  * Return Value: BOOL - true when a tracker was registered.
  * Example: [truck1,"WEST","LEAD",true,player] remoteExecCall ["Waldo_fnc_ZenTrackerServer",2];
  * Current caller: Waldo_fnc_ZenTracker.
+ * Result: A visible tracker ID is registered, or the curator is told registration failed.
  */
 params [["_target", objNull, [objNull]], ["_side", "ALL", [""]], ["_label", "", [""]], ["_active", true, [true]], ["_requester", objNull, [objNull]]];
 if (!isServer) exitWith {false};

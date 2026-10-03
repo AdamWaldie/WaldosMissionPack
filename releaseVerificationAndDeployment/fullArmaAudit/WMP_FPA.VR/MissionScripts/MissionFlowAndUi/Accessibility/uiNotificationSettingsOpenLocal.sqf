@@ -10,6 +10,9 @@
  * Return Value: DISPLAY - created settings display, or displayNull without a gameplay display.
  * Current caller: WMP Options self-interaction and QA capture.
  * Example: [] call Waldo_fnc_UiNotificationSettingsOpenLocal;
+ * Locality and authority: Creates a dialog on the requesting interface client only.
+ * Reopening reads current local settings; nothing is published to JIP clients.
+ * Result: The player can inspect and change notification theme, scale and motion.
  */
 
 disableSerialization;

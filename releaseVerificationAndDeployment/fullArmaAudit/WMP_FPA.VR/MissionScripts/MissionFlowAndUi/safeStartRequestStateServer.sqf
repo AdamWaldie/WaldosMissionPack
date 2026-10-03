@@ -8,6 +8,7 @@
  * Arguments: requester OBJECT (default objNull).
  * Return Value: BOOL. Current caller: initPlayerLocal.sqf.
  * Example: [player] remoteExecCall ["Waldo_fnc_SafeStartRequestStateServer", 2];
+ * Result: The requester receives the current server SafeStart snapshot.
  */
 params [["_requester", objNull, [objNull]]];
 if (!isServer || {isNull _requester} || {!isPlayer _requester}) exitWith {false};

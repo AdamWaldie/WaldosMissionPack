@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Prune ground command UI ds.
+ * Removes command keys whose players are no longer connected.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
@@ -8,10 +8,14 @@
  * None
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
  * [] call Waldo_fnc_EcoCommand_pruneGroundCommandUIDs;
+ * Locality/Authority: Economy background authority only; writes the validated command list.
+ * Repeat/JIP Behaviour: Idempotent for unchanged players; list updates are published for JIP.
+ * Current Callers: EcoResource_startAuthorityLoops background reconciliation.
+ * Result: Disconnected identities are removed from Ground Command membership.
  */
 
     if !([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority) exitWith {};

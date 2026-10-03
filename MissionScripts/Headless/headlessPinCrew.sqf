@@ -3,7 +3,7 @@
  * Pins a crewed vehicle server-side against automatic headless-client migration. The vehicle and
  * crew group receive the common Waldo_ServerOwnedFeature classification, and a crew group already
  * moved by an external HC system is immediately returned to owner 2. For real-time,
- * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes, Dynamic AA, AI convoys)
+ * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes, Dynamic AA)
  * an external headless rebalance racing WMP's own in-progress setup script - or simply moving a group
  * WMP expects to keep driving every frame - can corrupt that system's state. Confirmed live: ACE's
  * own ace_headless module (a required-mod feature, entirely separate from and uncoordinated with
@@ -51,22 +51,24 @@
  * rebalance and ACE's ace_headless module.
  *
  * Current callers: Waldo_fnc_GunshipRegister, Waldo_fnc_ParadropBuildFlightRoute,
- * Waldo_fnc_DynamicAACreate, Waldo_fnc_SimpleAiConvoy.
+ * Waldo_fnc_DynamicAACreate.
  */
 
 params [["_vehicle", objNull, [objNull]]];
 if !(isServer) exitWith {false};
 if (isNull _vehicle) exitWith {false};
 
+[_vehicle] call Waldo_fnc_HeadlessRememberPin;
 _vehicle setVariable ["Waldo_ServerOwnedFeature", true, true];
 _vehicle setVariable ["acex_headless_blacklist", true, true];
 private _groups = [];
 {_groups pushBackUnique group _x} forEach (crew _vehicle);
 {
+    [_x] call Waldo_fnc_HeadlessRememberPin;
     _x setVariable ["Waldo_ServerOwnedFeature", true, true];
     _x setVariable ["Waldo_Headless_ExcludeGroup", true, true];
     _x setVariable ["acex_headless_blacklist", true, true];
-    {_x setVariable ["acex_headless_blacklist", true, true]} forEach units _x;
+    {[_x] call Waldo_fnc_HeadlessRememberPin; _x setVariable ["acex_headless_blacklist", true, true]} forEach units _x;
     private _currentOwner = groupOwner _x;
     // Eden groups can briefly report owner 0 while the mission is still constructing network
     // entities. That is not a remote owner and setGroupOwner 2 is rejected during this window.

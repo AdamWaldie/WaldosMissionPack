@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Applies safe twelve-character names to each radio's official display-name field in the existing
  * ACRE side presets. It snapshots TX/RX fields, verifies the text write and reports frequency drift.
+ * Locality and authority: Each ACRE-enabled machine applies its local side-preset display names;
+ * mission configuration supplies the labels and radio profile limits.
+ * Repeat/JIP: Safe to retry and verify after ACRE becomes ready. Joining machines apply their own
+ * preset labels from the same mission configuration.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -10,6 +14,7 @@
  *
  * Example: [_config] call Waldo_fnc_ACRE2ApplyPresetNames;
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init retry path.
+ * Result: Supported radio channels display the configured short names without changing TX/RX.
  */
 params [['_config', missionNamespace getVariable ['Waldo_ACRE2_Config', createHashMap], [createHashMap]]];
 if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};

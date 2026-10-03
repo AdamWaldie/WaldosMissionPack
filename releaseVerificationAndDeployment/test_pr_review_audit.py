@@ -76,8 +76,9 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertEqual(4, mission_sqm.count("isPlayable=1;"))
             self.assertEqual(
                 mission_sqm.count('init="this allowDamage false; this enableSimulation false;";'),
-                manifest["staticFixtureCount"],
+                manifest["staticFixtureCount"] - 1,
             )
+            self.assertIn('text="qa_cortex_path_house";\n            init="this allowDamage false; this enableSimulation true;";', mission_sqm)
             fixture_names = re.findall(r'text="(qa_[^"]+)"', mission_sqm)
             self.assertEqual(len(fixture_names), len(set(fixture_names)))
 
@@ -195,7 +196,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
         self.assertIn('"-noPause"', launcher)
-        self.assertEqual(launcher.count('"-netlog"'), 2)
+        self.assertEqual(launcher.count('"-netlog"'), 3)
         self.assertIn("if ($serverReady) { break }", launcher)
 
     def test_server_runtime_waits_for_the_mod_loaded_audit_client(self):
@@ -443,7 +444,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 47', source)
+        self.assertIn('Waldo_ZenModuleCount", 49', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
@@ -621,6 +622,13 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("$clientModArgument", launcher)
         self.assertIn("arma3server_x64.exe", launcher)
         self.assertNotIn("playMission['','WMP_PR_Review_Audit.VR'", launcher)
+
+    def test_cortex_launcher_fingerprints_the_staged_mission(self):
+        launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
+        self.assertIn("Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256", launcher)
+        self.assertIn('Waldo_CortexQA_SourceFingerprint', launcher)
+        self.assertIn('WMP CORTEX QA SOURCE|fingerprint=', launcher)
+        self.assertIn('cortex-source-fingerprint.txt', launcher)
 
     def test_audit_zeus_follows_the_replacement_player_unit(self):
         server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
@@ -1522,7 +1530,7 @@ class PrReviewAuditTests(unittest.TestCase):
         ):
             self.assertIn(control, zen)
         for category in (
-            "WMP Mission Flow", "WMP Logistics", "WMP AI & Combat", "WMP Electronic Warfare",
+            "WMP Mission Flow", "WMP Logistics", "WMP Cortex", "WMP Electronic Warfare",
             "WMP Environment", "WMP Air Operations", "WMP Mission Tools", "WMP Interface & QA",
         ):
             self.assertIn(category, modules)

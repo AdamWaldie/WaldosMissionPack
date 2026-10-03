@@ -17,6 +17,10 @@
  *
  * Example:
  * [radar, ["AA_NORTH", "circuit", "standard"]] call Waldo_fnc_DynamicAAInteractionSetup;
+ * Locality and authority: Installs repeat-safe ACE actions on each interface client for the
+ * registered radar. The server still validates disable requests. Object-keyed JIP replay
+ * installs the actions for later joiners.
+ * Result: Eligible players see the radar shutdown interaction on that object.
  */
 
 params [["_radar", objNull, [objNull]], ["_settings", [], [[]]]];

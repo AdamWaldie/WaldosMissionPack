@@ -32,6 +32,10 @@
  * Example:
  * [] spawn Waldo_fnc_InfoText;
  * ["Operation Iron Fist", "Altis"] spawn Waldo_fnc_InfoText; // one-off override, e.g. from a trigger
+ * Locality and authority: Plays the title presentation on each intended interface client.
+ * Repeating it starts another local sequence; no server/JIP gameplay state is changed.
+ * Current callers: mission startup presentation and mission-maker title overrides.
+ * Result: The player sees the configured mission title and location sequence.
  */
 
 params[

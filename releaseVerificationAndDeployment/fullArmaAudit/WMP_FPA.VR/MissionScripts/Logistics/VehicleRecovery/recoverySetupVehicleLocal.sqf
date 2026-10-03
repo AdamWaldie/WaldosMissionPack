@@ -19,6 +19,8 @@
  *
  * Example: [_vehicle, []] call Waldo_fnc_RecoverySetupVehicleLocal;
  * Result: the vehicle receives one Package for Recovery ACE action, or one vanilla fallback.
+ * Locality and authority: Installs vehicle actions on each interface client; server validates
+ * the requested package operation. Repeated setup avoids duplicates and covers JIP.
  */
 
 params [["_target", objNull, [objNull]], ["_interactionSettings", [], [[]]]];

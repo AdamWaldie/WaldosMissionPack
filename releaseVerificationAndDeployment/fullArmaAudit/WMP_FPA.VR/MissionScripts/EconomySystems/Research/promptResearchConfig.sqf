@@ -1,18 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Prompt research config.
+ * Opens the curator's Research technology editor.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _ctrl <ANY> - ctrl
- * 1: _index <ANY> - index
+ * None; ZEN callback arguments are not read by this function.
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
- * [_ctrl, _index] call Waldo_fnc_EcoResearch_promptResearchConfig;
+ * [] call Waldo_fnc_EcoResearch_promptResearchConfig;
+ * Locality/Authority: Curator interface client; Save/Add requests go through Economy authority.
+ * Repeat/JIP Behaviour: Each open creates a local form from the latest published catalog.
+ * Current Callers: Research technology-tree ZEN authoring action.
+ * Result: Shows the Research list, form fields and labelled controls.
  */
 
         if (!hasInterface) exitWith {};

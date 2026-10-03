@@ -3,7 +3,12 @@
  * Safely exits a local unit from an aircraft and places them into the configured static-line
  * parachute vehicle while preserving exit velocity. Damage protection is temporary and always
  * restored. Must run where the unit is local and in a scheduled environment.
+ * Locality and authority: The jumping unit's owner handles exit, chute assignment and damage
+ * restoration; the caller chooses the eligible aircraft and unit.
+ * Repeat/JIP: Each call starts one jump and installs no persistent local actions. Joining players
+ * receive aircraft actions separately through the paradrop setup replay.
  *
+ * AI jumpers retain Waldo_Paradrop_Jumped so Smart AI can adopt them after landing.
  * Arguments:
  * 0: jumping unit <OBJECT>
  * 1: aircraft <OBJECT>
@@ -17,6 +22,7 @@
  *
  * Example:
  * [player, aircraft, "NonSteerable_Parachute_F"] spawn Waldo_fnc_StaticJumpFunc;
+ * Result: The jumper exits into the selected static-line parachute with aircraft exit velocity.
  */
 
 params [
@@ -34,6 +40,8 @@ private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
 _exitPosition set [2, (getPosATL _vehicle) select 2];
 private _exitVelocity = velocity _vehicle;
 moveOut _unit;
+// AI jumpers are pinned with their aircraft; the tag lets the Smart AI Pass release them once landed.
+if (!isPlayer _unit) then {(group _unit) setVariable ["Waldo_Paradrop_Jumped", true, true]};
 _unit setPosATL _exitPosition;
 _unit setDir (_direction + 170);
 sleep 1.5;

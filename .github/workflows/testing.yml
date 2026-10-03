@@ -45,6 +45,9 @@ jobs:
       run: git diff --check HEAD
     - name: Check performance regressions
       run: python3 releaseVerificationAndDeployment/performance_audit.py
+    - name: Test Smart AI Pass contracts
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_smart_ai_pass.py
     - name: Test performance audit
       working-directory: releaseVerificationAndDeployment
       run: python3 -m unittest -v test_performance_audit.py

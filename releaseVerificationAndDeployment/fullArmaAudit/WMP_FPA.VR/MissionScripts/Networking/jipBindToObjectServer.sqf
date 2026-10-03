@@ -14,6 +14,7 @@
  * Return Value: BOOLEAN - true when bound; false for invalid/non-server calls.
  * Current callers: starter crates, Field Resupply hubs/crates and Tactical Displays.
  * Example: [_crate, "Waldo_StarterCrate_1:42"] call Waldo_fnc_JipBindToObjectServer;
+ * Result: The named JIP entry is removed automatically when its source object is deleted.
  */
 
 params [

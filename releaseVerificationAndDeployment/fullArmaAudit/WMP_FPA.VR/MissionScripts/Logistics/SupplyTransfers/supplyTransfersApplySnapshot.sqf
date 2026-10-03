@@ -6,6 +6,7 @@
  * Arguments: container <OBJECT>, snapshot <ARRAY>. Return Value: <BOOL> exact rebuild.
  * Current caller: Waldo_fnc_SupplyTransfersRequestServer.
  * Example: [crate, savedSnapshot] call Waldo_fnc_SupplyTransfersApplySnapshot;
+ * Result: The container inventory matches the requested snapshot, or rebuild fails for rollback.
  */
 params [["_container", objNull, [objNull]], ["_snapshot", [], [[]]]];
 if (!isServer || {isNull _container} || {count _snapshot != 4}) exitWith {false};

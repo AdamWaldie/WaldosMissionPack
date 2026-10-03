@@ -6,10 +6,14 @@
  * or abort) can detonate it. All outcomes are applied on the server.
  *
  * Call from the object's Eden "Initialization" field so it runs on every machine.
+ * Locality and authority: each interface installs its local action, while the server publishes
+ * state and applies the defusal or explosion. The shared interaction setup handles repeat/JIP
+ * action installation and state replay. This setup call does not report the eventual outcome.
+ * Current callers: mission-maker Eden object init fields and the field-equipment ZEN setup.
  *
  * Arguments:
- * _object  - Object - the device
- * _options - Array/HashMap - named settings accepted by MiniGameInteractionSetup, plus:
+ * 0: _object <OBJECT> - device (default: objNull; exits without a Boolean result)
+ * 1: _options <ARRAY/HASHMAP> - named settings (default: []), including:
  *              "challengeId"       String - any built-in interaction procedure (default "wirecut")
  *              "title"             String - action text (default "Defuse Bomb")
  *              "actionTitle"       String - action text; preferred hashmap key
@@ -27,11 +31,13 @@
  *              "oneShot"           Bool   - single attempt (default true)
  *
  * Return Value:
- * Nothing
+ * BOOL true for a known procedure, false for an unknown procedure. A null object exits without
+ * a Boolean result. This reports local setup, not the later server-owned defusal outcome.
  *
  * Example:
  * [this] call Waldo_fnc_BombDefuseSetup;
  * [this, [["wireCount", 6], ["timeLimit", 15]]] call Waldo_fnc_BombDefuseSetup;
+ * Result: a valid device gets its defusal action; success/failure is decided later by the server.
  */
 
 params [

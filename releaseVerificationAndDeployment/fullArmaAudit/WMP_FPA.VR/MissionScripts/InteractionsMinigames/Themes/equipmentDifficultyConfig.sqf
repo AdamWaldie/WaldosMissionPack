@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Returns the canonical positional configuration for a built-in equipment
  * procedure and curated difficulty level.
  *
@@ -8,6 +9,11 @@
  *
  * Return Value:
  * Array - independent configuration copy, or [] for an unknown procedure
+ * Locality and authority: Pure lookup on the caller; repeated calls return a fresh copy
+ * without changing procedure or JIP state.
+ * Current callers: interaction challenge setup and equipment profile construction.
+ * Example: ["repair", "standard"] call Waldo_fnc_MiniGameEquipmentDifficultyConfig;
+ * Result: Returns the standard repair procedure settings or [] for an unknown ID.
  */
 params [
     ["_challengeId", "", [""]],

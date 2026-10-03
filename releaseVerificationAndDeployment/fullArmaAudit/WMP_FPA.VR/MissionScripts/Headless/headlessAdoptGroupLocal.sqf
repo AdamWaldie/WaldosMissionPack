@@ -62,7 +62,7 @@ if (isNull _group || {_revision < 0} || {clientOwner != _expectedOwner}) exitWit
     if (_aiEnabled) then {
         if !(missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]) then {
             [
-                missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],
+                missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"],
                 missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
             ] call Waldo_fnc_AIRebalanceInit;
         };
@@ -74,7 +74,7 @@ if (isNull _group || {_revision < 0} || {clientOwner != _expectedOwner}) exitWit
     };
 
     private _profile = if (_aiEnabled) then {
-        format ["%1/%2", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]]
+        format ["%1/%2", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"]]
     } else {
         "DISABLED"
     };

@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines field-resupply, physical-cargo, vehicle-recovery, transport-service, object-scaling and logistics-crate defaults. World
  * mutation remains server-authoritative and object interactions remain client-local/JIP-safe.
+ * Locality / Authority: SHARED rows load everywhere. SERVER rows load on the server. Only
+ * rows marked for publication are broadcast. Registered logistics objects use their own APIs.
+ * Repeat/JIP: The loader keeps already-defined values, including live server changes.
+ * Joining clients load SHARED defaults and receive published SERVER state.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
  * CONDITIONAL entries are [scope, name, required CfgPatches class, loaded default, absent default,

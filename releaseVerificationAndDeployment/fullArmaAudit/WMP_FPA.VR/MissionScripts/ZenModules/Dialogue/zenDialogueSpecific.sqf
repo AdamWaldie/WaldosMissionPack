@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: replaces existing assignments and republishes the action snapshot.
  * Arguments: module position ARRAY, selected object OBJECT. Return Value: Nothing.
  * Current caller: ZEN "Dialogue - Assign Simple Lines". Example: enter lines separated by |.
+ * Result: The curator receives a dialog for submitting ordered lines to the target.
  */
 params ["_modulePos", ["_target", objNull, [objNull]]];
 if (isNull _target || {!(_target isKindOf "CAManBase")}) exitWith {["DIALOGUE", "Place this module directly on an NPC.", "WARNING", "DIALOGUE_ZEN", 6] call Waldo_fnc_FeatureNotifyLocal};

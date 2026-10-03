@@ -80,7 +80,9 @@ private _knownTargets = (_group targets []) select {!isNull _x};
         // low aircraft and ground units after one eligible aircraft activated the site.
         _unit disableAI "AUTOTARGET";
         _unit enableAI "WEAPONAIM";
-        _unit enableAI "SUPPRESSION";
+        // Suppression can select terrain or a ground contact while an approved aircraft merely
+        // keeps the site open. Dynamic AA owns target choice, so suppressive fire stays disabled.
+        _unit disableAI "SUPPRESSION";
     } else {
         _unit doTarget objNull;
         _unit doWatch objNull;

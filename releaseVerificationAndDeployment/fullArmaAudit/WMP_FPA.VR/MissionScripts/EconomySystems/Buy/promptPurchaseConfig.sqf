@@ -1,18 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Prompt purchase config.
+ * Opens the curator's purchasable-asset catalog editor.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _ctrl <ANY> - ctrl
- * 1: _index <ANY> - index
+ * None; ZEN callback arguments, if supplied, are not read.
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
- * [_ctrl, _index] call Waldo_fnc_EcoBuy_promptPurchaseConfig;
+ * [] call Waldo_fnc_EcoBuy_promptPurchaseConfig;
+ * Locality/Authority: Curator interface client; catalog updates go to server authority.
+ * Repeat/JIP Behaviour: Each open reads current catalog and builds a new local form.
+ * Current Callers: Purchase catalog ZEN authoring action.
+ * Result: Shows the current asset list and editable fields.
  */
 
         if (!hasInterface) exitWith {};

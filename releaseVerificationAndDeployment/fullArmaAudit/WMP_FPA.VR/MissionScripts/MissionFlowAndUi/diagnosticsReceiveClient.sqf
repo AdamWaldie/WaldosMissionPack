@@ -1,4 +1,18 @@
-/* Accepts a diagnostic snapshot from its owning client and stores it for the active server run. */
+/*
+ * Author: WaldoTheWarfighter
+ * Accepts one client's diagnostic snapshot for the active server audit run.
+ * Locality and authority: Server only; checks run ID, sending owner, player and row shapes
+ * before replacing that owner's report. A duplicate owner report replaces its previous row;
+ * this transient run data is not a gameplay/JIP snapshot.
+ * Arguments: 0: run ID <STRING>; 1: client owner ID <NUMBER>;
+ *   2: player name <STRING>; 3: player UID <STRING>;
+ *   4: diagnostic check rows <ARRAY> ([], at most 128).
+ * Return Value: <BOOL> true when accepted; false for a stale or malformed report.
+ * Current caller: Waldo_fnc_RunDiagnosticsClient after local checks complete.
+ * Example: [_runId, clientOwner, name player, getPlayerUID player, _checks]
+ *   remoteExecCall ["Waldo_fnc_DiagnosticsReceiveClient", 2];
+ * Result: The server stores this client's checks under the current diagnostic run.
+ */
 if (!isServer) exitWith {false};
 params [
     ["_runId", "", [""]],

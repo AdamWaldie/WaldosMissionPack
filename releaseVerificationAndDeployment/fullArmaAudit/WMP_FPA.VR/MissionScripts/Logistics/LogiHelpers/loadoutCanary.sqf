@@ -15,6 +15,9 @@
  *
  * Example: private _canary = [player] call Waldo_fnc_LoadoutCanary;
  * Current callers: saveRespawnLoadout.sqf, respawnRestoreLoadout.sqf, Waldo_fnc_LoadoutWaitStable.
+ * Locality and authority: Read-only on the unit's current owner; it does not save or apply a
+ * loadout. Repeating the read has no JIP side effect.
+ * Result: Returns the key visible equipment slots used to detect loadout stability.
  */
 params [["_unit", objNull, [objNull]]];
 [primaryWeapon _unit, secondaryWeapon _unit, handgunWeapon _unit, uniform _unit, vest _unit, backpack _unit, headgear _unit]

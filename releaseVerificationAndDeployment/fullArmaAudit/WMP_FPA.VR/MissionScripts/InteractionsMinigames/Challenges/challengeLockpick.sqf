@@ -1,6 +1,14 @@
 /*
- * Cutaway lock-cylinder binding procedure.
- * Config: [pins(1..6), sweepPeriod, sweetSpotWidth(0.05..0.4), timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the cutaway lock-cylinder binding procedure.
+ * Locality and authority: Runs on the player's interface client; the resolver reports
+ * success/failure to the caller. Each repeat attempt has fresh private display state.
+ * Arguments: 0: config <ARRAY> [pins 1..6, sweepPeriod, sweetSpotWidth 0.05..0.4,
+ *   timeLimit, title] ([] defaults); 1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[3, 2.8, 0.16, 60, "LOCK CYLINDER"], {}] call Waldo_fnc_MiniGameLockpick;
+ * Result: The player sees the lockpick procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

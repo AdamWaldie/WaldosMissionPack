@@ -5,7 +5,10 @@
  * The function is locality-neutral and samples bounded radial findEmptyPosition searches. It never
  * returns the rally object's centre as a successful fallback. The server uses it when registering
  * the respawn position; the owning client uses it again after respawn or direct regroup in case the
- * area became obstructed. Currently called by RallyPointRequestServer and RallyPointSetupLocal.
+ * area became obstructed. Currently called by RallyPointRequestServer and RallyPointInit.
+ * Locality and authority: Locality-neutral geometry search. It does not create objects or
+ * authorize a regroup; the server or player owner uses its returned position.
+ * Repeat/JIP: No persistent state or JIP handler; each call checks current terrain and blockers.
  *
  * Arguments:
  * 0: rally object <OBJECT>
@@ -18,6 +21,8 @@
  *
  * Example:
  * private _position = [rallyObject, typeOf player] call Waldo_fnc_RallyPointResolveSafePosition;
+ * Current callers: RallyPointRequestServer and RallyPointInit.
+ * Result: A nearby open ATL position is returned, or [] if all checked positions are blocked.
  */
 
 params [

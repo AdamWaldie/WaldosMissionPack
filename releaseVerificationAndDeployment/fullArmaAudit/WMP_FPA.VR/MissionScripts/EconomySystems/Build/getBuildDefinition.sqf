@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get build definition.
+ * Finds one Construction definition by name, ignoring letter case.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _buildName <STRING> - build name (optional, default: "")
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> matching build row, or [] when absent.
  *
  * Example:
  * [_buildName] call Waldo_fnc_EcoBuild_getBuildDefinition;
+ * Locality/Authority: Any machine; reads the published catalog without mutation.
+ * Repeat/JIP Behaviour: Repeat-safe lookup; JIP sees current catalog state.
+ * Current Callers: Construction placement, status and building-upgrade helpers.
+ * Result: Returns a copy of the matching definition.
  */
 
         params [["_buildName", ""]];

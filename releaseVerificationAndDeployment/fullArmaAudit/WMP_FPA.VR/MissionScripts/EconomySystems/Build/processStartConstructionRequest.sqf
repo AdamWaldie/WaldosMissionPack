@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Process start construction request.
+ * Validates an actor's queued Construction request before opening an authoritative job.
  *
  * Part of the Waldos Economy Systems suite (Build system).
- * Locality / Authority: Server authority only; retains the existing placement, access, requirement and
+ * Locality/Authority: Server authority only; retains the existing placement, access, requirement and
  * resource validation before starting authoritative construction state.
- * Repeat / JIP Behaviour: Bounded request-token history rejects duplicates. Requests are transient and
+ * Repeat/JIP Behaviour: Bounded request-token history rejects duplicates. Requests are transient and
  * never replayed to JIP; a legacy mailbox is cleared only when populated.
  *
  * Arguments:
@@ -19,6 +19,7 @@
  *
  * Example:
  * [_holder, _request] call Waldo_fnc_EcoBuild_processStartConstructionRequest;
+ * Result: Invalid, stale or duplicate requests stop before spending resources or spawning a site.
  */
 
         params [["_holder", objNull], ["_request", []]];

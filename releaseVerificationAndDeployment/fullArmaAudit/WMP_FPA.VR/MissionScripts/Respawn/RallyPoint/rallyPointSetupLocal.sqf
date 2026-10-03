@@ -5,6 +5,10 @@
  * ACE self-interactions are preferred; vanilla hold/add actions are the fallback. Statements send
  * authenticated requests to the server, which owns deployment and respawn state. This is called by
  * RallyPointInit for the initial player and again after respawn/JIP reconciliation.
+ * Locality and authority: Runs on the player unit's owning interface client; all deploy,
+ * removal and regroup requests go to the server for validation.
+ * Repeat/JIP: The installed-actions flag prevents duplicate menus. RallyPointInit calls this
+ * for the current player after initial join and after respawn.
  *
  * Arguments:
  * 0: unit <OBJECT> (default player) - locally owned player receiving the actions
@@ -14,6 +18,8 @@
  *
  * Example:
  * [player] call Waldo_fnc_RallyPointSetupLocal;
+ * Current callers: RallyPointInit and its respawn handler.
+ * Result: The local squad leader receives the applicable rally self-interactions.
  */
 params [["_unit", player, [objNull]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

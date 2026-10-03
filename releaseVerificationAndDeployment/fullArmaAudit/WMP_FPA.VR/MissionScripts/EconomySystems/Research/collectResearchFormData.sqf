@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Collect research form data.
+ * Reads and normalizes one technology row from the Research curator form.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - Research editor display
  *
  * Return Value:
- * Nothing
+ * <ARRAY> normalized technology row, or [] for a null display.
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoResearch_collectResearchFormData;
+ * Locality/Authority: Curator interface client only; reads local controls.
+ * Repeat/JIP Behaviour: Repeat-safe form read; server validates the submitted row separately.
+ * Current Callers: Research editor Save/Add button handlers.
+ * Result: Returns a normalized row without changing the authoritative catalog.
  */
 
         params ["_disp"];

@@ -44,6 +44,9 @@
  *
  * Example:
  * private _candidates = [cursorObject] call Waldo_fnc_VehicleComponentHeuristicScan;
+ * Locality and authority: Read-only config/model inspection on the caller. Repeated calls
+ * recompute candidates without changing the vehicle or publishing state to JIP clients.
+ * Result: Candidate component selection names are returned with their tentative turret paths.
  */
 
 params [["_vehicle", objNull, [objNull]]];

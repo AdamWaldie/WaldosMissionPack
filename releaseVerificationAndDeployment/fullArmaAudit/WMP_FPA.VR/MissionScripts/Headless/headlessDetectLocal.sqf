@@ -15,8 +15,8 @@
  * Locality and authority:
  * Detection runs locally on every machine. Registration is server-authoritative
  * (Waldo_fnc_HeadlessRegisterClient); this function only decides whether to ask for it, and it
- * verifies the caller's identity server-side via the engine-supplied remoteExecutedOwner rather
- * than trusting anything this function sends.
+ * validates the claimed owner against a live HeadlessClient_F entity because Arma reports
+ * zero as the remote sender of an HC call.
  *
  * Arguments: None.
  *
@@ -62,7 +62,7 @@ diag_log format ["[WMP HEADLESS] This machine detected itself as a headless clie
         } >= 0;
         if (!_registered) then {
             diag_log format ["[WMP HEADLESS] Registration attempt %1/15 owner=%2 label=%3.", _attempt, clientOwner, _label];
-            [_label] remoteExecCall ["Waldo_fnc_HeadlessRegisterClient", 2];
+            [_label, clientOwner] remoteExecCall ["Waldo_fnc_HeadlessRegisterClient", 2];
         };
         if (!_registered && {_attempt < 15}) then {uiSleep 2};
         _registered || {_attempt >= 15}

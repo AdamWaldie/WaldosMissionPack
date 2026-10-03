@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Progress research queue.
+ * Advances active Research for each side and publishes completed projects.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -8,10 +8,15 @@
  * None
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
  * [] call Waldo_fnc_EcoResearch_progressResearchQueue;
+ * Locality/Authority: Economy authority only; updates shared side state.
+ * Repeat/JIP Behaviour: Called by the authority scheduler; completed and active states are
+ * published for JIP. Do not run a second scheduler on clients.
+ * Current Callers: Economy authority request/progress scheduler.
+ * Result: Projects whose required progress has been reached become completed.
  */
 
         if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};

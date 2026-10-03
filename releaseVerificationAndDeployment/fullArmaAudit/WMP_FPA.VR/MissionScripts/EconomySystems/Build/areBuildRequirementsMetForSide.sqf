@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Are build requirements met for side.
+ * Checks a build entry's Research and prior-building prerequisites for one side.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true only when every prerequisite is satisfied.
  *
  * Example:
  * [_entry, _sideKey] call Waldo_fnc_EcoBuild_areBuildRequirementsMetForSide;
+ * Locality/Authority: Any machine may inspect published state; authority checks again before spending.
+ * Repeat/JIP Behaviour: Pure read; JIP sees current prerequisite state.
+ * Current Callers: Construction status and authoritative job start.
+ * Result: Returns false at the first unmet named prerequisite.
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];

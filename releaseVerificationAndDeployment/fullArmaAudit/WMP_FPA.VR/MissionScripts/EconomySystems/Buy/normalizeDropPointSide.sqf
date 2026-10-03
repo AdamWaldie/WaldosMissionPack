@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize drop point side.
+ * Converts a delivery-point faction label to its stored side key.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * 0: _value <STRING> - value (optional, default: "ANY")
  *
  * Return Value:
- * Any - see function body
+ * <STRING> ANY, WEST, EAST or GUER; unknown labels become ANY.
  *
  * Example:
  * [_value] call Waldo_fnc_EcoBuy_normalizeDropPointSide;
+ * Locality/Authority: Any machine; pure label normalization.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Delivery-point creation, filtering and curator controls.
+ * Result: Common faction aliases map to a single stored key.
  */
 
         params [["_value", "ANY"]];

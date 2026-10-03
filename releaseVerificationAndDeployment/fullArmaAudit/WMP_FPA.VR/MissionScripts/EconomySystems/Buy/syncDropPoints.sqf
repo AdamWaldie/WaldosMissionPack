@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Sync drop points.
+ * Prunes invalid world anchors from the authoritative delivery-point registry.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * None
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
  * [] call Waldo_fnc_EcoBuy_syncDropPoints;
+ * Locality/Authority: Economy authority only; may publish a pruned registry.
+ * Repeat/JIP Behaviour: Idempotent while anchors are unchanged; JIP receives current rows.
+ * Current Callers: Purchasing authority maintenance loop.
+ * Result: Deleted or invalid delivery points stop appearing in purchase selection.
  */
 
         if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Set research catalog.
+ * Normalizes and publishes the side-independent Research technology catalog.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalog;
+ * Locality/Authority: Economy authority only; clients receive the published catalog.
+ * Repeat/JIP Behaviour: Repeated calls replace the catalog; JIP clients receive the latest value.
+ * Current Callers: Research ZEN configuration and exported mission setup calls.
+ * Result: Invalid entries are normalized before the catalog becomes public.
  */
 
         params [["_catalog", []]];

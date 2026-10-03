@@ -20,6 +20,9 @@
  * ["SPECTRE_1"] call Waldo_fnc_GunshipRevealStatusHud;
  *
  * Current callers: Waldo_fnc_GunshipSetupLocal (the "View Off-Station Status" self-interaction).
+ * Repeat/JIP: Each request replaces the local reveal timer. The panel is not automatically
+ * replayed to a joining controller; current status remains available through the self-action.
+ * Result: The off-station panel appears temporarily, then hides on timeout or return to station.
  */
 
 params [["_id", "", [""]], ["_duration", 10, [0]]];

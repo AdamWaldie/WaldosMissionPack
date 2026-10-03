@@ -1,7 +1,17 @@
 /*
- * Reads or updates local field-equipment accessibility preferences.
- * Call with [] to read settings, or an array/hashmap of named overrides to update them.
- * Presentation preferences never alter challenge difficulty or timing.
+ * Author: WaldoTheWarfighter
+ * Purpose: Reads or updates local field-equipment accessibility preferences. These are
+ * presentation settings; they do not change challenge difficulty or timing.
+ * Locality/Authority: Run on the interface client whose profile should change.
+ * Repeat/JIP Behaviour: Reads are repeat-safe. Updates persist in that client's profile;
+ * each joining client reads its own saved settings, not a server snapshot.
+ * Arguments: 0: overrides <ARRAY of [STRING, BOOL] pairs or HASHMAP>, default [].
+ * The recognized keys are highContrast, colourblind, largeText, strongOutlines,
+ * reducedMotion and audioCaptions. An empty array only reads current values.
+ * Return Value: <HASHMAP> effective accessibility settings.
+ * Current Callers: MiniGameChallengeUI, MiniGameEquipmentProfile and local UI setup.
+ * Example: [["largeText", true]] call Waldo_fnc_MiniGameAccessibility;
+ * Result: Saves the override locally and returns the updated settings.
  */
 private _overrides = _this;
 if (typeName _overrides == "ARRAY" && {(count _overrides) == 1} && {typeName (_overrides select 0) in ["ARRAY", "HASHMAP"]}) then {

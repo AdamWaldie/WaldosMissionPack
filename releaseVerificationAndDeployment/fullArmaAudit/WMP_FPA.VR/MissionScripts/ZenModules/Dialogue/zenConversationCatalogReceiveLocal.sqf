@@ -7,6 +7,7 @@
  * Arguments: request token STRING, revision NUMBER, IDs ARRAY. Return Value: BOOL.
  * Current callers: ZenConversationCatalogServer responses.
  * Example: server remote execution only.
+ * Result: The matching catalogue response is stored for the curator's open assignment dialog.
  */
 params [["_requestToken", "", [""]], ["_revision", -1, [0]], ["_ids", [], [[]]]];
 if (!hasInterface || {remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}}) exitWith {false};

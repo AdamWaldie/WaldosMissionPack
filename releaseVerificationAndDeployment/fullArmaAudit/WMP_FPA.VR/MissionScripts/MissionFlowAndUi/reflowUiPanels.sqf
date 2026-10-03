@@ -14,6 +14,9 @@
  *
  * Example: [0.18] call Waldo_fnc_ReflowUiPanels;
  * Current callers: ShowUiNotification, notification expiry and UI-theme live restyling.
+ * Locality and authority: Repositions only this client's active WMP notification controls.
+ * Repeated passes replace layout, not gameplay state; JIP builds its own interface.
+ * Result: Current cards occupy their assigned lanes without overlapping reservations.
  */
 if (!hasInterface) exitWith {false};
 params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], [0]]];

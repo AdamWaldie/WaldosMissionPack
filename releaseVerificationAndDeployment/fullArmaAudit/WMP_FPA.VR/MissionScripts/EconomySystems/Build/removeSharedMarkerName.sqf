@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Remove shared marker name.
+ * Removes a marker name from the published Economy cleanup registry.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_markerName] call Waldo_fnc_EcoBuild_removeSharedMarkerName;
+ * Locality/Authority: Economy authority only; changes public registry.
+ * Repeat/JIP Behaviour: Missing names are ignored; JIP receives current list.
+ * Current Callers: Named marker deletion and building marker cleanup.
+ * Result: Future cleanup no longer targets the removed marker.
  */
 
         params [["_markerName", ""]];

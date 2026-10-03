@@ -6,6 +6,7 @@
  * Arguments: 0 pack ID <STRING>: MEDIEVAL_DORNOW or MODERN_CIVILIANS. Return Value: BOOL.
  * Current caller: mission-maker Eden init fields, triggers, scripts or server-authorised ZEN.
  * Example: ["MODERN_CIVILIANS"] call Waldo_fnc_DialogueLoadPresetPack;
+ * Result: The chosen preset archetypes become available for speaker assignment.
  */
 params [["_packId", "", [""]]];
 if (!isServer) exitWith {false};

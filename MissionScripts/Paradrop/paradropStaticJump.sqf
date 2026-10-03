@@ -8,6 +8,7 @@
  * Repeat/JIP: Each call starts one jump and installs no persistent local actions. Joining players
  * receive aircraft actions separately through the paradrop setup replay.
  *
+ * AI jumpers retain Waldo_Paradrop_Jumped so Smart AI can adopt them after landing.
  * Arguments:
  * 0: jumping unit <OBJECT>
  * 1: aircraft <OBJECT>
@@ -39,6 +40,8 @@ private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
 _exitPosition set [2, (getPosATL _vehicle) select 2];
 private _exitVelocity = velocity _vehicle;
 moveOut _unit;
+// AI jumpers are pinned with their aircraft; the tag lets the Smart AI Pass release them once landed.
+if (!isPlayer _unit) then {(group _unit) setVariable ["Waldo_Paradrop_Jumped", true, true]};
 _unit setPosATL _exitPosition;
 _unit setDir (_direction + 170);
 sleep 1.5;

@@ -11,6 +11,9 @@
  *
  * Example: [] call Waldo_fnc_UiThemeZen;
  * Current caller: UI QA - Set Visual Theme in Zen_initModules.sqf.
+ * Locality and authority: Opens a curator-local selection dialog; confirmation sends the
+ * requested global theme to server validation. The dialog is not replayed for JIP.
+ * Result: The curator can choose a WMP visual theme for current and joining players.
  */
 
 if !(hasInterface && {isClass (configFile >> "CfgPatches" >> "zen_dialog")}) exitWith {};

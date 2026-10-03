@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get side research speed bonus percent.
+ * Sums Research-speed bonuses granted by a side's completed buildings.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <NUMBER> non-negative combined percentage bonus.
  *
  * Example:
  * [_sideKey] call Waldo_fnc_EcoBuild_getSideResearchSpeedBonusPercent;
+ * Locality/Authority: Any machine; reads published completed-building registry.
+ * Repeat/JIP Behaviour: Repeat-safe read of current side state.
+ * Current Callers: Research remaining-time and progress calculations.
+ * Result: Each eligible building contributes its configured Research-speed bonus.
  */
 
         params [["_sideKey", "NONE"]];

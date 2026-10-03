@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Refresh purchase config side.
+ * Redraws the purchase editor's selected faction label.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigSide;
+ * Locality/Authority: Curator interface client; presentation only.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP state.
+ * Current Callers: Purchase editor load-row and faction selector controls.
+ * Result: The label matches the selected faction index.
  */
 
         params [["_disp", displayNull]];

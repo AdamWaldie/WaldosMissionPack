@@ -5,7 +5,7 @@
  * the active WMP profile. The newest 100 per-group results are retained for diagnostics.
  *
  * Locality and authority:
- * Server-only remote-execution endpoint. The claimed owner must equal remoteExecutedOwner and own
+ * Server-only remote-execution endpoint. The claimed owner must pass the HC-aware sender check and own
  * the ACE-reported headless-client entity. Because Arma can update groupOwner just after ACE raises
  * its transfer event, the server waits for that ownership to settle before recording the result.
  * Results are diagnostic state only and are not broadcast/JIP replayed. A repeat report replaces
@@ -37,8 +37,8 @@ params [
     ["_applied", 0, [0]], ["_profile", "LINE", [""]], ["_mode", "DAY", [""]]
 ];
 if !(isServer) exitWith {false};
-private _sender = remoteExecutedOwner;
-if (isNull _group || {isNull _headlessEntity} || {_newOwner <= 2} || {_sender != _newOwner}
+private _sender = [_newOwner] call Waldo_fnc_HeadlessResolveSender;
+if (isNull _group || {isNull _headlessEntity} || {!(_headlessEntity isKindOf "HeadlessClient_F")} || {_newOwner <= 2} || {_sender != _newOwner}
     || {owner _headlessEntity != _newOwner}) exitWith {
     diag_log format ["[WMP AI] Rejected HC adoption acknowledgement group=%1 sender=%2 claimedOwner=%3 HCowner=%4 actualOwner=%5.", _group, _sender, _newOwner, owner _headlessEntity, groupOwner _group];
     false

@@ -16,6 +16,7 @@
  *
  * Example:
  * call Waldo_fnc_SQUADPREDOC;
+ * Result: The player's Preparation diary subject gains the squad checklist.
  */
 
 player createDiaryRecord["Preperation",

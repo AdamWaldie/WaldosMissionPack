@@ -11,15 +11,25 @@
  * replaces the old AO safely.
  *
  * Locality and authority:
- * Server-owned creation, AI/marker registry and cleanup. Curator client requests route to the server;
+ * Server-owned creation, AI/marker registry and cleanup. An explicit curator requester routes a
+ * client call to the server; an Eden object-init call without one does no client-side work.
  * AI commands run where their groups are local and compact published state supplies JIP clients.
+ * Reusing an id replaces its old AO. JIP receives the published AO summary, not a rerun of creation.
  *
  * Arguments:
- * 0: config <HASHMAP> - see Wiki/Dynamic-AO-Generation.md for every supported key
- * 1: requester <OBJECT> - optional curator player used for authorization and feedback
+ * 0: config <HASHMAP> (default empty, rejected) - required: id <STRING>, center/centre <POSITION ARRAY>,
+ *    faction <STRING>; optional: side <SIDE, east>, radius <NUMBER, 500>, patrolGroups <NUMBER, 3>,
+ *    garrisonGroups <NUMBER, 3>, staticTurrets/vehiclePatrols/airPatrols <NUMBER, 0>,
+ *    vehicleMix <ARRAY OF 3 NUMBERS, [34,33,33]>, airMix <ARRAY OF 4 NUMBERS, [25,25,25,25]>,
+ *    heliPatrolRange <NUMBER, 1000>, planePatrolRange <NUMBER, 2000>, simplePathing <BOOLEAN, false>,
+ *    civilianFaction <STRING, empty>, civilianPatrols/civilianGarrisons/civilianCars <NUMBER, 0>,
+ *    minefields/roadblocks <NUMBER, 0>, showMineMarkers <BOOLEAN, false>,
+ *    displayName <STRING, id>, showMarker <BOOLEAN, true>. See wiki for limits and meaning.
+ * 1: requester <OBJECT> (default objNull) - curator player for remote authorization and feedback
  *
  * Return Value:
- * Boolean - true when the AO was accepted and registered
+ * Boolean - on server, true when accepted and registered; false on validation failure. On a client,
+ * true means the request was forwarded, or that an init-field copy was skipped, not AO creation.
  *
  * Current callers: server mission scripts, Waldo_fnc_DynamicAOZen and the full-pack audit station.
  * Eden init fields run on every machine: a non-server copy without an explicit curator requester
@@ -38,9 +48,7 @@ if (!isServer) exitWith {
     true
 };
 
-if (remoteExecutedOwner > 0) then {
-    if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
-};
+if (remoteExecutedOwner > 0 && {isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}}) exitWith {false};
 private _notify = {
     params ["_message", ["_state", "INFO"]];
     if (!isNull _requester) then {
@@ -93,13 +101,21 @@ _config set ["faction", _faction];
 _config set ["displayName", _displayName];
 _config set ["radius", _radius];
 private _registry = missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap];
-if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
-
 private _pools = [_faction, _side] call Waldo_fnc_DynamicAOResolvePools;
 private _infantry = _pools get "infantry";
-if (count _infantry == 0) exitWith {["The selected faction has no public infantry classes.", "ERROR"] call _notify; false};
+// Crewed vehicles, statics, aircraft and civilian-only requests do not consume this pool.
+// Reject an unusable infantry request before replacing an existing AO with the same id.
+private _needsInfantry = _patrolCount > 0 || {_garrisonCount > 0} || {_roadblockCount > 0};
+if (_needsInfantry && {count _infantry == 0}) exitWith {
+    private _message = if (_side == civilian) then {"The selected faction has no public infantry classes."} else {"The selected faction has no public armed infantry classes."};
+    [_message, "ERROR"] call _notify;
+    diag_log format ["[WMP DYNAMIC AO] Rejected '%1': faction=%2 side=%3 has no eligible infantry classes.", _id, _faction, _side];
+    false
+};
 private _civilianFaction = _config getOrDefault ["civilianFaction", ""];
 private _civilianPools = if (_civilianFaction == "") then {createHashMapFromArray [["infantry", []], ["car", []]]} else {[_civilianFaction, civilian] call Waldo_fnc_DynamicAOResolvePools};
+
+if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
 
 private _objects = [];
 private _groups = [];
@@ -127,6 +143,8 @@ private _spawnUnit = {
     // server the overlapping collision geometries can prevent the leader and followers from
     // acquiring their first path even though the group's waypoint is valid.
     private _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+    // Keep the chosen class and its initialization lifecycle intact. Mod InitPost/loadout handlers
+    // may equip it later; an immediate inventory check must not delete it or poison the pool cache.
     _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
     _unit setVariable ["acex_headless_blacklist", true, true];
     _objects pushBack _unit;
@@ -190,6 +208,9 @@ for "_buildingIndex" from 0 to (_usableGarrisons - 1) do {
     private _positions = (_buildings select _buildingIndex) buildingPos -1;
     private _group = createGroup _side;
     [_group] call _trackGroup;
+    // Lets the Smart AI Pass apply its garrison handling when Waldo_AIPass_Garrison_DynamicAO is true.
+    _group setVariable ["Waldo_DynamicAO_Role", "GARRISON", true];
+    _group setVariable ["Waldo_DynamicAO_Building", _buildings select _buildingIndex, true];
     private _occupants = (2 + floor random 3) min count _positions;
     for "_unitIndex" from 0 to (_occupants - 1) do {
         private _unit = [_group, selectRandom _infantry, _positions select _unitIndex] call _spawnUnit;

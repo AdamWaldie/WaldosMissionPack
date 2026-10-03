@@ -163,7 +163,7 @@ if (_suite in ["all", "core"]) then {
         _target allowDamage false;
         private _targetGroup = west createVehicleCrew _target;
         _target enableSimulationGlobal false;
-        private _ground = createVehicle ["B_MRAP_01_F", _centre, [], 0, "NONE"];
+        private _ground = createVehicle ["B_MRAP_01_F", [(_centre select 0) + 150, _centre select 1, 0], [], 0, "NONE"];
         _ground allowDamage false;
         private _groundGroup = west createVehicleCrew _ground;
         _ground enableSimulationGlobal false;
@@ -183,7 +183,11 @@ if (_suite in ["all", "core"]) then {
         private _detectionOnly = _detectionOnlyState getOrDefault ["detected", false]
             && {!(_detectionOnlyState getOrDefault ["engaged", false])};
 
-        _target setPosATL [_centre select 0, _centre select 1, 200];
+        _target enableSimulationGlobal true;
+        _target engineOn true;
+        _target flyInHeight 200;
+        _target setPosATL [(_centre select 0) - 200, _centre select 1, 200];
+        _target setVelocity [0, 0, 0];
         uiSleep 0.8;
         private _insideState = call _readState;
         private _insideEngaged = _insideState getOrDefault ["detected", false]
@@ -200,6 +204,64 @@ if (_suite in ["all", "core"]) then {
             private _units = units _x;
             _units findIf {_x checkAIFeature "AUTOTARGET"} >= 0
         } < 0;
+        private _defenceVehicles = [];
+        {
+            {if (vehicle _x != _x) then {_defenceVehicles pushBackUnique vehicle _x}} forEach units _x;
+        } forEach _activeDefenceGroups;
+        {
+            _x setVariable ["Waldo_DynamicAA_AuditShots", true, true];
+            _x setVariable ["Waldo_DynamicAA_AuditAirShots", 0, true];
+            _x setVariable ["Waldo_DynamicAA_AuditBlockedShots", 0, true];
+        } forEach _defenceVehicles;
+        // Deliberately present a forbidden ground-fire request while an aircraft keeps the site open.
+        // The production projectile gate must destroy it, after which the normal detector must restore
+        // the approved aircraft and produce real air-directed fire.
+        {
+            {if (alive _x) then {_x doTarget _ground; _x doFire _ground}} forEach units _x;
+        } forEach _activeDefenceGroups;
+        private _groundFireAttempts = 0;
+        private _groundFireAcceptedRequests = 0;
+        {
+            private _vehicle = _x;
+            private _requested = false;
+            {
+                private _turret = _x;
+                {
+                    private _weapon = _x;
+                    private _loaded = (magazinesAllTurrets _vehicle) findIf {
+                        (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
+                            && {(_x select 0) in compatibleMagazines _weapon}
+                    } >= 0;
+                    if (!_requested && {_loaded}) then {
+                        _vehicle selectWeaponTurret [_weapon, _turret];
+                        _groundFireAttempts = _groundFireAttempts + 1;
+                        _requested = _vehicle fireAtTarget [_ground, _weapon];
+                        if (_requested) then {
+                            _groundFireAcceptedRequests = _groundFireAcceptedRequests + 1;
+                        };
+                    };
+                } forEach (_vehicle weaponsTurret _turret);
+            } forEach allTurrets [_vehicle, true];
+        } forEach _defenceVehicles;
+        uiSleep 3;
+        private _blockedGroundShots = 0;
+        {_blockedGroundShots = _blockedGroundShots + (_x getVariable ["Waldo_DynamicAA_AuditBlockedShots", 0])} forEach _defenceVehicles;
+        {[_x, true, [_target]] call Waldo_fnc_DynamicAASetGroupState} forEach _activeDefenceGroups;
+        private _airFireDeadline = diag_tickTime + 12;
+        waitUntil {
+            uiSleep 0.25;
+            private _total = 0;
+            {_total = _total + (_x getVariable ["Waldo_DynamicAA_AuditAirShots", 0])} forEach _defenceVehicles;
+            _total > 0 || {diag_tickTime >= _airFireDeadline}
+        };
+        private _airShots = 0;
+        {_airShots = _airShots + (_x getVariable ["Waldo_DynamicAA_AuditAirShots", 0])} forEach _defenceVehicles;
+        // A rejected fireAtTarget request produces no projectile and is already a successful ground
+        // denial. If the engine accepts it, the production Fired gate must observe and delete it.
+        // In both cases an approved aircraft must still receive real fire afterwards.
+        private _groundFireDenied = _groundFireAttempts > 0
+            && {_groundFireAcceptedRequests == 0 || {_blockedGroundShots > 0}};
+        private _realFireGate = _groundFireDenied && {_airShots > 0};
 
         _target setPosATL [_centre select 0, _centre select 1, 350];
         uiSleep 0.8;
@@ -218,8 +280,11 @@ if (_suite in ["all", "core"]) then {
         [
             "core/dynamic-aa/envelope-and-locality",
             _created && {_belowClosed} && {_detectionOnly} && {_insideEngaged}
-                && {_groundNotEngaged} && {_autoTargetClosed} && {_aboveClosed} && {_closedOnOwners},
-            [_created, _belowClosed, _detectionOnly, _insideEngaged, _groundNotEngaged, _autoTargetClosed, _aboveClosed, _closedOnOwners]
+                && {_groundNotEngaged} && {_autoTargetClosed} && {_realFireGate}
+                && {_aboveClosed} && {_closedOnOwners},
+            [_created, _belowClosed, _detectionOnly, _insideEngaged, _groundNotEngaged,
+                _autoTargetClosed, _realFireGate, _groundFireAttempts, _groundFireAcceptedRequests,
+                _blockedGroundShots, _airShots, _aboveClosed, _closedOnOwners]
         ] call Waldo_QA_fnc_assert;
 
         [_id, true] call Waldo_fnc_DynamicAADestroy;

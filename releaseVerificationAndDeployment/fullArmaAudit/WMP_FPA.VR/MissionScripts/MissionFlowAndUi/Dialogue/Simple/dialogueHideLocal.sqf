@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: token-aware and repeat-safe. Arguments: 0 token/session prefix STRING.
  * Return Value: BOOL. Current callers: subtitle timer and dialogue workers.
  * Example: ["session"] call Waldo_fnc_DialogueHideLocal;
+ * Result: The matching subtitle closes without hiding a newer line.
  */
 params [["_token", "", [""]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

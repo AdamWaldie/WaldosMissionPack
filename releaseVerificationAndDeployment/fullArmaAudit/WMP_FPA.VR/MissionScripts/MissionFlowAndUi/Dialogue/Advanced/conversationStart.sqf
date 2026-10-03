@@ -4,6 +4,7 @@
  * Locality/authority: server-only and delegates to the same lock/validation path.
  * Repeat/JIP behaviour: respects the per-NPC active lock. Arguments: speaker OBJECT, caller OBJECT.
  * Return Value: BOOL. Current caller: mission scripts. Example: [guide,player] call Waldo_fnc_ConversationStart;
+ * Result: An eligible caller begins a validated session with the assigned speaker.
  */
 params [["_speaker", objNull, [objNull]], ["_caller", objNull, [objNull]]];
 if (!isServer) exitWith {false};

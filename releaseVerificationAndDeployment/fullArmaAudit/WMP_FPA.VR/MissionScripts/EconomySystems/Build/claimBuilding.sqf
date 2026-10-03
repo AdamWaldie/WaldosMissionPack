@@ -1,15 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Claim building.
+ * Change a built structure's owner to the caller's supported side.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; ownership is broadcast on the building.
+ * Repeat/JIP: A repeat claim by the same side does nothing. Published object
+ * state and refreshed marker are available to joining clients.
+ * Current Callers: EcoBuild_processBuildingManageRequest.
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
  * 1: _caller <OBJECT> - caller (optional, default: objNull)
  *
  * Return Value:
- * Any - see function body
+ * Nothing.
+ * Result: Updates side, upkeep/detection timers and marker when valid;
+ * exits without changing state for null objects or the existing owner.
  *
  * Example:
  * [_building, _caller] call Waldo_fnc_EcoBuild_claimBuilding;

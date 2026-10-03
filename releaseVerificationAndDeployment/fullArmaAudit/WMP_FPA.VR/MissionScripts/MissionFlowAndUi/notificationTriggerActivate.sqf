@@ -22,6 +22,10 @@
  *
  * Example:
  * [thisTrigger] call Waldo_fnc_NotificationTriggerActivate;
+ * Locality and authority: Runs from the registered trigger and forwards the configured
+ * audience/message through server notification authority. Repeated activations send another
+ * transient card; earlier cards are not JIP replayed.
+ * Result: The trigger's current recipients receive its notification.
  */
 params [["_trigger", objNull, [objNull]]];
 if (!isServer || {isNull _trigger}) exitWith {0};

@@ -1,8 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Start building upgrade.
+ * Validate and begin a paid upgrade for an owned building.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; client actions submit a server request.
+ * Repeat/JIP: An already-upgrading building is rejected. Public building
+ * state and job records carry the active upgrade to joining clients.
+ * Current Callers: EcoBuild_processBuildingManageRequest.
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
@@ -10,6 +13,8 @@
  *
  * Return Value:
  * Nothing
+ * Result: Charges resources and records timed upgrade progress only when
+ * ownership, permission, definition and affordability checks pass.
  *
  * Example:
  * [_building, _caller] call Waldo_fnc_EcoBuild_startBuildingUpgrade;

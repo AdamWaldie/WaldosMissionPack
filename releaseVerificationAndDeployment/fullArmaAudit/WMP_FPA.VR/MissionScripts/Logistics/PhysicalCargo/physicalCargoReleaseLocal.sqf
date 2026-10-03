@@ -9,6 +9,7 @@
  * Return Value: BOOLEAN - true when an ACE release was processed.
  * Current caller: the DefaultAction handler installed by Waldo_fnc_PhysicalCargoInitLocal.
  * Example: [player, player getVariable ["ace_dragging_carriedObject", objNull]] call Waldo_fnc_PhysicalCargoReleaseLocal;
+ * Result: A valid vehicle click submits a physical mount; other releases follow ACE's drop path.
  */
 params [
     ["_carrier", objNull, [objNull]],
@@ -36,6 +37,8 @@ if (!isNull _requestedVehicle && {_vehicle isNotEqualTo _resolvedVehicle}) then 
 };
 private _validVehicle = !isNull _vehicle
     && {_vehicle isKindOf "LandVehicle" || {_vehicle isKindOf "Air"} || {_vehicle isKindOf "Ship"}}
+    && {[_cargo] call Waldo_fnc_PhysicalCargoIsEligible}
+    && {missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]}
     && {_vehicle isNotEqualTo _cargo}
     && {alive _vehicle}
     && {abs speed _vehicle < 5}
@@ -55,11 +58,32 @@ if (_validVehicle) then {
     _relativeUp = _vehicle vectorWorldToModel (vectorUp _cargo);
 };
 
+// ACE zeroes a carried object's mass and restores it globally on drop. Restoring it while the
+// object still overlaps the vehicle lets PhysX throw or destroy the vehicle, so a mounted object
+// keeps the carried near-zero mass; WMP restores it once the object is set down clear again.
+if (_validVehicle) then {
+    private _mass = _cargo getVariable ["ace_dragging_originalMass", 0];
+    if (_mass > 0) then {
+        _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", _mass, true];
+        _cargo setVariable ["ace_dragging_originalMass", 0, true];
+    };
+} else {
+    private _mass = _cargo getVariable ["Waldo_PhysicalCargo_OriginalMass", 0];
+    if (_mass > 0) then {
+        _cargo setVariable ["ace_dragging_originalMass", _mass, true];
+        _cargo setVariable ["Waldo_PhysicalCargo_OriginalMass", nil, true];
+    };
+};
+
 // This is ACE's own full cleanup path. The false argument prevents its automatic cargo-load
 // attempt; physical mounting is requested only for the vehicle captured before release.
 [_carrier, _cargo, false] call ace_dragging_fnc_dropObject_carry;
 
 if (_validVehicle) then {
+    // ACE has just detached the object. Attach it to the vehicle in the same frame so it never
+    // falls or simulates inside the vehicle while the server validates the mount; the server
+    // detaches and sets it down clear again if it rejects the request.
+    _cargo attachTo [_vehicle, _offset];
     [_carrier, _cargo, _vehicle, _offset, _relativeDir, _relativeUp]
         remoteExecCall ["Waldo_fnc_PhysicalCargoAttachServer", 2];
 };

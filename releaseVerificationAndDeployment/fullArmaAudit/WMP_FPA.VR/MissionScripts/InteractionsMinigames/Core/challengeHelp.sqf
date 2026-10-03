@@ -8,6 +8,10 @@
  *
  * Example: [_display, "BREAKER", "Restore power", "Select links", "Trace the circuit"] call Waldo_fnc_MiniGameChallengeHelp;
  * Current caller: ChallengeUi while constructing an interaction-procedure display.
+ * Locality/Authority: Interface client only; creates controls on the supplied local display.
+ * Repeat/JIP Behaviour: The help controls are created for each new display and reused while
+ * that display remains open. Joining clients receive no persistent help-card state.
+ * Result: The display gains an on-demand help card; no synchronous value is returned.
  */
 disableSerialization;
 params [

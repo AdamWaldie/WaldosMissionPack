@@ -12,6 +12,7 @@
  * Return Value: Boolean - true when applied or forwarded to the current group owner.
  * Example: [group driver _vehicle, "Raven One"] call Waldo_fnc_TransportSetGroupNameLocal;
  * Current caller: Waldo_fnc_TransportRegister after authoritative registration succeeds.
+ * Result: The transport group shows its assigned service name on the group owner.
  */
 
 params [["_group", grpNull, [grpNull]], ["_displayName", "", [""]]];

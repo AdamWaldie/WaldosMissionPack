@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Is build requirement satisfied for side.
+ * Checks whether a side owns an operational completed building of the named type.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true for a matching, operational, side-owned building.
  *
  * Example:
  * [_buildName, _sideKey] call Waldo_fnc_EcoBuild_isBuildRequirementSatisfiedForSide;
+ * Locality/Authority: Any machine; reads public building ownership/operational state.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP sees current registered buildings.
+ * Current Callers: Construction, Research and Purchasing prerequisite checks.
+ * Result: Enemy, disabled or deleted buildings do not satisfy the side requirement.
  */
 
         params [["_buildName", ""], ["_sideKey", "NONE"]];

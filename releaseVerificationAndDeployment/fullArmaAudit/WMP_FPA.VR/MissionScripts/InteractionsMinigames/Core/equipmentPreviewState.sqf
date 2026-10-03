@@ -1,4 +1,15 @@
-/* Applies a non-resolving developer-gallery state to the real equipment display. */
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Applies a non-resolving gallery state to a real field-equipment display.
+ * Locality/Authority: Interface client only; preview does not resolve the challenge.
+ * Repeat/JIP Behaviour: State can be changed repeatedly on one display; no JIP replay.
+ * Arguments: 0: display <DISPLAY>, default displayNull; 1: state <STRING>, default "ACTIVE";
+ * recognized states include BRIEFING, ACTIVE, HOVER, SELECTED, DISABLED and WARNING.
+ * Return Value: <BOOL> false for displayNull, true otherwise.
+ * Current Callers: Interaction-equipment developer-gallery and visual QA flows.
+ * Example: [_display, "WARNING"] call Waldo_fnc_MiniGameEquipmentPreviewState;
+ * Result: Shows the requested presentation state without reporting challenge success or failure.
+ */
 disableSerialization;
 params [["_display", displayNull, [displayNull]], ["_state", "ACTIVE", [""]]];
 if (isNull _display) exitWith {false};

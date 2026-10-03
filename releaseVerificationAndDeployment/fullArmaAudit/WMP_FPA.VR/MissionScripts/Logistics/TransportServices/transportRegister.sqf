@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
  * Registers one already AI-crewed helicopter, ground vehicle or boat with the authoritative typed
  * transport service. An Eden vehicle init runs on every machine, but only the server mutates the
  * registry; every non-server copy deliberately does nothing. ZEN registration reaches
@@ -13,31 +13,32 @@
  * (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily damaged to
  * remain effective
  * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
- * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
+ * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss. Each crew
+ * group is tagged Waldo_TransportService_Vehicle so that, once the transport is out of service and the
+ * crew are on foot, the Smart AI Pass (when enabled) takes them over as an ordinary squad.
  *
  * Arguments:
- * 0: vehicle <OBJECT>
- * 1: service type <STRING> - HELICOPTER, GROUND or BOAT.
- * 2: service ID <STRING> - unique readable key; blank generates one.
- * 3: display name <STRING> - player-facing callsign/name; blank uses groupId.
- * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
- *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
- *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
- *    landingClearanceScale,
- *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
- *    avoidRoadObstacles (ground only; default true - once a route stalls with no progress for
- *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
- *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
- *    false to keep retrying the exact same road-locked path instead),
- *    waterSearchRadius (boat only; furthest a safe water service point may move from the clicked
- *    position), boatSpeedLimit (boat only),
- *    invulnerable (vehicle and original AI service crew; default false), and
- *    useImprovedLanding (helicopters only; default true). At destination, LAND may naturally idle
- *    the engine down while boarding/disembarking and never orders passengers out;
- *    destinationDwell triggers moveOut only when forceDisembark is true, and RTB cannot begin until
- *    every passenger is physically outside. minimumSeparation spaces active
- *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18, boats 25);
- *    prepared bases are checked only for physical overlap.
+ * 0: vehicle <OBJECT> - required existing AI-crewed vehicle (default objNull is rejected).
+ * 1: service type <STRING> - HELICOPTER, GROUND or BOAT (default GROUND).
+ * 2: service ID <STRING> - unique readable key; blank generates one (default "").
+ * 3: display name <STRING> - player-facing callsign/name; blank uses groupId (default "").
+ * 4: options <HASHMAP|ARRAY of [STRING key, value] rows> (default empty HashMap). Keys:
+ *    cruiseAltitude <NUMBER metres, 50>, stopRadius <NUMBER metres, 35 heli/12 other>,
+ *    boardingSeconds <NUMBER seconds, 300>, destinationDwell <NUMBER seconds, 45>,
+ *    allowedSides <ARRAY of SIDE, [side driver]>, allowedGroups <ARRAY of group IDs, []>,
+ *    leadersOnly <BOOL, false>, showMarker <BOOL, true>, repairAtBase <BOOL, false>,
+ *    refuelAtBase <BOOL, true>, forceDisembark <BOOL, false>, failSafeReset <BOOL, false>,
+ *    invulnerable <BOOL, false; vehicle/original AI crew only>,
+ *    speedMode <STRING, NORMAL ground/FULL other>, behaviour <STRING, CARELESS>,
+ *    landingSearchRadius <NUMBER metres, 500>, landingClearanceScale <NUMBER, 1.5>,
+ *    roadSearchRadius <NUMBER metres, 200>, waterSearchRadius <NUMBER metres, 300>,
+ *    minimumSeparation <NUMBER metres, 60 heli/18 ground/25 boat>,
+ *    groundSpeedLimit <NUMBER km/h, 60>, boatSpeedLimit <NUMBER km/h, 45>,
+ *    pathRetrySeconds <NUMBER seconds, 25>, pathRetryLimit <NUMBER whole retries, 3>,
+ *    avoidRoadObstacles <BOOL, true; ground only>, useImprovedLanding <BOOL, true; heli only>.
+ *    With forceDisembark=false, destinationDwell never ejects a passenger. RTB waits until every
+ *    human is physically out. Prepared bases may be closer than minimumSeparation, but cannot
+ *    physically overlap.
  *
  * Return Value: Boolean - true when registered (or when a duplicate non-server Eden copy was ignored).
  *
@@ -188,6 +189,8 @@ _vehicle setVariable ["Waldo_TransportService_Requester", objNull, true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
 _vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
 [_vehicle] call Waldo_fnc_HeadlessPinCrew;
+// Lets the Smart AI Pass release this crew if they end up on foot beside a written-off transport.
+{(group _x) setVariable ["Waldo_TransportService_Vehicle", _vehicle, true]} forEach crew _vehicle;
 if (_config get "invulnerable") then {_vehicle setDamage 0};
 private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;

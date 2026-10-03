@@ -4,6 +4,7 @@
  * Locality/authority: pure server-loaded data. Repeat/JIP behaviour: no side effects.
  * Arguments: None. Return Value: HASHMAP of archetype ID to ARRAY<STRING>.
  * Current caller: Waldo_fnc_DialogueLoadPresetPack. Example: ["MEDIEVAL_DORNOW"] call Waldo_fnc_DialogueLoadPresetPack;
+ * Result: Returns the medieval preset archetypes for server-side registration.
  */
 createHashMapFromArray [
     ["DORNOW_CIVILIAN", ["You're with Dornow?", "White and blue, thank Christ!", "Hello?", "Jesus Christ be praised!", "...as we forgive those who trespass against us...", "Give those Cumans hell, eh?", "What a miserable bloody day.", "Praise be!", "Morning, Guardsman.", "Thought I saw something in the trees...", "Winds howling..."]],

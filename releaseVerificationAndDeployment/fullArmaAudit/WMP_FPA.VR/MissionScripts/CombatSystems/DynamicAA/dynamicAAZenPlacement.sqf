@@ -16,6 +16,9 @@
  * Return Value: Nothing.
  * Example: [_centre, _id, _settings, _catalogue] spawn Waldo_fnc_DynamicAAZenPlacement;
  * Current caller: Waldo_fnc_DynamicAAZen.
+ * Locality and authority: Runs on the curator's interface client after dialog selection.
+ * The resulting placement request goes to the server; no placement UI is JIP replayed.
+ * Result: The selected layout is submitted for authoritative creation.
  */
 
 params [

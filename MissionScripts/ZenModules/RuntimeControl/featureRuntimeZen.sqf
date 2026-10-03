@@ -13,6 +13,8 @@
  * 1: module position <ARRAY> - curator-selected world position
  * 2: object under the module <OBJECT> (default objNull) - optional preselected target
  *
+ * 3: section <STRING> - optional AI settings page, default empty opens the Cortex overview.
+ * Repeat/JIP: dialogs read current state; no persistent UI or local worker is installed.
  * Return Value:
  * Nothing
  *
@@ -29,7 +31,8 @@
 params [
     ["_feature", "", [""]],
     ["_modulePos", [], [[]]],
-    ["_objectPos", objNull, [objNull]]
+    ["_objectPos", objNull, [objNull]],
+    ["_section", "", [""]]
 ];
 if !(hasInterface) exitWith {};
 private _resolveTarget = {
@@ -512,29 +515,107 @@ switch (toUpperANSI _feature) do {
             }
         ] call zen_dialog_fnc_create;
     };
-    case "AI": {
-        private _profileValues = ["LEGACY", "MILITIA", "LINE", "VETERAN", "ELITE"];
-        private _configuredProfiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
+    case "AI": {[_section] call Waldo_fnc_CortexControlOpenLocal};
+    // Legacy script entry opens the consolidated control module.
+    case "AI_TUNING": {["AI",_modulePos,_objectPos,_section] call Waldo_fnc_FeatureRuntimeZen};
+    case "AI_SPOTTER": {
+        if (isNull _objectPos || {!(_objectPos isKindOf "CAManBase")} || {isPlayer _objectPos} || {!alive _objectPos}) exitWith {
+            ["AI SPOTTER", "Place this module on the existing AI soldier to assign or remove.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
+        };
+        [format ["Artillery spotter: %1", name _objectPos], [
+            ["COMBO", ["Assignment", "Assign only this soldier. Equip binoculars; radio inventory is ignored, and observation and jamming rules still apply. Enable artillery in Cortex Control to run support."],
+                [["SPOTTER_ON", "SPOTTER_OFF"], ["Assign artillery spotter", "Remove spotter assignment"], [0,1] select (_objectPos getVariable ["Waldo_AIPass_Spotter",false])]]
+        ], {
+            params ["_values", "_unit"];
+            ["AI_ORDER", [["order", _values select 0], ["group", group _unit], ["unit", _unit]]] call Waldo_fnc_FeatureRuntimeApply;
+        }, {}, _objectPos] call zen_dialog_fnc_create;
+    };
+    case "AI_BATTERY": {
+        if (isNull _objectPos || {getNumber (configOf _objectPos >> "artilleryScanner") != 1} || {!alive _objectPos}) exitWith {
+            ["AI BATTERY", "Place this module on an existing artillery vehicle or mortar.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
+        };
+        private _roles = ["SUPPORT", "COUNTER", "BOTH"];
+        private _role = _objectPos getVariable ["Waldo_AIPass_ArtilleryRole", missionNamespace getVariable ["Waldo_AIPass_Artillery_DefaultRole", "BOTH"]];
+        ["Artillery battery role", [
+            ["COMBO", ["Allowed missions", "Applies only to the selected gun, including an empty gun prepared before crewing. This does not enable artillery or bypass spotter and safety checks."],
+                [_roles, ["Support and retreat smoke", "Counter-battery only", "Support and counter-battery"], (_roles find _role) max 0]]
+        ], {
+            params ["_values", "_target"];
+            ["AI_BATTERY", [["target", _target], ["role", _values select 0]]] call Waldo_fnc_FeatureRuntimeApply;
+        }, {}, _objectPos] call zen_dialog_fnc_create;
+    };
+    case "AI_RADAR": {
+        if (isNull _objectPos || {!alive _objectPos} || {_objectPos isKindOf "CAManBase"}) exitWith {
+            ["AI RADAR", "Place this module on the existing radar vehicle or prop to register.", "ERROR", "AI_SETUP"] call Waldo_fnc_FeatureNotifyLocal;
+        };
+        private _radars = missionNamespace getVariable ["Waldo_AIPass_CounterBatteryRadars", []];
+        private _entry = _radars findIf {(_x select 0) == _objectPos};
+        private _side = if (_entry < 0) then {"WEST"} else {(_radars select _entry) select 1};
+        ["Counter-battery radar", [
+            ["COMBO", ["Registration", "Uses this exact object without spawning, moving or changing its simulation. Counter-battery works without radar. Registering this object reduces acquisition delay for its supported side."], [[true, false], ["Register / update radar", "Remove radar registration"], 0]],
+            ["COMBO", ["Supported side", "The side receiving detection from this radar; independent of the object's model or faction. Ignored when removing."], [["WEST", "EAST", "GUER"], ["BLUFOR", "OPFOR", "Independent"], (["WEST", "EAST", "GUER"] find _side) max 0]]
+        ], {
+            params ["_values", "_target"];
+            _values params ["_enabled", "_side"];
+            ["AI_RADAR", [["target", _target], ["enabled", _enabled], ["side", _side]]] call Waldo_fnc_FeatureRuntimeApply;
+        }, {}, _objectPos] call zen_dialog_fnc_create;
+    };
+    case "AI_GARRISON";
+    case "AI_DEFEND";
+    case "AI_CLEAR";
+    case "AI_AIRBORNE";
+    case "AI_GROUP";
+    case "AI_ORDERS": {
+        private _preferred = grpNull;
+        if (!isNull _objectPos) then {
+            if (_objectPos isKindOf "CAManBase" && {!isPlayer _objectPos}) then {_preferred = group _objectPos};
+            if (_objectPos isKindOf "LandVehicle" && {!isNull driver _objectPos}) then {_preferred = group driver _objectPos};
+        };
+        private _ranked = [];
         {
-            if !(_x in ["PUBLIC", "STANDARD"]) then {_profileValues pushBackUnique _x};
-        } forEach ((keys _configuredProfiles) call BIS_fnc_sortAlphabetically);
-        private _profileNames = missionNamespace getVariable ["Waldo_AI_ProfileDisplayNames", createHashMap];
-        private _profileLabels = _profileValues apply {_profileNames getOrDefault [_x, _x]};
-        private _activeProfile = missionNamespace getVariable ["Waldo_AI_Profile", "LINE"];
-        if (_activeProfile == "PUBLIC") then {_activeProfile = "MILITIA"};
-        if (_activeProfile == "STANDARD") then {_activeProfile = "LINE"};
-        [
-            "AI Rebalance Control",
-            [
-                ["CHECKBOX", ["Enable", "Apply the selected profile to local AI on every machine."], missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]],
-                ["COMBO", ["Lighting conditions", "Low light reduces AI combat and sensing skills; assigned NVG/HMD equipment offsets the penalty."], [["DAY", "NIGHT"], ["Daylight", "Low light (NVG-aware)"], (["DAY", "NIGHT"] find (missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"])) max 0]],
-                ["COMBO", ["WMP opposition profile", "These are WMP encounter presets, not Arma difficulty levels. Mission-defined profiles are included by display name."], [_profileValues, _profileLabels, (_profileValues find _activeProfile) max 0]]
-            ],
-            {
-                params ["_values"];
-                ["AI_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;
-            }
-        ] call zen_dialog_fnc_create;
+            private _leader = leader _x;
+            if (alive _leader && {(units _x) findIf {isPlayer _x} < 0} && {side _x in [west, east, independent, civilian]}
+                ) then {
+                _ranked pushBack [[1, 0] select (_x == _preferred), _leader distance2D _modulePos, _forEachIndex, _x];
+            };
+        } forEach allGroups;
+        _ranked sort true;
+        private _groups = [grpNull] + (_ranked apply {_x select 3});
+        private _groupLabels = ["Choose the squad to command"] + (_ranked apply {
+            private _group = _x select 3;
+            private _spotters = (units _group) select {_x getVariable ["Waldo_AIPass_Spotter", false]};
+            format ["%1 / %5 (%2 soldiers, %3 m; spotters: %4)", groupId _group, {alive _x} count units _group,
+                round (_x select 1), if (_spotters isEqualTo []) then {"none"} else {(_spotters apply {name _x}) joinString ", "},side _group]
+        });
+        if (count _groups == 1) exitWith {["CORTEX","No living AI-only squads are available.","ERROR","AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal};
+        private _groupIndices = [];
+        {_groupIndices pushBack _forEachIndex} forEach _groupLabels;
+        private _building = if (!isNull _objectPos && {_objectPos isKindOf "House"}) then {_objectPos} else {objNull};
+        private _orders = switch (_feature) do {
+            case "AI_GARRISON": {["GARRISON"]};
+            case "AI_DEFEND": {["DEFEND"]};
+            case "AI_CLEAR": {["CLEAR"]};
+            case "AI_AIRBORNE": {["AIRBORNE"]};
+            default {["RELEASE","EXCLUDE","RETURN"]};
+        };
+        private _names = createHashMapFromArray [["GARRISON","Garrison buildings"],["DEFEND","Defend a line"],["CLEAR","Clear selected building"],["AIRBORNE","Parachute passengers"],["RELEASE","Release WMP posted order"],["EXCLUDE","Stop Cortex orders and keep for Zeus"],["RETURN","Allow Cortex automatic control"]];
+        if (_feature == "AI_CLEAR" && {isNull _building}) exitWith {["AI CLEAR","Place this module on the building to clear.","ERROR","AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal};
+        private _controls = [
+            ["COMBO",["Group","All living AI-only squads, sorted by distance. Place the module at the order destination; select the squad explicitly. Clicking a soldier preselects its squad."],[_groupIndices,_groupLabels,(_groups find _preferred) max 0]]
+        ];
+        if (count _orders > 1) then {_controls pushBack ["COMBO",["Action","Release ends posted orders. Keep for Zeus ends all Cortex orders and excludes this group. Allow Cortex respects mission feature gates."],[_orders,_orders apply {_names get _x},0]]};
+        if (_feature in ["AI_GARRISON","AI_DEFEND"]) then {_controls pushBack ["SLIDER",["Area size (m)","Garrison search radius or defence line width."],[15,150,50,0]]};
+        if (_feature == "AI_DEFEND") then {_controls pushBack ["SLIDER",["Facing","Compass direction for the defence line."],[0,359,round getDir curatorCamera,0]]};
+        [if (count _orders == 1) then {_names get (_orders select 0)} else {"AI Group Control"},_controls,{
+            params ["_values","_arguments"];
+            _arguments params ["_groups","_modulePos","_building","_unit","_orders"];
+            private _group = _groups param [_values select 0,grpNull];
+            if (isNull _group) exitWith {["AI ORDERS","Select an AI group for this order.","ERROR","AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal};
+            private _order = if (count _orders == 1) then {_orders select 0} else {_values select 1};
+            private _reason = [_group,_order,_building] call Waldo_fnc_CortexOrderReason;
+            if (_reason != "") exitWith {["CORTEX",_reason,"ERROR","AI_ORDERS"] call Waldo_fnc_FeatureNotifyLocal};
+            ["AI_ORDER",[["order",_order],["group",_group],["position",_modulePos],["radius",if (_order in ["GARRISON","DEFEND"]) then {round (_values param [1,50])} else {50}],["building",_building],["facing",round (_values param [2,0])],["unit",_unit]]] call Waldo_fnc_FeatureRuntimeApply;
+        },{},[_groups,_modulePos,_building,_objectPos,_orders]] call zen_dialog_fnc_create;
     };
     case "HAZARD_CREATE": {
         private _presets = missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap];

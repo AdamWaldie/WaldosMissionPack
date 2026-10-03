@@ -1,6 +1,14 @@
 /*
- * Tactical directional-command uplink procedure.
- * Config: [baseLength(3..8), rounds(1..6), maxMistakes(1..6), timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Opens the tactical directional-command uplink procedure.
+ * Locality and authority: Creates a private client display; the result resolver reports
+ * completion to the caller. Repeated attempts start fresh and are not JIP replayed.
+ * Arguments: 0: config <ARRAY> [baseLength 3..8, rounds 1..6, maxMistakes 1..6,
+ *   timeLimit, title] ([] defaults); 1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[4, 3, 3, 45, "TACTICAL UPLINK"], {}] call Waldo_fnc_MiniGameCommandInput;
+ * Result: The player sees the command-input procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

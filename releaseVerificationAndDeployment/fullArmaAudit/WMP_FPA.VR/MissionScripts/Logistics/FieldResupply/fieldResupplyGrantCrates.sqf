@@ -19,6 +19,10 @@
  * if (isServer) then {[fieldResupplyCarrier, 2, false] call Waldo_fnc_FieldResupplyGrantCrates;};
  *
  * Current callers: Field Resupply Grant Crates ZEN module and mission-maker scripts.
+ * Locality and authority: Server validates curator requests and updates the carrier's public
+ * count. Client calls forward to the server; JIP reads the latest count rather than replaying
+ * the grant. Repeated grants consume remaining capacity unless expansion was requested.
+ * Result: The assigned carrier gains the number of portable crates returned by the server.
  */
 
 params [

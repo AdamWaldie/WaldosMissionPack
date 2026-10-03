@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup detector visuals.
+ * Removes a detector building's contact and coverage-area markers.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_building] call Waldo_fnc_EcoBuild_cleanupDetectorVisuals;
+ * Locality/Authority: Economy authority only; deletes global markers and public tags.
+ * Repeat/JIP Behaviour: Repeat cleanup is harmless; JIP sees cleared marker names.
+ * Current Callers: Building disable/deletion and detector teardown.
+ * Result: No detector visuals remain attached to the building.
  */
 
         params [["_building", objNull]];

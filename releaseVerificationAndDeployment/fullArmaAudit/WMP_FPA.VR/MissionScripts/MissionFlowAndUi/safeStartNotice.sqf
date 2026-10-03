@@ -11,6 +11,7 @@
  *
  * Example: ["SafeStart active", 8] call Waldo_fnc_SafeStartNotice;
  * Current caller: SafeStartApply when protection changes state.
+ * Result: The player receives a transient SafeStart change notification.
  */
 if (!hasInterface) exitWith {false};
 params [

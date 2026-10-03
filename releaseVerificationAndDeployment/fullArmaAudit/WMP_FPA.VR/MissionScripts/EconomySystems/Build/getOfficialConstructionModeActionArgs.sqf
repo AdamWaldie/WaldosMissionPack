@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official construction mode action args.
+ * Build the client action and dialog for construction-mode placement.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  * Locality / Authority: The placement UI and action execute on the interface client; the completed
@@ -8,17 +8,18 @@
  * Repeat / JIP Behaviour: Local UI cleanup is repeat-safe; JIP players receive this action through the
  * existing construction-vehicle registry reconciliation and create requests only after interaction.
  *
- * Arguments:
- * 0: _target <ANY> - target
- * 1: _caller <ANY> - caller
+ * Arguments: None. The returned action callback receives its target and caller.
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - arguments for the shared object-action installer.
+ * Result: Interacting opens local construction choices; confirming submits
+ * a placement request to Economy authority.
  *
- * Current Callers: Economy construction-vehicle action reconciliation.
+ * Current Callers: EcoBuild_ensureConstructionVehicleActionLocal and
+ * EcoResearch_ensureResearchCenterActionsLocal.
  *
  * Example:
- * [_target, _caller] call Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs;
+ * call Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs;
  */
 
         [

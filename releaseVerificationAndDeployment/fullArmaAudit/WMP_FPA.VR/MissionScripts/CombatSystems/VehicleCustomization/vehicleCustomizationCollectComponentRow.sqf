@@ -23,6 +23,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Component tab's Add Component Row button).
+ * Locality and authority: Reads the curator's local editor controls without mutating a
+ * vehicle. Repeated collection has no JIP side effect.
+ * Result: Returns one validated component row, or an empty row when the input is unusable.
  */
 
 params [["_disp", displayNull]];

@@ -1,8 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Register construction job.
+ * Add a new named construction job to the published active-job list.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; the list setter broadcasts it.
+ * Repeat/JIP: An existing job ID is ignored, preventing duplicate entries;
+ * JIP clients receive the published list.
+ * Current Callers: EcoBuild_startPlacedConstruction and
+ * EcoBuild_startVehicleConstruction.
  *
  * Arguments:
  * 0: _jobId <STRING> - job id (optional, default: "")
@@ -11,6 +15,7 @@
  *
  * Return Value:
  * Nothing
+ * Result: Adds [job ID, definition name, side key] when both IDs are valid.
  *
  * Example:
  * [_jobId, _buildName, _sideKey] call Waldo_fnc_EcoBuild_registerConstructionJob;

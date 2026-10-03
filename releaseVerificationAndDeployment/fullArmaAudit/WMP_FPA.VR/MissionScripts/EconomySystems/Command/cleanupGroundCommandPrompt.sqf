@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup ground command prompt.
+ * Removes controls and closes the local Ground Command curator prompt.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoCommand_cleanupGroundCommandPrompt;
+ * Locality/Authority: Curator interface client only; does not change command authority.
+ * Repeat/JIP Behaviour: Safe to call on a closed/null display; no JIP state is stored.
+ * Current Callers: Ground Command prompt close button, unified save cleanup and Resource prompts.
+ * Result: Removes the prompt controls from the supplied display.
  */
 
     params [["_disp", displayNull]];

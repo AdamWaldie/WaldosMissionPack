@@ -5,8 +5,10 @@
  * Repeat / JIP: Clears and repopulates on repeat; global inventory changes replicate to JIP.
  * Arguments: crate <OBJECT>, scale <NUMBER> (1), side <SIDE> (west),
  *   include equipment <BOOL> (false), include launchers <BOOL> (false).
- * Return Value: See function body. Current callers: starter crates, quartermaster, ZEN crate and field resupply.
+ * Return Value: No supported return value; use the crate's resulting inventory.
+ * Current callers: starter crates, quartermaster, ZEN crate and field resupply.
  * Example: [myCrate, 1, west, false, false] call Waldo_fnc_SupplyCratePopulate;
+ * Result: The crate receives dynamic mission-derived ammunition and selected equipment.
  */
 
 params ["_crate", ["_scalar",1],["_crateSupplySide",west],["_weaponsAttachmentsUniforms",false],["_includeLaunchersAndLauncherAmmo",false]];
@@ -97,5 +99,11 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 
 if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
-    [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+    // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+    // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+    // Same ACE handling as a quartermaster crate (drag/carry regardless of weight, one cargo slot).
+    [{
+        [_this select 0, 1] call Waldo_fnc_LogisticsApplyAceHandling;
+        _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+    }, [_crate, "SUPPLY"]] call CBA_fnc_execNextFrame;
 };

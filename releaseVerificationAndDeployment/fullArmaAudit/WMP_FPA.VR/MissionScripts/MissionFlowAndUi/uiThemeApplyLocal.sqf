@@ -13,6 +13,10 @@
  *
  * Example: ["SCIFI", true] call Waldo_fnc_UiThemeApplyLocal;
  * Current callers: UiThemeSetServer and local colour-vision profile changes.
+ * Locality and authority: Applies a server-published or local preview theme on one
+ * interface client. Repeating it restyles current UI; JIP clients receive the current
+ * global theme separately and apply their own profile.
+ * Result: Existing and later WMP controls use the selected theme locally.
  */
 
 params [["_themeId", "DEFAULT", [""]], ["_preview", false, [true]]];

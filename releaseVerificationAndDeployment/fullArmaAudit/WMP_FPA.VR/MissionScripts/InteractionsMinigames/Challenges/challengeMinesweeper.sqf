@@ -15,6 +15,7 @@
  * Current Callers: Waldo_fnc_MiniGameChallenge and the interaction-equipment QA mission.
  * Example: [[5, 5, 90, "TRIGGER ANALYSER"], {systemChat str _this}] call
  *          Waldo_fnc_MiniGameMinesweeper;
+ * Result: The resolver receives the challenge outcome; no value is returned synchronously.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

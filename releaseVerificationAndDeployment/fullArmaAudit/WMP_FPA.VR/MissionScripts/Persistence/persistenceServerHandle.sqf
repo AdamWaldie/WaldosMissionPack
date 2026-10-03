@@ -4,6 +4,10 @@
  * Every LOAD_PLAYER request receives exactly one FOUND, NONE or FAILED response. This explicit reply
  * is required so a client never starts automatic writes while an older database record is unread.
  * The server remains the sole database authority; repeated requests are safe and UID/scope isolated.
+ * Locality and authority: Server-only request endpoint. It authenticates the requesting player
+ * owner before database access and sends load replies back to that player's client.
+ * Repeat/JIP: Each LOAD_PLAYER gets a FOUND, NONE or FAILED reply. Joining players use the same
+ * handshake; repeated requests remain isolated by UID and scope.
  *
  * Arguments:
  * 0: operation <STRING> - LOAD_PLAYER or SAVE_PLAYER
@@ -14,6 +18,9 @@
  *
  * Example:
  * ["SAVE_PLAYER", _state] remoteExecCall ["Waldo_fnc_PersistenceServerHandle", 2];
+ * Result: Returns true after handling an authenticated load or save request, false when
+ * inactive, invalid or unauthorized.
+ * Current callers: PersistenceInit's client load request and PersistenceSavePlayerLocal.
  */
 
 params [

@@ -3,6 +3,10 @@
  * Defines airborne gunship, dynamic paradrop and Dynamic AA defaults. Shared airframe/chute pools
  * remain independent of operational side; shared AA pools feed curator selectors and server
  * validation, while server-only safety limits and jump envelopes remain authoritative.
+ * Locality / Authority: SHARED rows load on every machine. SERVER rows load on the server,
+ * which publishes only rows marked for publication and validates operational requests.
+ * Repeat/JIP: The loader preserves values already set. Joining clients load SHARED defaults
+ * and receive published SERVER settings. This file creates no aircraft or AA site.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
  * ALIASES entries are [scope, target name, source name] and copy only when target is undefined.

@@ -17,6 +17,7 @@
  * Example:
  * ["diag_01"] call Waldo_fnc_RunDiagnosticsClient;
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics
+ * Result: The client reports its checks for the active diagnostic run to the server.
  */
 if (!hasInterface) exitWith {false};
 params [["_runId", "", [""]]];
@@ -255,8 +256,8 @@ private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 // after diagnostics starts, so accept every valid intermediate/final combination rather than
 // reporting a false module-load failure during that bounded startup window.
 private _zenCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
-private _zenOk = _zenCount in [47, 49, 50, 52];
-["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenOk) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 valid=52 base +2 hazards +3 headless", _zenCount], if (!_zenLoaded || _zenOk) then {""} else {"Zeus Enhanced module registration count is outside the valid base/hazard/headless combinations - check the RPT for registration errors from Waldo_fnc_ZenInitModules, or confirm this client's WMP copy matches the server's."}] call _add;
+private _zenOk = _zenCount in [49, 51, 52, 54];
+["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenOk) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 valid=49 base +2 hazards +3 headless", _zenCount], if (!_zenLoaded || _zenOk) then {""} else {"Zeus Enhanced module registration count is outside the valid base/hazard/headless combinations - check the RPT for registration errors from Waldo_fnc_ZenInitModules, or confirm this client's WMP copy matches the server's."}] call _add;
 private _economyActive = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
 ["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]], if (!_economyActive || {(missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19}) then {""} else {"Waldos Economy Systems is active but its 19 ZEN modules did not fully register - check the RPT for errors from Waldo_fnc_EcoCore_registerZenModules."}] call _add;
 

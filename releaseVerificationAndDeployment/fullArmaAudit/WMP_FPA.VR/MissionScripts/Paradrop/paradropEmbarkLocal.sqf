@@ -5,6 +5,10 @@
  * stale aircraft or exhausted cargo capacity through the WMP notification UI. Cargo assignment
  * is verified over a short engine frame window because moveInCargo can update vehicle state after
  * the command returns; this prevents a false failure notice after successful boarding.
+ * Locality and authority: Runs on the selected player's owning interface client after server
+ * authorisation; no client can assign another player's seat here.
+ * Repeat/JIP: Each invocation checks current aircraft capacity; the boarding request is not JIP
+ * replayed, and repeated calls do not install persistent handlers.
  *
  * Arguments:
  * 0: player unit <OBJECT>
@@ -19,6 +23,7 @@
  *
  * Example:
  * [player, _aircraft, "DZ ALPHA"] call Waldo_fnc_ParadropEmbarkLocal;
+ * Result: The selected player occupies a cargo seat, or sees why boarding failed.
  */
 
 params [

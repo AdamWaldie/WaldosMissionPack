@@ -18,6 +18,7 @@
  * Return Value: Boolean - true when applied locally or forwarded to the current group owner.
  * Current caller: Waldo_fnc_TransportReportServer after pickup, destination and physical RTB.
  * Example: [_group, getPosATL _helicopter, _helicopter] call Waldo_fnc_TransportStopGroupLocal;
+ * Result: The transport group stops its current route on its current owner.
  */
 
 params [

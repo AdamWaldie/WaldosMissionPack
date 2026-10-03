@@ -4,8 +4,10 @@
 
 Arma AI can trade forward speed for an unwanted zoom-climb while braking. This optional helper
 detects falling speed, rising altitude and nose-up pitch. It applies a
-short downward world-space impulse on the machine that currently owns the aircraft. It does not
-replace waypoints, set velocity, change AI features or prescribe a route.
+short bounded world-space impulse on the machine that currently owns the aircraft. It does not
+replace waypoints, set velocity, change AI features or prescribe a route. During a detected braking
+event on a MOVE approach, horizontal assistance follows a distance-based speed envelope while
+vertical assistance limits excess climb. This coordinated response is under live evaluation.
 
 The feature is disabled by default. Enable `Waldo_HelicopterDeceleration_Enable` in
 `MissionConfig\aiConfig.sqf` only after testing the helicopters used by the mission. Helicopters are
@@ -61,6 +63,17 @@ The numeric rows are advanced safety thresholds. Leave them at their shipped val
 repeatable test identifies a specific airframe problem. This feature has no mission-maker function
 call: it starts from the flag, evaluates eligible AI aircraft on their current owner, and follows
 locality changes. It does not replay a past correction to joining players.
+
+Correction impulses use elapsed simulation time rather than assuming the scheduled loop wakes
+exactly on time. Catch-up is capped at 0.1 seconds per impulse, and each impulse is limited to the
+current excess climb rate. The configured acceleration and four-second duration limits still apply.
+
+## Current verification
+
+The dedicated-server comparison has demonstrated natural braking and a real correction event.
+After elapsed-time integration, the latest measured comparison reduced peak climb from 77.3 m
+to 63.3 m and passed the relative-improvement check. A 63.3 m climb remains substantial: this
+narrow result does not yet meet the intended behaviour below. Terrain, landing-priority, repeated-flight and headless-client variants are not accepted.
 
 ## What success looks like
 

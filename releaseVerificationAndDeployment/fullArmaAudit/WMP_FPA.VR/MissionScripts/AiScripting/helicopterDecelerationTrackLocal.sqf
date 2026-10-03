@@ -2,22 +2,27 @@
  * Author: WaldoTheWarfighter
  * Samples one local AI helicopter and starts a bounded correction when Arma's braking behaviour is
  * simultaneously losing forward speed, gaining altitude and pitching up. It never operates near
- * terrain, on player/UAV/remote-controlled aircraft, or while a supported landing order exists.
+ * terrain, on player/UAV/remote-controlled aircraft, during a Cortex attack lease, while Zeus is
+ * directly holding the pilot group, or while a supported landing order exists.
  *
  * Locality/authority: scheduled on the aircraft owner only. The loop ends when locality moves and
  * the Local handler installs a fresh tracker on the new owner. Public state is diagnostics only.
  *
  * Arguments:
  * 0: aircraft <OBJECT> - local AI helicopter (or VTOL when explicitly enabled).
+ * 1: ownership generation <NUMBER, -1 captures current generation for direct calls>.
  * Return Value: Nothing (scheduled tracker lifecycle).
  *
  * Example: [_helicopter] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
+ * Result: Samples only its local aircraft until an exit condition and starts a bounded
+ * correction when the cruise-braking predicate is met.
  * Current callers: Waldo_fnc_HelicopterDecelerationInit and its aircraft Local event handler.
  */
 
-params [["_aircraft", objNull, [objNull]]];
+params [["_aircraft", objNull, [objNull]], ["_generation",-1,[0]]];
 if (isNull _aircraft) exitWith {};
 
+if (_generation < 0) then {_generation=_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]};
 private _isLandingOrder = {
     params ["_vehicle"];
     private _pilot = currentPilot _vehicle;
@@ -41,8 +46,9 @@ private _sampleInterval = (missionNamespace getVariable ["Waldo_HelicopterDecele
 private _lastSpeed = abs speed _aircraft;
 private _lastAltitude = (getPosASL _aircraft) select 2;
 
-while {alive _aircraft && {local _aircraft}} do {
+while {alive _aircraft && {local _aircraft} && {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) == _generation}} do {
     uiSleep _sampleInterval;
+    if (!local _aircraft || {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) != _generation}) exitWith {};
     private _speed = abs speed _aircraft;
     private _altitudeASL = (getPosASL _aircraft) select 2;
     private _altitudeAGL = (getPosATL _aircraft) select 2;
@@ -51,7 +57,10 @@ while {alive _aircraft && {local _aircraft}} do {
         if (!isNil "ace_common_fnc_isAwake") then {[_pilot] call ace_common_fnc_isAwake} else {lifeState _pilot != "INCAPACITATED"}
     };
     private _eligible = missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false]
+        && {_aircraft isKindOf "Helicopter" || {(missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL",false]) && {_aircraft isKindOf "VTOL_Base_F"}}}
         && {!(_aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false])}
+        && {isNil {_aircraft getVariable "Waldo_Cortex_AirAttackToken"}}
+        && {!([group _pilot] call Waldo_fnc_CortexZeusHeld)}
         && {!(_aircraft getVariable ["Waldo_HelicopterDeceleration_Active", false])}
         && {!(_aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
         && {!([_aircraft] call _isLandingOrder)}
@@ -75,14 +84,14 @@ while {alive _aircraft && {local _aircraft}} do {
             && {_altitudeGain >= (missionNamespace getVariable ["Waldo_HelicopterDeceleration_MinimumAltitudeGain", 0.5])}
             && {(vectorDir _aircraft select 2) >= (missionNamespace getVariable ["Waldo_HelicopterDeceleration_MinimumNoseUp", 0.02])}
         ) then {
-            [_aircraft, _speed, _altitudeASL, _isLandingOrder] spawn Waldo_fnc_HelicopterDecelerationCorrectLocal;
+            [_aircraft, _speed, _altitudeASL, _isLandingOrder, _generation] spawn Waldo_fnc_HelicopterDecelerationCorrectLocal;
         };
     };
     _lastSpeed = _speed;
     _lastAltitude = _altitudeASL;
 };
 
-if (!isNull _aircraft) then {
+if (!isNull _aircraft && {local _aircraft} && {(_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]) == _generation}) then {
     _aircraft setVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false];
     _aircraft setVariable ["Waldo_HelicopterDeceleration_Active", false, true];
 };

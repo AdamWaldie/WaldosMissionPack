@@ -231,7 +231,7 @@ def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fi
             '            side="EMPTY";\n'
             '            vehicle="{classname}";\n'
             '            text="{name}";\n'
-            '            init="this allowDamage false; this enableSimulation false;";\n'
+            '            init="this allowDamage false; this enableSimulation {simulation};";\n'
             "            skill=0.6;\n"
             "        }};".format(
                 index=index,
@@ -241,6 +241,7 @@ def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fi
                 direction=fixture["dir"],
                 object_id=100 + index,
                 classname=classname,
+                simulation="true" if fixture.get("pathSimulation", False) else "false",
                 name=fixture["name"],
             )
         )
@@ -333,6 +334,8 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
         name: (RANGE_TEMPLATE / name).read_text(encoding="utf-8") for name in RANGE_FILES
     }
     fixtures = audit_fixtures()
+    # Building path LODs must be checked independently of runtime-spawned fixtures.
+    fixtures.append(dict(name="qa_cortex_path_house", **{"class":"Land_i_House_Small_03_V1_F"}, pos=[6125,6000,0], dir=0, pathSimulation=True))
     mission_sqm = legacy_mission_with_fixtures(
         (TEMPLATE / "mission.sqm").read_bytes(), fixtures, nested_loadout_fixture()
     )

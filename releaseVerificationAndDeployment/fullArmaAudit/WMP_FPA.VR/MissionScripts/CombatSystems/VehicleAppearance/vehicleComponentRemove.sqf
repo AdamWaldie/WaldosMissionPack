@@ -35,6 +35,10 @@
  *
  * Current callers: mission scripts, and the ZEN "Vehicle Appearance - Remove/Restore Component"
  * module (via Waldo_fnc_ZenVehicleComponentRemoveServer).
+ * Locality and authority: Client calls forward to the server. Appearance changes run there;
+ * any turret weapon changes use VehicleWeaponLoadoutApply's owner-local path. Repeat calls
+ * reassert the requested state, which replicates to joining clients.
+ * Result: The named model selection and associated turret component are removed or restored.
  */
 
 params [

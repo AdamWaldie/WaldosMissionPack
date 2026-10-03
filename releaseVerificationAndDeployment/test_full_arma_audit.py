@@ -901,8 +901,12 @@ class FullAuditTests(unittest.TestCase):
             bad = Path(directory) / "bad.sqf"
             bad.write_text("_control ctrlSetStyle 1;\n", encoding="utf-8")
             self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
+            bad.write_text("_flags bitAnd 4;\n", encoding="utf-8")
+            self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
+            bad.write_text("private _laser = isIRLaserOn player;\n", encoding="utf-8")
+            self.assertGreater(SQF_VALIDATOR.check_sqf_syntax(str(bad)), 0)
             comment_only = Path(directory) / "comment.sqf"
-            comment_only.write_text("// ctrlSetStyle is invalid\n", encoding="utf-8")
+            comment_only.write_text("// ctrlSetStyle and isIRLaserOn are invalid\n", encoding="utf-8")
             self.assertEqual(SQF_VALIDATOR.check_sqf_syntax(str(comment_only)), 0)
 
     def test_standard_release_is_explicit_and_excludes_qa_tooling(self):
@@ -1767,6 +1771,15 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_AI_SkillVarianceOffsets', ai_apply)
         self.assertNotIn('current + random', ai_apply)
         self.assertIn('["Waldo_AI_SkillVarianceOffsets", nil, true]', ai_stop)
+        for token in ['assignedVehicleRole','Waldo_AI_VehicleCrewAimMultiplier',
+                      'Waldo_AI_VehicleCrewDispersion','Waldo_AI_OriginalAimCoef',
+                      'CfgPatches" >> "lambs_turrets','setCustomAimCoef',
+                      'Waldo_DynamicAA_SystemId','_operatingCrew && {!_dynamicAA}']:
+            self.assertIn(token, ai_apply)
+        self.assertIn('netId _profileVehicle', ai_init)
+        self.assertIn('_profileSeat,_dynamicAA', ai_init)
+        self.assertIn('Waldo_AI_OriginalAimCoef', ai_stop)
+        self.assertIn('ai-vehicle-precision', ai_diagnostics)
         self.assertIn('Waldo_Headless_ExternalScheduler', register)
         self.assertIn('CfgPatches" >> "ace_headless', register)
         detect = (headless / "headlessDetectLocal.sqf").read_text(encoding="utf-8")
@@ -1876,7 +1889,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_ImprovedHelicopterLanding_Active', tracker)
         self.assertIn('[_aircraft] call _isLandingOrder', tracker)
         self.assertIn('"LANDING_PRIORITY"', correction)
-        self.assertIn('_aircraft addForce [[0, 0, -(getMass _aircraft)', correction)
+        self.assertIn('_aircraft addForce [_change vectorMultiply getMass _aircraft', correction)
+        self.assertIn('_change set [2,-_deltaV]', correction)
+        self.assertIn('(_horizontal vectorDotProduct _toward) > 0', correction)
+        self.assertIn('min (_maximumAcceleration*_elapsed)', correction)
         self.assertIn('Waldo_HelicopterDeceleration_Active", false, true', landing)
         self.assertNotIn('setVelocity', correction)
         self.assertNotIn('flyInHeight', correction)
@@ -2262,7 +2278,9 @@ class FullAuditTests(unittest.TestCase):
             generated_server.index('["SERVER"] call Waldo_fnc_LoadFeatureConfigs;'),
         )
         pre_server = (mission / "auditPreInitServer.sqf").read_text(encoding="utf-8")
-        self.assertIn('"B_Parachute"', pre_server)
+        # Static-line insertion requires a vehicle, not the HALO backpack class.
+        self.assertIn('["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]', pre_server)
+        self.assertNotIn('["WALDO_STATIC_STATICCHUTE", "B_Parachute"', pre_server)
         self.assertIn('"Waldo_SafeStart_AutoStart", false', pre_server)
         self.assertIn('["Waldo_Economy_Preset", "MEDIUM", true]', pre_server)
         for side_catalog in ('["WEST", "NATO"]', '["EAST", "CSAT"]', '["GUER", "AAF"]'):
@@ -2931,7 +2949,10 @@ class FullAuditTests(unittest.TestCase):
             / "FullArmaAudit.VR"
             / "runClientAudit.sqf"
         ).read_text(encoding="utf-8")
-        self.assertIn('_coreCount == 52 && {_economyCount == 19}', client_audit)
+        self.assertIn('_coreCount == _expected && {_economyCount == 19}', client_audit)
+        self.assertIn('Waldo_Hazard_Enable', client_audit)
+        self.assertIn('Waldo_Headless_Enable', client_audit)
+        self.assertIn('private _expected=49;', client_audit)
 
     def test_party_actions_are_ace_first_with_vanilla_fallback(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
@@ -2989,7 +3010,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("private _groundPosition", crate_server)
         for variable in ("Logi_MedicalBoxClass", "Logi_SupplyBoxClass"):
             self.assertIn(f'missionNamespace getVariable ["{variable}"', crate_server)
-        self.assertIn('remoteExec ["Waldo_fnc_SimpleAiConvoy", _owner]', convoy)
+        self.assertIn('call Waldo_fnc_FeatureRuntimeApply', convoy)
+        self.assertIn('["AI_CONVOY",', convoy)
+        self.assertNotIn('nearestObjects', convoy)
 
     def test_jamming_uses_one_combined_panel_and_server_zen_mutation(self):
         hud = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammingHud.sqf").read_text(encoding="utf-8")
@@ -3621,7 +3644,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('addMissionEventHandler ["Draw3D"', overlay)
         self.assertNotIn('groupOwner _group', overlay)
         self.assertIn('Waldo_Headless_GroupOwnerSnapshot', overlay)
-        self.assertIn('groupOwner _x', snapshot)
+        self.assertIn('groupOwner _group', snapshot)
         self.assertNotIn('setVariable ["Waldo_Headless_GroupOwnerSnapshot"', snapshot)
         self.assertIn('Waldo_Headless_GroupOwnerSnapshot', snapshot_setter)
         self.assertIn('missionNamespace setVariable ["Waldo_Headless_Debug", false, true]', init_server)
@@ -3636,7 +3659,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('MISMATCH', overlay)
         self.assertIn('ownership mismatches:', toggle)
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf").read_text(encoding="utf-8")
-        self.assertIn("[47, 49, 50, 52]", diagnostics)
+        self.assertIn("[49, 51, 52, 54]", diagnostics)
 
     def test_manual_headless_handoff_can_target_one_live_hc(self):
         module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_headlessManualHandoffModule.sqf").read_text(encoding="utf-8")
@@ -3870,6 +3893,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('setVehicleReportRemoteTargets false', group_state)
         self.assertIn('_unit disableAI "FIREWEAPON"', group_state)
         self.assertIn('_unit enableAI "FIREWEAPON"', group_state)
+        self.assertNotIn('_unit enableAI "SUPPRESSION"', group_state)
+        self.assertIn('_unit disableAI "SUPPRESSION"', group_state)
         self.assertIn('setVehicleRadar ([0, 1] select _active)', group_state)
         self.assertIn('_unit disableAI "ALL"', group_state)
         self.assertIn('_candidate distance2D _centre <= _radius', detector)
@@ -3880,6 +3905,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('addEventHandler ["Fired"', fire_gate)
         self.assertIn('Waldo_DynamicAA_EligibleTargetsLocal', fire_gate)
         self.assertIn('deleteVehicle _projectile', fire_gate)
+        self.assertIn('Waldo_DynamicAA_FireGateVersionLocal", -1] != _version', fire_gate)
+        self.assertIn('private _version = 3', fire_gate)
+        self.assertIn('vectorDotProduct (vectorNormalized _bearing) >= 0.9063', fire_gate)
+        self.assertIn('Waldo_DynamicAA_AuditBlockedShots', fire_gate)
+        self.assertIn('Waldo_DynamicAA_AuditAirShots', fire_gate)
         self.assertIn('remoteExecutedOwner != 2', fire_gate)
         self.assertIn('including while closed', detector)
         self.assertNotIn('deleteGroupWhenEmpty true', create)
@@ -3915,6 +3945,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('private _groundNotEngaged', automated_audit)
         self.assertIn('private _autoTargetClosed', automated_audit)
         self.assertIn('private _closedOnOwners', automated_audit)
+        self.assertIn('private _blockedGroundShots', automated_audit)
+        self.assertIn('private _airShots', automated_audit)
+        self.assertIn('private _realFireGate', automated_audit)
+        self.assertIn('_requested = _vehicle fireAtTarget [_ground, _weapon]', automated_audit)
+        self.assertIn('private _groundFireDenied = _groundFireAttempts > 0', automated_audit)
+        self.assertIn('_groundFireAcceptedRequests == 0 || {_blockedGroundShots > 0}', automated_audit)
 
     def test_shared_interaction_selectors_expose_the_complete_catalogue(self):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
@@ -3959,10 +3995,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_AI_ProfileDisplayNames", mission_config + runtime)
         self.assertIn("Waldo_AI_NightNVGMultipliers", apply_profile)
         self.assertIn("Waldo_AI_NightUnaidedMultipliers", apply_profile)
-        self.assertIn('if (hmd _unit != "")', apply_profile)
+        self.assertIn('"NVG" in getArray', apply_profile)
         self.assertIn("(_unit skill _x) *", apply_profile)
-        self.assertIn('["Waldo_AIRebalance_Mode", "DAY"]', mission_config)
+        self.assertIn('["Waldo_AIRebalance_Mode", "AUTO"]', mission_config)
         self.assertIn('["Waldo_AI_ApplyMode", "BOTH"]', mission_config)
+        self.assertEqual(1, profile_init.count("call CBA_fnc_addPerFrameHandler"))
+        self.assertEqual(2, profile_init.count("Waldo_Cortex_LightingPFH"))
         self.assertNotIn("Waldo_AI_Mode", mission_config + profile_init + apply_profile + runtime)
         self.assertNotIn('["Waldo_AI_Profile",', profile_init + apply_profile)
 

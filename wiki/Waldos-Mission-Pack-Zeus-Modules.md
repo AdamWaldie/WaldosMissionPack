@@ -28,7 +28,7 @@ These modules allow users to:
 * Enable, time or lift SafeStart protection during play, even though it starts inactive by default
 * Send a [WMP notification card](Custom-UI-Notifications) to everyone, one side, a named group, or selected players
 
-WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped by purpose under **WMP Mission Flow**, **WMP Logistics**, **WMP Transport**, **WMP AI & Combat**, **WMP Electronic Warfare**, **WMP Environment**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**. Headless-client controls use their own **WMP Headless Client** category and appear only when `Waldo_Headless_Enable` is true.
+WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped by purpose under **WMP Mission Flow**, **WMP Logistics**, **WMP Transport**, **WMP Cortex**, **WMP Electronic Warfare**, **WMP Environment**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**. Headless-client controls use their own **WMP Headless Client** category and appear only when `Waldo_Headless_Enable` is true.
 
 Use them to:
 
@@ -65,9 +65,29 @@ The following modules are under **WMP Logistics**:
 
 This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup), or ACE Fortify being active. It allows for the alteration of the fortify budget in zeus, without the need for manual scripting.
 
+## WMP Cortex category
+
+| Module | Place on | Controls |
+|---|---|---|
+| Cortex Control | Anywhere | Purpose pages combine feature switches, profiles and live values. |
+| Garrison Buildings | Position | Group and building-search radius. |
+| Defend Position | Position | Group, line width and facing. |
+| Clear Building | Exact building | Group; rejects a missing building. |
+| Parachute Passengers | Position or passenger | Select a passenger group for an airborne jump. |
+| Manage Group Control | Position or unit | Release WMP orders, exclude for Zeus or return to the pass. |
+| Assign Artillery Spotter | Existing AI soldier | Assign or remove the selected soldier. Equip binoculars separately; no inventory radio is required. |
+| Configure Artillery Battery | Exact artillery gun or mortar | Support, counter-battery or both; empty guns can be prepared. |
+| Configure Counter-battery Radar | Existing vehicle or prop | Register/update/remove; BLUFOR, OPFOR or Independent support. |
+| Create Convoy | Crewed AI land vehicle | Configure/resume, stop and dismount cargo, or release; speed, spacing and push-through. |
+
+Setup helpers use existing objects and preserve feature switches. Enable artillery/counter-battery
+through Cortex Control after setup; radar coverage shortens acquisition delay. Mutations
+are validated on the server and AI orders execute on the current owner. The new helpers add no
+periodic workers. Dynamic AO and Dynamic AA share the WMP Cortex category.
+
 ## AI Convoy Module
 
-Under **WMP AI & Combat**, **Convoy - Create Moving Group** turns the nearest crewed AI land-vehicle group within 150 m of the module into a managed convoy. Place the module on or near the lead vehicle. The dialog sets max speed, target separation and whether the convoy pushes through contact (keeps moving and only returns fire on the move) instead of stopping to engage. It calls the same [AI Convoy System](AI-Convoy-System) behaviour (`Waldo_fnc_SimpleAiConvoy`) available to scripts, dispatched to whichever machine currently owns the selected group. See [AI Convoy System](AI-Convoy-System) for the full parameter reference and the manual-stop script pattern.
+Under **WMP Cortex**, **Create Convoy** requires an explicitly selected crewed AI land vehicle. The dialog configures/resumes its group convoy, stops it and dismounts cargo, or releases the controller. Existing speed, spacing and push-through choices remain. Drivers, commanders and weapon-turret crew stay aboard; push-through halts after 15 seconds pinned in contact. It sends named settings through the server-authorised runtime route to the [AI Convoy System](AI-Convoy-System). Driving runs on the current group owner, including headless clients. There is no nearest-vehicle fallback.
 
 ## ENDEX Module
 
@@ -122,7 +142,7 @@ Two more electronic-warfare modules have separate guides for [EMP Burst](EMP-Bur
 
 ## Dynamic AO Modules
 
-Under **WMP AI & Combat**, **Dynamic AO - Create** uses one live friendly-name faction/side selector and exposes independent patrol, garrison, static, weighted vehicle/air, civilian, minefield, roadblock, pathing and marker controls. The entered AO name is retained as the centre-marker and removal-list name while a safe internal ID is generated separately. Patrol routes preserve Arma's waypoint-zero state and explicitly activate their first movement waypoint on dedicated authority. **Dynamic AO - Remove** lists active AOs and preselects the nearest one. Deleting the hidden AO centre anchor invokes the same complete cleanup; minefield anchors remove only their own field. See [Dynamic AO Generation](Dynamic-AO-Generation).
+Under **WMP Cortex**, **Dynamic AO - Create** uses one live friendly-name faction/side selector and exposes independent patrol, garrison, static, weighted vehicle/air, civilian, minefield, roadblock, pathing and marker controls. The entered AO name is retained as the centre-marker and removal-list name while a safe internal ID is generated separately. Patrol routes preserve Arma's waypoint-zero state and explicitly activate their first movement waypoint on dedicated authority. **Dynamic AO - Remove** lists active AOs and preselects the nearest one. Deleting the hidden AO centre anchor invokes the same complete cleanup; minefield anchors remove only their own field. See [Dynamic AO Generation](Dynamic-AO-Generation).
 
 ## Scale Object Module
 
@@ -148,9 +168,13 @@ These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig
 
 **Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
 
-## AI Rebalance
+## Cortex Control
 
-**AI Rebalance - Control** enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier.
+One module combines skill profiles, behaviour switches and tuning values. Choose a purpose page: General and profiles, Contact and investigation, Movement and cover, Reports and reinforcement, Morale and survivors, Vehicles and convoys, Artillery and counter-battery, or Airborne and aircraft. Pages open on live values. The server validates named settings and distributes a complete ordered revision before starting or stopping local workers. Joining owners receive the full current snapshot.
+
+Infantry garrison, defence and building clearing have separate modules with only their relevant fields. Airborne insertion has its own passenger-group selector. **Manage Group Control** releases WMP orders or changes the Zeus exclusion; independent feature exclusions and external-controller flags remain in force. An explicitly selected unit puts its group first in the nearby-group list. Clear Building requires an exact building target. Artillery setup helpers assign roles without enabling the features or spawning equipment.
+
+See [Smart AI Pass](Smart-AI-Pass) for controls, defaults, dependencies and script examples.
 
 ## Field Resupply
 

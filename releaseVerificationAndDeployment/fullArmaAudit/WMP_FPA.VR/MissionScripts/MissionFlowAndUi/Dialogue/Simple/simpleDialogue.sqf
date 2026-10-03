@@ -8,6 +8,7 @@
  * specific STRING/ARRAY, completion CODE, remove-after-use BOOL. Return Value: BOOL.
  * Current callers: Eden object init fields, triggers, scripts and dialogue ZEN adapters.
  * Example: [this, ["Welcome.", "The clinic is ahead."]] call Waldo_fnc_SimpleDialogue;
+ * Result: Target speakers offer the configured lines to current and joining players.
  */
 if (!isServer) exitWith {false};
 [] call Waldo_fnc_DialogueBootstrap;

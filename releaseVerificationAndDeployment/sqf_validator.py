@@ -8,10 +8,15 @@ import sys
 import argparse
 
 INVALID_RUNTIME_COMMANDS = {
+    "bitAnd": "not an Arma SQF runtime command; use a supported bit-mask test",
     # UI style is configured by the Rsc control class. Arma has no runtime
     # ctrlSetStyle SQF command; this previously passed delimiter checks and
     # failed only when the shared interaction display compiled in-game.
     "ctrlSetStyle": "not an Arma SQF runtime command; configure the control class instead",
+    # Arma can enable IR lasers for a unit but exposes no corresponding state
+    # getter. This invented token previously broke the Cortex building backend
+    # on every machine when the mission compiled the function library.
+    "isIRLaserOn": "not an Arma SQF runtime command; do not infer live IR-laser state",
 }
 
 

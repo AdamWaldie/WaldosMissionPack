@@ -7,6 +7,10 @@
  * every sharing side's own row. Deliberately non-transitive: the referenced side's own nets must
  * already be a literal array, not another "INHERIT:..." string - this single check rejects
  * self-reference, cycles and inheritance chains all at once with no graph-walk.
+ * Locality and authority: Pure config conversion before validation; it does not apply radio
+ * state or change the authoritative server plan.
+ * Repeat/JIP: Called during local pre-init and later validation; it returns a new resolved
+ * configuration rather than installing any persistent handler.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -18,6 +22,8 @@
  *
  * Example: private _resolution = [_config] call Waldo_fnc_ACRE2ResolveSides;
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init, before Waldo_fnc_ACRE2ValidateConfig.
+ * Result: INHERIT references become literal side net arrays; bad references produce errors and
+ * an empty safe net array for that side.
  */
 params [["_config", createHashMap, [createHashMap]]];
 private _errors = [];

@@ -15,6 +15,9 @@
  *
  * Example: [_carrier] call Waldo_fnc_RecoverySetupCarrierLocal;
  * Result: the carrier receives Load and Unload actions in ACE, or vanilla fallbacks without ACE.
+ * Locality and authority: Installs carrier actions on each interface client; server validates
+ * the requested operation. Repeated setup does not duplicate actions, and object-keyed replay
+ * installs them for JIP players.
  */
 params [["_target", objNull, [objNull]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

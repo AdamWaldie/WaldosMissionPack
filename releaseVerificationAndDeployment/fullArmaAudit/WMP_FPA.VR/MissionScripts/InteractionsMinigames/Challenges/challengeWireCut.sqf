@@ -1,6 +1,15 @@
 /*
- * Rugged EOD controller wire-isolation procedure.
- * Config: [wireCount(3..6), timeLimit, title, verificationLevel(1..4, derived)]
+ * Author: WaldoTheWarfighter
+ * Opens the EOD controller wire-isolation procedure.
+ * Locality and authority: Runs in a private client display; the result resolver reports
+ * completion. Repeated attempts reset wires and are not JIP replayed.
+ * Arguments: 0: config <ARRAY> [wireCount 3..6, timeLimit, title,
+ *   verificationLevel 1..4 (derived when omitted)] ([] defaults);
+ *   1: result resolver <CODE> ({}).
+ * Return Value: No supported synchronous result; use the resolver callback.
+ * Current callers: Waldo_fnc_MiniGameChallenge and interaction-equipment QA.
+ * Example: [[5, 20, "EOD CONTROLLER", 3], {}] call Waldo_fnc_MiniGameWireCut;
+ * Result: The player sees the wire-isolation procedure and briefing card.
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];

@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Load build into prompt.
+ * Loads one Construction definition into the curator editor controls.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
- * 1: _index <SCALAR> - index (optional, default: -1)
+ * 0: _disp <DISPLAY> - editor display
+ * 1: _index <NUMBER> - selected row (optional, default: -1)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp, _index] call Waldo_fnc_EcoBuild_loadBuildIntoPrompt;
+ * Locality/Authority: Curator interface client; local form only.
+ * Repeat/JIP Behaviour: Each selection replaces form values; no JIP UI replay.
+ * Current Callers: Construction editor list selection.
+ * Result: Fields and icon preview reflect the selected build row.
  */
 
         params ["_disp", ["_index", -1]];

@@ -10,6 +10,7 @@
  * Return Value: Nothing; result is sent to the actor's current owner.
  * Current callers: Waldo_MG_fnc_submitRequestLocal through remoteExecCall.
  * Example: [1, _table, _token, 3, "VOTE", _legacyPayload, player] remoteExecCall ["Waldo_fnc_MiniGamesRequestServer", 2];
+ * Result: A valid request updates authoritative game state and returns feedback to its actor.
  */
 
 params [

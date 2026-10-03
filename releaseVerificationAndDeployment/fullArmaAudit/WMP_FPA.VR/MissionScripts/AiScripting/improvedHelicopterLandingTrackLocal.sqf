@@ -9,6 +9,14 @@
  * waypoints that vanilla Arma completes immediately. A group containing more than one helicopter
  * keeps vanilla formation/waypoint flight: one group waypoint cannot safely provide a separate
  * exact touchdown point for every aircraft, and driving all of them at one point causes collisions.
+ * An active Cortex attack lease also blocks acquisition so the landing and attack controllers never
+ * issue competing flight commands; the authored landing remains available after the finite lease.
+ * A direct Zeus hold also blocks acquisition so curator flight orders are never supplemented by a
+ * separate exact-landing controller.
+ * Locality and authority: Scheduled on the helicopter owner. It never drives a remote aircraft;
+ * ownership migration ends this tracker and the new owner can start another.
+ * Repeat/JIP: Owner-local installation guards prevent competing trackers. JIP machines only
+ * participate when they become the aircraft owner.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -16,6 +24,8 @@
  * Return Value: Nothing (scheduled tracker lifecycle).
  *
  * Example: [_helicopter] spawn Waldo_fnc_ImprovedHelicopterLandingTrackLocal;
+ * Result: Watches an eligible local AI helicopter's orders and starts the landing controller
+ * only for a supported approach outside the minimum-distance guard.
  * Current callers: the helicopter class-init handler and each helicopter's Local ownership handler.
  */
 
@@ -105,6 +115,8 @@ while {
                     && {isEngineOn _helicopter}
                     && {!isTouchingGround _helicopter}
                     && {isNull (getSlingLoad _helicopter)}
+                    && {isNil {_helicopter getVariable "Waldo_Cortex_AirAttackToken"}}
+                    && {!([_group] call Waldo_fnc_CortexZeusHeld)}
                     // Guard against re-attempting acquisition on every 0.5s tick while a controller is
                     // already active for this helicopter. Waldo_fnc_ImprovedHelicopterLandingExecuteLocal
                     // already no-ops in that case, but reaching this branch at all still reset

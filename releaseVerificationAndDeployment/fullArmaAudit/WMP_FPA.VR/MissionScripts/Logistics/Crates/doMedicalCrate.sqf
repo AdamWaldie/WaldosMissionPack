@@ -4,8 +4,10 @@
  * Locality / Authority: Server mutates global cargo; caller owns crate-handling registration.
  * Repeat / JIP: Rebuilds inventory on repeat; global contents and facility state replicate to JIP.
  * Arguments: crate <OBJECT>, field-hospital mode <BOOL> (true), scale <NUMBER> (1).
- * Return Value: See function body. Current callers: starter crates, quartermaster and ZEN medical crate.
+ * Return Value: No supported return value; use the crate's resulting inventory/facility state.
+ * Current callers: starter crates, quartermaster and ZEN medical crate.
  * Example: [myCrate, true, 1] call Waldo_fnc_MedicalCratePopulate;
+ * Result: The crate receives medical stock and, when requested, ACE medical-facility status.
  */
 
 params [
@@ -81,5 +83,11 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 
 if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
-    [_crate, "MEDICAL"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+    // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+    // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+    // Same ACE handling as a quartermaster crate (drag/carry regardless of weight, one cargo slot).
+    [{
+        [_this select 0, 1] call Waldo_fnc_LogisticsApplyAceHandling;
+        _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+    }, [_crate, "MEDICAL"]] call CBA_fnc_execNextFrame;
 };

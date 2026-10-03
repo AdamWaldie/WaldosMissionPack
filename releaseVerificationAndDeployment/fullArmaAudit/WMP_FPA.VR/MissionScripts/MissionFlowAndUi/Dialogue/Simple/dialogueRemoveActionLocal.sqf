@@ -4,6 +4,7 @@
  * Locality/authority: interface local. Repeat/JIP behaviour: repeat-safe; never removes unrelated actions.
  * Arguments: 0 speaker <OBJECT>. Return Value: BOOL.
  * Current callers: snapshot reconciliation and action replacement. Example: [npc] call Waldo_fnc_DialogueRemoveActionLocal;
+ * Result: Only WMP's local interaction for this speaker is removed.
  */
 params [["_speaker", objNull, [objNull]]];
 if (!hasInterface || {isNull _speaker}) exitWith {false};

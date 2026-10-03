@@ -6,6 +6,7 @@
  * Arguments: player <OBJECT>. Return Value: <BOOL> sent.
  * Current caller: Waldo_fnc_BaseServicesSetupLocal during player startup.
  * Example: [player] remoteExecCall ["Waldo_fnc_BaseServicesRequestStateServer", 2];
+ * Result: The joining player's client receives the current base-service group snapshot.
  */
 params [["_player", objNull, [objNull]]];
 if (!isServer || {isNull _player}) exitWith {false};

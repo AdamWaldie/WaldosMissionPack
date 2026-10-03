@@ -2,9 +2,10 @@
  * Author: WaldoTheWarfighter
  * Removes WMP static-line, HALO and jump-settings interactions from one paradrop aircraft.
  *
- * Locality and repeat/JIP behaviour:
- * Runs on every interface client because hold actions and ACE interaction paths are local. Repeated
- * calls are safe. The server publishes this with the aircraft as its object-keyed JIP ID, replacing
+ * Locality and authority: Runs on every interface client because hold actions and ACE interaction
+ * paths are local. The server decides when an operation ends.
+ * Repeat/JIP: Repeated calls are safe. The server publishes this with the aircraft as its
+ * object-keyed JIP ID, replacing
  * the earlier setup call so a later joiner cannot reinstall an operation Zeus already removed.
  * It changes no aircraft movement, crew, inventory or map marker.
  *
@@ -19,6 +20,7 @@
  *
  * Example:
  * [this] call Waldo_fnc_ParadropRemoveAircraftActionsLocal;
+ * Result: WMP jump and settings actions are absent from this aircraft on the local client.
  */
 params [["_aircraft", objNull, [objNull]]];
 if (!hasInterface || {isNull _aircraft}) exitWith {false};

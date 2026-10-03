@@ -14,6 +14,9 @@
  *
  * Example:
  * [_modulePos] call Waldo_fnc_DynamicAORemoveZen;
+ * Locality and authority: Opens a dialog on the curator's interface client. Its confirmation
+ * sends the selected AO ID to the server; no dialog is replayed for JIP clients.
+ * Result: The curator can choose a live AO to remove, with the nearest preselected.
  */
 params [["_modulePos", [], [[]]]];
 if !(hasInterface) exitWith {false};

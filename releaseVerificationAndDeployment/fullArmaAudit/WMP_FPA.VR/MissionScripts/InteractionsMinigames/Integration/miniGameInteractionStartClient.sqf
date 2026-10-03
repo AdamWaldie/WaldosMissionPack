@@ -2,6 +2,15 @@
  * Author: WaldoTheWarfighter
  * Opens an accepted interaction procedure only on its owning player's client and reports typed
  * outcome metadata to the authoritative server resolver.
+ * Locality/Authority: Accepted actor's interface client only; refuses non-server remote senders.
+ * Repeat/JIP Behaviour: One display per accepted attempt; no display is replayed to JIP clients.
+ * Arguments: 0: interaction object <OBJECT>, default objNull; 1: actor <OBJECT>, default objNull;
+ * 2: server attempt ID <STRING>, default "".
+ * Return Value: Nothing <NIL>.
+ * Current Callers: MiniGameInteractionAcquireServer after validating and assigning an attempt.
+ * Example: [_device, _actor, _attemptId] remoteExecCall
+ *          ["Waldo_fnc_MiniGameInteractionStartClient", owner _actor];
+ * Result: Opens the owner-local challenge, then reports its result to the server.
  */
 
 params [

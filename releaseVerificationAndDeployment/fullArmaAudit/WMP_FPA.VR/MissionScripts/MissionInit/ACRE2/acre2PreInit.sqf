@@ -2,12 +2,18 @@
  * Author: WaldoTheWarfighter
  * Loads and validates MissionConfig\acreConfig.sqf before mission radios become unique, registers Babel
  * languages in deterministic order and applies label-only changes to existing side presets.
+ * Locality and authority: CfgFunctions preInit runs on each machine before unique radios exist;
+ * each machine validates config and prepares its own ACRE preset state.
+ * Repeat/JIP: Initialization is designed for one preInit pass per machine. A joining machine
+ * runs it with the same mission config; later radio readiness uses the retry path.
  *
  * Arguments: None.
  * Return Value: BOOL - true when configuration was accepted, including when ACRE is absent.
  *
  * Example: Automatically called by CfgFunctions preInit.
  * Current caller: CfgFunctions preInit registration in WaldosFunctions.sqf.
+ * Result: Valid ACRE configuration and preset/Babel definitions are available for runtime radio
+ * setup, or errors are logged and the function returns false.
  */
 private _config = call compile preprocessFileLineNumbers 'MissionConfig\acreConfig.sqf';
 // Resolve any "INHERIT:<SIDE>" nets sentinel into a literal array BEFORE validation, so the validator

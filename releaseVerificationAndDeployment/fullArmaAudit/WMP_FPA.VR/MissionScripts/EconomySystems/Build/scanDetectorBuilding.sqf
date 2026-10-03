@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Scan detector building.
+ * Scans an operational detector building and publishes clustered contact markers.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,15 @@
  * 1: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
  * [_building, _entry] call Waldo_fnc_EcoBuild_scanDetectorBuilding;
+ * Locality/Authority: Economy authority only; owns global markers and scan timestamp.
+ * Repeat/JIP Behaviour: Rescan clears previous contacts before replacing public marker names;
+ * JIP sees current global markers.
+ * Current Callers: Building production/maintenance scheduler.
+ * Result: Valid nearby targets appear as detector contacts on the map.
  */
 
         params [["_building", objNull], ["_entry", []]];

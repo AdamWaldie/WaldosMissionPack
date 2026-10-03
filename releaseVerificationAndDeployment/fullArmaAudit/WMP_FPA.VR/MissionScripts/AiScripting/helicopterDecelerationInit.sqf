@@ -3,15 +3,21 @@
  * Installs optional, repeat-safe locality handlers for AI helicopter cruise-deceleration correction.
  * The current vehicle owner alone samples and corrects an aircraft. A Local event restarts tracking
  * after server/headless-client migration; JIP machines do not become a second authority.
+ * A machine-local generation invalidates sleeping workers even after a rapid ownership round trip.
  *
  * Improved Helicopter Landing always has priority. The tracker stands down for any supported landing
  * waypoint and the correction loop releases immediately if the landing controller becomes active.
+ * Locality and authority: Each machine installs only its local detection handlers. Only the
+ * aircraft's current owner starts a tracker or changes flight velocity.
+ * Repeat/JIP: The local installed flag prevents duplicate handlers. A joining machine starts
+ * only the tracking appropriate to aircraft it owns.
  *
  * Arguments: None.
  * Return Value: BOOL - true when installed/already installed; false while disabled.
  *
  * Example: Set Waldo_HelicopterDeceleration_Enable=true in MissionConfig\aiConfig.sqf; WMP calls
  * [] call Waldo_fnc_HelicopterDecelerationInit automatically from init.sqf.
+ * Result: Returns true when handlers are installed or already present, and false while disabled.
  * Current caller: init.sqf on server, interface clients and headless clients after shared settings.
  */
 
@@ -30,15 +36,18 @@ private _install = {
         _aircraft setVariable ["Waldo_HelicopterDeceleration_LocalHandlerInstalled", true];
         _aircraft addEventHandler ["Local", {
             params ["_aircraft", "_isLocal"];
-            if (_isLocal && {!(_aircraft getVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false])}) then {
+            _aircraft setVariable ["Waldo_HelicopterDeceleration_GenerationLocal", (_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0])+1];
+            _aircraft setVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false];
+            if (_isLocal) then {
+                _aircraft setVariable ["Waldo_HelicopterDeceleration_Active", false, true];
                 _aircraft setVariable ["Waldo_HelicopterDeceleration_TrackedLocal", true];
-                [_aircraft] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
+                [_aircraft,_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
             };
         }];
     };
     if (local _aircraft && {!(_aircraft getVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false])}) then {
         _aircraft setVariable ["Waldo_HelicopterDeceleration_TrackedLocal", true];
-        [_aircraft] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
+        [_aircraft,_aircraft getVariable ["Waldo_HelicopterDeceleration_GenerationLocal",0]] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
     };
 };
 missionNamespace setVariable ["Waldo_HelicopterDeceleration_InstallLocal", _install];

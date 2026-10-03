@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Validate purchase import payload.
+ * Checks the outer structure of a PURCHASE_V1 catalog import.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * 0: _payload <ARRAY> - payload (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true for a supported version with expected field types.
  *
  * Example:
  * [_payload] call Waldo_fnc_EcoBuy_validatePurchaseImportPayload;
+ * Locality/Authority: Any machine; pure import structure validation.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Economy Purchasing import handler.
+ * Result: Malformed payloads are rejected before catalog replacement.
  */
 
         params [["_payload", []]];

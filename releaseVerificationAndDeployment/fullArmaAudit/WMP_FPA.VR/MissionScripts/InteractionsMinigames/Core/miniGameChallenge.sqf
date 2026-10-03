@@ -23,6 +23,11 @@
  *
  * Example:
  * ["minesweeper", [], { hint "Hacked."; }, { hint "Lockout."; }] call Waldo_fnc_MiniGameChallenge;
+ * Locality/Authority: Interface client hosting the actor; callbacks run locally for that actor.
+ * Repeat/JIP Behaviour: Each attempt gets a distinct job token and resolves once. An open
+ * challenge is not replayed to a client joining later.
+ * Current Callers: MiniGameInteraction and direct mission-maker challenge calls.
+ * Result: Returns true after launching a known challenge; the callbacks receive its eventual outcome.
  */
 
 params [

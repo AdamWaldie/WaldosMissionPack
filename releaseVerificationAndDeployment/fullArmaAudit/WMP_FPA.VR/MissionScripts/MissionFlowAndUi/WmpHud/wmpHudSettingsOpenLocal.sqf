@@ -10,6 +10,9 @@
  * Return Value: DISPLAY - created settings display, or displayNull without a gameplay display.
  * Current caller: WMP Options > WMP HUD self-interaction and QA capture.
  * Example: [] call Waldo_fnc_WmpHudSettingsOpenLocal;
+ * Locality and authority: Opens a settings dialog only on the requesting interface client.
+ * Reopening reads current local preferences; no server or JIP display state exists.
+ * Result: The player can change WMP HUD icon, label, scale and opacity settings.
  */
 
 disableSerialization;

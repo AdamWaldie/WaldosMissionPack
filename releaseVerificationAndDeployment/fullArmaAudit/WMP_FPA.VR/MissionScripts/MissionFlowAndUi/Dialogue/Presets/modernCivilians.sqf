@@ -4,6 +4,7 @@
  * Locality/authority: pure server-loaded data. Repeat/JIP behaviour: no side effects.
  * Arguments: None. Return Value: HASHMAP of archetype ID to ARRAY<STRING>.
  * Current caller: Waldo_fnc_DialogueLoadPresetPack. Example: ["MODERN_CIVILIANS"] call Waldo_fnc_DialogueLoadPresetPack;
+ * Result: Returns the modern civilian preset archetypes for server-side registration.
  */
 createHashMapFromArray [
     ["MODERN_CIVILIAN", ["Hello.", "Can I help you?", "Is the road open?", "We are just trying to get through the day.", "I have not heard anything reliable.", "Please leave the gate as you found it.", "The market was quieter this morning.", "Everyone is waiting for things to calm down.", "You should ask someone at the municipal building.", "Stay safe out there."]],

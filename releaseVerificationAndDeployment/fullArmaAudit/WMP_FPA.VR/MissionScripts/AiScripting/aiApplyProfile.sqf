@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Applies the active base, night-sensor, faction, and role skill layers to one local AI unit.
+ * Applies the active base, night-sensor, faction, role and vehicle-crew skill layers to one local AI unit.
  * Locality and authority: call where the AI unit is local; the unit Local handler reapplies after
  * ownership migration. Original skill values and the optional per-unit variance are captured once
  * and published on the unit so a headless-client handoff cannot recapture WMP-modified skills or
@@ -19,7 +19,14 @@
  * [_unit] call Waldo_fnc_AIApplyProfile;
  * Result: the eligible local AI receives the currently selected WMP skill layers.
  *
- * Current callers: AIRebalanceInit for existing/new AI and each unit's Local ownership handler.
+ * Operating vehicle and aircraft crew retain the selected profile but receive the configured final
+ * aiming multiplier. When LAMBS Turrets is absent, an owner-local custom aim coefficient adds a
+ * bounded script-level approximation of its wider turret dispersion; WMP does not stack this over
+ * the addon's config changes. Crews assigned to a named WMP Dynamic AA system retain their authored
+ * profile and aim coefficient so the general lethality control cannot weaken air defence. Seat and
+ * Dynamic AA membership are part of the application signature, so reassigned or dismounted AI
+ * promptly receive the correct layer without a per-unit loop.
+ * Current callers: AIRebalanceInit for existing/new AI, its bounded lighting/seat worker and each unit's Local ownership handler.
  */
 
 params [["_unit", objNull, [objNull]]];
@@ -64,11 +71,13 @@ private _applySkills = {
 
 private _profiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
 private _profileKey = missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"];
-private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"];
+private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode", "AUTO"];
 [_unit, _profiles getOrDefault [_profileKey, createHashMap]] call _applySkills;
 
 private _roleText = toUpperANSI (getText (configFile >> "CfgVehicles" >> typeOf _unit >> "textSingular"));
 private _role = [_roleText, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"] call BIS_fnc_filterString;
+
+private _hasNVG = "NVG" in getArray (configFile >> "CfgWeapons" >> hmd _unit >> "visionMode");
 
 // Preserve the established night combat tiers while correcting the old inverted NVG sensing values.
 if (_profileKey == "LEGACY" && {_mode == "NIGHT"}) then {
@@ -115,9 +124,9 @@ private _factionOverrides = missionNamespace getVariable ["Waldo_AI_FactionOverr
 private _roleOverrides = missionNamespace getVariable ["Waldo_AI_RoleOverrides", createHashMap];
 [_unit, _roleOverrides getOrDefault [_role, createHashMap]] call _applySkills;
 
-if (_mode == "NIGHT" && {(getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold", 5])}) then {
+if (_mode in ["AUTO","NIGHT"] && {(getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold", 5])}) then {
     if (_profileKey == "LEGACY") then {
-        private _spot = if (hmd _unit != "") then {
+        private _spot = if (_hasNVG) then {
             missionNamespace getVariable ["Waldo_AI_NightSpotWithNVG", 0.55]
         } else {
             missionNamespace getVariable ["Waldo_AI_NightSpotWithoutNVG", 0.12]
@@ -127,7 +136,7 @@ if (_mode == "NIGHT" && {(getLighting select 1) <= (missionNamespace getVariable
     } else {
         // Night profiles degrade the AI itself. Assigned NVG/HMD equipment offsets, but does not
         // completely remove, the low-light penalty. Mission makers can replace either map.
-        private _multipliers = if (hmd _unit != "") then {
+        private _multipliers = if (_hasNVG) then {
             missionNamespace getVariable ["Waldo_AI_NightNVGMultipliers", createHashMapFromArray [
                 ["aimingSpeed", 0.90], ["aimingAccuracy", 0.85], ["aimingShake", 0.90],
                 ["spotTime", 0.78], ["spotDistance", 0.75], ["commanding", 0.90],
@@ -159,4 +168,42 @@ if (_variance > 0) then {
         _unit setSkill [_x, ((_current + (_offsets select _forEachIndex)) max 0) min 1];
     } forEach _skillNames;
 };
+// Skill profiles apply to every CAManBase AI, including crew. Add the vehicle layer after variance
+// so its relative precision remains consistent across profiles. Cargo receives the ordinary infantry
+// profile; drivers, commanders and turret operators use the crew layer. LAMBS Turrets already changes
+// weapon config dispersion and turret angular error, so only the skill layer is retained with it.
+private _vehicle = vehicle _unit;
+private _seat = assignedVehicleRole _unit;
+private _seatName = toUpperANSI (_seat param [0, ""]);
+private _operatingCrew = _vehicle != _unit && {_seatName != "CARGO"};
+// Dynamic AA owns a separate detection, fire-gate and ammunition policy. Applying the generic crew
+// lethality reduction here would silently weaken a deliberately configured air-defence network.
+private _dynamicAA = _operatingCrew && {(_vehicle getVariable ["Waldo_DynamicAA_SystemId", ""]) != ""};
+if (isNil {_unit getVariable "Waldo_AI_OriginalAimCoef"}) then {
+    _unit setVariable ["Waldo_AI_OriginalAimCoef", getCustomAimCoef _unit, true];
+};
+if (_operatingCrew && {!_dynamicAA}) then {
+    private _crewMultiplier = ((missionNamespace getVariable ["Waldo_AI_VehicleCrewAimMultiplier", 0.75]) max 0.25) min 1;
+    {
+        _unit setSkill [_x, ((_unit skill _x) * _crewMultiplier) max 0 min 1];
+    } forEach ["aimingAccuracy", "aimingShake", "aimingSpeed"];
+    if !(isClass (configFile >> "CfgPatches" >> "lambs_turrets")) then {
+        private _dispersion = ((missionNamespace getVariable ["Waldo_AI_VehicleCrewDispersion", 2.5]) max 1) min 5;
+        // Better profiles still matter: general skill trims up to 25 percent from the configured
+        // coefficient while never making a crew more precise than the mission's original baseline.
+        private _profileFactor = 1 - (0.25 * (_unit skill "general"));
+        _unit setCustomAimCoef ((_dispersion * _profileFactor) max (_unit getVariable ["Waldo_AI_OriginalAimCoef", 1]));
+    } else {
+        _unit setCustomAimCoef (_unit getVariable ["Waldo_AI_OriginalAimCoef", 1]);
+    };
+} else {
+    _unit setCustomAimCoef (_unit getVariable ["Waldo_AI_OriginalAimCoef", 1]);
+};
+_unit setVariable ["Waldo_Cortex_LightingSignature", [
+    _mode, (getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold",5]), hmd _unit,
+    netId _vehicle, _seatName, _dynamicAA
+]];
+private _lightingUnits = missionNamespace getVariable ["Waldo_Cortex_LightingUnits",[]];
+_lightingUnits pushBackUnique _unit;
+missionNamespace setVariable ["Waldo_Cortex_LightingUnits",_lightingUnits];
 true

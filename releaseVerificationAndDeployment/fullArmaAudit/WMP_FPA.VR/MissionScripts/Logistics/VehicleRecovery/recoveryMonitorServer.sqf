@@ -16,6 +16,10 @@
  * if (isServer) then {[] spawn Waldo_fnc_RecoveryMonitorServer;};
  *
  * Current caller: Waldo_fnc_RecoveryRegisterWorkshop starts the repeat-safe monitor.
+ * Locality and authority: One scheduled server loop owns workshop matching and virtual
+ * package spill decisions. A second start is refused; current public package state serves
+ * joining clients instead of replaying monitor iterations.
+ * Result: Grounded packages are restored at matching workshops and lost carriers spill safely.
  */
 if (!isServer || {remoteExecutedOwner > 0} || {missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]}) exitWith {false};
 missionNamespace setVariable ["Waldo_Recovery_MonitorRunning", true];

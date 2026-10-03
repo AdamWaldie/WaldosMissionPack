@@ -16,13 +16,18 @@
  * it must be reinstalled every time Arma replaces the player object - the same
  * EntityRespawned-registers-itself-once idiom already used by
  * Waldo_fnc_AccessibilitySelfInteractionInit.
+ * Locality and authority: Interface client installs its current player's ACE self-action.
+ * Pronouncement requests remain server-authoritative.
+ * Repeat/JIP: The installed flag prevents duplicate actions on one player object. A respawn
+ * replaces that object and triggers local reinstallation; JIP clients run their own setup.
  *
  * Arguments: None.
- * Return Value: BOOL - true when the current player has the self-action installed (or ACE interaction
- * is unavailable, in which case there is nothing to install and this still returns true).
+ * Return Value: BOOL - true when the current player has the self-action installed; false without
+ * a player interface or when the required ACE interaction functions are unavailable.
  *
  * Example:
  * [] call Waldo_fnc_ObituarySelfInteractionInit;
+ * Result: The current player gains a repeat-safe Pronounce Dead self-action when ACE is ready.
  * Current callers: Waldo_fnc_ObituaryInit, and this function's own respawn re-installer.
  */
 
