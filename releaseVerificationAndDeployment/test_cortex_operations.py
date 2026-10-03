@@ -2714,6 +2714,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex]',controller)
         self.assertNotIn('_handoverGroup move _handoverPosition',controller)
         self.assertIn('_handoverPilot doMove _handoverPosition',controller)
+        self.assertIn('(crew _aircraft) commandTarget objNull',controller)
+        self.assertEqual(controller.count('(crew _aircraft) commandTarget objNull'),1)
         self.assertNotIn('_handoverPilot setDestination [_handoverPosition,"LEADER PLANNED",true]',controller)
         self.assertNotIn('_handoverPilot doFollow leader _handoverGroup',controller)
         self.assertNotIn('(driver _aircraft) doMove _handoverPosition',controller)

@@ -9,10 +9,10 @@
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
  * authenticated curator waypoint and replaces the pilot's private Cortex doMove once with that same
- * destination. A short token-bound transit guard prevents the pilot from autonomously selecting the
- * retired target while that direct move takes hold; it never changes the route, combat mode, group
- * attack permission, FSM, MOVE/PATH, gunner AI, velocity or movement order. A newer Zeus order ends
- * the guard immediately.
+ * destination. Cleanup releases the attack target at both individual and group-command layers, then
+ * a short token-bound transit guard prevents the pilot from autonomously selecting the retired target
+ * while that direct move takes hold. It never changes the route, combat mode, group attack permission,
+ * FSM, MOVE/PATH, gunner AI, velocity or movement order. A newer Zeus order ends the guard immediately.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -101,6 +101,10 @@ private _finish={
                 {_handoverPilot disableAI _x} forEach _handoverFeatures;
                 _handoverPilot doTarget objNull;
                 _handoverPilot doWatch objNull;
+                // doTarget clears only the actor-level target. The attack controller's group-issued
+                // ATTACK command can otherwise survive and reject the replacement doMove before the
+                // guard begins. Release that command once at the same authority layer.
+                (crew _aircraft) commandTarget objNull;
                 if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
                     _handoverGroup setBehaviourStrong _authoredBehaviour;
                     _handoverPilot setCombatBehaviour _authoredBehaviour;

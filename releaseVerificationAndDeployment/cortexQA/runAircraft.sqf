@@ -390,6 +390,7 @@ deleteGroup _nativeHandoverGroup;
         private _handoverGuardValid=count _handoverGuard == 2
             && {!(_handoverPilot checkAIFeature "AUTOTARGET")}
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
+            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [4,""] == "MOVE"}
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [5,""] == "ZEUS_TRANSIT_GUARD"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
