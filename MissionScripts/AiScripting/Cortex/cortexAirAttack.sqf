@@ -9,7 +9,8 @@
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
  * authenticated curator waypoint and replaces the Cortex group ATTACK once with a group MOVE to
- * that same destination. Cleanup releases the attack target at both individual and group-command layers, then
+ * that same destination. It also updates the pilot's movement planner once to the identical point;
+ * cleanup releases the attack target at both individual and group-command layers, then
  * a short token-bound transit guard prevents the pilot from autonomously selecting the retired target
  * while that move takes hold. It never changes the route, combat mode, group attack permission, FSM,
  * MOVE/PATH, gunner AI or velocity, and it never repeats the movement order. A newer Zeus order ends
@@ -120,9 +121,12 @@ private _finish={
                     _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
                 };
                 // ATTACK is a group-command-layer order, so a private pilot doMove cannot reliably
-                // replace it. Issue one group-command MOVE to the byte-for-byte Zeus waypoint. This
+                // replace it. Issue one group-command MOVE to the byte-for-byte Zeus waypoint, then
+                // force the local movement planner to adopt that same point. Live dedicated evidence
+                // showed commandMove alone left expectedDestination on the retired attack leg. This
                 // is cleanup, not a continuing tactic; the guard never invents or repeats movement.
                 _handoverPilot commandMove _handoverPosition;
+                _handoverPilot setDestination [_handoverPosition,"LEADER PLANNED",true];
                 _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
                 [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverCombatMode,
                     _handoverGroupCombatMode,_handoverAttackEnabled,_handoverPosition,
@@ -176,7 +180,8 @@ private _finish={
                 behaviour _handoverPilot,
                 unitCombatMode _handoverPilot,
                 currentCommand _handoverPilot,
-                "ZEUS_TRANSIT_GUARD"
+                "ZEUS_TRANSIT_GUARD",
+                expectedDestination _handoverPilot
             ],true];
         };
         if (_resume) then {

@@ -387,15 +387,17 @@ deleteGroup _nativeHandoverGroup;
             str [_replacement,_replacementWaypoint,_group getVariable ["Waldo_AIPass_ZeusHold",[]],_zeusSnapshot]] call _recordCheck;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
         private _handoverGuard=_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]];
+        private _handoverResult=_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]];
+        private _handoverExpected=(_handoverResult param [6,[]]) param [0,[]];
         private _handoverGuardValid=count _handoverGuard == 2
             && {!(_handoverPilot checkAIFeature "AUTOTARGET")}
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
-            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [4,""] == "MOVE"}
-            && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [5,""] == "ZEUS_TRANSIT_GUARD"};
+            && {_handoverExpected distance2D _replacement <= 2}
+            && {_handoverResult param [5,""] == "ZEUS_TRANSIT_GUARD"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
         [_id+"-bounded-zeus-transit-guard",_released && {_handoverGuardValid},str [
-            _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
+            _handoverResult,
             _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]
         ]] call _recordCheck;
