@@ -6,9 +6,10 @@
  * aircraft to its unchanged authored route. This provides responsive air-to-air contact handling
  * without pretending that fixed script geometry implements full basic fighter manoeuvring.
  * It flies physical route legs, repeatedly presents the live target to operating crew, records real
- * non-countermeasure shots and requests finite approach/departure countermeasures. Standoff weapons
- * fire only after the engine reports an aim solution; lateral runs command only the retained turret
- * operator. A lack of travel, solution or fire aborts the run; elapsed time alone never completes it. Zeus priority, locality loss,
+ * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
+ * selects and explicitly requests fire from its retained loaded weapon; lateral runs command only
+ * the retained turret operator. A lack of travel, solution or fire aborts the run; elapsed time alone
+ * never completes it. Zeus priority, locality loss,
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
@@ -245,6 +246,8 @@ if (_stage == "") then {
     _job set ["lateralWeapon",_plan getOrDefault ["lateralWeapon",""]];
     _job set ["standoffWeapon",_plan getOrDefault ["standoffWeapon",""]];
     _job set ["standoffTurret",_plan getOrDefault ["standoffTurret",[]]];
+    _job set ["groundWeapon",_plan getOrDefault ["groundWeapon",""]];
+    _job set ["groundTurret",_plan getOrDefault ["groundTurret",[]]];
     _job set ["airToAir",_plan getOrDefault ["airToAir",false]];
     _job set ["airWeapon",_plan getOrDefault ["airWeapon",""]];
     _job set ["airWeaponTurret",_plan getOrDefault ["airWeaponTurret",[]]];
@@ -290,6 +293,8 @@ if (serverTime >= (_job getOrDefault ["progressAt",serverTime])+12) then {
                 _job set ["lateralWeapon",_replacement getOrDefault ["lateralWeapon",""]];
                 _job set ["standoffWeapon",_replacement getOrDefault ["standoffWeapon",""]];
                 _job set ["standoffTurret",_replacement getOrDefault ["standoffTurret",[]]];
+                _job set ["groundWeapon",_replacement getOrDefault ["groundWeapon",""]];
+                _job set ["groundTurret",_replacement getOrDefault ["groundTurret",[]]];
                 _job set ["airToAir",_replacement getOrDefault ["airToAir",false]];
                 _job set ["airWeapon",_replacement getOrDefault ["airWeapon",""]];
                 _job set ["airWeaponTurret",_replacement getOrDefault ["airWeaponTurret",[]]];
@@ -370,11 +375,23 @@ if (_stage == "ATTACK") then {
             _job set ["nextStandoffFire",serverTime+([1,4] select _fired)];
         };
     } else {
-        if ((_job getOrDefault ["pattern",""]) == "LATERAL") then {
-            private _operator=_aircraft turretUnit (_job getOrDefault ["lateralTurretPath",[]]);
-            if (!isNull _operator && {alive _operator}) then {_operator doTarget _target; _operator doFire _target};
-        } else {
-        {if (alive _x) then {_x doFire _target}} forEach crew _aircraft;
+        private _lateral=(_job getOrDefault ["pattern",""]) == "LATERAL";
+        private _weapon=if (_lateral) then {_job getOrDefault ["lateralWeapon",""]}
+            else {_job getOrDefault ["groundWeapon",""]};
+        private _turret=if (_lateral) then {_job getOrDefault ["lateralTurretPath",[]]}
+            else {_job getOrDefault ["groundTurret",[]]};
+        private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
+        _group reveal [_target,4];
+        if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
+        if (!isNull _operator && {alive _operator}) then {
+            _operator doTarget _target;
+            if (_weapon == "") then {_operator doFire _target}
+            else {
+                if (serverTime >= (_job getOrDefault ["nextGroundFire",0])) then {
+                    private _fired=_aircraft fireAtTarget [_target,_weapon];
+                    _job set ["nextGroundFire",serverTime+([0.8+random 0.7,2+random 1.5] select _fired)];
+                };
+            };
         };
     }};
 };

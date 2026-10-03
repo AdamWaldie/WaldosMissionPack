@@ -2770,6 +2770,9 @@ class CortexOperations(unittest.TestCase):
                             'magazinesAllTurrets','airLock','aiAmmoUsageFlags','STANDOFF','OFFSET','HOOK','STRAFE','LATERAL',
                             'INTERCEPT','_airToAir','airWeapon','airWeaponTurret']:
             self.assertIn(requirement,planner)
+        for requirement in ['groundWeapon','groundTurret','_groundCandidates','shotbullet','shotshell',
+                            'shotrocket','shotmissile']:
+            self.assertIn(requirement,planner)
         self.assertNotIn('allUnits',planner)
         self.assertNotIn('nearEntities',planner)
         for requirement in ['fullCrew _aircraft','_aircraft weaponsTurret _turret','_personTurret',
@@ -2793,6 +2796,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _leadSeconds=[8,3] select (_stage == "ATTACK")',controller)
         self.assertIn('_job getOrDefault ["airToAir",false]',controller)
         self.assertIn('_job getOrDefault ["airWeapon",""]',controller)
+        self.assertIn('_job getOrDefault ["groundWeapon",""]',controller)
+        self.assertIn('_job getOrDefault ["groundTurret",[]]',controller)
         self.assertIn('_isPlane && {speed _aircraft < 40}',controller)
         self.assertIn('serverTime+0.8+random 0.8',controller)
         self.assertIn('flareINGRESS',controller)

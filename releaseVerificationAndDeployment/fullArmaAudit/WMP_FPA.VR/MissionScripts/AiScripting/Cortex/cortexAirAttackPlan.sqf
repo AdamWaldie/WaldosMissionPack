@@ -6,8 +6,9 @@
  * sample of targets already known to the pilot. Intercept geometry leads the target's measured velocity,
  * varies height inside a platform-safe envelope and retains a real loaded air-to-air weapon when present.
  * This is an intercept/engage/disengage controller, not a scripted claim to full BFM. A standoff
- * plan retains the real loaded weapon/turret pair; a lateral pass retains the real independent turret
- * and operator weapon. Observed AA shifts the run away from the threat sector and prefers a usable
+ * plan retains the real loaded weapon/turret pair. Every surface pattern retains a loaded damaging
+ * weapon/turret pair suited to its geometry; a lateral pass requires an armed independent turret.
+ * Observed AA shifts the run away from the threat sector and prefers a usable
  * standoff pair unless that aircraft recently failed to acquire a firing solution.
  * Locality/authority: read-only; called on the aircraft owner. It does not reveal enemies, add
  * waypoints, move the aircraft or change crew orders. Immutable magazine facts are cached locally.
@@ -36,7 +37,7 @@ private _ammoCache=missionNamespace getVariable ["Waldo_Cortex_AirAmmoFacts",cre
 private _ammoFacts={
     params ["_magazine"];
     private _facts=_ammoCache getOrDefault [_magazine,[]];
-    if (_facts isEqualTo []) then {
+    if (count _facts < 5) then {
         private _ammo=configFile >> "CfgAmmo" >> getText (configFile >> "CfgMagazines" >> _magazine >> "ammo");
         private _flags=getNumber (_ammo >> "aiAmmoUsageFlags");
         private _simulation=toLowerANSI getText (_ammo >> "simulation");
@@ -45,7 +46,10 @@ private _ammoFacts={
             || {getNumber (_ammo >> "nvLock") > 0} || {(floor (_flags/512) mod 2) == 1};
         private _standoff=_simulation in ["shotmissile","shotrocket"] && {getNumber (_ammo >> "hit") >= 100}
             && {!_antiAir} && {_guidedGround};
-        _facts=[_antiAir,_standoff];
+        private _hit=getNumber (_ammo >> "hit");
+        private _surface=_hit > 0 && {!_antiAir}
+            && {_simulation in ["shotbullet","shotshell","shotrocket","shotmissile"]};
+        _facts=[_antiAir,_standoff,_surface,_simulation,_hit];
         _ammoCache set [_magazine,_facts];
     };
     _facts
@@ -55,6 +59,7 @@ private _standoffWeapon="";
 private _standoffTurret=[];
 private _airWeapon="";
 private _airWeaponTurret=[];
+private _groundCandidates=[];
 // Retain the actual muzzle/turret pair. Magazine metadata alone cannot fire a weapon and previously
 // allowed STANDOFF plans that sprayed rockets or waited forever with no usable target solution.
 {
@@ -73,9 +78,16 @@ private _airWeaponTurret=[];
             (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
                 && {([_x select 0] call _ammoFacts) select 1}
         };
-        if (_loaded >= 0) exitWith {_standoff=true; _standoffWeapon=_weapon; _standoffTurret=_turret};
+        if (_loaded >= 0 && {!_standoff}) then {_standoff=true; _standoffWeapon=_weapon; _standoffTurret=_turret};
+        private _surfaceLoaded=(magazinesAllTurrets _aircraft) findIf {
+            (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
+                && {([_x select 0] call _ammoFacts) select 2}
+        };
+        if (_surfaceLoaded >= 0) then {
+            private _facts=[((magazinesAllTurrets _aircraft) select _surfaceLoaded) select 0] call _ammoFacts;
+            _groundCandidates pushBack [_weapon,_turret,_facts select 3,_facts select 4];
+        };
     } forEach (_aircraft weaponsTurret _turret);
-    if (_standoff) exitWith {};
 } forEach ([[-1]] + allTurrets [_aircraft,true]);
 // A lateral pass needs an independently aimed, occupied turret. A fixed-forward pilot weapon cannot
 // engage abeam and previously made LATERAL a label on an impossible route. Person turrets are troop
@@ -92,6 +104,7 @@ private _lateralWeapon="";
             (magazinesAllTurrets _aircraft) findIf {
                 (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
                     && {(_x select 0) in compatibleMagazines _weapon}
+                    && {([_x select 0] call _ammoFacts) select 2}
             } >= 0
         };
         if (_usable >= 0) exitWith {
@@ -156,6 +169,23 @@ private _overrideValid=_patternOverride in ["STRAFE","OFFSET","HOOK","STANDOFF",
     && {!(_patternOverride == "LATERAL") || {!_isPlane && {_lateralTurret}}}
     && {!(_patternOverride == "STANDOFF") || {_standoffAvailable}};
 if (_overrideValid && {!_airToAir}) then {_pattern=_patternOverride};
+private _groundWeapon="";
+private _groundTurret=[];
+private _groundScore=-1;
+{
+    _x params ["_weapon","_turret","_simulation","_hit"];
+    private _score=_hit min 500;
+    if (_pattern == "STRAFE") then {
+        _score=_score+([0,900] select (_simulation in ["shotbullet","shotshell"]));
+    } else {
+        _score=_score+([0,900] select (_simulation in ["shotrocket","shotmissile"]));
+    };
+    if (_score > _groundScore) then {
+        _groundScore=_score;
+        _groundWeapon=_weapon;
+        _groundTurret=_turret;
+    };
+} forEach _groundCandidates;
 // Sample once per finite plan. Bounded variation avoids identical attack profiles without adding
 // per-frame work or accepting unsafe arbitrary heights.
 private _altitude=if (_airToAir) then {
@@ -292,7 +322,7 @@ if (_isPlane) then {
         case "LATERAL": {
             _stageAltitudes=[_altitude,_altitude,_altitude+40];
             _stageSpeeds=[_speed,(_speed-15) max 70,_speed+45];
-            _captureRadii=[140,160,240];
+            _captureRadii=[280,260,340];
             _attackMinimum=8;
         };
         default {
@@ -316,6 +346,7 @@ createHashMapFromArray [
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
     ["lateralWeapon",_lateralWeapon],["standoffWeapon",_standoffWeapon],
     ["standoffTurret",_standoffTurret],["airToAir",_airToAir],
+    ["groundWeapon",_groundWeapon],["groundTurret",_groundTurret],
     ["airWeapon",_airWeapon],["airWeaponTurret",_airWeaponTurret],
     ["platform",["HELICOPTER","PLANE"] select _isPlane]
 ]
