@@ -51,12 +51,14 @@ private _finish={
             if (!isNull _leasedTarget && {!isNull _finishGroup}) then {
                 _finishGroup forgetTarget _leasedTarget;
             };
-            // Direct sight can immediately rebuild engine knowledge after forgetTarget. Lease only
-            // the pilot's TARGET/AUTOTARGET selection while the curator route takes hold. Earlier
-            // suppression of AUTOCOMBAT stalled some helicopters; it deliberately remains enabled.
-            // Gunners are untouched and continue sensing, aiming and returning fire.
+            // Direct sight can immediately rebuild engine knowledge after forgetTarget. Lease the
+            // pilot's autonomous combat and target selection while the curator route takes hold.
+            // Without AUTOCOMBAT suppression Arma immediately forces an AWARE Zeus waypoint back
+            // into COMBAT and the helicopter hovers despite having the exact replacement doMove.
+            // The pilot still flies the authored destination; gunners remain untouched and continue
+            // sensing, aiming and returning fire. The bounded restore below returns every feature.
             private _handoverPilot=driver _aircraft;
-            private _handoverFeatures=["TARGET","AUTOTARGET"] select {
+            private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {
                 _handoverPilot checkAIFeature _x
             };
             {_handoverPilot disableAI _x} forEach _handoverFeatures;
