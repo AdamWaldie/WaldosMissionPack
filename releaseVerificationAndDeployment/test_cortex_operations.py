@@ -2713,7 +2713,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('waypointBehaviour [_handoverGroup,_handoverIndex]',controller)
         self.assertIn('waypointSpeed [_handoverGroup,_handoverIndex]',controller)
         self.assertIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
-        self.assertIn('_handoverGroup setCombatMode "YELLOW"',controller)
+        self.assertIn('_handoverGroup setCombatMode "BLUE"',controller)
         self.assertIn('_handoverGroup enableAttack false',controller)
         self.assertIn('_aircraft flyInHeight (((getPosATL _aircraft) select 2) max 25)',controller)
         self.assertIn('Waldo_fnc_CortexAirHandoverRestoreLocal',controller)
@@ -2727,7 +2727,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_Cortex_AirHandoverResult',controller)
         restore=source('cortexAirHandoverRestoreLocal')
         for requirement in ['remoteExecutedOwner != _originOwner','arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET"]',
-                            '_pilot enableAI _x','unitCombatMode _pilot == "BLUE"','combatMode _group == "YELLOW"',
+                            '_pilot enableAI _x','unitCombatMode _pilot == "BLUE"','combatMode _group == "BLUE"',
                             '!attackEnabled _group','_group enableAttack _previousAttackEnabled',
                             '_pilot setCombatBehaviour _previousPilotBehaviour',
                             'Waldo_Cortex_AirHandoverLease",nil,true']:

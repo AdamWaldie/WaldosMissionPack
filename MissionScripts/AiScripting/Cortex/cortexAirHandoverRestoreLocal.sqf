@@ -47,7 +47,7 @@ if (!isNull _pilot && {alive _pilot} && {local _pilot}) then {
     };
 };
 private _group=group _pilot;
-if (!isNull _group && {local _group} && {combatMode _group == "YELLOW"}) then {
+if (!isNull _group && {local _group} && {combatMode _group == "BLUE"}) then {
     _group setCombatMode _previousGroupCombatMode;
 };
 if (!isNull _group && {local _group} && {!attackEnabled _group}) then {

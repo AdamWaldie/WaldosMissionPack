@@ -79,10 +79,12 @@ private _finish={
             // only that autonomous engage-at-will delegation while the curator's replacement leg
             // takes hold. Turrets retain their weapons, target knowledge and ability to return fire.
             _handoverGroup enableAttack false;
-            // RED permits engage-at-will manoeuvres that can abandon even a valid MOVE route.
-            // YELLOW retains fire-at-will for every gunner while requiring the group to follow the
-            // curator route. Restore the original value only if this lease still owns YELLOW.
-            _handoverGroup setCombatMode "YELLOW";
+            // A gunship can still stop to service a fully known target in YELLOW even after attack
+            // delegation is disabled. Direct curator movement has absolute priority during this
+            // bounded handover, so hold the whole aircraft's fire until the replacement leg takes
+            // hold. Restore the previous group mode on arrival or deadline; a later Zeus token ends
+            // this monitor before it can repeat the old destination.
+            _handoverGroup setCombatMode "BLUE";
             // The driver is the only crew member whose attack manoeuvre can steer the aircraft
             // away from Zeus. BLUE prevents that pilot from initiating fire during the bounded
             // handover; turret crews retain the group's YELLOW fire permission. Cleanup restores
