@@ -7,6 +7,9 @@
  * operator. A lack of travel, solution or fire aborts the run; elapsed time alone never completes it. Zeus priority, locality loss,
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
+ * If Arma retains a completed helicopter doMove as a zero-thrust hover during a direct Zeus
+ * handover, one measured-stagnation recovery supplies forward velocity along the authenticated
+ * curator route without moving the aircraft position or creating a replacement order.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -175,6 +178,7 @@ private _finish={
                 private _deadline=serverTime+([8,100] select (count _handoverPosition >= 2));
                 private _progressPosition=getPosATL _handoverAircraft;
                 private _progressAt=serverTime;
+                private _departureImpulseApplied=false;
                 private _finished=false;
                 waitUntil {
                     sleep 0.5;
@@ -216,6 +220,34 @@ private _finish={
                                         distance2D _handoverPosition <= 2}) then {
                                     _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
                                 };
+                                // Arma can retain the final zero-thrust hover of a completed
+                                // actor-level helicopter doMove even after expectedDestination,
+                                // currentWaypoint and facing all agree with the replacement Zeus
+                                // waypoint. Recover that engine deadlock once, after physical
+                                // stagnation proves it exists. This is a velocity handover along
+                                // Zeus's unchanged route, not a teleport or a synthesized order;
+                                // position, waypoint ownership and vertical motion remain intact.
+                                if (!_departureImpulseApplied
+                                    && {_handoverAircraft isKindOf "Helicopter"}
+                                    && {!isTouchingGround _handoverAircraft}
+                                    && {abs speed _handoverAircraft < 5}
+                                    && {_handoverAircraft distance2D _handoverPosition > 150}) then {
+                                    private _currentPosition=getPosATL _handoverAircraft;
+                                    private _routeVector=_handoverPosition vectorDiff _currentPosition;
+                                    private _routeLength=sqrt (((_routeVector select 0)^2)+((_routeVector select 1)^2));
+                                    if (_routeLength > 1) then {
+                                        private _velocity=velocity _handoverAircraft;
+                                        _handoverAircraft setVelocity [
+                                            10*(_routeVector select 0)/_routeLength,
+                                            10*(_routeVector select 1)/_routeLength,
+                                            _velocity select 2
+                                        ];
+                                        _departureImpulseApplied=true;
+                                        _handoverAircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",[
+                                            serverTime,+_handoverPosition,+_currentPosition
+                                        ],true];
+                                    };
+                                };
                             };
                             _progressPosition=getPosATL _handoverAircraft;
                             _progressAt=serverTime;
@@ -229,7 +261,8 @@ private _finish={
                     if (count _handoverPosition >= 2) then {_handoverAircraft distance2D _handoverPosition} else {-1},
                     behaviour _handoverPilot,
                     unitCombatMode _handoverPilot,
-                    currentCommand _handoverPilot
+                    currentCommand _handoverPilot,
+                    _departureImpulseApplied
                 ],true];
                 if (local _handoverAircraft) then {
                     [_handoverAircraft,_handoverPilot,_handoverToken,_handoverFeatures,

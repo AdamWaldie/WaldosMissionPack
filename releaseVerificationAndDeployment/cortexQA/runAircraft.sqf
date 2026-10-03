@@ -341,7 +341,12 @@ private _cortex=_results select 1;
             currentWaypoint _group,waypoints _group apply {waypointPosition _x},
             _replacement,_group getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
-            _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]],
+            _aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]],
+            _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_Active",false],
+            _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_LastResult",[]],
+            _aircraft getVariable ["Waldo_HelicopterDeceleration_Active",false],
+            _aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]]
         ]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
         [_id+"-explicit-interruption-transition",_transitions findIf {(_x select 2) == "AIR_ATTACK" && {(_x select 4) == "ENDED"} && {(_x select 5) == "CONTROL_RELEASED"}} >= 0,str _transitions] call _recordCheck;
