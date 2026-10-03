@@ -2,6 +2,27 @@
 
 Updated 1 October 2026. PR 151 remains draft. Batched Arma testing uses the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms. The 50-squad infantry and 50-group mixed native-versus-Cortex matrices now pass the agreed frame-time budgets; repeated hardware and ACE HC runs remain.
 
+## 4 October: VCOM, WebKnight, IMS and civilian ownership
+
+Local Workshop source was inspected for WebKnight Zombies, WebKnight Droids, the WBK Units LAMBS
+compatibility patch and Simple Civilian Behaviour. The official VCOM source was also inspected. IMS2
+was not present in the local Workshop library; the locally available earlier IMS generation and known
+IMS2 runtime markers informed a conservative active-actor gate, but IMS2 live compatibility is not
+accepted yet.
+
+Cortex now excludes WebKnight custom actors and active IMS melee actors without excluding ordinary
+infantry merely because either addon is loaded. The WBK LAMBS patch remains authoritative because
+Cortex refuses those actors before acquiring any movement lease. VCOM receives a finite movement
+lease that preserves and restores its exact `Vcm_Disable` baseline; active VCOM support or medic
+movement refuses the Cortex request. VCOM formation, flank, rescue and skill controls are untouched.
+
+An additive WMP civilian reaction supplies event-driven `FiredNear`/`Hit` flight only when Simple
+Civilian Behaviour is absent. It has no poller or FSM, yields to Zeus, and exposes enable, radius,
+distance and cooldown controls. WMP Diagnostics reports loaded integrations, finite leases, external
+actor ownership and active civilian reactions. The coverage registry now maps 61 cases, 177 settings
+and 149 production AI sources. The new civilian physical audit is saved but unexecuted; all
+dependency-loaded, HC, JIP and real event-delivery variants remain open.
+
 ## 1 October: LAMBS ownership and compatibility
 
 The four supplied Workshop packages now have explicit, separate treatment. LAMBS_Danger and its

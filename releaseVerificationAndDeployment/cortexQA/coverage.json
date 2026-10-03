@@ -465,6 +465,29 @@
       ]
     },
     {
+      "id": "CIVILIAN",
+      "title": "Civilian danger response and external ownership",
+      "setup": "Use an ordinary unarmed civilian near a threat with reactions disabled and enabled, then replace the active flee order with a Zeus movement order. Repeat under supported WBK, IMS and Simple Civilian Behaviour dependencies when installed.",
+      "expected": "Disabled civilians remain in place. Enabled ordinary civilians physically move away once, respect the cooldown and yield immediately to a later Zeus order. WebKnight custom actors, active IMS actors and Simple Civilian Behaviour civilians remain externally owned and receive no Cortex movement, animation or combat commands.",
+      "settings": [
+        "Waldo_AIPass_CivilianReaction_Enable",
+        "Waldo_AIPass_CivilianReaction_Radius",
+        "Waldo_AIPass_CivilianReaction_Distance",
+        "Waldo_AIPass_CivilianReaction_Cooldown"
+      ],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runReactions.sqf adds disabled refusal, enabled physical flight, cooldown refusal and physical Zeus replacement-order checks through the production reaction endpoint. Saved, unexecuted. Dependency-loaded WBK/IMS/Simple Civilian Behaviour, locality migration, JIP and real FiredNear/Hit event-delivery variants remain open.",
+      "executable_sources": [
+        "runReactions.sqf"
+      ],
+      "production_sources": [
+        "MissionScripts/AiScripting/Cortex/cortexCivilianReact.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexCivilianSetup.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexExternalOwner.sqf"
+      ]
+    },
+    {
       "id": "AT",
       "title": "Anti-armour and ammunition roles",
       "setup": "Provide AT/AA/dual-role launchers and overrides against real vehicles, with a friendly in the backblast corridor.",

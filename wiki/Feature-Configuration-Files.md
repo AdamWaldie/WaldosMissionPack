@@ -417,6 +417,10 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_Morale_RetreatDistance` | How far a broken squad falls back. Default `200`. |
 | `Waldo_AIPass_Surrender_Enable` | One or two broken survivors surrender only with an enemy within 60 m and no friendly squad within 300 m (ACE Captives when loaded). Default `true`. |
 | `Waldo_AIPass_GrenadeEvasion_Enable` | AI move away from a live grenade they can see; off until tested in your setup. Default `false`. |
+| `Waldo_AIPass_CivilianReaction_Enable` | Event-driven danger response for ordinary unarmed civilians. Simple Civilian Behaviour takes exclusive ownership when loaded. Default `true`. |
+| `Waldo_AIPass_CivilianReaction_Radius` | Maximum `FiredNear` trigger distance in metres for the WMP civilian fallback. Default `45`. |
+| `Waldo_AIPass_CivilianReaction_Distance` | Approximate length in metres of one finite civilian escape leg away from danger. Default `180`. |
+| `Waldo_AIPass_CivilianReaction_Cooldown` | Minimum seconds before a later danger event may replace the civilian's current escape order. Default `20`. |
 | `Waldo_AIPass_AntiArmour_Enable` | The best anti-tank gunner engages known armour, clear of backblast. Default `true`. |
 | `Waldo_AIPass_VehicleDismount_Enable` | Routine passenger dismounting during vehicle contact drills. Default `true`. |
 | `Waldo_AIPass_VehicleRemount_Enable` | Reboard recorded passengers on a normal return to CALM. Default `true`. |

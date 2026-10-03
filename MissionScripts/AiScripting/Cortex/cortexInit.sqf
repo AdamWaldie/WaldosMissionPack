@@ -12,6 +12,8 @@
  *   on (it would otherwise run for every projectile);
  * - an ArtilleryShellFired handler for counter-battery, only while Waldo_AIPass_CounterBattery_Enable
  *   is on.
+ * - event-driven civilian FiredNear/Hit reactions when enabled. Existing and newly created owner-local
+ *   civilians are versioned once; no civilian polling loop is installed.
  * Existing local groups have their peak strength recorded. Repeat calls are safe, and they add the
  * optional handlers when their switches have been turned on since the last call. Player clients return immediately and pay nothing. Each
  * behaviour has its own Waldo_AIPass_<Behaviour>_Enable switch in MissionConfig\aiConfig.sqf, and
@@ -107,11 +109,35 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_ArtilleryHandler"}) then {
     }]];
 };
 missionNamespace setVariable ["Waldo_AIPass_LambsDangerLoaded", isClass (configFile >> "CfgPatches" >> "lambs_danger")];
+missionNamespace setVariable ["Waldo_AIPass_VcomLoaded",
+    isClass (configFile >> "CfgPatches" >> "VCOM_AI") || {!isNil "VCM_fnc_SQUADBEH"}];
+missionNamespace setVariable ["Waldo_AIPass_IMSLoaded",
+    !isNil "IMS_Melee_Weapons" || {isClass (configFile >> "CfgPatches" >> "WBK_IMS")}
+        || {isClass (configFile >> "CfgPatches" >> "WBK_IMS2")}];
+missionNamespace setVariable ["Waldo_AIPass_WBKLoaded",
+    !isNil "WBK_LoadAIThroughEden" || {!isNil "WBK_Droid_B1_Load"}];
+missionNamespace setVariable ["Waldo_AIPass_WBKCivilianLoaded",!isNil "WBK_CivilianFlee"];
 // The companion packages are config layers. Record them for diagnostics, but never disable them
 // when Cortex takes movement ownership from LAMBS_Danger.
 missionNamespace setVariable ["Waldo_Cortex_LambsTurretsLoaded", isClass (configFile >> "CfgPatches" >> "lambs_turrets")];
 missionNamespace setVariable ["Waldo_Cortex_LambsSuppressionLoaded", isClass (configFile >> "CfgPatches" >> "lambs_suppression")];
 missionNamespace setVariable ["Waldo_Cortex_LambsRpgLoaded", isClass (configFile >> "CfgPatches" >> "lambs_rpg")];
+if (missionNamespace getVariable ["Waldo_AIPass_CivilianReaction_Enable",true]) then {
+    {if (local _x) then {[_x] call Waldo_fnc_CortexCivilianSetup}} forEach (allUnits select {side group _x == civilian});
+    if (isNil {missionNamespace getVariable "Waldo_Cortex_CivilianCreatedHandler"}) then {
+        missionNamespace setVariable ["Waldo_Cortex_CivilianCreatedHandler",addMissionEventHandler ["EntityCreated",{
+            params ["_entity"];
+            if (_entity isKindOf "CAManBase" && {local _entity}) then {[_entity] call Waldo_fnc_CortexCivilianSetup};
+        }]];
+    };
+} else {
+    private _civilianCreated=missionNamespace getVariable "Waldo_Cortex_CivilianCreatedHandler";
+    if (!isNil "_civilianCreated") then {
+        removeMissionEventHandler ["EntityCreated",_civilianCreated];
+        missionNamespace setVariable ["Waldo_Cortex_CivilianCreatedHandler",nil];
+    };
+    {if (local _x) then {[_x,true] call Waldo_fnc_CortexCivilianSetup}} forEach (allUnits select {side group _x == civilian});
+};
 {
     if (local _x) then {
         _x setVariable ["Waldo_AIPass_PeakSize", (_x getVariable ["Waldo_AIPass_PeakSize", 0]) max ({alive _x} count units _x)];
@@ -122,7 +148,7 @@ if !(missionNamespace getVariable ["Waldo_AIPass_DiscoveryQueued", false]) then 
     [Waldo_fnc_CortexDiscover, createHashMap, 1] call Waldo_fnc_CortexQueueJob;
 };
 
-diag_log format ["[WMP CORTEX] Started on %1 (contact=%2 flank=%3 regroup=%4 artillery=%5 airborne=%6 lambs=%7/%8).",
+diag_log format ["[WMP CORTEX] Started on %1 (contact=%2 flank=%3 regroup=%4 artillery=%5 airborne=%6 lambs=%7/%8 vcom=%9 ims=%10 wbk=%11).",
     ["headless client", "server"] select isServer,
     missionNamespace getVariable ["Waldo_AIPass_Contact_Enable", true],
     missionNamespace getVariable ["Waldo_AIPass_Flank_Enable", true],
@@ -130,6 +156,9 @@ diag_log format ["[WMP CORTEX] Started on %1 (contact=%2 flank=%3 regroup=%4 art
     missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false],
     missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false],
     missionNamespace getVariable ["Waldo_AIPass_LambsDangerLoaded", false],
-    missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"]
+    missionNamespace getVariable ["Waldo_AIPass_LambsMode", "SPLIT"],
+    missionNamespace getVariable ["Waldo_AIPass_VcomLoaded",false],
+    missionNamespace getVariable ["Waldo_AIPass_IMSLoaded",false],
+    missionNamespace getVariable ["Waldo_AIPass_WBKLoaded",false]
 ];
 true

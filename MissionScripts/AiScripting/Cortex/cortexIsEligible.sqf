@@ -21,6 +21,8 @@
  *   suppressive fire);
  * - a member fails the shared AI filters: Waldo_AI_IncludedFactions, Waldo_AI_ExcludedFactions or
  *   Waldo_AI_ExcludedClasses.
+ * - WebKnight custom AI owns the actor, IMS currently owns its melee state, or Simple Civilian
+ *   Behaviour owns an unarmed civilian. Addon presence alone never excludes ordinary infantry.
  * Dynamic AO groups are deliberately eligible. Waldo_Headless_ExcludeGroup only pins locality and
  * does not exclude a group from behaviour.
  *
@@ -101,6 +103,7 @@ if ([_group] call _isFeatureOwned) exitWith {false};
     || {!isNull (_unit getVariable ["bis_fnc_moduleRemoteControl_owner", objNull])}
     || {_unit getVariable ["zen_ai_garrisoned", false]}
     || {_unit getVariable ["zen_ai_isSuppressing", false]}
+    || {[_unit] call Waldo_fnc_CortexExternalOwner != ""}
     || {[_unit] call _isFeatureOwned}
     || {count _includedFactions > 0 && {!(faction _unit in _includedFactions)}}
     || {faction _unit in _excludedFactions}

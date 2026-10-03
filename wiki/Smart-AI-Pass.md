@@ -107,6 +107,7 @@ unavailable supporting action therefore cannot leave the squad waiting forever.
 | Morale and retreat | `Waldo_AIPass_Morale_Enable` (on) | Morale is driven by casualties, suppression, a lost leader, being outnumbered, and armour the squad cannot fight. Braver soldiers hold longer. A broken squad selects from five bounded escape avenues, favours screened ground, then falls back 200 m under smoke. |
 | Surrender | `Waldo_AIPass_Surrender_Enable` (on) | The last one or two survivors of a broken, isolated squad drop their weapons and surrender only when an enemy is within 60 m and no friendly squad is within 300 m. With ACE Captives loaded, players can take them prisoner. |
 | Grenade evasion | `Waldo_AIPass_GrenadeEvasion_Enable` (on) | AI move away from a live grenade they can see under a short actor-level movement reservation. A soldier providing coordinated covering fire can leave the owned hold to evade; the support controller waits for that evasion instead of pulling the soldier straight back. Test it in your setup first (see Limitations). |
+| Civilian danger reaction | `Waldo_AIPass_CivilianReaction_Enable` (on) | Unarmed civilians use `FiredNear` and `Hit` events to make one finite move away from danger. There is no civilian polling loop or persistent FSM. The response yields to Zeus, player control and Simple Civilian Behaviour. Radius, approximate escape distance and cooldown are separately configurable. |
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
 | Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Eligible cargo infantry, including a separate passenger squad, get out on known contact and reboard after contact ends. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
 | Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
@@ -456,6 +457,28 @@ WMP calls the installed LAMBS public interface; it does not bundle LAMBS source.
 GPLv2 license includes an additional condition which forbids modified or derivative versions from
 being uploaded to Steam Workshop. Keeping the FSM in its own optional mod also avoids a stale fork and
 lets its engine-level Danger FSM continue to receive upstream fixes.
+
+## Other AI mod compatibility
+
+Cortex uses explicit ownership boundaries for the supplied AI and animation mods. Merely loading a
+mod does not disable Cortex for ordinary infantry. The gate applies to the actor or group whose state
+the other system actually owns.
+
+| Package | Cortex treatment |
+|---|---|
+| [VCOM AI V3.4.0](https://steamcommunity.com/sharedfiles/filedetails/?id=721359761) | A finite Cortex movement lease saves VCOM's exact group `Vcm_Disable` value, pauses VCOM only for the accepted Cortex move, then restores that value on completion, expiry, Zeus takeover, locality handover or shutdown. Cortex refuses a lease while VCOM support or medic movement is active. It never changes VCOM skill, formation, flank or rescue settings. |
+| [Improved Melee System 2](https://steamcommunity.com/sharedfiles/filedetails/?id=3510959070) | Actors carrying active IMS runtime markers or IMS animation state are excluded from Cortex movement, stance and combat commands. Loading IMS does not exclude ordinary rifle squads. The current implementation was derived from the locally available IMS generation and known IMS2 runtime markers; an installed IMS2 live arm remains required before acceptance. |
+| [WebKnight Zombies and Creatures](https://steamcommunity.com/sharedfiles/filedetails/?id=2789152015) | Zombies and custom-skeleton actors are treated as WebKnight-owned. Cortex does not issue movement, stance, surrender, garrison or combat commands to them. |
+| [WebKnight Droids](https://steamcommunity.com/sharedfiles/filedetails/?id=2567352444) | Droids identified by their runtime state, faction, movement config or WebKnight author metadata remain under their native controller. Ordinary soldiers in the same mission remain eligible. |
+| [WBK Units LAMBS compatibility patch](https://steamcommunity.com/sharedfiles/filedetails/?id=3032643455) | The patch remains authoritative for the relationship between WebKnight actors and LAMBS. Cortex excludes those actors before requesting a LAMBS/VCOM lease, so it does not undo the patch or re-enable an incompatible FSM. |
+| [Simple Civilian Behaviour](https://steamcommunity.com/sharedfiles/filedetails/?id=3529745801) | When its public flee function is present, the addon exclusively owns unarmed civilians and Cortex installs no civilian danger handlers. Without it, the optional WMP fallback supplies a lightweight event-driven flee response with the same master, radius, distance and cooldown controls used by Cortex. |
+
+The compatibility gate is read-only: WMP does not clear external variables, terminate external
+scripts, replace custom animations or imitate an externally owned actor. WMP Diagnostics reports
+which integrations are loaded, finite VCOM leases, externally owned actors and active WMP civilian
+responses. Source inspection and static tests establish the ownership contract; dependency-loaded
+dedicated-server, headless-client, JIP and Zeus interruption runs remain required for behavioural
+acceptance.
 
 ## Which AI are affected
 

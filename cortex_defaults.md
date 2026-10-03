@@ -84,6 +84,10 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Cohesion` | `1` | 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner. |
 | `Waldo_AIPass_ReactionSpeed` | `1` | 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often. |
 | `Waldo_AIPass_LambsMode` | `"SPLIT"` | STRING: SPLIT (LAMBS keeps in-contact unit tactics) or WMP (LAMBS group AI off for managed squads). |
+| `Waldo_AIPass_CivilianReaction_Enable` | `true` | BOOL: event-driven flight for unarmed civilians; Simple Civilian Behaviour takes priority. |
+| `Waldo_AIPass_CivilianReaction_Radius` | `45` | METRES: nearby gunfire trigger range. |
+| `Waldo_AIPass_CivilianReaction_Distance` | `180` | METRES: approximate one-shot escape leg. |
+| `Waldo_AIPass_CivilianReaction_Cooldown` | `20` | SECONDS: minimum delay before replacing a civilian escape order. |
 | `Waldo_AIPass_Debug` | `false` | BOOL: extra [WMP CORTEX] RPT lines for contact, flanks, morale and retreats. |
 | `Waldo_AIPass_EngageRange` | `800` | METRES: enemies the leader knows about within this range are considered. |
 | `Waldo_AIPass_NearRange` | `1000` | METRES: squads this close to a player run at the near cadence. |

@@ -21,6 +21,8 @@
  * Vehicle safe-stop handshakes restore their prior forced speed before their tokens are cleared.
  * Owner-local missile-warning generations are advanced before handlers are removed; an
  * old CBA callback cannot become valid again after a quick restart.
+ * Civilian event handlers and their EntityCreated installer are removed; external addon state is
+ * never cleared. VCOM and LAMBS movement leases restore their captured baseline through group release.
  *
  * Arguments: None.
  *
@@ -111,6 +113,17 @@ if (!isNil "_handle") then {
     ["Waldo_AIPass_ProjectileHandler", "ProjectileCreated"],
     ["Waldo_AIPass_ArtilleryHandler", "ArtilleryShellFired"]
 ];
+private _civilianCreated=missionNamespace getVariable "Waldo_Cortex_CivilianCreatedHandler";
+if (!isNil "_civilianCreated") then {
+    removeMissionEventHandler ["EntityCreated",_civilianCreated];
+    missionNamespace setVariable ["Waldo_Cortex_CivilianCreatedHandler",nil];
+};
+{
+    [_x,true] call Waldo_fnc_CortexCivilianSetup;
+    private _local=_x getVariable ["Waldo_Cortex_CivilianLocalHandler",-1];
+    if (_local >= 0) then {_x removeEventHandler ["Local",_local]};
+    _x setVariable ["Waldo_Cortex_CivilianLocalHandler",nil];
+} forEach (allUnits select {side group _x == civilian});
 {
     [_x,true] call Waldo_fnc_CortexHearingLocal;
     if (local _x) then {_x setVariable ["Waldo_AIPass_AreaReport",nil,true]};

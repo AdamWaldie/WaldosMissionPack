@@ -81,6 +81,10 @@ private _spec = [
     ["Waldo_AIRebalance_Mode", "Lighting", "Automatic follows ambient darkness and equipped night vision. Day disables the extra penalty; Low light retains the legacy night profile.", "COMBO", [["AUTO","DAY","NIGHT"],["Automatic visibility","Daylight override","Low light (legacy)"]], "AUTO"],
     ["Waldo_AIRebalance_Profile", "Selected WMP skill profile", "Skill values used when Apply WMP skill profiles is enabled. This is independent of the Cortex behaviour profile.", "COMBO", [_skillProfiles,_skillLabels], "LINE"],
     ["Waldo_AIPass_LambsMode", "LAMBS integration", "Shared ownership leaves Danger FSM tactics active. A finite Cortex rally or coordinated assault pauses LAMBS movement only for that responder, then restores its prior setting. Cortex only disables Danger group tactics for every managed squad. Installed LAMBS Waypoints remains the preferred Garrison and Clear Building backend in either mode. Turrets, Suppression and RPG remain active in both modes.", "COMBO", [["SPLIT","WMP"],["Shared ownership (recommended)","Cortex only"]], "SPLIT"],
+    ["Waldo_AIPass_CivilianReaction_Enable", "Civilian danger reactions", "Unarmed civilians flee nearby gunfire or a hit using event handlers and one finite move. WMP yields completely when Simple Civilian Behaviour owns the civilian.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_CivilianReaction_Radius", "Civilian gunfire radius (m)", "FiredNear events inside this distance may trigger an escape response.", "SLIDER", [10,150,0], 45],
+    ["Waldo_AIPass_CivilianReaction_Distance", "Civilian escape distance (m)", "Approximate length of the safe escape leg away from the threat.", "SLIDER", [50,500,0], 180],
+    ["Waldo_AIPass_CivilianReaction_Cooldown", "Civilian reaction cooldown (s)", "Minimum delay before another danger event can replace the current escape order.", "SLIDER", [2,120,0], 20],
     ["Waldo_AIPass_VehicleDismount_Enable", "Contact: dismount passengers", "Under Enable Cortex vehicle tactics, unloads capable passengers only when safely stopped on dry ground.", "CHECKBOX", [], true],
     ["Waldo_AIPass_VehicleRemount_Enable", "Contact: remount released passengers", "Under Enable Cortex vehicle tactics, allows safe conscious passengers to reboard after contact. A newer Zeus order cancels remount intent.", "CHECKBOX", [], true],
     ["Waldo_AIPass_VehicleWithdraw_Enable", "Damage: withdraw mobile vehicle", "Under Enable Cortex vehicle tactics, allows a damaged mobile vehicle to withdraw and use existing smoke.", "CHECKBOX", [], true],
@@ -141,6 +145,7 @@ _spec apply {
         case (_name find "Morale" >= 0 || {_name find "Retreat" >= 0} || {_name find "Surrender" >= 0} || {_name find "Regroup" >= 0}): {"MORALE"};
         case (_name find "Flank" >= 0 || {_name find "Advance" >= 0} || {_name find "Assault" >= 0} || {_name find "StreetCrossing" >= 0} || {_name find "CoverValidation" >= 0}): {"MOVEMENT"};
         case (_name find "Contact_" >= 0 || {_name find "PostContact" >= 0} || {_name find "Investigate" >= 0} || {_name find "Hearing" >= 0} || {_name find "FireControl" >= 0} || {_name find "Grenade" >= 0} || {_name find "AntiArmour" >= 0} || {_name find "Stance" >= 0}): {"CONTACT"};
+        case (_name find "CivilianReaction" >= 0): {"REACTIONS"};
         default {"GENERAL"};
     };
     _x + [_section]

@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Exercises cover stance, live grenade evasion and casualty-driven retreat/surrender, including
- * the terminal CONTACT -> RETREAT -> REGROUP and CONTACT -> CALM/SURRENDER handovers.
+ * Exercises cover stance, live grenade evasion, civilian danger responses and casualty-driven
+ * retreat/surrender, including terminal CONTACT -> RETREAT -> REGROUP and CONTACT -> CALM/SURRENDER
+ * handovers. Civilian checks measure real travel and later Zeus replacement-order execution.
  * Locality/authority: scheduled dedicated-server audit, with server-pinned disposable actors.
  * Repeat/JIP: fresh actors per case; settings restored by the calling audit; observer data is public.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>, required callbacks.
@@ -411,4 +412,53 @@ private _membership=true;
     [format ["MULTI-WITHDRAW-squad-%1-cohesion",_forEachIndex+1],_allWithdrew && {(_survivors select 0) distance2D (_survivors select 1) <= 30},str ((_survivors select 0) distance2D (_survivors select 1))] call _check;
 } forEach _withdrawTeams;
 sleep 12;
+call _cleanup;
+
+// Civilian reactions are event driven in normal play. This focused stage calls the same production
+// endpoint used by FiredNear/Hit so its stimulus is deterministic, then measures physical movement.
+private _civilianGroup=[civilian] call _newGroup;
+private _civilian=_civilianGroup createUnit ["C_man_1",[1600,1100,0],[],0,"NONE"];
+_civilian setVariable ["acex_headless_blacklist",true,true];
+_civilian setVariable ["Waldo_CortexQA_Label","CIVILIAN / DISABLED",true];
+_civilian allowDamage false;
+_objects pushBack _civilian;
+private _civilianThreatGroup=[west] call _newGroup;
+_civilianThreatGroup setVariable ["Waldo_AIPass_Exclude",true,true];
+private _civilianThreat=[_civilianThreatGroup,[1600,1120,0],"CIVILIAN THREAT"] call _newUnit;
+_civilianThreat disableAI "PATH";
+_civilianThreat allowDamage false;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_civilian,_civilianThreat],true];
+private _civilianOrigin=getPosATL _civilian;
+[createHashMapFromArray [["Waldo_AIPass_CivilianReaction_Enable",false]]] call Waldo_fnc_CortexTuning;
+[_civilian,true] call Waldo_fnc_CortexCivilianSetup;
+["Civilian reaction disabled","An unarmed civilian stands near a threat. The production reaction endpoint must refuse the request and the civilian must remain in place while the feature is disabled.",_civilianOrigin] call _phase;
+private _disabledIssued=[_civilian,_civilianThreat] call Waldo_fnc_CortexCivilianReact;
+sleep 8;
+["CIVILIAN-disabled-no-response",!_disabledIssued && {_civilian distance2D _civilianOrigin < 3},format ["issued=%1 travel=%2",_disabledIssued,_civilian distance2D _civilianOrigin]] call _check;
+
+[createHashMapFromArray [
+    ["Waldo_AIPass_CivilianReaction_Enable",true],
+    ["Waldo_AIPass_CivilianReaction_Radius",45],
+    ["Waldo_AIPass_CivilianReaction_Distance",180],
+    ["Waldo_AIPass_CivilianReaction_Cooldown",20]
+]] call Waldo_fnc_CortexTuning;
+[_civilian] call Waldo_fnc_CortexCivilianSetup;
+_civilian setVariable ["Waldo_CortexQA_Label","CIVILIAN / FLEE",true];
+["Civilian reaction enabled","The same civilian receives the production danger response. Watch real movement away from the nearby threat. No FSM, animation or test waypoint is injected.",_civilianOrigin] call _phase;
+private _enabledIssued=[_civilian,_civilianThreat] call Waldo_fnc_CortexCivilianReact;
+private _fled=[{_civilian distance2D _civilianOrigin >= 25 && {_civilian distance2D _civilianThreat > (_civilianOrigin distance2D _civilianThreat)+20}},35] call _wait;
+["CIVILIAN-enabled-physical-flee",_enabledIssued && {_fled},format ["issued=%1 travel=%2 separation=%3",_enabledIssued,_civilian distance2D _civilianOrigin,_civilian distance2D _civilianThreat]] call _check;
+private _cooldownRefused=!([_civilian,_civilianThreat] call Waldo_fnc_CortexCivilianReact);
+["CIVILIAN-cooldown-no-duplicate",_cooldownRefused] call _check;
+
+// A later Zeus order must own the actor immediately and complete physically without the old flee
+// destination returning after the hold expires.
+[_civilianGroup,true] call Waldo_fnc_CortexZeusMark;
+private _replacement=(getPosATL _civilian) vectorAdd [0,55,0];
+_civilian doMove _replacement;
+_civilian setVariable ["Waldo_CortexQA_Label","CIVILIAN / ZEUS REPLACEMENT",true];
+["Civilian reaction: Zeus replacement","A later Zeus movement order now owns the civilian. Watch physical arrival at the green replacement destination and no renewed Cortex flee order.",_replacement] call _phase;
+private _replacementArrived=[{_civilian distance2D _replacement < 5},35] call _wait;
+private _blockedDuringZeus=!([_civilian,_civilianThreat] call Waldo_fnc_CortexCivilianReact);
+["CIVILIAN-zeus-replacement-physical",_replacementArrived && {_blockedDuringZeus},format ["remaining=%1 blocked=%2",_civilian distance2D _replacement,_blockedDuringZeus]] call _check;
 call _cleanup;

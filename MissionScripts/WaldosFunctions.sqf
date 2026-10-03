@@ -172,6 +172,9 @@ class CfgFunctions
             class CortexInit {file = "MissionScripts\AiScripting\Cortex\cortexInit.sqf";};
             class CortexStop {file = "MissionScripts\AiScripting\Cortex\cortexStop.sqf";};
             class CortexIsEligible {file = "MissionScripts\AiScripting\Cortex\cortexIsEligible.sqf";};
+            class CortexExternalOwner {file = "MissionScripts\AiScripting\Cortex\cortexExternalOwner.sqf";};
+            class CortexCivilianReact {file = "MissionScripts\AiScripting\Cortex\cortexCivilianReact.sqf";};
+            class CortexCivilianSetup {file = "MissionScripts\AiScripting\Cortex\cortexCivilianSetup.sqf";};
             class CortexIsPaused {file = "MissionScripts\AiScripting\Cortex\cortexIsPaused.sqf";};
             class CortexQueueJob {file = "MissionScripts\AiScripting\Cortex\cortexQueueJob.sqf";};
             class CortexSchedulerTick {file = "MissionScripts\AiScripting\Cortex\cortexSchedulerTick.sqf";};

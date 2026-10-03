@@ -54,7 +54,7 @@ The infantry suite retains the original garrison result before an explicitly lab
 
 ## Full AI coverage
 
-`COVERAGE.md` specifies 57 behaviour cases, with an exact mapping of all 165 declared AI settings in `coverage.json`. A mapped setting means the test is specified, not executed. The regression check rejects new settings without a case.
+`COVERAGE.md` specifies 61 behaviour cases, with an exact mapping of all 177 declared AI settings in `coverage.json`. A mapped setting means the test is specified, not executed. The regression check rejects new settings without a case.
 
 Use `-CortexFocus combat` for real contact, flank/assault and waypoint advance. These fixtures must be inside the configured tactical distance from the actual player; Zeus camera position does not satisfy that gate. The test records this prerequisite, movement, actual firing, real drill ending and disable cleanup. The first combat run at the distant infantry range did not satisfy the distance prerequisite and is not valid acceptance evidence.
 

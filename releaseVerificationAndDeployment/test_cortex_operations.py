@@ -692,7 +692,7 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),60)
+        self.assertEqual(len(data['cases']),61)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
         self.assertIn('COMBINED-ARMS',pending)
@@ -702,7 +702,7 @@ class CortexOperations(unittest.TestCase):
             for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
         }
         assigned=[path for case in data['cases'] for path in case['production_sources']]
-        self.assertEqual(146,len(production))
+        self.assertEqual(149,len(production))
         self.assertEqual(production,set(assigned))
         self.assertEqual(len(assigned),len(set(assigned)))
         self.assertTrue(all((ROOT/path).is_file() for path in assigned))
@@ -1537,6 +1537,49 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_ImprovedHelicopterLanding_Active',eligible)
         self.assertNotIn('_vehicles findIf {_x getVariable ["Waldo_Headless_HelicopterPinned"',eligible)
         self.assertIn('The permanent helicopter pin prevents unstable HC transfer',eligible)
+
+    def test_external_ai_owners_are_detected_without_blanket_mod_exclusion(self):
+        owner=source('cortexExternalOwner')
+        eligible=source('cortexIsEligible')
+        for marker in ['WBK_AI_ISZombie','Droid_Health','WBK_Droids_VoiceType',
+                       'IMS_IsUnitInvicibleScripted','IMS_ISAI','WBK_VariableScared']:
+            self.assertIn(marker,owner)
+        self.assertIn('CfgmovesMaleSdr',owner)
+        self.assertIn('getText (_config >> "author")',owner)
+        self.assertIn('[_unit] call Waldo_fnc_CortexExternalOwner != ""',eligible)
+        self.assertNotIn('isClass (configFile >> "CfgPatches"',eligible)
+
+    def test_vcom_and_lambs_receive_finite_exact_state_movement_leases(self):
+        lease=source('cortexLambsLease')
+        init=source('cortexInit')
+        for text in ['Waldo_AIPass_VcomLoaded','Waldo_Cortex_VcomLease','Vcm_Disable',
+                     'VCM_MOVE2SUP','VCM_MBUSY','Waldo_Cortex_LambsLease']:
+            self.assertIn(text,lease)
+        self.assertIn('_group setVariable ["Vcm_Disable",_baselineVcom,true]',lease)
+        self.assertIn('isClass (configFile >> "CfgPatches" >> "VCOM_AI")',init)
+        self.assertNotIn('VCM_NOFLANK',lease)
+        self.assertNotIn('VCM_DisableForm',lease)
+        self.assertNotIn('VCM_Skilldisable',lease)
+
+    def test_civilian_reactions_are_event_driven_and_yield_to_wbk_and_zeus(self):
+        setup=source('cortexCivilianSetup')
+        react=source('cortexCivilianReact')
+        init=source('cortexInit')
+        stop=source('cortexStop')
+        for event in ['"FiredNear"','"Hit"','"Local"']:
+            self.assertIn(event,setup)
+        self.assertNotIn('CBA_fnc_addPerFrameHandler',setup+react)
+        self.assertNotIn('while {',setup+react)
+        self.assertIn('Waldo_fnc_CortexExternalOwner',setup)
+        self.assertIn('Waldo_fnc_CortexZeusHeld',react)
+        self.assertIn('BIS_fnc_findSafePos',react)
+        self.assertIn('doMove _destination',react)
+        self.assertNotIn('switchMove',react)
+        self.assertIn('"EntityCreated"',init)
+        self.assertIn('Waldo_Cortex_CivilianCreatedHandler',stop)
+        settings=source('cortexSettingsLocal')
+        self.assertIn('Waldo_AIPass_CivilianReaction_Enable',settings)
+        self.assertIn('_effects select [3,3]',settings)
 
     def test_aircraft_occupants_have_one_dedicated_movement_owner(self):
         eligible=source('cortexIsEligible')

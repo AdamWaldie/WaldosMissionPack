@@ -134,6 +134,10 @@
  * - Waldo_AIPass_Regroup_TimeoutSeconds (ADVANCED): limit for finding a host and for walking to it.
  * - Waldo_AIPass_Regroup_SettleSeconds (ADVANCED): wait after a kill so simultaneous deaths settle.
  * - Waldo_AIPass_LambsMode (MISSION MAKER): only matters with LAMBS Danger loaded; SPLIT keeps its FSM active except during finite Cortex-owned responder movement, while WMP gives Cortex full group control. Config-only LAMBS companions remain active.
+ * - Waldo_AIPass_CivilianReaction_Enable (MISSION MAKER): event-driven unarmed civilian flight from nearby danger. Simple Civilian Behaviour takes priority when loaded.
+ * - Waldo_AIPass_CivilianReaction_Radius (ADVANCED): FiredNear distance which may trigger flight.
+ * - Waldo_AIPass_CivilianReaction_Distance (ADVANCED): approximate one-shot escape distance.
+ * - Waldo_AIPass_CivilianReaction_Cooldown (ADVANCED): minimum seconds before another response.
  * - Waldo_AIPass_Debug (TROUBLESHOOTING): logs contact, flank, morale and retreat events to RPT.
  * - Waldo_AIPass_EngageRange (ADVANCED): range in metres within which known enemies are considered.
  * - Waldo_AIPass_NearRange (ADVANCED): squads this close to a player are stepped every TickNear seconds.
@@ -316,6 +320,10 @@ createHashMapFromArray [
         ["Waldo_AIPass_Cohesion", 1], // 0.5-2: above 1 squads take more before morale breaks, below 1 they break sooner.
         ["Waldo_AIPass_ReactionSpeed", 1], // 0.5-2: above 1 squads re-assess more often (more server time), below 1 less often.
         ["Waldo_AIPass_LambsMode", "SPLIT"], // STRING: SPLIT (shared ownership with finite movement handover) or WMP (Cortex group control). Turrets/Suppression/RPG remain active.
+        ["Waldo_AIPass_CivilianReaction_Enable", true], // BOOL: event-driven unarmed civilian flight; yields to WBK Simple Civilian Behaviour.
+        ["Waldo_AIPass_CivilianReaction_Radius", 45], // METRES: nearby gunfire trigger range.
+        ["Waldo_AIPass_CivilianReaction_Distance", 180], // METRES: approximate finite escape leg.
+        ["Waldo_AIPass_CivilianReaction_Cooldown", 20], // SECONDS: minimum time between new flee orders.
         ["Waldo_AIPass_Debug", false], // BOOL: extra [WMP CORTEX] RPT lines for contact, flanks, morale and retreats.
         ["Waldo_AIPass_EngageRange", 800], // METRES: enemies the leader knows about within this range are considered.
         ["Waldo_AIPass_NearRange", 1000], // METRES: squads this close to a player run at the near cadence.
