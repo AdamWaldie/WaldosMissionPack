@@ -252,6 +252,27 @@ private _dispersionApplied=_operatingCrew findIf {
     if (_lambsTurrets) then {abs (getCustomAimCoef _x-_original) > 0.01} else {getCustomAimCoef _x <= _original}
 } < 0;
 ["SKILL-vehicle-dispersion-layer",_dispersionApplied,format ["lambsTurrets=%1 coefficients=%2",_lambsTurrets,_operatingCrew apply {[getCustomAimCoef _x,_x getVariable ["Waldo_AI_OriginalAimCoef",-1]]}]] call _check;
+private _airVehicle=createVehicle ["O_Heli_Light_02_dynamicLoadout_F",[1260,1140,0],[],0,"NONE"];
+private _airGroup=east createVehicleCrew _airVehicle;
+_groups pushBack _airGroup;
+private _airCrew=crew _airVehicle;
+{_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]; _objects pushBack _x} forEach _airCrew;
+_objects pushBack _airVehicle;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[_skillUnit,_crewVehicle,_airVehicle],true];
+["Skill profile: infantry, ground and air dispersion","Read the measured aim coefficients. Dismounted infantry and cargo receive the modest infantry layer; ground operators receive the wider vehicle layer; aircraft operators receive the widest ordinary layer. LAMBS Turrets replaces the two vehicle layers when loaded.",getPosATL _airVehicle] call _phase;
+private _layeredDispersion=[{
+    private _infantryOriginal=_skillUnit getVariable ["Waldo_AI_OriginalAimCoef",getCustomAimCoef _skillUnit];
+    private _cargoOriginal=_cargo getVariable ["Waldo_AI_OriginalAimCoef",getCustomAimCoef _cargo];
+    private _infantryOk=getCustomAimCoef _skillUnit > _infantryOriginal && {getCustomAimCoef _cargo > _cargoOriginal};
+    private _vehicleOk=if (_lambsTurrets) then {true} else {
+        (_operatingCrew findIf {getCustomAimCoef _x <= getCustomAimCoef _skillUnit}) < 0
+    };
+    private _airOk=if (_lambsTurrets) then {true} else {
+        (_airCrew findIf {getCustomAimCoef _x <= getCustomAimCoef (_operatingCrew select 0)}) < 0
+    };
+    _infantryOk && {_vehicleOk} && {_airOk}
+},20] call _wait;
+["SKILL-layered-dispersion",_layeredDispersion,format ["infantry=%1 cargo=%2 ground=%3 air=%4 lambsTurrets=%5",getCustomAimCoef _skillUnit,getCustomAimCoef _cargo,_operatingCrew apply {getCustomAimCoef _x},_airCrew apply {getCustomAimCoef _x},_lambsTurrets]] call _check;
 private _aaVehicle=createVehicle ["O_APC_Tracked_02_AA_F",[1280,1100,0],[],0,"NONE"];
 _aaVehicle setVariable ["Waldo_DynamicAA_SystemId","CORTEX_QA_AA",true];
 private _aaGroup=east createVehicleCrew _aaVehicle;

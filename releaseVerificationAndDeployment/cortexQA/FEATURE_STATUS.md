@@ -11,7 +11,7 @@ Feature cases: **60**. Required variant categories: **13**.
 | LAMBS - LAMBS coexistence and Cortex fallback | 1 | 0 | 3 | `runLambs.sqf`, `runBuildingComparison.sqf` | 2 | implemented_partial |
 | SCHED - Scheduler and distance tiers | 11 | 0 | 4 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
 | PROFILE - Behaviour profiles and aggression | 4 | 1 | 1 | `runProfiles.sqf` | 1 | implemented_partial |
-| SKILL - AI skill rebalance | 12 | 0 | 4 | `runMechanics.sqf` | 0 | implemented_partial |
+| SKILL - AI skill rebalance | 14 | 0 | 4 | `runMechanics.sqf` | 0 | implemented_partial |
 | LAND - Helicopter landing | 21 | 0 | 7 | `runLanding.sqf` | 1 | implemented_partial |
 | DECEL - Helicopter braking | 14 | 1 | 3 | `runDeceleration.sqf` | 0 | implemented_partial |
 | REGROUP - Survivor regroup | 9 | 0 | 2 | `runMechanics.sqf` | 0 | implemented_partial |
@@ -114,7 +114,7 @@ Feature cases: **60**. Required variant categories: **13**.
 
 **Expected:** Expected units receive configured skills once, variance remains stable, excluded/player units retain their values and stop restores captured values.
 
-**Automation and open work:** runMechanics.sqf now compares ordinary operating crew, cargo and a named Dynamic AA crew. It requires the ordinary crew multiplier/aim coefficient, unchanged cargo treatment and retained Dynamic AA profile/aim coefficient. This expanded fixture is saved and awaits a rebuilt live run.
+**Automation and open work:** runMechanics.sqf compares dismounted infantry, cargo, ground-vehicle crew, aircraft crew and a named Dynamic AA crew. It measures the distinct configured aim coefficients, reduced operator skill and retained Dynamic AA profile/aim coefficient. The expanded fixture awaits a rebuilt live run.
 
 ### LAND - Helicopter landing
 
@@ -300,7 +300,7 @@ Feature cases: **60**. Required variant categories: **13**.
 
 **Expected:** Actual countermeasure release responds to valid threats, uses finite ammunition and leaves unsupported/excluded aircraft alone.
 
-**Automation and open work:** runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.
+**Automation and open work:** runAircraft.sqf: separate moving native and Cortex flights face real AA acquisition and guided missiles with damage enabled. IncomingMissile and Fired events record the exposed projectile, actual countermeasure use, six-second physical departure, survival/damage, ground clearance, crew retention and ordinary post-defence flight. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.
 
 ### INVESTIGATE - Known-area investigation
 
@@ -354,7 +354,7 @@ Feature cases: **60**. Required variant categories: **13**.
 
 **Expected:** Aircraft physically changes flight path within limits and returns controls; no effect when disabled or owner changes invalidate the job.
 
-**Automation and open work:** runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.
+**Automation and open work:** runAircraft.sqf: separate moving native and Cortex flights face real AA acquisition and guided missiles with damage enabled. IncomingMissile and Fired events record the exposed projectile, actual countermeasure use, six-second physical departure, survival/damage, ground clearance, crew retention and ordinary post-defence flight. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.
 
 ### DEFEND - Defence orders
 

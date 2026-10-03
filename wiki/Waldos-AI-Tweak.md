@@ -23,8 +23,10 @@ multiplayer `init.sqf` for normal setup.
 | `Waldo_AI_ApplyMode` | String | `"BOTH"` | Existing AI, newly created AI, or both: `EXISTING`, `NEW`, `BOTH`. |
 | `Waldo_AI_RestoreOnStop` | Boolean | `true` | Restore each unit's captured skills when this feature stops. |
 | `Waldo_AI_SkillVariance` | Number | `0` | Stable per-unit variance; zero disables it. |
-| `Waldo_AI_VehicleCrewAimMultiplier` | Number | `0.75` | Final aiming-skill multiplier for ordinary operating vehicle and aircraft crew. Named Dynamic AA crews are exempt. |
-| `Waldo_AI_VehicleCrewDispersion` | Number | `2.5` | Owner-local aim coefficient for ordinary operating crew when LAMBS Turrets is absent. Named Dynamic AA crews retain their authored coefficient. |
+| `Waldo_AI_InfantryDispersion` | Number | `1.35` | Owner-local aim coefficient for ordinary infantry and vehicle cargo. Values above `1` widen weapon dispersion without changing detection or movement. |
+| `Waldo_AI_VehicleCrewAimMultiplier` | Number | `0.6` | Final aiming-skill multiplier for ordinary operating vehicle and aircraft crew. Named Dynamic AA crews are exempt. |
+| `Waldo_AI_VehicleCrewDispersion` | Number | `3.5` | Owner-local aim coefficient for ordinary ground-vehicle operating crew when LAMBS Turrets is absent. Named Dynamic AA crews retain their authored coefficient. |
+| `Waldo_AI_AirCrewDispersion` | Number | `4.25` | Wider owner-local aim coefficient for ordinary helicopter and fixed-wing crew when LAMBS Turrets is absent. This reduces excessive first-burst lethality while retaining real weapon and targeting behaviour. |
 | `Waldo_AI_IncludedSides` | Array of side-ID Strings | `[]` | Empty allows every side. |
 | `Waldo_AI_IncludedFactions` | Array of `CfgFactionClasses` Strings | `[]` | Empty allows every faction. |
 | `Waldo_AI_ExcludedFactions` | Array of `CfgFactionClasses` Strings | `[]` | Skip these factions after include filtering. |

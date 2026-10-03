@@ -49,8 +49,10 @@
  * - Waldo_AI_ApplyMode (MISSION MAKER): EXISTING, NEW or BOTH; choose which AI population receives the profile.
  * - Waldo_AI_RestoreOnStop (ADVANCED): true restores the skills WMP recorded when its handler is stopped.
  * - Waldo_AI_SkillVariance (ADVANCED): stable random offset chosen once per AI; 0 disables variation.
+ * - Waldo_AI_InfantryDispersion (ADVANCED): script-level aim coefficient for dismounted AI and vehicle cargo.
  * - Waldo_AI_VehicleCrewAimMultiplier (ADVANCED): final aiming-skill multiplier for operating vehicle and aircraft crew.
- * - Waldo_AI_VehicleCrewDispersion (ADVANCED): script-level aim coefficient for operating crew when LAMBS Turrets is absent.
+ * - Waldo_AI_VehicleCrewDispersion (ADVANCED): script-level aim coefficient for ground-vehicle operators when LAMBS Turrets is absent.
+ * - Waldo_AI_AirCrewDispersion (ADVANCED): wider script-level aim coefficient for aircraft operators when LAMBS Turrets is absent.
  * - Waldo_AI_IncludedSides (MISSION MAKER): [] allows every side; example ["WEST", "GUER"] limits application.
  * - Waldo_AI_IncludedFactions (MISSION MAKER): [] allows all; otherwise list CfgFactionClasses names.
  * - Waldo_AI_ExcludedFactions (MISSION MAKER): listed factions are always skipped after the include checks.
@@ -250,8 +252,10 @@ createHashMapFromArray [
         ["Waldo_AI_ApplyMode", "BOTH"],             // STRING: EXISTING, NEW or BOTH AI populations.
         ["Waldo_AI_RestoreOnStop", true],            // ADVANCED: restore captured vanilla/mission skills on stop.
         ["Waldo_AI_SkillVariance", 0],               // ADVANCED: one stable per-AI offset; 0 disables variation.
-        ["Waldo_AI_VehicleCrewAimMultiplier", 0.75], // ADVANCED: vehicle/aircraft operating crew retain the selected profile at reduced precision.
-        ["Waldo_AI_VehicleCrewDispersion", 2.5],     // ADVANCED: owner-local aim coefficient; skipped when LAMBS Turrets supplies config dispersion.
+        ["Waldo_AI_InfantryDispersion", 1.35],       // ADVANCED: modest owner-local dispersion for dismounted AI and cargo.
+        ["Waldo_AI_VehicleCrewAimMultiplier", 0.6],  // ADVANCED: vehicle/aircraft operating crew retain the selected profile at reduced precision.
+        ["Waldo_AI_VehicleCrewDispersion", 3.5],     // ADVANCED: ground-vehicle aim coefficient; skipped when LAMBS Turrets supplies config dispersion.
+        ["Waldo_AI_AirCrewDispersion", 4.25],        // ADVANCED: aircraft aim coefficient; Dynamic AA remains exempt.
         ["Waldo_AI_IncludedSides", []],             // ARRAY of WEST/EAST/GUER/CIV strings; [] permits every side.
         ["Waldo_AI_IncludedFactions", []],          // ARRAY of CfgFactionClasses names; [] permits every faction.
         ["Waldo_AI_ExcludedFactions", []],          // ARRAY of faction names removed after the include filter.
@@ -396,7 +400,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_Garrison_BreakFraction", 0.5], // 0-1: a garrison breaks at this share of its strength.
         ["Waldo_Cortex_AttackRunFlares_Enable", true], // BOOL: finite countermeasure bursts approaching and leaving assigned attack targets.
         ["Waldo_Cortex_AirAttack_Enable", true], // BOOL: threat-aware finite aircraft attack patterns with safe Zeus handover.
-        ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: eligible AI aircraft flare at incoming missiles.
+        ["Waldo_AIPass_AircraftFlares_Enable", true], // BOOL: eligible AI aircraft flare at incoming missiles.
         ["Waldo_AIPass_ProfileBehaviour", createHashMapFromArray [ // ADVANCED: morale/preparation per profile; legacy movement keys are compatibility-only.
             ["MILITIA", createHashMapFromArray [["flankChance", 0.3], ["assaultChance", 0.2], ["advanceChance", 0.7], ["investigateChance", 0.4], ["coordinatedChance", 0.2], ["moraleShaken", 0.65], ["moraleBroken", 0.4], ["retreatScale", 1.5], ["surrenderSurvivors", 3]]],
             ["LINE", createHashMapFromArray [["flankChance", 0.5], ["assaultChance", 0.4], ["advanceChance", 0.6], ["investigateChance", 0.6], ["coordinatedChance", 0.4], ["moraleShaken", 0.55], ["moraleBroken", 0.3], ["retreatScale", 1], ["surrenderSurvivors", 2]]],
@@ -421,7 +425,7 @@ createHashMapFromArray [
         ["Waldo_AIPass_VehicleGunnery_Enable", true], // BOOL: gunners prioritise AT soldiers; armour keeps away from them.
         ["Waldo_AIPass_Vehicles_StandoffDistance", 250], // METRES: distance armour keeps from known AT soldiers.
         ["Waldo_AIPass_ArtillerySmoke_Enable", true], // BOOL: a retreating squad gets an artillery smoke screen (needs Artillery).
-        ["Waldo_AIPass_AircraftBreak_Enable", false], // BOOL: eligible AI aircraft jink sideways from missiles; test addon aircraft first.
+        ["Waldo_AIPass_AircraftBreak_Enable", true], // BOOL: eligible AI aircraft jink sideways from missiles; test addon aircraft first.
         ["Waldo_AI_ProfileDisplayNames", createHashMapFromArray [ // ADVANCED: labels only; keys are implementation IDs.
             ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
             ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]

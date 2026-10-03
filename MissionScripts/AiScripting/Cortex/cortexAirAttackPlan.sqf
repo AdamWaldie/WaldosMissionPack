@@ -95,23 +95,32 @@ private _groundCandidates=[];
 private _lateralTurret=false;
 private _lateralTurretPath=[];
 private _lateralWeapon="";
+private _lateralWeaponScore=-1;
 {
     _x params ["_crew","_role","_cargoIndex","_turret","_personTurret"];
     if (!_personTurret && {toLowerANSI _role in ["gunner","commander","turret"]}
         && {!isNull _crew} && {alive _crew}) then {
-        private _usable=(_aircraft weaponsTurret _turret) findIf {
+        {
             private _weapon=_x;
-            (magazinesAllTurrets _aircraft) findIf {
+            private _loaded=(magazinesAllTurrets _aircraft) findIf {
                 (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
                     && {(_x select 0) in compatibleMagazines _weapon}
                     && {([_x select 0] call _ammoFacts) select 2}
-            } >= 0
-        };
-        if (_usable >= 0) exitWith {
-            _lateralTurret=true;
-            _lateralTurretPath=_turret;
-            _lateralWeapon=(_aircraft weaponsTurret _turret) select _usable;
-        };
+            };
+            if (_loaded >= 0) then {
+                private _facts=[((magazinesAllTurrets _aircraft) select _loaded) select 0] call _ammoFacts;
+                // Side-on flight needs a traversing gun. Prefer bullets/shells over missiles whose
+                // forward-biased launch envelope made the old lateral label physically impossible.
+                private _score=(_facts select 4) min 300;
+                if ((_facts select 3) in ["shotbullet","shotshell"]) then {_score=_score+1000};
+                if (_score > _lateralWeaponScore) then {
+                    _lateralWeaponScore=_score;
+                    _lateralTurret=true;
+                    _lateralTurretPath=_turret;
+                    _lateralWeapon=_weapon;
+                };
+            };
+        } forEach (_aircraft weaponsTurret _turret);
     };
 } forEach fullCrew _aircraft;
 
@@ -171,6 +180,7 @@ private _overrideValid=_patternOverride in ["STRAFE","OFFSET","HOOK","STANDOFF",
 if (_overrideValid && {!_airToAir}) then {_pattern=_patternOverride};
 private _groundWeapon="";
 private _groundTurret=[];
+private _groundSimulation="";
 private _groundScore=-1;
 {
     _x params ["_weapon","_turret","_simulation","_hit"];
@@ -184,6 +194,7 @@ private _groundScore=-1;
         _groundScore=_score;
         _groundWeapon=_weapon;
         _groundTurret=_turret;
+        _groundSimulation=_simulation;
     };
 } forEach _groundCandidates;
 // Sample once per finite plan. Bounded variation avoids identical attack profiles without adding
@@ -194,9 +205,9 @@ private _altitude=if (_airToAir) then {
     else {((_targetHeight-50+random 140) max 60) min 500}
 } else {
     if (_isPlane) then {
-        if (_aaPositions isNotEqualTo []) then {380+random 270} else {220+random 160}
+        if (_aaPositions isNotEqualTo []) then {500+random 650} else {240+random 360}
     } else {
-        if (_aaPositions isNotEqualTo []) then {140+random 120} else {70+random 90}
+        if (_aaPositions isNotEqualTo []) then {170+random 280} else {60+random 190}
     }
 };
 private _speed=if (_airToAir) then {
@@ -233,28 +244,28 @@ switch _pattern do {
         // 1.6 km setup range. Fixed points behind a fast jet forced a turn-back loop before every
         // shot. The retained 650-1400 m release range remains useful for guided ground weapons.
         if (_isPlane) then {
-            private _releaseRange=((_targetDistance-350) max 650) min 1400;
-            private _ingressRange=((_releaseRange+250) min ((_targetDistance-80) max _releaseRange));
-            _ingress=[-_ingressRange,500] call _point;
-            _attack=[-_releaseRange,350] call _point;
-            _egress=[700,800] call _point
+            private _releaseRange=((_targetDistance-450) max 1200) min 2400;
+            private _ingressRange=((_releaseRange+700) min ((_targetDistance-100) max _releaseRange));
+            _ingress=[-_ingressRange,650] call _point;
+            _attack=[-_releaseRange,300] call _point;
+            _egress=[1200,1000] call _point
         }
-        else {_ingress=[-700,450] call _point; _attack=[-550,300] call _point; _egress=[-800,-450] call _point};
+        else {_ingress=[-1100,600] call _point; _attack=[-800,350] call _point; _egress=[-1000,-650] call _point};
     };
     case "OFFSET": {
-        if (_isPlane) then {_ingress=[-1100,700] call _point; _attack=[-250,320] call _point; _egress=[850,650] call _point}
-        else {_ingress=[-650,550] call _point; _attack=[-180,300] call _point; _egress=[650,550] call _point};
+        if (_isPlane) then {_ingress=[-1800,700] call _point; _attack=[-800,280] call _point; _egress=[1300,750] call _point}
+        else {_ingress=[-1000,600] call _point; _attack=[-550,320] call _point; _egress=[850,650] call _point};
     };
     case "HOOK": {
-        if (_isPlane) then {_ingress=[-950,800] call _point; _attack=[-180,250] call _point; _egress=[850,-650] call _point}
-        else {_ingress=[-600,650] call _point; _attack=[-120,260] call _point; _egress=[550,-600] call _point};
+        if (_isPlane) then {_ingress=[-1700,850] call _point; _attack=[-750,250] call _point; _egress=[1300,-850] call _point}
+        else {_ingress=[-950,700] call _point; _attack=[-500,280] call _point; _egress=[800,-700] call _point};
     };
     // Remain on one side of the target and translate along the attack axis. This keeps the target
     // abeam throughout the firing leg instead of crossing its position and becoming a nose-on pass.
     case "LATERAL": {_ingress=[-650,420] call _point; _attack=[0,340] call _point; _egress=[650,420] call _point};
     default {
-        if (_isPlane) then {_ingress=[-950,0] call _point; _attack=[-180,0] call _point; _egress=[900,0] call _point}
-        else {_ingress=[-650,0] call _point; _attack=[-140,0] call _point; _egress=[650,0] call _point};
+        if (_isPlane) then {_ingress=[-1600,0] call _point; _attack=[-450,0] call _point; _egress=[1400,0] call _point}
+        else {_ingress=[-900,0] call _point; _attack=[-350,0] call _point; _egress=[850,0] call _point};
     };
 };
 private _stageAltitudes=[];
@@ -270,24 +281,24 @@ if (_isPlane) then {
             _attackMinimum=3;
         };
         case "STANDOFF": {
-            _stageAltitudes=[_altitude+60,_altitude,_altitude+160];
+            _stageAltitudes=[_altitude+250,_altitude,_altitude+550];
             _stageSpeeds=[_speed,_speed+20,_speed+100];
             _captureRadii=[350,450,650];
         };
         case "OFFSET": {
-            _stageAltitudes=[_altitude+100,_altitude,_altitude+180];
+            _stageAltitudes=[_altitude+300,(_altitude*0.45) max 150,_altitude+500];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[320,420,600];
             _attackMinimum=3;
         };
         case "HOOK": {
-            _stageAltitudes=[_altitude+120,(_altitude-40) max 140,_altitude+220];
+            _stageAltitudes=[_altitude+350,(_altitude*0.4) max 130,_altitude+650];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[320,420,650];
             _attackMinimum=3;
         };
         default {
-            _stageAltitudes=[_altitude+80,(_altitude*0.55) max 120,_altitude+220];
+            _stageAltitudes=[_altitude+280,(_altitude*0.35) max 110,_altitude+600];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[300,380,650];
             _attackMinimum=2;
@@ -302,31 +313,31 @@ if (_isPlane) then {
             _attackMinimum=4;
         };
         case "STANDOFF": {
-            _stageAltitudes=[_altitude+30,_altitude,_altitude+70];
+            _stageAltitudes=[_altitude+100,_altitude,_altitude+240];
             _stageSpeeds=[_speed+20,_speed,_speed+70];
             _captureRadii=[180,220,300];
             _attackMinimum=3;
         };
         case "OFFSET": {
-            _stageAltitudes=[_altitude+35,_altitude,_altitude+80];
+            _stageAltitudes=[_altitude+120,(_altitude*0.55) max 55,_altitude+220];
             _stageSpeeds=[_speed,_speed+20,_speed+50];
             _captureRadii=[160,200,280];
             _attackMinimum=4;
         };
         case "HOOK": {
-            _stageAltitudes=[_altitude+45,(_altitude-20) max 50,_altitude+100];
+            _stageAltitudes=[_altitude+150,(_altitude*0.5) max 50,_altitude+280];
             _stageSpeeds=[_speed,_speed+15,_speed+60];
             _captureRadii=[160,190,300];
             _attackMinimum=5;
         };
         case "LATERAL": {
-            _stageAltitudes=[_altitude,_altitude,_altitude+40];
+            _stageAltitudes=[_altitude+80,_altitude,_altitude+160];
             _stageSpeeds=[_speed,(_speed-15) max 70,_speed+45];
             _captureRadii=[280,260,340];
             _attackMinimum=8;
         };
         default {
-            _stageAltitudes=[_altitude+30,(_altitude*0.55) max 45,_altitude+100];
+            _stageAltitudes=[_altitude+120,(_altitude*0.45) max 45,_altitude+260];
             _stageSpeeds=[_speed,_speed+45,_speed+30];
             _captureRadii=[150,180,280];
             _attackMinimum=3;
@@ -346,7 +357,7 @@ createHashMapFromArray [
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
     ["lateralWeapon",_lateralWeapon],["standoffWeapon",_standoffWeapon],
     ["standoffTurret",_standoffTurret],["airToAir",_airToAir],
-    ["groundWeapon",_groundWeapon],["groundTurret",_groundTurret],
+    ["groundWeapon",_groundWeapon],["groundTurret",_groundTurret],["groundSimulation",_groundSimulation],
     ["airWeapon",_airWeapon],["airWeaponTurret",_airWeaponTurret],
     ["platform",["HELICOPTER","PLANE"] select _isPlane]
 ]

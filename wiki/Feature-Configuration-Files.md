@@ -326,8 +326,10 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AI_ApplyMode` | Which existing/new AI populations receive the profile. |
 | `Waldo_AI_RestoreOnStop` | Restores recorded skills when the handler stops. |
 | `Waldo_AI_SkillVariance` | Random variation applied around the selected profile. |
-| `Waldo_AI_VehicleCrewAimMultiplier` | Final aiming-skill multiplier for drivers, commanders and turret operators. Cargo keeps the infantry profile. Default `0.75`. |
-| `Waldo_AI_VehicleCrewDispersion` | Owner-local custom aim coefficient for operating crew. Default `2.5`; WMP skips this extra layer when LAMBS Turrets is loaded. |
+| `Waldo_AI_InfantryDispersion` | Owner-local custom aim coefficient for ordinary infantry and vehicle cargo. Default `1.35`. |
+| `Waldo_AI_VehicleCrewAimMultiplier` | Final aiming-skill multiplier for drivers, commanders and turret operators. Cargo keeps the infantry profile. Default `0.6`. |
+| `Waldo_AI_VehicleCrewDispersion` | Owner-local custom aim coefficient for ordinary ground-vehicle operating crew. Default `3.5`; WMP skips this extra layer when LAMBS Turrets is loaded. |
+| `Waldo_AI_AirCrewDispersion` | Owner-local custom aim coefficient for ordinary helicopter and fixed-wing operating crew. Default `4.25`; WMP skips this extra layer when LAMBS Turrets is loaded. Named Dynamic AA crews remain exempt from both WMP dispersion layers. |
 | `Waldo_AI_IncludedSides` | Optional side allowlist. |
 | `Waldo_AI_IncludedFactions` | Optional faction allowlist. |
 | `Waldo_AI_ExcludedFactions` | Factions never altered. |

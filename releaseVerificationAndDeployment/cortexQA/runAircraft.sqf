@@ -16,7 +16,7 @@ private _prefix=["AIR-NATIVE-","AIR-CORTEX-"] select _enabled;
 private _check={params ["_id","_passed",["_detail",""]]; [_prefix+_id,_passed,_detail] call _recordCheck};
 [createHashMapFromArray [["Waldo_AIPass_Enable",true],["Waldo_AIPass_AircraftFlares_Enable",_enabled],["Waldo_AIPass_AircraftBreak_Enable",_enabled]]] call Waldo_fnc_CortexTuning;
 private _aircraft=createVehicle ["O_Heli_Light_02_unarmed_F",[4500,4500,100],[],0,"FLY"];
-_aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
+_aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage true;
 private _aircrew=crew _aircraft;
 private _airgroup=group driver _aircraft;
 _airgroup setCombatMode "BLUE";
@@ -32,7 +32,7 @@ _shootgroup setVariable ["Waldo_AIPass_Exclude",true,true];
 {
     _x setVariable ["Waldo_Headless_ExcludeGroup",true,true];
     _x setVariable ["acex_headless_blacklist",true,true];
-    {_x allowDamage false; _x setVariable ["acex_headless_blacklist",true,true]} forEach units _x;
+    {_x setVariable ["acex_headless_blacklist",true,true]} forEach units _x;
 } forEach [_airgroup,_shootgroup];
 _aircraft setVariable ["Waldo_CortexQA_Label",_prefix+"HELICOPTER",true];
 _launcher setVariable ["Waldo_CortexQA_Label","REAL AA MISSILE LAUNCHER",true];
@@ -40,6 +40,7 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[_aircraft,_launcher],true
 _aircraft setVariable ["Waldo_CortexQA_AALauncher",_launcher,true];
 _aircraft setVariable ["Waldo_CortexQA_MissileWarnings",[],true];
 _aircraft setVariable ["Waldo_CortexQA_Flares",0,true];
+_aircraft setVariable ["Waldo_CortexQA_IncomingProjectile",objNull,true];
 _launcher setVariable ["Waldo_CortexQA_Missiles",0,true];
 _launcher addEventHandler ["Fired",{
     params ["_launcher","","","","_ammo"];
@@ -55,15 +56,16 @@ _aircraft addEventHandler ["Fired",{
     };
 }];
 _aircraft addEventHandler ["IncomingMissile",{
-    params ["_aircraft"];
+    params ["_aircraft","","","",["_missile",objNull,[objNull]]];
     private _events=_aircraft getVariable ["Waldo_CortexQA_MissileWarnings",[]];
     private _sample=[serverTime,getPosATL _aircraft,velocity _aircraft];
     _events pushBack _sample;
     _aircraft setVariable ["Waldo_CortexQA_MissileWarnings",_events,true];
+    _aircraft setVariable ["Waldo_CortexQA_IncomingProjectile",_missile,true];
     [_aircraft,_sample] spawn {
         params ["_aircraft","_sample"];
         private _departure=0;
-        for "_i" from 1 to 20 do {
+        for "_i" from 1 to 60 do {
             sleep 0.1;
             if (isNull _aircraft) exitWith {};
             private _expected=(_sample select 1) vectorAdd ((_sample select 2) vectorMultiply (serverTime-(_sample select 0)));
@@ -72,7 +74,14 @@ _aircraft addEventHandler ["IncomingMissile",{
         if (!isNull _aircraft) then {_aircraft setVariable ["Waldo_CortexQA_EvasiveDeparture",_departure,true]};
     };
 }];
-[_prefix+"missile acquisition","The AA launcher faces the helicopter. It must acquire and fire a real missile. Watch the helicopter trail and actual countermeasures. A warning handler or accepted fire order alone is insufficient.",[4500,4400,80]] call _phase;
+// Start in genuine forward flight. A hovering target turns this into a countermeasure-ammunition
+// check and cannot distinguish an energy-preserving break from a stationary flare dispenser.
+_aircraft setVelocityModelSpace [0,65,0];
+private _approachWaypoint=_airgroup addWaypoint [[4500,5700,110],0];
+_approachWaypoint setWaypointType "MOVE";
+_approachWaypoint setWaypointBehaviour "AWARE";
+private _moving=[{alive _aircraft && {speed _aircraft >= 45}},20] call _wait;
+[_prefix+"missile acquisition","The moving helicopter is engaged by a real guided missile. Enabled Cortex must preserve energy, break across guidance and dispense through the threat window. Firing flares alone does not pass.",[4500,4400,80]] call _phase;
 private _installed=false;
 if (_enabled) then {
     _installed=[{_aircraft getVariable ["Waldo_AIPass_FlaresInstalled",false]},30] call _wait;
@@ -99,32 +108,43 @@ private _warning=[{count (_aircraft getVariable ["Waldo_CortexQA_MissileWarnings
 ["AIR-real-missile-warning",_fired && {_warning}] call _check;
 private _flared=[{_aircraft getVariable ["Waldo_CortexQA_Flares",0] > 0},10] call _wait;
 if (_enabled) then {
-    ["AIR-actual-countermeasure-release",_fired && {_warning} && {_flared},str (_aircraft getVariable ["Waldo_CortexQA_Flares",0])] call _check;
+    ["AIR-moving-threat-precondition",_moving,str [speed _aircraft,getPosATL _aircraft]] call _check;
+    ["AIR-actual-countermeasure-release",_moving && {_fired} && {_warning} && {_flared},str (_aircraft getVariable ["Waldo_CortexQA_Flares",0])] call _check;
 };
-// The event-time sampler observes only the first two seconds, not later ordinary flight drift.
+// The event-time sampler follows the bounded defensive window, not later ordinary flight drift.
 private _sampled=[{!isNil {_aircraft getVariable "Waldo_CortexQA_EvasiveDeparture"}},5] call _wait;
 private _departure=_aircraft getVariable ["Waldo_CortexQA_EvasiveDeparture",0];
 if (_enabled) then {
     ["AIR-physical-evasive-departure",_warning && {_sampled} && {_departure >= 5},str _departure] call _check;
 };
-_results pushBack [_fired && {_warning} && {_sampled},_departure,_aircraft getVariable ["Waldo_CortexQA_Flares",0]];
-diag_log format ["WMP CORTEX QA AIR SAMPLE: mode=%1 departure=%2 countermeasures=%3",_prefix,_departure,_aircraft getVariable ["Waldo_CortexQA_Flares",0]];
-["AIR-retains-operating-crew",_aircrew findIf {!alive _x || {vehicle _x != _aircraft}} < 0] call _check;
-["AIR-clear-of-ground",alive _aircraft && {getPosATL _aircraft select 2 > 30}] call _check;
+private _projectile=_aircraft getVariable ["Waldo_CortexQA_IncomingProjectile",objNull];
+private _threatEnded=[{isNull _projectile || {!alive _projectile} || {!alive _aircraft}},18] call _wait;
+private _survived=alive _aircraft && {_aircrew findIf {!alive _x || {vehicle _x != _aircraft}} < 0};
+private _damage=if (isNull _aircraft) then {1} else {damage _aircraft};
+_results pushBack [_fired && {_warning} && {_sampled},_departure,_aircraft getVariable ["Waldo_CortexQA_Flares",0],_survived,_damage,_threatEnded];
+diag_log format ["WMP CORTEX QA AIR SAMPLE: mode=%1 departure=%2 countermeasures=%3 survived=%4 damage=%5 threatEnded=%6",_prefix,_departure,_aircraft getVariable ["Waldo_CortexQA_Flares",0],_survived,_damage,_threatEnded];
+if (_enabled) then {
+    ["AIR-guided-threat-defeated",_moving && {_fired} && {_warning} && {_threatEnded} && {_survived} && {_damage < 0.9},str [_survived,_damage,_threatEnded]] call _check;
+    ["AIR-retains-operating-crew",_survived] call _check;
+    ["AIR-clear-of-ground",alive _aircraft && {getPosATL _aircraft select 2 > 30}] call _check;
+};
 _shootgroup setCombatMode "BLUE";
 {_x setUnitCombatMode "BLUE"; _x doTarget objNull} forEach _shooters;
-private _flightOrigin=getPosATL _aircraft;
-private _flightTarget=_flightOrigin vectorAdd [400,0,0];
-[_prefix+"flight after defence","After the missile response, the helicopter receives a normal flight waypoint. It must travel at least 100 m toward it with its operating crew still aboard. A defensive flag alone cannot pass.",_flightTarget] call _phase;
-private _flightWaypoint=_airgroup addWaypoint [_flightTarget,0];
-_flightWaypoint setWaypointType "MOVE";
-_flightWaypoint setWaypointBehaviour "AWARE";
-private _continued=[{
-    alive _aircraft && {_aircraft distance2D _flightOrigin >= 100}
-        && {_aircraft distance2D _flightTarget <= 300}
-        && {_aircrew findIf {!alive _x || {vehicle _x != _aircraft}} < 0}
-},75] call _wait;
-["AIR-post-defence-normal-flight",_continued,format ["travel=%1 remaining=%2",_aircraft distance2D _flightOrigin,_aircraft distance2D _flightTarget]] call _check;
+if (_enabled && {_survived}) then {
+    private _flightOrigin=getPosATL _aircraft;
+    private _flightTarget=_flightOrigin vectorAdd [400,0,0];
+    [_prefix+"flight after defence","After defeating the missile, the helicopter receives a normal flight waypoint. It must travel at least 100 m with its operating crew still aboard. Cortex may not leave a persistent defensive controller behind.",_flightTarget] call _phase;
+    while {count waypoints _airgroup > 0} do {deleteWaypoint ((waypoints _airgroup) select 0)};
+    private _flightWaypoint=_airgroup addWaypoint [_flightTarget,0];
+    _flightWaypoint setWaypointType "MOVE";
+    _flightWaypoint setWaypointBehaviour "AWARE";
+    private _continued=[{
+        alive _aircraft && {_aircraft distance2D _flightOrigin >= 100}
+            && {_aircraft distance2D _flightTarget <= 300}
+            && {_aircrew findIf {!alive _x || {vehicle _x != _aircraft}} < 0}
+    },75] call _wait;
+    ["AIR-post-defence-normal-flight",_continued,format ["travel=%1 remaining=%2",_aircraft distance2D _flightOrigin,_aircraft distance2D _flightTarget]] call _check;
+};
 sleep 8;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 {deleteVehicle _x} forEach (_aircrew+_shooters+[_aircraft,_launcher]);
@@ -135,6 +155,8 @@ private _native=_results select 0;
 private _cortex=_results select 1;
 ["AIR-paired-real-threats",(_native select 0) && {_cortex select 0},str _results] call _recordCheck;
 ["AIR-break-exceeds-native-response",(_native select 0) && {_cortex select 0} && {(_cortex select 1) >= (_native select 1)+5},str _results] call _recordCheck;
+["AIR-cortex-defeats-guided-threat",(_cortex select 3) && {(_cortex select 4) < 0.9}
+    && {(!(_native select 3)) || {(_cortex select 4) <= (_native select 4)}},str _results] call _recordCheck;
 
 
 // Additive attack-run cases. Normal target and flight commands provide the stimulus;

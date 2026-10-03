@@ -19,10 +19,10 @@
  * [_unit] call Waldo_fnc_AIApplyProfile;
  * Result: the eligible local AI receives the currently selected WMP skill layers.
  *
- * Operating vehicle and aircraft crew retain the selected profile but receive the configured final
- * aiming multiplier. When LAMBS Turrets is absent, an owner-local custom aim coefficient adds a
- * bounded script-level approximation of its wider turret dispersion; WMP does not stack this over
- * the addon's config changes. Crews assigned to a named WMP Dynamic AA system retain their authored
+ * Dismounted AI and cargo receive a modest configured aim coefficient. Operating ground-vehicle and
+ * aircraft crew retain the selected profile but receive a reduced final aiming multiplier and separate,
+ * wider aim coefficients. When LAMBS Turrets is present WMP does not stack its vehicle/aircraft
+ * coefficient over the addon's config changes. Crews assigned to a named WMP Dynamic AA system retain their authored
  * profile and aim coefficient so the general lethality control cannot weaken air defence. Seat and
  * Dynamic AA membership are part of the application signature, so reassigned or dismounted AI
  * promptly receive the correct layer without a per-unit loop.
@@ -183,12 +183,14 @@ if (isNil {_unit getVariable "Waldo_AI_OriginalAimCoef"}) then {
     _unit setVariable ["Waldo_AI_OriginalAimCoef", getCustomAimCoef _unit, true];
 };
 if (_operatingCrew && {!_dynamicAA}) then {
-    private _crewMultiplier = ((missionNamespace getVariable ["Waldo_AI_VehicleCrewAimMultiplier", 0.75]) max 0.25) min 1;
+    private _crewMultiplier = ((missionNamespace getVariable ["Waldo_AI_VehicleCrewAimMultiplier", 0.6]) max 0.25) min 1;
     {
         _unit setSkill [_x, ((_unit skill _x) * _crewMultiplier) max 0 min 1];
     } forEach ["aimingAccuracy", "aimingShake", "aimingSpeed"];
     if !(isClass (configFile >> "CfgPatches" >> "lambs_turrets")) then {
-        private _dispersion = ((missionNamespace getVariable ["Waldo_AI_VehicleCrewDispersion", 2.5]) max 1) min 5;
+        private _dispersionSetting=["Waldo_AI_VehicleCrewDispersion","Waldo_AI_AirCrewDispersion"] select (_vehicle isKindOf "Air");
+        private _dispersionDefault=[3.5,4.25] select (_vehicle isKindOf "Air");
+        private _dispersion = ((missionNamespace getVariable [_dispersionSetting, _dispersionDefault]) max 1) min 7;
         // Better profiles still matter: general skill trims up to 25 percent from the configured
         // coefficient while never making a crew more precise than the mission's original baseline.
         private _profileFactor = 1 - (0.25 * (_unit skill "general"));
@@ -196,9 +198,12 @@ if (_operatingCrew && {!_dynamicAA}) then {
     } else {
         _unit setCustomAimCoef (_unit getVariable ["Waldo_AI_OriginalAimCoef", 1]);
     };
+} else {if (!_dynamicAA) then {
+    private _infantryDispersion=((missionNamespace getVariable ["Waldo_AI_InfantryDispersion",1.35]) max 1) min 3;
+    _unit setCustomAimCoef ((_infantryDispersion * (1-(0.15*(_unit skill "general")))) max (_unit getVariable ["Waldo_AI_OriginalAimCoef",1]));
 } else {
     _unit setCustomAimCoef (_unit getVariable ["Waldo_AI_OriginalAimCoef", 1]);
-};
+}};
 _unit setVariable ["Waldo_Cortex_LightingSignature", [
     _mode, (getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold",5]), hmd _unit,
     netId _vehicle, _seatName, _dynamicAA

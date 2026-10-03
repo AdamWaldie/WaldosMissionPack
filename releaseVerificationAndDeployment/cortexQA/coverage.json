@@ -159,12 +159,14 @@
         "Waldo_AI_ProfileDisplayNames",
         "Waldo_AI_RestoreOnStop",
         "Waldo_AI_SkillVariance",
+        "Waldo_AI_InfantryDispersion",
         "Waldo_AI_VehicleCrewAimMultiplier",
-        "Waldo_AI_VehicleCrewDispersion"
+        "Waldo_AI_VehicleCrewDispersion",
+        "Waldo_AI_AirCrewDispersion"
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runMechanics.sqf now compares ordinary operating crew, cargo and a named Dynamic AA crew. It requires the ordinary crew multiplier/aim coefficient, unchanged cargo treatment and retained Dynamic AA profile/aim coefficient. This expanded fixture is saved and awaits a rebuilt live run.",
+      "automation": "runMechanics.sqf compares dismounted infantry, cargo, ground-vehicle crew, aircraft crew and a named Dynamic AA crew. It measures the distinct configured aim coefficients, reduced operator skill and retained Dynamic AA profile/aim coefficient. The expanded fixture awaits a rebuilt live run.",
       "executable_sources": [
         "runMechanics.sqf"
       ],
@@ -888,7 +890,7 @@
         "runtime-20260927-074530: enabled case and client complete, 23 checks passed with zero SQF errors; real missile, flare and 33.7594 m departure. Does not establish causation without the newly added paired native comparison.",
         "runtime-20260927-074821: paired real threats passed; native departure 0.216797 m versus Cortex 34.0758 m over two seconds. Native flare count 5 versus enabled 3: flare causation is NOT established. Server checks passed; client completion checked separately in runtime report. Service creation, ammo exhaustion and exclusion variants remain unaccepted."
       ],
-      "automation": "runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
+      "automation": "runAircraft.sqf: separate moving native and Cortex flights face real AA acquisition and guided missiles with damage enabled. IncomingMissile and Fired events record the exposed projectile, actual countermeasure use, six-second physical departure, survival/damage, ground clearance, crew retention and ordinary post-defence flight. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
       "executable_sources": [
         "runAircraft.sqf"
       ],
@@ -1088,7 +1090,7 @@
         "runtime-20260927-074530: enabled case and client complete, 23 checks passed with zero SQF errors; real missile, flare and 33.7594 m departure. Does not establish causation without the newly added paired native comparison.",
         "runtime-20260927-074821: paired real threats passed; native departure 0.216797 m versus Cortex 34.0758 m over two seconds. Native flare count 5 versus enabled 3: flare causation is NOT established. Server checks passed; client completion checked separately in runtime report. Service creation, ammo exhaustion and exclusion variants remain unaccepted."
       ],
-      "automation": "runAircraft.sqf: separate native and Cortex flights, real AA acquisition/missile, IncomingMissile and Fired events, two-second physical departure comparison, ground clearance and crew retention. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
+      "automation": "runAircraft.sqf: separate moving native and Cortex flights face real AA acquisition and guided missiles with damage enabled. IncomingMissile and Fired events record the exposed projectile, actual countermeasure use, six-second physical departure, survival/damage, ground clearance, crew retention and ordinary post-defence flight. Low-altitude, ammunition exhaustion, service creation and owner variants remain outstanding.",
       "executable_sources": [
         "runAircraft.sqf"
       ],

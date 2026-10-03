@@ -5,7 +5,7 @@
  * destinations lead the contact's measured velocity while egress remains finite and returns the
  * aircraft to its unchanged authored route. This provides responsive air-to-air contact handling
  * without pretending that fixed script geometry implements full basic fighter manoeuvring.
- * It flies physical route legs, repeatedly presents the live target to operating crew, records real
+ * It flies physical route legs, presents the live target only to the retained weapon operator, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
  * selects and explicitly requests fire from its retained loaded weapon; lateral runs command only
  * the retained turret operator. During that lateral lease only, the pilot's autonomous combat/target
@@ -308,6 +308,7 @@ if (serverTime >= (_job getOrDefault ["progressAt",serverTime])+12) then {
                 {_pilot enableAI _x} forEach (_job getOrDefault ["lateralPilotFeatures",[]]);
                 _job set ["lateralPilotFeatures",[]];
                 _job set ["points",_replacement get "points"]; _job set ["pattern",_replacement get "pattern"];
+                _job set ["commandedStage",""];
                 if ((_replacement get "pattern") == "LATERAL") then {
                     private _replacementLateralFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {_pilot checkAIFeature _x};
                     _job set ["lateralPilotFeatures",_replacementLateralFeatures];
@@ -361,10 +362,23 @@ private _shots=_aircraft getVariable ["Waldo_Cortex_AirAttackShots",0];
 _job set ["shots",_shots];
 private _stageAltitudes=_job getOrDefault ["stageAltitudes",[_job get "altitude",_job get "altitude",_job get "altitude"]];
 private _stageSpeeds=_job getOrDefault ["stageSpeeds",[_job get "speed",_job get "speed",_job get "speed"]];
-_aircraft flyInHeight (_stageAltitudes select _stageIndex);
-_aircraft limitSpeed (_stageSpeeds select _stageIndex);
-_pilot doMove _destination;
-{if (alive _x) then {_x doTarget _target}} forEach crew _aircraft;
+// A durable movement order is cheaper and smoother than restarting the engine flight planner on
+// every scheduler tick. Refresh only on a real stage transition, or when a moving airborne contact
+// has displaced far enough to invalidate the previous intercept destination.
+private _commandedStage=_job getOrDefault ["commandedStage",""];
+private _commandedDestination=_job getOrDefault ["commandedDestination",[]];
+private _refreshIntercept=_job getOrDefault ["airToAir",false]
+    && {count _commandedDestination >= 2}
+    && {_commandedDestination distance2D _destination >= 250}
+    && {serverTime >= (_job getOrDefault ["commandedAt",0])+3};
+if (_commandedStage != _stage || {_refreshIntercept}) then {
+    _aircraft flyInHeight (_stageAltitudes select _stageIndex);
+    _aircraft limitSpeed (_stageSpeeds select _stageIndex);
+    _pilot doMove _destination;
+    _job set ["commandedStage",_stage];
+    _job set ["commandedDestination",+_destination];
+    _job set ["commandedAt",serverTime];
+};
 if (_stage == "ATTACK") then {
     if (_job getOrDefault ["airToAir",false]) then {
         private _weapon=_job getOrDefault ["airWeapon",""];

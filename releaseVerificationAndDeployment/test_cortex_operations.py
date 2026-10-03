@@ -2779,8 +2779,8 @@ class CortexOperations(unittest.TestCase):
                             'Waldo_Cortex_AirAttackPattern','_lateralTurret','_lateralTurretPath',
                             'toLowerANSI _role in ["gunner","commander","turret"]',
                             'standoffWeapon','Waldo_Cortex_AirStandoffBlockedUntil',
-                            '[-650,420]','[0,340]','[650,420]','[700,800]',
-                            '((_targetDistance-350) max 650) min 1400']:
+                            '[-650,420]','[0,340]','[650,420]','[1200,1000]',
+                            '((_targetDistance-450) max 1200) min 2400']:
             self.assertIn(requirement,planner)
         self.assertNotIn('private _choices=["STRAFE",0.3,"LATERAL"',planner)
         controller=source('cortexAirAttack')
@@ -2953,9 +2953,11 @@ class CortexOperations(unittest.TestCase):
     def test_delayed_missile_flare_bursts_are_generation_owned(self):
         discover=source('cortexDiscover')
         for requirement in ['Waldo_Cortex_FlareBurstGeneration',
-                            'params ["_vehicle","_generation"]',
-                            '== _generation',
-                            '[_vehicle,_generation], _burst * 0.4']:
+                            'params ["_vehicle","_missile","_generation","_side"]',
+                            '!= _generation',
+                            'for "_step" from 0 to 11',
+                            '!isNull _missile} && {!alive _missile',
+                            'Waldo_Cortex_LastIncomingMissile']:
             self.assertIn(requirement,discover)
         stop=source('cortexStop')
         self.assertIn('Waldo_Cortex_FlareBurstGeneration',stop)

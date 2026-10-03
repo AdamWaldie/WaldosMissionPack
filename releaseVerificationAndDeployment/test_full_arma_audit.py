@@ -1779,7 +1779,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('netId _profileVehicle', ai_init)
         self.assertIn('_profileSeat,_dynamicAA', ai_init)
         self.assertIn('Waldo_AI_OriginalAimCoef', ai_stop)
-        self.assertIn('ai-vehicle-precision', ai_diagnostics)
+        self.assertIn('ai-weapon-dispersion', ai_diagnostics)
+        for token in ['Waldo_AI_InfantryDispersion', 'Waldo_AI_VehicleCrewDispersion',
+                      'Waldo_AI_AirCrewDispersion', 'dynamicAAExempt', 'lambsTurrets']:
+            self.assertIn(token, ai_diagnostics)
         self.assertIn('Waldo_Headless_ExternalScheduler', register)
         self.assertIn('CfgPatches" >> "ace_headless', register)
         detect = (headless / "headlessDetectLocal.sqf").read_text(encoding="utf-8")

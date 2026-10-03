@@ -4,7 +4,7 @@ Verified against MissionConfig/aiConfig.sqf and the Cortex Control specification
 
 Cortex automatic tactics are enabled by default. AI skill profiles and improved helicopter landings are independently enabled. Convoy options apply when a convoy is explicitly started. Enabled subfeatures still require their parent feature and applicable setup.
 
-The deliberately opt-in features are artillery support, counter-battery, airborne insertion, missile-threat countermeasures, aircraft break-away, helicopter deceleration, Dynamic AO garrison integration, and convoy friendly-infantry avoidance. Each can expend ammunition, move or dismount assets, change aircraft motion, depend on another system, or add a short-range vehicle scan. Their disabled default prevents an ordinary mission from acquiring those side effects merely by loading WMP; it does not disable the core Cortex contact, movement, morale, reaction, vehicle, stance, gunnery, hearing, investigation, reinforcement, assault, or coordination behaviours.
+The deliberately opt-in features are artillery support, counter-battery, airborne insertion, helicopter deceleration, Dynamic AO garrison integration, and convoy friendly-infantry avoidance. Each can move or dismount assets, depend on another system, or add a short-range vehicle scan. Missile-threat countermeasures and the bounded break-away reaction are enabled because they are defensive extensions of ordinary AI flight and immediately yield to Zeus or eligibility loss.
 
 Existing Waldo_AIPass_* setting keys remain for mission compatibility; the public AI functions use Waldo_fnc_Cortex*.
 
@@ -23,8 +23,10 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AI_ApplyMode` | `"BOTH"` | STRING: EXISTING, NEW or BOTH AI populations. |
 | `Waldo_AI_RestoreOnStop` | `true` | ADVANCED: restore captured vanilla/mission skills on stop. |
 | `Waldo_AI_SkillVariance` | `0` | ADVANCED: one stable per-AI offset; 0 disables variation. |
-| `Waldo_AI_VehicleCrewAimMultiplier` | `0.75` | Final aiming-skill multiplier for ordinary operating vehicle and aircraft crew. Named Dynamic AA crews are exempt. |
-| `Waldo_AI_VehicleCrewDispersion` | `2.5` | Owner-local aim coefficient for ordinary operating crew when LAMBS Turrets is absent. Named Dynamic AA crews retain their authored coefficient. |
+| `Waldo_AI_InfantryDispersion` | `1.35` | Owner-local aim coefficient for dismounted AI and vehicle cargo. |
+| `Waldo_AI_VehicleCrewAimMultiplier` | `0.6` | Final aiming-skill multiplier for ordinary operating vehicle and aircraft crew. Named Dynamic AA crews are exempt. |
+| `Waldo_AI_VehicleCrewDispersion` | `3.5` | Owner-local aim coefficient for ground-vehicle operators when LAMBS Turrets is absent. |
+| `Waldo_AI_AirCrewDispersion` | `4.25` | Wider owner-local aim coefficient for aircraft operators. Named Dynamic AA crews remain exempt. |
 | `Waldo_AI_IncludedSides` | `[]` | ARRAY of WEST/EAST/GUER/CIV strings; [] permits every side. |
 | `Waldo_AI_IncludedFactions` | `[]` | ARRAY of CfgFactionClasses names; [] permits every faction. |
 | `Waldo_AI_ExcludedFactions` | `[]` | ARRAY of faction names removed after the include filter. |
@@ -166,7 +168,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_Garrison_BreakFraction` | `0.5` | 0-1: a garrison breaks at this share of its strength. |
 | `Waldo_Cortex_AttackRunFlares_Enable` | `true` | BOOL: finite countermeasure requests while eligible AI aircraft approach and leave assigned attack targets. |
 | `Waldo_Cortex_AirAttack_Enable` | `true` | BOOL: finite threat-aware strafe, offset, hook, capability-gated lateral and aimed standoff attack patterns. |
-| `Waldo_AIPass_AircraftFlares_Enable` | `false` | BOOL: WMP gunships and Dynamic AA fighters flare at missiles. |
+| `Waldo_AIPass_AircraftFlares_Enable` | `true` | BOOL: eligible AI aircraft make a staggered countermeasure sequence after a missile warning. |
 | `Waldo_AIPass_FactionProfiles` | `createHashMap` | MAP: CfgFactionClasses name to behaviour profile, for example OPF_F to ELITE. |
 | `Waldo_AIPass_ZeusHoldSeconds` | `120` | SECONDS: the pass leaves a group alone this long after Zeus selects or edits it. |
 | `Waldo_AIPass_Investigate_Enable` | `true` | BOOL: squads check out enemies they know about but have not seen. |
@@ -184,7 +186,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_AIPass_VehicleGunnery_Enable` | `true` | BOOL: gunners prioritise AT soldiers; armour keeps away from them. |
 | `Waldo_AIPass_Vehicles_StandoffDistance` | `250` | METRES: distance armour keeps from known AT soldiers. |
 | `Waldo_AIPass_ArtillerySmoke_Enable` | `true` | BOOL: a retreating squad gets an artillery smoke screen (needs Artillery). |
-| `Waldo_AIPass_AircraftBreak_Enable` | `false` | BOOL: WMP gunships and fighters jink sideways from missiles; test first. |
+| `Waldo_AIPass_AircraftBreak_Enable` | `true` | BOOL: eligible AI aircraft preserve forward energy while making a bounded break from missile launches. |
 
 
 ## Behaviour profile map

@@ -350,10 +350,10 @@ class CortexContracts(unittest.TestCase):
         self.assertIn('CortexAircraftEligible', install)
         self.assertNotIn('Waldo_Gunship_Id', install)
         self.assertNotIn('Waldo_DynamicAA_SystemId', install)
-        self.assertLess(discover.index('getTerrainHeightASL _position'),
+        self.assertLess(discover.index('getTerrainHeightASL _future'),
                         discover.index('setVelocityModelSpace _candidate'))
-        self.assertIn('forEach [0,1,2]', discover)
-        self.assertIn('if (_safe &&', discover)
+        self.assertIn('private _clearance=', discover)
+        self.assertIn('&& {[_vehicle] call Waldo_fnc_CortexAircraftEligible}', discover)
 
     def test_backblast_blocks_shot_in_current_invocation(self):
         text = source('cortexAntiArmour')
@@ -439,16 +439,19 @@ class CortexContracts(unittest.TestCase):
         self.assertIn('{[] call Waldo_fnc_CortexSchedulerTick}, 0] call CBA_fnc_addPerFrameHandler', init)
         self.assertNotIn('{[] call Waldo_fnc_CortexSchedulerTick}, 0.25]', init)
 
-    def test_default_policy_enables_infantry_reactions_but_not_specialist_hazards(self):
+    def test_default_policy_enables_general_reactions_but_not_specialist_hazards(self):
         config = (ROOT / 'MissionConfig' / 'aiConfig.sqf').read_text(encoding='utf-8')
-        for name in ['Waldo_AIPass_Surrender_Enable', 'Waldo_AIPass_Hearing_Enable']:
+        for name in [
+            'Waldo_AIPass_Surrender_Enable',
+            'Waldo_AIPass_Hearing_Enable',
+            'Waldo_AIPass_AircraftFlares_Enable',
+            'Waldo_AIPass_AircraftBreak_Enable',
+        ]:
             self.assertIn(f'["{name}", true]', config)
         for name in [
             'Waldo_AIPass_Artillery_Enable',
             'Waldo_AIPass_CounterBattery_Enable',
             'Waldo_AIPass_Airborne_Enable',
-            'Waldo_AIPass_AircraftFlares_Enable',
-            'Waldo_AIPass_AircraftBreak_Enable',
         ]:
             self.assertIn(f'["{name}", false]', config)
 

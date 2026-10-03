@@ -15,8 +15,9 @@
  * - re-applies defence-line orders after a locality change;
  * - hands landed paratroopers and dismounted crews of a lost transport to the pass
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
- * - installs the missile-warning handler (flares, and the optional break-away jink) on every locally
- *   owned, eligible AI aircraft; no unrelated WMP aircraft-system marker is required.
+ * - installs the missile-warning handler on every locally owned, eligible AI aircraft. A warning
+ *   starts one finite, threat-tracked countermeasure and climbing-break sequence; a later missile
+ *   replaces and extends that response. It never injects a waypoint or resets the native planner.
  * - reserves aircraft crews from the generic group domain, then queues proactive attack-run flare
  *   sampling and the finite adaptive attack controller only for a
  *   currently eligible, crewed AI aircraft;
@@ -142,8 +143,8 @@ missionNamespace setVariable ["Waldo_AIPass_LocalSpotters", _spotters];
 
 private _wantArtillery = (missionNamespace getVariable ["Waldo_AIPass_Artillery_Enable", false])
     || {missionNamespace getVariable ["Waldo_AIPass_CounterBattery_Enable", false]};
-private _wantFlares = (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", false])
-    || {missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", false]};
+private _wantFlares = (missionNamespace getVariable ["Waldo_AIPass_AircraftFlares_Enable", true])
+    || {missionNamespace getVariable ["Waldo_AIPass_AircraftBreak_Enable", true]};
 private _wantAttackFlares=missionNamespace getVariable ["Waldo_Cortex_AttackRunFlares_Enable",true];
 private _wantAirAttack=missionNamespace getVariable ["Waldo_Cortex_AirAttack_Enable",true];
 if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
@@ -191,39 +192,51 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                 _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",
                     (_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1];
                 private _handler = _vehicle addEventHandler ["IncomingMissile", {
-                    params ["_vehicle", "", "_shooter"];
+                    params ["_vehicle", "", "_shooter", "", ["_missile",objNull,[objNull]]];
                     if !([_vehicle] call Waldo_fnc_CortexAircraftEligible) exitWith {};
-                    if (time < (_vehicle getVariable ["Waldo_AIPass_NextFlare", 0])) exitWith {};
-                    _vehicle setVariable ["Waldo_AIPass_NextFlare", time + 3];
-                    if ([group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled) then {
-                        private _generation=(_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1;
-                        _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",_generation];
-                        for "_burst" from 0 to 2 do {
-                            [{
-                                params ["_vehicle","_generation"];
-                                if ((_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",-1]) == _generation
-                                    && {[_vehicle] call Waldo_fnc_CortexAircraftEligible}
-                                    && {[group driver _vehicle,"Waldo_AIPass_AircraftFlares_Enable",false] call Waldo_fnc_CortexFeatureEnabled}
-                                    ) then {
-                                    [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
+                    // A newer warning replaces the earlier finite response so salvos extend the threat
+                    // window instead of starting competing workers. The missile object (available since
+                    // Arma 3 2.10) lets the response stop once guidance has ended; older/unknown projectiles
+                    // retain the same bounded maximum duration.
+                    private _generation=(_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1;
+                    _vehicle setVariable ["Waldo_Cortex_FlareBurstGeneration",_generation];
+                    _vehicle setVariable ["Waldo_Cortex_LastIncomingMissile",_missile];
+                    private _threat=[_shooter,_missile] select (!isNull _missile);
+                    private _side=if (isNull _threat) then {selectRandom [1,-1]}
+                        else {[1,-1] select ((_vehicle getRelDir _threat) < 180)};
+                    [_vehicle,_missile,_generation,_side] spawn {
+                        params ["_vehicle","_missile","_generation","_side"];
+                        for "_step" from 0 to 11 do {
+                            if (isNull _vehicle || {!local _vehicle}
+                                || {(_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",-1]) != _generation}
+                                || {!([_vehicle] call Waldo_fnc_CortexAircraftEligible)}) exitWith {};
+                            // A known missile becoming null/dead means the engagement has ended. Keep one
+                            // initial iteration for engines/mods that do not expose the projectile object.
+                            if (_step > 0 && {!isNull _missile} && {!alive _missile}) exitWith {};
+                            private _pilot=driver _vehicle;
+                            if (!isNull _pilot && {[group _pilot,"Waldo_AIPass_AircraftFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
+                                [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
+                            };
+                            if (!isNull _pilot && {[group _pilot,"Waldo_AIPass_AircraftBreak_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
+                                private _velocity=velocityModelSpace _vehicle;
+                                private _isPlane=_vehicle isKindOf "Plane";
+                                private _lateralLimit=[28,48] select _isPlane;
+                                private _minimumForward=[24,75] select _isPlane;
+                                private _vertical=[5,10] select _isPlane;
+                                private _candidate=[
+                                    (((_velocity select 0)+(_side*([7,11] select _isPlane))) max -_lateralLimit) min _lateralLimit,
+                                    (_velocity select 1) max _minimumForward,
+                                    ((_velocity select 2)+_vertical) min ([12,24] select _isPlane)
+                                ];
+                                private _future=_vehicle modelToWorldWorld (_candidate vectorMultiply 2);
+                                private _clearance=(_future select 2)-(getTerrainHeightASL _future);
+                                if (_clearance >= ([30,70] select _isPlane)
+                                    && {[_vehicle] call Waldo_fnc_CortexAircraftEligible}) then {
+                                    _vehicle setVelocityModelSpace _candidate;
                                 };
-                            }, [_vehicle,_generation], _burst * 0.4] call CBA_fnc_waitAndExecute;
+                            };
+                            sleep (0.45+random 0.18);
                         };
-                    };
-                    // Break-away: one sideways jink away from the shooter, without touching
-                    // the aircraft's waypoints or orbit (Waldo_AIPass_AircraftBreak_Enable, off by default).
-                    if (([group driver _vehicle,"Waldo_AIPass_AircraftBreak_Enable",false] call Waldo_fnc_CortexFeatureEnabled) && {!isNull _shooter}) then {
-                        private _velocity = velocityModelSpace _vehicle;
-                        private _side = [18, -18] select ((_vehicle getRelDir _shooter) < 180);
-                        private _candidate=[((_velocity select 0)+_side) max -18 min 18,_velocity select 1,(_velocity select 2)-4];
-                        // Reject the jink if either the current or projected flight envelope is too low.
-                        // World-space clearance also accounts for a banked aircraft and rising terrain.
-                        private _safe=true;
-                        {
-                            private _position=_vehicle modelToWorldWorld (_candidate vectorMultiply _x);
-                            if ((_position select 2)-(getTerrainHeightASL _position) < 30) then {_safe=false};
-                        } forEach [0,1,2];
-                        if (_safe && {abs (_velocity select 0) <= 18}) then {_vehicle setVelocityModelSpace _candidate};
                     };
                 }];
                 _vehicle setVariable ["Waldo_AIPass_FlaresHandler", _handler];
