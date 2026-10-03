@@ -361,3 +361,30 @@ Lighting no longer relies only on direct skill-number checks inside the profile 
 The same fixture performs a physical night comparison. The observer starts with its weapon light forced off and must neither acquire nor fire. After the light is physically on, the forward target must be acquired and receive actual fire while an equally distant rear target remains outside the beam. Spotting skill must remain unchanged: flashlights illuminate through the engine and do not grant omnidirectional Cortex awareness.
 
 Static validation passed 268 focused Cortex tests, all 1,265 SQF files, all 113 wiki pages, all 85 Zeus/script parity checks, the exact coverage report and `git diff --check`. Arma remained closed; the new physical detection, firing and HC cases are queued and unaccepted.
+
+## 3 October: aircraft continuity and real missile defence
+
+The completed `runtime-20261003-182908` air batch recorded 16 server findings and zero client
+findings. Its helicopter lateral case fired five real rounds but remained in `INGRESS`, repeatedly
+slowed and circled close to its start. The fixed-wing standoff case fired four rounds but never
+completed egress. The exact Zeus waypoint was retained, yet the helicopter travelled only about
+55 metres toward a replacement more than 680 metres away. These are controller failures, not
+accepted attack patterns. The earlier missile fixture also never produced a real launcher shot or
+incoming-missile event, so its defensive outcome is invalid evidence.
+
+Source now uses one group-level native movement command per ingress, attack and egress leg. Useful
+progress means closing the active leg; local circles cannot reset the progress clock, and Cortex no
+longer replans a pattern while it is running. Completion reselects the unchanged authored waypoint.
+Zeus handover similarly leaves the authenticated curator waypoint as the sole movement authority
+instead of layering an individual pilot command over it. The audit hard-fails more than five seconds
+of low-speed flight or a long circular path with little net displacement.
+
+The missile comparison now starts both native and Cortex helicopters in forward crossing flight and
+requires a real launcher firing event, real `IncomingMissile`, real countermeasure expenditure,
+physical departure from the projected uncorrected path and survival. The launcher is at tactical
+range rather than the former 400-metre point-blank position. Cortex applies two bounded defensive
+break impulses while preserving forward energy. The landing and deceleration helpers yield during
+that finite defensive lease so independent WMP flight controllers cannot cancel one another.
+
+Static validation passes all 642 repository tests and all 1,276 SQF files. The rebuilt focused air
+batch remains required; none of the new physical behavior is claimed accepted yet.

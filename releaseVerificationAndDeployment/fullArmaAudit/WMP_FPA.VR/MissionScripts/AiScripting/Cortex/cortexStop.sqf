@@ -84,6 +84,7 @@ missionNamespace setVariable ["Waldo_AIPass_InitPending", false];
     if (_handler >= 0) then {_x removeEventHandler ["IncomingMissile", _handler]};
     _x setVariable ["Waldo_Cortex_FlareBurstGeneration",
         (_x getVariable ["Waldo_Cortex_FlareBurstGeneration",0])+1];
+    _x setVariable ["Waldo_Cortex_MissileDefenceActive",nil];
     _x setVariable ["Waldo_AIPass_FlaresHandler", nil];
     _x setVariable ["Waldo_AIPass_FlaresInstalled", nil];
 } forEach (missionNamespace getVariable ["Waldo_AIPass_FlareVehicles", []]);

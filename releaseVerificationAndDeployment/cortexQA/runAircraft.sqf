@@ -16,14 +16,17 @@ private _prefix=["AIR-NATIVE-","AIR-CORTEX-"] select _enabled;
 private _check={params ["_id","_passed",["_detail",""]]; [_prefix+_id,_passed,_detail] call _recordCheck};
 [createHashMapFromArray [["Waldo_AIPass_Enable",true],["Waldo_AIPass_AircraftFlares_Enable",_enabled],["Waldo_AIPass_AircraftBreak_Enable",_enabled]]] call Waldo_fnc_CortexTuning;
 private _aircraft=createVehicle ["O_Heli_Light_02_unarmed_F",[4500,4500,100],[],0,"FLY"];
-_aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage true;
+_aircraft setDir 90; createVehicleCrew _aircraft; _aircraft allowDamage true;
 private _aircrew=crew _aircraft;
 private _airgroup=group driver _aircraft;
 _airgroup setCombatMode "BLUE";
 // Deliberately leave this ordinary aircraft without Gunship/Dynamic-AA provenance. The global
 // setting must install defensive reactions on eligible AI aircraft directly.
 _aircraft flyInHeight 100;
-private _launcher=createVehicle ["B_static_AA_F",[4500,4100,0],[],0,"NONE"];
+// Give both arms a real defensive window. The former 400 m launch was effectively point blank:
+// even an immediate warning left too little missile time-of-flight for a physical break or flare
+// rejection, so it measured launcher proximity rather than Cortex survivability.
+private _launcher=createVehicle ["B_static_AA_F",[4500,3100,0],[],0,"NONE"];
 _launcher setDir 0; createVehicleCrew _launcher;
 private _shooters=crew _launcher;
 private _shootgroup=group gunner _launcher;
@@ -76,12 +79,18 @@ _aircraft addEventHandler ["IncomingMissile",{
 }];
 // Start in genuine forward flight. A hovering target turns this into a countermeasure-ammunition
 // check and cannot distinguish an energy-preserving break from a stationary flare dispenser.
-_aircraft setVelocityModelSpace [0,65,0];
-private _approachWaypoint=_airgroup addWaypoint [[4500,5700,110],0];
+_aircraft setVelocityModelSpace [0,35,0];
+_aircraft limitSpeed 120;
+private _approachWaypoint=_airgroup addWaypoint [[5700,4500,110],0];
 _approachWaypoint setWaypointType "MOVE";
 _approachWaypoint setWaypointBehaviour "AWARE";
+private _returnWaypoint=_airgroup addWaypoint [[3600,4500,110],0];
+_returnWaypoint setWaypointType "MOVE";
+_returnWaypoint setWaypointBehaviour "AWARE";
+private _cycleWaypoint=_airgroup addWaypoint [[4500,4500,110],0];
+_cycleWaypoint setWaypointType "CYCLE";
 private _moving=[{alive _aircraft && {speed _aircraft >= 45}},20] call _wait;
-[_prefix+"missile acquisition","The moving helicopter is engaged by a real guided missile. Enabled Cortex must preserve energy, break across guidance and dispense through the threat window. Firing flares alone does not pass.",[4500,4400,80]] call _phase;
+[_prefix+"missile acquisition","The moving helicopter is engaged by a real guided missile from tactical range. Enabled Cortex must preserve energy, break across guidance and dispense through the threat window. Firing flares alone does not pass.",[4500,4000,80]] call _phase;
 private _installed=false;
 if (_enabled) then {
     _installed=[{_aircraft getVariable ["Waldo_AIPass_FlaresInstalled",false]},30] call _wait;
@@ -101,8 +110,16 @@ _airgroup setVariable ["Waldo_AI_ExternalControl",false,true];
 private _detected=[{gunner _launcher knowsAbout _aircraft >= 1},60] call _wait;
 ["AIR-natural-launcher-detection",_detected] call _check;
 _shootgroup setCombatMode "RED";
-(gunner _launcher) doTarget _aircraft; (gunner _launcher) doFire _aircraft;
-private _fired=[{_launcher getVariable ["Waldo_CortexQA_Missiles",0] > 0},60] call _wait;
+(gunner _launcher) doTarget _aircraft;
+private _solutionPeak=0;
+private _fireDeadline=serverTime+30;
+while {serverTime < _fireDeadline && {_launcher getVariable ["Waldo_CortexQA_Missiles",0] == 0}} do {
+    _solutionPeak=_solutionPeak max (_launcher aimedAtTarget [_aircraft]);
+    _launcher fireAtTarget [_aircraft];
+    sleep 1;
+};
+private _fired=_launcher getVariable ["Waldo_CortexQA_Missiles",0] > 0;
+["AIR-real-firing-solution",_fired,format ["peakAim=%1 finalAim=%2",_solutionPeak,_launcher aimedAtTarget [_aircraft]]] call _check;
 ["AIR-real-missile-fired",_fired] call _check;
 private _warning=[{count (_aircraft getVariable ["Waldo_CortexQA_MissileWarnings",[]]) > 0},15] call _wait;
 ["AIR-real-missile-warning",_fired && {_warning}] call _check;
@@ -155,7 +172,8 @@ private _native=_results select 0;
 private _cortex=_results select 1;
 ["AIR-paired-real-threats",(_native select 0) && {_cortex select 0},str _results] call _recordCheck;
 ["AIR-break-exceeds-native-response",(_native select 0) && {_cortex select 0} && {(_cortex select 1) >= (_native select 1)+5},str _results] call _recordCheck;
-["AIR-cortex-defeats-guided-threat",(_cortex select 3) && {(_cortex select 4) < 0.9}
+["AIR-cortex-defeats-guided-threat",(_cortex select 0) && {(_cortex select 5)}
+    && {(_cortex select 3)} && {(_cortex select 4) < 0.9}
     && {(!(_native select 3)) || {(_cortex select 4) <= (_native select 4)}},str _results] call _recordCheck;
 
 
@@ -379,7 +397,7 @@ private _observedProfiles=createHashMap;
             private _samples=_sampleAircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
             _samples pushBack [
                 serverTime,_planSample param [2,""],speed _sampleAircraft,
-                (getPosATL _sampleAircraft) select 2,_planSample param [4,[]]
+                (getPosATL _sampleAircraft) select 2,_planSample param [4,[]],getPosATL _sampleAircraft
             ];
             _sampleAircraft setVariable ["Waldo_CortexQA_ProfileSamples",_samples,true];
             sleep 1;
@@ -508,12 +526,29 @@ private _observedProfiles=createHashMap;
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]]] call _recordCheck;
     } else {
-        private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in ["COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE"]},210] call _wait;
+        private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in ["COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION"]},210] call _wait;
         private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
         private _profileSamples=_aircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
         private _sampleStages=_profileSamples apply {_x select 1};
         private _sampleSpeeds=_profileSamples apply {_x select 2};
         private _sampleAltitudes=_profileSamples apply {_x select 3};
+        private _samplePositions=_profileSamples apply {_x select 5};
+        private _pathTravel=0;
+        for "_sampleIndex" from 1 to (count _samplePositions-1) do {
+            _pathTravel=_pathTravel+((_samplePositions select (_sampleIndex-1)) distance2D (_samplePositions select _sampleIndex));
+        };
+        private _netTravel=if (count _samplePositions >= 2) then {
+            (_samplePositions select 0) distance2D (_samplePositions select (count _samplePositions-1))
+        } else {0};
+        private _motionFloor=[20,80] select (_aircraft isKindOf "Plane");
+        private _idleStreak=0;
+        private _longestIdle=0;
+        {
+            if (abs _x < _motionFloor) then {
+                _idleStreak=_idleStreak+1;
+                _longestIdle=_longestIdle max _idleStreak;
+            } else {_idleStreak=0};
+        } forEach _sampleSpeeds;
         private _physicalTransitions=(_group getVariable ["Waldo_Cortex_DrillTransitions",[]]) select {
             (_x select 2) == "AIR_ATTACK" && {(_x select 4) in ["INGRESS","ATTACK","EGRESS"]}
         } apply {_x select 4};
@@ -523,6 +558,13 @@ private _observedProfiles=createHashMap;
                 || {(selectMax _sampleAltitudes)-(selectMin _sampleAltitudes) >= 5}},
             str [_sampleStages,_physicalTransitions,selectMin _sampleSpeeds,selectMax _sampleSpeeds,
                 selectMin _sampleAltitudes,selectMax _sampleAltitudes]] call _recordCheck;
+        // Pattern metadata cannot hide the behaviour reported by a human observer. Long stationary
+        // pauses and a long trail with little net displacement are the measurable signature of the
+        // tiny local circles that made the previous controller look worse than native flight.
+        [_id+"-continuous-useful-flight",_sampleSpeeds isNotEqualTo [] && {_longestIdle <= 5}
+            && {_pathTravel < 300 || {_netTravel/_pathTravel >= 0.35}},
+            str [_longestIdle,_motionFloor,_pathTravel,_netTravel,
+                if (_pathTravel > 0) then {_netTravel/_pathTravel} else {1}]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] == "COMPLETE"},str _outcome] call _recordCheck;
         [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,str (_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])] call _recordCheck;
         [_id+"-visible-countermeasures",_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0] >= 2,

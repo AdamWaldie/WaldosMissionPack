@@ -16,8 +16,9 @@
  * - hands landed paratroopers and dismounted crews of a lost transport to the pass
  *   (Waldo_fnc_CortexReleaseFeatureCrew);
  * - installs the missile-warning handler on every locally owned, eligible AI aircraft. A warning
- *   starts one finite, threat-tracked countermeasure and climbing-break sequence; a later missile
- *   replaces and extends that response. It never injects a waypoint or resets the native planner.
+ *   starts one finite, threat-tracked countermeasure sequence with two energy-preserving break
+ *   impulses; a later missile replaces and extends that response. It never injects a waypoint,
+ *   stops the aircraft or rewrites the native planner every frame.
  * - reserves aircraft crews from the generic group domain, then queues proactive attack-run flare
  *   sampling and the finite adaptive attack controller only for a
  *   currently eligible, crewed AI aircraft;
@@ -204,6 +205,7 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                     private _threat=[_shooter,_missile] select (!isNull _missile);
                     private _side=if (isNull _threat) then {selectRandom [1,-1]}
                         else {[1,-1] select ((_vehicle getRelDir _threat) < 180)};
+                    _vehicle setVariable ["Waldo_Cortex_MissileDefenceActive",_generation];
                     [_vehicle,_missile,_generation,_side] spawn {
                         params ["_vehicle","_missile","_generation","_side"];
                         for "_step" from 0 to 11 do {
@@ -217,16 +219,21 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                             if (!isNull _pilot && {[group _pilot,"Waldo_AIPass_AircraftFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
                                 [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
                             };
-                            if (!isNull _pilot && {[group _pilot,"Waldo_AIPass_AircraftBreak_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
+                            // Two decisive impulses produce a genuine beam/climb without fighting
+                            // the native flight FSM every half-second. The earlier implementation
+                            // rewrote velocity twelve times and created the same pauses and small
+                            // circles that this defensive reaction is meant to avoid.
+                            if (_step in [0,4] && {!isNull _pilot}
+                                && {[group _pilot,"Waldo_AIPass_AircraftBreak_Enable",true] call Waldo_fnc_CortexFeatureEnabled}) then {
                                 private _velocity=velocityModelSpace _vehicle;
                                 private _isPlane=_vehicle isKindOf "Plane";
-                                private _lateralLimit=[28,48] select _isPlane;
-                                private _minimumForward=[24,75] select _isPlane;
-                                private _vertical=[5,10] select _isPlane;
+                                private _lateralLimit=[34,58] select _isPlane;
+                                private _minimumForward=[28,90] select _isPlane;
+                                private _vertical=[7,14] select _isPlane;
                                 private _candidate=[
-                                    (((_velocity select 0)+(_side*([7,11] select _isPlane))) max -_lateralLimit) min _lateralLimit,
+                                    (((_velocity select 0)+(_side*([18,30] select _isPlane))) max -_lateralLimit) min _lateralLimit,
                                     (_velocity select 1) max _minimumForward,
-                                    ((_velocity select 2)+_vertical) min ([12,24] select _isPlane)
+                                    ((_velocity select 2)+([_vertical,_vertical*0.35] select (_step > 0))) min ([16,30] select _isPlane)
                                 ];
                                 private _future=_vehicle modelToWorldWorld (_candidate vectorMultiply 2);
                                 private _clearance=(_future select 2)-(getTerrainHeightASL _future);
@@ -236,6 +243,10 @@ if (_wantArtillery || _wantFlares || _wantAttackFlares || _wantAirAttack) then {
                                 };
                             };
                             sleep (0.45+random 0.18);
+                        };
+                        if (!isNull _vehicle
+                            && {(_vehicle getVariable ["Waldo_Cortex_FlareBurstGeneration",-1]) == _generation}) then {
+                            _vehicle setVariable ["Waldo_Cortex_MissileDefenceActive",nil];
                         };
                     };
                 }];
