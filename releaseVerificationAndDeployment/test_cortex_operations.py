@@ -2719,6 +2719,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_fnc_CortexAirHandoverRestoreLocal',controller)
         self.assertIn('_handoverAircraft distance2D _handoverPosition <= 150',controller)
         self.assertIn('serverTime+([8,100] select (count _handoverPosition >= 2))',controller)
+        self.assertIn('private _handoverZeusToken=-1',controller)
+        self.assertIn('(_currentHold param [0,-2]) != _handoverZeusToken',controller)
+        self.assertIn('_handoverAircraft distance2D _progressPosition < 15',controller)
+        self.assertIn('combatBehaviour _handoverPilot != _handoverLeasedBehaviour',controller)
+        self.assertIn('_handoverPilot setCombatBehaviour _handoverLeasedBehaviour',controller)
         self.assertIn('Waldo_Cortex_AirHandoverResult',controller)
         restore=source('cortexAirHandoverRestoreLocal')
         for requirement in ['remoteExecutedOwner != _originOwner','arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET"]',

@@ -93,6 +93,7 @@ private _finish={
             private _authoredBehaviour="";
             private _authoredSpeed="";
             private _authoredWaypointIndex=-1;
+            private _handoverZeusToken=-1;
             private _zeusSnapshot=_handoverGroup getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]];
             // CortexZeusMark clears this snapshot for every later non-waypoint takeover and
             // replaces it for every later waypoint takeover. Its presence is therefore the
@@ -100,6 +101,7 @@ private _finish={
             // than a second independently replicated gate that can race the snapshot in MP.
             private _snapshotMatches=_zeusSnapshot isNotEqualTo [];
             if (_snapshotMatches) then {
+                _handoverZeusToken=_zeusSnapshot param [0,-1];
                 _handoverPosition=+(_zeusSnapshot param [1,[]]);
                 _authoredBehaviour=_zeusSnapshot param [2,""];
                 _authoredSpeed=_zeusSnapshot param [3,""];
@@ -155,21 +157,59 @@ private _finish={
             };
             [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverPosition,
                 _handoverCombatMode,_handoverGroupCombatMode,_handoverAttackEnabled,
-                _handoverLeasedBehaviour,_handoverPilotBehaviour] spawn {
+                _handoverLeasedBehaviour,_handoverPilotBehaviour,_authoredSpeed,
+                _handoverZeusToken] spawn {
                 params ["_handoverAircraft","_handoverPilot","_handoverToken","_handoverFeatures",
                     "_handoverPosition","_handoverCombatMode","_handoverGroupCombatMode",
-                    "_handoverAttackEnabled","_handoverLeasedBehaviour","_handoverPilotBehaviour"];
-                // This is a bounded cleanup lease, not a new Cortex movement profile. Give an
-                // aircraft enough time to turn onto a replacement leg, but release immediately on
-                // arrival, destruction, token replacement or the hard safety deadline.
+                    "_handoverAttackEnabled","_handoverLeasedBehaviour","_handoverPilotBehaviour",
+                    "_authoredSpeed","_handoverZeusToken"];
+                // This is a bounded handover monitor, not a new Cortex movement profile. Arma can
+                // rebuild the pilot's COMBAT state after the first command even while AUTOCOMBAT is
+                // disabled. Keep only the pilot aligned with the exact curator order and reassert
+                // that same leg after measured physical stagnation. A newer Zeus hold token ends
+                // the monitor before it can repeat an obsolete destination.
                 private _deadline=serverTime+([8,100] select (count _handoverPosition >= 2));
+                private _progressPosition=getPosATL _handoverAircraft;
+                private _progressAt=serverTime;
+                private _finished=false;
                 waitUntil {
                     sleep 0.5;
-                    isNull _handoverAircraft
+                    private _handoverGroup=group _handoverPilot;
+                    private _currentHold=_handoverGroup getVariable ["Waldo_AIPass_ZeusHold",[]];
+                    private _superseded=_handoverZeusToken >= 0
+                        && {(_currentHold param [0,-2]) != _handoverZeusToken};
+                    _finished=isNull _handoverAircraft
                         || {!alive _handoverAircraft}
+                        || {isNull _handoverPilot}
+                        || {!alive _handoverPilot}
+                        || {isNull _handoverGroup}
                         || {(_handoverAircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) param [0,""] != _handoverToken}
+                        || {_superseded}
                         || {serverTime >= _deadline}
-                        || {count _handoverPosition >= 2 && {_handoverAircraft distance2D _handoverPosition <= 150}}
+                        || {count _handoverPosition >= 2 && {_handoverAircraft distance2D _handoverPosition <= 150}};
+                    if (!_finished && {local _handoverAircraft} && {count _handoverPosition >= 2}) then {
+                        if (_handoverLeasedBehaviour != ""
+                            && {combatBehaviour _handoverPilot != _handoverLeasedBehaviour}) then {
+                            _handoverPilot setCombatBehaviour _handoverLeasedBehaviour;
+                        };
+                        if (serverTime >= _progressAt+4) then {
+                            if (_handoverAircraft distance2D _progressPosition < 15) then {
+                                if (!isNull _handoverGroup) then {
+                                    if (_handoverLeasedBehaviour != "") then {
+                                        _handoverGroup setBehaviourStrong _handoverLeasedBehaviour;
+                                    };
+                                    if (_authoredSpeed in ["LIMITED","NORMAL","FULL"]) then {
+                                        _handoverGroup setSpeedMode _authoredSpeed;
+                                    };
+                                    _handoverGroup move _handoverPosition;
+                                };
+                                _handoverPilot doMove _handoverPosition;
+                            };
+                            _progressPosition=getPosATL _handoverAircraft;
+                            _progressAt=serverTime;
+                        };
+                    };
+                    _finished
                 };
                 if (isNull _handoverAircraft) exitWith {};
                 _handoverAircraft setVariable ["Waldo_Cortex_AirHandoverResult",[
