@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Controller diagnostic, not combat acceptance: actors are invulnerable and the opponent
  * cannot fire. Exercises natural contact with three full squads, actual supporting/assault fire,
- * two real reinforcement arrivals, a natural CONTACT-to-SECURITY target occlusion,
+ * two real reinforcement arrivals, a deterministic engine-hidden CONTACT-to-SECURITY transition,
  * coordinated assault travel from that SECURITY handoff and
  * release to new ordinary group orders after both support switches are disabled.
  * Locality/authority: scheduled server fixture using normal discovery, support and assault paths.
@@ -21,6 +21,30 @@
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACoordinated.sqf";
  */
 params ["_check","_phase","_wait",["_responderOwners",[],[[]]],["_exposeDuringRally",false,[true]],["_localScreens",false,[true]]];
+// FiredMan is local to the firing actor. Reinstall this repeat-safe sampler on the
+// current owner after every QA locality migration so server and HC cases measure the
+// same physical weapon events.
+Waldo_fnc_CortexQAInstallShotCounter = {
+    params [["_units",[],[[]]]];
+    {
+        private _unit = _x;
+        if (local _unit) then {
+            private _old = _unit getVariable ["Waldo_CortexQA_FiredManEH",-1];
+            if (_old >= 0) then {_unit removeEventHandler ["FiredMan",_old]};
+            private _handler = _unit addEventHandler ["FiredMan",{
+                params ["_unit","_weapon"];
+                if (_weapon in ["Throw","Put"]) exitWith {};
+                _unit setVariable ["Waldo_CortexQA_Shots",(_unit getVariable ["Waldo_CortexQA_Shots",0])+1,true];
+                private _teams=(group _unit) getVariable ["Waldo_Cortex_SupportTeams",[]];
+                if (abs speed _unit > 2 && {count _teams == 6} && {_unit in (_teams select 5)}) then {
+                    _unit setVariable ["Waldo_CortexQA_MovingShots",(_unit getVariable ["Waldo_CortexQA_MovingShots",0])+1,true];
+                };
+            }];
+            _unit setVariable ["Waldo_CortexQA_FiredManEH",_handler];
+        };
+    } forEach _units;
+};
+publicVariable "Waldo_fnc_CortexQAInstallShotCounter";
 [createHashMapFromArray [
     ["Waldo_AIPass_Enable",true],["Waldo_AIPass_LambsMode","WMP"],["Waldo_AIPass_Contact_Enable",true],
     ["Waldo_AIPass_Reinforce_Enable",true],["Waldo_AIPass_Reinforce_MaxResponders",2],
@@ -61,16 +85,7 @@ private _makeUnit={
     _unit setVariable ["Waldo_CortexQA_Label",_label,true];
     _unit setVariable ["Waldo_CortexQA_Shots",0];
     _unit setVariable ["Waldo_CortexQA_MovingShots",0,true];
-    _unit addEventHandler ["FiredMan",{
-        params ["_unit","_weapon"];
-        if (_weapon in ["Throw","Put"]) exitWith {};
-        _unit setVariable ["Waldo_CortexQA_Shots",(_unit getVariable ["Waldo_CortexQA_Shots",0])+1,true];
-        // Measure speed at discharge, not at the next one-second observer sample.
-        private _teams=(group _unit) getVariable ["Waldo_Cortex_SupportTeams",[]];
-        if (abs speed _unit > 2 && {count _teams == 6} && {_unit in (_teams select 5)}) then {
-            _unit setVariable ["Waldo_CortexQA_MovingShots",(_unit getVariable ["Waldo_CortexQA_MovingShots",0])+1,true];
-        };
-    }];
+    [[_unit]] call Waldo_fnc_CortexQAInstallShotCounter;
     _unit allowDamage false; _actors pushBack _unit; _unit
 };
 private _requester=[east] call _makeGroup;
@@ -103,6 +118,7 @@ private _migrateTeam={
     diag_log format ["WMP CORTEX QA COORD MIGRATION REQUEST: group=%1 members=%2 actualMembers=%3 target=%4",_g,_members apply {netId _x},(units _g) apply {netId _x},_owner];
     private _requested=[_g,_owner] call Waldo_fnc_HeadlessMigrateGroup;
     private _adopted=[{groupOwner _g == _owner && {(_members findIf {owner _x != _owner}) < 0}},30] call _wait;
+    if (_adopted) then {[_members] remoteExecCall ["Waldo_fnc_CortexQAInstallShotCounter",_owner]};
     ["COORD-owner-"+_stage,_requested && {_adopted},str [groupOwner _g,_members apply {owner _x}]] call _check;
     _g setVariable ["Waldo_Headless_ExcludeGroup",true,true];
 };
@@ -190,28 +206,24 @@ _walls=[];
 sleep 0.1;
 ["COORD-assault-corridor-clear",(_movementScreens findIf {!isNull _x}) < 0,str (count _movementScreens)] call _check;
 private _origins=_helpers apply {getPosATL _x};
-// Hide the known target from the fixed base of fire after both responders have physically rallied.
-// The obstacle is removed before movement, so this stage isolates the CONTACT -> SECURITY handoff
-// rather than adding route geometry to the subsequent bound measurements.
-private _occluders=[];
-for "_i" from -4 to 4 do {
-    private _wall=createVehicle ["Land_CncWall4_F",[1500+_i*4,1550,0],[],0,"CAN_COLLIDE"];
-    _wall setDir 0;
-    _occluders pushBack _wall;
-};
+// Hide the known target at engine level after both responders have physically rallied.
+// View geometry did not consistently make target visibility expire on dedicated/HC owners,
+// so it tested wall placement rather than the production CONTACT -> SECURITY transition.
+// The target remains the same known object and is restored before movement starts.
+hideObjectGlobal _enemy;
 [createHashMapFromArray [
     ["Waldo_AIPass_CoordinatedAssault_Enable",true],
     ["Waldo_AIPass_FireControl_Enable",true],
     ["Waldo_AIPass_PostContact_LostSeconds",3]
 ]] call Waldo_fnc_CortexTuning;
-["Coordinated assault: contact-loss handoff","The rallied squads are ready while a temporary wall hides the known target from the base of fire. Cortex must pass CONTACT to SECURITY without discarding the prepared assault, then publish both squad roles. The wall is removed before movement is measured.",[1500,1525,0]] call _phase;
+["Coordinated assault: contact-loss handoff","The rallied squads are ready while the known target is temporarily hidden by the engine. Cortex must pass CONTACT to SECURITY without discarding the prepared assault, then publish both squad roles. The same target is restored before movement is measured.",[1500,1525,0]] call _phase;
 private _securityHandoff=[{_requester getVariable ["Waldo_AIPass_PublicPhase","NONE"] == "SECURITY"},20] call _wait;
 ["COORD-contact-loss-entered-security",_securityHandoff,str (_requester getVariable ["Waldo_Cortex_PhaseTransition",[]])] call _check;
 private _rolesDispatched=[{
     _teams findIf {count ((group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]) != 5} < 0
 },30] call _wait;
 ["COORD-security-dispatches-prepared-assault",_securityHandoff && {_rolesDispatched},str (_teams apply {(group (_x select 0)) getVariable ["Waldo_Cortex_SupportRole",[]]})] call _check;
-{deleteVehicle _x} forEach _occluders;
+_enemy hideObjectGlobal false;
 _enemy setUnitPos "AUTO";
 // Open fire only after the independently measured rally stage. Combat mode is global;
 // the production owner-local fire controller issues the actual engagement commands.
@@ -402,7 +414,7 @@ private _advanced=true;
 ["COORD-no-engine-attack-overrides",(_attackOverrideSamples select 0)+(_attackOverrideSamples select 1) == 0,str _attackOverrideSamples] call _check;
 {private _total=0; {_total=_total+(_x getVariable ["Waldo_CortexQA_MovingShots",0])} forEach _x; _movingShots set [_forEachIndex,_total]} forEach _teams;
 ["COORD-movers-fire-during-travel",(_movingShots findIf {_x <= 0}) < 0,str _movingShots] call _check;
-["COORD-no-prolonged-empty-range-idle",_advanced && {_longestMovingIdle <= 18},format ["longest outstanding MOVE idle=%1 s; empty-range limit=18 s",_longestMovingIdle]] call _check;
+["COORD-no-prolonged-empty-range-idle",_longestMovingIdle <= 18,format ["longest outstanding MOVE idle=%1 s; empty-range limit=18 s",_longestMovingIdle]] call _check;
 ["COORD-open-ground-bound-backtracking",_roleSwitches >= 2 && {_largestBacktrack <= 8},format ["largest physical reverse travel=%1 m; empty-range limit=8 m",_largestBacktrack]] call _check;
 ["COORD-inter-squad-physical-cover",_interCover > 0,str _interCover] call _check;
 ["COORD-intra-squad-physical-cover",(_intraCover findIf {_x == 0}) < 0,str _intraCover] call _check;
@@ -463,10 +475,12 @@ private _attackRestored=true;
 private _restoredFeatures=_helpers apply {[_x checkAIFeature "TARGET",_x checkAIFeature "AUTOTARGET",_x checkAIFeature "AUTOCOMBAT",_x checkAIFeature "PATH"]};
 ["COORD-movement-features-restored",_restoredFeatures isEqualTo _featureBaseline,str [_featureBaseline,_restoredFeatures]] call _check;
 private _releaseOrigins=_helpers apply {getPosATL _x};
+private _ordinaryDestinations=[];
 {
     private _g=group (_x select 0);
     private _destination=(leader _g) getPos [90,[270,90] select (_forEachIndex == 1)];
     private _wp=_g addWaypoint [_destination,0];
+    _ordinaryDestinations pushBack _destination;
     _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 5;
     _wp setWaypointDescription "QA FRESH ORDINARY ORDER";
     _g setCurrentWaypoint _wp;
@@ -477,7 +491,18 @@ private _releaseOrigins=_helpers apply {getPosATL _x};
 } forEach _teams;
 private _handedBack=[{
     private _okay=true;
-    {if (!alive _x || {_x distance2D (_releaseOrigins select _forEachIndex) < 50}) then {_okay=false}} forEach _helpers;
+    {
+        private _teamIndex=_forEachIndex;
+        private _destination=_ordinaryDestinations select _teamIndex;
+        private _members=_x select {alive _x};
+        private _arrived={_x distance2D _destination <= 55} count _members;
+        private _progressed=0;
+        {
+            private _globalIndex=_teamIndex*6+_forEachIndex;
+            if (_x distance2D (_releaseOrigins select _globalIndex) >= 30 || {_x distance2D _destination <= 55}) then {_progressed=_progressed+1};
+        } forEach _members;
+        if (count _members != 6 || {_arrived < 4} || {_progressed != count _members} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
+    } forEach _teams;
     _okay
 },75] call _wait;
 ["COORD-fresh-orders-physical-travel",_released && {_handedBack},str (_helpers apply {getPosATL _x})] call _check;
@@ -489,23 +514,36 @@ private _handedBack=[{
 // Separate Zeus takeover from the existing ordinary-order handover result.
 // The marker is the production event endpoint; curator UI delivery is tested separately.
 private _zeusOrigins=_helpers apply {getPosATL _x};
+private _zeusDestinations=[];
 {
     private _g=group (_x select 0);
-    [_g,true] call Waldo_fnc_CortexZeusMark;
     private _destination=(getPosATL leader _g) vectorAdd [0,100,0];
     private _wp=_g addWaypoint [_destination,0];
+    _zeusDestinations pushBack _destination;
     _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 5;
     _wp setWaypointDescription "QA ZEUS REPLACEMENT";
     _g setCurrentWaypoint _wp;
+    [_g,true,_wp select 1] call Waldo_fnc_CortexZeusMark;
     {
         _x setVariable ["Waldo_CortexQA_Target",_destination,true];
         _x setVariable ["Waldo_CortexQA_Label",format ["%1 / ZEUS ORDER",groupId _g],true];
     } forEach _x;
 } forEach _teams;
-["Coordinated assault: Zeus replacement","Zeus now takes control of both squads. Every soldier must travel at least 50 m toward the new northbound order. Earlier assault and ordinary-handover failures remain recorded.",[1500,1680,0]] call _phase;
+["Coordinated assault: Zeus replacement","Zeus now takes control of both squads. Each complete formation must make physical progress and at least four members plus the leader must reach the replacement order. Earlier failures remain recorded.",[1500,1680,0]] call _phase;
 private _zeusTravel=[{
     private _okay=true;
-    {if (!alive _x || {(getPosATL _x select 1)-(_zeusOrigins select _forEachIndex select 1) < 50}) then {_okay=false}} forEach _helpers;
+    {
+        private _teamIndex=_forEachIndex;
+        private _destination=_zeusDestinations select _teamIndex;
+        private _members=_x select {alive _x};
+        private _arrived={_x distance2D _destination <= 55} count _members;
+        private _progressed=0;
+        {
+            private _globalIndex=_teamIndex*6+_forEachIndex;
+            if (_x distance2D (_zeusOrigins select _globalIndex) >= 30 || {_x distance2D _destination <= 55}) then {_progressed=_progressed+1};
+        } forEach _members;
+        if (count _members != 6 || {_arrived < 4} || {_progressed != count _members} || {leader (group (_x select 0)) distance2D _destination > 55}) then {_okay=false};
+    } forEach _teams;
     _okay
 },120] call _wait;
 ["COORD-zeus-replacement-physical-travel",_zeusTravel,str (_helpers apply {getPosATL _x})] call _check;

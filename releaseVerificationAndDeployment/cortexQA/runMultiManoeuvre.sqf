@@ -11,6 +11,10 @@ params ["_check","_phase","_wait"];
 {
     private _mode=_x;
     private _prefix="MULTI-"+_mode;
+    private _savedNearRange=missionNamespace getVariable ["Waldo_AIPass_NearRange",900];
+    private _savedFarRange=missionNamespace getVariable ["Waldo_AIPass_FarRange",2500];
+    missionNamespace setVariable ["Waldo_AIPass_NearRange",5000];
+    missionNamespace setVariable ["Waldo_AIPass_FarRange",5000];
     // Independent-drill baseline: mutual timing is observed, not a coordination claim.
     [createHashMapFromArray [
         ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
@@ -169,10 +173,11 @@ params ["_check","_phase","_wait"];
         private _group=_groups select _teamIndex;
         private _state=_group getVariable ["Waldo_AIPass_State",createHashMap];
         private _drill=_state getOrDefault ["drill",createHashMap];
-        diag_log format ["WMP CORTEX QA MULTI END: case=%1 team=%2 phase=%3 drillType=%4 stage=%5 bound=%6/%7 result=%8 failure=%9",
+        diag_log format ["WMP CORTEX QA MULTI END: case=%1 team=%2 phase=%3 drillType=%4 stage=%5 bound=%6/%7 result=%8 failure=%9 flankRefusal=%10 advanceRefusal=%11",
             _prefix,_teamIndex+1,_state getOrDefault ["phase","NONE"],_drill getOrDefault ["type","NONE"],
             _drill getOrDefault ["stage","NONE"],_drill getOrDefault ["index",-1],count (_drill getOrDefault ["points",[]]),
-            _group getVariable ["Waldo_Cortex_DrillResult",[]],_group getVariable ["Waldo_Cortex_DrillFailure",[]]];
+            _group getVariable ["Waldo_Cortex_DrillResult",[]],_group getVariable ["Waldo_Cortex_DrillFailure",[]],
+            _group getVariable ["Waldo_Cortex_FlankRefusal",[]],_group getVariable ["Waldo_Cortex_AdvanceRefusal",[]]];
         [_prefix+format ["-squad-%1-physical-travel",_teamIndex+1],_contact && {_drillSeen select _teamIndex} && {(_peaks select [_teamIndex*6,6]) findIf {_x < 30} < 0},str (_peaks select [_teamIndex*6,6])] call _check;
         [_prefix+format ["-squad-%1-cohesion",_teamIndex+1],_members findIf {!alive _x || {group _x != _group} || {_x distance2D leader _group > 40}} < 0] call _check;
         [_prefix+format ["-squad-%1-covering-fire",_teamIndex+1],(_drillSeen select _teamIndex) && {(_coverEvents select _teamIndex) > 0},str _coverEvents] call _check;
@@ -183,5 +188,7 @@ params ["_check","_phase","_wait"];
     if (_mode == "BOUND") then {[_prefix+"-observed-movement-fire-overlap",(_drillSeen findIf {!_x}) < 0 && {_switches >= 2},str [_switches,_coverEvents,_drillSeen]] call _check};
     {deleteVehicle _x} forEach (_actors+_enemies);
     {deleteGroup _x} forEach (_groups+[_enemyGroup]);
+    missionNamespace setVariable ["Waldo_AIPass_NearRange",_savedNearRange];
+    missionNamespace setVariable ["Waldo_AIPass_FarRange",_savedFarRange];
     missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 } forEach ["FLANK","BOUND"];

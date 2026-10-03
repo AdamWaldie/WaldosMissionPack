@@ -589,12 +589,15 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_movementRoeViolations',qa)
         self.assertIn('Waldo_CortexQA_MovingShots',fired)
         self.assertIn('COORD-no-prolonged-empty-range-idle',qa)
+        self.assertNotIn('"COORD-no-prolonged-empty-range-idle",_advanced &&',qa)
         self.assertIn('COORD-full-fire-team-physical-bounds',qa)
         self.assertIn('COORD-no-engine-attack-overrides',qa)
         self.assertIn('_stage == "MOVE"',qa)
         self.assertIn('_x distance2D _destination > 3',qa)
         self.assertIn('empty-range limit=18 s',qa)
         self.assertIn('currentCommand _x == "ATTACK"',qa)
+        self.assertIn('Waldo_fnc_CortexQAInstallShotCounter',qa)
+        self.assertIn('remoteExecCall ["Waldo_fnc_CortexQAInstallShotCounter",_owner]',qa)
 
     def test_zeus_mark_releases_cortex_immediately_on_group_owner(self):
         mark=(ROOT/'MissionScripts/AiScripting/Cortex/cortexZeusMark.sqf').read_text()
@@ -623,6 +626,31 @@ class CortexOperations(unittest.TestCase):
             stage=qa.split('setWaypointDescription "'+description+'";')[1].split('} forEach _teams;')[0]
             self.assertIn('Waldo_CortexQA_Label',stage)
             self.assertIn(label,stage)
+
+    def test_coordinated_handover_marks_the_exact_replacement_order(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
+        zeus=qa.split('private _zeusOrigins=',1)[1].split('private _unopposedOrigins=',1)[0]
+        self.assertIn('[_g,true,_wp select 1] call Waldo_fnc_CortexZeusMark',zeus)
+        self.assertLess(zeus.index('_g setCurrentWaypoint _wp'),
+                        zeus.index('[_g,true,_wp select 1] call Waldo_fnc_CortexZeusMark'))
+        self.assertIn('_arrived < 4',zeus)
+        self.assertIn('_progressed != count _members',zeus)
+
+    def test_coordinated_contact_loss_uses_engine_visibility_not_fixture_walls(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
+        transition=qa.split('// Hide the known target at engine level',1)[1].split('_enemy setUnitPos "AUTO";',1)[0]
+        self.assertIn('hideObjectGlobal _enemy',transition)
+        self.assertIn('_enemy hideObjectGlobal false',transition)
+        self.assertNotIn('createVehicle ["Land_CncWall4_F"',transition)
+
+    def test_multi_manoeuvre_keeps_both_squads_in_tactical_range(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
+        self.assertIn('setVariable ["Waldo_AIPass_NearRange",5000]',qa)
+        self.assertIn('setVariable ["Waldo_AIPass_FarRange",5000]',qa)
+        self.assertIn('setVariable ["Waldo_AIPass_NearRange",_savedNearRange]',qa)
+        self.assertIn('setVariable ["Waldo_AIPass_FarRange",_savedFarRange]',qa)
+        self.assertIn('Waldo_Cortex_FlankRefusal',qa)
+        self.assertIn('Waldo_Cortex_AdvanceRefusal',qa)
 
     def test_support_release_retires_owned_hold_after_engine_combat_relabels_it(self):
         maintain=source('cortexSupportMaintain')
