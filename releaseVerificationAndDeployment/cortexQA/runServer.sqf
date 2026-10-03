@@ -4,7 +4,8 @@
  * Locality/authority: dedicated server only; only staged by the audit launcher's explicit CortexAudit switch.
  * Repeat/JIP: one run per machine; fresh fixtures are cleaned up, no production JIP replay.
  * Arguments: None. Waldo_CortexQA_Focus selects the staged batch; airskills runs aircraft and
- * AI-profile/vehicle-crew mechanics together without the unrelated feature suites.
+ * AI-profile/vehicle-crew mechanics together, while supportflows runs coordinated manoeuvre plus
+ * combined-arms composition in one process without unrelated feature suites.
  * Return: Nothing (scheduled script).
  * Current callers: staged audit continuation. Example: [] execVM "cortexQAServer.sqf";
  */
@@ -472,7 +473,7 @@ if (_focus in ["all","features","combat"]) then {[_check,_phase,_wait] call comp
 if (_focus in ["all","features","mechanics","airskills"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAMechanics.sqf"};
 if (_focus in ["all","features","mechanics","reactions"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAReactions.sqf"};
 if (_focus in ["all","features","mechanics","support"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQASupport.sqf"};
-if (_focus in ["all","features","combinedarms"]) then {
+if (_focus in ["all","features","combinedarms","supportflows"]) then {
     // Keep the narrow communications diagnostic, then exercise the same production layers in a
     // full multi-squad operation. The second case is additive and cannot inherit fixture actors.
     [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACombinedArms.sqf";
@@ -496,7 +497,7 @@ if (_focus in ["all","features","coordinatedclean"]) then {
     private _cleanCheck={params ["_id","_passed",["_detail",""]]; ["CLEAN-"+_id,_passed,_detail] call _recordCleanCheck};
     [_cleanCheck,_phase,_wait,[],true,true] call compile preprocessFileLineNumbers "cortexQACoordinated.sqf";
 };
-if (_focus in ["all","features","coordinated"]) then {
+if (_focus in ["all","features","coordinated","supportflows"]) then {
     [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAMultiManoeuvre.sqf";
     private _coordinated=compile preprocessFileLineNumbers "cortexQACoordinated.sqf";
     [_check,_phase,_wait] call _coordinated;

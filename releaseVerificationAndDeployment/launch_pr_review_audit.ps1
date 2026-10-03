@@ -19,7 +19,8 @@
  * HeadlessClients: number of local headless owners to launch (0-2, default 0).
  * CortexAudit: run the disposable Cortex owner, convoy, artillery and custom UI acceptance cases.
  * CortexFocus: optional focused batch; stateflows runs lifecycle and vehicle state handoffs together,
- *   while airskills runs adaptive aircraft plus AI profile/crew-skill mechanics in one launch.
+ *   airskills runs adaptive aircraft plus AI profile/crew-skill mechanics, and supportflows runs
+ *   coordinated manoeuvre plus combined-arms composition in one launch.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
  * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}. Both processes always
  * enable Arma's network log so every dedicated audit captures traffic alongside its RPT.
@@ -42,7 +43,7 @@ param(
     [ValidateRange(0, 2)]
     [int]$HeadlessClients = 0,
     [switch]$CortexAudit,
-    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "airskills", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "lighting", "performance", "performancecontact", "performancemixed", "coordinated", "coordinatedbounds", "coordinatedclean", "combinedarms", "lifecycle", "stateflows", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
+    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "airskills", "supportflows", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "lighting", "performance", "performancecontact", "performancemixed", "coordinated", "coordinatedbounds", "coordinatedclean", "combinedarms", "lifecycle", "stateflows", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
     [string]$CortexFocus = "all",
     [ValidateSet("FLANK-NATIVE-FIRE","FLANK-YELLOW-NATIVE-FIRE","FLANK-YELLOW","FLANK-AWARE","ADVANCE-AWARE","FLANK","ADVANCE","ADVANCE-YELLOW","ADVANCE-CLOSE","ADVANCE-DISTANT","FLANK-ZEUS","ADVANCE-ZEUS","FLANK-ZEUS-ROE","FLANK-BLOCKED","ADVANCE-BLOCKED","FLANK-GRENADE","FLANK-ZEUS-CONSOLIDATE","ADVANCE-GRENADE")]
     [string]$CortexCombatCase = "",

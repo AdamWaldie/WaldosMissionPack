@@ -421,7 +421,7 @@ class CortexOperations(unittest.TestCase):
             if '"all"' in selection:
                 self.assertIn('"features"',selection)
         self.assertNotIn('if (_focus == "all")',runner)
-        self.assertGreater(runner.index('if (_focus in ["all","features","coordinated"])'),runner.index('cortexQAFire.sqf'))
+        self.assertGreater(runner.index('if (_focus in ["all","features","coordinated","supportflows"])'),runner.index('cortexQAFire.sqf'))
 
     def test_other_feature_batch_and_independent_artillery(self):
         runner=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text(encoding='utf-8')
@@ -737,6 +737,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('"combinedarms"',launcher)
         self.assertIn('cortexQACombinedArms.sqf',launcher)
         self.assertIn('cortexQACombinedOperation.sqf',launcher)
+        self.assertIn('"supportflows"',launcher)
+        server=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text()
+        self.assertEqual(server.count('"supportflows"'),2)
         lighting=(ROOT/'releaseVerificationAndDeployment/cortexQA/runLighting.sqf').read_text()
         for marker in ['LIGHTING-modded-nvg-prerequisite','LIGHTING-owner-adoption-reapplies',
                        'LIGHTING-flashlight-no-global-skill-boost',
