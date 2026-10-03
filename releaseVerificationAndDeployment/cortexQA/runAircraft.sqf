@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Exercises aircraft missile defence, surface attack patterns and airborne interception using live
- * aircraft, moving targets, weapon fire, countermeasure events and physical flight.
+ * aircraft, moving targets, compatible weapon selection, release alignment, projectile closest approach,
+ * countermeasure events and physical flight. A Fired event alone cannot prove an effective attack.
  * Locality/authority: scheduled server fixtures; defensive response runs through normal discovery.
  * Repeat/JIP: fresh actors, public trails/labels; removes actors and their event handlers on completion.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required callbacks.
@@ -14,7 +15,13 @@ private _results=[];
 private _enabled=_x;
 private _prefix=["AIR-NATIVE-","AIR-CORTEX-"] select _enabled;
 private _check={params ["_id","_passed",["_detail",""]]; [_prefix+_id,_passed,_detail] call _recordCheck};
-[createHashMapFromArray [["Waldo_AIPass_Enable",true],["Waldo_AIPass_AircraftFlares_Enable",_enabled],["Waldo_AIPass_AircraftBreak_Enable",_enabled]]] call Waldo_fnc_CortexTuning;
+[createHashMapFromArray [
+    ["Waldo_AIPass_Enable",true],
+    ["Waldo_AIPass_AircraftFlares_Enable",_enabled],
+    ["Waldo_AIPass_AircraftBreak_Enable",_enabled],
+    ["Waldo_Cortex_AttackRunFlares_Enable",false],
+    ["Waldo_Cortex_AirAttack_Enable",false]
+]] call Waldo_fnc_CortexTuning;
 private _aircraft=createVehicle ["O_Heli_Light_02_unarmed_F",[4500,4500,100],[],0,"FLY"];
 _aircraft setDir 90; createVehicleCrew _aircraft; _aircraft allowDamage true;
 private _aircrew=crew _aircraft;
@@ -108,7 +115,8 @@ _airgroup setVariable ["Waldo_AI_ExternalControl",true,true];
 ["AIR-external-owner-refused",!([_aircraft] call Waldo_fnc_CortexAircraftEligible)] call _check;
 _airgroup setVariable ["Waldo_AI_ExternalControl",false,true];
 private _detected=[{gunner _launcher knowsAbout _aircraft >= 1},60] call _wait;
-["AIR-natural-launcher-detection",_detected] call _check;
+diag_log format ["WMP CORTEX QA AIR DETECTION: mode=%1 natural=%2 knowsAbout=%3",
+    _prefix,_detected,gunner _launcher knowsAbout _aircraft];
 _shootgroup setCombatMode "RED";
 (gunner _launcher) doTarget _aircraft;
 private _solutionPeak=0;
@@ -129,7 +137,9 @@ if (_enabled) then {
     ["AIR-actual-countermeasure-release",_moving && {_fired} && {_warning} && {_flared},str (_aircraft getVariable ["Waldo_CortexQA_Flares",0])] call _check;
 };
 // The event-time sampler follows the bounded defensive window, not later ordinary flight drift.
-private _sampled=[{!isNil {_aircraft getVariable "Waldo_CortexQA_EvasiveDeparture"}},5] call _wait;
+// The sampler observes sixty 0.1-second intervals. Give its scheduled worker enough wall-clock
+// allowance under dedicated-server load before reading the result.
+private _sampled=[{!isNil {_aircraft getVariable "Waldo_CortexQA_EvasiveDeparture"}},8] call _wait;
 private _departure=_aircraft getVariable ["Waldo_CortexQA_EvasiveDeparture",0];
 if (_enabled) then {
     ["AIR-physical-evasive-departure",_warning && {_sampled} && {_departure >= 5},str _departure] call _check;
@@ -335,7 +345,12 @@ private _observedProfiles=createHashMap;
     private _launchSpeed=[55,105] select (_aircraft isKindOf "Plane");
     _aircraft setVelocityModelSpace [0,_launchSpeed,0];
     _aircraft flyInHeight ([120,260] select (_aircraft isKindOf "Plane"));
-    private _targetClass=["B_APC_Tracked_01_rcws_F","B_Plane_CAS_01_dynamicLoadout_F"] select _airTarget;
+    private _friendlySide=side _group;
+    private _targetClass=if (_friendlySide == west) then {
+        ["O_APC_Tracked_02_cannon_F","O_Plane_CAS_02_dynamicLoadout_F"] select _airTarget
+    } else {
+        ["B_APC_Tracked_01_rcws_F","B_Plane_CAS_01_dynamicLoadout_F"] select _airTarget
+    };
     private _targetPosition=[[8200,6500,0],[8500,6400,320]] select _airTarget;
     private _target=createVehicle [_targetClass,_targetPosition,[],0,["NONE","FLY"] select _airTarget];
     createVehicleCrew _target; _target allowDamage false;
@@ -375,12 +390,48 @@ private _observedProfiles=createHashMap;
     _target setVariable ["Waldo_CortexQA_Label",["LIVE ARMOURED ATTACK TARGET","LIVE AIR INTERCEPT TARGET"] select _airTarget,true];
     _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",0,true];
     _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",0,true];
+    _aircraft setVariable ["Waldo_CortexQA_AttackTarget",_target,true];
+    _aircraft setVariable ["Waldo_CortexQA_ReleaseResults",[],true];
+    _target setVariable ["Waldo_CortexQA_WeaponHits",0,true];
+    _target addEventHandler ["Hit",{
+        params ["_target","_source"];
+        private _attackAircraft=_target getVariable ["Waldo_CortexQA_AttackAircraft",objNull];
+        if (!isNull _attackAircraft && {_source == _attackAircraft || {_source in crew _attackAircraft}}) then {
+            _target setVariable ["Waldo_CortexQA_WeaponHits",(_target getVariable ["Waldo_CortexQA_WeaponHits",0])+1,true];
+        };
+    }];
+    _target setVariable ["Waldo_CortexQA_AttackAircraft",_aircraft,true];
+    _aircraft setVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0,true];
     _aircraft addEventHandler ["Fired",{
-        params ["_aircraft","_weapon"];
+        params ["_aircraft","_weapon","_muzzle","_mode","_ammo","_magazine","_projectile"];
         if (toLowerANSI getText (configFile >> "CfgWeapons" >> _weapon >> "simulation") == "cmlauncher") then {
             _aircraft setVariable ["Waldo_CortexQA_AdaptiveFlares",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0])+1,true];
         } else {
             _aircraft setVariable ["Waldo_CortexQA_AdaptiveShots",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])+1,true];
+            private _target=_aircraft getVariable ["Waldo_CortexQA_AttackTarget",objNull];
+            private _startedSamples=_aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0];
+            if (!isNull _target && {_startedSamples < 12}) then {
+                // Reserve the slot before the asynchronous closest-approach sampler starts. Counting
+                // only completed samples allowed a fast cannon burst to create one job per round.
+                _aircraft setVariable ["Waldo_CortexQA_ReleaseSamplesStarted",_startedSamples+1,true];
+                private _velocity=velocity _projectile;
+                private _bearing=(aimPos _target) vectorDiff (getPosASL _aircraft);
+                private _alignment=if (vectorMagnitude _velocity > 0.1 && {vectorMagnitude _bearing > 0.1}) then {
+                    (vectorNormalized _velocity) vectorDotProduct (vectorNormalized _bearing)
+                } else {-1};
+                [_aircraft,_target,_projectile,_weapon,_ammo,_alignment] spawn {
+                    params ["_aircraft","_target","_projectile","_weapon","_ammo","_alignment"];
+                    private _closest=if (isNull _projectile) then {1e9} else {_projectile distance _target};
+                    private _deadline=serverTime+12;
+                    while {!isNull _projectile && {alive _target} && {serverTime < _deadline}} do {
+                        _closest=_closest min (_projectile distance _target);
+                        sleep 0.05;
+                    };
+                    private _results=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];
+                    _results pushBack [serverTime,_weapon,_ammo,_alignment,_closest];
+                    _aircraft setVariable ["Waldo_CortexQA_ReleaseResults",_results,true];
+                };
+            };
         };
     }];
     private _actors=[_aircraft,_target]; if (!isNull _aa) then {_actors pushBack _aa};
@@ -420,6 +471,8 @@ private _observedProfiles=createHashMap;
     private _profileRadii=_initialPlan param [19,[]];
     private _profileDwell=_initialPlan param [20,0];
     private _profilePoints=_initialPlan param [21,[]];
+    private _selectedWeapon=_initialPlan param [22,""];
+    private _selectedSimulation=_initialPlan param [23,""];
     if (_pattern != "") then {_observedProfiles set [_pattern,[_profilePoints,_profileAltitudes,_profileSpeeds]]};
     [_id+"-pattern-specific-flight-profile",count _profileAltitudes == 3
         && {count _profileSpeeds == 3} && {count _profileRadii == 3}
@@ -427,6 +480,15 @@ private _observedProfiles=createHashMap;
         && {count (_profileAltitudes arrayIntersect _profileAltitudes) > 1
             || {count (_profileSpeeds arrayIntersect _profileSpeeds) > 1}},
         str [_pattern,_profileAltitudes,_profileSpeeds,_profileRadii,_profileDwell,_profilePoints]] call _recordCheck;
+    private _weaponMatchesPattern=switch _pattern do {
+        case "STRAFE": {_selectedSimulation in ["shotbullet","shotshell"]};
+        case "LATERAL": {_selectedSimulation in ["shotbullet","shotshell"]};
+        case "STANDOFF": {_selectedSimulation == "shotmissile"};
+        case "INTERCEPT": {_selectedSimulation in ["shotbullet","shotshell","shotmissile"]};
+        default {_selectedSimulation in ["shotbullet","shotshell","shotrocket"]};
+    };
+    [_id+"-weapon-matches-manoeuvre",_selectedWeapon != "" && {_weaponMatchesPattern},
+        str [_pattern,_selectedWeapon,_selectedSimulation,_initialPlan param [24,[]]]] call _recordCheck;
     if (_airTarget) then {
         [_id+"-air-contact-intercept-plan",_pattern == "INTERCEPT"
             && {_initialPlan param [3,objNull] == _target}
@@ -471,18 +533,13 @@ private _observedProfiles=createHashMap;
             && {_zeusSnapshot param [3,""] == "FULL"},
             str [_replacement,_replacementWaypoint,_group getVariable ["Waldo_AIPass_ZeusHold",[]],_zeusSnapshot]] call _recordCheck;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
-        private _handoverGuard=_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]];
         private _handoverResult=_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]];
-        // currentCommand and the first expectedDestination sample can remain ATTACK/the retired
-        // internal leg while an aircraft replans. The unchanged 90-second physical gate below is
-        // authoritative; this assertion verifies only that the bounded, interruptible guard exists.
-        private _handoverGuardValid=count _handoverGuard == 2
-            && {!(_handoverPilot checkAIFeature "AUTOTARGET")}
+        private _immediateHandover=(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
-            && {_handoverResult param [5,""] == "ZEUS_TRANSIT_GUARD"};
+            && {_handoverResult param [5,""] == "ZEUS_IMMEDIATE_HANDOVER"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
         [_id+"-zeus-plan-retired",_released,str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
-        [_id+"-bounded-zeus-transit-guard",_released && {_handoverGuardValid},str [
+        [_id+"-immediate-zeus-handover",_released && {_immediateHandover},str [
             _handoverResult,
             _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]],
             _aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]
@@ -526,7 +583,10 @@ private _observedProfiles=createHashMap;
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]]] call _recordCheck;
     } else {
-        private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in ["COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION"]},210] call _wait;
+        private _ended=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in [
+            "COMPLETE","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE",
+            "INGRESS_NONPROGRESS","ATTACK_NONPROGRESS","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION","NO_PLAN"
+        ]},210] call _wait;
         private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
         private _profileSamples=_aircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
         private _sampleStages=_profileSamples apply {_x select 1};
@@ -566,7 +626,14 @@ private _observedProfiles=createHashMap;
             str [_longestIdle,_motionFloor,_pathTravel,_netTravel,
                 if (_pathTravel > 0) then {_netTravel/_pathTravel} else {1}]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] == "COMPLETE"},str _outcome] call _recordCheck;
-        [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,str (_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0])] call _recordCheck;
+        sleep 2;
+        private _releaseResults=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];
+        private _weaponHits=_target getVariable ["Waldo_CortexQA_WeaponHits",0];
+        private _usefulRelease=_releaseResults findIf {(_x select 3) >= 0.94 && {(_x select 4) <= 60}} >= 0;
+        [_id+"-actual-weapon-fire",_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0] > 0,
+            str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_releaseResults]] call _recordCheck;
+        [_id+"-effective-release",_weaponHits > 0 || {_usefulRelease},
+            str [_weaponHits,_releaseResults,_aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
         [_id+"-visible-countermeasures",_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0] >= 2,
             str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0],_aircraft getVariable ["Waldo_Cortex_CountermeasureLastRequest",[]]]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
@@ -579,7 +646,7 @@ private _observedProfiles=createHashMap;
     {deleteVehicle _x} forEach (_crew+_targetCrew+_aaCrew+[_aircraft,_target,_aa]);
     deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
 } forEach [
-    ["AIR-ATTACK-HELI-LATERAL","O_Heli_Attack_02_dynamicLoadout_F",false,false,"LATERAL"],
+    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Transport_01_F",false,false,"LATERAL"],
     ["AIR-ATTACK-PLANE-STRAFE","O_Plane_CAS_02_dynamicLoadout_F",false,false,"STRAFE"],
     ["AIR-ATTACK-PLANE-OFFSET","O_Plane_CAS_02_dynamicLoadout_F",false,false,"OFFSET"],
     ["AIR-ATTACK-PLANE-HOOK","O_Plane_CAS_02_dynamicLoadout_F",false,false,"HOOK"],

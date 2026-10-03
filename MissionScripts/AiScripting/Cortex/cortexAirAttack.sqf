@@ -7,26 +7,20 @@
  * without pretending that fixed script geometry implements full basic fighter manoeuvring.
  * It flies physical route legs, presents the live target only to the retained weapon operator, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
- * selects and explicitly requests fire from its retained loaded weapon; lateral runs command only
- * the retained turret operator. During that lateral lease only, the pilot's autonomous combat/target
- * selection is suspended and restored so it cannot cancel movement while the independent gunner fires.
+ * uses a compatible loaded weapon and opens fire only inside a live range, alignment and engine aim
+ * envelope. The engine remains the flight controller; Cortex issues one native move per finite leg.
+ * Autonomous group attack delegation is suspended only for that lease and restored exactly on exit.
  * Each leg is issued once as a group-level native movement order. Progress is measured toward
  * that leg, so broad turns are accepted while hovering, local circles and repeated replans cannot keep
- * an attack alive. A non-progressing ingress is bypassed into the firing leg; a fired attack exits, and
- * a non-progressing egress ends cleanly instead of orbiting indefinitely.
+ * an attack alive. Non-progress in any phase aborts rather than fabricating a transition; a validly
+ * released attack exits after physically capturing or passing its firing leg.
  * A lack of travel, solution or fire aborts the run; elapsed time alone
  * never completes it. Zeus priority, locality loss,
  * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
- * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
- * authenticated curator waypoint, returns the crew from the Cortex engage task to normal formation,
- * and reselects that unchanged curator waypoint without adding an individual pilot order;
- * cleanup releases the attack target at both individual and group-command layers, then
- * a short token-bound transit guard prevents the pilot from autonomously selecting the retired target
- * while that move takes hold. The guard temporarily suspends group attack delegation, then restores
- * its exact prior value. It never changes the route, combat mode, FSM, MOVE/PATH, gunner AI or velocity,
- * and it never repeats the movement order. A newer Zeus order ends
- * the guard immediately.
+ * During direct Zeus handover, cleanup clears this attack's target commands, restores the exact native
+ * attack policy, selects the authenticated curator waypoint and returns immediately. It creates no
+ * timed guard, replacement route, pilot movement order or delayed semantic restoration.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -48,155 +42,44 @@ private _finish={
     if (_handler >= 0) then {_aircraft removeEventHandler ["Fired",_handler]};
     if (local _aircraft) then {
         _aircraft limitSpeed -1;
+        if (!isNull _finishGroup) then {
+            _finishGroup enableAttack (_job getOrDefault ["previousAttackEnabled",true]);
+        };
         private _finishPilot=driver _aircraft;
         if (!isNull _finishPilot && {alive _finishPilot}) then {
             {_finishPilot enableAI _x} forEach (_job getOrDefault ["lateralPilotFeatures",[]]);
         };
-        // Every targeting command below is issued by this finite Cortex lease. Retire those commands
-        // before handover so a curator MOVE does not keep competing with the old attack target.
-        // The engine remains free to reacquire under the replacement waypoint and combat mode.
+        // Direct Zeus input owns the aircraft immediately. Retire only Cortex target commands,
+        // restore the native attack policy, reselect the authenticated waypoint and leave. A timed
+        // guard was observed to suppress the new route for 90 seconds and violated this boundary.
         if (_reason in ["CONTROL_RELEASED","AUTHORED_ROUTE_CHANGED"]) then {
-            // flyInHeight has no getter. Preserve the aircraft's physical handover height instead
-            // of leaving the Cortex attack altitude active; otherwise a replacement Zeus MOVE can
-            // spend its whole useful window climbing in place before it starts translating.
             _aircraft flyInHeight (((getPosATL _aircraft) select 2) max 25);
-            private _leasedTarget=_job getOrDefault ["target",objNull];
-            {
-                if (alive _x && {!isPlayer _x}) then {
-                    _x doTarget objNull;
-                    _x doWatch objNull;
-                };
-            } forEach crew _aircraft;
-            // Cortex explicitly revealed the attack target to the group to obtain a weapon
-            // solution. Merely clearing doTarget leaves that artificial knowledge at maximum
-            // confidence, so an AWARE/COMBAT pilot can keep circling the old target instead of
-            // accepting the curator's replacement route. Retire only the target owned by this
-            // finite lease; ordinary contacts and the curator's new order remain untouched.
-            if (!isNull _leasedTarget && {!isNull _finishGroup}) then {
-                _finishGroup forgetTarget _leasedTarget;
-            };
-            // Direct Zeus input is the new owner, so cleanup must not create another long-lived
-            // Cortex movement lease. Read the authenticated snapshot, apply its ordinary waypoint
-            // attributes, replace the one group ATTACK owned by this attack with a group MOVE to the
-            // same exact destination, and return immediately to native group control.
+            {if (alive _x && {!isPlayer _x}) then {_x doTarget objNull; _x doWatch objNull}}
+                forEach crew _aircraft;
+            (crew _aircraft) commandTarget objNull;
             private _handoverPilot=driver _aircraft;
             private _handoverGroup=group _handoverPilot;
-            private _handoverIndex=currentWaypoint _handoverGroup;
-            private _handoverPosition=[];
-            private _authoredBehaviour="";
-            private _authoredSpeed="";
-            private _authoredWaypointIndex=-1;
-            private _handoverZeusToken=-1;
-            private _zeusSnapshot=_handoverGroup getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]];
-            private _snapshotMatches=_zeusSnapshot isNotEqualTo [];
-            if (_snapshotMatches) then {
-                _handoverZeusToken=_zeusSnapshot param [0,-1];
-                _handoverPosition=+(_zeusSnapshot param [1,[]]);
-                _authoredBehaviour=_zeusSnapshot param [2,""];
-                _authoredSpeed=_zeusSnapshot param [3,""];
-                _authoredWaypointIndex=_zeusSnapshot param [5,-1];
-            } else {
-                if (_handoverIndex >= 0 && {_handoverIndex < count waypoints _handoverGroup}) then {
-                    _handoverPosition=waypointPosition [_handoverGroup,_handoverIndex];
-                    _authoredBehaviour=waypointBehaviour [_handoverGroup,_handoverIndex];
-                    _authoredSpeed=waypointSpeed [_handoverGroup,_handoverIndex];
-                    _authoredWaypointIndex=_handoverIndex;
-                };
+            private _snapshot=_handoverGroup getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]];
+            private _handoverPosition=+(_snapshot param [1,[]]);
+            private _authoredBehaviour=_snapshot param [2,""];
+            private _authoredSpeed=_snapshot param [3,""];
+            private _authoredWaypointIndex=_snapshot param [5,currentWaypoint _handoverGroup];
+            if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
+                _handoverGroup setBehaviourStrong _authoredBehaviour;
             };
-            if (count _handoverPosition >= 2) then {
-                // The engine can instantly turn an ordinary Zeus MOVE back into ATTACK while the
-                // target revealed by the retired Cortex run remains visible. Guard only the pilot's
-                // autonomous target selection and group attack delegation while the selected route
-                // takes hold. The turret crew remains enabled, and no movement is issued after the
-                // single exact commandMove below.
-                private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {
-                    _handoverPilot checkAIFeature _x
-                };
-                private _handoverCombatMode=unitCombatMode _handoverPilot;
-                private _handoverGroupCombatMode=combatMode _handoverGroup;
-                private _handoverAttackEnabled=attackEnabled _handoverGroup;
-                private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
-                {_handoverPilot disableAI _x} forEach _handoverFeatures;
-                _handoverGroup enableAttack false;
-                _handoverPilot doTarget objNull;
-                _handoverPilot doWatch objNull;
-                // doTarget clears only the actor-level target. The attack controller's group-issued
-                // ATTACK command can otherwise survive and reject the replacement MOVE before the
-                // guard begins. Release that command once at the same authority layer.
-                (crew _aircraft) commandTarget objNull;
-                if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
-                    _handoverGroup setBehaviourStrong _authoredBehaviour;
-                    _handoverPilot setCombatBehaviour _authoredBehaviour;
-                };
-                if (_authoredSpeed in ["LIMITED","NORMAL","FULL"]) then {
-                    _handoverGroup setSpeedMode _authoredSpeed;
-                };
-                if (_authoredWaypointIndex >= 0
-                    && {_authoredWaypointIndex < count waypoints _handoverGroup}
-                    && {waypointPosition [_handoverGroup,_authoredWaypointIndex]
-                        distance2D _handoverPosition <= 2}) then {
-                    _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
-                };
-                // ATTACK includes an engine formation/engage task. Return the vehicle crew to its
-                // ordinary formation, then leave the exact reselected Zeus waypoint as the only
-                // movement authority. Layering commandMove/setDestination over that waypoint was
-                // observed to stop the helicopter despite the expected destination being correct.
-                (crew _aircraft) doFollow leader _handoverGroup;
-                _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
-                [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverCombatMode,
-                    _handoverGroupCombatMode,_handoverAttackEnabled,_handoverPosition,
-                    _handoverZeusToken] spawn {
-                    params ["_guardAircraft","_guardPilot","_guardToken","_guardFeatures",
-                        "_previousPilotMode","_previousGroupMode","_previousAttackEnabled",
-                        "_guardPosition","_guardZeusToken"];
-                    private _deadline=serverTime+90;
-                    private _superseded=false;
-                    waitUntil {
-                        sleep 0.25;
-                        private _guardGroup=group _guardPilot;
-                        private _holdToken=(_guardGroup getVariable ["Waldo_AIPass_ZeusHold",[]]) param [0,-2];
-                        _superseded=_guardZeusToken >= 0 && {_holdToken != _guardZeusToken};
-                        isNull _guardAircraft
-                            || {!alive _guardAircraft}
-                            || {isNull _guardPilot}
-                            || {!alive _guardPilot}
-                            || {(_guardAircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) param [0,""] != _guardToken}
-                            || {_superseded}
-                            || {_guardAircraft distance2D _guardPosition <= 150}
-                            || {serverTime >= _deadline}
-                    };
-                    if (isNull _guardAircraft) exitWith {};
-                    if (_superseded) then {
-                        // Do not restore modes across a newer curator order. Only release the AI
-                        // features this guard disabled; the new order owns every semantic setting.
-                        if (!isNull _guardPilot && {alive _guardPilot} && {local _guardPilot}) then {
-                            {_guardPilot enableAI _x} forEach _guardFeatures;
-                        };
-                        _guardAircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
-                    } else {
-                        if (local _guardAircraft) then {
-                            [_guardAircraft,_guardPilot,_guardToken,_guardFeatures,
-                                _previousPilotMode,_previousGroupMode,_previousAttackEnabled,
-                                "","",""] call Waldo_fnc_CortexAirHandoverRestoreLocal;
-                        } else {
-                            [_guardAircraft,_guardPilot,_guardToken,_guardFeatures,
-                                _previousPilotMode,_previousGroupMode,_previousAttackEnabled,
-                                "","",""] remoteExecCall ["Waldo_fnc_CortexAirHandoverRestoreLocal",owner _guardAircraft];
-                        };
-                    };
-                };
-            } else {
-                _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
+            if (_authoredSpeed in ["LIMITED","NORMAL","FULL"]) then {
+                _handoverGroup setSpeedMode _authoredSpeed;
             };
+            if (_authoredWaypointIndex >= 0 && {_authoredWaypointIndex < count waypoints _handoverGroup}) then {
+                _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
+            };
+            (crew _aircraft) doFollow leader _handoverGroup;
+            _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverResult",[
-                serverTime,
-                if (count _handoverPosition >= 2) then {_aircraft distance2D _handoverPosition} else {-1},
-                behaviour _handoverPilot,
-                unitCombatMode _handoverPilot,
-                currentCommand _handoverPilot,
-                "ZEUS_TRANSIT_GUARD",
-                expectedDestination _handoverPilot
+                serverTime,if (count _handoverPosition >= 2) then {_aircraft distance2D _handoverPosition} else {-1},
+                behaviour _handoverPilot,unitCombatMode _handoverPilot,currentCommand _handoverPilot,
+                "ZEUS_IMMEDIATE_HANDOVER",expectedDestination _handoverPilot
             ],true];
         };
         if (_resume) then {
@@ -214,6 +97,7 @@ private _finish={
     };
     _aircraft setVariable ["Waldo_Cortex_AirAttackOutcome",[_reason,serverTime,_job getOrDefault ["pattern",""],_job getOrDefault ["shots",0]],true];
     _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",nil,true];
+    _aircraft setVariable ["Waldo_Cortex_AirFireSolution",nil,true];
     _aircraft setVariable ["Waldo_Cortex_AirAttackJob",nil];
     _aircraft setVariable ["Waldo_Cortex_AirAttackToken",nil];
     -1
@@ -266,13 +150,20 @@ if (_stage == "") then {
     _job set ["lateralTurret",_plan getOrDefault ["lateralTurret",false]];
     _job set ["lateralTurretPath",_plan getOrDefault ["lateralTurretPath",[]]];
     _job set ["lateralWeapon",_plan getOrDefault ["lateralWeapon",""]];
+    _job set ["lateralSimulation",_plan getOrDefault ["lateralSimulation",""]];
     _job set ["standoffWeapon",_plan getOrDefault ["standoffWeapon",""]];
     _job set ["standoffTurret",_plan getOrDefault ["standoffTurret",[]]];
+    _job set ["standoffSimulation",_plan getOrDefault ["standoffSimulation",""]];
     _job set ["groundWeapon",_plan getOrDefault ["groundWeapon",""]];
     _job set ["groundTurret",_plan getOrDefault ["groundTurret",[]]];
+    _job set ["groundSimulation",_plan getOrDefault ["groundSimulation",""]];
     _job set ["airToAir",_plan getOrDefault ["airToAir",false]];
     _job set ["airWeapon",_plan getOrDefault ["airWeapon",""]];
     _job set ["airWeaponTurret",_plan getOrDefault ["airWeaponTurret",[]]];
+    _job set ["airSimulation",_plan getOrDefault ["airSimulation",""]];
+    _job set ["selectedWeapon",_plan getOrDefault ["selectedWeapon",""]];
+    _job set ["selectedTurret",_plan getOrDefault ["selectedTurret",[]]];
+    _job set ["selectedSimulation",_plan getOrDefault ["selectedSimulation",""]];
     _job set ["altitude",_plan get "altitude"]; _job set ["speed",_plan get "speed"];
     _job set ["stageAltitudes",_plan getOrDefault ["stageAltitudes",[_plan get "altitude",_plan get "altitude",_plan get "altitude"]]];
     _job set ["stageSpeeds",_plan getOrDefault ["stageSpeeds",[_plan get "speed",_plan get "speed",_plan get "speed"]]];
@@ -281,6 +172,11 @@ if (_stage == "") then {
     _job set ["type","AIR_ATTACK"]; _job set ["stage",""]; _job set ["deadline",serverTime+75]; _job set ["shots",0];
     _job set ["origin",getPosATL _aircraft]; _job set ["resumePosition",_resumePosition];
     _job set ["resumeWaypointIndex",_waypointIndex]; _job set ["routeSignature",_routeSignature];
+    _job set ["previousAttackEnabled",attackEnabled _group];
+    // Suspend only the engine's autonomous attack delegation while the finite route is active.
+    // Turret tracking and the validated release window remain live; ordinary control is restored
+    // exactly on every exit, including immediate Zeus handover.
+    _group enableAttack false;
     _aircraft setVariable ["Waldo_Cortex_AirAttackToken",_plan get "token"];
     private _handler=_aircraft addEventHandler ["Fired",{
         params ["_aircraft","_weapon"];
@@ -358,62 +254,65 @@ if (_stageDistance <= _stageBest-40) then {
 };
 private _routeStalled=serverTime >= (_job getOrDefault ["stageProgressAt",serverTime])+18;
 if (_stage == "ATTACK") then {
-    if (_job getOrDefault ["airToAir",false]) then {
-        private _weapon=_job getOrDefault ["airWeapon",""];
-        private _turret=_job getOrDefault ["airWeaponTurret",[]];
-        private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
-        _group reveal [_target,4];
-        if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
-        if (!isNull _operator && {alive _operator}) then {
-            _operator doTarget _target;
-            if (_weapon == "") then {_operator doFire _target}
-            else {
-                if (serverTime >= (_job getOrDefault ["nextAirFire",0])) then {
-                    _aircraft fireAtTarget [_target,_weapon];
-                    _job set ["nextAirFire",serverTime+1.5+random 1.5];
-                };
-            };
-        };
-    } else {if ((_job getOrDefault ["pattern",""]) == "STANDOFF") then {
-        private _weapon=_job getOrDefault ["standoffWeapon",""];
-        private _turret=_job getOrDefault ["standoffTurret",[]];
-        // Pilot weapons use the virtual [-1] turret. turretUnit [-1] is not portable across
-        // airframes, so bind that path explicitly to the driver retained by the plan.
-        private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
-        _group reveal [_target,4];
-        if (!isNull _operator && {alive _operator}) then {_operator doTarget _target};
-        if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
-        private _solution=if (_weapon == "") then {0} else {_aircraft aimedAtTarget [_target,_weapon]};
-        _job set ["fireSolution",_solution];
-        // fireAtTarget is the engine's weapon-specific solution gate. aimedAtTarget can remain zero
-        // for pilot-guided missiles even after the sensor has a valid lock, so treating that generic
-        // scalar as a second hard gate prevented every AGM release. Failed requests retry at 1 Hz;
-        // successful release is still proved by the Fired handler before the run can advance.
-        if (!isNull _operator && {alive _operator}
-            && {serverTime >= (_job getOrDefault ["nextStandoffFire",0])}) then {
-            private _fired=_aircraft fireAtTarget [_target,_weapon];
-            _job set ["nextStandoffFire",serverTime+([1,4] select _fired)];
-        };
-    } else {
-        private _lateral=(_job getOrDefault ["pattern",""]) == "LATERAL";
-        private _weapon=if (_lateral) then {_job getOrDefault ["lateralWeapon",""]}
-            else {_job getOrDefault ["groundWeapon",""]};
-        private _turret=if (_lateral) then {_job getOrDefault ["lateralTurretPath",[]]}
-            else {_job getOrDefault ["groundTurret",[]]};
-        private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
-        _group reveal [_target,4];
-        if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
-        if (!isNull _operator && {alive _operator}) then {
-            _operator doTarget _target;
-            if (_weapon == "") then {_operator doFire _target}
-            else {
-                if (serverTime >= (_job getOrDefault ["nextGroundFire",0])) then {
-                    private _fired=_aircraft fireAtTarget [_target,_weapon];
-                    _job set ["nextGroundFire",serverTime+([0.8+random 0.7,2+random 1.5] select _fired)];
-                };
-            };
-        };
-    }};
+    private _pattern=_job getOrDefault ["pattern",""];
+    private _airContact=_job getOrDefault ["airToAir",false];
+    private _lateral=_pattern == "LATERAL";
+    private _standoff=_pattern == "STANDOFF";
+    private _weapon=if (_airContact) then {_job getOrDefault ["airWeapon",""]} else {
+        if (_lateral) then {_job getOrDefault ["lateralWeapon",""]} else {
+            if (_standoff) then {_job getOrDefault ["standoffWeapon",""]}
+            else {_job getOrDefault ["groundWeapon",""]}
+        }
+    };
+    private _turret=if (_airContact) then {_job getOrDefault ["airWeaponTurret",[]]} else {
+        if (_lateral) then {_job getOrDefault ["lateralTurretPath",[]]} else {
+            if (_standoff) then {_job getOrDefault ["standoffTurret",[]]}
+            else {_job getOrDefault ["groundTurret",[]]}
+        }
+    };
+    private _simulation=if (_airContact) then {_job getOrDefault ["airSimulation",""]} else {
+        if (_lateral) then {_job getOrDefault ["lateralSimulation",""]} else {
+            if (_standoff) then {_job getOrDefault ["standoffSimulation",""]}
+            else {_job getOrDefault ["groundSimulation",""]}
+        }
+    };
+    private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
+    if (!isNull _operator && {alive _operator} && {!(_job getOrDefault ["targetCommanded",false])}) then {
+        _operator doWatch _target;
+        _operator doTarget _target;
+        _job set ["targetCommanded",true];
+    };
+    if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
+    private _range=_aircraft distance _target;
+    private _weaponVector=if (_weapon == "") then {[0,0,0]} else {_aircraft weaponDirection _weapon};
+    private _targetVector=(aimPos _target) vectorDiff (getPosASL _aircraft);
+    private _alignment=if (vectorMagnitude _weaponVector > 0.01 && {vectorMagnitude _targetVector > 0.01}) then {
+        (vectorNormalized _weaponVector) vectorDotProduct (vectorNormalized _targetVector)
+    } else {-1};
+    private _aimed=if (_weapon == "") then {0} else {_aircraft aimedAtTarget [_target,_weapon]};
+    private _loaded=(magazinesAllTurrets _aircraft) findIf {
+        (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
+            && {(_x select 0) in compatibleMagazines _weapon}
+    } >= 0;
+    private _envelope=switch _simulation do {
+        case "shotbullet": {[80,1400,0.985]};
+        case "shotshell": {[100,1800,0.985]};
+        case "shotrocket": {[300,2200,0.992]};
+        case "shotmissile": {[500,5000,0.94]};
+        default {[0,0,1]};
+    };
+    _envelope params ["_minimumRange","_maximumRange","_minimumAlignment"];
+    private _guided=_simulation == "shotmissile";
+    private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
+        && {_range >= _minimumRange} && {_range <= _maximumRange}
+        && {_alignment >= _minimumAlignment}
+        && {!_guided || {_aimed > 0}};
+    _job set ["fireSolution",[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded]];
+    _aircraft setVariable ["Waldo_Cortex_AirFireSolution",[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded],true];
+    if (_validSolution && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
+        private _fired=_aircraft fireAtTarget [_target,_weapon];
+        _job set ["nextWeaponFire",serverTime+([0.7+random 0.8,2+random 1.5] select _fired)];
+    };
 };
 
 private _flareSetting=[_group,"Waldo_Cortex_AttackRunFlares_Enable",true] call Waldo_fnc_CortexFeatureEnabled;
@@ -435,10 +334,12 @@ _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     _job getOrDefault ["flareINGRESS",0],_job getOrDefault ["flareEGRESS",0],
     ["HELICOPTER","PLANE"] select _isPlane,_job getOrDefault ["lateralTurret",false]
     ,_job getOrDefault ["standoffWeapon",""],_job getOrDefault ["standoffTurret",[]],
-    _job getOrDefault ["fireSolution",0],
+    _job getOrDefault ["fireSolution",[]],
     _job getOrDefault ["stageAltitudes",[]],_job getOrDefault ["stageSpeeds",[]],
     _job getOrDefault ["captureRadii",[]],_job getOrDefault ["attackMinimum",0],
-    +(_job getOrDefault ["points",[]])
+    +(_job getOrDefault ["points",[]]),
+    _job getOrDefault ["selectedWeapon",""],_job getOrDefault ["selectedSimulation",""],
+    _job getOrDefault ["selectedTurret",[]]
 ],true];
 
 private _attackShots=_shots-(_job getOrDefault ["attackShotBaseline",0]);
@@ -467,13 +368,16 @@ private _awayFromTarget=(velocity _aircraft) vectorDotProduct ((getPosATL _aircr
 // under Cortex until a timeout after the attack has already succeeded.
 if (_stage == "EGRESS" && {_egressTravel >= ([350,700] select _isPlane)} && {_awayFromTarget}) exitWith {["COMPLETE",true] call _finish};
 if (_stage == "EGRESS" && {_routeStalled}) exitWith {["EGRESS_NONPROGRESS",true] call _finish};
+if (_stage in ["INGRESS","ATTACK"] && {_routeStalled}) exitWith {
+    [["INGRESS_NONPROGRESS","ATTACK_NONPROGRESS"] select (_stage == "ATTACK"),true] call _finish
+};
 switch _stage do {
     case "INGRESS": {
         // Aircraft rarely hit an exact doMove coordinate, especially at fixed-wing turn radius.
         // Accept entering or physically passing a bounded capture area; elapsed time alone still
         // cannot advance the state.
-        if (_stageDistance <= _captureRadius || {_stagePassed} || {_ingressBehind} || {_routeStalled}) then {
-            [_group,_job,"ATTACK",["INGRESS_ARRIVAL","INGRESS_NONPROGRESS"] select _routeStalled] call Waldo_fnc_CortexDrillSetStage;
+        if (_stageDistance <= _captureRadius || {_stagePassed} || {_ingressBehind}) then {
+            [_group,_job,"ATTACK","INGRESS_ARRIVAL"] call Waldo_fnc_CortexDrillSetStage;
             _job set ["commandedStage",""];
             _job set ["deadline",serverTime+50];
             _job set ["attackStartedAt",serverTime];
@@ -483,8 +387,8 @@ switch _stage do {
     case "ATTACK": {
         private _attackDwell=serverTime-(_job getOrDefault ["attackStartedAt",serverTime]);
         if (_attackShots > 0 && {_attackDwell >= (_job getOrDefault ["attackMinimum",2])}
-            && {(_stageDistance <= _captureRadius || {_stagePassed} || {_routeStalled})}) then {
-            [_group,_job,"EGRESS",["ACTUAL_FIRE","ACTUAL_FIRE_NONPROGRESS"] select _routeStalled] call Waldo_fnc_CortexDrillSetStage;
+            && {(_stageDistance <= _captureRadius || {_stagePassed})}) then {
+            [_group,_job,"EGRESS","ACTUAL_FIRE"] call Waldo_fnc_CortexDrillSetStage;
             _job set ["commandedStage",""];
             _job set ["egressStartPosition",getPosATL _aircraft];
             _job set ["egressStartedAt",serverTime];

@@ -2771,8 +2771,11 @@ class CortexOperations(unittest.TestCase):
                             'INTERCEPT','_airToAir','airWeapon','airWeaponTurret']:
             self.assertIn(requirement,planner)
         for requirement in ['groundWeapon','groundTurret','_groundCandidates','shotbullet','shotshell',
-                            'shotrocket','shotmissile']:
+                            'shotrocket','shotmissile','selectedWeapon','selectedSimulation',
+                            '_simulation in ["shotbullet","shotshell"]',
+                            '_simulation in ["shotbullet","shotshell","shotrocket"]']:
             self.assertIn(requirement,planner)
+        self.assertIn('private _standoff=_simulation == "shotmissile"',planner)
         self.assertNotIn('allUnits',planner)
         self.assertNotIn('nearEntities',planner)
         for requirement in ['fullCrew _aircraft','_aircraft weaponsTurret _turret','_personTurret',
@@ -2780,16 +2783,20 @@ class CortexOperations(unittest.TestCase):
                             'toLowerANSI _role in ["gunner","commander","turret"]',
                             'standoffWeapon','Waldo_Cortex_AirStandoffBlockedUntil',
                             '[-650,420]','[0,340]','[650,420]','[1200,1000]',
-                            '((_targetDistance-450) max 1200) min 2400']:
+                            '((_targetDistance-450) max 1200) min 2400',
+                            'private _forwardIngress=(_toIngress vectorDotProduct _axis) >= 100',
+                            'vectorNormalized _toAttack']:
             self.assertIn(requirement,planner)
         self.assertNotIn('private _choices=["STRAFE",0.3,"LATERAL"',planner)
         controller=source('cortexAirAttack')
         for requirement in ['local _aircraft','Waldo_Cortex_AirAttack_Enable','CortexZeusHeld',
-                            'addEventHandler ["Fired"','_group move _destination','doFire _target','flyInHeight',
+                            'addEventHandler ["Fired"','_group move _destination','flyInHeight',
                             'limitSpeed','INGRESS','ATTACK','EGRESS','GROUND_CLEARANCE','EGRESS_NONPROGRESS',
                             'routeSignature','AUTHORED_ROUTE_CHANGED','CortexFireCountermeasure','Waldo_Cortex_AirAttackOutcome',
                             'aimedAtTarget','fireAtTarget','NO_FIRE_SOLUTION','attackStartedAt',
-                            'stageBestDistance','stageProgressAt','INGRESS_NONPROGRESS','ACTUAL_FIRE_NONPROGRESS']:
+                            'stageBestDistance','stageProgressAt','INGRESS_NONPROGRESS','ATTACK_NONPROGRESS',
+                            'weaponDirection _weapon','Waldo_Cortex_AirFireSolution','private _validSolution=',
+                            '_range >= _minimumRange','_alignment >= _minimumAlignment']:
             self.assertIn(requirement,controller)
         self.assertNotIn('_pilot doMove _destination',controller)
         self.assertNotIn('_pilot commandMove _destination',controller)
@@ -2818,19 +2825,19 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_turret isEqualTo [-1]) then {_pilot}',controller)
         self.assertIn('_x doTarget objNull',controller)
         self.assertIn('_x doWatch objNull',controller)
-        self.assertIn('_group reveal [_target,4]',controller)
+        self.assertNotIn('_group reveal [_target,4]',controller)
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_target,_weapon]',controller)
         self.assertIn('_job set ["lateralPilotFeatures",_lateralPilotFeatures]',controller)
-        self.assertIn('_handoverGroup enableAttack false',controller)
-        self.assertIn('private _deadline=serverTime+90',controller)
+        self.assertIn('_group enableAttack false',controller)
+        self.assertIn('_finishGroup enableAttack (_job getOrDefault ["previousAttackEnabled",true])',controller)
+        self.assertNotIn('ACTUAL_FIRE_NONPROGRESS',controller)
         aircraft_qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text()
         self.assertIn('private _physicalTransitions=',aircraft_qa)
         self.assertIn('count (_physicalTransitions arrayIntersect _physicalTransitions) >= 2',aircraft_qa)
         self.assertNotIn('_solution >= 0.35',controller)
         self.assertIn('Waldo_Cortex_ZeusOrderSnapshot',controller)
-        self.assertIn('private _snapshotMatches=',controller)
-        self.assertIn('if (_snapshotMatches)',controller)
+        self.assertIn('private _snapshot=',controller)
         self.assertIn('_handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex]',controller)
         self.assertNotIn('_handoverGroup move _handoverPosition',controller)
         self.assertIn('(crew _aircraft) doFollow leader _handoverGroup',controller)
@@ -2840,25 +2847,18 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(controller.count('(crew _aircraft) commandTarget objNull'),1)
         self.assertNotIn('_handoverPilot doFollow leader _handoverGroup',controller)
         self.assertNotIn('(driver _aircraft) doMove _handoverPosition',controller)
-        self.assertIn('_finishGroup forgetTarget _leasedTarget',controller)
         self.assertIn('Waldo_Cortex_AirHandoverLease',controller)
-        self.assertIn('private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"]',controller)
-        self.assertIn('_handoverPilot disableAI _x',controller)
+        self.assertNotIn('private _deadline=serverTime+90',controller)
         self.assertNotIn('_handoverPilot setUnitCombatMode "BLUE"',controller)
         self.assertNotIn('_handoverGroup setBehaviourStrong "CARELESS"',controller)
         self.assertNotIn('_handoverPilot setCombatBehaviour "CARELESS"',controller)
-        self.assertIn('waypointBehaviour [_handoverGroup,_handoverIndex]',controller)
-        self.assertIn('waypointSpeed [_handoverGroup,_handoverIndex]',controller)
         self.assertIn('_handoverGroup setBehaviourStrong _authoredBehaviour',controller)
-        self.assertIn('_handoverPilot setCombatBehaviour _authoredBehaviour',controller)
         self.assertIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
         self.assertNotIn('_handoverGroup setCombatMode "BLUE"',controller)
-        # The bounded handover guard temporarily disables native attack delegation so the
-        # replacement Zeus MOVE is not immediately replaced by the retired attack target.
-        # cortexAirHandoverRestoreLocal restores the exact prior group value afterwards.
-        self.assertIn('_handoverGroup enableAttack false',controller)
+        # Direct Zeus input must end the finite lease immediately. There is no delayed guard that
+        # can suppress a replacement order after Cortex has retired.
         self.assertIn('_aircraft flyInHeight (((getPosATL _aircraft) select 2) max 25)',controller)
-        self.assertIn('Waldo_fnc_CortexAirHandoverRestoreLocal',controller)
+        self.assertIn('"ZEUS_IMMEDIATE_HANDOVER"',controller)
         self.assertNotIn('_handoverPilot doMove _handoverPosition',controller)
         self.assertNotIn('"FORCE_REPLAN"',controller)
         self.assertNotIn('"FORWARD_IMPULSE"',controller)
@@ -2866,23 +2866,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_Cortex_AirHandoverRecovery',controller)
         self.assertIn('Waldo_Cortex_AirHandoverResult',controller)
         self.assertIn('expectedDestination _handoverPilot',controller)
-        self.assertIn('"ZEUS_TRANSIT_GUARD"',controller)
-        self.assertIn('private _deadline=serverTime+90',controller)
-        self.assertIn('_guardAircraft distance2D _guardPosition <= 150',controller)
-        self.assertIn('_holdToken != _guardZeusToken',controller)
-        guard=controller.split('] spawn {',1)[1].split('};\n            } else {',1)[0]
-        for forbidden in ['doMove','commandMove','setDestination','setVelocity',
-                          'setCurrentWaypoint','FORCE_REPLAN','FORWARD_IMPULSE']:
-            self.assertNotIn(forbidden,guard)
-        restore=source('cortexAirHandoverRestoreLocal')
-        for requirement in ['remoteExecutedOwner != _originOwner','arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET"]',
-                            '_pilot enableAI _x','unitCombatMode _pilot == "BLUE"','combatMode _group == "BLUE"',
-                            '!attackEnabled _group','_group enableAttack _previousAttackEnabled',
-                            'private _restoreBehaviour=_previousPilotBehaviour',
-                            '_pilot setCombatBehaviour _restoreBehaviour',
-                            '_group setBehaviourStrong _finalBehaviour',
-                            'Waldo_Cortex_AirHandoverLease",nil,true']:
-            self.assertIn(requirement,restore)
+        self.assertNotIn('"ZEUS_TRANSIT_GUARD"',controller)
         self.assertIn('egressStartPosition',controller)
         self.assertIn('private _egressTravel=',controller)
         self.assertIn('private _awayFromTarget=',controller)
@@ -2893,7 +2877,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_Cortex_AirAttackJob',discover)
         self.assertIn('Waldo_fnc_CortexAirAttack',discover)
         stop=source('cortexStop')
-        for requirement in ['Waldo_Cortex_AirAttackPlan','Waldo_Cortex_AirAttackJob','removeEventHandler ["Fired"','limitSpeed -1']:
+        for requirement in ['Waldo_Cortex_AirAttackPlan','Waldo_Cortex_AirAttackJob','Waldo_Cortex_AirFireSolution',
+                            'removeEventHandler ["Fired"','limitSpeed -1','previousAttackEnabled']:
             self.assertIn(requirement,stop)
         for name in ['featureRuntimeApply','featureRuntimeRequestState']:
             transport=(ROOT/'MissionScripts/ZenModules/RuntimeControl'/f'{name}.sqf').read_text()
@@ -2907,7 +2892,7 @@ class CortexOperations(unittest.TestCase):
         for requirement in ['AIR-HANDOVER-NATIVE-CONTROL-started',
                             'AIR-HANDOVER-NATIVE-CONTROL-replacement-travel',
                             'AIR-HANDOVER-NATIVE-CONTROL-no-cortex-owner',
-                            '-bounded-zeus-transit-guard',
+                            '-immediate-zeus-handover',
                             '-dedicated-aircraft-owner','Waldo_AIPass_Managed',
                             'Waldo_AIPass_State']:
             self.assertIn(requirement,audit)
@@ -2995,7 +2980,8 @@ class CortexOperations(unittest.TestCase):
                      'AIR-ATTACK-PLANE-HOOK','AIR-ATTACK-PLANE-AA','AIR-ATTACK-PLANE-INTERCEPT',
                      'AIR-ATTACK-ZEUS-HANDOVER','AIR-ATTACK-DISABLED','-air-contact-intercept-plan',
                      '-physical-plan-start','-aa-aware-pattern','-actual-weapon-fire',
-                     '-pattern-specific-flight-profile','-physical-profile-change','AIR-ATTACK-distinct-fixed-wing-profiles',
+                      '-pattern-specific-flight-profile','-weapon-matches-manoeuvre','-effective-release',
+                      '-physical-profile-change','AIR-ATTACK-distinct-fixed-wing-profiles',
                      '-continuous-useful-flight',
                      '-visible-countermeasures','-safe-crew-egress','CortexZeusMark',
                      '-zeus-snapshot-exact','-zeus-replacement-travel','-no-old-plan-resurrection','-explicit-state-flow',
@@ -3006,6 +2992,7 @@ class CortexOperations(unittest.TestCase):
                      'Waldo_HelicopterDeceleration_LastResult','checkAIFeature _x','unitReady _handoverPilot',
                      'canMove _aircraft','isEngineOn _aircraft','fuel _aircraft','damage _aircraft']:
             self.assertIn(item,text)
+        self.assertIn('Waldo_CortexQA_ReleaseSamplesStarted',text)
         self.assertIn('[_group,true,_replacementWaypoint select 1] call Waldo_fnc_CortexZeusMark',text)
         self.assertIn('private _replacementWaypoint=_group addWaypoint [_replacement,0]',text)
         self.assertIn('_group setCurrentWaypoint _replacementWaypoint',text)

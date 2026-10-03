@@ -18,8 +18,8 @@
  * uses a stable release leg and accelerates away. Repeat/JIP: safe to repeat. Each result is a new
  * owner-local plan and has no JIP side effects.
  * Aircraft may set Waldo_Cortex_AirAttackPattern to STRAFE, OFFSET, HOOK, STANDOFF or LATERAL
- * for a finite mission-maker/test override. Invalid or platform-incompatible values fall back to
- * automatic selection; LATERAL still requires a living armed independent turret.
+ * for a finite mission-maker/test override. An incompatible forced type returns no plan instead of
+ * silently substituting another weapon or manoeuvre; LATERAL requires a living gun-armed turret.
  * Arguments: 0: aircraft <OBJECT>; 1: hostile target <OBJECT>.
  * Return Value: HASHMAP plan, or an empty HASHMAP when the request is invalid.
  * Current callers: Waldo_fnc_CortexAirAttack.
@@ -41,10 +41,15 @@ private _ammoFacts={
         private _ammo=configFile >> "CfgAmmo" >> getText (configFile >> "CfgMagazines" >> _magazine >> "ammo");
         private _flags=getNumber (_ammo >> "aiAmmoUsageFlags");
         private _simulation=toLowerANSI getText (_ammo >> "simulation");
-        private _antiAir=getNumber (_ammo >> "airLock") > 0 || {(floor (_flags/256) mod 2) == 1};
+        // aiAmmoUsageFlags alone marks some air-to-ground ordnance as useful against aircraft.
+        // Require a real air lock for missiles; guns may use the engine's anti-air usage hint.
+        private _antiAir=getNumber (_ammo >> "airLock") > 0
+            || {_simulation in ["shotbullet","shotshell"] && {(floor (_flags/256) mod 2) == 1}};
         private _guidedGround=getNumber (_ammo >> "laserLock") > 0 || {getNumber (_ammo >> "irLock") > 0}
             || {getNumber (_ammo >> "nvLock") > 0} || {(floor (_flags/512) mod 2) == 1};
-        private _standoff=_simulation in ["shotmissile","shotrocket"] && {getNumber (_ammo >> "hit") >= 100}
+        // STANDOFF is reserved for a guided missile. Guided rockets still need a forward run and
+        // belong to OFFSET/HOOK; treating them as stand-off ordnance created long-range overshoots.
+        private _standoff=_simulation == "shotmissile" && {getNumber (_ammo >> "hit") >= 100}
             && {!_antiAir} && {_guidedGround};
         private _hit=getNumber (_ammo >> "hit");
         private _surface=_hit > 0 && {!_antiAir}
@@ -57,8 +62,10 @@ private _ammoFacts={
 private _standoff=false;
 private _standoffWeapon="";
 private _standoffTurret=[];
+private _standoffSimulation="";
 private _airWeapon="";
 private _airWeaponTurret=[];
+private _airSimulation="";
 private _groundCandidates=[];
 // Retain the actual muzzle/turret pair. Magazine metadata alone cannot fire a weapon and previously
 // allowed STANDOFF plans that sprayed rockets or waited forever with no usable target solution.
@@ -72,13 +79,24 @@ private _groundCandidates=[];
                 (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
                     && {([_x select 0] call _ammoFacts) select 0}
             };
-            if (_airLoaded >= 0) then {_airWeapon=_weapon; _airWeaponTurret=_turret};
+            if (_airLoaded >= 0) then {
+                private _airMagazine=((magazinesAllTurrets _aircraft) select _airLoaded) select 0;
+                _airWeapon=_weapon;
+                _airWeaponTurret=_turret;
+                _airSimulation=([_airMagazine] call _ammoFacts) select 3;
+            };
         };
         private _loaded=(magazinesAllTurrets _aircraft) findIf {
             (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
                 && {([_x select 0] call _ammoFacts) select 1}
         };
-        if (_loaded >= 0 && {!_standoff}) then {_standoff=true; _standoffWeapon=_weapon; _standoffTurret=_turret};
+        if (_loaded >= 0 && {!_standoff}) then {
+            private _standoffMagazine=((magazinesAllTurrets _aircraft) select _loaded) select 0;
+            _standoff=true;
+            _standoffWeapon=_weapon;
+            _standoffTurret=_turret;
+            _standoffSimulation=([_standoffMagazine] call _ammoFacts) select 3;
+        };
         private _surfaceLoaded=(magazinesAllTurrets _aircraft) findIf {
             (_x select 1) isEqualTo _turret && {(_x select 2) > 0} && {(_x select 0) in _compatible}
                 && {([_x select 0] call _ammoFacts) select 2}
@@ -95,6 +113,7 @@ private _groundCandidates=[];
 private _lateralTurret=false;
 private _lateralTurretPath=[];
 private _lateralWeapon="";
+private _lateralSimulation="";
 private _lateralWeaponScore=-1;
 {
     _x params ["_crew","_role","_cargoIndex","_turret","_personTurret"];
@@ -109,15 +128,16 @@ private _lateralWeaponScore=-1;
             };
             if (_loaded >= 0) then {
                 private _facts=[((magazinesAllTurrets _aircraft) select _loaded) select 0] call _ammoFacts;
-                // Side-on flight needs a traversing gun. Prefer bullets/shells over missiles whose
-                // forward-biased launch envelope made the old lateral label physically impossible.
+                // Side-on flight requires a traversing gun. A guided missile on a nominal turret
+                // does not make an airframe a gunship and produced the observed stationary circles.
+                private _simulation=_facts select 3;
                 private _score=(_facts select 4) min 300;
-                if ((_facts select 3) in ["shotbullet","shotshell"]) then {_score=_score+1000};
-                if (_score > _lateralWeaponScore) then {
+                if (_simulation in ["shotbullet","shotshell"] && {_score > _lateralWeaponScore}) then {
                     _lateralWeaponScore=_score;
                     _lateralTurret=true;
                     _lateralTurretPath=_turret;
                     _lateralWeapon=_weapon;
+                    _lateralSimulation=_simulation;
                 };
             };
         } forEach (_aircraft weaponsTurret _turret);
@@ -161,13 +181,21 @@ private _threatSide=0;
 private _sideVector=if (_threatSide > 0) then {_right} else {if (_threatSide < 0) then {_left} else {[ _left,_right] select (random 1 >= 0.5)}};
 private _isPlane=_aircraft isKindOf "Plane";
 private _standoffAvailable=_standoff && {serverTime >= (_aircraft getVariable ["Waldo_Cortex_AirStandoffBlockedUntil",0])};
+private _hasGun=_groundCandidates findIf {(_x select 2) in ["shotbullet","shotshell"]} >= 0;
+private _hasRunWeapon=_groundCandidates findIf {(_x select 2) in ["shotbullet","shotshell","shotrocket"]} >= 0;
 private _pattern=if (_airToAir) then {"INTERCEPT"} else {if (_aaPositions isNotEqualTo []) then {
     if (_standoffAvailable) then {"STANDOFF"} else {"OFFSET"}
 } else {
     if (_isPlane) then {
-        selectRandomWeighted ["STRAFE",0.45,"OFFSET",0.3,"HOOK",0.25]
+        private _choices=[];
+        if (_hasGun) then {_choices append ["STRAFE",0.5]};
+        if (_hasRunWeapon) then {_choices append ["OFFSET",0.28,"HOOK",0.22]};
+        if (_choices isEqualTo [] && {_standoffAvailable}) then {_choices=["STANDOFF",1]};
+        if (_choices isEqualTo []) then {""} else {selectRandomWeighted _choices}
     } else {
-        private _choices=["STRAFE",0.4,"HOOK",0.3];
+        private _choices=[];
+        if (_hasGun) then {_choices append ["STRAFE",0.4]};
+        if (_hasRunWeapon) then {_choices append ["HOOK",0.3]};
         if (_lateralTurret) then {_choices append ["LATERAL",0.3]};
         if (_standoffAvailable) then {_choices append ["STANDOFF",0.1]};
         selectRandomWeighted _choices
@@ -175,28 +203,49 @@ private _pattern=if (_airToAir) then {"INTERCEPT"} else {if (_aaPositions isNotE
 }};
 private _patternOverride=toUpperANSI (_aircraft getVariable ["Waldo_Cortex_AirAttackPattern","AUTO"]);
 private _overrideValid=_patternOverride in ["STRAFE","OFFSET","HOOK","STANDOFF","LATERAL"]
+    && {!(_patternOverride == "STRAFE") || {_hasGun}}
+    && {!(_patternOverride in ["OFFSET","HOOK"]) || {_hasRunWeapon}}
     && {!(_patternOverride == "LATERAL") || {!_isPlane && {_lateralTurret}}}
     && {!(_patternOverride == "STANDOFF") || {_standoffAvailable}};
+if (_patternOverride != "AUTO" && {!_airToAir} && {!_overrideValid}) exitWith {createHashMap};
 if (_overrideValid && {!_airToAir}) then {_pattern=_patternOverride};
+if (_pattern == "") exitWith {createHashMap};
 private _groundWeapon="";
 private _groundTurret=[];
 private _groundSimulation="";
 private _groundScore=-1;
 {
     _x params ["_weapon","_turret","_simulation","_hit"];
-    private _score=_hit min 500;
-    if (_pattern == "STRAFE") then {
-        _score=_score+([0,900] select (_simulation in ["shotbullet","shotshell"]));
+    private _compatible=if (_pattern == "STRAFE") then {
+        _simulation in ["shotbullet","shotshell"]
     } else {
-        _score=_score+([0,900] select (_simulation in ["shotrocket","shotmissile"]));
+        _simulation in ["shotbullet","shotshell","shotrocket"]
     };
-    if (_score > _groundScore) then {
+    private _score=(_hit min 500)+([0,200] select (_simulation == "shotrocket"));
+    if (_compatible && {_score > _groundScore}) then {
         _groundScore=_score;
         _groundWeapon=_weapon;
         _groundTurret=_turret;
         _groundSimulation=_simulation;
     };
 } forEach _groundCandidates;
+if (!_airToAir && {_pattern in ["STRAFE","OFFSET","HOOK"]} && {_groundWeapon == ""}) exitWith {createHashMap};
+if (_airToAir && {_airWeapon == ""}) exitWith {createHashMap};
+private _selectedWeapon=if (_airToAir) then {_airWeapon} else {
+    if (_pattern == "LATERAL") then {_lateralWeapon} else {
+        if (_pattern == "STANDOFF") then {_standoffWeapon} else {_groundWeapon}
+    }
+};
+private _selectedTurret=if (_airToAir) then {_airWeaponTurret} else {
+    if (_pattern == "LATERAL") then {_lateralTurretPath} else {
+        if (_pattern == "STANDOFF") then {_standoffTurret} else {_groundTurret}
+    }
+};
+private _selectedSimulation=if (_airToAir) then {_airSimulation} else {
+    if (_pattern == "LATERAL") then {_lateralSimulation} else {
+        if (_pattern == "STANDOFF") then {_standoffSimulation} else {_groundSimulation}
+    }
+};
 // Sample once per finite plan. Bounded variation avoids identical attack profiles without adding
 // per-frame work or accepting unsafe arbitrary heights.
 private _altitude=if (_airToAir) then {
@@ -266,6 +315,21 @@ switch _pattern do {
     default {
         if (_isPlane) then {_ingress=[-1600,0] call _point; _attack=[-450,0] call _point; _egress=[1400,0] call _point}
         else {_ingress=[-900,0] call _point; _attack=[-350,0] call _point; _egress=[850,0] call _point};
+    };
+};
+// ZEN's disposable CAS aircraft always starts on a known three-kilometre inbound vector. Cortex
+// accepts persistent aircraft from arbitrary natural flight, so a fixed setup point can lie behind
+// the aircraft and make the native pilot turn a small circle before every run. Preserve the chosen
+// attack geometry, but replace only an aft/too-close setup point with one bounded point on the live
+// aircraft-to-attack leg. This is calculated once; the engine still flies the leg without steering.
+if (!_airToAir) then {
+    private _toIngress=_ingress vectorDiff _airPos;
+    private _toAttack=_attack vectorDiff _airPos;
+    private _forwardIngress=(_toIngress vectorDotProduct _axis) >= 100;
+    if (!_forwardIngress && {vectorMagnitude _toAttack > 200}) then {
+        private _setupDistance=((vectorMagnitude _toAttack)*0.35) max 150 min 500;
+        _ingress=_airPos vectorAdd ((vectorNormalized _toAttack) vectorMultiply _setupDistance);
+        _ingress set [2,_altitude];
     };
 };
 private _stageAltitudes=[];
@@ -355,9 +419,12 @@ createHashMapFromArray [
     ["stageAltitudes",_stageAltitudes],["stageSpeeds",_stageSpeeds],
     ["captureRadii",_captureRadii],["attackMinimum",_attackMinimum],
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
-    ["lateralWeapon",_lateralWeapon],["standoffWeapon",_standoffWeapon],
+    ["lateralWeapon",_lateralWeapon],["lateralSimulation",_lateralSimulation],
+    ["standoffWeapon",_standoffWeapon],["standoffSimulation",_standoffSimulation],
     ["standoffTurret",_standoffTurret],["airToAir",_airToAir],
     ["groundWeapon",_groundWeapon],["groundTurret",_groundTurret],["groundSimulation",_groundSimulation],
-    ["airWeapon",_airWeapon],["airWeaponTurret",_airWeaponTurret],
+    ["airWeapon",_airWeapon],["airWeaponTurret",_airWeaponTurret],["airSimulation",_airSimulation],
+    ["selectedWeapon",_selectedWeapon],["selectedTurret",_selectedTurret],
+    ["selectedSimulation",_selectedSimulation],
     ["platform",["HELICOPTER","PLANE"] select _isPlane]
 ]

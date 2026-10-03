@@ -80,11 +80,11 @@ private _draw = addMissionEventHandler ["Draw3D",{
         };
         private _airPlan=_x getVariable ["Waldo_Cortex_AirAttackPlan",[]];
         if (count _airPlan >= 10) then {
-            _airPlan params ["_token","_pattern","_stage","_airTarget","_destination","_remaining","_shots","_aaCount","_airSpeed","_altitude",["_approachCM",0],["_egressCM",0],["_platform","AIRCRAFT"],["_lateralTurret",false],["_standoffWeapon",""],["_standoffTurret",[]],["_fireSolution",0]];
+            _airPlan params ["_token","_pattern","_stage","_airTarget","_destination","_remaining","_shots","_aaCount","_airSpeed","_altitude",["_approachCM",0],["_egressCM",0],["_platform","AIRCRAFT"],["_lateralTurret",false],["_standoffWeapon",""],["_standoffTurret",[]],["_fireSolution",[]],["_stageAltitudes",[]],["_stageSpeeds",[]],["_captureRadii",[]],["_attackMinimum",0],["_points",[]],["_selectedWeapon",""],["_selectedSimulation",""],["_selectedTurret",[]]];
             private _request=_x getVariable ["Waldo_Cortex_CountermeasureLastRequest",[]];
             private _cm=if (count _request >= 2) then {["REFUSED","REQUESTED"] select (_request select 1)} else {"NONE"};
-            _text=format ["%1 | %2 %3 / %4 | %5 km/h | altitude %6 m | remaining %7 m | actual shots %8 | observed AA %9 | CM %10 A:%11 E:%12 | weapon %13 aim %14",
-                _label,_platform,_pattern,_stage,round _airSpeed,round _altitude,round _remaining,_shots,_aaCount,_cm,_approachCM,_egressCM,_standoffWeapon,_fireSolution];
+            _text=format ["%1 | %2 %3 / %4 | %5 km/h | altitude %6 m | remaining %7 m | actual shots %8 | observed AA %9 | CM %10 A:%11 E:%12 | weapon %13 (%14) solution %15",
+                _label,_platform,_pattern,_stage,round _airSpeed,round _altitude,round _remaining,_shots,_aaCount,_cm,_approachCM,_egressCM,_selectedWeapon,_selectedSimulation,_fireSolution];
             drawLine3D [(getPosATL _x) vectorAdd [0,0,2],_destination,[0.1,1,1,0.9]];
             drawIcon3D ["\a3\ui_f\data\map\markers\military\objective_ca.paa",[1,0.7,0,1],_destination,0.8,0.8,0,format ["%1 %2 destination",_pattern,_stage],2,0.03,"RobotoCondensed"];
             if (!isNull _airTarget) then {drawLine3D [(getPosATL _x) vectorAdd [0,0,2],(getPosATL _airTarget) vectorAdd [0,0,2],[1,0.25,0.15,0.8]]};
