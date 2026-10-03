@@ -339,20 +339,9 @@ private _observedProfiles=createHashMap;
     private _isPlaneClass=_class isKindOf ["Plane",configFile >> "CfgVehicles"];
     private _aircraft=createVehicle [_class,[8200,5000,[180,650] select _isPlaneClass],[],0,"FLY"];
     _aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
-    // createVehicleCrew does not fill every real weapon station on all aircraft. Populate empty,
-    // non-person turrets so the fixture proves an armed operator exists instead of accidentally
-    // auditing an empty door gun or nominal turret path.
     private _pilot=driver _aircraft;
-    private _crewClass=if (isNull _pilot) then {if (side _aircraft == west) then {"B_Helipilot_F"} else {"O_helipilot_F"}}
-        else {typeOf _pilot};
-    private _airGroup=group _pilot;
-    {
-        _x params ["_occupant","_role","_cargoIndex","_turretPath","_personTurret"];
-        if (isNull _occupant && {!_personTurret} && {_turretPath isNotEqualTo [-1]}) then {
-            private _operator=_airGroup createUnit [_crewClass,getPosATL _aircraft,[],0,"NONE"];
-            _operator moveInTurret [_aircraft,_turretPath];
-        };
-    } forEach fullCrew [_aircraft,"",true];
+    // Observe the aircraft's normal crew exactly as createVehicleCrew supplies it. The fixture must
+    // never manufacture extra turret operators to make an unsuitable airframe appear attack-ready.
     _aircraft setVariable ["Waldo_Cortex_AirAttackPattern",_patternOverride,true];
     private _crew=crew _aircraft;
     private _group=group driver _aircraft;

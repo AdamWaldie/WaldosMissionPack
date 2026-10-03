@@ -2463,6 +2463,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('forEach _stationWeapons',text)
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runAircraft.sqf').read_text(encoding='utf-8')
         self.assertIn('private _ended=if (!_started) then {false}',qa)
+        self.assertNotIn('moveInTurret',qa)
+        self.assertNotIn('_airGroup createUnit',qa)
 
     def test_deceleration_releases_changed_order_before_impulse(self):
         text=(ROOT/'MissionScripts/AiScripting/helicopterDecelerationCorrectLocal.sqf').read_text(encoding='utf-8')
