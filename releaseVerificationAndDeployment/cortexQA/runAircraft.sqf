@@ -359,7 +359,7 @@ deleteGroup _nativeHandoverGroup;
     };
     if (_interrupt && {_started}) then {
         private _handoverPilot=driver _aircraft;
-        private _handoverFeaturesBefore=["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"] apply {
+        private _handoverFeaturesBefore=["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {
             _handoverPilot checkAIFeature _x
         };
         private _handoverCombatModeBefore=unitCombatMode _handoverPilot;
@@ -388,7 +388,7 @@ deleteGroup _nativeHandoverGroup;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
         private _handoverGuard=_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]];
         private _handoverGuardValid=count _handoverGuard == 2
-            && {!(_handoverPilot checkAIFeature "FSM")}
+            && {!(_handoverPilot checkAIFeature "AUTOTARGET")}
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverRecovery",[]]) isEqualTo []}
             && {(_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]]) param [5,""] == "ZEUS_TRANSIT_GUARD"};
         private _travelled=[{_aircraft distance2D _replacement <= 350},90] call _wait;
@@ -427,11 +427,11 @@ deleteGroup _nativeHandoverGroup;
         private _handoverRestored=[{(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []},35] call _wait;
         [_id+"-no-old-plan-resurrection",(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo [],str (_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]])] call _recordCheck;
         [_id+"-pilot-features-restored",
-            (["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"] apply {_handoverPilot checkAIFeature _x}) isEqualTo _handoverFeaturesBefore
+            (["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x}) isEqualTo _handoverFeaturesBefore
                 && {unitCombatMode _handoverPilot == _handoverCombatModeBefore}
                 && {combatMode _group == _handoverGroupCombatModeBefore}
                 && {_handoverRestored},
-            str [_handoverFeaturesBefore,["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"] apply {_handoverPilot checkAIFeature _x},
+            str [_handoverFeaturesBefore,["AUTOCOMBAT","TARGET","AUTOTARGET"] apply {_handoverPilot checkAIFeature _x},
                 [_handoverBehaviourExpected,behaviour _handoverPilot],[_handoverCombatModeBefore,unitCombatMode _handoverPilot],
                 [_handoverGroupCombatModeBefore,combatMode _group],
                 _aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]],

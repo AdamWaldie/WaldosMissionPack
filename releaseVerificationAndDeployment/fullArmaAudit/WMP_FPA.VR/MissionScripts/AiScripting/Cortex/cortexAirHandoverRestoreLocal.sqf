@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Restores pilot AI features after the short Cortex-to-Zeus aircraft transit guard. The token
  * prevents stale delayed cleanup from altering a newer guard. It restores only pilot features that
- * were enabled before the guard; MOVE, PATH and weapon AI are never changed.
+ * were enabled before the guard; combat mode, group attack permission, FSM, MOVE, PATH and weapon AI
+ * are never changed by the current guard. Older lease payloads remain compatible.
  * Locality/authority: current aircraft owner. A local caller, the server, or the owner recorded when
  * the lease began may request restoration after locality migration.
  * Repeat/JIP: token guarded and repeat safe. The short lease is transient and is never replayed to
@@ -13,11 +14,11 @@
  * 6: original autonomous attack permission <BOOL>, default true; 7: guard-owned pilot combat
  * behaviour <STRING>, default ""; 8: original pilot combat behaviour <STRING>, default ""; 9:
  * final curator-authored behaviour <STRING>, default "". A valid final behaviour is restored to
- * both the group and pilot after the bounded combat-FSM guard.
+ * both the group and pilot after a compatible bounded handover guard.
  * Return Value: BOOL true when the current lease was restored, otherwise false.
  * Current callers: bounded Zeus transit-guard cleanup in Waldo_fnc_CortexAirAttack and compatibility
  * cleanup for missions already carrying Waldo_Cortex_AirHandoverLease.
- * Example: [_heli,driver _heli,"heli:2:10.5",["AUTOTARGET","FSM"],"RED","RED",true,"","","AWARE"]
+ * Example: [_heli,driver _heli,"heli:2:10.5",["AUTOTARGET"],"RED","RED",true,"","","AWARE"]
  *     call Waldo_fnc_CortexAirHandoverRestoreLocal;
  */
 params [
@@ -40,7 +41,7 @@ if (remoteExecutedOwner > 0
     && {remoteExecutedOwner != 2}
     && {remoteExecutedOwner != _originOwner}) exitWith {false};
 if (!isNull _pilot && {alive _pilot} && {local _pilot}) then {
-    {_pilot enableAI _x} forEach (_features arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"]);
+    {_pilot enableAI _x} forEach (_features arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET"]);
     if (unitCombatMode _pilot == "BLUE") then {_pilot setUnitCombatMode _previousCombatMode};
     // Undo only the pilot behaviour still owned by this bounded handover lease. A later
     // curator/script change is authoritative and must never be overwritten by cleanup.

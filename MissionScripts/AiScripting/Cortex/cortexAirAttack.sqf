@@ -9,9 +9,10 @@
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
  * authenticated curator waypoint and replaces the pilot's private Cortex doMove once with that same
- * destination. A short token-bound transit guard prevents the pilot's combat FSM from replacing
- * that direct move with the retired attack task; it never changes the route, disables MOVE/PATH or
- * gunner AI, retries movement or applies velocity. A newer Zeus order ends the guard immediately.
+ * destination. A short token-bound transit guard prevents the pilot from autonomously selecting the
+ * retired target while that direct move takes hold; it never changes the route, combat mode, group
+ * attack permission, FSM, MOVE/PATH, gunner AI, velocity or movement order. A newer Zeus order ends
+ * the guard immediately.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -90,7 +91,7 @@ private _finish={
                 // autonomous target selection and group attack delegation while the selected route
                 // takes hold. The turret crew remains enabled, and no movement is issued after the
                 // single exact doMove below.
-                private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"] select {
+                private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET"] select {
                     _handoverPilot checkAIFeature _x
                 };
                 private _handoverCombatMode=unitCombatMode _handoverPilot;
@@ -100,9 +101,6 @@ private _finish={
                 {_handoverPilot disableAI _x} forEach _handoverFeatures;
                 _handoverPilot doTarget objNull;
                 _handoverPilot doWatch objNull;
-                _handoverPilot setUnitCombatMode "BLUE";
-                _handoverGroup setCombatMode "BLUE";
-                _handoverGroup enableAttack false;
                 if (_authoredBehaviour in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"]) then {
                     _handoverGroup setBehaviourStrong _authoredBehaviour;
                     _handoverPilot setCombatBehaviour _authoredBehaviour;
