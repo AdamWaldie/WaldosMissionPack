@@ -9,10 +9,9 @@
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears only this attack's target ownership, selects the exact
  * authenticated curator waypoint and replaces the pilot's private Cortex doMove once with that same
- * destination. A short token-bound transit guard prevents the operating crew from immediately
- * republishing the retired attack target into the shared vehicle group; it never changes the route,
- * disables movement/weapon AI, retries movement or applies velocity. A newer Zeus order ends the
- * guard immediately.
+ * destination. A short token-bound transit guard prevents the pilot's combat FSM from replacing
+ * that direct move with the retired attack task; it never changes the route, disables MOVE/PATH or
+ * gunner AI, retries movement or applies velocity. A newer Zeus order ends the guard immediately.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler, speed limit and public plan.
@@ -91,22 +90,14 @@ private _finish={
                 // autonomous target selection and group attack delegation while the selected route
                 // takes hold. The turret crew remains enabled, and no movement is issued after the
                 // single exact doMove below.
-                private _handoverFeatureState=(crew _aircraft select {
-                    alive _x && {!isPlayer _x}
-                }) apply {
-                    private _actor=_x;
-                    [_actor,["AUTOCOMBAT","TARGET","AUTOTARGET"] select {
-                        _actor checkAIFeature _x
-                    }]
+                private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"] select {
+                    _handoverPilot checkAIFeature _x
                 };
                 private _handoverCombatMode=unitCombatMode _handoverPilot;
                 private _handoverGroupCombatMode=combatMode _handoverGroup;
                 private _handoverAttackEnabled=attackEnabled _handoverGroup;
                 private _handoverToken=format ["%1:%2:%3",netId _aircraft,clientOwner,diag_tickTime];
-                {
-                    _x params ["_actor","_features"];
-                    {_actor disableAI _x} forEach _features;
-                } forEach _handoverFeatureState;
+                {_handoverPilot disableAI _x} forEach _handoverFeatures;
                 _handoverPilot doTarget objNull;
                 _handoverPilot doWatch objNull;
                 _handoverPilot setUnitCombatMode "BLUE";
@@ -130,10 +121,10 @@ private _finish={
                 // and the guard never invents or repeats a movement command.
                 _handoverPilot doMove _handoverPosition;
                 _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",[_handoverToken,clientOwner],true];
-                [_aircraft,_handoverPilot,_handoverToken,_handoverFeatureState,_handoverCombatMode,
+                [_aircraft,_handoverPilot,_handoverToken,_handoverFeatures,_handoverCombatMode,
                     _handoverGroupCombatMode,_handoverAttackEnabled,_handoverPosition,
                     _handoverZeusToken] spawn {
-                    params ["_guardAircraft","_guardPilot","_guardToken","_guardFeatureState",
+                    params ["_guardAircraft","_guardPilot","_guardToken","_guardFeatures",
                         "_previousPilotMode","_previousGroupMode","_previousAttackEnabled",
                         "_guardPosition","_guardZeusToken"];
                     private _deadline=serverTime+30;
@@ -156,22 +147,19 @@ private _finish={
                     if (_superseded) then {
                         // Do not restore modes across a newer curator order. Only release the AI
                         // features this guard disabled; the new order owns every semantic setting.
-                        {
-                            _x params ["_actor","_features"];
-                            if (!isNull _actor && {alive _actor} && {local _actor}) then {
-                                {_actor enableAI _x} forEach _features;
-                            };
-                        } forEach _guardFeatureState;
+                        if (!isNull _guardPilot && {alive _guardPilot} && {local _guardPilot}) then {
+                            {_guardPilot enableAI _x} forEach _guardFeatures;
+                        };
                         _guardAircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
                     } else {
                         if (local _guardAircraft) then {
-                            [_guardAircraft,_guardPilot,_guardToken,[],
+                            [_guardAircraft,_guardPilot,_guardToken,_guardFeatures,
                                 _previousPilotMode,_previousGroupMode,_previousAttackEnabled,
-                                "","","",_guardFeatureState] call Waldo_fnc_CortexAirHandoverRestoreLocal;
+                                "","",""] call Waldo_fnc_CortexAirHandoverRestoreLocal;
                         } else {
-                            [_guardAircraft,_guardPilot,_guardToken,[],
+                            [_guardAircraft,_guardPilot,_guardToken,_guardFeatures,
                                 _previousPilotMode,_previousGroupMode,_previousAttackEnabled,
-                                "","","",_guardFeatureState] remoteExecCall ["Waldo_fnc_CortexAirHandoverRestoreLocal",owner _guardAircraft];
+                                "","",""] remoteExecCall ["Waldo_fnc_CortexAirHandoverRestoreLocal",owner _guardAircraft];
                         };
                     };
                 };

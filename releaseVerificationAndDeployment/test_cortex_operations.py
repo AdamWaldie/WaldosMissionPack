@@ -2719,8 +2719,8 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('(driver _aircraft) doMove _handoverPosition',controller)
         self.assertIn('_finishGroup forgetTarget _leasedTarget',controller)
         self.assertIn('Waldo_Cortex_AirHandoverLease',controller)
-        self.assertIn('private _handoverFeatureState=(crew _aircraft select',controller)
-        self.assertIn('_actor disableAI _x',controller)
+        self.assertIn('private _handoverFeatures=["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"]',controller)
+        self.assertIn('_handoverPilot disableAI _x',controller)
         self.assertIn('_handoverPilot setUnitCombatMode "BLUE"',controller)
         self.assertNotIn('_handoverGroup setBehaviourStrong "CARELESS"',controller)
         self.assertNotIn('_handoverPilot setCombatBehaviour "CARELESS"',controller)
@@ -2748,8 +2748,8 @@ class CortexOperations(unittest.TestCase):
                           'setCurrentWaypoint','FORCE_REPLAN','FORWARD_IMPULSE']:
             self.assertNotIn(forbidden,guard)
         restore=source('cortexAirHandoverRestoreLocal')
-        for requirement in ['remoteExecutedOwner != _originOwner','arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET"]',
-                            '_actor enableAI _x','unitCombatMode _pilot == "BLUE"','combatMode _group == "BLUE"',
+        for requirement in ['remoteExecutedOwner != _originOwner','arrayIntersect ["AUTOCOMBAT","TARGET","AUTOTARGET","FSM"]',
+                            '_pilot enableAI _x','unitCombatMode _pilot == "BLUE"','combatMode _group == "BLUE"',
                             '!attackEnabled _group','_group enableAttack _previousAttackEnabled',
                             'private _restoreBehaviour=_previousPilotBehaviour',
                             '_pilot setCombatBehaviour _restoreBehaviour',
