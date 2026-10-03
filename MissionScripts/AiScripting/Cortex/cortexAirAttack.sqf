@@ -7,16 +7,18 @@
  * without pretending that fixed script geometry implements full basic fighter manoeuvring.
  * It flies physical route legs, presents the live target only to the retained weapon operator, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
- * uses a compatible loaded weapon and opens fire only inside a live range, alignment and engine aim
- * envelope. The engine remains the flight controller; Cortex issues one native move per finite leg
+ * uses a compatible loaded weapon and opens fire only inside a live range and alignment envelope.
+ * On attack entry the selected living operator receives one native reveal/target/fire instruction;
+ * this joins route geometry to the engine's weapon FSM instead of treating an ATTACK label as an
+ * attack. The engine remains the flight controller; Cortex issues one native move per finite leg
  * and leaves the engine's attack delegation enabled so ordinary combat and turret tracking continue.
  * Each leg is issued once as a group-level native movement order. Progress is measured toward
  * that leg, so broad turns are accepted while hovering, local circles and repeated replans cannot keep
  * an attack alive. Non-progress in any phase aborts rather than fabricating a transition; a validly
  * released attack exits after physically capturing or passing its firing leg.
  * A lack of travel, solution or fire aborts the run; elapsed time alone
- * never completes it. Zeus priority, locality loss,
- * eligibility changes or a changed curator waypoint end the lease immediately without restoring an
+ * never completes it. Zeus priority, locality loss, explicit exclusions, runtime disablement or a
+ * changed curator waypoint end the lease immediately without restoring an
  * obsolete order. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears this attack's target commands, restores the exact native
  * attack policy, selects the authenticated curator waypoint and returns immediately. It creates no
@@ -93,7 +95,10 @@ private _finish={
             };
         };
     };
-    _aircraft setVariable ["Waldo_Cortex_AirAttackOutcome",[_reason,serverTime,_job getOrDefault ["pattern",""],_job getOrDefault ["shots",0]],true];
+    _aircraft setVariable ["Waldo_Cortex_AirAttackOutcome",[
+        _reason,serverTime,_job getOrDefault ["pattern",""],_job getOrDefault ["shots",0],
+        _job getOrDefault ["releaseDetail",[]]
+    ],true];
     _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",nil,true];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",nil,true];
     _aircraft setVariable ["Waldo_Cortex_AirAttackJob",nil];
@@ -102,19 +107,39 @@ private _finish={
 };
 private _pilot=driver _aircraft;
 private _group=group _pilot;
+private _stage=_job getOrDefault ["stage",""];
+// Generic eligibility is a start gate. Re-evaluating every broad filter during a finite owned run
+// allowed a transient locality/filter marker to cancel a valid attack just before weapon release.
+// Runtime master/feature changes, locality, explicit exclusions and Zeus still release immediately.
+private _explicitlyExcluded=_group getVariable ["Waldo_AI_ExternalControl",false]
+    || {"ALL" in (_group getVariable ["Waldo_AIPass_DisabledFeatures",[]])}
+    || {_group getVariable ["Waldo_AI_Exclude",false]}
+    || {_group getVariable ["Waldo_AIPass_Exclude",false]};
 private _allowed=local _aircraft && {alive _aircraft} && {!isNull _pilot} && {alive _pilot} && {!isPlayer _pilot}
     && {!unitIsUAV _aircraft} && {missionNamespace getVariable ["Waldo_AIPass_Active",false]}
     && {!([] call Waldo_fnc_CortexIsPaused)}
     && {!([_group] call Waldo_fnc_CortexZeusHeld)}
     && {[_group,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled}
-    && {[_group] call Waldo_fnc_CortexIsEligible};
-if (!_allowed) exitWith {["CONTROL_RELEASED"] call _finish};
+    && {!_explicitlyExcluded}
+    && {_stage != "" || {[_group] call Waldo_fnc_CortexIsEligible}};
+if (!_allowed) exitWith {
+    // Preserve the exact authority/control gate which ended the run. Without this, locality loss,
+    // a curator interruption and an explicit exclusion all appeared as the same opaque failure in
+    // the WMP diagnostics and audit overlay.
+    _job set ["releaseDetail",[
+        "local",local _aircraft,"aircraftAlive",alive _aircraft,"pilotAlive",!isNull _pilot && {alive _pilot},
+        "runtime",missionNamespace getVariable ["Waldo_AIPass_Active",false],
+        "paused",[] call Waldo_fnc_CortexIsPaused,"zeus",[_group] call Waldo_fnc_CortexZeusHeld,
+        "feature",[_group,"Waldo_Cortex_AirAttack_Enable",true] call Waldo_fnc_CortexFeatureEnabled,
+        "excluded",_explicitlyExcluded,"stage",_stage,"vehicleOwner",owner _aircraft,"groupOwner",groupOwner _group
+    ]];
+    ["CONTROL_RELEASED"] call _finish
+};
 private _isPlane=_aircraft isKindOf "Plane";
 // A helicopter may validly begin an attack from a hover. Planes still need enough energy to enter a
 // finite run; accepting a stationary plane would make its own spawn/ground state look like tactics.
 if (isTouchingGround _aircraft || {_isPlane && {speed _aircraft < 40}} || {combatMode _group in ["BLUE","GREEN"]}) exitWith {["NOT_ATTACKING"] call _finish};
 
-private _stage=_job getOrDefault ["stage",""];
 private _startFailure="";
 if (_stage == "") then {
     private _target=_job getOrDefault ["target",objNull];
@@ -261,13 +286,21 @@ if (_stage == "ATTACK") then {
     private _simulation=_job getOrDefault ["selectedSimulation",""];
     private _weaponClass=_job getOrDefault ["selectedWeaponClass",""];
     private _operator=if (_turret isEqualTo [-1]) then {_pilot} else {_aircraft turretUnit _turret};
+    // Selection precedes the one-shot native fire command. Issuing doFire first left the operator
+    // trying its previous countermeasure or navigation weapon and produced a valid ATTACK state with
+    // no attack.
+    if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
     if (!isNull _operator && {alive _operator} && {!(_job getOrDefault ["targetCommanded",false])}) then {
+        // A MOVE leg alone never asks the engine weapon FSM to prosecute the contact. Reveal only
+        // the already selected hostile at attack entry, then let the retained operator and native
+        // flight model solve the shot. This runs once and is cleared during every handover path.
+        _group reveal [_target,4];
         _operator doWatch _target;
         _operator doTarget _target;
         _operator commandTarget _target;
+        _operator doFire _target;
         _job set ["targetCommanded",true];
     };
-    if (_weapon != "") then {_aircraft selectWeaponTurret [_weapon,_turret]};
     private _range=_aircraft distance _target;
     private _weaponVector=if (_weapon == "") then {[0,0,0]} else {_aircraft weaponDirection _weapon};
     private _targetVector=(aimPos _target) vectorDiff (getPosASL _aircraft);
@@ -298,7 +331,10 @@ if (_stage == "ATTACK") then {
         (vectorNormalized _horizontalForward) vectorDotProduct (vectorNormalized _horizontalTarget)
     } else {-1};
     private _deliveryAngle=acos ((_alignment max -1) min 1);
-    private _minimumAim=if (_guided) then {0.45} else {if (_bomb) then {0.15} else {0.05}};
+    // aimedAtTarget is useful for seekers, but fixed pilot guns/rockets can report zero even when
+    // weaponDirection is physically on the target. Geometry remains the release authority for
+    // unguided weapons; otherwise a correct pass flies through without firing.
+    private _minimumAim=if (_guided) then {0.35} else {0};
     private _closing=_forwardAlignment > 0.35;
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
@@ -352,13 +388,17 @@ if ((_job getOrDefault ["pattern",""]) == "STANDOFF" && {_stage == "ATTACK"} && 
 if (serverTime > (_job get "deadline")) exitWith {["STAGE_TIMEOUT"] call _finish};
 private _captureRadii=_job getOrDefault ["captureRadii",[if (_isPlane) then {700} else {450},if (_isPlane) then {700} else {450},if (_isPlane) then {700} else {450}]];
 private _captureRadius=_captureRadii select _stageIndex;
+// Rotorcraft do not capture exact three-dimensional move points under native combat flight. A
+// modest approach tolerance advances into the real attack instruction before the pilot starts a
+// local orbit; fixed-wing profiles retain their larger authored capture radii unchanged.
+private _effectiveCapture=_captureRadius+([0,150] select !_isPlane);
 private _stagePassed=_stageClosest <= _captureRadius && {_stageDistance >= _stageClosest+([120,75] select !_isPlane)};
 // Discovery can acquire a fast jet after it has already flown past the nominal ingress point.
 // Continue into the firing leg when that point is physically behind the jet; ordering a turn back
 // creates the observed pre-run loop and can never improve a fixed-wing attack solution.
 private _ingressBehind=_isPlane && {_stage == "INGRESS"} && {_stageDistance <= 2000}
     && {(velocity _aircraft) vectorDotProduct (_destination vectorDiff getPosATL _aircraft) <= 0};
-if (_stage == "EGRESS" && {(_stageDistance <= _captureRadius || {_stagePassed})}
+if (_stage == "EGRESS" && {(_stageDistance <= _effectiveCapture || {_stagePassed})}
     && {_aircraft distance2D (_points select 1) >= 400}) exitWith {["COMPLETE",true] call _finish};
 private _egressTravel=if (_stage == "EGRESS") then {
     _aircraft distance2D (_job getOrDefault ["egressStartPosition",getPosATL _aircraft])
@@ -377,7 +417,7 @@ switch _stage do {
         // Aircraft rarely hit an exact doMove coordinate, especially at fixed-wing turn radius.
         // Accept entering or physically passing a bounded capture area; elapsed time alone still
         // cannot advance the state.
-        if (_stageDistance <= _captureRadius || {_stagePassed} || {_ingressBehind}) then {
+        if (_stageDistance <= _effectiveCapture || {_stagePassed} || {_ingressBehind}) then {
             [_group,_job,"ATTACK","INGRESS_ARRIVAL"] call Waldo_fnc_CortexDrillSetStage;
             _job set ["commandedStage",""];
             _job set ["deadline",serverTime+50];
@@ -388,7 +428,7 @@ switch _stage do {
     case "ATTACK": {
         private _attackDwell=serverTime-(_job getOrDefault ["attackStartedAt",serverTime]);
         private _deliveryComplete=(_job getOrDefault ["selectedWeaponClass",""]) in ["GUIDED","BOMB"]
-            || {_stageDistance <= _captureRadius || {_stagePassed}};
+            || {_stageDistance <= _effectiveCapture || {_stagePassed}};
         if (_attackShots > 0 && {_attackDwell >= (_job getOrDefault ["attackMinimum",2])}
             && {_deliveryComplete}) then {
             [_group,_job,"EGRESS","ACTUAL_FIRE"] call Waldo_fnc_CortexDrillSetStage;

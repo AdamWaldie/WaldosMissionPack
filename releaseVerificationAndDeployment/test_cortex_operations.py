@@ -1550,7 +1550,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _generallyEligible=[_group] call Waldo_fnc_CortexIsEligible',tick)
         self.assertIn('private _groundPassEligible=[_group,false,true] call Waldo_fnc_CortexIsEligible',tick)
         self.assertIn('[_group,true,"AIRCRAFT_DEDICATED"] call Waldo_fnc_CortexReleaseGroup',tick)
-        self.assertIn('&& {[_group] call Waldo_fnc_CortexIsEligible}',attack)
+        self.assertIn('_stage != "" || {[_group] call Waldo_fnc_CortexIsEligible}',attack)
+        self.assertIn('private _explicitlyExcluded=',attack)
 
     def test_combined_roles_use_owned_fire_team_drills_and_restore_holds(self):
         coordinator=source('cortexSupportCoordinateStep')
@@ -2835,7 +2836,16 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_turret isEqualTo [-1]) then {_pilot}',controller)
         self.assertIn('_x doTarget objNull',controller)
         self.assertIn('_x doWatch objNull',controller)
-        self.assertNotIn('_group reveal [_target,4]',controller)
+        self.assertIn('_group reveal [_target,4]',controller)
+        self.assertIn('_operator doFire _target',controller)
+        self.assertLess(
+            controller.index('_aircraft selectWeaponTurret [_weapon,_turret]'),
+            controller.index('_operator doFire _target'),
+        )
+        self.assertIn('_job getOrDefault ["releaseDetail",[]]',controller)
+        self.assertIn('"vehicleOwner",owner _aircraft,"groupOwner",groupOwner _group',controller)
+        self.assertIn('private _effectiveCapture=_captureRadius+([0,150] select !_isPlane)',controller)
+        self.assertIn('_stage != "" || {[_group] call Waldo_fnc_CortexIsEligible}',controller)
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_target,_weapon]',controller)
         self.assertIn('_job set ["lateralPilotFeatures",_lateralPilotFeatures]',controller)

@@ -657,7 +657,8 @@ private _observedProfiles=createHashMap;
         [_id+"-effective-release",_weaponHits > 0,
             str [_weaponHits,_releaseResults,_aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
         [_id+"-target-destroyed",!_mustDestroy || {!alive _target},
-            str [_mustDestroy,alive _target,damage _target,_weaponHits,_releaseResults]] call _recordCheck;
+            str [_mustDestroy,alive _target,damage _target,getAllHitPointsDamage _target,
+                _weaponHits,_releaseResults]] call _recordCheck;
         [_id+"-visible-countermeasures",_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0] >= 2,
             str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0],_aircraft getVariable ["Waldo_Cortex_CountermeasureLastRequest",[]]]] call _recordCheck;
         private _transitions=_group getVariable ["Waldo_Cortex_DrillTransitions",[]];
