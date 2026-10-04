@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Tests hearing, report-led investigation and reinforcement with real firing, detection and travel.
+ * VR keeps deterministic geometry; terrain worlds rotate every actor, sight screen and rally onto a
+ * measured dry sector so sound/report/support movement is exercised over relief and rough ground.
  * Locality/authority: scheduled server audit; fixtures pinned to the server until explicit transfer.
  * Repeat/JIP: disposable groups and objects, public observer labels; caller restores settings.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>, required callbacks.
@@ -8,6 +10,63 @@
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQASupport.sqf";
  */
 params ["_check","_phase","_wait"];
+private _terrainOrigin=[1525,1100,0];
+private _terrainHeading=0;
+private _terrainReady=worldName == "VR";
+private _terrainRelief=0;
+if (!_terrainReady) then {
+    private _bestScore=-1;
+    private _gridStep=(worldSize/9) max 900;
+    for "_gridX" from 2 to 7 do {
+        for "_gridY" from 2 to 7 do {
+            private _candidateOrigin=[_gridX*_gridStep,_gridY*_gridStep,0];
+            for "_heading" from 0 to 315 step 45 do {
+                private _forward=[sin _heading,cos _heading,0];
+                private _right=[cos _heading,-sin _heading,0];
+                private _safe=true;
+                private _heights=[];
+                {
+                    private _lane=_x;
+                    private _previous=[];
+                    private _previousHeight=0;
+                    for "_along" from -80 to 220 step 20 do {
+                        private _sample=_candidateOrigin vectorAdd (_right vectorMultiply _lane)
+                            vectorAdd (_forward vectorMultiply _along);
+                        private _height=getTerrainHeightASL _sample;
+                        if (surfaceIsWater _sample || {((surfaceNormal _sample) select 2) < 0.55}) then {_safe=false};
+                        if (_previous isNotEqualTo []) then {
+                            private _grade=abs (_height-_previousHeight)/((_sample distance2D _previous) max 1);
+                            if (_grade > 0.75) then {_safe=false};
+                        };
+                        _heights pushBack _height;
+                        _previous=_sample;
+                        _previousHeight=_height;
+                    };
+                } forEach [-100,0,100];
+                private _relief=if (_heights isEqualTo []) then {0} else {(selectMax _heights)-(selectMin _heights)};
+                if (_safe && {_relief >= 12} && {_relief <= 120} && {_relief > _bestScore}) then {
+                    _bestScore=_relief;
+                    _terrainOrigin=_candidateOrigin;
+                    _terrainHeading=_heading;
+                    _terrainRelief=_relief;
+                    _terrainReady=true;
+                };
+            };
+        };
+    };
+};
+private _terrainForward=[sin _terrainHeading,cos _terrainHeading,0];
+private _terrainRight=[cos _terrainHeading,-sin _terrainHeading,0];
+private _terrainPosition={
+    params ["_local"];
+    _terrainOrigin vectorAdd (_terrainRight vectorMultiply ((_local select 0)-1525))
+        vectorAdd (_terrainForward vectorMultiply ((_local select 1)-1100))
+};
+["SUPPORT-terrain-scenario",_terrainReady,
+    format ["world=%1 origin=%2 heading=%3 relief=%4",worldName,_terrainOrigin,_terrainHeading,_terrainRelief]] call _check;
+if (!_terrainReady) exitWith {
+    ["Support systems: no evaluative terrain","No dry three-lane sector provided 12-120 m relief without unsafe slope or grade. Hearing, report and reinforcement cases are skipped rather than reverting to flat coordinates.",_terrainOrigin] call _phase;
+};
 private _groups=[];
 private _objects=[];
 private _newGroup={
@@ -41,25 +100,25 @@ private _cleanup={{deleteVehicle _x} forEach _objects; {deleteGroup _x} forEach 
 ]] call Waldo_fnc_CortexTuning;
 // Build the sight screen before either opponent exists; scheduled execution can yield during setup.
 for "_i" from -2 to 2 do {
-    private _wall=createVehicle ["Land_CncWall4_F",[1600+_i*4,1100,0],[],0,"CAN_COLLIDE"];
-    _wall setDir 0;
+    private _wall=createVehicle ["Land_CncWall4_F",[[1600+_i*4,1100,0]] call _terrainPosition,[],0,"CAN_COLLIDE"];
+    _wall setDir _terrainHeading;
     _objects pushBack _wall;
 };
 private _listeners=[east] call _newGroup;
 // Keep the listener outside the investigation arrival radius after sound quantization.
-private _listener=[_listeners,[1600,1070,0],"LISTENER"] call _unit;
+private _listener=[_listeners,[[1600,1070,0]] call _terrainPosition,"LISTENER"] call _unit;
 // Targeting is disabled to avoid combat orders; the wall below supplies real visual occlusion.
 {_listener disableAI _x} forEach ["TARGET","AUTOTARGET"];
 private _shooters=[west] call _newGroup;
 _shooters setVariable ["Waldo_AIPass_Exclude",true,true];
-private _shooter=[_shooters,[1600,1135,0],"AUDIBLE SHOT SOURCE"] call _unit;
-_shooter setDir 0; _shooter disableAI "PATH";
+private _shooter=[_shooters,[[1600,1135,0]] call _terrainPosition,"AUDIBLE SHOT SOURCE"] call _unit;
+_shooter setDir _terrainHeading; _shooter disableAI "PATH";
 
 
 {_x setCombatMode "BLUE"} forEach [_listeners,_shooters];
 _shooter addEventHandler ["Fired",{params ["_unit"]; _unit setVariable ["Waldo_CortexQA_ActualShots",(_unit getVariable ["Waldo_CortexQA_ActualShots",0])+1,true]}];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",+_objects,true];
-["Hearing disabled: actual gunshot","The shooter fires behind a concrete screen. With hearing disabled, the shot must not create a Cortex sound report.",[1600,1100,0]] call _phase;
+["Hearing disabled: actual gunshot","The shooter fires behind a concrete screen on the measured terrain sector. With hearing disabled, the shot must not create a Cortex sound report.",[[1600,1100,0]] call _terrainPosition] call _phase;
 ["HEARING-fixture-occluded",(lineIntersectsSurfaces [eyePos _listener,eyePos _shooter,_listener,_shooter,true,1,"VIEW","GEOM"]) isNotEqualTo []] call _check;
 ["HEARING-fixture-no-prior-contact",_listener knowsAbout _shooter < 1,format ["knowledge=%1 phase=%2",_listener targetKnowledge _shooter,(_listeners getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]]] call _check;
 _shooter forceWeaponFire [primaryWeapon _shooter,"Single"];
@@ -68,7 +127,7 @@ sleep 3;
 ["HEARING-disabled-no-report",(_listeners getVariable ["Waldo_AIPass_AreaReport",[]]) isEqualTo []] call _check;
 private _shotsBeforeEnable=_shooter getVariable ["Waldo_CortexQA_ActualShots",0];
 [createHashMapFromArray [["Waldo_AIPass_Hearing_Enable",true]]] call Waldo_fnc_CortexTuning;
-["Hearing: actual gunshot","The northern soldier fires away from the listener. A concrete screen blocks sight; only a real nearby gunshot may create the uncertain report. No target is revealed by the test.",[1600,1125,0]] call _phase;
+["Hearing: actual gunshot","The forward soldier fires away from the listener. A concrete screen blocks sight; only a real nearby gunshot may create the uncertain report. No target is revealed by the test.",[[1600,1125,0]] call _terrainPosition] call _phase;
 ["HEARING-handler-ready",[{(_listeners getVariable ["Waldo_AIPass_HearingHandler",[]]) isNotEqualTo []},20] call _wait] call _check;
 for "_i" from 1 to 3 do {_shooter forceWeaponFire [primaryWeapon _shooter,"Single"]; sleep 1};
 private _heard=[{((_listeners getVariable ["Waldo_AIPass_AreaReport",[]]) param [3,""]) == "SOUND"},5] call _wait;
@@ -87,7 +146,7 @@ private _soundTrace=[];
 private _nextSoundSample=0;
 private _lastSoundPhase="";
 [createHashMapFromArray [["Waldo_AIPass_Investigate_Enable",true]]] call Waldo_fnc_CortexTuning;
-["Sound investigation: physical approach","The listener must physically approach the approximate sound area by at least 15 m. The controller stops short to investigate; reaching the hidden shooter's exact position is not required. Watch the travel trail and remaining area distance.",[1600,1125,0]] call _phase;
+["Sound investigation: physical approach","The listener must physically approach the approximate sound area by at least 15 m over the measured terrain. The controller stops short to investigate; reaching the hidden shooter's exact position is not required. Watch the travel trail and remaining area distance.",[[1600,1125,0]] call _terrainPosition] call _phase;
 private _investigated=[{
     private _travel=_listener distance2D _start;
     private _remaining=if (count _soundArea >= 2) then {_listener distance2D _soundArea} else {-1};
@@ -117,26 +176,26 @@ call _cleanup;
 
 [createHashMapFromArray [["Waldo_AIPass_ContactReports_Enable",true],["Waldo_AIPass_Investigate_Enable",true]]] call Waldo_fnc_CortexTuning;
 private _sender=[east] call _newGroup;
-private _senderUnit=[_sender,[1600,1100,0],"REPORTING SQUAD"] call _unit;
+private _senderUnit=[_sender,[[1600,1100,0]] call _terrainPosition,"REPORTING SQUAD"] call _unit;
 _senderUnit disableAI "PATH";
 private _receiver=[east] call _newGroup;
-private _receiverUnit=[_receiver,[1450,1100,0],"REPORT RECEIVER"] call _unit;
+private _receiverUnit=[_receiver,[[1450,1100,0]] call _terrainPosition,"REPORT RECEIVER"] call _unit;
 // Screen the receiver's initial sightline without obstructing the sender's northward view.
-private _screenDirection=[1450,1100,0] getDir [1600,1190,0];
+private _screenDirection=([[1450,1100,0]] call _terrainPosition) getDir ([[1600,1190,0]] call _terrainPosition);
 for "_i" from -2 to 2 do {
-    private _wall=createVehicle ["Land_CncWall4_F",([1490,1124,0] getPos [_i*4,_screenDirection+90]),[],0,"CAN_COLLIDE"];
+    private _wall=createVehicle ["Land_CncWall4_F",(([[1490,1124,0]] call _terrainPosition) getPos [_i*4,_screenDirection+90]),[],0,"CAN_COLLIDE"];
     _wall setDir _screenDirection;
     _objects pushBack _wall;
 };
 {_receiverUnit disableAI _x} forEach ["TARGET","AUTOTARGET"];
 _shooters=[west] call _newGroup;
 _shooters setVariable ["Waldo_AIPass_Exclude",true,true];
-_shooter=[_shooters,[1600,1190,0],"SIGHTED OPPOSITION"] call _unit;
+_shooter=[_shooters,[[1600,1190,0]] call _terrainPosition,"SIGHTED OPPOSITION"] call _unit;
 _shooter disableAI "PATH";
 {_x setCombatMode "BLUE"} forEach [_sender,_receiver,_shooters];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",+_objects,true];
 _start=getPosATL _receiverUnit;
-["Contact report and investigation","The reporting squad sees an opponent. A concrete screen blocks the receiver's initial sightline; it must approach using Cortex's server-to-owner report path.",[1525,1140,0]] call _phase;
+["Contact report and investigation","The reporting squad sees an opponent across the measured terrain. A concrete screen blocks the receiver's initial sightline; it must approach using Cortex's server-to-owner report path.",[[1525,1140,0]] call _terrainPosition] call _phase;
 ["REPORT-fixture-receiver-occluded",(lineIntersectsSurfaces [eyePos _receiverUnit,eyePos _shooter,_receiverUnit,_shooter,true,1,"VIEW","GEOM"]) isNotEqualTo []] call _check;
 ["REPORT-fixture-sender-clear",(lineIntersectsSurfaces [eyePos _senderUnit,eyePos _shooter,_senderUnit,_shooter,true,1,"VIEW","GEOM"]) isEqualTo []] call _check;
 private _reportSeen=false;
@@ -150,22 +209,22 @@ call _cleanup;
 
 [createHashMapFromArray [["Waldo_AIPass_ContactReports_Enable",false],["Waldo_AIPass_Investigate_Enable",false],["Waldo_AIPass_Reinforce_Enable",true],["Waldo_AIPass_CoordinatedAssault_Enable",false]]] call Waldo_fnc_CortexTuning;
 _sender=[east] call _newGroup;
-_senderUnit=[_sender,[1600,1200,0],"SQUAD REQUESTING SUPPORT"] call _unit;
+_senderUnit=[_sender,[[1600,1200,0]] call _terrainPosition,"SQUAD REQUESTING SUPPORT"] call _unit;
 _senderUnit disableAI "PATH";
 _receiver=[east] call _newGroup;
 private _helpers=[];
 for "_i" from 0 to 2 do {
-    private _helper=[_receiver,[1500+_i*3,1050,0],format ["REINFORCEMENT %1",_i+1]] call _unit;
+    private _helper=[_receiver,[[1500+_i*3,1050,0]] call _terrainPosition,format ["REINFORCEMENT %1",_i+1]] call _unit;
     {_helper disableAI _x} forEach ["TARGET","AUTOTARGET"];
     _helpers pushBack _helper;
 };
 _shooters=[west] call _newGroup;
 _shooters setVariable ["Waldo_AIPass_Exclude",true,true];
-_shooter=[_shooters,[1600,1290,0],"SUPPORT THREAT"] call _unit;
+_shooter=[_shooters,[[1600,1290,0]] call _terrainPosition,"SUPPORT THREAT"] call _unit;
 _shooter disableAI "PATH";
 {_x setCombatMode "BLUE"} forEach [_sender,_receiver,_shooters];
 missionNamespace setVariable ["Waldo_CortexQA_Actors",+_objects,true];
-private _rally=[1600,1120,0];
+private _rally=[[1600,1120,0]] call _terrainPosition;
 private _helperStarts=_helpers apply {getPosATL _x};
 ["Reinforcement travel","The three idle helpers must walk to the rally point behind the squad in contact. All three must arrive within 45 m; a reservation or waypoint is insufficient.",_rally] call _phase;
 private _assigned=[{

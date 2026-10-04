@@ -2925,6 +2925,24 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (!_withdrawTerrainReady) then {',qa)
         self.assertIn('No dry three-lane corridor',qa)
 
+    def test_support_audit_rotates_hearing_reports_and_reinforcement_over_terrain(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runSupport.sqf').read_text()
+        for marker in ['private _terrainReady=worldName == "VR"',
+                       'for "_heading" from 0 to 315 step 45',
+                       'forEach [-100,0,100]',
+                       'for "_along" from -80 to 220 step 20',
+                       '((surfaceNormal _sample) select 2) < 0.55',
+                       '_grade > 0.75',
+                       '_relief >= 12',
+                       'SUPPORT-terrain-scenario',
+                       'call _terrainPosition',
+                       '_wall setDir _terrainHeading']:
+            self.assertIn(marker,qa)
+        for local in ['[1600,1070,0]','[1600,1190,0]','[1450,1100,0]',
+                      '[1500+_i*3,1050,0]','[1600,1290,0]','[1600,1120,0]']:
+            self.assertIn('['+local+'] call _terrainPosition',qa)
+        self.assertIn('No dry three-lane sector',qa)
+
     def test_assault_qa_requires_cover_element_to_consolidate_physically(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         self.assertIn('-physical-consolidation',qa)

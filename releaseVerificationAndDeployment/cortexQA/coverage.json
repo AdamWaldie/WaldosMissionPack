@@ -755,7 +755,7 @@
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runSupport.sqf: HEARING- actual Fired event and hearing delivery (partial variants; fresh live acceptance required) Added physical wall occlusion, real gunshot with hearing disabled, handler readiness and a fresh enabled shot. Saved changes need a fresh live run.",
+      "automation": "runSupport.sqf: HEARING- actual Fired event and hearing delivery (partial variants; fresh live acceptance required) Added physical wall occlusion, real gunshot with hearing disabled, handler readiness and a fresh enabled shot. VR retains deterministic geometry; terrain worlds rotate the complete hearing/report/support fixture onto a measured dry sector with relief and reject unsafe slope or grade. Saved changes need a fresh live run.",
       "executable_sources": [
         "runSupport.sqf"
       ],
@@ -776,7 +776,7 @@
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runSupport.sqf: REPORT- actual delivery and receiver travel (partial variants; fresh live acceptance required)",
+      "automation": "runSupport.sqf: REPORT- actual delivery and receiver travel (partial variants; fresh live acceptance required). The whole sight-screen and investigation geometry uses the shared measured terrain transform outside VR.",
       "executable_sources": [
         "runSupport.sqf"
       ],
@@ -798,7 +798,7 @@
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runSupport.sqf: reinforcement movement and cancellation variants. Static guards also prove that vehicle crews and mounted passenger groups cannot enter infantry support bounds. Fresh live acceptance remains required.",
+      "automation": "runSupport.sqf: reinforcement movement and cancellation variants. Static guards also prove that vehicle crews and mounted passenger groups cannot enter infantry support bounds. Outside VR the requester, helpers, threat and resulting physical rally all share the measured terrain sector. Fresh live acceptance remains required.",
       "executable_sources": [
         "runSupport.sqf"
       ],

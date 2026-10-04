@@ -280,19 +280,19 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Receivers get an uncertain area, not target reveal; response respects investigation gate and range.
 
-**Automation and open work:** runSupport.sqf: HEARING- actual Fired event and hearing delivery (partial variants; fresh live acceptance required) Added physical wall occlusion, real gunshot with hearing disabled, handler readiness and a fresh enabled shot. Saved changes need a fresh live run.
+**Automation and open work:** runSupport.sqf: HEARING- actual Fired event and hearing delivery (partial variants; fresh live acceptance required) Added physical wall occlusion, real gunshot with hearing disabled, handler readiness and a fresh enabled shot. VR retains deterministic geometry; terrain worlds rotate the complete hearing/report/support fixture onto a measured dry sector with relief and reject unsafe slope or grade. Saved changes need a fresh live run.
 
 ### REPORT - Contact sharing
 
 **Expected:** Reports use permitted communication, preserve uncertainty and do not depend on a vanilla radio item.
 
-**Automation and open work:** runSupport.sqf: REPORT- actual delivery and receiver travel (partial variants; fresh live acceptance required)
+**Automation and open work:** runSupport.sqf: REPORT- actual delivery and receiver travel (partial variants; fresh live acceptance required). The whole sight-screen and investigation geometry uses the shared measured terrain transform outside VR.
 
 ### REINFORCE - Reinforcement
 
 **Expected:** Only eligible squads with at least three combat-effective dismounted infantry accept reinforcement movement; vehicle crews and mounted passenger groups retain their dedicated controllers. Request, acknowledgement, rejection and timeout release ownership cleanly.
 
-**Automation and open work:** runSupport.sqf: reinforcement movement and cancellation variants. Static guards also prove that vehicle crews and mounted passenger groups cannot enter infantry support bounds. Fresh live acceptance remains required.
+**Automation and open work:** runSupport.sqf: reinforcement movement and cancellation variants. Static guards also prove that vehicle crews and mounted passenger groups cannot enter infantry support bounds. Outside VR the requester, helpers, threat and resulting physical rally all share the measured terrain sector. Fresh live acceptance remains required.
 
 ### ART - Spotted artillery bursts
 
