@@ -27,7 +27,7 @@ Feature cases: **63**. Required variant categories: **14**.
 | GRENADE - Grenade avoidance | 1 | 0 | 2 | `runReactions.sqf` | 2 | implemented_partial |
 | CIVILIAN - Civilian danger response and external ownership | 4 | 0 | 3 | `runReactions.sqf` | 0 | implemented_partial |
 | AT - Anti-armour and ammunition roles | 2 | 0 | 1 | `runFireControl.sqf` | 0 | implemented_partial |
-| VEH - Vehicle engagement | 2 | 0 | 2 | `runGunnery.sqf` | 1 | implemented_partial |
+| VEH - Vehicle engagement | 3 | 0 | 4 | `runGunnery.sqf`, `runNaval.sqf` | 1 | implemented_partial |
 | DISMOUNT - Contact passenger dismount | 1 | 0 | 1 | `runVehicleDrills.sqf` | 0 | implemented_partial |
 | REMOUNT - Contact passenger remount | 1 | 0 | 1 | `runVehicleDrills.sqf` | 0 | implemented_partial |
 | WITHDRAW - Damaged vehicle withdrawal | 1 | 0 | 1 | `runVehicleDrills.sqf` | 1 | implemented_partial |
@@ -212,9 +212,9 @@ Feature cases: **63**. Required variant categories: **14**.
 
 ### VEH - Vehicle engagement
 
-**Expected:** Only eligible mounted groups receive changes; parent gate disables all dependent behaviour and releases owned controls.
+**Expected:** Only eligible mounted groups receive changes. Boats make a finite shallow-water approach, unload infantry onto dry ground, retain operating crew and restore authored orders; the parent gate and external owner release all controls.
 
-**Automation and open work:** runGunnery.sqf: disabled stationary control and enabled physical AT standoff with crew retention. Server cases passed in runtime-20260927-040456; remaining variants unverified.
+**Automation and open work:** runGunnery.sqf retains disabled stationary control and enabled physical AT standoff. runNaval.sqf adds separate and combined crew/passenger landings on a bounded real coastline search, requiring physical water travel, dismount, dry egress, crew retention and finite cleanup. Naval fixture is saved but unexecuted; varied coast, owner migration, Zeus interruption and PROTOCOL-loaded arms remain queued.
 
 ### DISMOUNT - Contact passenger dismount
 

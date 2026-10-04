@@ -490,6 +490,7 @@ if (_focus in ["all","features","mechanics","airborne"]) then {
     [_fallbackCheck,_fallbackPhase,_wait,"B_Parachute"] call compile preprocessFileLineNumbers "cortexQAAirborne.sqf";
 };
 if (_focus in ["all","features","mechanics","vehicles","stateflows"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAVehicles.sqf"};
+if (_focus in ["all","features","mechanics","vehicles","naval"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQANaval.sqf"};
 if (_focus in ["all","features","mechanics","fire"]) then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAFire.sqf"};
 // Long multi-squad comparisons run last so they cannot delay unrelated feature coverage.
 if (_focus == "coordinatedbounds") then {[_check,_phase,_wait,[],true] call compile preprocessFileLineNumbers "cortexQACoordinated.sqf"};

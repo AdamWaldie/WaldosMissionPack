@@ -538,9 +538,10 @@
     {
       "id": "VEH",
       "title": "Vehicle engagement",
-      "setup": "Use mixed passenger/crew groups in contact, including feature-owned and player-controlled vehicles.",
-      "expected": "Only eligible mounted groups receive changes; parent gate disables all dependent behaviour and releases owned controls.",
+      "setup": "Use mixed passenger/crew groups in contact, including ground vehicles and separate/combined boat groups on a measured real coastline.",
+      "expected": "Only eligible mounted groups receive changes. Boats make a finite shallow-water approach, unload infantry onto dry ground, retain operating crew and restore authored orders; the parent gate and external owner release all controls.",
       "settings": [
+        "Waldo_AIPass_NavalAssault_Enable",
         "Waldo_AIPass_Vehicles_Enable",
         "Waldo_AIPass_Vehicles_StandoffDistance"
       ],
@@ -548,12 +549,15 @@
       "live_evidence": [
         "runtime-20260927-040456: server suite zero findings; natural detection, actual AT-directed shots, hold-fire, disabled stationary control, physical +60 m standoff and crew retention passed. Client completion missing, broader owner/disable variants unverified."
       ],
-      "automation": "runGunnery.sqf: disabled stationary control and enabled physical AT standoff with crew retention. Server cases passed in runtime-20260927-040456; remaining variants unverified.",
+      "automation": "runGunnery.sqf retains disabled stationary control and enabled physical AT standoff. runNaval.sqf adds separate and combined crew/passenger landings on a bounded real coastline search, requiring physical water travel, dismount, dry egress, crew retention and finite cleanup. Naval fixture is saved but unexecuted; varied coast, owner migration, Zeus interruption and PROTOCOL-loaded arms remain queued.",
       "executable_sources": [
-        "runGunnery.sqf"
+        "runGunnery.sqf",
+        "runNaval.sqf"
       ],
       "production_sources": [
         "MissionScripts/AiScripting/Cortex/cortexAircraftEligible.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexNavalAssault.sqf",
+        "MissionScripts/AiScripting/Cortex/cortexNavalRelease.sqf",
         "MissionScripts/AiScripting/Cortex/cortexVehicles.sqf"
       ]
     },

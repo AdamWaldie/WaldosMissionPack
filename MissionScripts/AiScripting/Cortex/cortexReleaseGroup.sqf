@@ -17,6 +17,7 @@
  * Public remount intent is cancelled even when owner migration left no local behaviour map.
  * A public actor marker likewise releases only PATH restrictions proven to belong to Cortex.
  * A crew owner also restores any forced speed borrowed for an onboard dismount safe stop.
+ * Naval cleanup restores the exact boat forced speed and removes only the token-matched WMP plan.
  * Arguments:
  * 0: group <GROUP>
  * 1: forget <BOOL> - also clear the managed flag so discovery may pick the group up again
@@ -41,6 +42,10 @@ private _state = _group getVariable ["Waldo_AIPass_State", createHashMap];
 private _yieldToExternal=local _group && {[_group] call Waldo_fnc_CortexZeusHeld};
 if (_reason == "") then {_reason=["RELEASED","ZEUS_TAKEOVER"] select _yieldToExternal};
 private _externalTakeover=_yieldToExternal || {_reason == "ZEUS_TAKEOVER"};
+if ((_state getOrDefault ["navalOperation",[]]) isNotEqualTo []
+    || {(_group getVariable ["Waldo_Cortex_NavalOperation",[]]) isNotEqualTo []}) then {
+    [_group,_state] call Waldo_fnc_CortexNavalRelease;
+};
 // Defence in depth for every caller, including a release delivered after locality migration. The
 // curator client normally retires these public tokens before dispatch, but cleanup must never depend
 // on that client-side write arriving first.

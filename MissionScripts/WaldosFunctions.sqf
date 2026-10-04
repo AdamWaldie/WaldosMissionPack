@@ -279,6 +279,8 @@ class CfgFunctions
             class CortexUnitRole {file = "MissionScripts\AiScripting\Cortex\cortexUnitRole.sqf";};
             class CortexOnboardContact {file = "MissionScripts\AiScripting\Cortex\cortexOnboardContact.sqf";};
             class CortexVehicles {file = "MissionScripts\AiScripting\Cortex\cortexVehicles.sqf";};
+            class CortexNavalAssault {file = "MissionScripts\AiScripting\Cortex\cortexNavalAssault.sqf";};
+            class CortexNavalRelease {file = "MissionScripts\AiScripting\Cortex\cortexNavalRelease.sqf";};
             class CortexTacticalStart {file = "MissionScripts\AiScripting\Cortex\cortexTacticalStart.sqf";};
             class CortexAdvanceStart {file = "MissionScripts\AiScripting\Cortex\cortexAdvanceStart.sqf";};
             class CortexAmmoShare {file = "MissionScripts\AiScripting\Cortex\cortexAmmoShare.sqf";};

@@ -111,6 +111,8 @@ if (isNil {missionNamespace getVariable "Waldo_AIPass_ArtilleryHandler"}) then {
 missionNamespace setVariable ["Waldo_AIPass_LambsDangerLoaded", isClass (configFile >> "CfgPatches" >> "lambs_danger")];
 missionNamespace setVariable ["Waldo_AIPass_VcomLoaded",
     isClass (configFile >> "CfgPatches" >> "VCOM_AI") || {!isNil "VCM_fnc_SQUADBEH"}];
+missionNamespace setVariable ["Waldo_AIPass_ProtocolNavyLoaded",
+    isClass (configFile >> "CfgPatches" >> "PROTOCOL_AI_NAVY_SEAL")];
 missionNamespace setVariable ["Waldo_AIPass_IMSLoaded",
     !isNil "IMS_Melee_Weapons" || {isClass (configFile >> "CfgPatches" >> "WBK_IMS")}
         || {isClass (configFile >> "CfgPatches" >> "WBK_IMS2")}];

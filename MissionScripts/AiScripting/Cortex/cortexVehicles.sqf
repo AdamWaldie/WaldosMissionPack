@@ -189,7 +189,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             } >= 0
         } >= 0
     };
-    if (_commandsVehicle && {[_group, "Waldo_AIPass_VehicleWithdraw_Enable", true] call Waldo_fnc_CortexFeatureEnabled} && {local _vehicle} && {alive _vehicle} && {canMove _vehicle} && {!(_vehicle in _withdrawn)} && {_distance < 800}
+    if (_commandsVehicle && {_vehicle isKindOf "LandVehicle"} && {[_group, "Waldo_AIPass_VehicleWithdraw_Enable", true] call Waldo_fnc_CortexFeatureEnabled} && {local _vehicle} && {alive _vehicle} && {canMove _vehicle} && {!(_vehicle in _withdrawn)} && {_distance < 800}
         && {damage _vehicle >= 0.5 || {!canFire _vehicle && {call _hasRealWeapon}}}) then {
         _withdrawn pushBack _vehicle;
         _state set ["withdrawn", _withdrawn];

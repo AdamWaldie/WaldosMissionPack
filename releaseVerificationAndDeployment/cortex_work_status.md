@@ -19,11 +19,17 @@ an HBQ-loaded dedicated/HC/Zeus route-loss run remains queued.
 
 The locally installed PROTOCOL AI NAVY SEAL PBO was also unpacked. Its useful concepts are shoreline
 sampling, finite boat approach, separate support and assault roles, cover-biased movement and casualty
-redistribution. Its implementation is not suitable as a compatibility owner: one file launches two
-overlapping global group scans, takes control based only on enemy proximity, repeatedly forces exits
-and individual moves, and does not arbitrate Zeus, locality, authored orders or cleanup. No source is
-copied. A separate opt-in WMP naval-assault behaviour, with explicit ownership and the normal Cortex
-performance budget, remains to be built and physically accepted.
+redistribution. Its implementation is not suitable as a shared compatibility owner: one file launches
+two overlapping global group scans, takes control based only on enemy proximity, repeatedly forces
+exits and individual moves, and does not arbitrate Zeus, locality, authored orders or cleanup. No source
+is copied. WMP now supplies a separately gated naval landing through the existing Cortex group job: a
+crew compares a bounded set of dry shore/shallow-water candidates, takes one finite native MOVE lease,
+stops for dismount and restores its authored route; passenger groups unload only their own cargo and
+continue through one dry-ground egress. Combined crew/cargo groups never receive a land waypoint.
+Casualties reduce the landing element without creating a readiness wait. Zeus, expiry, locality and
+feature cleanup restore exact boat speed and only token-matched WMP state. When PROTOCOL is loaded,
+WMP yields naval ownership completely. Static acceptance is implemented; dependency-loaded,
+multi-owner and varied-coast physical arms remain queued.
 
 ## 4 October: VCOM, WebKnight, IMS and civilian ownership
 
@@ -42,8 +48,8 @@ movement refuses the Cortex request. VCOM formation, flank, rescue and skill con
 An additive WMP civilian reaction supplies event-driven `FiredNear`/`Hit` flight only when Simple
 Civilian Behaviour is absent. It has no poller or FSM, yields to Zeus, and exposes enable, radius,
 distance and cooldown controls. WMP Diagnostics reports loaded integrations, finite leases, external
-actor ownership and active civilian reactions. The coverage registry now maps 61 cases, 177 settings
-and 149 production AI sources. The new civilian physical audit is saved but unexecuted; all
+actor ownership and active civilian reactions. The coverage registry now maps 63 cases, 180 settings
+and 151 production AI sources. The new civilian and naval physical audits are saved but unexecuted; all
 dependency-loaded, HC, JIP and real event-delivery variants remain open.
 
 ## 1 October: LAMBS ownership and compatibility

@@ -217,6 +217,11 @@ private _delay = switch (true) do {
 if !(["Waldo_AIPass_Contact_Enable", true] call _get) exitWith {[_group,false] call Waldo_fnc_CortexReleaseGroup; _delay};
 
 ([_group] call Waldo_fnc_CortexKnowledge) params ["_enemies", "_seenCount"];
+// Naval delivery is a composable movement layer inside this existing group job. It runs before
+// state selection so an embarked passenger group waits for the crew's finite approach and a boat
+// crew cannot be given an infantry flank, retreat or investigation destination on land.
+private _navalOwnsMovement=[_group,_state,_enemies] call Waldo_fnc_CortexNavalAssault;
+_groupMovementOwned=_groupMovementOwned || {_navalOwnsMovement};
 private _visible = _enemies select {(_x select 2) <= 10};
 private _garrisoned = (_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo [];
 private _defending = (_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo [];

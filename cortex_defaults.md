@@ -133,6 +133,7 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_Convoy_Unload_Enable` | `true` | Allows WMP passenger unloading on halt. Operating crews remain aboard. |
 | `Waldo_AIPass_Hearing_Enable` | `true` | Nearby gunfire creates throttled approximate investigation reports, never target reveals. |
 | `Waldo_AIPass_Vehicles_Enable` | `true` | BOOL: dismount under fire; damaged vehicles smoke and withdraw. |
+| `Waldo_AIPass_NavalAssault_Enable` | `true` | BOOL: finite coastal boat approach and infantry landing; yields to PROTOCOL AI NAVY SEAL. |
 | `Waldo_AIPass_ContactReports_Enable` | `true` | BOOL: share sightings by radio (jammable) or voice. |
 | `Waldo_AIPass_ContactReports_Radius` | `500` | METRES: radio report range. |
 | `Waldo_AIPass_ContactReports_VoiceRange` | `35` | METRES: report range when AI transmission is blocked. |

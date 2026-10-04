@@ -126,6 +126,7 @@ if ($CortexAudit) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runConvoyMatrix.sqf") -Destination (Join-Path $missionRoot "cortexQAConvoyMatrix.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runFireControl.sqf") -Destination (Join-Path $missionRoot "cortexQAFire.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runVehicleDrills.sqf") -Destination (Join-Path $missionRoot "cortexQAVehicles.sqf")
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runNaval.sqf") -Destination (Join-Path $missionRoot "cortexQANaval.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runAirborne.sqf") -Destination (Join-Path $missionRoot "cortexQAAirborne.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runSupport.sqf") -Destination (Join-Path $missionRoot "cortexQASupport.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runCombinedArms.sqf") -Destination (Join-Path $missionRoot "cortexQACombinedArms.sqf")

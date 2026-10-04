@@ -717,7 +717,7 @@ class CortexOperations(unittest.TestCase):
             for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
         }
         assigned=[path for case in data['cases'] for path in case['production_sources']]
-        self.assertEqual(149,len(production))
+        self.assertEqual(151,len(production))
         self.assertEqual(production,set(assigned))
         self.assertEqual(len(assigned),len(set(assigned)))
         self.assertTrue(all((ROOT/path).is_file() for path in assigned))
@@ -3610,3 +3610,54 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_firedMagazines pushBackUnique (_x select 4)',text)
         self.assertIn('if ((_x select 0) in _firedMagazines)',text)
         self.assertIn('_magazinesBefore getOrDefault [_x,0]',text)
+
+    def test_naval_assault_uses_existing_scheduler_and_finite_external_ownership(self):
+        naval=source('cortexNavalAssault')
+        release=source('cortexNavalRelease')
+        tick=source('cortexGroupTick')
+        vehicles=source('cortexVehicles')
+        init=source('cortexInit')
+        for marker in ['Waldo_AIPass_NavalAssault_Enable','PROTOCOL_AI_NAVY_SEAL',
+                       'Waldo_AIPass_ProtocolNavyLoaded']:
+            self.assertIn(marker,init + naval)
+        self.assertIn('Waldo_Cortex_NavalOperation',naval)
+        self.assertIn('Waldo_Cortex_NavalOperation',source('cortexLocality'))
+        for marker in ['surfaceIsWater _landing','surfaceIsWater _approach',
+                       'surfaceNormal _shore','CortexLambsLease','NAVAL_ASSAULT',
+                       'Waldo_Cortex_NavalPlan','doGetOut _unit','NAVAL_LANDING']:
+            self.assertIn(marker,naval)
+        implementation=naval.split('*/',1)[1]
+        for forbidden in ['allGroups','allUnits','while {','waitUntil','setPos','setVelocity','setDamage','setFuel','setDriveOnPath']:
+            self.assertNotIn(forbidden,implementation)
+        self.assertIn('call Waldo_fnc_CortexNavalAssault',tick)
+        self.assertIn('call Waldo_fnc_CortexNavalRelease',source('cortexReleaseGroup'))
+        self.assertIn('Waldo_Cortex_NavalForcedSpeed',release)
+        self.assertIn('Waldo_Cortex_NavalOperation',release)
+        self.assertIn('_vehicle isKindOf "LandVehicle"',vehicles)
+
+    def test_naval_release_is_token_scoped_and_never_forces_boarding(self):
+        release=source('cortexNavalRelease')
+        for marker in ['(_plan select 0) == _token','(_plan select 1) == _group',
+                       'forceSpeed (_saved param [0,-1])','CortexGroupMoveClear',
+                       'NAVAL_ASSAULT','NAVAL_LANDING']:
+            self.assertIn(marker,release)
+        for forbidden in ['moveIn','orderGetIn true','assignAs','setPos','deleteVehicle']:
+            self.assertNotIn(forbidden,release)
+
+    def test_naval_audit_requires_real_coast_travel_dismount_and_cleanup(self):
+        audit=(ROOT/'releaseVerificationAndDeployment/cortexQA/runNaval.sqf').read_text(encoding='utf-8')
+        runner=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text(encoding='utf-8')
+        launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text(encoding='utf-8')
+        for marker in ['for "_bearing" from 0 to 350 step 10','surfaceIsWater _water',
+                       'NAVAL-terrain-coast','forEach [false,true]',
+                       'NAVAL-"+_suffix+"-physical-water-travel',
+                       'NAVAL-"+_suffix+"-physical-dismount',
+                       'NAVAL-"+_suffix+"-dry-egress',
+                       'NAVAL-"+_suffix+"-crew-retained',
+                       'NAVAL-"+_suffix+"-finite-cleanup']:
+            self.assertIn(marker,audit)
+        post_setup=audit.split('} forEach [false,true];',1)[0].split('private _start=getPosATL _boat;',1)[1]
+        for forbidden in ['setPos','moveInCargo','addWaypoint','setVariable ["Waldo_Cortex_NavalPlan"']:
+            self.assertNotIn(forbidden,post_setup)
+        self.assertIn('cortexQANaval.sqf',runner)
+        self.assertIn('cortexQA/runNaval.sqf',launcher)

@@ -59,6 +59,7 @@ private _spec = [
     ["Waldo_AIPass_GrenadeEvasion_Enable", "Grenade evasion", "AI move away from a live grenade they can see. Test before live use.", "CHECKBOX", [], true],
     ["Waldo_AIPass_AntiArmour_Enable", "Anti-armour", "The best anti-tank gunner engages known armour, clear of backblast.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Vehicles_Enable", "Enable Cortex vehicle tactics", "Parent control for Cortex passenger dismount, remount and damaged-vehicle withdrawal. Convoy route control remains independent.", "CHECKBOX", [], true],
+    ["Waldo_AIPass_NavalAssault_Enable", "Naval infantry landing", "AI boat crews make one finite shallow-water approach and deliver embarked infantry onto dry ground. PROTOCOL AI NAVY SEAL takes priority when loaded.", "CHECKBOX", [], true],
     ["Waldo_AIPass_ContactReports_Enable", "Contact reports", "Squads share sighted enemies by radio (blocked by jamming) or by voice.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Reinforce_Enable", "Reinforcement", "Idle nearby squads move up behind a squad in contact.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Artillery_Enable", "Enable spotter artillery support", "Parent control for spotter-requested support and retreat smoke missions. Explicitly assign a spotter and configure a friendly battery first.", "CHECKBOX", [], false],

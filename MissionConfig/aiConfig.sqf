@@ -173,6 +173,7 @@
  * - Waldo_AIPass_GrenadeEvasion_Enable (MISSION MAKER): AI move away from a live grenade they can see; enabled by default, with live compatibility testing required.
  * - Waldo_AIPass_AntiArmour_Enable (MISSION MAKER): the best anti-tank gunner engages known armour, clear of backblast.
  * - Waldo_AIPass_Vehicles_Enable (MISSION MAKER): infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw.
+ * - Waldo_AIPass_NavalAssault_Enable (MISSION MAKER): AI boat crews make one finite shallow-water approach and deliver their embarked infantry onto dry ground. Default true; PROTOCOL AI NAVY SEAL takes priority when loaded.
  * - Waldo_AIPass_ContactReports_Enable (MISSION MAKER): squads share sighted enemies by radio (blocked by jamming) or by voice.
  * - Waldo_AIPass_ContactReports_Radius (ADVANCED): radio report range in metres.
  * - Waldo_AIPass_ContactReports_VoiceRange (ADVANCED): report range in metres when AI transmission is blocked.
@@ -371,6 +372,7 @@ createHashMapFromArray [
         ["Waldo_Convoy_Unload_Enable", true], // Allows WMP passenger unloading on halt. Operating crews remain aboard.
         ["Waldo_AIPass_Hearing_Enable", true], // Nearby gunfire area reports, never target reveals.
         ["Waldo_AIPass_Vehicles_Enable", true], // BOOL: dismount under fire; damaged vehicles smoke and withdraw.
+        ["Waldo_AIPass_NavalAssault_Enable", true], // BOOL: finite coastal approach and passenger landing; yields to PROTOCOL AI NAVY SEAL.
         ["Waldo_AIPass_ContactReports_Enable", true], // BOOL: share sightings by radio (jammable) or voice.
         ["Waldo_AIPass_ContactReports_Radius", 500], // METRES: radio report range.
         ["Waldo_AIPass_ContactReports_VoiceRange", 35], // METRES: report range when AI transmission is blocked.

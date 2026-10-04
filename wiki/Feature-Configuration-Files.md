@@ -435,6 +435,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_Convoy_DrivingAssist_Enable` | Low-frequency road look-ahead plus speed damping for smoother curves, junctions and grades. It leaves route choice and physical obstruction handling to Arma. Default `true`. |
 | `Waldo_Convoy_RouteRecovery_Enable` | Conservative final-route recovery. Re-selects only the same unchanged final MOVE waypoint after premature engine completion and never teleports, repairs or bypasses an obstruction. Default `true`. |
 | `Waldo_AIPass_Vehicles_Enable` | Infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw. Default `true`. |
+| `Waldo_AIPass_NavalAssault_Enable` | AI boat crews make a finite shallow-water approach, unload passenger infantry and release their authored route. PROTOCOL AI NAVY SEAL takes priority when loaded. Default `true`. |
 | `Waldo_AIPass_ContactReports_Enable` | Squads share sighted enemies by radio (blocked by jamming) or by voice. Default `true`. |
 | `Waldo_AIPass_ContactReports_Radius` | Radio report range in metres. Default `500`. |
 | `Waldo_Cortex_CombinedArms_AirRange` | Radio-linked aircraft support opportunity range in metres. This does not widen ordinary squad contact sharing. Default `4000`. |

@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Passenger, pending calm remount, active coordinated-support, post-contact movement and active
- * withdrawal intent survive migration without replaying old owner jobs. Invalidates old jobs,
+ * Passenger, naval landing, pending calm remount, active coordinated-support, post-contact movement
+ * and active withdrawal intent survive migration without replaying old owner jobs. Invalidates old jobs,
  * restores interrupted transient behaviour and resumes a bounded support assignment,
  * investigation, search or withdrawal after WMP or ACE migration. A Zeus hold or the
  * matching infantry-morale/vehicle-withdrawal gate cancels restoration so migration cannot revive
@@ -25,6 +25,7 @@ private _transitionIntent = _group getVariable ["Waldo_Cortex_TransitionIntent",
 private _remountIntent = _group getVariable ["Waldo_Cortex_Remount",[]];
 private _supportLease = _group getVariable ["Waldo_AIPass_SupportLease",[]];
 private _supportStatus = _group getVariable ["Waldo_AIPass_SupportStatus",[]];
+private _navalIntent = _group getVariable ["Waldo_Cortex_NavalOperation",[]];
 [_group,true] call Waldo_fnc_CortexHearingLocal;
 {
         private _unit = _x;
@@ -118,6 +119,15 @@ private _withdrawalResumeEligible=count _withdrawalIntent == 7
     && {_withdrawalGateOpen}
     && {!([_group] call Waldo_fnc_CortexZeusHeld)};
 [_group, _restore, false, false, "OWNERSHIP_ADOPTED",!(_transitionResumeEligible || {_withdrawalResumeEligible})] call Waldo_fnc_CortexRestoreCalm;
+// The public token is semantic state only. CortexNavalAssault validates its unchanged deadline,
+// plan owner and boat before issuing any replacement-owner command on the normal group tick.
+if (count _navalIntent == 5 && {serverTime < (_navalIntent select 4)}
+    && {[_group] call Waldo_fnc_CortexIsEligible} && {!([_group] call Waldo_fnc_CortexZeusHeld)}) then {
+    private _adopted=[_group] call Waldo_fnc_CortexGroupState;
+    _adopted set ["navalOperation",+_navalIntent];
+    _group setVariable ["Waldo_AIPass_Checkpoint", [], true];
+};
+if ((_group getVariable ["Waldo_Cortex_NavalOperation",[]]) isNotEqualTo []) exitWith {};
 // Aircrew have dedicated flight, countermeasure and attack controllers. A Local event handler may
 // survive from the group's earlier ground phase, but ownership migration must never reconstruct
 // infantry transitions, remounts or building movement while any living member occupies an aircraft.
