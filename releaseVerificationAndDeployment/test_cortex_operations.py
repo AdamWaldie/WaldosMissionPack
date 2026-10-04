@@ -998,6 +998,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('class CortexSelectAvenue',functions)
         for marker in ['(count _candidates) min 8','forEach [0.25,0.5,0.75]',
                        'terrainIntersectASL [_threatASL,_sampleASL]',
+                       'private _surfaceUp=(surfaceNormal _sample) select 2',
+                       'private _terrainASL=getTerrainHeightASL _sample',
+                       'if (_surfaceUp < 0.5) exitWith {_valid=false}',
+                       '+2*(_terrainPenalty/(_terrainSamples max 1))',
                        '"FIRE","GEOM"','"VIEW","GEOM"','_lateral < 30',
                        '_pointSide*_startSide < 0','(ceil (_legLength/20)) max 3',
                        '-70*(_hardScreen/(_screenSamples max 1))',

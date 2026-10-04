@@ -6,9 +6,11 @@
  * which enter a supporting element's 30 m live-fire corridor. A manoeuvre element which begins
  * inside its own supporting squad's corridor may depart laterally for at most 60 m of route; once
  * clear it may not re-enter. This distinguishes a necessary departure from crossing friendly fire.
- * Three fixed samples per leg score
- * terrain/solid ballistic screening separately from visual concealment; concealment receives a
- * smaller benefit and is never described as cover. Route length keeps the result purposeful.
+ * Three fixed samples per leg score terrain/solid ballistic screening separately from visual
+ * concealment. The same bounded samples reject cliff-like ground and add a small cost for cumulative
+ * height change and steep surfaces, so a flat-range route does not become the preferred route over
+ * an easier avenue on a real terrain. Concealment receives a smaller benefit and is never described
+ * as cover. Route length keeps the result purposeful.
  * Candidate and sample counts are capped, so this runs once when an operation starts rather than
  * per unit or scheduler tick.
  * Locality/authority: pure terrain and geometry calculation; call on the group owner planning the
@@ -54,6 +56,9 @@ private _bestScore=1e12;
     private _hardScreen=0;
     private _concealed=0;
     private _screenSamples=0;
+    private _terrainPenalty=0;
+    private _terrainSamples=0;
+    private _previousTerrainASL=getTerrainHeightASL _start;
     private _from=_start;
     // [starts inside corridor, has cleared corridor]. State persists across every leg in this
     // candidate so a route cannot leave the lane and later cross back through it.
@@ -126,6 +131,14 @@ private _bestScore=1e12;
                     0
                 ];
                 _screenSamples=_screenSamples+1;
+                _terrainSamples=_terrainSamples+1;
+                private _surfaceUp=(surfaceNormal _sample) select 2;
+                private _terrainASL=getTerrainHeightASL _sample;
+                // Very steep samples are unlikely to be usable by an infantry formation. Less
+                // severe relief remains valid but loses to a similarly protected, easier avenue.
+                if (_surfaceUp < 0.5) exitWith {_valid=false};
+                _terrainPenalty=_terrainPenalty+abs (_terrainASL-_previousTerrainASL)+((1-_surfaceUp)*12);
+                _previousTerrainASL=_terrainASL;
                 private _sampleASL=(AGLToASL _sample) vectorAdd [0,0,1.0];
                 private _rayStart=_threatASL vectorAdd ((_threatASL vectorFromTo _sampleASL) vectorMultiply 2);
                 private _hard=terrainIntersectASL [_threatASL,_sampleASL]
@@ -145,7 +158,8 @@ private _bestScore=1e12;
     if (_valid) then {
         private _score=_routeLength
             -70*(_hardScreen/(_screenSamples max 1))
-            -25*(_concealed/(_screenSamples max 1));
+            -25*(_concealed/(_screenSamples max 1))
+            +2*(_terrainPenalty/(_terrainSamples max 1));
         if (_score < _bestScore) then {_best=+_route; _bestScore=_score};
     };
 } forEach _limited;
