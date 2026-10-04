@@ -13,10 +13,11 @@
  * checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
  * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
- * fixed-wing ATTACK leg temporarily changes that same waypoint to a target-attached DESTROY order,
- * joining the pilot's native attack manoeuvre to its fire-control solution instead of asking a MOVE
- * pilot to honour a later asynchronous release. Egress, abort and Zeus interruption detach and
- * delete the order. The real hostile remains the
+ * fixed-wing ATTACK leg retains the target-crossing MOVE route until the selected weapon has a live
+ * delivery solution, then changes that same waypoint once to a target-attached DESTROY order. This
+ * joins the pilot's native attack manoeuvre to its fire-control solution without allowing the engine
+ * to fire several kilometres before roll-in. Air intercepts attach immediately because the contact
+ * itself is moving. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
  * Each leg updates the one Cortex-owned native waypoint once. Progress is measured toward
@@ -245,8 +246,11 @@ if (_stage == "") then {
     // prevented native pilots and turrets from building a valid solution while Cortex waited to fire.
     _aircraft setVariable ["Waldo_Cortex_AirAttackToken",_plan get "token"];
     _aircraft setVariable ["Waldo_Cortex_AirAttackTarget",_target];
+    // simulation=shotMissile also covers unguided rockets and bombs. Only a planner-classified
+    // GUIDED station may receive missile target commands; assigning them to bombs prevented normal
+    // fuzing, while assigning them to fixed rockets contradicted their delivery geometry.
     _aircraft setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",
-        ["",_plan getOrDefault ["selectedWeapon",""]] select ((_plan getOrDefault ["selectedSimulation",""]) == "shotmissile")];
+        ["",_plan getOrDefault ["selectedWeapon",""]] select ((_plan getOrDefault ["selectedWeaponClass",""]) == "GUIDED")];
     _aircraft setVariable ["Waldo_Cortex_AirAttackGuidanceTarget",_target];
     private _handler=_aircraft addEventHandler ["Fired",{
         params ["_aircraft","_weapon","","","","","_projectile"];
@@ -365,11 +369,10 @@ if (_commandedStage != _stage) then {
         _created setWaypointCompletionRadius ([450,220] select !_isPlane);
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
-    // During the delivery leg, let Arma's aircraft attack FSM own the final turn, dive and release
-    // against the real hostile. Keeping a MOVE leg while separately calling fireAtTarget caused
-    // accepted requests to execute after the aircraft had passed the only useful attack angle.
-    // Rotary-wing lateral passes retain their authored abeam MOVE geometry.
-    if (_isPlane && {_stage == "ATTACK"} && {!isNull _target}) then {
+    // A moving air contact is the route, so native pursuit begins with the intercept leg. Ground
+    // attacks retain the immutable target-crossing MOVE route until their live weapon basket is met;
+    // attaching DESTROY here made Arma fire guns and rockets several kilometres before roll-in.
+    if (_isPlane && {_stage == "ATTACK"} && {_job getOrDefault ["airToAir",false]} && {!isNull _target}) then {
         _ownedWaypoint setWaypointType "DESTROY";
         _ownedWaypoint waypointAttachVehicle _target;
     } else {
@@ -479,6 +482,20 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
+    // Commit a fixed-wing ground attack once, at the moment this exact weapon has a physical
+    // solution. The engine can now couple its final attack manoeuvre and release without gaining an
+    // early-fire window. The same owned waypoint is detached on egress or immediate Zeus handover.
+    if (_isPlane && {!_airContact} && {_validSolution} && {!(_job getOrDefault ["deliveryCommitted",false])}) then {
+        private _deliveryWaypointIndex=(waypoints _group) findIf {waypointName _x == _ownedWaypointName};
+        if (_deliveryWaypointIndex >= 0) then {
+            private _deliveryWaypoint=(waypoints _group) select _deliveryWaypointIndex;
+            _deliveryWaypoint setWaypointType "DESTROY";
+            _deliveryWaypoint waypointAttachVehicle _target;
+            _group setCurrentWaypoint _deliveryWaypoint;
+            _job set ["deliveryCommitted",true];
+            _job set ["deliveryCommittedAt",serverTime];
+        };
+    };
     // fireAtTarget is asynchronous. Do not queue another request while the engine is still solving
     // the previous one: the old request burst was released seconds later after the nose had moved,
     // producing a visibly aligned request followed by rockets missing hundreds of metres wide.
