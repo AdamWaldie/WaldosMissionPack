@@ -1047,16 +1047,19 @@ class CortexOperations(unittest.TestCase):
                        'terrainIntersectASL [_threatASL,_sampleASL]',
                        'private _surfaceUp=(surfaceNormal _sample) select 2',
                        'private _terrainASL=getTerrainHeightASL _sample',
-                       'if (surfaceIsWater _sample || {_surfaceUp < _minimumSurfaceUp})',
+                       'if (surfaceIsWater _sample || {_surfaceUp < _sampleMinimumUp} || {_sampleGrade > _sampleMaximumGrade})',
                        '+2*(_terrainPenalty/(_terrainSamples max 1))',
                        '"FIRE","GEOM"','"VIEW","GEOM"','_lateral < 30',
                        '_pointSide*_startSide < 0','(ceil (_legLength/20)) max 3',
+                       'min 24','private _sampleGrade=abs (_terrainASL-_previousTerrainASL)/_sampleDistance',
                        '-70*(_hardScreen/(_screenSamples max 1))',
                        '-25*(_concealed/(_screenSamples max 1))']:
             self.assertIn(marker,selector)
         self.assertLess(selector.index('private _safetySamples='),selector.index('surfaceIsWater _sample'))
         self.assertLess(selector.index('surfaceIsWater _sample'),selector.index('forEach [0.25,0.5,0.75]'))
-        for vehicle_marker in ['"VEHICLE"','private _minimumSurfaceUp=[0.5,0.68]',
+        for vehicle_marker in ['"VEHICLE"','private _minimumSurfaceUp=[0.55,0.8]',
+                               'private _maximumGrade=[1.25,0.7]',
+                               'if (_onRoad) then {0.68}','if (_onRoad) then {0.9}',
                                'isOnRoad _sample','-30*(_roadSamples/(_terrainSamples max 1))']:
             self.assertIn(vehicle_marker,selector)
         self.assertNotIn('nearObjects',selector)

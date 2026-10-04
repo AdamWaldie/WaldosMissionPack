@@ -7,7 +7,11 @@
  * inside its own supporting squad's corridor may depart laterally for at most 60 m of route; once
  * clear it may not re-enter. This distinguishes a necessary departure from crossing friendly fire.
  * The existing bounded safety samples also reject water and cliff-like ground and score cumulative
- * height change, steep surfaces and roads. This closes the gaps between the three more expensive
+ * height change, steep surfaces and roads. An off-road vehicle route rejects sustained ground
+ * steeper than roughly 37 degrees or an abrupt sample-to-sample grade above 70 percent. Roads keep
+ * a wider allowance because their engine path surface can disagree with the underlying terrain
+ * normal. Infantry retains a wider traversable envelope but still rejects cliff-like steps. This
+ * closes the gaps between the three more expensive
  * ballistic/visual screening rays, so a route that looked valid on a flat range cannot jump across
  * a narrow ridge, ditch or water strip on a real terrain. Vehicle callers use a stricter slope limit
  * and receive a small road preference; the selector still chooses only endpoints and leaves actual
@@ -54,7 +58,8 @@ if (count _start < 2 || {count _threat < 2} || {_candidates isEqualTo []}) exitW
 _mobility=toUpper _mobility;
 if !(_mobility in ["INFANTRY","VEHICLE"]) then {_mobility="INFANTRY"};
 private _vehicleRoute=_mobility == "VEHICLE";
-private _minimumSurfaceUp=[0.5,0.68] select _vehicleRoute;
+private _minimumSurfaceUp=[0.55,0.8] select _vehicleRoute;
+private _maximumGrade=[1.25,0.7] select _vehicleRoute;
 
 private _limited=_candidates select [0,(count _candidates) min 8];
 private _threatASL=(AGLToASL _threat) vectorAdd [0,0,1.4];
@@ -62,9 +67,7 @@ private _best=[];
 private _bestScore=1e12;
 {
     private _route=_x;
-    private _valid=_route isNotEqualTo [] && {_route findIf {
-        count _x < 2 || {surfaceIsWater _x} || {((surfaceNormal _x) select 2) < _minimumSurfaceUp}
-    } < 0};
+    private _valid=_route isNotEqualTo [] && {_route findIf {count _x < 2 || {surfaceIsWater _x}} < 0};
     private _routeLength=0;
     private _hardScreen=0;
     private _concealed=0;
@@ -73,6 +76,7 @@ private _bestScore=1e12;
     private _terrainSamples=0;
     private _roadSamples=0;
     private _previousTerrainASL=getTerrainHeightASL _start;
+    private _previousTerrainPoint=+_start;
     private _from=_start;
     // [starts inside corridor, has cleared corridor]. State persists across every leg in this
     // candidate so a route cannot leave the lane and later cross back through it.
@@ -92,7 +96,7 @@ private _bestScore=1e12;
             _routeLength=_routeLength+_legLength;
             // Safety sampling is simple arithmetic and capped independently from the three
             // geometry rays. Long flank legs therefore cannot jump across a narrow fire lane.
-            private _safetySamples=((ceil (_legLength/20)) max 3) min 12;
+            private _safetySamples=((ceil (_legLength/20)) max 3) min 24;
             for "_safetyIndex" from 1 to _safetySamples do {
                 private _fraction=_safetyIndex/_safetySamples;
                 private _sample=[
@@ -105,14 +109,20 @@ private _bestScore=1e12;
                 // long leg. This adds no loop and remains a once-per-operation planning cost.
                 private _surfaceUp=(surfaceNormal _sample) select 2;
                 private _terrainASL=getTerrainHeightASL _sample;
+                private _sampleDistance=(_previousTerrainPoint distance2D _sample) max 1;
+                private _sampleGrade=abs (_terrainASL-_previousTerrainASL)/_sampleDistance;
+                private _onRoad=_vehicleRoute && {isOnRoad _sample};
+                private _sampleMinimumUp=if (_onRoad) then {0.68} else {_minimumSurfaceUp};
+                private _sampleMaximumGrade=if (_onRoad) then {0.9} else {_maximumGrade};
                 _terrainSamples=_terrainSamples+1;
-                if (surfaceIsWater _sample || {_surfaceUp < _minimumSurfaceUp}) then {
+                if (surfaceIsWater _sample || {_surfaceUp < _sampleMinimumUp} || {_sampleGrade > _sampleMaximumGrade}) then {
                     _valid=false;
                 } else {
                     _terrainPenalty=_terrainPenalty+abs (_terrainASL-_previousTerrainASL)
                         +((1-_surfaceUp)*12);
-                    if (_vehicleRoute && {isOnRoad _sample}) then {_roadSamples=_roadSamples+1};
+                    if (_onRoad) then {_roadSamples=_roadSamples+1};
                     _previousTerrainASL=_terrainASL;
+                    _previousTerrainPoint=+_sample;
                 };
                 if (!_valid) exitWith {};
                 if (_sample distance2D _start > 10) then {

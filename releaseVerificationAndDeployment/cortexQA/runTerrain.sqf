@@ -63,13 +63,18 @@ private _vehicleRoute=[_start,_candidates,_threat,[],objNull,"VEHICLE"] call Wal
 ["TERRAIN-vehicle-avenue",_vehicleRoute isNotEqualTo [],str _vehicleRoute] call _check;
 
 private _routeUsable={
-    params ["_origin","_route",["_minimumUp",0.5]];
+    params ["_origin","_route",["_mobility","INFANTRY"]];
     if (_route isEqualTo []) exitWith {false};
+    private _vehicleRoute=toUpper _mobility == "VEHICLE";
+    private _minimumUp=[0.55,0.8] select _vehicleRoute;
+    private _maximumGrade=[1.25,0.7] select _vehicleRoute;
     private _usable=true;
     private _from=_origin;
+    private _previousPoint=+_origin;
+    private _previousTerrainASL=getTerrainHeightASL _origin;
     {
         private _to=_x;
-        private _samples=((ceil ((_from distance2D _to)/20)) max 3) min 12;
+        private _samples=((ceil ((_from distance2D _to)/20)) max 3) min 24;
         for "_index" from 1 to _samples do {
             private _fraction=_index/_samples;
             private _point=[
@@ -77,15 +82,24 @@ private _routeUsable={
                 (_from select 1)+((_to select 1)-(_from select 1))*_fraction,
                 0
             ];
-            if (surfaceIsWater _point || {((surfaceNormal _point) select 2) < _minimumUp}) exitWith {_usable=false};
+            private _terrainASL=getTerrainHeightASL _point;
+            private _grade=abs (_terrainASL-_previousTerrainASL)/((_previousPoint distance2D _point) max 1);
+            private _onRoad=_vehicleRoute && {isOnRoad _point};
+            private _pointMinimumUp=if (_onRoad) then {0.68} else {_minimumUp};
+            private _pointMaximumGrade=if (_onRoad) then {0.9} else {_maximumGrade};
+            if (surfaceIsWater _point
+                || {((surfaceNormal _point) select 2) < _pointMinimumUp}
+                || {_grade > _pointMaximumGrade}) exitWith {_usable=false};
+            _previousPoint=+_point;
+            _previousTerrainASL=_terrainASL;
         };
         if (!_usable) exitWith {};
         _from=_to;
     } forEach _route;
     _usable
 };
-["TERRAIN-infantry-route-usable",[_start,_infantryRoute,0.5] call _routeUsable] call _check;
-["TERRAIN-vehicle-route-usable",[_start,_vehicleRoute,0.68] call _routeUsable] call _check;
+["TERRAIN-infantry-route-usable",[_start,_infantryRoute,"INFANTRY"] call _routeUsable] call _check;
+["TERRAIN-vehicle-route-usable",[_start,_vehicleRoute,"VEHICLE"] call _routeUsable] call _check;
 
 private _infantryGroup=createGroup [east,true];
 _infantryGroup setVariable ["Waldo_Headless_ExcludeGroup",true,true];
