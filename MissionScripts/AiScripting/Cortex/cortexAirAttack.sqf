@@ -12,12 +12,14 @@
  * Cortex then asks that operator to release the selected weapon only after live range, route,
  * ammunition and seeker checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
- * waypoint for the finite lease. Ingress and egress receive one terrain-relative height hint. On a
- * fixed-wing ATTACK the same waypoint becomes a native DESTROY order attached to the hostile and the
- * attack-height hint is deliberately omitted: MOVE waypoint height did not pitch the aircraft, while
- * flyInHeight held every nominally descending route level and made guns, rockets and bombs miss long.
- * The terrain-screened ingress therefore chooses the safe bearing and altitude, then Arma's pilot and
- * weapon FSM solve the terminal dive, turn, muzzle, pylon and release. Rotorcraft and independently aimed
+ * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. Surface
+ * attacks keep the immutable target-crossing MOVE leg: Arma's target-attached DESTROY waypoint is not
+ * a reliable target association and live use made the pilot circle without firing. During the final
+ * fixed-wing gun or rocket basket, Cortex briefly blends the nose toward the live target at a bounded
+ * rate. The alignment derives from current aircraft/target geometry and runs only while the sampled
+ * line remains clear of terrain; it never moves the aircraft position or corrects a projectile. Bomb
+ * release uses a short config-driven ballistic integration instead of a fixed angle or height. Native
+ * fireAtTarget still owns the real muzzle, configured weapon and release. Rotorcraft and independently aimed
  * turrets retain the bounded native fire request because their abeam and standoff attacks do not
  * use a fixed-wing dive. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
@@ -410,13 +412,12 @@ private _commandedStage=_job getOrDefault ["commandedStage",""];
 if (_commandedStage != _stage) then {
     _aircraft limitSpeed (_stageSpeeds select _stageIndex);
     // MOVE waypoint height is not a reliable flight-profile input for native aircraft. Apply one
-    // terrain-relative height hint to ingress and egress, then leave the flight model alone. A
-    // fixed-wing ATTACK deliberately receives no height hint: native target prosecution must be able
-    // to pitch down, and the live audit proved flyInHeight kept nominal dive routes almost level.
+    // terrain-relative height hint when the leg changes, then leave the flight model alone. The
+    // terminal delivery assist below supplies only final weapon alignment; it does not become a
+    // second route planner or continuously chase terrain.
     // This is deliberately not refreshed by the scheduler. Zeus handover deletes the lease waypoint
     // and does not issue a replacement movement command or delayed repair after curator ownership.
-    private _nativePlaneTargeting=_isPlane && {_stage == "ATTACK"} && {!isNull _target};
-    if (!_nativePlaneTargeting) then {_aircraft flyInHeight (_stageAltitudes select _stageIndex)};
+    _aircraft flyInHeight (_stageAltitudes select _stageIndex);
     private _ownedWaypointIndex=(waypoints _group) findIf {waypointName _x == _ownedWaypointName};
     private _ownedWaypoint=if (_ownedWaypointIndex < 0) then {
         private _created=_group addWaypoint [_destination,0];
@@ -428,10 +429,12 @@ if (_commandedStage != _stage) then {
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
     _ownedWaypoint setWaypointPosition [_destination,0];
-    // Ingress establishes a terrain-screened bearing and enough separation for the engine to form an
-    // attack. At ATTACK, attach this finite order to the real hostile so native fixed-wing combat AI
-    // can choose the pitch and release point that MOVE plus flyInHeight could not express.
-    if (_nativePlaneTargeting) then {
+    // Moving air contacts need the engine's native intercept order. Surface delivery retains the
+    // planned target-crossing line; attaching DESTROY to a surface object is unsupported and the live
+    // audit showed it can leave the pilot circling without prosecuting the selected target.
+    private _nativeAirIntercept=_isPlane && {_stage == "ATTACK"}
+        && {_job getOrDefault ["airToAir",false]} && {!isNull _target};
+    if (_nativeAirIntercept) then {
         _ownedWaypoint setWaypointPosition [getPosATL _target,0];
         _ownedWaypoint setWaypointType "DESTROY";
         _ownedWaypoint waypointAttachVehicle _target;
@@ -458,6 +461,10 @@ if (_stageDistance <= _stageBest-40) then {
 };
 private _routeStalled=serverTime >= (_job getOrDefault ["stageProgressAt",serverTime])+([35,24] select !_isPlane);
 if (_stage == "ATTACK") then {
+    // This flag is live for one scheduler pass only. It selects a faster cadence while a fixed
+    // weapon is inside its terminal basket without turning every aircraft job into a high-rate
+    // controller.
+    _job set ["deliveryAssistActive",false];
     private _pattern=_job getOrDefault ["pattern",""];
     private _airContact=_job getOrDefault ["airToAir",false];
     private _weapon=_job getOrDefault ["selectedWeapon",""];
@@ -479,13 +486,48 @@ if (_stage == "ATTACK") then {
         _aircraft doTarget _fireTarget;
         _operator doWatch _fireTarget;
         _operator doTarget _fireTarget;
-        // One operator order activates the selected station. The attached DESTROY order owns the
-        // manoeuvre; Cortex neither repeats this instruction nor supplies a firing vector.
-        if (_isPlane) then {_operator doFire _fireTarget};
         _job set ["targetCommanded",true];
     };
     private _range=_aircraft distance _target;
     private _horizontalRange=_aircraft distance2D _target;
+    private _deliveryTerrainClear=true;
+    // Native fixed-wing pilots commonly keep a level attitude all the way through a surface MOVE
+    // waypoint. Blend only the last gun/rocket basket toward the live aim point, and only where a
+    // sampled terrain corridor remains clear. Position, velocity and projectiles remain untouched.
+    // This lets hills veto the assist instead of assuming the flat VR horizon is representative.
+    private _terminalAssist=_isPlane && {!_airContact} && {_weaponClass in ["GUN","ROCKET"]}
+        && {_horizontalRange >= 700} && {_horizontalRange <= ([2600,3400] select (_weaponClass == "ROCKET"))};
+    if (_terminalAssist) then {
+        private _aircraftASL=getPosASL _aircraft;
+        private _aimASL=aimPos _target;
+        private _desiredVector=_aimASL vectorDiff _aircraftASL;
+        private _desiredDirection=vectorNormalized _desiredVector;
+        private _depression=-(asin (((_desiredDirection select 2) max -1) min 1));
+        if (_depression >= 2 && {_depression <= 26}) then {
+            private _clearanceMinimum=1e10;
+            for "_sampleIndex" from 1 to 7 do {
+                private _fraction=_sampleIndex/8;
+                private _sampleASL=_aircraftASL vectorAdd (_desiredVector vectorMultiply _fraction);
+                private _terrainClearance=(_sampleASL select 2)-getTerrainHeightASL _sampleASL;
+                private _requiredClearance=20+(100*(1-_fraction));
+                _clearanceMinimum=_clearanceMinimum min _terrainClearance;
+                if (_terrainClearance < _requiredClearance) then {_deliveryTerrainClear=false};
+            };
+            _job set ["deliveryAssistSamples",[8,_clearanceMinimum,_depression,_deliveryTerrainClear]];
+            if (_deliveryTerrainClear) then {
+                private _currentDirection=vectorDir _aircraft;
+                private _newDirection=vectorNormalized ((_currentDirection vectorMultiply 0.86)
+                    vectorAdd (_desiredDirection vectorMultiply 0.14));
+                private _newRight=vectorNormalized (_newDirection vectorCrossProduct [0,0,1]);
+                private _newUp=vectorNormalized (_newRight vectorCrossProduct _newDirection);
+                _aircraft setVectorDirAndUp [_newDirection,_newUp];
+                _job set ["deliveryAssistActive",true];
+            };
+        } else {
+            _deliveryTerrainClear=false;
+            _job set ["deliveryAssistSamples",[0,-1,_depression,false]];
+        };
+    };
     private _weaponVector=if (_weapon == "") then {[0,0,0]} else {_aircraft weaponDirection _weapon};
     private _targetVector=(aimPos _target) vectorDiff (getPosASL _aircraft);
     private _alignment=if (vectorMagnitude _weaponVector > 0.01 && {vectorMagnitude _targetVector > 0.01}) then {
@@ -499,7 +541,13 @@ if (_stage == "ATTACK") then {
     if (_muzzleSpeed <= 0 && {_ammoClass != ""}) then {
         _muzzleSpeed=getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "typicalSpeed");
     };
-    if (_muzzleSpeed <= 0) then {_muzzleSpeed=[900,180] select (_weaponClass == "ROCKET")};
+    if (_muzzleSpeed <= 0) then {
+        _muzzleSpeed=switch _weaponClass do {
+            case "ROCKET": {180};
+            case "BOMB": {0};
+            default {900};
+        };
+    };
     private _predictedLaunchVelocity=((vectorNormalized _weaponVector) vectorMultiply _muzzleSpeed)
         vectorAdd (velocity _aircraft);
     private _launchAlignment=if (vectorMagnitude _predictedLaunchVelocity > 0.01
@@ -538,9 +586,9 @@ if (_stage == "ATTACK") then {
     } else {-1};
     private _deliveryAngle=acos ((_alignment max -1) min 1);
     // A bomb rack points with the airframe and cannot be validated by comparing weaponDirection to
-    // the target. Use a cheap ballistic release basket from live AGL and horizontal speed instead.
-    // This does not steer the bomb or guarantee a hit; it only prevents firing after overflight and
-    // gives the native projectile a physically credible release.
+    // the target. Integrate the selected ammunition's configured drag from the live aircraft state.
+    // This does not steer the bomb or guarantee a hit; it only creates a terrain-relative release
+    // basket rather than assuming flat ground, constant horizontal speed and vacuum ballistics.
     private _horizontalVelocity=velocity _aircraft;
     _horizontalVelocity set [2,0];
     private _heightAGL=(getPosATL _aircraft select 2) max 1;
@@ -548,8 +596,32 @@ if (_stage == "ATTACK") then {
     private _fallTime=(_verticalSpeed+sqrt ((_verticalSpeed*_verticalSpeed)+(2*9.81*_heightAGL)))/9.81;
     private _bombReleaseDistance=(vectorMagnitude _horizontalVelocity)*_fallTime;
     private _predictedBombImpact=(getPosATL _aircraft) vectorAdd (_horizontalVelocity vectorMultiply _fallTime);
+    if (_bomb) then {
+        private _integrationPosition=getPosATL _aircraft;
+        private _integrationVelocity=velocity _aircraft;
+        if (_muzzleSpeed > 0) then {
+            _integrationVelocity=_integrationVelocity vectorAdd ((vectorDir _aircraft) vectorMultiply _muzzleSpeed);
+        };
+        private _airFriction=getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "airFriction");
+        private _targetAltitude=getPosATL _target select 2;
+        private _integrationTime=0;
+        private _integrationStep=0.2;
+        for "_integrationIndex" from 0 to 119 do {
+            if ((_integrationPosition select 2) > _targetAltitude) then {
+                private _dragAcceleration=_integrationVelocity vectorMultiply
+                    (_airFriction*(vectorMagnitude _integrationVelocity));
+                _integrationVelocity=_integrationVelocity vectorAdd (_dragAcceleration vectorMultiply _integrationStep);
+                _integrationVelocity set [2,(_integrationVelocity select 2)-(9.81*_integrationStep)];
+                _integrationPosition=_integrationPosition vectorAdd (_integrationVelocity vectorMultiply _integrationStep);
+                _integrationTime=_integrationTime+_integrationStep;
+            };
+        };
+        _fallTime=_integrationTime;
+        _predictedBombImpact=_integrationPosition;
+        _bombReleaseDistance=(getPosATL _aircraft) distance2D _predictedBombImpact;
+    };
     private _bombImpactError=_predictedBombImpact distance2D getPosATL _target;
-    private _bombWindow=_bombImpactError <= 45 && {_forwardAlignment >= 0.92};
+    private _bombWindow=_bombImpactError <= 55 && {_forwardAlignment >= 0.92};
     // A nose-mounted weapon needs forward closure. A retained lateral turret is specifically
     // selected to fire abeam, so forcing the helicopter nose onto the target defeats that pattern.
     private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
@@ -569,7 +641,7 @@ if (_stage == "ATTACK") then {
     };
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
-        && {_closing} && {_nativeFixedBasket}
+        && {_closing} && {_nativeFixedBasket} && {_deliveryTerrainClear}
         && {_bombWindow || {!_bomb && {!_fixedUnguided || {_forwardAlignment >= 0.94}}}}
         && {!_bomb || {(getPosATL _aircraft select 2) >= 250}};
     private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
@@ -579,16 +651,13 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // Native fixed-wing delivery owns manoeuvre and release through the attached DESTROY order and
-    // one operator instruction. Do not compete with it from the scheduler. Rotorcraft keep this
-    // bounded request path because an independently aimed turret can attack without turning the
-    // airframe onto the hostile.
-    private _nativePlaneDelivery=_isPlane;
+    // fireAtTarget owns the actual configured muzzle and release for every platform. The bounded
+    // basket above decides when Cortex may ask; the engine may still reject the request.
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
         && {serverTime < _requestAt+0.35};
-    if (!_nativePlaneDelivery && {_validSolution} && {!_requestPending}
+    if (_validSolution && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
         // One native request at a time. Repeating a rejected request after a short interval is
         // intentional: the operator may enter the engine's exact solution later in the same pass.
@@ -759,4 +828,4 @@ switch _stage do {
     };
     case "EGRESS": {};
 };
-0.5
+if (_job getOrDefault ["deliveryAssistActive",false] && {_stage == "ATTACK"}) then {0.1} else {0.5}
