@@ -14,7 +14,10 @@
  * Locality/authority: read-only; called on the aircraft owner. It does not reveal enemies, add
  * waypoints, move the aircraft or change crew orders. Immutable magazine facts are cached locally.
  * Each pattern carries separate ingress/attack/egress height, speed, capture radius and minimum
- * firing-leg time. STRAFE dives and accelerates through; OFFSET remains oblique; HOOK crosses the
+ * firing-leg time. A bounded set of terrain samples is taken once while the plan is built. When
+ * intervening relief intrudes into the platform's clearance envelope, the same lift is added to all
+ * three stages so the attack angle remains intact without a per-frame terrain controller. STRAFE
+ * dives and accelerates through; OFFSET remains oblique; HOOK crosses the
  * target axis on a climbing exit; LATERAL stays abeam long enough for its retained turret; STANDOFF
  * uses a stable release leg and accelerates away. Repeat/JIP: safe to repeat. Each result is a new
  * owner-local plan and has no JIP side effects.
@@ -478,10 +481,12 @@ if (_isPlane) then {
             _attackMinimum=3;
         };
         default {
-            // A useful depression angle and a 280-350 m far-side endpoint let guns fire through the
-            // target while leaving enough height for a native pull-out. The endpoint is beyond the
-            // target and is never treated as the release point itself.
-            _stageAltitudes=[(_altitude+300) min 1600,280+random 70,_altitude+700];
+            // Preserve a roughly ten-degree gun run while leaving a useful recovery margin. The
+            // former 280-350 m endpoint repeatedly let natural flight dip through the 220 m abort
+            // floor during a valid burst, splitting one pass into several rediscovered attacks.
+            private _deliveryAltitude=400+random 80;
+            private _approachAltitude=(_deliveryAltitude+1250) min 1800;
+            _stageAltitudes=[_approachAltitude,_deliveryAltitude,_altitude+700];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];
             _attackMinimum=2;
@@ -527,6 +532,41 @@ if (_isPlane) then {
         };
     };
 };
+// MOVE points and flyInHeight are terrain-relative, but natural fixed-wing flight can still lag a
+// sharp ridge between distant waypoints. Sample each route leg once and compare the terrain with the
+// straight absolute-height profile the three stage heights describe. Lift the complete profile only
+// by the missing clearance. A fixed 14 samples per surface plan keeps this independent of unit count,
+// preserves the delivery angle and avoids an expensive terrain-following scheduler.
+private _terrainLift=0;
+private _terrainClearanceMinimum=0;
+if (!_airToAir) then {
+    _terrainClearanceMinimum=1e6;
+    private _minimumTerrainClearance=[45,300] select _isPlane;
+    private _terrainLiftLimit=[300,1200] select _isPlane;
+    private _routePoints=[_ingress,_attack,_egress];
+    for "_legIndex" from 0 to 1 do {
+        private _fromPoint=_routePoints select _legIndex;
+        private _toPoint=_routePoints select (_legIndex+1);
+        private _fromTerrain=getTerrainHeightASL _fromPoint;
+        private _toTerrain=getTerrainHeightASL _toPoint;
+        private _fromFlightASL=_fromTerrain+(_stageAltitudes select _legIndex);
+        private _toFlightASL=_toTerrain+(_stageAltitudes select (_legIndex+1));
+        for "_sampleIndex" from 0 to 6 do {
+            private _fraction=_sampleIndex/6;
+            private _samplePoint=_fromPoint vectorAdd ((_toPoint vectorDiff _fromPoint) vectorMultiply _fraction);
+            private _terrainASL=getTerrainHeightASL _samplePoint;
+            private _plannedASL=_fromFlightASL+((_toFlightASL-_fromFlightASL)*_fraction);
+            private _clearance=_plannedASL-_terrainASL;
+            _terrainClearanceMinimum=_terrainClearanceMinimum min _clearance;
+            _terrainLift=_terrainLift max (_minimumTerrainClearance-_clearance);
+        };
+    };
+    _terrainLift=(ceil (_terrainLift max 0)) min _terrainLiftLimit;
+    if (_terrainLift > 0) then {
+        _stageAltitudes=_stageAltitudes apply {_x+_terrainLift};
+        _terrainClearanceMinimum=_terrainClearanceMinimum+_terrainLift;
+    };
+};
 {
     private _pointValue=_x;
     _pointValue set [2,_stageAltitudes select _forEachIndex];
@@ -537,6 +577,7 @@ createHashMapFromArray [
     ["points",[_ingress,_attack,_egress]],["altitude",_altitude],["speed",_speed],
     ["stageAltitudes",_stageAltitudes],["stageSpeeds",_stageSpeeds],
     ["captureRadii",_captureRadii],["attackMinimum",_attackMinimum],
+    ["terrainLift",_terrainLift],["terrainClearanceMinimum",_terrainClearanceMinimum],
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
     ["lateralWeapon",_lateralWeapon],["lateralSimulation",_lateralSimulation],
     ["standoffWeapon",_standoffWeapon],["standoffSimulation",_standoffSimulation],

@@ -13,11 +13,11 @@
  * checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
  * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
- * fixed-wing ATTACK leg retains the target-crossing MOVE route until the selected weapon has a live
- * delivery solution, then changes that same waypoint once to a target-attached DESTROY order. This
- * joins the pilot's native attack manoeuvre to its fire-control solution without allowing the engine
- * to fire several kilometres before roll-in. Air intercepts attach immediately because the contact
- * itself is moving. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
+ * fixed-wing ground ATTACK leg retains the target-crossing MOVE route throughout delivery; the
+ * selected operator receives a native fire request only inside the live weapon basket. This keeps
+ * the aircraft on its useful approach instead of replacing it with an unreliable spatial DESTROY
+ * search at the release point. Air intercepts attach immediately because the contact itself is
+ * moving. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
  * Each leg updates the one Cortex-owned native waypoint once. Progress is measured toward
@@ -84,15 +84,22 @@ private _finish={
             private _handoverGroup=group _handoverPilot;
             private _snapshot=_handoverGroup getVariable ["Waldo_Cortex_ZeusOrderSnapshot",[]];
             private _handoverPosition=+(_snapshot param [1,[]]);
-            private _authoredWaypointIndex=(waypoints _handoverGroup) findIf {
+            private _handoverWaypoints=waypoints _handoverGroup;
+            private _authoredWaypointOffset=_handoverWaypoints findIf {
                 count _handoverPosition >= 2 && {waypointPosition _x distance2D _handoverPosition <= 2}
             };
-            if (_authoredWaypointIndex < 0) then {_authoredWaypointIndex=_snapshot param [5,currentWaypoint _handoverGroup]};
             // The waypoint already contains Zeus' behaviour and speed. Re-select it without
             // translating those properties into additional unit or group commands; the engine and
-            // curator remain the only authorities after this point.
-            if (_authoredWaypointIndex >= 0 && {_authoredWaypointIndex < count waypoints _handoverGroup}) then {
-                _handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointIndex];
+            // curator remain the only authorities after this point. Use the actual waypoint handle:
+            // deleting the Cortex waypoint leaves engine-ID gaps, so a findIf list offset is not a
+            // valid waypoint ID and previously selected the deleted slot/waypoint zero.
+            private _authoredWaypoint=if (_authoredWaypointOffset >= 0) then {
+                _handoverWaypoints select _authoredWaypointOffset
+            } else {
+                [_handoverGroup,_snapshot param [5,currentWaypoint _handoverGroup]]
+            };
+            if ((_authoredWaypoint select 1) >= 0) then {
+                _handoverGroup setCurrentWaypoint _authoredWaypoint;
             };
             // flyInHeight persists after a waypoint changes. Restore it once from the curator's
             // selected destination so a helicopter does not hover at Cortex's attack altitude while
@@ -131,7 +138,8 @@ private _finish={
     // re-attack interval, not a movement controller or Zeus order guard.
     _aircraft setVariable ["Waldo_Cortex_AirAttackBlockedUntil",serverTime+(
         if (_reason in ["CONTROL_RELEASED","AUTHORED_ROUTE_CHANGED"]) then {5}
-        else {if (_reason in ["COMPLETE","TARGET_DESTROYED"]) then {20} else {35}}
+        else {if (_reason in ["COMPLETE","TARGET_DESTROYED"]) then {20}
+            else {if (_reason == "DELIVERY_SAFETY_FLOOR") then {120} else {35}}}
     )];
     _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",nil,true];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",nil,true];
@@ -237,6 +245,8 @@ if (_stage == "") then {
     _job set ["stageSpeeds",_plan getOrDefault ["stageSpeeds",[_plan get "speed",_plan get "speed",_plan get "speed"]]];
     _job set ["captureRadii",_plan getOrDefault ["captureRadii",[450,450,450]]];
     _job set ["attackMinimum",_plan getOrDefault ["attackMinimum",2]];
+    _job set ["terrainLift",_plan getOrDefault ["terrainLift",0]];
+    _job set ["terrainClearanceMinimum",_plan getOrDefault ["terrainClearanceMinimum",0]];
     _job set ["type","AIR_ATTACK"]; _job set ["stage",""]; _job set ["deadline",serverTime+75]; _job set ["shots",0];
     _job set ["origin",getPosATL _aircraft]; _job set ["resumePosition",_resumePosition];
     _job set ["resumeWaypointIndex",_waypointIndex]; _job set ["routeSignature",_routeSignature];
@@ -262,13 +272,16 @@ if (_stage == "") then {
             private _guidedWeapon=_aircraft getVariable ["Waldo_Cortex_AirAttackGuidedWeapon",""];
             private _guidedTarget=_aircraft getVariable ["Waldo_Cortex_AirAttackGuidanceTarget",objNull];
             if (_weapon == _guidedWeapon && {!isNull _projectile} && {!isNull _guidedTarget} && {alive _guidedTarget}) then {
-                _projectile setMissileTarget _guidedTarget;
+                private _targetAccepted=_projectile setMissileTarget [_guidedTarget,true];
                 // Air seekers track the object directly. Ground seekers also need one immutable
-                // aim point because several vanilla and modded AGMs accept fireAtTarget but launch
-                // without a usable object lock. This does not steer the round after release.
+                // aim point when their ammo explicitly supports manual point guidance. This is one
+                // release-time assignment, not a scripted homing loop or an airframe correction.
                 if (!(_guidedTarget isKindOf "Air")) then {
                     _projectile setMissileTargetPos (aimPos _guidedTarget);
                 };
+                _aircraft setVariable ["Waldo_Cortex_AirGuidanceAssignment",[
+                    serverTime,_weapon,_targetAccepted,missileTarget _projectile,missileTargetPos _projectile
+                ],true];
             };
         };
     }];
@@ -437,7 +450,9 @@ if (_stage == "ATTACK") then {
         case "ROCKET": {[500,3600,0.9995]};
         // A guided seeker needs a clean forward launch sector, not a gun-quality boresight solution.
         // The Fired handler assigns the selected hostile to the real projectile after release.
-        case "GUIDED": {if (_airContact) then {[800,9000,0.96]} else {[1100,9000,0.97]}};
+        // fireAtTarget is asynchronous. Demand a tighter ground launch cone so the actual round is
+        // still inside the seeker's basket when the native pilot releases it a moment later.
+        case "GUIDED": {if (_airContact) then {[800,9000,0.96]} else {[1100,9000,0.995]}};
         case "BOMB": {[700,6500,0.9]};
         default {[0,0,1]};
     };
@@ -482,20 +497,10 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // Commit a fixed-wing ground attack once, at the moment this exact weapon has a physical
-    // solution. The engine can now couple its final attack manoeuvre and release without gaining an
-    // early-fire window. The same owned waypoint is detached on egress or immediate Zeus handover.
-    if (_isPlane && {!_airContact} && {_validSolution} && {!(_job getOrDefault ["deliveryCommitted",false])}) then {
-        private _deliveryWaypointIndex=(waypoints _group) findIf {waypointName _x == _ownedWaypointName};
-        if (_deliveryWaypointIndex >= 0) then {
-            private _deliveryWaypoint=(waypoints _group) select _deliveryWaypointIndex;
-            _deliveryWaypoint setWaypointType "DESTROY";
-            _deliveryWaypoint waypointAttachVehicle _target;
-            _group setCurrentWaypoint _deliveryWaypoint;
-            _job set ["deliveryCommitted",true];
-            _job set ["deliveryCommittedAt",serverTime];
-        };
-    };
+    // Keep ground delivery on the target-crossing MOVE leg. A DESTROY waypoint attached at the
+    // release basket proved engine-dependent: when attachment was rejected it became a spatial
+    // target search, stalled the run and emitted a warning every simulation tick. fireAtTarget below
+    // already hands the compatible loaded station to native fire control at the measured solution.
     // fireAtTarget is asynchronous. Do not queue another request while the engine is still solving
     // the previous one: the old request burst was released seconds later after the nose had moved,
     // producing a visibly aligned request followed by rockets missing hundreds of metres wide.
@@ -548,7 +553,8 @@ _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     +(_job getOrDefault ["points",[]]),
     _job getOrDefault ["selectedWeapon",""],_job getOrDefault ["selectedSimulation",""],
     _job getOrDefault ["selectedTurret",[]],_job getOrDefault ["selectedWeaponClass",""],
-    _job getOrDefault ["selectedMagazine",""]
+    _job getOrDefault ["selectedMagazine",""],
+    _job getOrDefault ["terrainLift",0],_job getOrDefault ["terrainClearanceMinimum",0]
 ],true];
 
 private _attackShots=_shots-(_job getOrDefault ["attackShotBaseline",0]);
@@ -625,10 +631,14 @@ switch _stage do {
         private _attackDwell=serverTime-(_job getOrDefault ["attackStartedAt",serverTime]);
         private _weaponClass=_job getOrDefault ["selectedWeaponClass",""];
         private _desiredShots=switch _weaponClass do {
-            case "GUN": {20};
+            // A short cannon burst damaged the live MRAP but left it operational. Forty requested
+            // rounds remains a finite one-pass burst while tolerating natural dispersion and armour.
+            case "GUN": {40};
             case "ROCKET": {8};
             case "GUIDED": {[1,2] select (_job getOrDefault ["airToAir",false])};
-            case "BOMB": {1};
+            // Release the paired bomb rack when fitted. One verified direct pass in the audit left
+            // the tracked target untouched; a two-weapon ripple is the credible finite delivery.
+            case "BOMB": {2};
             default {1};
         };
         // The release basket is the delivery point. Let finite gun/rocket/guided salvos develop

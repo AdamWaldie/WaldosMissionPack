@@ -503,6 +503,8 @@ private _observedProfiles=createHashMap;
     private _selectedSimulation=_initialPlan param [23,""];
     private _selectedTurret=_initialPlan param [24,[]];
     private _selectedWeaponClass=_initialPlan param [25,""];
+    private _terrainLift=_initialPlan param [27,0];
+    private _terrainClearanceMinimum=_initialPlan param [28,0];
     private _selectedOperator=if (_selectedTurret isEqualTo [-1]) then {driver _aircraft}
         else {_aircraft turretUnit _selectedTurret};
     if (_pattern != "") then {_observedProfiles set [_pattern,[_profilePoints,_profileAltitudes,_profileSpeeds]]};
@@ -512,6 +514,13 @@ private _observedProfiles=createHashMap;
         && {count (_profileAltitudes arrayIntersect _profileAltitudes) > 1
             || {count (_profileSpeeds arrayIntersect _profileSpeeds) > 1}},
         str [_pattern,_profileAltitudes,_profileSpeeds,_profileRadii,_profileDwell,_profilePoints]] call _recordCheck;
+    if (!_airTarget) then {
+        private _requiredTerrainClearance=[45,300] select _isPlaneClass;
+        [_id+"-terrain-envelope",_terrainLift >= 0
+            && {_terrainLift <= ([300,1200] select _isPlaneClass)}
+            && {_terrainClearanceMinimum >= _requiredTerrainClearance},
+            str [_terrainLift,_terrainClearanceMinimum,_requiredTerrainClearance,_profileAltitudes]] call _recordCheck;
+    };
     if (_isPlaneClass && {!_airTarget} && {count _profilePoints == 3}) then {
         private _deliveryStart=+(_profilePoints select 0);
         private _deliveryEnd=+(_profilePoints select 1);
@@ -707,7 +716,10 @@ private _observedProfiles=createHashMap;
             && {selectMin _sampleAltitudes >= ([25,200] select _isPlaneClass)},
             str [selectMin _sampleAltitudes,selectMax _sampleAltitudes,_sampleStages]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] in ["COMPLETE","TARGET_DESTROYED"]},str _outcome] call _recordCheck;
-        private _releaseWait=[4,20] select (_selectedWeaponClass in ["BOMB","GUIDED"]);
+        // Rockets and high releases can remain live well after the finite controller starts egress.
+        // Keep the damageable target until every bounded closest-approach sampler has completed;
+        // deleting it after four seconds previously turned visible rocket misses into empty evidence.
+        private _releaseWait=[4,20] select (_selectedWeaponClass in ["ROCKET","BOMB","GUIDED"]);
         [{
             !alive _target || {
                 count (_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]])
