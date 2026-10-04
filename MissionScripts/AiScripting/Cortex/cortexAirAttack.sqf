@@ -14,9 +14,11 @@
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
  * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
  * fixed-wing ground ATTACK leg retains the target-crossing MOVE route throughout delivery; the
- * selected operator receives a native fire request only inside the live weapon basket. This keeps
- * the aircraft on its useful approach instead of replacing it with an unreliable spatial DESTROY
- * search at the release point. Air intercepts attach immediately because the contact itself is
+ * selected operator releases a fixed forward weapon immediately inside the live weapon basket;
+ * independently aimed turrets retain native fire control. This keeps the aircraft on its useful
+ * approach instead of replacing it with an unreliable spatial DESTROY search at the release point,
+ * and prevents an asynchronous pilot request from releasing after the nose has left the measured
+ * solution. Air intercepts attach immediately because the contact itself is
  * moving. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
@@ -447,12 +449,15 @@ if (_stage == "ATTACK") then {
     } >= 0;
     private _envelope=switch _weaponClass do {
         case "GUN": {if (_airContact) then {[100,2200,0.999]} else {[120,2200,0.9995]}};
-        case "ROCKET": {[500,3600,0.9995]};
+        // The release is immediate, so a three-degree rocket cone is both credible and usable on
+        // an engine-flown dive. The old sub-two-degree gate caused the HOOK pass to overfly without
+        // ever firing even though the planned delivery axis crossed the target.
+        case "ROCKET": {[500,3600,0.998]};
         // A guided seeker needs a clean forward launch sector, not a gun-quality boresight solution.
         // The Fired handler assigns the selected hostile to the real projectile after release.
-        // fireAtTarget is asynchronous. Demand a tighter ground launch cone so the actual round is
-        // still inside the seeker's basket when the native pilot releases it a moment later.
-        case "GUIDED": {if (_airContact) then {[800,9000,0.96]} else {[1100,9000,0.995]}};
+        // Fixed forward weapons release synchronously below. Keep a clean seeker launch cone so the
+        // target remains inside its acquisition basket without scripting projectile flight.
+        case "GUIDED": {if (_airContact) then {[800,9000,0.96]} else {[1100,9000,0.97]}};
         case "BOMB": {[700,6500,0.9]};
         default {[0,0,1]};
     };
@@ -499,20 +504,37 @@ if (_stage == "ATTACK") then {
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
     // Keep ground delivery on the target-crossing MOVE leg. A DESTROY waypoint attached at the
     // release basket proved engine-dependent: when attachment was rejected it became a spatial
-    // target search, stalled the run and emitted a warning every simulation tick. fireAtTarget below
-    // already hands the compatible loaded station to native fire control at the measured solution.
-    // fireAtTarget is asynchronous. Do not queue another request while the engine is still solving
-    // the previous one: the old request burst was released seconds later after the nose had moved,
-    // producing a visibly aligned request followed by rockets missing hundreds of metres wide.
+    // target search, stalled the run and emitted a warning every simulation tick. The release below
+    // hands only the compatible loaded station to its living operator at the measured solution.
+    // A fixed forward weapon must fire in that same simulation window: fireAtTarget is asynchronous
+    // and was observed to release rockets and bombs only after the nose had moved hundreds of metres
+    // off the solved line. A turret that can aim independently still uses native fireAtTarget.
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
         && {serverTime < _requestAt+4};
     if (_validSolution && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
-        // One station-specific native request per bounded cycle is sufficient. Stacking doFire,
-        // commandTarget and fireAtTarget made the script compete with the pilot weapon FSM.
-        private _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
+        // One station-specific request per bounded cycle is sufficient. Stacking doFire and
+        // commandTarget made the script compete with the pilot weapon FSM. forceWeaponFire acts on
+        // the current operator and selected muzzle; it does not steer the airframe or projectile.
+        private _fixedForward=_turret isEqualTo [-1];
+        private _fired=false;
+        if (_fixedForward) then {
+            private _weaponState=weaponState [_aircraft,_turret,_weapon];
+            private _muzzle=_weaponState param [1,_weapon,[""]];
+            private _mode=_weaponState param [2,"",[""]];
+            if (_muzzle == "") then {_muzzle=_weapon};
+            if (_mode == "") then {
+                private _modes=getArray (configFile >> "CfgWeapons" >> _weapon >> "modes");
+                if (_modes isNotEqualTo []) then {_mode=_modes select 0};
+            };
+            if (_mode == "this" || {_mode == ""}) then {_mode=_weapon};
+            _operator forceWeaponFire [_muzzle,_mode];
+            _fired=true;
+        } else {
+            _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
+        };
         if (_fired) then {
             _job set ["fireRequestAt",serverTime];
             _job set ["fireRequestShotBaseline",_shots];
@@ -644,11 +666,18 @@ switch _stage do {
         // The release basket is the delivery point. Let finite gun/rocket/guided salvos develop
         // across a few native fire-control cycles, then leave promptly. A one-round rack and an
         // engine that refuses a follow-up cannot strand the aircraft: empty ammunition or six
-        // seconds after the first real shot closes the delivery. Hit/destruction remains an audit
-        // outcome and never gets fabricated here.
+        // bounded class-specific interval after the first real shot closes the delivery. A turreted
+        // cannon needs longer than a missile rail because dispersion is intentionally applied to
+        // vehicle crews. Target destruction still ends the attack immediately at the top of the
+        // next scheduler tick; no hit or kill is fabricated here.
+        private _deliveryWindow=switch _weaponClass do {
+            case "GUN": {18};
+            case "ROCKET": {12};
+            default {10};
+        };
         private _deliveryComplete=_attackShots >= _desiredShots
             || {_attackShots > 0 && {!(_job getOrDefault ["deliveryLoaded",true])}}
-            || {_attackShots > 0 && {serverTime >= (_job getOrDefault ["firstAttackShotAt",serverTime])+10}};
+            || {_attackShots > 0 && {serverTime >= (_job getOrDefault ["firstAttackShotAt",serverTime])+_deliveryWindow}};
         if (_attackShots > 0 && {_attackDwell >= (_job getOrDefault ["attackMinimum",2])}
             && {_deliveryComplete}) then {
             [_group,_job,"EGRESS","ACTUAL_FIRE"] call Waldo_fnc_CortexDrillSetStage;

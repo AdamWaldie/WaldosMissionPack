@@ -520,6 +520,26 @@ private _observedProfiles=createHashMap;
             && {_terrainLift <= ([300,1200] select _isPlaneClass)}
             && {_terrainClearanceMinimum >= _requiredTerrainClearance},
             str [_terrainLift,_terrainClearanceMinimum,_requiredTerrainClearance,_profileAltitudes]] call _recordCheck;
+        // VR is the fast flat regression arm. A checked Altis launch must prove that its route is
+        // genuinely non-flat; otherwise a green terrain-envelope result would merely repeat VR in
+        // a different world. Fourteen fixed samples mirror the production planner's bounded cost.
+        private _terrainSamples=[];
+        if (count _profilePoints == 3) then {
+            for "_terrainLeg" from 0 to 1 do {
+                private _terrainStart=_profilePoints select _terrainLeg;
+                private _terrainEnd=_profilePoints select (_terrainLeg+1);
+                for "_terrainIndex" from 0 to 6 do {
+                    private _fraction=_terrainIndex/6;
+                    private _sample=(_terrainStart vectorMultiply (1-_fraction))
+                        vectorAdd (_terrainEnd vectorMultiply _fraction);
+                    _terrainSamples pushBack (getTerrainHeightASL _sample);
+                };
+            };
+        };
+        private _terrainRelief=if (_terrainSamples isEqualTo []) then {0}
+            else {(selectMax _terrainSamples)-(selectMin _terrainSamples)};
+        [_id+"-terrain-scenario-relief",worldName == "VR" || {_terrainRelief >= 30},
+            str [worldName,_terrainRelief,_terrainSamples]] call _recordCheck;
     };
     if (_isPlaneClass && {!_airTarget} && {count _profilePoints == 3}) then {
         private _deliveryStart=+(_profilePoints select 0);

@@ -11,6 +11,9 @@
  * capture sequence (default Manual).
  * Port: dedicated-server port (default 24132).
  * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
+ * AuditTerrain: VR for the fast flat regression or Altis for real slope, ridge and rough-ground
+ *   validation. Altis keeps the same checked mission payload and is intended for focused physical
+ *   Cortex batches whose coordinates fit the terrain (default VR).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
  * IncludeRhsPolaris: legacy compatibility switch to load RHSUSAF. The seat station remains the
  *   vanilla NATO Prowler/DAGOR regardless of this switch.
@@ -27,6 +30,7 @@
  *
  * Example:
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual
+ * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Automated -CortexAudit -CortexFocus airskills -AuditTerrain Altis
  * Current callers: launch_full_arma_hosted_audit.ps1 and manual QA operators.
  #>
 param(
@@ -37,6 +41,8 @@ param(
     [int]$Port = 24132,
     [int]$ResolutionWidth = 3840,
     [int]$ResolutionHeight = 2160,
+    [ValidateSet("VR", "Altis")]
+    [string]$AuditTerrain = "VR",
     [switch]$ExcludePersistenceMod,
     [switch]$IncludeRhsPolaris,
     [switch]$IncludeLambs,
@@ -56,7 +62,8 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\arma 3").main
 $armaExe = Join-Path $armaRoot "arma3_x64.exe"
 $serverExe = Join-Path $armaRoot "arma3server_x64.exe"
-$missionRoot = Join-Path $armaRoot "MPMissions\WMP_PR_Review_Audit.VR"
+$missionTemplate = "WMP_PR_Review_Audit.$AuditTerrain"
+$missionRoot = Join-Path $armaRoot ("MPMissions\" + $missionTemplate)
 $runStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $runRoot = Join-Path $repoRoot ".qa\pr-review-audit\runtime-$runStamp"
 $serverProfile = Join-Path $runRoot "server"
@@ -213,7 +220,7 @@ class Missions
 {
     class FullPackPrAudit
     {
-        template = "WMP_PR_Review_Audit.VR";
+        template = "$missionTemplate";
         difficulty = "Regular";
     };
 };
@@ -236,13 +243,13 @@ while ((Get-Date) -lt $serverDeadline -and -not $server.HasExited) {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
             throw ("Arma rejected the staged audit mission: " + $loadError.Line)
         }
-        $serverReady = [bool](Select-String -LiteralPath $serverRpt.FullName -Pattern "Mission world: VR|Game started|WMP PR REVIEW AUDIT" -Quiet)
+        $serverReady = [bool](Select-String -LiteralPath $serverRpt.FullName -Pattern ("Mission world: " + [regex]::Escape($AuditTerrain) + "|Game started|WMP PR REVIEW AUDIT") -Quiet)
         if ($serverReady) { break }
     }
 }
 if (-not $serverReady) {
     Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
-    throw "The dedicated audit authority did not load WMP_PR_Review_Audit.VR."
+    throw "The dedicated audit authority did not load $missionTemplate."
 }
 
 for ($hcIndex = 1; $hcIndex -le $HeadlessClients; $hcIndex++) {
@@ -260,7 +267,7 @@ $clientArguments = @(
     "-password=wmpqa", "-profiles=$clientProfile", "-name=WMPAuditClient", $clientModArgument
 )
 $client = Start-Process -FilePath $armaExe -ArgumentList $clientArguments -WorkingDirectory $armaRoot -PassThru
-Write-Output "Loaded WMP_PR_Review_Audit.VR on dedicated authority PID $($server.Id)."
+Write-Output "Loaded $missionTemplate on dedicated authority PID $($server.Id)."
 Write-Output "Started ${ResolutionWidth}x${ResolutionHeight} audit client PID $($client.Id) in $Mode mode; Eden is not used."
 if ($CortexAudit) {
     Write-Output "Cortex audit automatically enters the first playable slot. Runtime evidence: $runRoot"
