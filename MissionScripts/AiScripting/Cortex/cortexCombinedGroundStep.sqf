@@ -25,7 +25,10 @@ private _finish={
         [_group] call Waldo_fnc_CortexGroupMoveClear;
         private _state=[_group] call Waldo_fnc_CortexGroupState;
         private _lease=_state getOrDefault ["movementLease",[]];
-        if ((_lease param [0,""]) == "COMBINED_GROUND") then {_state deleteAt "movementLease"};
+        if ((_lease param [0,""]) == "COMBINED_GROUND") then {
+            [_group,"COMBINED_GROUND",false] call Waldo_fnc_CortexLambsLease;
+            _state deleteAt "movementLease";
+        };
         if (((_group getVariable ["Waldo_Cortex_CombinedRole",[]]) param [0,""]) == _token) then {
             _group setVariable ["Waldo_Cortex_CombinedResult",[_token,"GROUND_MANOEUVRE",_reason,serverTime,_target,_destination],true];
         };

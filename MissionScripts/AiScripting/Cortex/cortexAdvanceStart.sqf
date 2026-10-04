@@ -133,6 +133,10 @@ _state set ["drill", createHashMapFromArray [
     ["enemyPos", (_enemies select 0) select 1], ["disabled", []], ["spots", []], ["started", time], ["lastStep",time],
     ["boundStart", time], ["pauseUntil", 0]
 ]];
+if !([_group,"TACTICAL_DRILL",true,serverTime+90] call Waldo_fnc_CortexLambsLease) exitWith {
+    _state deleteAt "drill";
+    ["EXTERNAL_MOVEMENT_BUSY"] call _refuse
+};
 [_group,_state get "drill","START","ADVANCE_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
 _group setVariable ["Waldo_Cortex_AdvanceRefusal",nil,true];
 // Direct fire-team bounds are a group movement owner even though they do not

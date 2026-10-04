@@ -2092,6 +2092,32 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_state set ["movementLease",["COORDINATED_ASSAULT",time+(_expiry-serverTime)]]',apply)
         self.assertIn('case "SUPPORT_RALLY"',maintain)
 
+    def test_every_finite_group_move_holds_one_external_controller_lease(self):
+        lease=source('cortexLambsLease')
+        self.assertIn('LAMBS_Danger and/or VCOM',lease)
+        for name in ['cortexFlankStart','cortexAdvanceStart']:
+            code=source(name)
+            self.assertIn('[_group,"TACTICAL_DRILL",true,serverTime+90]',code)
+            self.assertIn('EXTERNAL_MOVEMENT_BUSY',code)
+        step=source('cortexFlankStep')
+        end=source('cortexFlankEnd')
+        self.assertIn('[_group,"TACTICAL_DRILL",true,serverTime+90]',step)
+        self.assertIn('[_group,"TACTICAL_DRILL",false]',end)
+        retreat=source('cortexRetreat')
+        tick=source('cortexGroupTick')
+        self.assertIn('[_group,"INFANTRY_WITHDRAW",true,serverTime+_remainingLease]',retreat)
+        self.assertIn('[_group,"INFANTRY_WITHDRAW",false]',tick)
+        vehicles=source('cortexVehicles')
+        self.assertIn('[_group,"VEHICLE_WITHDRAW",true,serverTime+120]',vehicles)
+        self.assertIn('[_group,"VEHICLE_STANDOFF",true,serverTime+60]',vehicles)
+        combined=source('cortexCombinedArmsLocal')
+        combined_end=source('cortexCombinedGroundStep')
+        self.assertIn('[_group,"COMBINED_GROUND",true,_expiry]',combined)
+        self.assertIn('[_group,"COMBINED_GROUND",false]',combined_end)
+        scoot=source('cortexArtilleryScoot')
+        self.assertIn('[_group,"ARTILLERY_SCOOT",true,serverTime+120]',scoot)
+        self.assertIn('[_group,_movementOwner,false]',tick)
+
     def test_tactical_drill_scheduler_silence_restores_owned_ai_state(self):
         step=source('cortexFlankStep')
         tick=source('cortexGroupTick')

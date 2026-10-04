@@ -160,6 +160,7 @@ _drill set ["lastStep",time];
 private _movementLease=_state getOrDefault ["movementLease",[]];
 if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {
     _state set ["movementLease",["TACTICAL_DRILL",time+90]];
+    [_group,"TACTICAL_DRILL",true,serverTime+90] call Waldo_fnc_CortexLambsLease;
 };
 // Rebuild depleted manoeuvre elements from the surviving squad inside this existing group job.
 // There is no casualty event handler or per-unit scheduler. A change during a live bound restarts

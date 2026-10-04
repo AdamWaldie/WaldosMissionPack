@@ -57,6 +57,12 @@ for "_attempt" from 0 to 5 do {
 private _selected=[_origin,_candidates,_origin,[],objNull,"VEHICLE"] call Waldo_fnc_CortexSelectAvenue;
 private _spot=if (_selected isEqualTo []) then {[]} else {_selected select ((count _selected)-1)};
 if (_spot isEqualTo []) exitWith {call _clear; false};
+if !([_group,"ARTILLERY_SCOOT",true,serverTime+120] call Waldo_fnc_CortexLambsLease) exitWith {
+    if (serverTime < (_battery getVariable ["Waldo_Cortex_ArtilleryScootDeadline",0])) then {
+        [{_this call Waldo_fnc_CortexArtilleryScoot},[_battery,_token],5] call CBA_fnc_waitAndExecute;
+        true
+    } else {call _clear; false}
+};
 [_group, _spot, 30] call Waldo_fnc_CortexGroupMove;
 _state set ["movementLease",["ARTILLERY_SCOOT",time+120]];
 call _clear;

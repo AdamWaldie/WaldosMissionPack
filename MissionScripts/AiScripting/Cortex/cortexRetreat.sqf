@@ -88,6 +88,11 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
     [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 };
 [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
+private _remainingLease=(120-((serverTime-(if (_resuming) then {_resume select 4} else {serverTime})) max 0)) max 3;
+if !([_group,"INFANTRY_WITHDRAW",true,serverTime+_remainingLease] call Waldo_fnc_CortexLambsLease) exitWith {
+    _group setVariable ["Waldo_Cortex_Withdrawal",["EXTERNAL_BUSY",0,0],true];
+    false
+};
 private _supportHeld=_state getOrDefault ["supportHeld",[]];
 {
     if (_x getVariable ["Waldo_Cortex_SupportPathHold",false]) then {_supportHeld pushBackUnique _x};

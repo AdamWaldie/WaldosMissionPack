@@ -23,7 +23,7 @@
  * Boolean - true when ownership was acquired/released, false for invalid locality, a competing
  * owner or movement which LAMBS already owns
  *
- * Current callers: CortexSupportApply, CortexSupportMaintain, CortexDiscover and CortexReleaseGroup.
+ * Current callers: every finite Cortex group-movement start/end, CortexDiscover and CortexReleaseGroup.
  *
  * Example:
  * [_group, "SUPPORT", true, serverTime + 180] call Waldo_fnc_CortexLambsLease;

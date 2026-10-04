@@ -157,6 +157,10 @@ _state set ["drill", createHashMapFromArray [
     ["type", "FLANK"], ["units", _element], ["desiredStrength",count _element], ["points", _points], ["index", 0], ["stage", ""], ["enemyPos", _enemyPos],
     ["disabled", []], ["spots", []], ["started", time], ["lastStep",time], ["boundStart", time], ["pauseUntil", 0]
 ]];
+if !([_group,"TACTICAL_DRILL",true,serverTime+90] call Waldo_fnc_CortexLambsLease) exitWith {
+    _state deleteAt "drill";
+    ["EXTERNAL_MOVEMENT_BUSY"] call _refuse
+};
 [_group,_state get "drill","START","FLANK_ACCEPTED"] call Waldo_fnc_CortexDrillSetStage;
 _group setVariable ["Waldo_Cortex_FlankRefusal",nil,true];
 // The drill moves selected actors directly rather than adding a group waypoint.

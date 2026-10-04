@@ -119,6 +119,7 @@ _group setVariable ["Waldo_Cortex_DrillResult",[_type,_reason,time],true];
 _state deleteAt "drill";
 private _movementLease = _state getOrDefault ["movementLease",[]];
 if (count _movementLease == 2 && {(_movementLease select 0) == "TACTICAL_DRILL"}) then {
+    [_group,"TACTICAL_DRILL",false] call Waldo_fnc_CortexLambsLease;
     _state deleteAt "movementLease";
 };
 private _cooldownName = ["Waldo_AIPass_Flank_Cooldown", "Waldo_AIPass_Advance_Cooldown"] select (_type == "ADVANCE");

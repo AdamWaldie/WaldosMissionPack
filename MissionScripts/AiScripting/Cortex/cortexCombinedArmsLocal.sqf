@@ -85,6 +85,11 @@ if (_role == "GROUND_MANOEUVRE") exitWith {
         false
     };
     private _destination=_selected select ((count _selected)-1);
+    if !([_group,"COMBINED_GROUND",true,_expiry] call Waldo_fnc_CortexLambsLease) exitWith {
+        _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
+        _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"EXTERNAL_BUSY",serverTime,_target],true];
+        false
+    };
     [_group,_destination,55] call Waldo_fnc_CortexGroupMove;
     private _state=[_group] call Waldo_fnc_CortexGroupState;
     _state set ["movementLease",["COMBINED_GROUND",time+((_expiry-serverTime) max 5)]];

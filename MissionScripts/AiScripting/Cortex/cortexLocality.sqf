@@ -237,6 +237,9 @@ if (_withdrawalResumeEligible) then {
         private _startedAt = _withdrawalIntent select 4;
         private _elapsed = (serverTime-_startedAt) max 0;
         private _target = +(_withdrawalIntent select 2);
+        if !([_group,"VEHICLE_WITHDRAW",true,serverTime+((120-_elapsed) max 3)] call Waldo_fnc_CortexLambsLease) exitWith {
+            _group setVariable ["Waldo_Cortex_Withdrawal",["EXTERNAL_BUSY",_withdrawalIntent select 6,_withdrawalIntent select 5],true];
+        };
         [_group,_target,40] call Waldo_fnc_CortexGroupMove;
         _adopted set ["movementLease",["VEHICLE_WITHDRAW",time+((120-_elapsed) max 3)]];
         _adopted set ["enemyPos",+(_withdrawalIntent select 3)];

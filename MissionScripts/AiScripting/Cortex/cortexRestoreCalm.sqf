@@ -80,6 +80,8 @@ if (count _supportLease == 6 && {(_state getOrDefault ["supportToken",""]) == (_
     [_group,_supportLease select 0,false,_supportLease,clientOwner] remoteExecCall ["Waldo_fnc_CortexSupportAck",2];
 };
 [_group,"SUPPORT",false] call Waldo_fnc_CortexLambsLease;
+private _movementOwner=(_state getOrDefault ["movementLease",[]]) param [0,""];
+if (_movementOwner != "") then {[_group,_movementOwner,false] call Waldo_fnc_CortexLambsLease};
 {_state deleteAt _x} forEach ["supportHeld","supportBoundSequence","supportToken","responding","assaulting","respondingTo","respondUntil"];
 private _leader = leader _group;
 // Zeus may deliberately replace Cortex's disabled autonomous-attack state while taking over.

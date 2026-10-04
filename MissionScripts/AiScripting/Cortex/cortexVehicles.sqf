@@ -58,7 +58,10 @@ if (_vehicleMove isNotEqualTo []) then {
         _activeVehicleMove = ((waypoints _group) findIf {
             (_x select 1) >= currentWaypoint _group && {waypointDescription _x == "WMP AI PASS"}
         } >= 0) && {time < (_vehicleMove select 1)};
-        if (!_activeVehicleMove) then {_state deleteAt "movementLease"};
+        if (!_activeVehicleMove) then {
+            [_group,_vehicleMove param [0,""],false] call Waldo_fnc_CortexLambsLease;
+            _state deleteAt "movementLease";
+        };
     } else {
         // The group tick has already validated direct tactical/support owners.
         // Yield to them without requiring a waypoint or deleting their lease.
@@ -194,7 +197,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
         if ((units _group) findIf {alive _x && {vehicle _x == _x}} < 0) then {
             private _threat=(_enemies select 0) select 0;
             private _away=[_vehicle,_enemyPos,_threat,300] call _selectVehicleEscape;
-            if (_away isNotEqualTo []) then {
+            if (_away isNotEqualTo [] && {[_group,"VEHICLE_WITHDRAW",true,serverTime+120] call Waldo_fnc_CortexLambsLease}) then {
                 [_group, _away, 40] call Waldo_fnc_CortexGroupMove;
                 _state set ["movementLease",["VEHICLE_WITHDRAW",time+120]];
                 private _origin = getPosATL _vehicle;
@@ -251,7 +254,7 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             private _atThreat=(_enemies select _atIndex) select 0;
             private _away=[_vehicle,_atPos,_atThreat,(_standoff - (_vehicle distance2D _atPos)) max 60]
                 call _selectVehicleEscape;
-            if (_away isNotEqualTo []) then {
+            if (_away isNotEqualTo [] && {[_group,"VEHICLE_STANDOFF",true,serverTime+60] call Waldo_fnc_CortexLambsLease}) then {
                 [_group, _away, 30] call Waldo_fnc_CortexGroupMove;
                 _state set ["movementLease",["VEHICLE_STANDOFF",time+60]];
                 _movementOwned = true;

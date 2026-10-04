@@ -180,7 +180,10 @@ private _groupMovementOwned = count _movementLease == 2 && {time < (_movementLea
         };
     }
 };
-if (!_groupMovementOwned && {_movementLease isNotEqualTo []}) then {_state deleteAt "movementLease"};
+if (!_groupMovementOwned && {_movementLease isNotEqualTo []}) then {
+    if (_movementOwner != "") then {[_group,_movementOwner,false] call Waldo_fnc_CortexLambsLease};
+    _state deleteAt "movementLease";
+};
 private _now = time;
 private _hasLiveActorMove = {
     private _actorMove = _this getVariable ["Waldo_Cortex_ActorMove",[]];
@@ -729,6 +732,7 @@ switch (_state get "phase") do {
         private _status = if (_timedOut) then {"INCOMPLETE"} else {["MOVING","WITHDRAWN"] select (!_moving && {_travel >= 30})};
         _group setVariable ["Waldo_Cortex_Withdrawal",[_status,round _travel,_replans],true];
         if ((!_moving && {_travel >= 30}) || {_timedOut}) then {
+            [_group,"INFANTRY_WITHDRAW",false] call Waldo_fnc_CortexLambsLease;
             [_group] call Waldo_fnc_CortexGroupMoveClear;
             _group setVariable ["Waldo_Cortex_WithdrawalIntent",nil,true];
             [_group,_state,"REGROUP",["WITHDRAWAL_COMPLETE","WITHDRAWAL_TIMEOUT"] select _timedOut,_now] call Waldo_fnc_CortexSetPhase;
