@@ -2884,7 +2884,10 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(profile,planner)
             self.assertIn(profile,controller)
         self.assertIn('private _deliveryAltitude=400+random 80',planner)
-        self.assertIn('private _approachAltitude=(_deliveryAltitude+1250) min 1800',planner)
+        self.assertIn('private _approachAltitude=_deliveryAltitude+650',planner)
+        self.assertIn('vectorAdd (velocity _aircraft)',controller)
+        self.assertIn('private _launchAlignment=',controller)
+        self.assertIn('private _bombImpactError=',controller)
         self.assertIn('private _minimumTerrainClearance=[45,300] select _isPlane',planner)
         self.assertIn('for "_legIndex" from 0 to 1',planner)
         self.assertIn('for "_sampleIndex" from 0 to 6',planner)
@@ -2983,8 +2986,9 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_handoverPilot setUnitCombatMode "BLUE"',controller)
         self.assertNotIn('_handoverGroup setBehaviourStrong "CARELESS"',controller)
         self.assertNotIn('_handoverPilot setCombatBehaviour "CARELESS"',controller)
-        self.assertNotIn('_handoverGroup setBehaviourStrong _authoredBehaviour',controller)
-        self.assertNotIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
+        self.assertIn('_handoverGroup setBehaviourStrong _authoredBehaviour',controller)
+        self.assertIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
+        self.assertIn('_handoverGroup setCombatMode _authoredCombatMode',controller)
         self.assertNotIn('_handoverGroup setCombatMode "BLUE"',controller)
         # One native height hint at a real stage transition is permitted because Arma does not use
         # MOVE point Z as a dependable flight profile. Direct handover may clear that persistent

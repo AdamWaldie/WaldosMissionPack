@@ -372,6 +372,13 @@ private _observedProfiles=createHashMap;
     private _targetGroup=group driver _target;
     _targetGroup setVariable ["Waldo_AIPass_Exclude",true,true];
     {_x allowDamage false; if (!_airTarget) then {_x disableAI "PATH"}} forEach _targetCrew;
+    if (!_airTarget) then {
+        // A ground weapon audit requires an immutable aim point. Disabled crew pathfinding alone
+        // still allowed the running vehicle to roll after the plan was sampled.
+        _target engineOn false;
+        _target setFuel 0;
+        _target setVelocity [0,0,0];
+    };
     if (_airTarget) then {
         _target setDir 180;
         _target setVelocityModelSpace [0,145,0];
@@ -728,8 +735,10 @@ private _observedProfiles=createHashMap;
         // Pattern metadata cannot hide the behaviour reported by a human observer. Long stationary
         // pauses and a long trail with little net displacement are the measurable signature of the
         // tiny local circles that made the previous controller look worse than native flight.
+        // A moving intercept is expected to turn and may end near its start. Retain the anti-circle
+        // displacement ratio for ground runs while judging an intercept by sustained physical flight.
         [_id+"-continuous-useful-flight",_sampleSpeeds isNotEqualTo [] && {_longestIdle <= 5}
-            && {_pathTravel < 300 || {_netTravel/_pathTravel >= 0.35}},
+            && {_airTarget || {_pathTravel < 300 || {_netTravel/_pathTravel >= 0.35}}},
             str [_longestIdle,_motionFloor,_pathTravel,_netTravel,
                 if (_pathTravel > 0) then {_netTravel/_pathTravel} else {1}]] call _recordCheck;
         [_id+"-safe-flight-envelope",_sampleAltitudes isNotEqualTo []

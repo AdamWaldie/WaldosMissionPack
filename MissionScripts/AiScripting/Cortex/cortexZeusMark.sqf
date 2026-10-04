@@ -8,7 +8,7 @@
  * curators to inspect active squads. Dependent jobs stop issuing commands once the hold reaches
  * their owner. The marker immediately asks the current group owner to release Cortex state, avoiding
  * a scheduler-delay race with the curator's replacement order. A waypoint event snapshots the
- * selected waypoint's position, behaviour and speed beside the same hold token. Finite controllers
+ * selected waypoint's position, behaviour, speed and combat mode beside the same hold token. Finite controllers
  * can therefore hand over to the order Zeus actually selected even if Arma changes currentWaypoint
  * while their owner-local cleanup is running. A waypoint placed or moved by Zeus (including the DESTROY
  * waypoint created by designating a target) also holds the group until it has finished every waypoint
@@ -59,7 +59,8 @@ if (_waypoints) then {
             waypointBehaviour _waypoint,
             waypointSpeed _waypoint,
             waypointType _waypoint,
-            _waypointIndex
+            _waypointIndex,
+            waypointCombatMode _waypoint
         ],true];
     } else {
         _group setVariable ["Waldo_Cortex_ZeusOrderSnapshot",nil,true];

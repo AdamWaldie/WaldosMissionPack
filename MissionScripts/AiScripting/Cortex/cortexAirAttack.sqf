@@ -14,7 +14,8 @@
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
  * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
  * fixed-wing ground ATTACK leg retains the target-crossing MOVE route throughout delivery; the
- * selected operator releases a fixed forward weapon immediately inside the live weapon basket;
+ * selected operator releases a fixed forward weapon only when its launch vector, including aircraft
+ * velocity, is inside the live weapon basket;
  * independently aimed turrets retain native fire control. This keeps the aircraft on its useful
  * approach instead of replacing it with an unreliable spatial DESTROY search at the release point,
  * and prevents an asynchronous pilot request from releasing after the nose has left the measured
@@ -90,9 +91,10 @@ private _finish={
             private _authoredWaypointOffset=_handoverWaypoints findIf {
                 count _handoverPosition >= 2 && {waypointPosition _x distance2D _handoverPosition <= 2}
             };
-            // The waypoint already contains Zeus' behaviour and speed. Re-select it without
-            // translating those properties into additional unit or group commands; the engine and
-            // curator remain the only authorities after this point. Use the actual waypoint handle:
+            // Re-select the exact curator waypoint and immediately apply its own movement semantics.
+            // This is a one-time replay of authenticated Zeus intent, not a Cortex route. Without
+            // it Arma retained the pre-attack RED/COMBAT state and ignored AWARE/FULL movement.
+            // Use the actual waypoint handle:
             // deleting the Cortex waypoint leaves engine-ID gaps, so a findIf list offset is not a
             // valid waypoint ID and previously selected the deleted slot/waypoint zero.
             private _authoredWaypoint=if (_authoredWaypointOffset >= 0) then {
@@ -102,6 +104,12 @@ private _finish={
             };
             if ((_authoredWaypoint select 1) >= 0) then {
                 _handoverGroup setCurrentWaypoint _authoredWaypoint;
+                private _authoredBehaviour=_snapshot param [2,waypointBehaviour _authoredWaypoint];
+                private _authoredSpeed=_snapshot param [3,waypointSpeed _authoredWaypoint];
+                private _authoredCombatMode=_snapshot param [6,waypointCombatMode _authoredWaypoint];
+                if (_authoredBehaviour != "NO CHANGE") then {_handoverGroup setBehaviourStrong _authoredBehaviour};
+                if (_authoredSpeed != "UNCHANGED") then {_handoverGroup setSpeedMode _authoredSpeed};
+                if (_authoredCombatMode != "NO CHANGE") then {_handoverGroup setCombatMode _authoredCombatMode};
             };
             // flyInHeight persists after a waypoint changes. Restore it once from the curator's
             // selected destination so a helicopter does not hover at Cortex's attack altitude while
@@ -443,6 +451,19 @@ if (_stage == "ATTACK") then {
     } else {-1};
     private _aimed=if (_weapon == "") then {0} else {_aircraft aimedAtTarget [_target,_weapon]};
     private _selectedMagazine=_job getOrDefault ["selectedMagazine",""];
+    private _magazineConfig=configFile >> "CfgMagazines" >> _selectedMagazine;
+    private _ammoClass=getText (_magazineConfig >> "ammo");
+    private _muzzleSpeed=getNumber (_magazineConfig >> "initSpeed");
+    if (_muzzleSpeed <= 0 && {_ammoClass != ""}) then {
+        _muzzleSpeed=getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "typicalSpeed");
+    };
+    if (_muzzleSpeed <= 0) then {_muzzleSpeed=[900,180] select (_weaponClass == "ROCKET")};
+    private _predictedLaunchVelocity=((vectorNormalized _weaponVector) vectorMultiply _muzzleSpeed)
+        vectorAdd (velocity _aircraft);
+    private _launchAlignment=if (vectorMagnitude _predictedLaunchVelocity > 0.01
+        && {vectorMagnitude _targetVector > 0.01}) then {
+        (vectorNormalized _predictedLaunchVelocity) vectorDotProduct (vectorNormalized _targetVector)
+    } else {-1};
     private _loaded=(magazinesAllTurrets _aircraft) findIf {
         (_x select 1) isEqualTo _turret && {(_x select 2) > 0}
             && {(_x select 0) == _selectedMagazine || {(_x select 0) in compatibleMagazines _weapon}}
@@ -479,11 +500,13 @@ if (_stage == "ATTACK") then {
     // gives the native projectile a physically credible release.
     private _horizontalVelocity=velocity _aircraft;
     _horizontalVelocity set [2,0];
-    private _fallTime=sqrt (2*((getPosATL _aircraft select 2) max 1)/9.81);
+    private _heightAGL=(getPosATL _aircraft select 2) max 1;
+    private _verticalSpeed=velocity _aircraft select 2;
+    private _fallTime=(_verticalSpeed+sqrt ((_verticalSpeed*_verticalSpeed)+(2*9.81*_heightAGL)))/9.81;
     private _bombReleaseDistance=(vectorMagnitude _horizontalVelocity)*_fallTime;
-    private _bombWindow=_horizontalRange >= ((_bombReleaseDistance*0.58) max 350)
-        && {_horizontalRange <= ((_bombReleaseDistance*1.40) max 900)}
-        && {_forwardAlignment >= 0.92};
+    private _predictedBombImpact=(getPosATL _aircraft) vectorAdd (_horizontalVelocity vectorMultiply _fallTime);
+    private _bombImpactError=_predictedBombImpact distance2D getPosATL _target;
+    private _bombWindow=_bombImpactError <= 140 && {_forwardAlignment >= 0.92};
     // aimedAtTarget is an engine fire-control hint. Some valid pilot pylons report zero until after
     // release, so it must not veto an otherwise valid seeker launch. Loaded station, target
     // assignment, range and forward geometry are the actual prerequisites.
@@ -491,14 +514,19 @@ if (_stage == "ATTACK") then {
     // A nose-mounted weapon needs forward closure. A retained lateral turret is specifically
     // selected to fire abeam, so forcing the helicopter nose onto the target defeats that pattern.
     private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
+    private _fixedUnguided=_turret isEqualTo [-1] && {_weaponClass in ["GUN","ROCKET"]};
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
-        && {_closing} && {_bombWindow || {!_bomb && {_alignment >= _minimumAlignment}}}
+        && {_closing} && {_bombWindow || {!_bomb && {
+            [_alignment >= _minimumAlignment,_launchAlignment >= ([0.992,0.975] select (_weaponClass == "ROCKET"))]
+                select _fixedUnguided
+        }}}
         && {!_bomb || {(getPosATL _aircraft select 2) >= 250}}
         && {_aimed >= _minimumAim};
     private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
         _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing,
-        _horizontalRange,_bombReleaseDistance,_bombWindow];
+        _horizontalRange,_bombReleaseDistance,_bombWindow,_muzzleSpeed,_launchAlignment,
+        _predictedBombImpact,_bombImpactError];
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
@@ -657,7 +685,8 @@ switch _stage do {
             // rounds remains a finite one-pass burst while tolerating natural dispersion and armour.
             case "GUN": {40};
             case "ROCKET": {8};
-            case "GUIDED": {[1,2] select (_job getOrDefault ["airToAir",false])};
+            // One valid seeker launch can still be defeated or near-miss. Keep this a finite salvo.
+            case "GUIDED": {3};
             // Release the paired bomb rack when fitted. One verified direct pass in the audit left
             // the tracked target untouched; a two-weapon ripple is the credible finite delivery.
             case "BOMB": {2};

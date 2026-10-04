@@ -469,23 +469,28 @@ if (_isPlane) then {
             _attackMinimum=2;
         };
         case "OFFSET": {
-            _stageAltitudes=[(_altitude+300) min 1650,300+random 70,_altitude+750];
+            // Build a shallow, continuous delivery slope. A 1.3 km climb followed by a dive made
+            // the nose cross the target while the aircraft's momentum still carried every rocket
+            // above it. This is the height needed for a five-to-seven degree fixed-rocket approach.
+            private _deliveryAltitude=320+random 60;
+            _stageAltitudes=[_deliveryAltitude+700,_deliveryAltitude,_altitude+750];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[700,900,1200];
             _attackMinimum=3;
         };
         case "HOOK": {
-            _stageAltitudes=[(_altitude+400) min 1800,320+random 80,_altitude+850];
+            private _deliveryAltitude=340+random 60;
+            _stageAltitudes=[_deliveryAltitude+900,_deliveryAltitude,_altitude+850];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[700,900,1250];
             _attackMinimum=3;
         };
         default {
-            // Preserve a roughly ten-degree gun run while leaving a useful recovery margin. The
+            // Preserve a roughly six-degree gun run while leaving a useful recovery margin. The
             // former 280-350 m endpoint repeatedly let natural flight dip through the 220 m abort
             // floor during a valid burst, splitting one pass into several rediscovered attacks.
             private _deliveryAltitude=400+random 80;
-            private _approachAltitude=(_deliveryAltitude+1250) min 1800;
+            private _approachAltitude=_deliveryAltitude+650;
             _stageAltitudes=[_approachAltitude,_deliveryAltitude,_altitude+700];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];
