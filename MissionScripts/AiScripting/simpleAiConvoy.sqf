@@ -3,6 +3,8 @@
  * Registers mixed land convoys; speed <= 0 holds vehicles and unloads passengers except a STALLED recovery halt. Release removes the controller.
  * Locality/authority: server validates requests and owns registry/baselines; each owner applies local effects.
  * Repeat/JIP: versioned snapshots include halt cargo and restoration data; reconfigure explicitly resumes travel.
+ * If HBQ Advanced Driving AI is present, WMP temporarily pauses its steering/unstuck worker and
+ * crew-return option on controlled vehicles, then restores each exact prior variable state on release.
  * Accepted halt transitions notify assigned Zeus players once through the shared UI; no historical JIP alerts.
  * Arguments: 0: group <GROUP>, grpNull; 1: maximum km/h <NUMBER>, 30; 2: separation metres <NUMBER>, 30;
  * 3: push through <BOOL>, true; 4: release controller without unloading <BOOL>, false;
@@ -64,7 +66,18 @@ if (!_release) then {
         private _saved = +(_restore select 2);
         {
             private _vehicle = _x;
-            if (_saved findIf {(_x select 0) == _vehicle} < 0) then {_saved pushBack [_vehicle, getForcedSpeed _vehicle, getUnloadInCombat _vehicle]};
+            if (_saved findIf {(_x select 0) == _vehicle} < 0) then {
+                private _hbqPause = if (isNil {_vehicle getVariable "HBQAD_Pause"}) then {[false,false]} else {[true,_vehicle getVariable ["HBQAD_Pause",false]]};
+                private _hbqCrew = if (isNil {_vehicle getVariable "HBQAD_PreventDisembark"}) then {[false,false]} else {[true,_vehicle getVariable ["HBQAD_PreventDisembark",false]]};
+                _saved pushBack [_vehicle, getForcedSpeed _vehicle, getUnloadInCombat _vehicle, [_hbqPause,_hbqCrew]];
+            };
+            // HBQ's public live pause stops obstacle, traffic and unstuck movement without disabling
+            // its addon. Its separate crew loop does not read Pause, so WMP also suspends only that
+            // per-vehicle option while WMP owns seat and dismount semantics.
+            if (isClass (configFile >> "CfgPatches" >> "hbq_advanced_driving_ai")) then {
+                _vehicle setVariable ["HBQAD_Pause",true,true];
+                _vehicle setVariable ["HBQAD_PreventDisembark",false,true];
+            };
         } forEach _vehicles;
         _restore set [2, _saved];
         _configuration = [_revision, (_speed max 5) min 120, (_separation max 10) min 100, _pushThrough, _vehicles, "TRAVEL", [], _restore, "NONE", [], 0];

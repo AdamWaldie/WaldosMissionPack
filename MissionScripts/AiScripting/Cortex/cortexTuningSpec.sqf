@@ -92,6 +92,8 @@ private _spec = [
     ["Waldo_Convoy_MountedFire_Enable", "Convoy mounted targeting", "WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.", "CHECKBOX", [], true],
     ["Waldo_Convoy_Cover_Enable", "Convoy dismount movement", "Moves dismounted passengers clear of vehicles; seeks cover during contact.", "CHECKBOX", [], true],
     ["Waldo_Convoy_AvoidInfantry_Enable", "Convoy infantry avoidance", "Optional short-range friendly infantry corridor checks before driving.", "CHECKBOX", [], false],
+    ["Waldo_Convoy_DrivingAssist_Enable", "Convoy driving assist", "Uses low-frequency road look-ahead and damped speed changes for smoother curves, junctions and grades. It does not bypass obstacles or replace authored routes.", "CHECKBOX", [], true],
+    ["Waldo_Convoy_RouteRecovery_Enable", "Convoy route recovery", "Re-selects the same unchanged final MOVE waypoint when the engine completes it more than 75 m early. It never creates a route, teleports, repairs or defeats an obstruction.", "CHECKBOX", [], true],
     ["Waldo_Convoy_ContactHalt_Enable", "Convoy contact halts", "Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.", "CHECKBOX", [], true],
     ["Waldo_Convoy_Unload_Enable", "Convoy cargo unloading", "Allows WMP passenger unloading on halt. Operating crews remain aboard.", "CHECKBOX", [], true],
     ["Waldo_AIPass_Hearing_Enable", "Nearby gunfire investigation", "Hostile FiredNear events create a throttled, approximate 50 m area for investigation, never a target reveal.", "CHECKBOX", [], true],

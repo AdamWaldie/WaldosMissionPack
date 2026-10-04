@@ -1,6 +1,29 @@
 # Cortex work and acceptance status
 
-Updated 1 October 2026. PR 151 remains draft. Batched Arma testing uses the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms. The 50-squad infantry and 50-group mixed native-versus-Cortex matrices now pass the agreed frame-time budgets; repeated hardware and ACE HC runs remain.
+Updated 4 October 2026. PR 151 remains draft. Batched Arma testing uses the canonical 3840x2160 resolution. Core LAMBS compatibility passed both standalone and installed-mod arms. The 50-squad infantry and 50-group mixed native-versus-Cortex matrices passed the agreed frame-time budgets in their recorded runs; repeated hardware and ACE HC runs remain.
+
+## 4 October: HBQ driving and naval-assault source assessments
+
+The locally installed HBQ Advanced Driving AI 1.0.0 PBO was unpacked and inspected. WMP adopts its
+route-memory and anticipatory-speed principles conservatively. A convoy performs one bounded road
+walk every three seconds to anticipate curves, junctions and grades; followers reuse the predecessor
+trail already held by the spacing controller. Speed increases are damped while safety and braking
+remain immediate. The controller does not add a worker per vehicle. An enabled convoy also stores the identity of its final MOVE
+waypoint and may re-select that exact waypoint only when the engine completes it more than 75 metres
+early, its type and position are unchanged, and Zeus has not suspended the controller. It never
+creates a replacement route, teleports, repairs, unflips, pushes or suppresses collision damage.
+Those exclusions preserve player roadblocks and ambushes. While WMP owns a convoy it captures and
+temporarily applies HBQ's public pause and crew-return variables; final release restores exact value
+and variable presence. HBQ remains untouched for non-WMP vehicles. Static acceptance is implemented;
+an HBQ-loaded dedicated/HC/Zeus route-loss run remains queued.
+
+The locally installed PROTOCOL AI NAVY SEAL PBO was also unpacked. Its useful concepts are shoreline
+sampling, finite boat approach, separate support and assault roles, cover-biased movement and casualty
+redistribution. Its implementation is not suitable as a compatibility owner: one file launches two
+overlapping global group scans, takes control based only on enemy proximity, repeatedly forces exits
+and individual moves, and does not arbitrate Zeus, locality, authored orders or cleanup. No source is
+copied. A separate opt-in WMP naval-assault behaviour, with explicit ownership and the normal Cortex
+performance budget, remains to be built and physically accepted.
 
 ## 4 October: VCOM, WebKnight, IMS and civilian ownership
 

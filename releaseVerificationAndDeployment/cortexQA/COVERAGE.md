@@ -32,7 +32,7 @@ Feature cases: **63**. Required variant categories: **14**.
 | REMOUNT - Contact passenger remount | 1 | 0 | 1 | `runVehicleDrills.sqf` | 0 | implemented_partial |
 | WITHDRAW - Damaged vehicle withdrawal | 1 | 0 | 1 | `runVehicleDrills.sqf` | 1 | implemented_partial |
 | COVER - Cover selection and clearance | 1 | 0 | 1 | `runCover.sqf` | 1 | implemented_partial |
-| CNV-MOVE - Mixed convoy path and spacing | 0 | 0 | 3 | `runServer.sqf`, `runConvoyMatrix.sqf` | 0 | implemented_partial |
+| CNV-MOVE - Mixed convoy path and spacing | 2 | 0 | 3 | `runServer.sqf`, `runConvoyMatrix.sqf` | 0 | implemented_partial |
 | CNV-FIRE - Convoy weapon crew | 1 | 0 | 1 | `runServer.sqf` | 0 | implemented_partial |
 | CNV-COVER - Convoy dismount positions | 1 | 0 | 0 | `runServer.sqf` | 0 | implemented_partial |
 | CNV-AVOID - Convoy infantry avoidance | 1 | 0 | 0 | `runConvoyAvoidance.sqf` | 1 | implemented_partial |
@@ -244,7 +244,7 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Each traces its predecessor, maintains spacing and makes progress without wedge formation; recovery is bounded.
 
-**Automation and open work:** runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained. Outside VR the matrix performs one bounded search across eight headings for its complete 1.8 km straight-and-corner route, requires at least 30 m of relief and rejects water, unsafe vehicle surface normals and grades above 0.8. Startup direction, lateral offset, vehicle order and restart-turn measurements are projected onto the selected route axes rather than hard-coded world X/Y.
+**Automation and open work:** runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained. Outside VR the matrix performs one bounded search across eight headings for its complete 1.8 km straight-and-corner route, requires at least 30 m of relief and rejects water, unsafe vehicle surface normals and grades above 0.8. Startup direction, lateral offset, vehicle order and restart-turn measurements are projected onto the selected route axes rather than hard-coded world X/Y. One bounded road walk per convoy every three seconds anticipates curves, junctions and grades; followers reuse predecessor trail geometry and speed changes are damped without replacing route or obstacle authority. The route watchdog stores only the final MOVE identity and may re-select it after premature engine completion when its type and position remain unchanged and the convoy is still over 75 m outside the completion radius. HBQ steering, unstuck and crew-return ownership is paused only for WMP-controlled convoy vehicles and exact variable presence/value is restored on final release. Dependency-loaded physical acceptance remains pending.
 
 ### CNV-FIRE - Convoy weapon crew
 

@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Restores recorded formation, attack permission, vehicle speed and unload settings; cancels only follower paths.
+ * Restores recorded formation, attack permission, vehicle speed, unload settings and exact HBQ
+ * per-vehicle baselines; cancels only follower paths.
  * Locality/authority: server owns registration; driving commands execute only on current owners.
  * Repeat/JIP: ordered registry snapshots replace old settings; owner-local paths rebuild on migration.
  * Arguments: 0: group <GROUP>, grpNull; 1: forget baseline <BOOL>, true; 2: baseline <ARRAY>, [] reads the locally received baseline; 3: still-controlled vehicles <ARRAY>, [].
@@ -18,7 +19,7 @@ if (_restore isNotEqualTo []) then {
         _group enableAttack _attack;
     };
     {
-        _x params ["_vehicle", "_speed", "_unload"];
+        _x params ["_vehicle", "_speed", "_unload", ["_hbqRestore",[],[[]]]];
         if (_forget && {isServer} && {!(_vehicle in _keepCrew)} && {(_vehicle getVariable ["Waldo_Convoy_Group", grpNull]) == _group}) then {
             _vehicle setVariable ["Waldo_Convoy_Group", nil, true];
             _vehicle setVariable ["Waldo_Convoy_Active", nil, true];
@@ -38,6 +39,12 @@ if (_restore isNotEqualTo []) then {
             private _hitEH = _vehicle getVariable ["Waldo_Convoy_HitEH", -1];
             if (_hitEH >= 0) then {_vehicle removeEventHandler ["Hit", _hitEH]};
             _vehicle setVariable ["Waldo_Convoy_HitEH", nil];
+            if (_forget && {isServer} && {_hbqRestore isNotEqualTo []}) then {
+                (_hbqRestore select 0) params ["_hadPause","_pause"];
+                (_hbqRestore select 1) params ["_hadCrew","_crew"];
+                if (_hadPause) then {_vehicle setVariable ["HBQAD_Pause",_pause,true]} else {_vehicle setVariable ["HBQAD_Pause",nil,true]};
+                if (_hadCrew) then {_vehicle setVariable ["HBQAD_PreventDisembark",_crew,true]} else {_vehicle setVariable ["HBQAD_PreventDisembark",nil,true]};
+            };
         };
         if (local _vehicle) then {
             _vehicle forceSpeed _speed;

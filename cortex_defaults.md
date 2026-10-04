@@ -127,6 +127,8 @@ CounterBattery_Mode is a legacy compatibility value; automatic acquisition does 
 | `Waldo_Convoy_MountedFire_Enable` | `true` | WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod. |
 | `Waldo_Convoy_Cover_Enable` | `true` | Moves dismounted passengers clear of vehicles; seeks cover during contact. |
 | `Waldo_Convoy_AvoidInfantry_Enable` | `false` | Optional short-range friendly infantry corridor checks before driving. |
+| `Waldo_Convoy_DrivingAssist_Enable` | `true` | Low-frequency road look-ahead and damped speed changes for smoother curves, junctions and grades without replacing authored routes or bypassing obstacles. |
+| `Waldo_Convoy_RouteRecovery_Enable` | `true` | Re-select the same unchanged final MOVE waypoint when the engine completes it prematurely while the convoy remains well outside its completion radius. Never creates a route, teleports, repairs or bypasses an obstruction. |
 | `Waldo_Convoy_ContactHalt_Enable` | `true` | Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available. |
 | `Waldo_Convoy_Unload_Enable` | `true` | Allows WMP passenger unloading on halt. Operating crews remain aboard. |
 | `Waldo_AIPass_Hearing_Enable` | `true` | Nearby gunfire creates throttled approximate investigation reports, never target reveals. |

@@ -472,10 +472,12 @@ the other system actually owns.
 | [WebKnight Droids](https://steamcommunity.com/sharedfiles/filedetails/?id=2567352444) | Droids identified by their runtime state, faction, movement config or WebKnight author metadata remain under their native controller. Ordinary soldiers in the same mission remain eligible. |
 | [WBK Units LAMBS compatibility patch](https://steamcommunity.com/sharedfiles/filedetails/?id=3032643455) | The patch remains authoritative for the relationship between WebKnight actors and LAMBS. Cortex excludes those actors before requesting a LAMBS/VCOM lease, so it does not undo the patch or re-enable an incompatible FSM. |
 | [Simple Civilian Behaviour](https://steamcommunity.com/sharedfiles/filedetails/?id=3529745801) | When its public flee function is present, the addon exclusively owns unarmed civilians and Cortex installs no civilian danger handlers. Without it, the optional WMP fallback supplies a lightweight event-driven flee response with the same master, radius, distance and cooldown controls used by Cortex. |
+| [HBQ Advanced Driving AI](https://steamcommunity.com/sharedfiles/filedetails/?id=3812620045) | The locally installed 1.0.0 PBO was inspected. While WMP owns a convoy, it preserves and temporarily sets HBQ's public `HBQAD_Pause` and `HBQAD_PreventDisembark` variables so HBQ cannot issue competing steering, unstuck or crew-return actions. Final release restores both exact prior values, including an originally absent variable. HBQ remains authoritative for every vehicle outside a WMP convoy. WMP does not reproduce HBQ's teleport, repair, unflip, collision-damage suppression or forced navigable-area path. Its route-memory idea informed a smaller WMP watchdog which may only re-select the same unchanged final MOVE waypoint after premature completion; it never creates a route or bypasses an obstruction. |
+| [PROTOCOL AI NAVY SEAL](https://steamcommunity.com/sharedfiles/filedetails/?id=3813369033) | The locally installed PBO was inspected. Its single runtime file starts two overlapping global loops which scan every group once per second, acquire any boat group near an enemy, repeatedly force dismount/movement and overwrite formation and combat state without Zeus, locality or release arbitration. Cortex therefore does not run alongside that controller. Shore sampling, boat approach, support/assault roles and casualty redistribution are design inputs for a separate gated WMP naval-assault feature; they are not copied and that feature is not yet implemented or accepted. |
 
 The compatibility gate is read-only: WMP does not clear external variables, terminate external
 scripts, replace custom animations or imitate an externally owned actor. WMP Diagnostics reports
-which integrations are loaded, finite VCOM leases, externally owned actors and active WMP civilian
+which integrations are loaded, finite VCOM leases, HBQ convoy handover, externally owned actors and active WMP civilian
 responses. Source inspection and static tests establish the ownership contract; dependency-loaded
 dedicated-server, headless-client, JIP and Zeus interruption runs remain required for behavioural
 acceptance.
@@ -566,6 +568,8 @@ Convoy controls apply to explicitly configured convoys independently of the Smar
 | `Waldo_Convoy_ContactHalt_Enable` | `true` | Contact-driven halt requests under the existing push-through rule. |
 | `Waldo_Convoy_Unload_Enable` | `true` | Routine passenger unloading at arrival, manual stop and ambush halt. |
 | `Waldo_Convoy_AvoidInfantry_Enable` | `false` | Slow or stop for friendly infantry in the vehicle's immediate travel corridor. |
+| `Waldo_Convoy_DrivingAssist_Enable` | `true` | Sample the road ahead every three seconds and damp speed changes before sharp curves, junctions and steep grades. Authored routes and real obstructions remain authoritative. |
+| `Waldo_Convoy_RouteRecovery_Enable` | `true` | Re-select the same unchanged final MOVE waypoint after premature engine completion while the convoy remains well outside its completion radius. This never creates a route, teleports, repairs or defeats a roadblock. |
 
 The existing vehicle gunnery switch also controls standoff manoeuvres. Other existing switches still
 separate reinforcement, coordinated assault, contact reports, artillery, counter-battery, movement

@@ -432,6 +432,8 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_Convoy_ContactHalt_Enable` | Contact halt requests under the configured push-through rule. Default `true`. |
 | `Waldo_Convoy_Unload_Enable` | Routine cargo unloading at arrival, manual stop and ambush halt. Default `true`. |
 | `Waldo_Convoy_AvoidInfantry_Enable` | Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default `false`. |
+| `Waldo_Convoy_DrivingAssist_Enable` | Low-frequency road look-ahead plus speed damping for smoother curves, junctions and grades. It leaves route choice and physical obstruction handling to Arma. Default `true`. |
+| `Waldo_Convoy_RouteRecovery_Enable` | Conservative final-route recovery. Re-selects only the same unchanged final MOVE waypoint after premature engine completion and never teleports, repairs or bypasses an obstruction. Default `true`. |
 | `Waldo_AIPass_Vehicles_Enable` | Infantry dismount under fire and remount afterwards; damaged vehicles smoke and withdraw. Default `true`. |
 | `Waldo_AIPass_ContactReports_Enable` | Squads share sighted enemies by radio (blocked by jamming) or by voice. Default `true`. |
 | `Waldo_AIPass_ContactReports_Radius` | Radio report range in metres. Default `500`. |

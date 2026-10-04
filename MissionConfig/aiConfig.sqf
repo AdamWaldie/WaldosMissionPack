@@ -111,6 +111,8 @@
  * - Waldo_Convoy_ContactHalt_Enable (MISSION MAKER): Contact halt requests under the configured push-through rule. Default true.
  * - Waldo_Convoy_Unload_Enable (MISSION MAKER): Routine cargo unloading at arrival, manual stop and ambush halt. Default true.
  * - Waldo_Convoy_AvoidInfantry_Enable (MISSION MAKER): Bounded friendly-infantry corridor checks in the existing convoy speed controller. Default false.
+ * - Waldo_Convoy_DrivingAssist_Enable (MISSION MAKER): Low-frequency road look-ahead and speed damping for smoother curves, junctions and grades. Default true.
+ * - Waldo_Convoy_RouteRecovery_Enable (MISSION MAKER): Re-selects the same unchanged final MOVE waypoint when the engine completes it far from its destination. Default true.
  *
  * SETTING-BY-SETTING GUIDE - SMART AI PASS:
  * Behaviour improvements for all non-player AI groups. It runs only on the server and headless
@@ -363,6 +365,8 @@ createHashMapFromArray [
         ["Waldo_Convoy_MountedFire_Enable", true], // WMP assigns targets to weapon crew under existing ROE. Disable to leave targeting to another AI mod.
         ["Waldo_Convoy_Cover_Enable", true], // Moves dismounted passengers clear of vehicles; seeks cover during contact.
         ["Waldo_Convoy_AvoidInfantry_Enable", false], // Optional short-range friendly infantry corridor checks before driving.
+        ["Waldo_Convoy_DrivingAssist_Enable", true], // Low-frequency road look-ahead and speed damping; no obstacle bypass or alternate route ownership.
+        ["Waldo_Convoy_RouteRecovery_Enable", true], // Re-selects only the same unchanged final MOVE waypoint after premature engine completion; never creates, teleports or repairs.
         ["Waldo_Convoy_ContactHalt_Enable", true], // Automatic ambush halt using push-through and pinned rules. Route arrival and explicit stop remain available.
         ["Waldo_Convoy_Unload_Enable", true], // Allows WMP passenger unloading on halt. Operating crews remain aboard.
         ["Waldo_AIPass_Hearing_Enable", true], // Nearby gunfire area reports, never target reveals.

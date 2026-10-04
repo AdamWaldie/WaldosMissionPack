@@ -638,10 +638,13 @@
       "title": "Mixed convoy path and spacing",
       "setup": "Run tracked and wheeled leaders/followers through straight roads, corners, stops, route edits and a blocked leader.",
       "expected": "Each traces its predecessor, maintains spacing and makes progress without wedge formation; recovery is bounded.",
-      "settings": [],
+      "settings": [
+        "Waldo_Convoy_DrivingAssist_Enable",
+        "Waldo_Convoy_RouteRecovery_Enable"
+      ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained. Outside VR the matrix performs one bounded search across eight headings for its complete 1.8 km straight-and-corner route, requires at least 30 m of relief and rejects water, unsafe vehicle surface normals and grades above 0.8. Startup direction, lateral offset, vehicle order and restart-turn measurements are projected onto the selected route axes rather than hard-coded world X/Y.",
+      "automation": "runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained. Outside VR the matrix performs one bounded search across eight headings for its complete 1.8 km straight-and-corner route, requires at least 30 m of relief and rejects water, unsafe vehicle surface normals and grades above 0.8. Startup direction, lateral offset, vehicle order and restart-turn measurements are projected onto the selected route axes rather than hard-coded world X/Y. One bounded road walk per convoy every three seconds anticipates curves, junctions and grades; followers reuse predecessor trail geometry and speed changes are damped without replacing route or obstacle authority. The route watchdog stores only the final MOVE identity and may re-select it after premature engine completion when its type and position remain unchanged and the convoy is still over 75 m outside the completion radius. HBQ steering, unstuck and crew-return ownership is paused only for WMP-controlled convoy vehicles and exact variable presence/value is restored on final release. Dependency-loaded physical acceptance remains pending.",
       "executable_sources": [
         "runServer.sqf",
         "runConvoyMatrix.sqf"

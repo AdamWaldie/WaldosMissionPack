@@ -2601,6 +2601,46 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_keepCrew isEqualTo (_configuration select 4)',text)
         self.assertIn('setVariable ["Waldo_Convoy_LocalState",_navigation]',text)
 
+    def test_convoy_recovers_only_the_same_unchanged_final_route(self):
+        tick=(ROOT/'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
+        for marker in ['Waldo_Convoy_RouteRecovery_Enable','["routeWatch",',
+                       'currentWaypoint _group >= count waypoints _group',
+                       'waypointPosition _watchedWaypoint distance2D _watchedPosition < 2',
+                       '_watchedRadius max 20)+75','_group setCurrentWaypoint _watchedWaypoint',
+                       'Waldo_Convoy_RouteRecoveries']:
+            self.assertIn(marker,tick)
+        recovery=tick.split('private _routeWatch=',1)[1].split('private _routeDone',1)[0]
+        for forbidden in ['addWaypoint','deleteWaypoint','setPos','setVelocity','setDamage','setFuel']:
+            self.assertNotIn(forbidden,recovery)
+
+    def test_convoy_temporarily_yields_hbq_vehicle_workers_and_restores_exact_state(self):
+        start=(ROOT/'MissionScripts/AiScripting/simpleAiConvoy.sqf').read_text(encoding='utf-8')
+        release=(ROOT/'MissionScripts/AiScripting/convoyReleaseLocal.sqf').read_text(encoding='utf-8')
+        diagnostics=(ROOT/'MissionScripts/AiScripting/aiGetDiagnostics.sqf').read_text(encoding='utf-8')
+        self.assertIn('CfgPatches" >> "hbq_advanced_driving_ai',start)
+        for variable in ['HBQAD_Pause','HBQAD_PreventDisembark']:
+            self.assertIn('isNil {_vehicle getVariable "'+variable+'"}',start)
+            self.assertIn('_vehicle setVariable ["'+variable+'"',start)
+            self.assertIn('_vehicle setVariable ["'+variable+'"',release)
+            self.assertIn('_vehicle setVariable ["'+variable+'",nil,true]',release)
+        self.assertIn('drivingAssist=%3 routeRecoveryEnabled=%4',diagnostics)
+        self.assertIn('hbqLoaded=%6 hbqPausedVehicles=%7',diagnostics)
+        self.assertIn('never teleports, repairs or ignores a physical roadblock',diagnostics)
+
+    def test_convoy_driving_assist_is_bounded_and_does_not_take_route_ownership(self):
+        tick=(ROOT/'MissionScripts/AiScripting/convoyTick.sqf').read_text(encoding='utf-8')
+        for marker in ['Waldo_Convoy_DrivingAssist_Enable','["roadLookAt",time+3]',
+                       'roadsConnectedTo _road','_travel >= 70','["roadAssist",',
+                       '["leadSpeedLimit",[_leadLimit,time]]','private _pathTurn=0;',
+                       'private _pathGrade=0;']:
+            self.assertIn(marker,tick)
+        assist=tick.split('// One bounded road walk per convoy',1)[1].split('// During contact',1)[0]
+        for forbidden in ['addWaypoint','deleteWaypoint','setCurrentWaypoint','setDriveOnPath',
+                          'setPos','setVelocity','setDamage','setFuel']:
+            self.assertNotIn(forbidden,assist)
+        self.assertLessEqual(assist.count('nearRoads'),1)
+
+
     def test_convoy_matrix_checks_physical_column_and_halt_notifies_curators(self):
         matrix=(ROOT/'releaseVerificationAndDeployment/cortexQA/runConvoyMatrix.sqf').read_text()
         for marker in ['CNVM-terrain-scenario','for "_heading" from 0 to 315 step 45',
