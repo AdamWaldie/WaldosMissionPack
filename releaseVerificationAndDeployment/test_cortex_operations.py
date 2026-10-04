@@ -750,7 +750,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_CortexQA_Combined',guide)
         self.assertIn('phase %2 | tactic %3/%4 | movement %5 | support %6',guide)
         operation=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedOperation.sqf').read_text()
-        for marker in ['COMBINED-OP-natural-contact','COMBINED-OP-separated-approaches',
+        for marker in ['COMBINED-OP-terrain-layout','worldName == "VR"','surfaceNormal _x',
+                       'getTerrainHeightASL _x','COMBINED-OP-natural-contact','COMBINED-OP-separated-approaches',
                        'COMBINED-OP-multiple-squads-manoeuvred','COMBINED-OP-composed-tactics',
                        'COMBINED-OP-infantry-actual-fire','COMBINED-OP-fire-while-moving',
                        'COMBINED-OP-no-operation-wide-pause','COMBINED-OP-ground-route-and-fire',
