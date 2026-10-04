@@ -118,7 +118,7 @@ if (_active) then {
             private _approvedTarget=_eligibleTargets select (_forEachIndex mod _targetCount);
             private _assigned=assignedTarget _x;
             private _leased=_x getVariable ["Waldo_DynamicAA_CommandedTargetLocal",objNull];
-            if ((!isNull _assigned && {!(_assigned in _eligibleTargets)}) || {_leased != _approvedTarget}) then {
+            if (_assigned != _approvedTarget || {_leased != _approvedTarget}) then {
                 _x doTarget objNull;
                 _x doWatch objNull;
                 _x doTarget _approvedTarget;

@@ -597,7 +597,7 @@ class FullAuditTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn('doStop leader _group', stop)
-        self.assertNotIn('ImprovedHelicopterLanding', stop)
+        self.assertIn('Waldo_fnc_ImprovedHelicopterLandingRestoreLocal', stop)
         self.assertNotIn('disableAI', stop)
         self.assertNotIn('engineOn', stop)
         self.assertNotIn('spawn {', stop)
@@ -697,8 +697,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("WMP-blue informational action", wiki)
 
         self.assertIn("Select Destination", wiki)
-        self.assertNotIn('ImprovedHelicopterLanding', register)
-        self.assertNotIn('useImprovedLanding', register)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_Exclude', register)
+        self.assertIn('useImprovedLanding', register)
         self.assertIn('if (!_helicopter || {_destinationLanding}) then {"MOVE"} else {"TR UNLOAD"}', dispatch)
         self.assertNotIn('setWaypointScript', dispatch)
         self.assertIn('_vehicle distance2D _target <= 300', dispatch)
@@ -746,7 +746,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('if (_phase == "RTB") then', request)
         self.assertIn('_target = +(_entry get "startPos")', request)
         self.assertIn('_vehicle land "LAND"', dispatch)
-        self.assertNotIn('ImprovedHelicopterLanding', dispatch)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_Active', dispatch)
         self.assertIn('_vehicle land "LAND"', dispatch)
         self.assertNotIn('_vehicle landAt', dispatch)
         self.assertIn("_waypoint setWaypointType _waypointType", dispatch)
@@ -1743,8 +1743,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('ai-headless-adoption', ai_diagnostics)
         self.assertIn('(_aceResult select 1) >= _eligibleCount', ai_diagnostics)
         self.assertIn('(_wmpResult select 3) >= _eligibleCount', ai_diagnostics)
-        self.assertNotIn('improved-helicopter-landing', ai_diagnostics)
-        self.assertNotIn('helicopter-deceleration', ai_diagnostics)
+        self.assertIn('improved-helicopter-landing', ai_diagnostics)
+        self.assertIn('helicopter-deceleration', ai_diagnostics)
         self.assertIn('call Waldo_fnc_HeadlessPinCrew', transport)
         self.assertIn('Waldo_ServerOwnedFeature', paradrop)
 
@@ -3969,9 +3969,8 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn("Example:", text, path.name)
             self.assertIn("Current callers:", text, path.name)
 
-    def test_standalone_ai_controllers_are_absent_from_wmp(self):
-        removed_files = (
-            "simpleAiConvoy.sqf",
+    def test_wait_owns_ai_when_loaded_and_wmp_retains_helicopter_fallback(self):
+        controller_files = (
             "helicopterDecelerationInit.sqf",
             "helicopterDecelerationTrackLocal.sqf",
             "helicopterDecelerationCorrectLocal.sqf",
@@ -3984,8 +3983,9 @@ class FullAuditTests(unittest.TestCase):
             "improvedHelicopterLandingConfigureServer.sqf",
         )
         ai_root = ROOT / "MissionScripts" / "AiScripting"
-        for name in removed_files:
-            self.assertFalse((ai_root / name).exists(), name)
+        self.assertFalse((ai_root / "simpleAiConvoy.sqf").exists())
+        for name in controller_files:
+            self.assertTrue((ai_root / name).exists(), name)
         self.assertFalse((ROOT / "MissionScripts" / "ZenModules" / "Zen_convoyModule.sqf").exists())
 
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
@@ -4002,9 +4002,11 @@ class FullAuditTests(unittest.TestCase):
             path.read_text(encoding="utf-8")
             for path in (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR").glob("*.sqf")
         )
-        removed_tokens = ("SimpleAiConvoy", "ImprovedHelicopterLanding", "HelicopterDeceleration")
-        for token in removed_tokens:
-            self.assertNotIn(token, functions + zen + transport + paradrop + audit)
+        self.assertNotIn("SimpleAiConvoy", functions + zen + transport + paradrop + audit)
+        self.assertIn("ImprovedHelicopterLandingInit", functions)
+        self.assertIn("HelicopterDecelerationInit", functions)
+        self.assertIn("Waldo_TransportService_LandingOrder", transport)
+        self.assertIn("Waldo_ImprovedHelicopterLanding_Active", transport)
         self.assertIn('_vehicle land "LAND"', transport)
 
         init = (ROOT / "init.sqf").read_text(encoding="utf-8")
@@ -4013,6 +4015,10 @@ class FullAuditTests(unittest.TestCase):
         runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
         for source in (init, apply_profile, rebalance, runtime):
             self.assertIn('CfgPatches" >> "Waldo_AI_Tweaks_Main', source)
+        for name in controller_files:
+            if name.endswith("Setting.sqf") or name.endswith("RestoreLocal.sqf"):
+                continue
+            self.assertIn('CfgPatches" >> "Waldo_AI_Tweaks_Main', (ai_root / name).read_text(encoding="utf-8"), name)
 
     def test_parser_extracts_failure(self):
         with tempfile.TemporaryDirectory() as directory:

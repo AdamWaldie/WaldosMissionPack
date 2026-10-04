@@ -351,6 +351,14 @@ Set `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf` to `DEFAULT`, `WW2`,
 by WMP displays. Curator QA can change it live and the server publishes that durable selection for
 JIP. See [UI Visual Themes](UI-Visual-Themes).
 
+### Improved AI Helicopter Landings
+
+`Waldo_ImprovedHelicopterLanding_Enable` and the related settings in `MissionConfig\aiConfig.sqf` tune WMP's exact AI landing controller. It covers registered helicopter taxis as well as normal landing waypoints. When WAIT is loaded, WMP does not start or drive this controller; WAIT owns the approach. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
+
+### AI Helicopter Deceleration
+
+`Waldo_HelicopterDeceleration_Enable` controls WMP's optional cruise-braking correction and defaults to `false`. Improved landing takes priority. When WAIT is loaded, WMP does not start or drive deceleration correction. See [AI Helicopter Deceleration](AI-Helicopter-Deceleration).
+
 ### Zeus Enhanced Modules
 
 `Waldo_fnc_ZenInitModules` is called automatically on interface clients. The function is repeat-safe and exits when Zeus Enhanced is unavailable.

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1113,
+  "registeredFunctionCount": 1123,
   "runtimeFunctionCount": 383,
-  "functionCount": 1496,
+  "functionCount": 1506,
   "stations": [
     {
       "id": "control",
@@ -403,6 +403,16 @@
         0
       ],
       "description": "Server-owned DZ route, timed jumpers, operational markers and teardown."
+    },
+    {
+      "id": "ai-helicopter-landing",
+      "title": "AI HELICOPTER FLIGHT",
+      "position": [
+        325,
+        40,
+        0
+      ],
+      "description": "Improved landing and optional cruise deceleration when WAIT is absent."
     },
     {
       "id": "ui-theme-qa",
@@ -862,6 +872,66 @@
       "name": "Waldo_fnc_AIRebalanceStop",
       "file": "MissionScripts/AiScripting/aiRebalanceStop.sqf",
       "station": "ai-rebalance",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingInit",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingTrackLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingTrackLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingExecuteLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingExecuteLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingAnchorLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingAnchorLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingRestoreLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingRestoreLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingSetting",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingSetting.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingConfigureServer",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HelicopterDecelerationInit",
+      "file": "MissionScripts/AiScripting/helicopterDecelerationInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HelicopterDecelerationTrackLocal",
+      "file": "MissionScripts/AiScripting/helicopterDecelerationTrackLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HelicopterDecelerationCorrectLocal",
+      "file": "MissionScripts/AiScripting/helicopterDecelerationCorrectLocal.sqf",
+      "station": "ai",
       "activation": "manual"
     },
     {

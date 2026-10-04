@@ -125,8 +125,9 @@ captured and unsupported radios remain untouched. WMP does not change alternate 
 
 **Normally edit:** enable switches, AI profile/mode/application population and filters.
 
-**Normally leave:** variance and restoration. No call is required. Convoy, helicopter deceleration
-and improved-landing controllers are provided by the standalone Waldos AI Tweaks addon instead of WMP.
+**Normally leave:** variance and restoration. No call is required. Convoy control is provided by
+the standalone Waldos AI Tweaks addon. WMP retains helicopter deceleration and improved landing
+when that addon is absent; loading it makes WMP stand down all three AI controllers.
 
 ### airOperationsConfig.sqf
 

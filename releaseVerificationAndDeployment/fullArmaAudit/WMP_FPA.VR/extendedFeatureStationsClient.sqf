@@ -525,6 +525,27 @@ private _loadouts = "qa_sign_nested_loadouts" call _get;
     [_actor] remoteExecCall ["Waldo_QA_fnc_reportLoadoutPoolServer", 2];
 }] call _add;
 
+private _landing = "qa_sign_ai_helicopter_landing" call _get;
+[_landing, "Waldo_QA_HelicopterDeceleration", "START CRUISE DECELERATION TEST", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_startHelicopterDecelerationServer", 2];
+}] call _add;
+[_landing, "Waldo_QA_ImprovedLandingNormal", "START NORMAL AI LANDING", {
+    params ["_target", "_actor"];
+    [_actor, false] remoteExecCall ["Waldo_QA_fnc_startImprovedLandingServer", 2];
+}] call _add;
+[_landing, "Waldo_QA_ImprovedLandingHigh", "START HIGH APPROACH / GO-AROUND", {
+    params ["_target", "_actor"];
+    [_actor, true] remoteExecCall ["Waldo_QA_fnc_startImprovedLandingServer", 2];
+}] call _add;
+[_landing, "Waldo_QA_ImprovedLandingReport", "REPORT AI LANDING STATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_reportImprovedLandingServer", 2];
+}] call _add;
+[_landing, "Waldo_QA_ImprovedLandingRemove", "REMOVE QA HELICOPTER", {
+    [] remoteExecCall ["Waldo_QA_fnc_removeImprovedLandingServer", 2];
+}] call _add;
+
 private _themes = "qa_sign_ui_theme_qa" call _get;
 {
     _x params ["_theme", "_label"];

@@ -4,9 +4,11 @@
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
  * Service helicopters use TR UNLOAD only when arriving for pickup or returning empty to base.
- * Passenger destinations use a MOVE route. This avoids both TR UNLOAD forcing players
+ * Passenger destinations use a MOVE route which the WMP improved-landing tracker recognises from
+ * the transport's authoritative TO_DESTINATION state. This avoids both TR UNLOAD forcing players
  * out before touchdown and Arma's scripted LAND task surviving route replacement after touchdown.
- * Both paths use the native vehicle LAND command inside 300 metres.
+ * Both paths retain the vehicle LAND fallback inside 300 metres. When WMP
+ * improved landing owns final approach, that fallback waits instead of fighting the controller.
  * After touchdown the server clears the completed route and permits normal AI engine idle-down;
  * Transport Services does not impose an engine-running or movement-suspension hold.
  * Ground and boat services stall-detect (no progress for pathRetrySeconds) and reissue a route up to
@@ -70,6 +72,9 @@ units _group doFollow leader _group;
 _vehicle engineOn true;
 private _dispatchRoadRoute = false;
 if (_helicopter) then {
+    if (_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
+        [_vehicle, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    };
     _vehicle land "NONE";
     // Array form forces strict AGL terrain-following - see Waldo_fnc_TransportRegister's matching
     // comment for the long-route/elevation-change failure mode this avoids.
@@ -91,7 +96,8 @@ if (_helicopter) then {
 // cargo out as an engine waypoint side effect, bypassing WMP's forceDisembark option. A scripted
 // LAND waypoint avoids that side effect but can leave Arma's waypoint script holding the aircraft
 // after WMP deletes/replaces the landing waypoint. Destination therefore uses an ordinary MOVE
-// route. The native LAND command below owns the final approach.
+// route; the improved-landing tracker recognises it only while this registered transport is in the
+// authoritative TO_DESTINATION state, so no general MOVE waypoint is reinterpreted as a landing.
 private _waypoint = _group addWaypoint [_target, 0];
 private _destinationLanding = _helicopter && {toUpperANSI _phase == "DESTINATION"};
 private _waypointType = if (!_helicopter || {_destinationLanding}) then {"MOVE"} else {"TR UNLOAD"};
@@ -103,6 +109,15 @@ if (!_helicopter) then {
     _waypoint setWaypointCompletionRadius ((_config getOrDefault ["stopRadius", 12]) max 5);
 };
 _group setCurrentWaypoint _waypoint;
+// Only this exact WMP-created destination MOVE may be interpreted as a landing task. The old
+// state-only test meant any later Zeus MOVE waypoint could make a registered transport descend
+// aggressively while TO_DESTINATION was still replicated. Index, request and position together
+// distinguish our route from a curator replacement even when Arma reuses waypoint indices.
+if (_destinationLanding) then {
+    _vehicle setVariable ["Waldo_TransportService_LandingOrder", [_requestId, _waypoint select 1, +_target], true];
+} else {
+    _vehicle setVariable ["Waldo_TransportService_LandingOrder", [], true];
+};
 diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 waypoint=%6 type=%7 owner=%8", _id, _requestId, _phase, _target, _helicopter, _waypoint select 1, waypointType _waypoint, clientOwner];
 
 [_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute, _boat, _movementBehaviour] spawn {
@@ -123,7 +138,9 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             || {diag_tickTime >= _timeout}
         };
         if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {!isTouchingGround _vehicle} && {_vehicle distance2D _target <= 300}) then {
-            _vehicle land "LAND";
+            if !(_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
+                _vehicle land "LAND";
+            };
         };
         private _fallbackIssued = false;
         waitUntil {
@@ -132,6 +149,7 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             if (
                 !_touchdown
                 && {!_fallbackIssued}
+                && {!(_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
                 && {!isTouchingGround _vehicle}
                 && {_vehicle distance2D _target <= 300}
             ) then {
@@ -191,7 +209,10 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
     };
     if (call _stale) exitWith {diag_log format ["[WMP TRANSPORT] Superseded controller stopped service=%1 request=%2", _id, _requestId]};
     if (!local _group) exitWith {[_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group]};
-    private _arrived = alive _vehicle && {alive driver _vehicle} && {_vehicle distance2D _target <= (_stopRadius * (if (_helicopter) then {2} else {1}))};
+    // A timed-out helicopter can hover over the pad. Distance alone must not advance the
+    // passenger state to DISEMBARKING or report a completed pickup/RTB.
+    private _touchdown = !_helicopter || {isTouchingGround _vehicle || {(getPosATL _vehicle select 2) < 1.5}};
+    private _arrived = alive _vehicle && {alive driver _vehicle} && {_touchdown} && {_vehicle distance2D _target <= (_stopRadius * (if (_helicopter) then {2} else {1}))};
     [_id, _requestId, _phase, if (_arrived) then {"ARRIVED"} else {"FAILED"}] remoteExecCall ["Waldo_fnc_TransportReportServer", 2];
 };
 true

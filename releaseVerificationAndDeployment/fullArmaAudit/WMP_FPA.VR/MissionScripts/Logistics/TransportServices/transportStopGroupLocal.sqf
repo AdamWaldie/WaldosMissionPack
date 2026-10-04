@@ -2,8 +2,9 @@
  * Author: WaldoTheWarfighter, Val
  * Clears a completed WMP transport route and leaves its AI service vehicle stopped at the physical
  * pickup, destination or base position. Helicopters receive the ordinary engine LAND command and
- * are allowed to idle down naturally; this function does not manipulate engine state, repeatedly
- * force LAND, disable AI features or run a background grounded-hold worker.
+ * are allowed to idle down naturally. If WMP owns an improved landing approach, it releases that
+ * controller while preserving the grounded LAND order. This function does not repeatedly force
+ * LAND or run a background grounded-hold worker.
  *
  * Locality and authority: called by the authoritative server after a validated arrival, then routed
  * to the machine currently owning the AI group. It changes only local group/vehicle movement state.
@@ -38,6 +39,11 @@ for "_index" from ((count waypoints _group) - 1) to 0 step -1 do {
 doStop leader _group;
 
 if (!isNull _vehicle && {_vehicle isKindOf "Helicopter"}) then {
+    if (_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
+        // Touchdown is already complete. Preserve LAND while removing only the vector controller;
+        // restoring transit height or LAND NONE here creates an unnecessary post-arrival lift.
+        [_vehicle, true, "LAND"] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    };
     _vehicle land "LAND";
 };
 true

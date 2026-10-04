@@ -122,7 +122,7 @@ if (Waldo_CorpseTraps_Enable) then {
 
 /*===========================================================================================================================*/
 
-/* AI SKILL VALUES
+/* AI SKILL VALUES AND HELICOPTER CONTROLLERS
  * Normal setup: MissionConfig\aiConfig.sqf.
  * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
  * Do not add another AITweak call here. This readiness-aware activation uses the settings received
@@ -143,6 +143,8 @@ if (Waldo_CorpseTraps_Enable) then {
             missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
         ] call Waldo_fnc_AITweak;
     };
+    [] call Waldo_fnc_ImprovedHelicopterLandingInit;
+    [] call Waldo_fnc_HelicopterDecelerationInit;
 };
 /*===========================================================================================================================*/
 

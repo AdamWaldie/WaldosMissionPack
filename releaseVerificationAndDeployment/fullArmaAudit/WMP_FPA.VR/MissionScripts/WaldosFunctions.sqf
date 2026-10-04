@@ -159,6 +159,16 @@ class CfgFunctions
             class AIRebalanceStop {
                 file = "MissionScripts\AiScripting\aiRebalanceStop.sqf";
             };
+            class ImprovedHelicopterLandingInit {file = "MissionScripts\AiScripting\improvedHelicopterLandingInit.sqf";};
+            class ImprovedHelicopterLandingTrackLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingTrackLocal.sqf";};
+            class ImprovedHelicopterLandingExecuteLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingExecuteLocal.sqf";};
+            class ImprovedHelicopterLandingAnchorLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingAnchorLocal.sqf";};
+            class ImprovedHelicopterLandingRestoreLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingRestoreLocal.sqf";};
+            class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
+            class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
+            class HelicopterDecelerationInit {file = "MissionScripts\AiScripting\helicopterDecelerationInit.sqf";};
+            class HelicopterDecelerationTrackLocal {file = "MissionScripts\AiScripting\helicopterDecelerationTrackLocal.sqf";};
+            class HelicopterDecelerationCorrectLocal {file = "MissionScripts\AiScripting\helicopterDecelerationCorrectLocal.sqf";};
         };
         class Headless
         {
