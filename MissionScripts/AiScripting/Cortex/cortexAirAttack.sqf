@@ -8,21 +8,22 @@
  * It flies physical route legs, presents the live target only to the retained weapon operator, records real
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
  * uses a compatible loaded weapon and opens fire only inside a live range and alignment envelope.
- * On attack entry the selected living operator receives one native reveal/target instruction;
- * Cortex then asks that operator to release the selected weapon only after live range, route,
- * ammunition and seeker checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
- * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
- * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. Surface
- * attacks keep the immutable target-crossing MOVE leg: Arma's target-attached DESTROY waypoint is not
- * a reliable target association and live use made the pilot circle without firing. During the final
- * fixed-wing gun or rocket basket, Cortex briefly blends the nose toward the live target at a bounded
- * rate. The alignment derives from current aircraft/target geometry and runs only while the sampled
- * line remains clear of terrain; it never moves the aircraft position or corrects a projectile. Bomb
+ * On attack entry the selected living operator receives one native reveal/target instruction.
+ * Fixed-wing pilots prosecute the object-attached native attack order; Cortex requests release only
+ * from independently aimed turrets after live range, route, ammunition and seeker checks pass. This
+ * joins route geometry to the engine's weapon FSM instead of treating an ATTACK label as an attack.
+ * The engine remains the flight controller; Cortex owns one named temporary
+ * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. Once a
+ * fixed-wing aircraft reaches its selected approach, the same owned waypoint becomes an object-attached
+ * DESTROY order. Arma's native combat flight controller therefore owns the roll-in, pitch and release
+ * geometry across real terrain; Cortex does not repeatedly rotate, move or velocity-lock the aircraft.
+ * The immutable approach still distinguishes standoff, oblique, hook, bomb and strafe setup, while the
+ * finite egress prevents an unsuccessful native attack from orbiting forever. Bomb
  * release uses a short config-driven ballistic integration instead of a fixed angle or height. Native
  * fireAtTarget still owns independently aimed turret release. A pilot-operated fixed-wing surface
- * weapon uses one bounded forceWeaponFire request only after those same physical gates pass; this
- * follows the engine's aircraft-operator contract and leaves the real configured muzzle, mode and
- * projectile physics intact. A pass which physically crosses the target without releasing proceeds
+ * weapon remains under the object-attached native attack order; Cortex records its real Fired event
+ * but does not compete with the pilot by forcing a second trigger command. A pass which physically
+ * crosses the target without releasing proceeds
  * to egress instead of circling back around an unreachable delivery point. Rotorcraft and independently
  * aimed turrets retain the bounded native fire request because their abeam and standoff attacks do not
  * use a fixed-wing dive. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
@@ -428,6 +429,11 @@ if (_job getOrDefault ["airToAir",false] && {_stage in ["INGRESS","ATTACK"]}) th
     _points set [_stageIndex,_destination];
     _job set ["points",_points];
 };
+// An object-attached DESTROY waypoint is the engine's native order to prosecute a specific target.
+// Keep each pattern's immutable ingress setup, then measure the attack against the live target while
+// the native combat flight controller chooses its terrain-appropriate roll-in and attitude.
+private _nativeAttackWaypoint=_isPlane && {_stage == "ATTACK"} && {!isNull _target};
+if (_nativeAttackWaypoint) then {_destination=getPosATL _target};
 private _stageDistance=_aircraft distance2D _destination;
 private _closestKey="closest"+_stage;
 private _stageClosest=(_job getOrDefault [_closestKey,_stageDistance]) min _stageDistance;
@@ -480,14 +486,13 @@ if (_commandedStage != _stage) then {
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
     _ownedWaypoint setWaypointPosition [_destination,0];
-    // Moving air contacts need the engine's native intercept order. Surface delivery retains the
-    // planned target-crossing line; attaching DESTROY to a surface object is unsupported and the live
-    // audit showed it can leave the pilot circling without prosecuting the selected target.
-    private _nativeAirIntercept=_isPlane && {_stage == "ATTACK"}
-        && {_job getOrDefault ["airToAir",false]} && {!isNull _target};
-    if (_nativeAirIntercept) then {
+    // Object-attached DESTROY is the supported native attack association for both air and surface
+    // targets. It lets the aircraft FSM form the actual attack angle instead of Cortex forcing an
+    // attitude that is only safe over flat VR terrain.
+    if (_nativeAttackWaypoint) then {
         _ownedWaypoint setWaypointPosition [getPosATL _target,0];
         _ownedWaypoint setWaypointType "DESTROY";
+        _ownedWaypoint setWaypointCombatMode "RED";
         _ownedWaypoint waypointAttachVehicle _target;
     } else {
         _ownedWaypoint waypointAttachVehicle objNull;
@@ -541,44 +546,10 @@ if (_stage == "ATTACK") then {
     };
     private _range=_aircraft distance _target;
     private _horizontalRange=_aircraft distance2D _target;
-    private _deliveryTerrainClear=true;
-    // Native fixed-wing pilots commonly keep a level attitude all the way through a surface MOVE
-    // waypoint. Blend only the last gun/rocket basket toward the live aim point, and only where a
-    // sampled terrain corridor remains clear. Position, velocity and projectiles remain untouched.
-    // This lets hills veto the assist instead of assuming the flat VR horizon is representative.
-    private _terminalAssist=_isPlane && {!_airContact} && {_weaponClass in ["GUN","ROCKET"]}
-        && {_horizontalRange >= 700} && {_horizontalRange <= ([2600,3400] select (_weaponClass == "ROCKET"))};
-    if (_terminalAssist) then {
-        private _aircraftASL=getPosASL _aircraft;
-        private _aimASL=aimPos _target;
-        private _desiredVector=_aimASL vectorDiff _aircraftASL;
-        private _desiredDirection=vectorNormalized _desiredVector;
-        private _depression=-(asin (((_desiredDirection select 2) max -1) min 1));
-        if (_depression >= 2 && {_depression <= 26}) then {
-            private _clearanceMinimum=1e10;
-            for "_sampleIndex" from 1 to 7 do {
-                private _fraction=_sampleIndex/8;
-                private _sampleASL=_aircraftASL vectorAdd (_desiredVector vectorMultiply _fraction);
-                private _terrainClearance=(_sampleASL select 2)-getTerrainHeightASL _sampleASL;
-                private _requiredClearance=20+(100*(1-_fraction));
-                _clearanceMinimum=_clearanceMinimum min _terrainClearance;
-                if (_terrainClearance < _requiredClearance) then {_deliveryTerrainClear=false};
-            };
-            _job set ["deliveryAssistSamples",[8,_clearanceMinimum,_depression,_deliveryTerrainClear]];
-            if (_deliveryTerrainClear) then {
-                private _currentDirection=vectorDir _aircraft;
-                private _newDirection=vectorNormalized ((_currentDirection vectorMultiply 0.86)
-                    vectorAdd (_desiredDirection vectorMultiply 0.14));
-                private _newRight=vectorNormalized (_newDirection vectorCrossProduct [0,0,1]);
-                private _newUp=vectorNormalized (_newRight vectorCrossProduct _newDirection);
-                _aircraft setVectorDirAndUp [_newDirection,_newUp];
-                _job set ["deliveryAssistActive",true];
-            };
-        } else {
-            _deliveryTerrainClear=false;
-            _job set ["deliveryAssistSamples",[0,-1,_depression,false]];
-        };
-    };
+    // The plan-time corridor and live safety floor may veto an unsafe run. They do not manufacture
+    // a pitch correction. Native attack flight retains the continuous terrain and obstacle picture
+    // that a sparse scheduled script cannot reproduce cheaply or safely.
+    private _deliveryTerrainClear=_job getOrDefault ["terrainViable",true];
     private _weaponVector=if (_weapon == "") then {[0,0,0]} else {_aircraft weaponDirection _weapon};
     private _targetVector=(aimPos _target) vectorDiff (getPosASL _aircraft);
     private _alignment=if (vectorMagnitude _weaponVector > 0.01 && {vectorMagnitude _targetVector > 0.01}) then {
@@ -681,15 +652,11 @@ if (_stage == "ATTACK") then {
     private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
     private _fixedUnguided=_turret isEqualTo [-1] && {_weaponClass in ["GUN","ROCKET"]};
     // aimedAtTarget is useful telemetry but is not a reliable release gate for fixed-wing pilot
-    // stations: the vanilla CAS jet can hold a valid target-crossing line while this command remains
-    // zero. Release remains behind the physical range, closure and route baskets below; the operator
-    // command only replaces the final API which cannot aim a pilot-fixed aircraft station.
+    // stations. The native attached attack owns that release; this basket remains useful for
+    // diagnostics and for independently aimed turret requests.
     private _minimumAim=0;
-    // Fixed aircraft weapons are released through the real operator's fire-control state. The
-    // vector returned by weaponDirection is not the launch vector of every aircraft muzzle or
-    // pylon; the audit proved a nominally valid predicted solution could put an entire cannon burst
-    // more than 400 metres beyond the target. Keep only a broad airframe/route basket here, then let
-    // the selected operator release use the configured muzzle, aircraft momentum, seeker and mode.
+    // The native DESTROY order now forms the fixed-wing attack attitude. Keep this as a telemetry
+    // basket for the real operator rather than replacing native flight with a scripted rotation.
     private _nativeFixedBasket=!_fixedUnguided || {
         _forwardAlignment >= ([0.985,0.975] select (_weaponClass == "ROCKET"))
     };
@@ -708,34 +675,24 @@ if (_stage == "ATTACK") then {
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
     // Turrets use fireAtTarget after their operator has tracked the hostile. Pilot-controlled
-    // fixed-wing surface weapons are different: fireAtTarget does not aim them and returned false
-    // through every valid live-audit basket. Once the physical route, terrain and release checks
-    // above pass, ask the actual pilot to fire the selected configured mode. The Fired handler is
-    // still the sole proof of release; no projectile is created, steered or corrected here.
+    // fixed-wing weapons remain with the native attached DESTROY order. The Fired handler is the
+    // sole proof of either release path; no projectile is created, steered or corrected here.
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
         && {serverTime < _requestAt+0.35};
-    if (_validSolution && {!_requestPending}
+    private _pilotSurfaceRelease=_isPlane && {!_airContact} && {_turret isEqualTo [-1]};
+    if (_validSolution && {_pilotSurfaceRelease}) then {
+        _job set ["releaseDetail",["NATIVE_FIXED",_weapon,_range,_forwardAlignment,
+            _deliveryAlong,_deliveryTerrainClear,waypointType [_group,currentWaypoint _group]]];
+    };
+    if (_validSolution && {!_pilotSurfaceRelease} && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
-        // One native request at a time. Repeating a rejected request after a short interval is
-        // intentional: the operator may enter the engine's exact solution later in the same pass.
-        // No request steers the aircraft and no projectile is corrected after launch.
-        private _pilotSurfaceRelease=_isPlane && {!_airContact} && {_turret isEqualTo [-1]};
-        private _fired=false;
-        if (_pilotSurfaceRelease) then {
-            private _modes=getArray (configFile >> "CfgWeapons" >> _weapon >> "modes");
-            private _mode=_modes param [0,_weapon];
-            if (_mode == "this") then {_mode=_weapon};
-            _operator forceWeaponFire [_weapon,_mode];
-            _fired=true;
-            _job set ["releaseDetail",["PILOT_FIXED",_weapon,_mode,_range,_forwardAlignment,
-                _deliveryAlong,_deliveryTerrainClear]];
-        } else {
-            _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
-            if (_fired) then {
-                _job set ["releaseDetail",["NATIVE_TURRET",_weapon,_range,_alignment,_aimed]];
-            };
+        // One native request at a time for an independently aimed turret. Fixed-wing pilots are
+        // already controlled by the native attached DESTROY order above.
+        private _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
+        if (_fired) then {
+            _job set ["releaseDetail",["NATIVE_TURRET",_weapon,_range,_alignment,_aimed]];
         };
         if (_fired) then {
             _job set ["fireRequestAt",serverTime];
@@ -921,4 +878,4 @@ switch _stage do {
     };
     case "EGRESS": {};
 };
-if (_job getOrDefault ["deliveryAssistActive",false] && {_stage == "ATTACK"}) then {0.1} else {0.5}
+0.5
