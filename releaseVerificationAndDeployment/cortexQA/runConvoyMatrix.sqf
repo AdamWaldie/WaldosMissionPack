@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Compares wheeled, tracked and mixed convoy continuity on a long route at four spacings.
+ * Outside VR one bounded scan rotates the 1.8 km route across real relieved terrain; all spacing,
+ * heading and order measurements use that selected route axis rather than world X/Y.
  * Locality/authority: scheduled server creates and owns fixtures through the public convoy API.
  * Repeat/JIP: fresh groups per case; public observer vehicles; release and delete each case.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required audit callbacks.
@@ -8,6 +10,76 @@
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAConvoyMatrix.sqf";
  */
 params ["_check","_phase","_wait"];
+private _terrainOrigin=[2500,2500,0];
+private _terrainHeading=0;
+private _terrainRelief=0;
+private _terrainMaximumGrade=0;
+private _terrainMinimumNormal=1;
+private _terrainScenarioReady=worldName == "VR";
+private _terrainWorld={
+    params ["_origin","_heading","_localX","_localY"];
+    _origin vectorAdd [
+        _localX*cos _heading+_localY*sin _heading,
+        -_localX*sin _heading+_localY*cos _heading,
+        0
+    ]
+};
+private _routeSamples=[];
+for "_along" from -180 to 1000 step 50 do {_routeSamples pushBack [0,_along]};
+for "_across" from 50 to 400 step 50 do {_routeSamples pushBack [_across,1000]};
+for "_along" from 1050 to 1400 step 50 do {_routeSamples pushBack [400,_along]};
+if (!_terrainScenarioReady) then {
+    private _found=[];
+    private _margin=1800;
+    private _scanStep=1000 max ((worldSize-2*_margin)/5);
+    for "_candidateX" from _margin to (worldSize-_margin) step _scanStep do {
+        for "_candidateY" from _margin to (worldSize-_margin) step _scanStep do {
+            for "_heading" from 0 to 315 step 45 do {
+                if (_found isEqualTo []) then {
+                    private _heights=[];
+                    private _usable=true;
+                    private _maximumGrade=0;
+                    private _minimumNormal=1;
+                    private _previous=[];
+                    {
+                        private _sample=[[_candidateX,_candidateY,0],_heading,_x select 0,_x select 1] call _terrainWorld;
+                        private _normal=(surfaceNormal _sample) select 2;
+                        if (surfaceIsWater _sample || {_normal < 0.65}) exitWith {_usable=false};
+                        private _height=getTerrainHeightASL _sample;
+                        if (_previous isNotEqualTo [] && {_sample distance2D (_previous select 0) <= 75}) then {
+                            private _grade=abs (_height-(_previous select 1))/(_sample distance2D (_previous select 0) max 1);
+                            _maximumGrade=_maximumGrade max _grade;
+                            if (_grade > 0.8) then {_usable=false};
+                        };
+                        _minimumNormal=_minimumNormal min _normal;
+                        _previous=[_sample,_height];
+                        _heights pushBack _height;
+                    } forEach _routeSamples;
+                    if (_usable && {_heights isNotEqualTo []}) then {
+                        private _relief=(selectMax _heights)-(selectMin _heights);
+                        if (_relief >= 30 && {_relief <= 220}) then {
+                            _found=[_candidateX,_candidateY,0];
+                            _terrainHeading=_heading;
+                            _terrainRelief=_relief;
+                            _terrainMaximumGrade=_maximumGrade;
+                            _terrainMinimumNormal=_minimumNormal;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    if (_found isNotEqualTo []) then {_terrainOrigin=_found; _terrainScenarioReady=true};
+};
+private _terrainPosition={
+    params ["_x","_y"];
+    [_terrainOrigin,_terrainHeading,_x-2500,_y-2500] call _terrainWorld
+};
+private _terrainForward=[sin _terrainHeading,cos _terrainHeading,0];
+private _terrainRight=[cos _terrainHeading,-sin _terrainHeading,0];
+["CNVM-terrain-scenario",_terrainScenarioReady,
+    str [worldName,_terrainOrigin,_terrainHeading,_terrainRelief,_terrainMaximumGrade,_terrainMinimumNormal]] call _check;
+if (!_terrainScenarioReady) exitWith {};
 private _columnOnly=(missionNamespace getVariable ["Waldo_CortexQA_Focus","all"]) in ["convoycolumn","convoytracked"];
 private _trackedOnly=(missionNamespace getVariable ["Waldo_CortexQA_Focus","all"]) == "convoytracked";
 private _followDiagnostic=(missionNamespace getVariable ["Waldo_CortexQA_Focus","all"]) == "convoyfollow";
@@ -35,7 +107,7 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
     {
         private _spacing = _x;
         private _id = format ["CNVM-%1-%2",_label,_spacing];
-        [_id,"This case creates operating crew, no cargo passengers: all must stay aboard. Watch their labelled vehicles and actual tracks on the 1 km straight, then a deliberate halt/resume. Separate cases test corners. BASELINE labels identify engine-only comparisons.",[2500,2500,0]] call _phase;
+        [_id,"This case creates operating crew, no cargo passengers: all must stay aboard. Watch their labelled vehicles and actual tracks on the 1 km straight, then a deliberate halt/resume. Separate cases test corners. BASELINE labels identify engine-only comparisons.",[2500,2500] call _terrainPosition] call _phase;
         private _group = createGroup [east,true];
         _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
         _group setVariable ["acex_headless_blacklist",true,true];
@@ -43,8 +115,8 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
         private _fixtureCrew=[];
         _group setGroupIdGlobal [_id];
         {
-            private _vehicle=createVehicle [_x,[2500,2500-_forEachIndex*_spacing,0],[],0,"NONE"];
-            _vehicle setDir 0;
+            private _vehicle=createVehicle [_x,[2500,2500-_forEachIndex*_spacing] call _terrainPosition,[],0,"NONE"];
+            _vehicle setDir _terrainHeading;
             _vehicle setVariable ["Waldo_CortexQA_GapBand",[_spacing*0.8,_spacing*1.2],true];
             createVehicleCrew _vehicle;
             private _vehicleNumber=_forEachIndex+1;
@@ -72,9 +144,9 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
         _group selectLeader driver (_vehicles select 0);
         _group setBehaviour "SAFE";
         _group setCombatMode "BLUE";
-        private _wp=_group addWaypoint [[2500,3500,0],0]; _wp setWaypointType "MOVE";
-        _wp=_group addWaypoint [[2900,3500,0],0]; _wp setWaypointType "MOVE";
-        _wp=_group addWaypoint [[2900,3900,0],0]; _wp setWaypointType "MOVE";
+        private _wp=_group addWaypoint [[2500,3500] call _terrainPosition,0]; _wp setWaypointType "MOVE";
+        _wp=_group addWaypoint [[2900,3500] call _terrainPosition,0]; _wp setWaypointType "MOVE";
+        _wp=_group addWaypoint [[2900,3900] call _terrainPosition,0]; _wp setWaypointType "MOVE";
         missionNamespace setVariable ["Waldo_CortexQA_ConvoyVehicles",_vehicles,true];
         if (_baseline) then {
             _group setVariable ["Waldo_AIPass_Exclude",true,true];
@@ -84,7 +156,7 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
                 if (_label != "BASELINE-OMIT-LEAD-GAP" || {_forEachIndex > 0}) then {_x setConvoySeparation _spacing};
                 _x setUnloadInCombat [false,false];
             } forEach _vehicles;
-            if (_label in ["BASELINE-LEAD-MOVE","BASELINE-MOVE-FORCE"]) then {driver (_vehicles select 0) doMove [2500,3500,0]};
+            if (_label in ["BASELINE-LEAD-MOVE","BASELINE-MOVE-FORCE"]) then {driver (_vehicles select 0) doMove ([2500,3500] call _terrainPosition)};
             if (_label in ["BASELINE-FORCE-SPEED","BASELINE-MOVE-FORCE"]) then {{_x forceSpeed (30/3.6)} forEach _vehicles};
             (_vehicles select 0) limitSpeed 30;
             if (_label == "BASELINE-DRIVER-FOLLOW") then {{if (_forEachIndex > 0) then {(driver _x) doFollow leader _group}} forEach _vehicles};
@@ -110,8 +182,9 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
         private _startupBackwards=false;
         for "_sample" from 1 to 40 do {
             {
-                if (abs speed _x > 2 && {abs (((getDir _x+540) mod 360)-180) > 75}) then {_startupTurned=true};
-                if ((getPosATL _x select 1) < ((_origins select _forEachIndex) select 1)-5) then {_startupBackwards=true};
+                if (abs speed _x > 2 && {abs (((getDir _x-_terrainHeading+540) mod 360)-180) > 75}) then {_startupTurned=true};
+                private _startupDelta=(getPosATL _x) vectorDiff (_origins select _forEachIndex);
+                if ((_startupDelta vectorDotProduct _terrainForward) < -5) then {_startupBackwards=true};
             } forEach _vehicles;
             sleep 0.5;
         };
@@ -139,9 +212,9 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
                     if (_gap >= _low && {_gap <= _high}) then {_gapInBand set [_slot,(_gapInBand select _slot)+1]};
                     _minimumGaps set [_slot,(_minimumGaps select _slot) min _gap];
                     _maximumGaps set [_slot,(_maximumGaps select _slot) max _gap];
-                    _maxLateral=_maxLateral max abs ((getPosATL _x select 0)-(_frontPosition select 0));
+                    _maxLateral=_maxLateral max abs (((getPosATL _x) vectorDiff _frontPosition) vectorDotProduct _terrainRight);
                 };
-                if (_forEachIndex > 0 && {(getPosATL _x select 1) > (getPosATL (_vehicles select (_forEachIndex-1)) select 1)+3}) then {_orderBroken=true};
+                if (_forEachIndex > 0 && {(((getPosATL _x) vectorDiff (getPosATL (_vehicles select (_forEachIndex-1)))) vectorDotProduct _terrainForward) > 3}) then {_orderBroken=true};
                 private _v=abs speed _x;
                 private _i=_forEachIndex;
                 _samples set [_i,(_samples select _i)+_v];
@@ -185,7 +258,7 @@ if (_trackedOnly) then {_types=_types select {(_x select 0) == "TRACKED"}};
             private _resumed=[{
                 private _moving=true;
                 {
-                    if (abs speed _x > 2 && {abs (((getDir _x+540) mod 360)-180) > 75}) then {_turned=true};
+                    if (abs speed _x > 2 && {abs (((getDir _x-_terrainHeading+540) mod 360)-180) > 75}) then {_turned=true};
                     if (_x distance2D (_restartOrigins select _forEachIndex) < 60 || {abs speed _x < 10}) then {_moving=false};
                 } forEach _vehicles;
                 _moving

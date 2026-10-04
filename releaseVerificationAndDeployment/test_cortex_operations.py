@@ -2603,7 +2603,12 @@ class CortexOperations(unittest.TestCase):
 
     def test_convoy_matrix_checks_physical_column_and_halt_notifies_curators(self):
         matrix=(ROOT/'releaseVerificationAndDeployment/cortexQA/runConvoyMatrix.sqf').read_text()
-        self.assertIn('-single-file',matrix)
+        for marker in ['CNVM-terrain-scenario','for "_heading" from 0 to 315 step 45',
+                       'for "_along" from -180 to 1000 step 50',
+                       '_normal < 0.65','_grade > 0.8','_relief >= 30',
+                       'vectorDotProduct _terrainForward','vectorDotProduct _terrainRight',
+                       '-single-file']:
+            self.assertIn(marker,matrix)
         self.assertIn('_maxLateral <= 8',matrix)
         text=(ROOT/'MissionScripts/AiScripting/simpleAiConvoy.sqf').read_text()
         self.assertIn('getAssignedCuratorUnit',text)

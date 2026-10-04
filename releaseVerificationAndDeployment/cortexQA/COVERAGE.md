@@ -244,7 +244,7 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Each traces its predecessor, maintains spacing and makes progress without wedge formation; recovery is bounded.
 
-**Automation and open work:** runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained
+**Automation and open work:** runServer.sqf CNV-* and runConvoyMatrix.sqf CNVM-*; continuity and restart failures retained. Outside VR the matrix performs one bounded search across eight headings for its complete 1.8 km straight-and-corner route, requires at least 30 m of relief and rejects water, unsafe vehicle surface normals and grades above 0.8. Startup direction, lateral offset, vehicle order and restart-turn measurements are projected onto the selected route axes rather than hard-coded world X/Y.
 
 ### CNV-FIRE - Convoy weapon crew
 
