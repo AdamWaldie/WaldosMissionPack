@@ -416,7 +416,10 @@ The flat VR range could not show whether infantry avenues, vehicle routes or def
 remain usable on real ground. The additive `terrain` focus now refuses VR, searches bounded dry
 sectors for at least seven metres of relief and measurable roughness, and exercises the production
 avenue selector for infantry and vehicles. It requires physical movement and terrain-aware defence
-occupation. This is queued for the next batched non-VR launch and is not yet live acceptance.
+occupation. The shared selector now reuses its bounded 20-metre fire-lane samples for water,
+steepness, cumulative relief and road scoring; the former three interior terrain checks could miss
+a narrow ridge, ditch or water strip on a long leg. No extra loop or background worker was added.
+This is queued for the next batched non-VR launch and is not yet live acceptance.
 
 The completed `runtime-20261004-083928` air batch recorded 35 server findings. Every fixed-wing
 surface profile reached ATTACK but released no weapon. The guided case exposed a loaded, aligned,

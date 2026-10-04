@@ -6,13 +6,13 @@
  * which enter a supporting element's 30 m live-fire corridor. A manoeuvre element which begins
  * inside its own supporting squad's corridor may depart laterally for at most 60 m of route; once
  * clear it may not re-enter. This distinguishes a necessary departure from crossing friendly fire.
- * Three fixed samples per leg score terrain/solid ballistic screening separately from visual
- * concealment. The same bounded samples reject cliff-like ground and add a small cost for cumulative
- * height change and steep surfaces, so a flat-range route does not become the preferred route over
- * an easier avenue on a real terrain. Vehicle callers use a stricter slope limit and receive a small
- * road preference; the selector still chooses only an endpoint and leaves actual driving and local
- * obstacle avoidance to the engine. Concealment receives a smaller benefit and is never described
- * as cover. Route length keeps the result purposeful.
+ * The existing bounded safety samples also reject water and cliff-like ground and score cumulative
+ * height change, steep surfaces and roads. This closes the gaps between the three more expensive
+ * ballistic/visual screening rays, so a route that looked valid on a flat range cannot jump across
+ * a narrow ridge, ditch or water strip on a real terrain. Vehicle callers use a stricter slope limit
+ * and receive a small road preference; the selector still chooses only endpoints and leaves actual
+ * driving and local obstacle avoidance to the engine. Concealment receives a smaller benefit and is
+ * never described as cover. Route length keeps the result purposeful.
  * Candidate and sample counts are capped, so this runs once when an operation starts rather than
  * per unit or scheduler tick.
  * Locality/authority: pure terrain and geometry calculation; call on the group owner planning the
@@ -100,6 +100,21 @@ private _bestScore=1e12;
                     (_from select 1)+((_to select 1)-(_from select 1))*_fraction,
                     0
                 ];
+                // Reuse the already bounded fire-lane samples for terrain passability. The former
+                // three-point terrain check could miss a narrow ridge, ditch or water strip on a
+                // long leg. This adds no loop and remains a once-per-operation planning cost.
+                private _surfaceUp=(surfaceNormal _sample) select 2;
+                private _terrainASL=getTerrainHeightASL _sample;
+                _terrainSamples=_terrainSamples+1;
+                if (surfaceIsWater _sample || {_surfaceUp < _minimumSurfaceUp}) then {
+                    _valid=false;
+                } else {
+                    _terrainPenalty=_terrainPenalty+abs (_terrainASL-_previousTerrainASL)
+                        +((1-_surfaceUp)*12);
+                    if (_vehicleRoute && {isOnRoad _sample}) then {_roadSamples=_roadSamples+1};
+                    _previousTerrainASL=_terrainASL;
+                };
+                if (!_valid) exitWith {};
                 if (_sample distance2D _start > 10) then {
                     {
                         private _support=_x;
@@ -145,15 +160,6 @@ private _bestScore=1e12;
                     0
                 ];
                 _screenSamples=_screenSamples+1;
-                _terrainSamples=_terrainSamples+1;
-                private _surfaceUp=(surfaceNormal _sample) select 2;
-                private _terrainASL=getTerrainHeightASL _sample;
-                // Very steep samples are unlikely to be usable by an infantry formation. Less
-                // severe relief remains valid but loses to a similarly protected, easier avenue.
-                if (_surfaceUp < _minimumSurfaceUp) exitWith {_valid=false};
-                _terrainPenalty=_terrainPenalty+abs (_terrainASL-_previousTerrainASL)+((1-_surfaceUp)*12);
-                if (_vehicleRoute && {isOnRoad _sample}) then {_roadSamples=_roadSamples+1};
-                _previousTerrainASL=_terrainASL;
                 private _sampleASL=(AGLToASL _sample) vectorAdd [0,0,1.0];
                 private _rayStart=_threatASL vectorAdd ((_threatASL vectorFromTo _sampleASL) vectorMultiply 2);
                 private _hard=terrainIntersectASL [_threatASL,_sampleASL]
