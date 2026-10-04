@@ -424,12 +424,12 @@ switch _pattern do {
         else {_ingress=[-1900,0] call _point; _attack=[550,0] call _point; _egress=[2200,0] call _point};
     };
 };
-// ZEN's disposable CAS aircraft always starts on a known three-kilometre inbound vector. Cortex
-// accepts persistent aircraft from arbitrary natural flight, so a fixed setup point can lie behind
-// the aircraft and make the native pilot turn a small circle before every run. Preserve the chosen
-// attack geometry, but replace only an aft/too-close setup point with one bounded point on the live
-// aircraft-to-attack leg. This is calculated once; the engine still flies the leg without steering.
-if (!_airToAir) then {
+// ZEN's disposable CAS aircraft always starts on a known inbound vector. Cortex accepts persistent
+// aircraft from arbitrary natural flight. A rotorcraft can shorten an aft setup leg without changing
+// its weapon geometry, but doing that to a fixed-wing run moves the delivery start off the selected
+// axis and guarantees an oblique rocket/missile miss. Planes therefore retain the complete roll-in;
+// the engine may make one broad joining turn, then flies the immutable target-crossing attack line.
+if (!_airToAir && {!_isPlane}) then {
     private _toIngress=_ingress vectorDiff _airPos;
     private _toAttack=_attack vectorDiff _airPos;
     private _forwardIngress=(_toIngress vectorDotProduct _deliveryAxis) >= 100;
@@ -466,21 +466,22 @@ if (_isPlane) then {
             _attackMinimum=2;
         };
         case "OFFSET": {
-            _stageAltitudes=[(_altitude+300) min 1650,150+random 55,_altitude+750];
+            _stageAltitudes=[(_altitude+300) min 1650,300+random 70,_altitude+750];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[700,900,1200];
             _attackMinimum=3;
         };
         case "HOOK": {
-            _stageAltitudes=[(_altitude+400) min 1800,170+random 60,_altitude+850];
+            _stageAltitudes=[(_altitude+400) min 1800,320+random 80,_altitude+850];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[700,900,1250];
             _attackMinimum=3;
         };
         default {
-            // A ten-to-fifteen degree delivery path gives guns a useful depression angle while the
-            // 140 m endpoint remains beyond the target and is never treated as a release point.
-            _stageAltitudes=[(_altitude+300) min 1600,140+random 45,_altitude+700];
+            // A useful depression angle and a 280-350 m far-side endpoint let guns fire through the
+            // target while leaving enough height for a native pull-out. The endpoint is beyond the
+            // target and is never treated as the release point itself.
+            _stageAltitudes=[(_altitude+300) min 1600,280+random 70,_altitude+700];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];
             _attackMinimum=2;

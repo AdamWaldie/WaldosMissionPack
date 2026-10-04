@@ -2915,7 +2915,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('case "BOMB"',controller)
         self.assertIn('"TARGET_DESTROYED"',controller)
         self.assertIn('_job set ["targetDestroyed",true]',controller)
-        self.assertIn('_stage in ["ATTACK","EGRESS"]',controller)
+        self.assertIn('private _liveShots=_aircraft getVariable ["Waldo_Cortex_AirAttackShots",0]',controller)
+        self.assertIn('_liveShots > 0',controller)
         self.assertIn('[_group,_job,"EGRESS","TARGET_DESTROYED"]',controller)
         self.assertIn('_reason == "COMPLETE" && {_job getOrDefault ["targetDestroyed",false]}',controller)
         discovery=source('cortexDiscover')
@@ -2948,11 +2949,12 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
         self.assertNotIn('_handoverGroup setCombatMode "BLUE"',controller)
         # One native height hint at a real stage transition is permitted because Arma does not use
-        # MOVE point Z as a dependable flight profile. It must never become a polling controller or
-        # be reissued during the direct Zeus handover path.
+        # MOVE point Z as a dependable flight profile. Direct handover may clear that persistent
+        # hint once from Zeus' selected destination, but must never become a polling controller.
         self.assertEqual(controller.count('_aircraft flyInHeight (_stageAltitudes select _stageIndex)'),1)
         handover=controller.split('if (_reason in ["CONTROL_RELEASED","AUTHORED_ROUTE_CHANGED"]) then {',1)[1].split('};\n        if (_resume)',1)[0]
-        self.assertNotIn('flyInHeight',handover)
+        self.assertEqual(handover.count('_aircraft flyInHeight'),1)
+        self.assertIn('count _handoverPosition >= 3',handover)
         self.assertIn('"ZEUS_IMMEDIATE_HANDOVER"',controller)
         self.assertNotIn('_handoverPilot doMove _handoverPosition',controller)
         self.assertNotIn('"FORCE_REPLAN"',controller)
@@ -2966,8 +2968,9 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _egressTravel=',controller)
         self.assertIn('private _awayFromTarget=',controller)
         self.assertIn('Waldo_Cortex_AirAttackBlockedUntil',controller)
-        self.assertIn('createVehicle [_laserClass,getPosATL _target,[],0,"CAN_COLLIDE"]',controller)
-        self.assertIn('_guidanceTarget attachTo [_target,[0,0,0]]',controller)
+        self.assertNotIn('createVehicle [_laserClass,getPosATL _target,[],0,"CAN_COLLIDE"]',controller)
+        self.assertNotIn('_guidanceTarget attachTo [_target,[0,0,0]]',controller)
+        self.assertIn('_job set ["fireTarget",_target]',controller)
         self.assertIn('Waldo_Cortex_AirAttackGuidanceTarget',controller)
         self.assertIn('private _requestPending=',controller)
         self.assertEqual(controller.count('fireAtTarget [_fireTarget,_weapon]'),1)

@@ -207,7 +207,10 @@ private _cortex=_results select 1;
         _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
         _group setVariable ["acex_headless_blacklist",true,true];
         {_x allowDamage false} forEach _crew;
-        _plane flyInHeight 150;
+        // The flare feature must be observed on a credible attack pass. Fixed-wing aircraft need a
+        // safe native baseline; 150 m allowed the unowned engine pass to dip to 50 m and obscured
+        // the countermeasure result with an unrelated near-ground fixture failure.
+        _plane flyInHeight ([150,400] select (_plane isKindOf "Plane"));
         private _launchSpeed=[45,90] select (_plane isKindOf "Plane");
         _plane setVelocityModelSpace [0,_launchSpeed,0];
         private _target=createVehicle ["B_Truck_01_transport_F",[6500,6700,0],[],0,"NONE"];
@@ -530,7 +533,7 @@ private _observedProfiles=createHashMap;
         };
         [_id+"-delivery-axis-crosses-target",_deliveryLength >= 3000 && {_crossTrack <= 75}
             && {_targetAlong > 0} && {_targetAlong < _deliveryLength}
-            && {_angleValid} && {(_deliveryEnd select 2) >= 140},
+            && {_angleValid} && {(_deliveryEnd select 2) >= 220},
             str [_selectedWeaponClass,_descentAngle,_crossTrack,_targetAlong,_deliveryLength,
                 _deliveryStart,_deliveryEnd,getPosATL _target]] call _recordCheck;
     };
@@ -698,7 +701,7 @@ private _observedProfiles=createHashMap;
             str [_longestIdle,_motionFloor,_pathTravel,_netTravel,
                 if (_pathTravel > 0) then {_netTravel/_pathTravel} else {1}]] call _recordCheck;
         [_id+"-safe-flight-envelope",_sampleAltitudes isNotEqualTo []
-            && {selectMin _sampleAltitudes >= ([25,120] select _isPlaneClass)},
+            && {selectMin _sampleAltitudes >= ([25,200] select _isPlaneClass)},
             str [selectMin _sampleAltitudes,selectMax _sampleAltitudes,_sampleStages]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] in ["COMPLETE","TARGET_DESTROYED"]},str _outcome] call _recordCheck;
         sleep 2;
