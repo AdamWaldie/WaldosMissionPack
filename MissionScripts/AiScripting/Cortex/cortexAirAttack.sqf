@@ -12,12 +12,12 @@
  * Cortex then asks that operator to release the selected weapon only after live range, route,
  * ammunition and seeker checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
- * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
- * surface attack keeps its target-crossing MOVE leg and gives the pilot one native fire order; the
- * audit showed that converting this leg to DESTROY discarded the selected attack angle and caused
- * steep dives, overflight and timeouts. An air intercept uses a target-attached DESTROY order so it
- * can lead a moving aircraft. Arma's pilot and weapon FSM still solve the muzzle, pylon and release
- * without a scheduler repeatedly steering or pressing the trigger. Rotorcraft and independently aimed
+ * waypoint for the finite lease. Ingress and egress receive one terrain-relative height hint. On a
+ * fixed-wing ATTACK the same waypoint becomes a native DESTROY order attached to the hostile and the
+ * attack-height hint is deliberately omitted: MOVE waypoint height did not pitch the aircraft, while
+ * flyInHeight held every nominally descending route level and made guns, rockets and bombs miss long.
+ * The terrain-screened ingress therefore chooses the safe bearing and altitude, then Arma's pilot and
+ * weapon FSM solve the terminal dive, turn, muzzle, pylon and release. Rotorcraft and independently aimed
  * turrets retain the bounded native fire request because their abeam and standoff attacks do not
  * use a fixed-wing dive. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
@@ -113,12 +113,10 @@ private _finish={
                 if (_authoredSpeed != "UNCHANGED") then {_handoverGroup setSpeedMode _authoredSpeed};
                 if (_authoredCombatMode != "NO CHANGE") then {_handoverGroup setCombatMode _authoredCombatMode};
             };
-            // flyInHeight persists after a waypoint changes. Restore it once from the curator's
-            // selected destination so a helicopter does not hover at Cortex's attack altitude while
-            // Zeus is already waiting at a low waypoint. Cortex issues no later correction.
-            if (count _handoverPosition >= 3) then {
-                _aircraft flyInHeight ([((_handoverPosition select 2) max 40),300] select (_aircraft isKindOf "Plane"));
-            };
+            // Do not add a flight-height order during handover. The selected waypoint is already the
+            // complete curator instruction, and even a one-time flyInHeight issued after it can make
+            // a helicopter brake into a hover before following the new route. Zeus owns the next
+            // altitude and movement decision exactly as authored.
             _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverResult",[
@@ -411,12 +409,14 @@ private _stageSpeeds=_job getOrDefault ["stageSpeeds",[_job get "speed",_job get
 private _commandedStage=_job getOrDefault ["commandedStage",""];
 if (_commandedStage != _stage) then {
     _aircraft limitSpeed (_stageSpeeds select _stageIndex);
-    // MOVE waypoint height is not a reliable flight-profile input for native aircraft: the live
-    // fixed-wing audit retained its 900 m cruise height while flying a 378 m rocket leg. Apply one
-    // native terrain-relative height hint when the leg changes, then leave the flight model alone.
+    // MOVE waypoint height is not a reliable flight-profile input for native aircraft. Apply one
+    // terrain-relative height hint to ingress and egress, then leave the flight model alone. A
+    // fixed-wing ATTACK deliberately receives no height hint: native target prosecution must be able
+    // to pitch down, and the live audit proved flyInHeight kept nominal dive routes almost level.
     // This is deliberately not refreshed by the scheduler. Zeus handover deletes the lease waypoint
     // and does not issue a replacement movement command or delayed repair after curator ownership.
-    _aircraft flyInHeight (_stageAltitudes select _stageIndex);
+    private _nativePlaneTargeting=_isPlane && {_stage == "ATTACK"} && {!isNull _target};
+    if (!_nativePlaneTargeting) then {_aircraft flyInHeight (_stageAltitudes select _stageIndex)};
     private _ownedWaypointIndex=(waypoints _group) findIf {waypointName _x == _ownedWaypointName};
     private _ownedWaypoint=if (_ownedWaypointIndex < 0) then {
         private _created=_group addWaypoint [_destination,0];
@@ -428,12 +428,10 @@ if (_commandedStage != _stage) then {
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
     _ownedWaypoint setWaypointPosition [_destination,0];
-    // Surface delivery retains the planned target-crossing line. Converting that MOVE leg into a
-    // DESTROY order made Arma discard the selected slope and attempt a new steep dive. A moving air
-    // contact still needs a target-attached DESTROY order; its lead point is refreshed above.
-    private _nativeAirIntercept=_isPlane && {_stage == "ATTACK"}
-        && {_job getOrDefault ["airToAir",false]} && {!isNull _target};
-    if (_nativeAirIntercept) then {
+    // Ingress establishes a terrain-screened bearing and enough separation for the engine to form an
+    // attack. At ATTACK, attach this finite order to the real hostile so native fixed-wing combat AI
+    // can choose the pitch and release point that MOVE plus flyInHeight could not express.
+    if (_nativePlaneTargeting) then {
         _ownedWaypoint setWaypointPosition [getPosATL _target,0];
         _ownedWaypoint setWaypointType "DESTROY";
         _ownedWaypoint waypointAttachVehicle _target;
@@ -481,6 +479,9 @@ if (_stage == "ATTACK") then {
         _aircraft doTarget _fireTarget;
         _operator doWatch _fireTarget;
         _operator doTarget _fireTarget;
+        // One operator order activates the selected station. The attached DESTROY order owns the
+        // manoeuvre; Cortex neither repeats this instruction nor supplies a firing vector.
+        if (_isPlane) then {_operator doFire _fireTarget};
         _job set ["targetCommanded",true];
     };
     private _range=_aircraft distance _target;
@@ -578,17 +579,16 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // Request release only while the live aircraft is inside the measured basket. doFire at attack
-    // entry proved inert for fixed-wing surface weapons, while a DESTROY waypoint discarded the
-    // authored delivery line. fireAtTarget is the engine boundary used by native/ZEN CAS: it asks
-    // the selected operator to release the configured weapon without steering the airframe or
-    // correcting the projectile. Requests remain rate-limited and stop as soon as the finite salvo
-    // is complete, so the scheduler cannot become a second flight controller.
+    // Native fixed-wing delivery owns manoeuvre and release through the attached DESTROY order and
+    // one operator instruction. Do not compete with it from the scheduler. Rotorcraft keep this
+    // bounded request path because an independently aimed turret can attack without turning the
+    // airframe onto the hostile.
+    private _nativePlaneDelivery=_isPlane;
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
         && {serverTime < _requestAt+0.35};
-    if (_validSolution && {!_requestPending}
+    if (!_nativePlaneDelivery && {_validSolution} && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
         // One native request at a time. Repeating a rejected request after a short interval is
         // intentional: the operator may enter the engine's exact solution later in the same pass.
