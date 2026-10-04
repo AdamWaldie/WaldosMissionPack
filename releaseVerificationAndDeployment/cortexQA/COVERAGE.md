@@ -418,7 +418,7 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Covering squads remain effective while movers increase threat separation; roles alternate and surviving squads physically regroup. Smoke does not replace movement; no teleportation or stale reassignment after Zeus takeover.
 
-**Automation and open work:** runReactions.sqf: additive two-squad casualty-driven withdrawal, natural contact, every survivor travelling away, real smoke, retained groups/rifles and intra-squad cohesion. Saved, unexecuted. This baseline does not prove coordinated alternating overwatch, a shared rally, interruption or distributed-owner behaviour.
+**Automation and open work:** runReactions.sqf: additive two-squad casualty-driven withdrawal, natural contact, every survivor travelling away, real smoke, retained groups/rifles and intra-squad cohesion. VR retains the deterministic strip; terrain worlds scan one bounded three-lane corridor, require measurable relief, reject water and unsafe slopes, rotate the full contact geometry, measure progress along the escape axis and require the two squads to retain distinct lanes. Saved, unexecuted. This baseline does not prove coordinated alternating overwatch, a shared rally, interruption or distributed-owner behaviour.
 
 ### TRANSITIONS - Combat action transitions
 

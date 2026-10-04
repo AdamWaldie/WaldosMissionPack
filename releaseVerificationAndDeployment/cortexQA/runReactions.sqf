@@ -2,7 +2,9 @@
  * Author: WaldoTheWarfighter
  * Exercises cover stance, live grenade evasion, civilian danger responses and casualty-driven
  * retreat/surrender, including terminal CONTACT -> RETREAT -> REGROUP and CONTACT -> CALM/SURRENDER
- * handovers. Civilian checks measure real travel and later Zeus replacement-order execution.
+ * handovers. Civilian checks measure real travel and later Zeus replacement-order execution. The
+ * additive two-squad withdrawal keeps its deterministic VR baseline, but on terrain worlds rotates
+ * the full contact and escape geometry onto a measured dry corridor with relief and separate lanes.
  * Locality/authority: scheduled dedicated-server audit, with server-pinned disposable actors.
  * Repeat/JIP: fresh actors per case; settings restored by the calling audit; observer data is public.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>, required callbacks.
@@ -348,9 +350,70 @@ call _cleanup;
 } forEach [false,true];
 
 // Additive multi-squad withdrawal baseline. Shared timing is a stimulus, not a
-// claim of coordinated overwatch; tactical alternation needs separate acceptance.
+// claim of coordinated overwatch; tactical alternation needs separate acceptance. Outside VR the
+// same fixture is rotated onto one bounded, measured escape corridor so a flat northbound strip
+// cannot masquerade as acceptance on hills or rough ground.
 [_base] call Waldo_fnc_CortexTuning;
 [createHashMapFromArray [["Waldo_AIPass_Morale_Enable",true],["Waldo_AIPass_Surrender_Enable",false],["Waldo_AIPass_Cohesion",0.25]]] call Waldo_fnc_CortexTuning;
+private _withdrawTerrainOrigin=[1432.5,1100,0];
+private _withdrawHeading=0;
+private _withdrawTerrainReady=worldName == "VR";
+private _withdrawRelief=0;
+if (!_withdrawTerrainReady) then {
+    private _bestScore=-1;
+    private _gridStep=(worldSize/9) max 900;
+    for "_gridX" from 2 to 7 do {
+        for "_gridY" from 2 to 7 do {
+            private _candidateOrigin=[_gridX*_gridStep,_gridY*_gridStep,0];
+            for "_heading" from 0 to 315 step 45 do {
+                private _forward=[sin _heading,cos _heading,0];
+                private _right=[cos _heading,-sin _heading,0];
+                private _safe=true;
+                private _heights=[];
+                {
+                    private _lane=_x;
+                    private _previous=[];
+                    private _previousHeight=0;
+                    for "_along" from -180 to 100 step 20 do {
+                        private _sample=_candidateOrigin vectorAdd (_right vectorMultiply _lane)
+                            vectorAdd (_forward vectorMultiply _along);
+                        private _height=getTerrainHeightASL _sample;
+                        private _normal=(surfaceNormal _sample) select 2;
+                        if (surfaceIsWater _sample || {_normal < 0.55}) then {_safe=false};
+                        if (_previous isNotEqualTo []) then {
+                            private _grade=abs (_height-_previousHeight)/((_sample distance2D _previous) max 1);
+                            if (_grade > 0.75) then {_safe=false};
+                        };
+                        _heights pushBack _height;
+                        _previous=_sample;
+                        _previousHeight=_height;
+                    };
+                } forEach [-45,0,45];
+                private _relief=if (_heights isEqualTo []) then {0} else {(selectMax _heights)-(selectMin _heights)};
+                private _score=_relief;
+                if (_safe && {_relief >= 12} && {_relief <= 120} && {_score > _bestScore}) then {
+                    _bestScore=_score;
+                    _withdrawTerrainOrigin=_candidateOrigin;
+                    _withdrawHeading=_heading;
+                    _withdrawRelief=_relief;
+                    _withdrawTerrainReady=true;
+                };
+            };
+        };
+    };
+};
+private _withdrawForward=[sin _withdrawHeading,cos _withdrawHeading,0];
+private _withdrawRight=[cos _withdrawHeading,-sin _withdrawHeading,0];
+private _withdrawPosition={
+    params ["_local"];
+    _withdrawTerrainOrigin vectorAdd (_withdrawRight vectorMultiply ((_local select 0)-1432.5))
+        vectorAdd (_withdrawForward vectorMultiply ((_local select 1)-1100))
+};
+["MULTI-WITHDRAW-terrain-scenario",_withdrawTerrainReady,
+    format ["world=%1 origin=%2 heading=%3 relief=%4",worldName,_withdrawTerrainOrigin,_withdrawHeading,_withdrawRelief]] call _check;
+if (!_withdrawTerrainReady) then {
+    ["Multi-squad withdrawal: no evaluative terrain","No dry three-lane corridor provided 12-120 m relief without unsafe slopes. Withdrawal results are skipped rather than falling back to a misleading flat layout.",_withdrawTerrainOrigin] call _phase;
+} else {
 private _withdrawTeams=[];
 private _withdrawSurvivors=[];
 private _withdrawEnemies=[];
@@ -359,7 +422,7 @@ for "_teamIndex" from 0 to 1 do {
     _team setCombatMode "BLUE";
     private _members=[];
     for "_i" from 0 to 5 do {
-        private _unit=[_team,[1400+_teamIndex*65+_i*2,1100,0],format ["WITHDRAW SQUAD %1 / SOLDIER %2",_teamIndex+1,_i+1]] call _newUnit;
+        private _unit=[_team,[[1400+_teamIndex*65+_i*2,1100,0]] call _withdrawPosition,format ["WITHDRAW SQUAD %1 / SOLDIER %2",_teamIndex+1,_i+1]] call _newUnit;
         _unit setSkill ["courage",0.1];
         _members pushBack _unit;
     };
@@ -379,12 +442,12 @@ for "_teamIndex" from 0 to 1 do {
     private _enemyGroup=[west] call _newGroup;
     _enemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
     _enemyGroup setCombatMode "BLUE";
-    private _enemy=[_enemyGroup,[1400+_teamIndex*65,1180,0],format ["SQUAD %1 THREAT",_teamIndex+1]] call _newUnit;
+    private _enemy=[_enemyGroup,[[1400+_teamIndex*65,1180,0]] call _withdrawPosition,format ["SQUAD %1 THREAT",_teamIndex+1]] call _newUnit;
     _enemy disableAI "PATH"; _enemy allowDamage false;
     _withdrawEnemies pushBack _enemy;
 };
 missionNamespace setVariable ["Waldo_CortexQA_Actors",+_objects,true];
-["Two squads: casualty-driven withdrawal","Both squads must naturally detect contact. Four casualties in each leave two survivors. Watch each survivor's trail, smoke and separation from the threat. Low cohesion is a declared stimulus; no retreat state is assigned.",[1435,1100,0]] call _phase;
+["Two squads: casualty-driven withdrawal","Both squads must naturally detect contact across the measured corridor. Four casualties in each leave two survivors. Watch each survivor follow a dry escape avenue, gain ground away from the threat, retain its squad lane and use real smoke. Low cohesion is a declared stimulus; no retreat state is assigned.",[[1435,1100,0]] call _withdrawPosition] call _phase;
 private _bothContact=[{_withdrawTeams findIf {((group (_x select 0) getVariable ["Waldo_AIPass_State",createHashMap]) getOrDefault ["phase",""]) != "CONTACT"} < 0},40] call _wait;
 ["MULTI-WITHDRAW-natural-contact",_bothContact] call _check;
 private _withdrawOrigins=_withdrawSurvivors apply {getPosATL _x};
@@ -397,8 +460,9 @@ private _allWithdrew=[{
         private _enemy=_withdrawEnemies select floor (_forEachIndex/2);
         private _travel=_x distance2D _origin;
         private _gain=(_x distance2D _enemy)-(_origin distance2D _enemy);
-        _x setVariable ["Waldo_CortexQA_Label",format ["SQUAD %1 SURVIVOR | travel %2 m | threat separation +%3 m",1+floor (_forEachIndex/2),round _travel,round _gain],true];
-        if (!alive _x || {_travel < 30} || {_gain < 25}) then {_okay=false};
+        private _escapeProgress=((getPosATL _x) vectorDiff _origin) vectorDotProduct (_withdrawForward vectorMultiply -1);
+        _x setVariable ["Waldo_CortexQA_Label",format ["SQUAD %1 SURVIVOR | travel %2 m | escape %3 m | threat separation +%4 m",1+floor (_forEachIndex/2),round _travel,round _escapeProgress,round _gain],true];
+        if (!alive _x || {_travel < 30} || {_escapeProgress < 20} || {_gain < 25}) then {_okay=false};
     } forEach _withdrawSurvivors;
     _okay
 },100] call _wait;
@@ -406,6 +470,13 @@ private _allWithdrew=[{
 private _membership=true;
 {if (group _x != (_originalGroups select _forEachIndex) || {primaryWeapon _x == ""}) then {_membership=false}} forEach _withdrawSurvivors;
 ["MULTI-WITHDRAW-membership-and-rifles",_membership] call _check;
+private _laneCentres=[];
+{
+    private _survivors=_x select [4,2];
+    private _centroid=((getPosATL (_survivors select 0)) vectorAdd (getPosATL (_survivors select 1))) vectorMultiply 0.5;
+    _laneCentres pushBack ((_centroid vectorDiff _withdrawTerrainOrigin) vectorDotProduct _withdrawRight);
+} forEach _withdrawTeams;
+["MULTI-WITHDRAW-distinct-terrain-lanes",_allWithdrew && {abs ((_laneCentres select 1)-(_laneCentres select 0)) >= 35},str _laneCentres] call _check;
 {
     private _survivors=_x select [4,2];
     [format ["MULTI-WITHDRAW-squad-%1-smoke",_forEachIndex+1],_survivors findIf {_x getVariable ["Waldo_CortexQA_MultiSmoke",false]} >= 0] call _check;
@@ -413,6 +484,7 @@ private _membership=true;
 } forEach _withdrawTeams;
 sleep 12;
 call _cleanup;
+};
 
 // Civilian reactions are event driven in normal play. This focused stage calls the same production
 // endpoint used by FiredNear/Hit so its stimulus is deterministic, then measures physical movement.

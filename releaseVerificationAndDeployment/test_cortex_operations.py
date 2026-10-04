@@ -2874,6 +2874,23 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_after == _before',qa)
         self.assertIn('["Waldo_AIPass_Assault_Enable",false]',qa)
 
+    def test_multi_withdrawal_audit_uses_separate_measured_terrain_lanes(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runReactions.sqf').read_text()
+        for marker in ['private _withdrawTerrainReady=worldName == "VR"',
+                       'for "_heading" from 0 to 315 step 45',
+                       'forEach [-45,0,45]',
+                       'for "_along" from -180 to 100 step 20',
+                       '_normal < 0.55',
+                       '_grade > 0.75',
+                       '_relief >= 12',
+                       'MULTI-WITHDRAW-terrain-scenario',
+                       'call _withdrawPosition',
+                       'vectorDotProduct (_withdrawForward vectorMultiply -1)',
+                       'MULTI-WITHDRAW-distinct-terrain-lanes']:
+            self.assertIn(marker,qa)
+        self.assertIn('if (!_withdrawTerrainReady) then {',qa)
+        self.assertIn('No dry three-lane corridor',qa)
+
     def test_assault_qa_requires_cover_element_to_consolidate_physically(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombat.sqf').read_text()
         self.assertIn('-physical-consolidation',qa)
