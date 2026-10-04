@@ -5,7 +5,10 @@
  * long dry corridor with measured relief, then requires a plane and helicopter to fly, release a
  * real compatible weapon, damage the target and leave the run clear of terrain. This is a terrain
  * prerequisite and cross-cutting physical diagnostic; it does not turn a route calculation or
- * accepted order into a feature pass.
+ * accepted order into a feature pass. After the isolated movement checks, two equal two-squad
+ * forces fight with damage enabled across the same measured ground. Ordinary SAD objectives create
+ * the encounter; real fire, casualties, multi-group progress and production drill transitions are
+ * observed without assigning Cortex roles or making actors invulnerable.
  * Locality/authority: scheduled dedicated-server QA. Fresh groups and vehicles remain server-owned.
  * Repeat/JIP: each invocation creates and cleans fresh fixtures; public labels, targets and trails
  * are transient audit presentation state and are not replayed as production state.
@@ -168,6 +171,96 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 {deleteVehicle _x} forEach (_infantry+_defenders+(crew _vehicle));
 deleteVehicle _vehicle;
 {deleteGroup _x} forEach [_infantryGroup,_vehicleGroup,_defenceGroup];
+
+// The flat controller ranges are useful fault isolators but do not establish combat acceptance.
+// Run an equal-force meeting engagement on the measured sector before moving on to the independent
+// air corridor. Cortex receives ordinary objectives and natural contact; the fixture never starts a
+// drill, assigns support roles or protects actors from casualties.
+[createHashMapFromArray [
+    ["Waldo_AIPass_Enable",true],["Waldo_AIPass_Contact_Enable",true],
+    ["Waldo_AIPass_Flank_Enable",true],["Waldo_AIPass_Advance_Enable",true],
+    ["Waldo_AIPass_Assault_Enable",true],["Waldo_AIPass_CoordinatedAssault_Enable",true],
+    ["Waldo_AIPass_Reinforce_Enable",true],["Waldo_AIPass_Regroup_Enable",true],
+    ["Waldo_AIPass_FireControl_Enable",true],["Waldo_AIPass_Morale_Enable",true],
+    ["Waldo_AIPass_Artillery_Enable",false],["Waldo_Cortex_AirAttack_Enable",false]
+]] call Waldo_fnc_CortexTuning;
+private _battleGroups=[];
+private _battleUnits=[];
+private _battleOrigins=[];
+missionNamespace setVariable ["Waldo_CortexQA_TerrainBattleEastShots",0,true];
+missionNamespace setVariable ["Waldo_CortexQA_TerrainBattleWestShots",0,true];
+{
+    _x params ["_side","_class","_bearing","_sideKey"];
+    for "_squadIndex" from 0 to 1 do {
+        private _group=createGroup [_side,true];
+        _group setVariable ["Waldo_Headless_ExcludeGroup",true,true];
+        _group setVariable ["acex_headless_blacklist",true,true];
+        _group setVariable ["Waldo_CortexQA_TerrainBattleSide",_sideKey,true];
+        _group setGroupIdGlobal [format ["Terrain battle %1 %2",_sideKey,_squadIndex+1]];
+        _group allowFleeing 0;
+        private _base=(_centre getPos [90,_bearing]) getPos [28,_bearing+([-90,90] select _squadIndex)];
+        private _objective=(_centre getPos [65,_bearing+180]) getPos [24,_bearing+([-90,90] select _squadIndex)];
+        for "_unitIndex" from 0 to 5 do {
+            private _spawn=(_base getPos [(_unitIndex-2.5)*2.5,_bearing+90]);
+            private _unit=_group createUnit [_class,_spawn,[],0,"NONE"];
+            _unit setVariable ["acex_headless_blacklist",true,true];
+            _unit setVariable ["Waldo_CortexQA_Label",format ["TERRAIN %1.%2",_squadIndex+1,_unitIndex+1],true];
+            _unit setVariable ["Waldo_CortexQA_TerrainBattleSide",_sideKey];
+            _unit addEventHandler ["FiredMan",{
+                params ["_unit"];
+                private _key="Waldo_CortexQA_TerrainBattle"+(_unit getVariable ["Waldo_CortexQA_TerrainBattleSide",""])+"Shots";
+                missionNamespace setVariable [_key,(missionNamespace getVariable [_key,0])+1,true];
+            }];
+            _battleUnits pushBack _unit;
+        };
+        _group setFormation "WEDGE";
+        _group setBehaviourStrong "AWARE";
+        _group setCombatMode "RED";
+        private _waypoint=_group addWaypoint [_objective,0];
+        _waypoint setWaypointType "SAD";
+        _waypoint setWaypointBehaviour "AWARE";
+        _waypoint setWaypointCombatMode "RED";
+        _waypoint setWaypointCompletionRadius 20;
+        _battleGroups pushBack _group;
+        _battleOrigins pushBack getPosATL leader _group;
+    };
+} forEach [[east,"O_Soldier_F",180,"East"],[west,"B_Soldier_F",0,"West"]];
+private _eastStart={alive _x && {side group _x == east}} count _battleUnits;
+private _westStart={alive _x && {side group _x == west}} count _battleUnits;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",_battleUnits,true];
+["Uneven-terrain equal-force battle","Two equal two-squad forces follow ordinary objectives and fight across the measured slope. Watch natural contact, real fire, casualties and several groups manoeuvring. The test assigns no Cortex role and applies no invulnerability.",_centre] call _phase;
+private _battleCompleted=[{
+    private _eastShots=missionNamespace getVariable ["Waldo_CortexQA_TerrainBattleEastShots",0];
+    private _westShots=missionNamespace getVariable ["Waldo_CortexQA_TerrainBattleWestShots",0];
+    private _casualties={!alive _x} count _battleUnits;
+    private _movers=0;
+    {
+        if (!isNull _x && {alive leader _x} && {leader _x distance2D (_battleOrigins select _forEachIndex) >= 30}) then {
+            _movers=_movers+1;
+        };
+    } forEach _battleGroups;
+    _eastShots > 0 && {_westShots > 0} && {_casualties >= 2} && {_movers >= 3}
+},150] call _wait;
+private _eastShots=missionNamespace getVariable ["Waldo_CortexQA_TerrainBattleEastShots",0];
+private _westShots=missionNamespace getVariable ["Waldo_CortexQA_TerrainBattleWestShots",0];
+private _casualties={!alive _x} count _battleUnits;
+private _movers=0;
+{
+    if (!isNull _x && {alive leader _x} && {leader _x distance2D (_battleOrigins select _forEachIndex) >= 30}) then {_movers=_movers+1};
+} forEach _battleGroups;
+private _transitionGroups={(_x getVariable ["Waldo_Cortex_DrillTransitions",[]]) isNotEqualTo []} count _battleGroups;
+private _battleDetail=str [_eastShots,_westShots,_casualties,_movers,_transitionGroups,
+    _battleGroups apply {[_x getVariable ["Waldo_AIPass_PublicPhase",""],_x getVariable ["Waldo_Cortex_DrillResult",[]],
+        if (isNull leader _x) then {[]} else {getPosATL leader _x}]}];
+["TERRAIN-BATTLE-equal-force-prerequisite",_eastStart == 12 && {_westStart == 12},str [_eastStart,_westStart]] call _check;
+["TERRAIN-BATTLE-both-sides-actual-fire",_eastShots > 0 && {_westShots > 0},_battleDetail] call _check;
+["TERRAIN-BATTLE-real-casualties",_casualties >= 2,_battleDetail] call _check;
+["TERRAIN-BATTLE-multi-group-physical-progress",_movers >= 3,_battleDetail] call _check;
+["TERRAIN-BATTLE-production-tactics-observed",_transitionGroups > 0,_battleDetail] call _check;
+["TERRAIN-BATTLE-composite-outcome",_battleCompleted,_battleDetail] call _check;
+missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
+{deleteVehicle _x} forEach _battleUnits;
+{deleteGroup _x} forEach _battleGroups;
 
 // Find one long inland air corridor instead of transplanting the flat VR coordinates. Its relief is
 // measured along both the approach and departure, because a clear target area does not prove that a

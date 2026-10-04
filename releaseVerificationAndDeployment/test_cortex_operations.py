@@ -706,7 +706,7 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),62)
+        self.assertEqual(len(data['cases']),63)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
         self.assertIn('COMBINED-ARMS',pending)
@@ -879,6 +879,17 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('TERRAIN-infantry-physical-progress',terrain)
         self.assertIn('TERRAIN-vehicle-physical-progress',terrain)
         self.assertIn('TERRAIN-defence-physical-arrival',terrain)
+        for battle_marker in ['TERRAIN-BATTLE-equal-force-prerequisite',
+                              'TERRAIN-BATTLE-both-sides-actual-fire',
+                              'TERRAIN-BATTLE-real-casualties',
+                              'TERRAIN-BATTLE-multi-group-physical-progress',
+                              'TERRAIN-BATTLE-production-tactics-observed',
+                              'TERRAIN-BATTLE-composite-outcome',
+                              'forEach [[east,"O_Soldier_F",180,"East"],[west,"B_Soldier_F",0,"West"]]',
+                              '_waypoint setWaypointType "SAD"']:
+            self.assertIn(battle_marker,terrain)
+        terrain_battle_source=terrain.split('// The flat controller ranges')[1].split('// Find one long inland air corridor')[0]
+        self.assertNotIn('allowDamage false',terrain_battle_source)
         for air_marker in ['TERRAIN-air-corridor-found','_laneRelief >= 45',
                            'TERRAIN-AIR-PLANE','TERRAIN-AIR-HELICOPTER',
                            '-terrain-plan','-physical-flight','-real-weapon-release',
@@ -891,6 +902,10 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(terrain_case['executable_sources'],['runTerrain.sqf'])
         self.assertEqual(terrain_case['status'],'implemented_partial')
         self.assertEqual(terrain_case['live_evidence'],[])
+        terrain_battle=next(case for case in coverage['cases'] if case['id']=='TERRAIN-BATTLE')
+        self.assertEqual(terrain_battle['executable_sources'],['runTerrain.sqf'])
+        self.assertEqual(terrain_battle['status'],'implemented_partial')
+        self.assertEqual(terrain_battle['live_evidence'],[])
 
     def test_audit_visualisation_has_a_bounded_render_cost(self):
         guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text(encoding='utf-8')

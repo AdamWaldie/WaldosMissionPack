@@ -32,6 +32,20 @@
       "production_sources": []
     },
     {
+      "id": "TERRAIN-BATTLE",
+      "title": "Equal-force live battle on measured terrain",
+      "setup": "As part of the dedicated Altis terrain focus, place two six-soldier squads per side on opposite approaches across the measured uneven sector. Give every group an ordinary SAD objective beyond the centre. Keep damage enabled and do not assign Cortex roles or make actors invulnerable.",
+      "expected": "Both equal forces naturally detect and fire, real casualties occur, at least three of the four groups make physical progress across the uneven ground, and at least one production flank or advance transition is observed. A selected route, combat mode, accepted objective or elapsed timer cannot pass the battle.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runTerrain.sqf adds a damage-enabled 12-versus-12 meeting engagement after the isolated route checks. FiredMan events, real deaths, per-group displacement and production drill-transition ledgers are measured independently. The fixture uses ordinary objectives and no Cortex role injection. Fresh Altis execution, headless ownership, Zeus interruption, varied force mixes and repeated reliability remain pending batched live acceptance.",
+      "executable_sources": [
+        "runTerrain.sqf"
+      ],
+      "production_sources": []
+    },
+    {
       "id": "CORE",
       "title": "Master, exclusions and ownership",
       "setup": "Use ordinary, excluded, player-led, Zeus-controlled and feature-owned squads. Toggle Cortex and transfer ownership during movement.",

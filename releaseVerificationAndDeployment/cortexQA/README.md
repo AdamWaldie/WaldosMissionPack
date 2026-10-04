@@ -68,6 +68,8 @@ Use `-CortexAudit -CortexFocus lighting -HeadlessClients 2` for the dedicated vi
 
 Use `-CortexFocus mechanics` for ammunition sharing, casualty regroup and actual skill changes. These new cases require live validation. Existing failed building cases remain in the full run; the open-door comparison records a separate result.
 
+`-CortexFocus terrain -AuditTerrain Altis` now includes an additive damage-enabled equal-force battle after the isolated ground-route checks and before the air corridor. Two six-soldier squads per side receive ordinary opposing objectives across the dynamically selected uneven sector. The battle records real fire from both sides, casualties, physical progress by several groups and production flank/advance transitions. It does not assign Cortex roles, protect actors or accept an elapsed timer as success. This is the first live-terrain combat arm; headless ownership, Zeus interruption, other terrains and repeated reliability remain required.
+
 The building comparison appends four independent physical-entry cases: two house models, each using direct movement and a building-attached waypoint. It does not replace the original garrison or open-door checks. The comparison units are excluded from Cortex and pinned to the server; neither their position nor arrival result is forced.
 
 Combat halts also measure the actual element frontage and depth relative to the enemy. A minimum spread and a depth limit catch collapsed or enemy-facing files. This is a rough formation check; the visual overlay remains necessary to assess cover and facing.
