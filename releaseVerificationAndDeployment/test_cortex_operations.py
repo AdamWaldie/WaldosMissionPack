@@ -810,6 +810,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('cortexQALighting.sqf',launcher)
         distributed=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceContact.sqf').read_text()
         owner_sampler=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformanceOwner.sqf').read_text()
+        server_baseline=(ROOT/'releaseVerificationAndDeployment/cortexQA/runPerformance.sqf').read_text()
+        self.assertIn('for "_i" from 0 to 49 do',server_baseline)
+        self.assertIn('count _groups == 50',server_baseline)
+        self.assertIn('count _actors == 300',server_baseline)
+        self.assertIn('PERF-50-patrol',server_baseline)
+        self.assertNotIn('PERF-100-patrol',server_baseline)
+        self.assertNotIn('from 0 to 99',server_baseline)
         for marker in ['["PERF-CONTACT","PERF-MIXED"]','two-headless-prerequisite','comparable-arms',
                        'balanced-ownership','physical-workload','median-budget','p95-budget',
                        'Waldo_CortexQA_PerformanceContactCompleted']:

@@ -22,7 +22,7 @@ ammo sharing and casualty replacement remain layered behaviours and do not becom
 The prior requester-side `allGroups` scan has also been removed from the contact cadence. The server
 support job publishes only the at-most-six responders already reserved for that requester, and clears
 the index with the reservation. This prevents coordinated selection from growing quadratically at the
-100-group performance target. Static acceptance is 151 focused Cortex tests and 1,262 validated SQF
+50-group primary performance target. Static acceptance is 151 focused Cortex tests and 1,262 validated SQF
 files. A rebuilt live run remains required and is deliberately deferred while game launches are paused.
 
 ## Confirmed casualty defect
@@ -407,7 +407,7 @@ Source review confirmed that STALLED/TIME_LIMIT called FlankEnd, which issued do
 
 The user requires terrain-aware routing for flank, advance, assault, withdrawal and coordinated movement. Saved source now gives flank, advance, initial and obstruction-replanned infantry withdrawal, and coordinated helper approaches one shared group-level selector. It considers no more than eight caller-supplied candidates and three geometry samples per leg, rejects water and supporting-fire corridors, preserves the starting side of a support axis, and scores terrain/solid ballistic screening separately from weaker visual concealment. Longer legs add at most twelve arithmetic safety samples without adding geometry rays. The chosen legs are reused by the existing bound planner; there is no per-unit or per-tick search. A confirmed withdrawal obstruction excludes the failed destination before selecting another avenue. Final clear-through remains deliberately direct across the fixed objective; its approach into that close phase still needs physical acceptance.
 
-Preserve existing tests and add comparative covered/exposed approach fixtures, vegetation concealment versus solid cover, terrain dead ground, constrained crossings, blocked avenues, objective change, Zeus takeover, and HC migration. Measure actual actor trails, exposure along travel and arrival; planned points alone cannot pass. Maintain squad frontage at firing positions while allowing a narrower approach through terrain. Replan only on objective change or confirmed obstruction. Vegetation concealment must not be reported as ballistic cover. Include routing cost in the approved 100-group budget of at most 5% added median frame time and 10% added p95 frame time versus Cortex off. The saved source is a candidate, not live acceptance.
+Preserve existing tests and add comparative covered/exposed approach fixtures, vegetation concealment versus solid cover, terrain dead ground, constrained crossings, blocked avenues, objective change, Zeus takeover, and HC migration. Measure actual actor trails, exposure along travel and arrival; planned points alone cannot pass. Maintain squad frontage at firing positions while allowing a narrower approach through terrain. Replan only on objective change or confirmed obstruction. Vegetation concealment must not be reported as ballistic cover. Include routing cost in the approved 50-group budget of at most 5% added median frame time and 10% added p95 frame time versus Cortex off. The saved source is a candidate, not live acceptance.
 
 ### Approach geometry diagnostic, 29 September
 

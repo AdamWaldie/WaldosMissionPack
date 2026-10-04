@@ -679,7 +679,7 @@ crowded corridor requests a stop. It changes the existing speed request without 
   It does not run per soldier or per scheduler tick. Ballistic screening and visual concealment are
   scored separately. This source bound supports, but does not yet prove, the accepted 50-group
   primary budget of at most 5% added median frame time and 10% added p95 frame time versus Cortex
-  off. The 100-group case remains an exploratory stress run.
+  off. Prior 100-group runs remain historical saturation evidence and are not repeated by the routine audit.
 
 ## Limitations
 
@@ -786,7 +786,7 @@ Reserved assault squads now receive explicit moving or covering roles from the s
 
 This uses the existing per-group movement jobs, retry limits and feature restoration. The coordinator examines at most six reserved squads every two seconds and broadcasts roles only when they change. A failed bound yields the turn and waits eight seconds before retry; it is never counted as completed. A squad below four combat-effective dismounts is released rather than blocking the remaining manoeuvre. A missing owner response is bounded by the configured bound timeout plus a small delivery margin, capped at the existing three-minute safety limit. The combined assignment has a finite ten-minute limit for viable participants. Responders which cannot communicate or receive a safe approach are released when the attack starts. Zeus takeover, withdrawal, feature disable and lease expiry release owned movement restrictions. HC adoption restores old restrictions before consuming the current role.
 
-These changes are not yet accepted in engine or at the 50-group primary performance target. The 100-group case remains an exploratory stress run. The `coordinatedbounds` focus measures actual squad-role exchanges, movement with covering fire between squads, and movement with covering fire inside each squad. Tactical role labels explain intent; measured travel and shots establish behaviour. Earlier independent-squad overlap results do not prove coordinated overwatch.
+These changes are not yet accepted in engine or at the 50-group primary performance target. Prior 100-group runs remain historical saturation evidence. The `coordinatedbounds` focus measures actual squad-role exchanges, movement with covering fire between squads, and movement with covering fire inside each squad. Tactical role labels explain intent; measured travel and shots establish behaviour. Earlier independent-squad overlap results do not prove coordinated overwatch.
 
 Combat acceptance also requires readable pressure and counterplay: use observed or reported positions, preserve uncertainty, avoid simultaneous uncontrolled charges, let suppression and casualties disrupt movement, and honour player roadblocks. No recovery may teleport actors. These are acceptance requirements, not claims that every behaviour currently satisfies them.
 
