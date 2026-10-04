@@ -520,10 +520,13 @@ private _observedProfiles=createHashMap;
             private _samples=_sampleAircraft getVariable ["Waldo_CortexQA_ProfileSamples",[]];
             _samples pushBack [
                 serverTime,_planSample param [2,""],speed _sampleAircraft,
-                (getPosATL _sampleAircraft) select 2,_planSample param [4,[]],getPosATL _sampleAircraft
+                (getPosATL _sampleAircraft) select 2,_planSample param [4,[]],getPosATL _sampleAircraft,
+                _sampleAircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]
             ];
             _sampleAircraft setVariable ["Waldo_CortexQA_ProfileSamples",_samples,true];
-            sleep 1;
+            // QA-only quarter-second sampling catches the short terminal basket without changing
+            // production cadence or manufacturing a release.
+            sleep 0.25;
         };
     };
     [_id+"-dedicated-aircraft-owner",
@@ -772,6 +775,17 @@ private _observedProfiles=createHashMap;
         private _sampleSpeeds=_profileSamples apply {_x select 2};
         private _sampleAltitudes=_profileSamples apply {_x select 3};
         private _samplePositions=_profileSamples apply {_x select 5};
+        private _sampleFireSolutions=_profileSamples apply {_x param [6,[]]};
+        if (_isPlaneClass && {_selectedWeaponClass in ["GUN","ROCKET"]}) then {
+            private _terrainAwareTerminal=_sampleFireSolutions findIf {
+                count _x >= 23 && {_x param [21,false]}
+                    && {(_x param [20,[]]) param [0,0] >= 8}
+                    && {(_x param [20,[]]) param [3,false]}
+                    && {_x param [22,false]}
+            } >= 0;
+            [_id+"-terrain-aware-terminal-delivery",_terrainAwareTerminal,
+                str (_sampleFireSolutions select {count _x >= 23})] call _recordCheck;
+        };
         private _pathTravel=0;
         for "_sampleIndex" from 1 to (count _samplePositions-1) do {
             _pathTravel=_pathTravel+((_samplePositions select (_sampleIndex-1)) distance2D (_samplePositions select _sampleIndex));

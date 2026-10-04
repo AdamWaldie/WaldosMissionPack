@@ -659,7 +659,8 @@ if (_stage == "ATTACK") then {
     private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
         _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing,
         _horizontalRange,_bombReleaseDistance,_bombWindow,_muzzleSpeed,_launchAlignment,
-        _predictedBombImpact,_bombImpactError];
+        _predictedBombImpact,_bombImpactError,_job getOrDefault ["deliveryAssistSamples",[]],
+        _job getOrDefault ["deliveryAssistActive",false],_deliveryTerrainClear];
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
