@@ -2,15 +2,55 @@
  * Author: WaldoTheWarfighter
  * Measures two-squad flank and advance against a shared, naturally observed enemy squad.
  * Locality/authority: scheduled server owns disposable fixtures; no behaviour results are injected.
+ * On VR the fixture retains its stable flat-range coordinates. On other worlds it performs one
+ * bounded pre-case terrain scan and places the same fight on a dry, traversable 360 m corridor with
+ * at least 20 m of relief. The physical drill checks therefore exercise slopes and rough ground
+ * without adding terrain polling to production AI.
  * Repeat/JIP: fresh actors per case, public labels and targets for observers; caller restores settings.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>, required callbacks.
  * Return: Nothing. Current caller: cortexQA/runServer.sqf.
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQAMultiManoeuvre.sqf";
  */
 params ["_check","_phase","_wait"];
+private _terrainOrigin=[2200,1100,0];
+private _terrainRelief=0;
+private _terrainScenarioReady=worldName == "VR";
+if (!_terrainScenarioReady) then {
+    private _found=[];
+    for "_candidateX" from 3000 to (worldSize-3000) step 1200 do {
+        for "_candidateY" from 3000 to (worldSize-3400) step 1200 do {
+            private _heights=[];
+            private _usable=true;
+            for "_along" from 0 to 360 step 30 do {
+                private _sample=[_candidateX,_candidateY+_along,0];
+                if (surfaceIsWater _sample || {((surfaceNormal _sample) select 2) < 0.55}) exitWith {_usable=false};
+                _heights pushBack getTerrainHeightASL _sample;
+            };
+            {
+                private _edge=[_candidateX+_x,_candidateY+180,0];
+                if (surfaceIsWater _edge || {((surfaceNormal _edge) select 2) < 0.55}) then {_usable=false};
+            } forEach [-80,80];
+            if (_usable && {_heights isNotEqualTo []}) then {
+                private _relief=(selectMax _heights)-(selectMin _heights);
+                if (_relief >= 20 && {_relief <= 120}) exitWith {
+                    _found=[_candidateX,_candidateY,0];
+                    _terrainRelief=_relief;
+                };
+            };
+        };
+        if (_found isNotEqualTo []) exitWith {};
+    };
+    if (_found isNotEqualTo []) then {_terrainOrigin=_found; _terrainScenarioReady=true};
+};
+private _terrainPosition={
+    params ["_x","_y"];
+    _terrainOrigin vectorAdd [_x-2200,_y-1100,0]
+};
 {
     private _mode=_x;
     private _prefix="MULTI-"+_mode;
+    [_prefix+"-terrain-scenario",_terrainScenarioReady,
+        str [worldName,_terrainOrigin,_terrainRelief]] call _check;
     private _savedNearRange=missionNamespace getVariable ["Waldo_AIPass_NearRange",900];
     private _savedFarRange=missionNamespace getVariable ["Waldo_AIPass_FarRange",2500];
     missionNamespace setVariable ["Waldo_AIPass_NearRange",5000];
@@ -36,7 +76,7 @@ params ["_check","_phase","_wait"];
         _group allowFleeing 0;
         private _members=[];
         for "_index" from 0 to 5 do {
-            private _unit=_group createUnit ["O_Soldier_F",[2200+_team*100+_index*3,1100,0],[],0,"NONE"];
+            private _unit=_group createUnit ["O_Soldier_F",[2200+_team*100+_index*3,1100] call _terrainPosition,[],0,"NONE"];
             _unit setVariable ["acex_headless_blacklist",true,true];
             _unit setDir 0;
             _unit allowDamage false;
@@ -59,7 +99,7 @@ params ["_check","_phase","_wait"];
     _enemyGroup allowFleeing 0;
     private _enemies=[];
     for "_index" from 0 to 5 do {
-        private _enemy=_enemyGroup createUnit ["B_Soldier_F",[2215+_index*14,1360,0],[],0,"NONE"];
+        private _enemy=_enemyGroup createUnit ["B_Soldier_F",[2215+_index*14,1360] call _terrainPosition,[],0,"NONE"];
         _enemy allowDamage false; _enemy disableAI "PATH"; _enemy setDir 180; _enemy setUnitPos "UP";
         _enemy setVariable ["Waldo_CortexQA_Label",format ["SHARED ENEMY %1",_index+1],true];
         _enemies pushBack _enemy;
@@ -75,7 +115,7 @@ params ["_check","_phase","_wait"];
     private _drillSeen=[false,false];
     private _expectedDrill=["FLANK","ADVANCE"] select (_mode == "BOUND");
     missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors+_enemies,true];
-    [_prefix+": two squads","Both squads must physically manoeuvre against the same enemy, retain their members and finish cohesive. Cyan trails show travel. Moving/covering counts and actual shots show whether one squad supports the other; accepted drill flags do not pass.",[2250,1200,0]] call _phase;
+    [_prefix+": two squads","Both squads must physically manoeuvre against the same enemy, retain their members and finish cohesive. Cyan trails show travel. Moving/covering counts and actual shots show whether one squad supports the other; accepted drill flags do not pass.",[2250,1200] call _terrainPosition] call _phase;
     // Direction is established without revealing the target. setDir gives every actor a genuine
     // visual-acquisition opportunity before doWatch starts tracking; doWatch alone can leave a
     // stationary formation facing its spawn bearing. Both sides remain armed, invulnerable and
@@ -100,7 +140,7 @@ params ["_check","_phase","_wait"];
     // turning the test into an expired-waypoint check instead of a bounding-advance check.
     if (_contact && {_mode == "BOUND"}) then {
         {
-            private _wp=_x addWaypoint [[2200+_forEachIndex*100,1460,0],0];
+            private _wp=_x addWaypoint [[2200+_forEachIndex*100,1460] call _terrainPosition,0];
             _wp setWaypointType "MOVE";
         } forEach _groups;
     };

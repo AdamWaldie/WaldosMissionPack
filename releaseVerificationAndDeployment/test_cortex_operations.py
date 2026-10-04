@@ -1027,6 +1027,18 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_enemy setUnitPos "UP"',qa)
         self.assertIn('for "_index" from 0 to 5 do',qa)
         self.assertIn('private _enemies=[]',qa)
+
+    def test_multi_manoeuvre_audit_uses_real_relief_outside_vr(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
+        for marker in ['private _terrainOrigin=[2200,1100,0]',
+                       'private _terrainScenarioReady=worldName == "VR"',
+                       'for "_candidateX" from 3000 to (worldSize-3000) step 1200',
+                       'for "_along" from 0 to 360 step 30',
+                       '((surfaceNormal _sample) select 2) < 0.55',
+                       '_relief >= 20 && {_relief <= 120}',
+                       '-terrain-scenario',
+                       'call _terrainPosition']:
+            self.assertIn(marker,qa)
         self.assertIn('_enemies findIf {_leader knowsAbout _x >= 1}',qa)
         self.assertIn('_actors+_enemies',qa)
         self.assertIn('_x setDir (_x getDir _enemy)',qa)
