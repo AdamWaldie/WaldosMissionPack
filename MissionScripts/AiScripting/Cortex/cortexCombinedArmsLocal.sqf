@@ -2,8 +2,10 @@
  * Author: WaldoTheWarfighter
  * Applies one expiring combined-arms contact role on the selected asset owner.
  * A direct-fire ground vehicle receives target knowledge without losing its authored route. A second
- * ground vehicle receives a finite safe-side manoeuvre destination and is maintained by the shared
- * Cortex scheduler. Airborne aircraft receive the same target and may start their existing finite attack-run job;
+ * ground vehicle receives a finite safe-side manoeuvre destination selected once from a bounded set
+ * which keeps the support fire lane clear and avoids water, cliff-like slopes and unnecessarily rough
+ * ground. Engine pathfinding remains responsible for the actual route. Airborne aircraft receive the
+ * same target and may start their existing finite attack-run job;
  * its controller, rather than a single instantaneous speed sample, proves progress or handles a stall.
  * Locality/authority: current group owner only; server-issued public token must still match. Asset
  * discovery accepts the effective commander's or driver's group but never a passenger-only group.
@@ -52,6 +54,7 @@ if (_role == "GROUND_FIRE") exitWith {
     true
 };
 if (_role == "GROUND_MANOEUVRE") exitWith {
+    private _start=getPosATL _asset;
     private _targetPosition=getPosATL _target;
     private _supportPosition=if (count _context >= 2) then {+_context} else {getPosATL leader _requester};
     private _axis=_targetPosition vectorDiff _supportPosition;
@@ -59,17 +62,35 @@ if (_role == "GROUND_MANOEUVRE") exitWith {
     if (vectorMagnitude _axis < 1) then {_axis=[sin getDir _asset,cos getDir _asset,0]};
     _axis=vectorNormalized _axis;
     private _left=[-(_axis select 1),_axis select 0,0];
-    private _relative=(getPosATL _asset) vectorDiff _supportPosition;
+    private _relative=_start vectorDiff _supportPosition;
     private _side=if ((_relative vectorDotProduct _left) < 0) then {_left vectorMultiply -1} else {_left};
-    private _destination=_targetPosition vectorAdd (_axis vectorMultiply -220);
-    _destination=_destination vectorAdd (_side vectorMultiply 320);
-    _destination set [2,0];
+    // These are alternative firing areas, not a scripted movement profile. Sampling a few ranges
+    // and lateral offsets makes the same contact opportunity usable on hills and rough terrain while
+    // keeping the engine free to choose roads and avoid local obstacles.
+    private _candidates=[];
+    {
+        private _standOff=_x;
+        {
+            private _destination=_targetPosition vectorAdd (_axis vectorMultiply -_standOff);
+            _destination=_destination vectorAdd (_side vectorMultiply _x);
+            _destination set [2,0];
+            _candidates pushBack [_destination];
+        } forEach [260,320,380];
+    } forEach [180,240];
+    private _selected=[_start,_candidates,_targetPosition,[_supportPosition],_target,"VEHICLE"]
+        call Waldo_fnc_CortexSelectAvenue;
+    if (_selected isEqualTo []) exitWith {
+        _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];
+        _group setVariable ["Waldo_Cortex_CombinedResult",[_token,_role,"NO_SAFE_ROUTE",serverTime,_target],true];
+        false
+    };
+    private _destination=_selected select ((count _selected)-1);
     [_group,_destination,55] call Waldo_fnc_CortexGroupMove;
     private _state=[_group] call Waldo_fnc_CortexGroupState;
     _state set ["movementLease",["COMBINED_GROUND",time+((_expiry-serverTime) max 5)]];
     [Waldo_fnc_CortexCombinedGroundStep,createHashMapFromArray [
         ["group",_group],["asset",_asset],["target",_target],["token",_token],
-        ["expiry",_expiry],["destination",_destination],["lastPosition",getPosATL _asset],
+        ["expiry",_expiry],["destination",_destination],["lastPosition",_start],
         ["progressAt",time],["stalls",0]
     ],1] call Waldo_fnc_CortexQueueJob;
     _group setVariable ["Waldo_Cortex_CombinedApplied",[_token,clientOwner,serverTime],true];

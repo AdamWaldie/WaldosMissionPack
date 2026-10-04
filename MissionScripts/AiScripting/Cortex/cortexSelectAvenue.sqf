@@ -9,7 +9,9 @@
  * Three fixed samples per leg score terrain/solid ballistic screening separately from visual
  * concealment. The same bounded samples reject cliff-like ground and add a small cost for cumulative
  * height change and steep surfaces, so a flat-range route does not become the preferred route over
- * an easier avenue on a real terrain. Concealment receives a smaller benefit and is never described
+ * an easier avenue on a real terrain. Vehicle callers use a stricter slope limit and receive a small
+ * road preference; the selector still chooses only an endpoint and leaves actual driving and local
+ * obstacle avoidance to the engine. Concealment receives a smaller benefit and is never described
  * as cover. Route length keeps the result purposeful.
  * Candidate and sample counts are capped, so this runs once when an operation starts rather than
  * per unit or scheduler tick.
@@ -24,12 +26,14 @@
  * 2: threat position <ARRAY> - ATL position used for exposure rays
  * 3: support origins <ARRAY> - origins whose live-fire corridors remain clear, default []
  * 4: threat object <OBJECT> - optional ray exclusion object, default objNull
+ * 5: mobility <STRING> - "INFANTRY" or "VEHICLE", default "INFANTRY"
  *
  * Return Value:
  * Array - selected ordered leg endpoints, or [] when no candidate is safe
  *
  * Current callers: Waldo_fnc_CortexFlankStart, Waldo_fnc_CortexAdvanceStart,
- * Waldo_fnc_CortexRetreat and Waldo_fnc_CortexSupportAssaultServer.
+ * Waldo_fnc_CortexRetreat, Waldo_fnc_CortexSupportAssaultServer and
+ * Waldo_fnc_CortexCombinedArmsLocal.
  *
  * Example:
  * private _legs = [_start, [[_goal],[_screen,_goal]], _enemyPos, [_baseOrigin], _target]
@@ -41,9 +45,14 @@ params [
     ["_candidates",[],[[]]],
     ["_threat",[],[[]]],
     ["_supportOrigins",[],[[]]],
-    ["_threatObject",objNull,[objNull]]
+    ["_threatObject",objNull,[objNull]],
+    ["_mobility","INFANTRY",[""]]
 ];
 if (count _start < 2 || {count _threat < 2} || {_candidates isEqualTo []}) exitWith {[]};
+_mobility=toUpper _mobility;
+if !(_mobility in ["INFANTRY","VEHICLE"]) then {_mobility="INFANTRY"};
+private _vehicleRoute=_mobility == "VEHICLE";
+private _minimumSurfaceUp=[0.5,0.68] select _vehicleRoute;
 
 private _limited=_candidates select [0,(count _candidates) min 8];
 private _threatASL=(AGLToASL _threat) vectorAdd [0,0,1.4];
@@ -51,13 +60,16 @@ private _best=[];
 private _bestScore=1e12;
 {
     private _route=_x;
-    private _valid=_route isNotEqualTo [] && {_route findIf {count _x < 2 || {surfaceIsWater _x}} < 0};
+    private _valid=_route isNotEqualTo [] && {_route findIf {
+        count _x < 2 || {surfaceIsWater _x} || {_vehicleRoute && {((surfaceNormal _x) select 2) < _minimumSurfaceUp}}
+    } < 0};
     private _routeLength=0;
     private _hardScreen=0;
     private _concealed=0;
     private _screenSamples=0;
     private _terrainPenalty=0;
     private _terrainSamples=0;
+    private _roadSamples=0;
     private _previousTerrainASL=getTerrainHeightASL _start;
     private _from=_start;
     // [starts inside corridor, has cleared corridor]. State persists across every leg in this
@@ -136,8 +148,9 @@ private _bestScore=1e12;
                 private _terrainASL=getTerrainHeightASL _sample;
                 // Very steep samples are unlikely to be usable by an infantry formation. Less
                 // severe relief remains valid but loses to a similarly protected, easier avenue.
-                if (_surfaceUp < 0.5) exitWith {_valid=false};
+                if (_surfaceUp < _minimumSurfaceUp) exitWith {_valid=false};
                 _terrainPenalty=_terrainPenalty+abs (_terrainASL-_previousTerrainASL)+((1-_surfaceUp)*12);
+                if (_vehicleRoute && {isOnRoad _sample}) then {_roadSamples=_roadSamples+1};
                 _previousTerrainASL=_terrainASL;
                 private _sampleASL=(AGLToASL _sample) vectorAdd [0,0,1.0];
                 private _rayStart=_threatASL vectorAdd ((_threatASL vectorFromTo _sampleASL) vectorMultiply 2);
@@ -159,6 +172,7 @@ private _bestScore=1e12;
         private _score=_routeLength
             -70*(_hardScreen/(_screenSamples max 1))
             -25*(_concealed/(_screenSamples max 1))
+            -30*(_roadSamples/(_terrainSamples max 1))
             +2*(_terrainPenalty/(_terrainSamples max 1));
         if (_score < _bestScore) then {_best=+_route; _bestScore=_score};
     };

@@ -1000,13 +1000,16 @@ class CortexOperations(unittest.TestCase):
                        'terrainIntersectASL [_threatASL,_sampleASL]',
                        'private _surfaceUp=(surfaceNormal _sample) select 2',
                        'private _terrainASL=getTerrainHeightASL _sample',
-                       'if (_surfaceUp < 0.5) exitWith {_valid=false}',
+                       'if (_surfaceUp < _minimumSurfaceUp) exitWith {_valid=false}',
                        '+2*(_terrainPenalty/(_terrainSamples max 1))',
                        '"FIRE","GEOM"','"VIEW","GEOM"','_lateral < 30',
                        '_pointSide*_startSide < 0','(ceil (_legLength/20)) max 3',
                        '-70*(_hardScreen/(_screenSamples max 1))',
                        '-25*(_concealed/(_screenSamples max 1))']:
             self.assertIn(marker,selector)
+        for vehicle_marker in ['"VEHICLE"','private _minimumSurfaceUp=[0.5,0.68]',
+                               'isOnRoad _sample','-30*(_roadSamples/(_terrainSamples max 1))']:
+            self.assertIn(vehicle_marker,selector)
         self.assertNotIn('nearObjects',selector)
         self.assertNotIn('nearestTerrainObjects',selector)
         self.assertIn('call Waldo_fnc_CortexSelectAvenue',advance)
@@ -1523,6 +1526,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('["GROUND_FIRE","GROUND_MANOEUVRE"]',server)
         self.assertIn('_role in ["GROUND_FIRE","GROUND_MANOEUVRE","AIR_ATTACK"]',local)
         self.assertIn('Waldo_fnc_CortexCombinedGroundStep',local)
+        self.assertIn('Waldo_fnc_CortexSelectAvenue',local)
+        self.assertIn('_target,"VEHICLE"',local)
+        self.assertIn('"NO_SAFE_ROUTE"',local)
+        self.assertIn('forEach [260,320,380]',local)
+        self.assertIn('forEach [180,240]',local)
         self.assertIn('"COMBINED_GROUND"',local+ground_step)
         self.assertIn('Waldo_fnc_CortexZeusHeld',ground_step)
         self.assertIn('if (_stalls >= 1)',ground_step)
