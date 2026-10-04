@@ -10,7 +10,10 @@
  * older abort cannot cancel a replacement task. A squad which can no longer form two viable fire
  * teams is retired immediately instead of keeping the whole action alive until lease expiry. The server watchdog follows the
  * configured owner-side bound timeout and retries after eight seconds. Bound length scales with
- * remaining distance to avoid slow fixed-step movement. Up to two squads on separated approaches
+ * remaining distance to avoid slow fixed-step movement. Each new bound chooses once among the direct
+ * line and two shallow alternatives through the shared terrain/fire-lane selector, so a valid overall
+ * approach does not place the next bound in water, on a cliff-like slope or across supporting fire.
+ * Up to two squads on separated approaches
  * may bound concurrently; each still alternates its own moving and covering fire teams. This removes
  * the former four-deep serial queue without turning the whole force into one unsupported rush.
  * Arguments: 0: request <HASHMAP>; 1: accepted leases <ARRAY>, required.
@@ -105,8 +108,18 @@ for "_slot" from count _active to (_maxConcurrent-1) do {
             _centre=_centre vectorMultiply (1/count _fit);
             private _remaining=_centre distance2D _goal;
             private _boundLength=(_remaining*0.35) max 45 min 70;
-            _point=_centre getPos [_boundLength min _remaining,_centre getDir _goal];
-            if (!surfaceIsWater _point) then {
+            private _distance=_boundLength min _remaining;
+            private _bearing=_centre getDir _goal;
+            private _candidateRoutes=[];
+            {
+                _candidateRoutes pushBack [_centre getPos [_distance,_bearing+_x]];
+            } forEach [0,-18,18];
+            private _requester=_job getOrDefault ["requester",grpNull];
+            private _supportOrigins=if (isNull _requester) then {[]} else {[getPosATL leader _requester]};
+            private _selected=[_centre,_candidateRoutes,_job get "assaultEnemy",_supportOrigins]
+                call Waldo_fnc_CortexSelectAvenue;
+            if (_selected isNotEqualTo []) then {
+                _point=+(_selected select ((count _selected)-1));
                 _next=_group;
                 _nextIndex=_index;
                 _sequence=_sequence+1;
