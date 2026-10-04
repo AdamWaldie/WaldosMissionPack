@@ -879,6 +879,13 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('TERRAIN-infantry-physical-progress',terrain)
         self.assertIn('TERRAIN-vehicle-physical-progress',terrain)
         self.assertIn('TERRAIN-defence-physical-arrival',terrain)
+        for air_marker in ['TERRAIN-air-corridor-found','_laneRelief >= 45',
+                           'TERRAIN-AIR-PLANE','TERRAIN-AIR-HELICOPTER',
+                           '-terrain-plan','-physical-flight','-real-weapon-release',
+                           '-target-damaged','-finite-egress']:
+            self.assertIn(air_marker,terrain)
+        self.assertNotIn('call Waldo_fnc_CortexAirAttackPlan',terrain)
+        self.assertNotIn('call Waldo_fnc_CortexAirAttack;',terrain)
         coverage=json.loads((ROOT/'releaseVerificationAndDeployment/cortexQA/coverage.json').read_text(encoding='utf-8'))
         terrain_case=next(case for case in coverage['cases'] if case['id']=='TERRAIN')
         self.assertEqual(terrain_case['executable_sources'],['runTerrain.sqf'])
