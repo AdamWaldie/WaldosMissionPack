@@ -727,7 +727,9 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(f"| {case['id']} - {case['title']} |",report)
 
         combined=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedArms.sqf').read_text()
-        for marker in ['COMBINED-air-fixture-moving','COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
+        for marker in ['COMBINED-terrain-scenario','for "_heading" from 0 to 315 step 45',
+                       'forEach [-120,0,180]','_normal < 0.68','_grade > 0.9',
+                       'COMBINED-air-fixture-moving','COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
                        'COMBINED-ground-route-preserved','COMBINED-ground-target-shared',
                        'COMBINED-ground-actual-fire','COMBINED-ground-manoeuvre-role',
                        'COMBINED-ground-manoeuvre-physical-travel','COMBINED-air-controller-started',
@@ -743,7 +745,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _manoeuvreIndex=_groundEntries findIf',combined)
         self.assertIn('_heli flyInHeight 140',combined)
         self.assertIn('_heli limitSpeed 170',combined)
-        self.assertIn('(driver _heli) doMove [3900,3900,140]',combined)
+        self.assertIn('(driver _heli) doMove ([3900,3900,140] call _terrainPosition)',combined)
         self.assertIn('Waldo_HelicopterDeceleration_Enable',combined)
         self.assertIn('Waldo_CortexQA_Combined',combined)
         guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text()
