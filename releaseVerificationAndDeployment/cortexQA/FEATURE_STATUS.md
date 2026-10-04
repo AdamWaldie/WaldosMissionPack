@@ -7,7 +7,7 @@ Feature cases: **62**. Required variant categories: **14**.
 
 | Feature | Settings | Per-asset controls | Production sources | Runnable suites | Evidence records | Status |
 | --- | ---: | ---: | ---: | --- | ---: | --- |
-| TERRAIN - Cross-cutting uneven-terrain movement | 0 | 0 | 0 | `runTerrain.sqf` | 0 | implemented_partial |
+| TERRAIN - Cross-cutting uneven-terrain movement and air attack | 0 | 0 | 0 | `runTerrain.sqf` | 0 | implemented_partial |
 | CORE - Master, exclusions and ownership | 3 | 1 | 15 | `runGates.sqf` | 2 | implemented_partial |
 | LAMBS - LAMBS coexistence and Cortex fallback | 1 | 0 | 3 | `runLambs.sqf`, `runBuildingComparison.sqf` | 2 | implemented_partial |
 | SCHED - Scheduler and distance tiers | 11 | 0 | 4 | `runScheduler.sqf`, `runPerformance.sqf`, `runPerformanceContact.sqf` | 3 | implemented_partial |
@@ -89,11 +89,11 @@ Feature cases: **62**. Required variant categories: **14**.
 
 ## Per-feature scope and remaining work
 
-### TERRAIN - Cross-cutting uneven-terrain movement
+### TERRAIN - Cross-cutting uneven-terrain movement and air attack
 
-**Expected:** The shared avenue selector rejects water and cliff-like samples for infantry and vehicles, both elements physically traverse the measured uneven sector, and a defence order physically occupies dry passable positions across the relief. A selected route, accepted order, elapsed timer or nominal non-VR world cannot pass by itself.
+**Expected:** The shared avenue selector rejects water and cliff-like samples for infantry and vehicles, both ground elements physically traverse the measured uneven sector, and a defence order physically occupies dry passable positions. A live armed plane and helicopter must then start normal Cortex attacks, fly the measured relief with safe clearance, release real weapons, damage their targets and reach finite egress. A selected route, accepted plan, Fired event, elapsed timer or nominal non-VR world cannot pass by itself.
 
-**Automation and open work:** runTerrain.sqf is a dedicated cross-cutting terrain prerequisite and physical diagnostic. It scans a bounded 7x7 set of sectors once, records measured relief and roughness, exercises the production avenue selector for infantry and vehicle mobility, requires physical movement, and verifies public defence placement. It deliberately rejects VR. Altis execution, headless ownership, Zeus interruption, tracked vehicles, larger formations and individual feature suites on varied terrain remain pending batched live acceptance.
+**Automation and open work:** runTerrain.sqf is a dedicated cross-cutting terrain prerequisite and physical diagnostic. It scans bounded ground and long-air candidates once, records measured relief and roughness, exercises the production avenue selector for infantry and vehicle mobility, requires physical ground movement, verifies public defence placement, then gives ordinary combat stimuli to an armed CAS jet and turret helicopter. The air cases require the production discovery path, sampled terrain envelope, physical flight, real release, target damage and finite egress. It deliberately rejects VR. Altis execution, headless ownership, Zeus interruption, tracked vehicles, larger formations and additional aircraft/ordnance on varied terrain remain pending batched live acceptance.
 
 ### CORE - Master, exclusions and ownership
 

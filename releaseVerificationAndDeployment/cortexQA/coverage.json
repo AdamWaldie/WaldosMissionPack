@@ -19,13 +19,13 @@
   "cases": [
     {
       "id": "TERRAIN",
-      "title": "Cross-cutting uneven-terrain movement",
-      "setup": "Launch the dedicated terrain focus on Altis. The fixture must dynamically find a dry 180 m sector with at least 7 m elevation relief and measurable surface roughness before creating infantry, wheeled-vehicle and defensive movement. VR and non-evaluative flat sectors fail the prerequisite.",
-      "expected": "The shared avenue selector rejects water and cliff-like samples for infantry and vehicles, both elements physically traverse the measured uneven sector, and a defence order physically occupies dry passable positions across the relief. A selected route, accepted order, elapsed timer or nominal non-VR world cannot pass by itself.",
+      "title": "Cross-cutting uneven-terrain movement and air attack",
+      "setup": "Launch the dedicated terrain focus on Altis. The fixture must dynamically find a dry 180 m sector with at least 7 m elevation relief and measurable surface roughness for ground movement, plus an independent dry 11 km air corridor with at least 45 m relief. VR and non-evaluative flat sectors fail the prerequisite.",
+      "expected": "The shared avenue selector rejects water and cliff-like samples for infantry and vehicles, both ground elements physically traverse the measured uneven sector, and a defence order physically occupies dry passable positions. A live armed plane and helicopter must then start normal Cortex attacks, fly the measured relief with safe clearance, release real weapons, damage their targets and reach finite egress. A selected route, accepted plan, Fired event, elapsed timer or nominal non-VR world cannot pass by itself.",
       "settings": [],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runTerrain.sqf is a dedicated cross-cutting terrain prerequisite and physical diagnostic. It scans a bounded 7x7 set of sectors once, records measured relief and roughness, exercises the production avenue selector for infantry and vehicle mobility, requires physical movement, and verifies public defence placement. It deliberately rejects VR. Altis execution, headless ownership, Zeus interruption, tracked vehicles, larger formations and individual feature suites on varied terrain remain pending batched live acceptance.",
+      "automation": "runTerrain.sqf is a dedicated cross-cutting terrain prerequisite and physical diagnostic. It scans bounded ground and long-air candidates once, records measured relief and roughness, exercises the production avenue selector for infantry and vehicle mobility, requires physical ground movement, verifies public defence placement, then gives ordinary combat stimuli to an armed CAS jet and turret helicopter. The air cases require the production discovery path, sampled terrain envelope, physical flight, real release, target damage and finite egress. It deliberately rejects VR. Altis execution, headless ownership, Zeus interruption, tracked vehicles, larger formations and additional aircraft/ordnance on varied terrain remain pending batched live acceptance.",
       "executable_sources": [
         "runTerrain.sqf"
       ],
