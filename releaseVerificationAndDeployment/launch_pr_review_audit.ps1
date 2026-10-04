@@ -31,6 +31,7 @@
  * Example:
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Automated -CortexAudit -CortexFocus airskills -AuditTerrain Altis
+ * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Automated -CortexAudit -CortexFocus coordinated -AuditTerrain Altis
  * Current callers: launch_full_arma_hosted_audit.ps1 and manual QA operators.
  #>
 param(
