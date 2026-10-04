@@ -424,7 +424,7 @@ private _observedProfiles=createHashMap;
     private _aaGroup=grpNull;
     if (_withAA) then {
         _aa=createVehicle ["B_static_AA_F",[[8750,6350,0],[8750,10750,0]] select _isPlaneClass,[],0,"NONE"];
-        createVehicleCrew _aa; _aa allowDamage false;
+        createVehicleCrew _aa; _aa allowDamage _mustDestroy;
         _aaCrew=crew _aa; _aaGroup=group gunner _aa;
         _aaGroup setVariable ["Waldo_AIPass_Exclude",true,true];
         {_x allowDamage false; _x disableAI "PATH"} forEach _aaCrew;
@@ -532,6 +532,23 @@ private _observedProfiles=createHashMap;
         str [_aircraft getVariable ["Waldo_HelicopterDeceleration_LastResult",[]],
             _aircraft getVariable ["Waldo_ImprovedHelicopterLanding_LastResult",[]]]] call _recordCheck;
     private _initialPlan=_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
+    // Observed-AA planning can legitimately replace the original armour contact with the known air
+    // defence threat. From this point the audit must measure the production plan's accepted target;
+    // comparing impacts and damage with the superseded fixture object creates false miss results.
+    private _plannedTargetObject=_initialPlan param [3,_target];
+    if (!isNull _plannedTargetObject && {_plannedTargetObject != _target}) then {
+        _aircraft setVariable ["Waldo_CortexQA_AttackTarget",_plannedTargetObject,true];
+        _plannedTargetObject setVariable ["Waldo_CortexQA_AttackAircraft",_aircraft,true];
+        _plannedTargetObject setVariable ["Waldo_CortexQA_WeaponHits",0,true];
+        _plannedTargetObject addEventHandler ["Hit",{
+            params ["_target","_source"];
+            private _attackAircraft=_target getVariable ["Waldo_CortexQA_AttackAircraft",objNull];
+            if (!isNull _attackAircraft && {_source == _attackAircraft || {_source in crew _attackAircraft}}) then {
+                _target setVariable ["Waldo_CortexQA_WeaponHits",
+                    (_target getVariable ["Waldo_CortexQA_WeaponHits",0])+1,true];
+            };
+        }];
+    };
     private _pattern=_initialPlan param [1,""];
     private _profileAltitudes=_initialPlan param [17,[]];
     private _profileSpeeds=_initialPlan param [18,[]];
@@ -615,8 +632,9 @@ private _observedProfiles=createHashMap;
             str [_selectedWeaponClass,_descentAngle,_crossTrack,_targetAlong,_deliveryLength,
                 _deliveryStart,_deliveryEnd,_plannedTargetPosition,getPosATL _target,
                 _plannedTargetPosition distance2D _target]] call _recordCheck;
-        [_id+"-ground-target-stationary",_plannedTargetPosition distance2D _target <= 2,
-            str [_plannedTargetPosition,getPosATL _target,_plannedTargetPosition distance2D _target]] call _recordCheck;
+        [_id+"-ground-target-stationary",_plannedTargetPosition distance2D _plannedTargetObject <= 2,
+            str [_plannedTargetPosition,getPosATL _plannedTargetObject,
+                _plannedTargetPosition distance2D _plannedTargetObject,typeOf _plannedTargetObject]] call _recordCheck;
     };
     private _weaponMatchesPattern=switch _pattern do {
         case "STRAFE";
@@ -634,8 +652,8 @@ private _observedProfiles=createHashMap;
             _expectedWeaponClass]] call _recordCheck;
     [_id+"-armed-live-operator",_selectedWeapon != "" && {!isNull _selectedOperator}
         && {alive _selectedOperator},str [_class,_selectedWeapon,_selectedTurret,_selectedOperator,fullCrew _aircraft]] call _recordCheck;
-    [_id+"-damageable-target-prerequisite",!_mustDestroy || {isDamageAllowed _target},
-        str [_mustDestroy,isDamageAllowed _target,typeOf _target]] call _recordCheck;
+    [_id+"-damageable-target-prerequisite",!_mustDestroy || {isDamageAllowed _plannedTargetObject},
+        str [_mustDestroy,isDamageAllowed _plannedTargetObject,typeOf _plannedTargetObject]] call _recordCheck;
     if (_airTarget) then {
         [_id+"-air-contact-intercept-plan",_pattern == "INTERCEPT"
             && {_initialPlan param [3,objNull] == _target}
@@ -792,13 +810,13 @@ private _observedProfiles=createHashMap;
         // deleting it after four seconds previously turned visible rocket misses into empty evidence.
         private _releaseWait=[4,20] select (_selectedWeaponClass in ["ROCKET","BOMB","GUIDED"]);
         [{
-            !alive _target || {
+            !alive _plannedTargetObject || {
                 count (_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]])
                     >= (_aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0])
             }
         },_releaseWait] call _wait;
         private _releaseResults=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];
-        private _weaponHits=_target getVariable ["Waldo_CortexQA_WeaponHits",0];
+        private _weaponHits=_plannedTargetObject getVariable ["Waldo_CortexQA_WeaponHits",0];
         private _attackStageShots=_aircraft getVariable ["Waldo_CortexQA_AttackStageShots",[]];
         [_id+"-actual-weapon-fire",_attackStageShots find "ATTACK" >= 0,
             str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_attackStageShots,_releaseResults,
@@ -808,14 +826,15 @@ private _observedProfiles=createHashMap;
             case "GUIDED": {18};
             default {30};
         };
-        private _physicalImpact=damage _target > 0 || {!alive _target}
+        private _physicalImpact=damage _plannedTargetObject > 0 || {!alive _plannedTargetObject}
             || {_releaseResults findIf {(_x param [4,1e9]) <= _impactDistance} >= 0};
         [_id+"-effective-release",_physicalImpact,
-            str [_weaponHits,damage _target,_impactDistance,_releaseResults,
+            str [_weaponHits,damage _plannedTargetObject,_impactDistance,_releaseResults,
                 _aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0],
                 _aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
-        [_id+"-target-destroyed",!_mustDestroy || {!alive _target},
-            str [_mustDestroy,alive _target,damage _target,getAllHitPointsDamage _target,
+        [_id+"-target-destroyed",!_mustDestroy || {!alive _plannedTargetObject},
+            str [_mustDestroy,alive _plannedTargetObject,damage _plannedTargetObject,
+                getAllHitPointsDamage _plannedTargetObject,typeOf _plannedTargetObject,
                 _weaponHits,_releaseResults]] call _recordCheck;
         [_id+"-visible-countermeasures",_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0] >= 2,
             str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveFlares",0],_aircraft getVariable ["Waldo_Cortex_CountermeasureLastRequest",[]]]] call _recordCheck;

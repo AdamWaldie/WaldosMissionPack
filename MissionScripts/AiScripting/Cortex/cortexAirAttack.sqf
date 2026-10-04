@@ -12,11 +12,12 @@
  * Cortex then asks that operator to release the selected weapon only after live range, route,
  * ammunition and seeker checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
- * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. On
- * fixed-wing ATTACK entry that same waypoint becomes a native DESTROY order attached to the real
- * hostile. The ingress leg therefore establishes the chosen bearing and terrain-safe approach,
- * while Arma's pilot and weapon FSM solve the final dive, turn, muzzle, pylon and release without a
- * scheduler repeatedly steering or pressing the trigger. Rotorcraft and independently aimed
+ * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
+ * surface attack keeps its target-crossing MOVE leg and gives the pilot one native fire order; the
+ * audit showed that converting this leg to DESTROY discarded the selected attack angle and caused
+ * steep dives, overflight and timeouts. An air intercept uses a target-attached DESTROY order so it
+ * can lead a moving aircraft. Arma's pilot and weapon FSM still solve the muzzle, pylon and release
+ * without a scheduler repeatedly steering or pressing the trigger. Rotorcraft and independently aimed
  * turrets retain the bounded native fire request because their abeam and standoff attacks do not
  * use a fixed-wing dive. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
@@ -27,7 +28,7 @@
  * Progress is measured toward
  * that leg, so broad turns are accepted while hovering, local circles and repeated replans cannot keep
  * an attack alive. Non-progress in any phase aborts rather than fabricating a transition; a validly
- * released attack exits after a bounded weapon-class delivery: one bomb, a short guided/rocket
+ * released attack exits after a bounded weapon-class delivery: a paired bomb ripple, a short guided/rocket
  * salvo or a gun burst. It never waits indefinitely for a single engine fire callback.
  * A lack of travel, solution or fire aborts the run; elapsed time alone
  * never completes it. Zeus priority, locality loss, explicit exclusions, runtime disablement or a
@@ -427,13 +428,13 @@ if (_commandedStage != _stage) then {
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
     _ownedWaypoint setWaypointPosition [_destination,0];
-    // Ingress establishes the planned bearing and terrain-safe corridor. Once a fixed-wing aircraft
-    // physically reaches ATTACK, attach this one lease-owned order to the real hostile and let the
-    // native pilot/weapon FSM solve the terminal manoeuvre and release. Repeated scripted trigger
-    // requests on a MOVE line produced accepted-but-missing rounds, late cannon fire and needless
-    // safety aborts. The order remains finite and is detached on egress or any Zeus handover.
-    private _nativePlaneTargeting=_isPlane && {_stage == "ATTACK"} && {!isNull _target};
-    if (_nativePlaneTargeting) then {
+    // Surface delivery retains the planned target-crossing line. Converting that MOVE leg into a
+    // DESTROY order made Arma discard the selected slope and attempt a new steep dive. A moving air
+    // contact still needs a target-attached DESTROY order; its lead point is refreshed above.
+    private _nativeAirIntercept=_isPlane && {_stage == "ATTACK"}
+        && {_job getOrDefault ["airToAir",false]} && {!isNull _target};
+    if (_nativeAirIntercept) then {
+        _ownedWaypoint setWaypointPosition [getPosATL _target,0];
         _ownedWaypoint setWaypointType "DESTROY";
         _ownedWaypoint waypointAttachVehicle _target;
     } else {
@@ -480,6 +481,9 @@ if (_stage == "ATTACK") then {
         _aircraft doTarget _fireTarget;
         _operator doWatch _fireTarget;
         _operator doTarget _fireTarget;
+        // One native fire order activates the retained pilot/gunner weapon FSM. The scheduler does
+        // not repeat it and never supplies a fixed firing vector or corrects a projectile.
+        if (_isPlane) then {_operator doFire _fireTarget};
         _job set ["targetCommanded",true];
     };
     private _range=_aircraft distance _target;
@@ -577,10 +581,10 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // Native fixed-wing delivery owns the terminal manoeuvre and release through the attached
-    // DESTROY order. Do not compete with that FSM by injecting fireAtTarget requests from the
-    // scheduler. Rotorcraft keep this bounded request path because a lateral or standoff turret can
-    // attack without forcing the pilot to turn the airframe onto the hostile.
+    // Native fixed-wing delivery owns release through the one doFire order while the authored MOVE
+    // leg preserves the chosen attack slope. Do not compete with that FSM by injecting fireAtTarget
+    // requests from the scheduler. Rotorcraft keep this bounded request path because a lateral or
+    // standoff turret can attack without forcing the pilot to turn the airframe onto the hostile.
     private _nativePlaneDelivery=_isPlane && {!_airContact};
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
@@ -712,9 +716,10 @@ switch _stage do {
         private _attackDwell=serverTime-(_job getOrDefault ["attackStartedAt",serverTime]);
         private _weaponClass=_job getOrDefault ["selectedWeaponClass",""];
         private _desiredShots=switch _weaponClass do {
-            // A short cannon burst damaged the live MRAP but left it operational. Forty requested
-            // rounds remains a finite one-pass burst while tolerating natural dispersion and armour.
-            case "GUN": {40};
+            // The Comanche emits about ninety rounds from one accepted cannon burst. That left a
+            // soft military truck mobile in the live audit, so allow a second bounded burst before
+            // egress. Dispersion and damage remain wholly native; no hit or kill is fabricated.
+            case "GUN": {120};
             case "ROCKET": {8};
             // One valid seeker launch can still be defeated or near-miss. Keep this a finite salvo.
             case "GUIDED": {3};
