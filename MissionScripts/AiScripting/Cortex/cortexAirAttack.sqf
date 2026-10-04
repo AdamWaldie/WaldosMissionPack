@@ -607,15 +607,18 @@ if (_stage == "ATTACK") then {
     private _verticalSpeed=velocity _aircraft select 2;
     private _fallTime=(_verticalSpeed+sqrt ((_verticalSpeed*_verticalSpeed)+(2*9.81*_heightAGL)))/9.81;
     private _bombReleaseDistance=(vectorMagnitude _horizontalVelocity)*_fallTime;
-    private _predictedBombImpact=(getPosATL _aircraft) vectorAdd (_horizontalVelocity vectorMultiply _fallTime);
+    private _predictedBombImpact=(getPosASL _aircraft) vectorAdd (_horizontalVelocity vectorMultiply _fallTime);
     if (_bomb) then {
-        private _integrationPosition=getPosATL _aircraft;
+        // ASL is required for a ballistic path between terrain cells. ATL zero follows the local
+        // ground and would make a valley-to-ridge or ridge-to-valley release solve against a false
+        // vertical plane even though the horizontal coordinates looked correct.
+        private _integrationPosition=getPosASL _aircraft;
         private _integrationVelocity=velocity _aircraft;
         if (_muzzleSpeed > 0) then {
             _integrationVelocity=_integrationVelocity vectorAdd ((vectorDir _aircraft) vectorMultiply _muzzleSpeed);
         };
         private _airFriction=getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "airFriction");
-        private _targetAltitude=getPosATL _target select 2;
+        private _targetAltitude=aimPos _target select 2;
         private _integrationTime=0;
         private _integrationStep=0.2;
         for "_integrationIndex" from 0 to 119 do {
@@ -630,9 +633,9 @@ if (_stage == "ATTACK") then {
         };
         _fallTime=_integrationTime;
         _predictedBombImpact=_integrationPosition;
-        _bombReleaseDistance=(getPosATL _aircraft) distance2D _predictedBombImpact;
+        _bombReleaseDistance=(getPosASL _aircraft) distance2D _predictedBombImpact;
     };
-    private _bombImpactError=_predictedBombImpact distance2D getPosATL _target;
+    private _bombImpactError=_predictedBombImpact distance2D getPosASL _target;
     private _bombWindow=_bombImpactError <= 55 && {_forwardAlignment >= 0.92};
     // A nose-mounted weapon needs forward closure. A retained lateral turret is specifically
     // selected to fire abeam, so forcing the helicopter nose onto the target defeats that pattern.
