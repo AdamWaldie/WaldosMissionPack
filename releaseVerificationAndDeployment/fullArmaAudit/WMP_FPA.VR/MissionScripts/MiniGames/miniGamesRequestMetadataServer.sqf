@@ -8,6 +8,7 @@
  * Return Value: Nothing; targeted metadata response.
  * Current callers: MiniGamesInitPlayerLocal after the public registry becomes non-empty.
  * Example: [player] remoteExecCall ["Waldo_fnc_MiniGamesRequestMetadataServer", 2];
+ * Result: The server sends current table metadata to the requesting player's owner.
  */
 
 params [["_actor", objNull, [objNull]]];

@@ -1,14 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Progress construction jobs.
+ * Advance active construction timers and complete finished sites.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; called by the server Economy tick.
+ * Repeat/JIP: Each tick computes elapsed time from the stored timestamp and
+ * replaces runtime records; completion removes its site and publishes results.
+ * Current Callers: EconomySystems/economyInit.sqf.
  *
  * Arguments:
  * None
  *
  * Return Value:
- * Any - see function body
+ * Nothing.
+ * Result: Advances valid jobs, removes expired site objects and keeps only
+ * unfinished runtime records for the next tick.
  *
  * Example:
  * [] call Waldo_fnc_EcoBuild_progressConstructionJobs;

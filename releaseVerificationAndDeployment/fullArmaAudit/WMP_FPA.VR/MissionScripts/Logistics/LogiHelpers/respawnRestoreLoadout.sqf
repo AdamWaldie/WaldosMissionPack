@@ -26,6 +26,10 @@
  * [_unit, _oldUnit, "RESPAWN_EH"] call Waldo_fnc_RespawnRestoreLoadout;
  *
  * Current callers: initPlayerLocal.sqf's two independent respawn triggers (see its own comments).
+ * Locality and authority: Runs on the respawned player's interface client and applies that
+ * player's chosen saved loadout. Repeat guards avoid competing restoration; no other player
+ * or JIP client replays the private loadout action.
+ * Result: The respawned unit receives the appropriate saved or side-base equipment.
  */
 params [["_unit", objNull, [objNull]], ["_oldUnit", objNull, [objNull]], ["_triggerSource", "UNKNOWN", [""]], ["_sideRetried", false, [false]]];
 if (isNull _unit) exitWith {diag_log "[WMP LOADOUT] RespawnRestoreLoadout skipped: called with a null unit."; false};

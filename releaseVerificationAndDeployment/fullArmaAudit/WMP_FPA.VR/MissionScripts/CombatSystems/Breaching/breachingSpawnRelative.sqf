@@ -11,6 +11,11 @@
  *
  * Example:
  * [_wall, ["Land_BagFence_Long_F", [0,0,0], [0,0,90], "CAN_COLLIDE", "ATL", 1]] call Waldo_fnc_BreachingSpawnRelative;
+ * Locality and authority: Server spawns a configured replacement relative to the breached
+ * object. Repeating the helper creates another object; server breach state prevents a second
+ * replacement for the same processed target. The spawned object replicates to JIP clients.
+ * Current caller: Waldo_fnc_BreachingServerHandle.
+ * Result: A replacement prop is placed at the configured offset, or objNull is returned.
  */
 
 params ["_original", "_specification"];

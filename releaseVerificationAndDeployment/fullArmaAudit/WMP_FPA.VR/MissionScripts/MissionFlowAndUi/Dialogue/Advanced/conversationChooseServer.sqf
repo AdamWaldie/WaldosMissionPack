@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: first valid selection wins and later duplicates are rejected.
  * Arguments: speaker, caller, session ID, choice ID. Return Value: BOOL.
  * Current caller: Advanced response panel. Example: internal UI remote execution only.
+ * Result: The first valid response advances the current server-owned conversation.
  */
 params [["_speaker", objNull, [objNull]], ["_caller", objNull, [objNull]], ["_sessionId", "", [""]], ["_choiceId", "", [""]]];
 if (!isServer || {isNull _speaker} || {isNull _caller} || {_choiceId == ""}) exitWith {false};

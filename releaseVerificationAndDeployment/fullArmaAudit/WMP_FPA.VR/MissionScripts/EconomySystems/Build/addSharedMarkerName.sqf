@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Add shared marker name.
+ * Records an Economy-created marker name in the published cleanup registry.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_markerName] call Waldo_fnc_EcoBuild_addSharedMarkerName;
+ * Locality/Authority: Economy authority only; updates public marker registry.
+ * Repeat/JIP Behaviour: Duplicate names are ignored; JIP receives current registry.
+ * Current Callers: Building and detector marker creation.
+ * Result: Marker visibility and later cleanup can find the registered name.
  */
 
         params [["_markerName", ""]];

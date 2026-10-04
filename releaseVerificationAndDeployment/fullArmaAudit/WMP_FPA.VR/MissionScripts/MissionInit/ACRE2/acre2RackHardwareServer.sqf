@@ -17,6 +17,7 @@
  * Current caller: Waldo_fnc_ACRE2RackClientApply.
  * Example: [_vehicle, _token, _rackId, "MOUNT_RADIO", "ACRE_PRC152"] remoteExecCall
  *          ["Waldo_fnc_ACRE2RackHardwareServer", 2];
+ * Result: ACRE receives the requested rack hardware operation for the validated vehicle and ID.
  */
 params [
     ["_vehicle", objNull, [objNull]], ["_token", "", [""]], ["_rackId", "", [""]],
@@ -32,4 +33,3 @@ switch (toUpperANSI _operation) do {
     case "MOUNT_RADIO": {if (_radio == "") then {false} else {[_rackId, _radio] call acre_api_fnc_mountRackRadio}};
     default {false};
 }
-

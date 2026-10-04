@@ -6,6 +6,7 @@
  * Arguments: id STRING, nodes ARRAY, start node STRING (default first), onComplete CODE, onCancel CODE.
  * Return Value: BOOL. Current caller: mission-maker Eden init, triggers or scripts.
  * Example: ["GREETING", [["START", ["Hello."], [["Goodbye", ""]]]]] call Waldo_fnc_ConversationCreate;
+ * Result: A valid node definition becomes available under the supplied conversation ID.
  */
 params [["_id", "", [""]], ["_rows", [], [[]]], ["_startNode", "", [""]], ["_onComplete", {}, [{}]], ["_onCancel", {}, [{}]]];
 if (!isServer || {_id == ""} || {count _rows == 0}) exitWith {false};

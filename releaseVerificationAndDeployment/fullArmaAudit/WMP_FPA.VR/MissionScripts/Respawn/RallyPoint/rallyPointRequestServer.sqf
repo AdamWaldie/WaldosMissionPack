@@ -6,6 +6,10 @@
  * Player requests must originate from the owner of the supplied actor. Deployment rejects water,
  * steep ground, nearby enemies, insufficient group strength and blocked object/respawn positions.
  * Regroup and respawn never fall back to the rally object's centre.
+ * Locality and authority: Server validates the requesting player owner and owns rally objects,
+ * cooldowns and respawn handles. A regroup move runs on the player's current owner.
+ * Repeat/JIP: Each operation is revalidated against live state. Public group state is visible
+ * to joiners; a request is not replayed.
  *
  * Arguments:
  * 0: actor <OBJECT> - requesting player unit.
@@ -17,6 +21,8 @@
  * [player, "DEPLOY"] remoteExecCall ["Waldo_fnc_RallyPointRequestServer", 2];
  *
  * Current callers: RallyPointSetupLocal self-actions and hold-action callbacks.
+ * Result: A valid squad rally is deployed, removed or used for regroup; rejected requests do
+ * not change the current rally.
  */
 params [["_actor", objNull, [objNull]], ["_operation", "", [""]]];
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_RallyPointRequestServer", 2]; false};

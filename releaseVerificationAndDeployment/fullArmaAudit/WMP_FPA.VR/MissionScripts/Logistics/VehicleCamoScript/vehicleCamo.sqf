@@ -1,45 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
  * Concept credit: Val's mission vehicle-camouflage interaction.
- * Purpose: Sets up synchronized vehicle-camouflage props, concealment and removal actions.
- * Locality / Authority: Called from mission object init; server owns shared camo state and
- * prop visibility while interface clients perform ACE interaction/progress work.
- * Repeat / JIP: Published state is visible to joining clients; action setup follows object init.
- * Arguments: target <OBJECT> - vehicle carrying synchronized camo props.
- * Return Value: Nothing. Current caller: mission-maker Eden object init.
+ * Purpose: Add ACE deploy/remove actions for props synchronized to the nearest Game Logic.
+ * Deployment changes the activating player's group to civilian until a reveal path runs.
+ * Locality/authority: Eden Init calls this on server and interface clients. The server attaches
+ * and hides props and publishes initial state. Clients install actions; completion callbacks
+ * publish state and request server-side visibility changes without separate requester validation.
+ * Repeat/JIP: Eden Init covers joining clients. There is no duplicate-action guard, explicit
+ * runtime-object JIP replay or tracked cleanup for all spawned concealment workers.
+ * Arguments:
+ * 0: target <OBJECT> (required) - existing vehicle near the intended synchronized Game Logic.
+ * Return Value: No documented value from the setup call.
+ * Current caller: mission-maker Eden vehicle Init fields.
  * Example: [this] call Waldo_fnc_VehicleCamoSetup;
-
-Vehicle Camo Script
-
-A script which allows for the creation of "camo" objects to assist in hiding of a vehicle in ambush. The script also accounts for limited dismounted movement around the vehicle, in concealment (civ).
-
-If the Player:
-- Is spotted
-- Fires the vehicls weapons
-- Moves more than 40 meters from the vehicle
-- Takes damage (Player or vehicle)
-
-The player is returned to their side (potential game restricted delay of up to 30 seconds) however the camo objects will remain until the vehicle moves, or the camo is removed by the indicated ace action.
-
-Designed for vehicles.
-
-Setting Up in Eden;
-    - Place the vehicle or object that you want to have the respawn deployable from, and provide it a variable name
-    - Place a Game Logic down as close as possible to the vehicle. This can be found near the same menu as Modules.
-    - Place any objects you wish to appear when the camo is deployed.
-    - If you are using a vehicle as your primary object and any of your deployable objects should be resting on the floor, then raise them about a foot, to allow for the drop of the vehicle's suspension once the game has initialised.
-    - Select all the objects that will be deployable, right-click and synchronise them to the Game Logic.
-    - In the init of the vehicle, paste the example below, and alter it to suit the needs you have.
-
-Parameters:
-_target - Vehicle or Object to deploy camo from.
-
-
-Example:
-
-[this] call Waldo_fnc_VehicleCamoSetup;
-
-*/
+ * Result: the vehicle gets ACE camo actions when the ground, speed and foliage conditions hold.
+ * Warning: reveal/removal paths call removeAllEventHandlers for several vehicle/unit event types.
+ * Other mission features using those event handlers can be affected.
+ */
 
 params ["_target"];
 //Catch all for any not using ACE to prevent bad things

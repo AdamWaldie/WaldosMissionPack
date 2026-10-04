@@ -4,8 +4,9 @@
  * electronic warfare, environmental hazards, air operations, transport, logistics, mission flow,
  * mission tools and interface/QA are separated so curators can find a control by purpose.
  *
- * Locality and repeat/JIP behaviour:
- * Player-interface only. Every curator client (including JIP) registers its own local palette after
+ * Locality and authority: Player-interface only; this file registers ZEN palette entries and
+ * leaves each selected module's mutation to its documented server or object owner.
+ * Repeat/JIP: Every curator client (including JIP) registers its own local palette after
  * ZEN is available. A missionNamespace guard prevents duplicate registration on the same machine.
  * Module effects retain their documented server/object-owner authority; this file only creates UI.
  *
@@ -14,6 +15,7 @@
  *
  * Example: [] call Waldo_fnc_ZenInitModules;
  * Current caller: initPlayerLocal.sqf after local player and ZEN readiness.
+ * Result: The local curator palette contains WMP's task-grouped modules once.
 */
 
 // Registration creates local curator UI entries; servers and headless clients have no consumer.
@@ -53,6 +55,22 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\nato\o_antiair.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Vehicle Customisation", "Vehicle Customisation - Editor",
+    {
+        params ["_modulePos", ["_objectPos", objNull]];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenVehicleCustomizationEditor;
+    },
+    "\A3\ui_f\data\igui\cfg\actions\reammo_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Vehicle Customisation", "Vehicle Customisation - Inspect",
+    {
+        params ["_modulePos", ["_objectPos", objNull]];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenVehicleCustomizationInspect;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Mission Tools", "Scale Object",
     {
         params ["_modulePos", ["_objectPos", objNull]];
@@ -72,9 +90,9 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
         _icon
     ] call zen_custom_modules_fnc_register;
 } forEach [
-    ["WMP Mission Tools", "Persistence - Control", "PERSISTENCE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
-    ["WMP Mission Tools", "Persistence - Register Object", "PERSISTENCE_OBJECT", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
-    ["WMP Mission Tools", "Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
+    ["WMP Persistence", "Persistence - Control", "PERSISTENCE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
+    ["WMP Persistence", "Persistence - Register Object", "PERSISTENCE_OBJECT", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
+    ["WMP Persistence", "Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
     ["WMP Logistics", "Field Resupply - Register Hub", "FIELD_RESUPPLY_HUB", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["WMP Logistics", "Field Resupply - Assign Carrier", "FIELD_RESUPPLY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
     ["WMP Logistics", "Field Resupply - Grant Crates", "FIELD_RESUPPLY_GRANT", "\A3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"],
@@ -95,6 +113,11 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
 ["WMP Mission Tools", "Create Custom 3D Marker",
     {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenCreate3DMarker;},
     "\A3\ui_f\data\map\markers\military\dot_CA.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Tools", "Remove Custom 3D Marker",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenRemove3DMarker;},
+    "\A3\ui_f\data\map\markers\military\warning_CA.paa"
 ] call zen_custom_modules_fnc_register;
 
 ["WMP Mission Tools", "Add WMP Field Equipment Interaction",
@@ -162,6 +185,50 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\igui\cfg\simpletasks\types\Radio_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Mission Flow", "Dialogue - Apply Simple Archetype",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenDialogueSimple;},
+    "\A3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Dialogue - Assign Simple Lines",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenDialogueSpecific;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Dialogue - Clear",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenDialogueClear;},
+    "\A3\ui_f\data\IGUI\Cfg\Actions\ico_off_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Conversation: Assign",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAssign;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+{
+    _x params ["_category", "_label", "_feature", "_icon"];
+    private _handler = compile format [
+        "params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_ZenServiceLogisticsModule;",
+        _feature
+    ];
+    [_category, _label, _handler, _icon] call zen_custom_modules_fnc_register;
+} forEach [
+    ["WMP Mission Flow", "Base Services - Configure Node", "BASE", "\a3\ui_f\data\igui\cfg\simpletasks\types\use_ca.paa"],
+    ["WMP Logistics", "Quartermaster - Set Up Object", "QUARTERMASTER", "\a3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
+    ["WMP Logistics", "Supply Transfers - Register or Inspect", "SUPPLY", "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"],
+    ["WMP Logistics", "Physical Cargo - Eligibility", "PHYSICAL", "\a3\ui_f\data\igui\cfg\simpletasks\types\box_ca.paa"],
+    ["WMP Logistics", "ACE Cargo - Set Object Handling", "ACE_CARGO", "\a3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"]
+];
+
+["WMP Logistics", "ACE Vehicle Services - Configure", {
+    _this call Waldo_fnc_ZenVehicleServicesModule;
+}, "\a3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa"] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Conversation: Author",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAuthor;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\documents_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Logistics", "Medical: Create Field Hospital Crate",
     {
         diag_log format ["[WMP ZEN] invoked module=Field Hospital Crate curator=%1 payload=%2", name player, _this];
@@ -179,15 +246,6 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
         [] call Waldo_fnc_FortifyBudgetModule;
     },
     "\z\ACE\addons\fortify\ui\hammer_ca.paa"
-] call zen_custom_modules_fnc_register;
-
-["WMP AI & Combat", "Convoy - Create Moving Group",
-    {
-        diag_log format ["[WMP ZEN] invoked module=Spawn AI Convoy curator=%1 payload=%2", name player, _this];
-        params ["_modulePos", "_objectPos"];
-        [_modulePos] call Waldo_fnc_ZenConvoyModule;
-    },
-    "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
 ["WMP Logistics", "Respawn: Create Loadout Save Point",
@@ -277,9 +335,15 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 47];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];
+diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 47], clientOwner];
+
+// Warm the Vehicle Weapon Loadout pack-wide catalog in the background now, well before a curator is
+// likely to actually open "Vehicle Weapon Loadout - Configure" - scanning every CfgVehicles class is
+// real work on a large modset, so this trades a background cost paid once at mission start for an
+// instant dialog open later instead of blocking the dialog itself on the scan.
+[] spawn {[] call Waldo_fnc_VehicleWeaponLoadoutCatalogBuild;};
 
 // Hazard controls are meaningful only when the mission enabled the underlying runtime. Shared
 // config can finish after ZEN registration, so add these two entries asynchronously once the
@@ -295,7 +359,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         private _handler = compile format ["params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_FeatureRuntimeZen;", _feature];
         ["WMP Environment", _name, _handler, "\A3\ui_f\data\map\markers\military\warning_CA.paa"] call zen_custom_modules_fnc_register;
     } forEach [["Hazard - Create", "HAZARD_CREATE"], ["Hazard - Remove Nearest", "HAZARD_REMOVE"]];
-    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 2];
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 47]) + 2];
     diag_log format ["[WMP ZEN] Registered 2 enabled hazard modules on clientOwner=%1.", clientOwner];
 };
 
@@ -337,9 +401,9 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"
     ] call zen_custom_modules_fnc_register;
 
-    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 3];
-    diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 48]];
-    if (missionNamespace getVariable ["Waldo_Headless_Debug", false] && {!isNull getAssignedCuratorLogic player}) then {
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 47]) + 3];
+    diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 50]];
+    if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {
         [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
     };
 };

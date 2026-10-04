@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Are purchase requirements met for side.
+ * Checks whether a side has completed an asset's Research and Build prerequisites.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -9,10 +9,15 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true only when every prerequisite is satisfied.
  *
  * Example:
  * [_entry, _sideKey] call Waldo_fnc_EcoBuy_arePurchaseRequirementsMetForSide;
+ * Locality/Authority: Any machine can inspect published prerequisite state; the server
+ * repeats this check before purchase.
+ * Repeat/JIP Behaviour: Pure read; JIP sees current public state.
+ * Current Callers: Purchase status and server purchase validation.
+ * Result: Returns false at the first unmet named requirement.
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];

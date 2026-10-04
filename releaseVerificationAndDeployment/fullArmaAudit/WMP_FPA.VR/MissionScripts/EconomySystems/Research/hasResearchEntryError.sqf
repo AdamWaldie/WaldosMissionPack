@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Has research entry error.
+ * Validates a technology row against its required fields, links and catalog.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,14 @@
  * 1: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when the row has a validation error.
  *
  * Example:
  * [_entry, _catalog] call Waldo_fnc_EcoResearch_hasResearchEntryError;
+ * Locality/Authority: Any machine; validates data without mutating it.
+ * Repeat/JIP Behaviour: Pure validation; no JIP effects.
+ * Current Callers: Research status, catalog filtering and server start validation.
+ * Result: Rejects malformed or unresolved technology definitions.
  */
 
         params [["_entry", []], ["_catalog", []]];

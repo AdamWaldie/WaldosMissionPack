@@ -1,14 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Show building info.
+ * Show a readable summary of one building's owner, status and effects.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Interface client; reads the local catalog and published object
+ * variables, then uses the WMP notification UI.
+ * Repeat/JIP: Read-only and safe to open again; JIP requires the catalog and
+ * building state to have arrived before this card can be complete.
+ * Current Callers: No in-pack caller; available to mission-side building UI.
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
  *
  * Return Value:
  * Nothing
+ * Result: Shows a card for a known definition; unknown or deleted buildings
+ * produce no card.
  *
  * Example:
  * [_building] call Waldo_fnc_EcoBuild_showBuildingInfo;

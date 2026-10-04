@@ -5,11 +5,15 @@
  * Remote callers require an assigned curator. Groups with a leaked object or respawn handle are
  * cleaned even when their active flag is already false. The authoritative token is passed to the
  * single-group cleanup function so obsolete client calls cannot remove newer state.
+ * Locality and authority: Server-only cleanup; remote callers need an assigned curator.
+ * Repeat/JIP: Scans active and stale group state on each call; later joiners see cleared public
+ * state, not a replayed removal request.
  *
  * Arguments: None.
  * Return Value: Boolean - true when cleanup was scheduled; otherwise false.
  * Example: [] call Waldo_fnc_RallyPointRemoveAllServer;
- * Current callers: RallyPointStop and the Rally ZEN runtime control.
+ * Current caller: the Rally ZEN runtime control through Waldo_fnc_FeatureRuntimeApply.
+ * Result: Every active or stale rally object and respawn handle is scheduled for cleanup.
  */
 if (!isServer) exitWith {[] remoteExecCall ["Waldo_fnc_RallyPointRemoveAllServer", 2]; false};
 private _authorized = true;

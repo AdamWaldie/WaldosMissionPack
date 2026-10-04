@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies one ordered server runtime-setting snapshot on a joining client or headless client.
+ * Locality and authority: Receives only server remote execution; each receiving machine applies
+ * the server-owned names locally before dependent client features activate.
+ * Repeat/JIP: A complete snapshot sets the local readiness sentinel. Later broadcasts can update
+ * individual settings without discarding that initial readiness.
  *
  * Arguments:
  * 0: name/value pairs <ARRAY>
@@ -9,6 +13,7 @@
  *
  * Example: [[["Waldo_UI_Theme", "WW2"]], true] call Waldo_fnc_FeatureRuntimeReceiveState;
  * Current callers: server JIP snapshot response and live runtime-setting broadcasts.
+ * Result: The receiving machine has the new settings and, for a complete snapshot, is ready.
  */
 
 params [["_snapshot", [], [[]]], ["_complete", false, [false]]];

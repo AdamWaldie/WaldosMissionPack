@@ -6,6 +6,10 @@
  * Aliases and conditional defaults preserve the few settings that depend on another configured
  * value or an optional CfgPatches dependency. Fallbacks preserve an older source-variable value
  * when present without making the pure-data files executable. This function starts no feature.
+ * Locality and authority: SHARED runs on each machine, SERVER only on the server, and PLAYER_LOCAL
+ * only on interface clients. The server publishes only settings marked for publication.
+ * Repeat/JIP: Existing values win on every pass, so a late join cannot replace received server
+ * settings with defaults. Each scope sets a local readiness flag after validation.
  *
  * Arguments:
  * 0: scope <STRING> - SHARED, SERVER or PLAYER_LOCAL.
@@ -17,6 +21,7 @@
  * ["SERVER"] call Waldo_fnc_LoadFeatureConfigs;
  *
  * Current callers: init.sqf, initServer.sqf and initPlayerLocal.sqf at their original config points.
+ * Result: Only the requested scope's guarded config values are present; invalid rows are logged.
  */
 params [['_scope', '', ['']]];
 _scope = toUpperANSI _scope;

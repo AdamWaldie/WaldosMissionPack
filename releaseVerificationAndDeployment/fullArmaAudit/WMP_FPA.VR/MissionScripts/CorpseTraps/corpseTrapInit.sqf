@@ -1,9 +1,14 @@
 /*
- * Installs the optional ACE corpse-trap interaction and local inventory listener.
- * Safe to call more than once and on every machine.
- *
- * Return Value:
- * True when installed or intentionally skipped <BOOL>
+ * Author: WaldoTheWarfighter
+ * Installs the ACE corpse-trap interaction and local inventory-open listener.
+ * Locality and authority: Interface-client only; the server validates planting and triggering.
+ * Repeat/JIP: An installed flag prevents duplicate class actions and respawn handlers. Joining
+ * clients run their own setup; public corpse trap state controls each action's visibility.
+ * Arguments: None.
+ * Return Value: <BOOL> - true after setup or on non-interface machines; false without ACE.
+ * Current caller: init.sqf when Waldo_CorpseTraps_Enable is true; non-interface machines skip.
+ * Example: [] call Waldo_fnc_CorpseTrapInit;
+ * Result: Eligible dead units gain a Rig Corpse ACE action and trapped inventory openings trigger.
  */
 if (!hasInterface) exitWith {true};
 if (missionNamespace getVariable ["Waldo_CorpseTrap_Installed", false]) exitWith {true};

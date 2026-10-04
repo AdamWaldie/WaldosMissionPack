@@ -1,13 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * This module function spawn a supply crate, based on player weapon magazines.
+ * Opens the curator's supply-crate dialog. The server spawns the chosen crate from the configured
+ * side's mission equipment pool after the curator submits its size and contents options.
+ * Locality and authority: Curator interface opens the dialog; Waldo_fnc_ZenSpawnCrateServer
+ * validates the request and creates the crate on the server.
+ * Repeat/JIP: Every accepted submission creates a new crate; its cargo and handling state are
+ * registered for joining clients by the server spawn path.
  *
  * Arguments:
  * 0: modulePos <POSITION>
  * 1: objectPos <OBJECT>
  *
  * Example:
- * [getPos logic, this] call Waldo_fnc_CreateSupplyCrate;
+ * [_modulePos, _moduleObject] call Waldo_fnc_ZenSupplySpawner;
+ * Return Value: Nothing useful; the dialog opens asynchronously.
+ * Current caller: ZEN "Waldos Supply Crate" module registration.
+ * Result: The curator chooses size, content and side before the server spawns the crate.
  *
  * Public: No
  */

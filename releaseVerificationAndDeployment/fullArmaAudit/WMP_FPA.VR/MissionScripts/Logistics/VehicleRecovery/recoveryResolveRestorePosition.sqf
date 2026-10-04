@@ -16,6 +16,9 @@
  * Example:
  * [_workshop, _class, _footprint, [_package, _retained]] call Waldo_fnc_RecoveryResolveRestorePosition;
  * Current caller: RecoveryRestoreServer before an existing or replacement vehicle is restored.
+ * Locality and authority: Read-only placement search on the server during restore. Repeated
+ * searches can reflect new blockers and need no JIP state publication.
+ * Result: Returns a complete clear ATL footprint, or [] when no safe spot fits.
  */
 
 params [

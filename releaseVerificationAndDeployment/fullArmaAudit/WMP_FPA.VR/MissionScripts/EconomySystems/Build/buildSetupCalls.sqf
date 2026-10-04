@@ -3,11 +3,16 @@
  * Converts the economy state authored through Construction Zeus modules into public setup calls.
  *
  * Arguments:
- * 0: include build definitions
- * 1: include placed construction sources and completed buildings
+ * 0: include build definitions <BOOL>, default true.
+ * 1: include placed construction sources and completed buildings <BOOL>, default true.
  *
  * Return Value:
  * ARRAY of STRING - ordered SQF statements.
+ * Locality/Authority: Read-only curator export; generated calls belong in authoritative setup.
+ * Repeat/JIP Behaviour: Repeated export reads current published state without changing it.
+ * Current Callers: Economy unified setup-script exporter.
+ * Example: [true, true] call Waldo_fnc_EcoBuild_buildSetupCalls;
+ * Result: Returns catalog and placed-object setup statements in order.
  */
 params [
     ["_includeDefinitions", true, [false]],

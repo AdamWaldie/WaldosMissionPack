@@ -7,9 +7,12 @@
  * everyone immediately. JIP and respawning players re-apply the current state themselves
  * (see initPlayerLocal.sqf). The pack starts live by default; this function remains available to
  * Zeus and scripts throughout the mission, and the server's published state is authoritative.
+ * Locality and authority: any machine may request a change; the server publishes the transition
+ * and each interface client applies its own protection. Repeat calls update the state safely.
  *
  * Arguments:
  * 0: Enable <BOOL> (Optional, default: true) - true = activate safestart, false = go live
+ * 1: reason <STRING> (Optional, default: "MANUAL") - recorded transition reason.
  *
  * Return Value:
  * Nothing
@@ -17,6 +20,7 @@
  * Example:
  * [true] call Waldo_fnc_SafeStart;   // activate
  * [false] call Waldo_fnc_SafeStart;  // go live (admin overrule)
+ * Result: the server publishes the new state and all current/JIP clients follow it.
  * Current callers: initServer.sqf only when AutoStart=true, SafeStart ZEN controls and timers.
  */
 

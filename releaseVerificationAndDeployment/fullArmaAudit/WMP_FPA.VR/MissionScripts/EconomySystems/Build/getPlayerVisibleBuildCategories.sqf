@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get player visible build categories.
+ * Lists categories represented in the side-visible Construction catalog.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY of STRING> category names.
  *
  * Example:
  * [_sideKey] call Waldo_fnc_EcoBuild_getPlayerVisibleBuildCategories;
+ * Locality/Authority: Interface client; read-only catalog grouping.
+ * Repeat/JIP Behaviour: Repeat-safe; JIP uses current published catalog.
+ * Current Callers: No in-pack caller; available for custom Construction category pickers.
+ * Result: Returns each available category once.
  */
 
         params [["_sideKey", "NONE"]];

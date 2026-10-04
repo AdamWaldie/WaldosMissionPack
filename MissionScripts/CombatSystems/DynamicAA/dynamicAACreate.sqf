@@ -404,6 +404,8 @@ private _assignCrew = {
     // visible in Zeus as an Empty vehicle separated from its correctly sided crew, especially during
     // dedicated mission startup. Establish the same group/vehicle relationship Eden creates.
     _group addVehicle _vehicle;
+    _group setVariable ["Waldo_AI_ExternalControl", true, true];
+    _group setVariable ["Waldo_AI_PrecisionExclude", true, true];
     _groups pushBackUnique _group;
     if (_defence) then {
         // DynamicAACreate may still carry the curator's remoteExecutedOwner after a ZEN request.
@@ -430,6 +432,8 @@ private _spawnFailed = false;
         _vehicle setPosATL _position;
         _vehicle setDir _direction;
         _vehicle setVariable ["Waldo_DynamicAA_SystemId", _id, true];
+        _vehicle setVariable ["Waldo_AI_ExternalControl", true, true];
+        _vehicle setVariable ["Waldo_AI_PrecisionExclude", true, true];
         _objects pushBack _vehicle;
         if (_kind == "RADAR") then {
             _radars pushBack _vehicle;

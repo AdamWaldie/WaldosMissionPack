@@ -14,6 +14,7 @@
  * Current caller: Waldo_fnc_ACRE2RackClientApply.
  * Example: [_vehicle, _token, [true, 1, 1, [], _snapshot]] remoteExecCall
  *          ["Waldo_fnc_ACRE2RackClientResultServer", 2];
+ * Result: The accepted client result is stored for the waiting server rack worker.
  */
 params [
     ["_vehicle", objNull, [objNull]],
@@ -34,4 +35,3 @@ if !(
 ) exitWith {false};
 _vehicle setVariable ["Waldo_ACRE2_RackClientResult", _result];
 true
-

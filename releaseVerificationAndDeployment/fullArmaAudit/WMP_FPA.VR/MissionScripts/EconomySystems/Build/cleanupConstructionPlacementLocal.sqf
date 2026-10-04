@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup construction placement local.
+ * Clears the local player's Construction placement preview and input state.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoBuild_cleanupConstructionPlacementLocal;
+ * Locality/Authority: Interface client owning the player; does not change server jobs.
+ * Repeat/JIP Behaviour: Repeat-safe cleanup; no placement preview is replayed to JIP.
+ * Current Callers: Construction placement cancel, commit and local lifecycle cleanup.
+ * Result: The player no longer has a pending preview or placement handlers.
  */
 
         if (!hasInterface || {isNull player}) exitWith {};

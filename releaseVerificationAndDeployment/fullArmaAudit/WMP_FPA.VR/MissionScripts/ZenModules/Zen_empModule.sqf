@@ -3,6 +3,10 @@
  * Zeus module handler: prompts the curator for an EMP radius and duration, then detonates an
  * electromagnetic pulse at the module position (Waldo_fnc_EMP). The pulse is server-authoritative;
  * this just gathers the parameters and forwards them.
+ * Locality and authority: Curator interface collects the inputs; the server validates and starts
+ * the pulse at the chosen module position.
+ * Repeat/JIP: Each accepted request starts a distinct pulse; the module dialog stores no local
+ * handler or JIP state.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -10,6 +14,9 @@
  *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenEMP;
+ * Return Value: Nothing useful; the dialog submits asynchronously.
+ * Current caller: ZEN EMP module registration.
+ * Result: The curator can request an EMP with the selected radius and duration.
  *
  * Public: No
  */

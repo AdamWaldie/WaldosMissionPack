@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get active research remaining seconds.
+ * Estimates the remaining time for one side's active Research project.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -9,10 +9,14 @@
  * 1: _activeRow <ARRAY> - active row (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <NUMBER> whole seconds remaining; 0 when no project is active.
  *
  * Example:
  * [_sideKey, _activeRow] call Waldo_fnc_EcoResearch_getActiveResearchRemainingSeconds;
+ * Locality/Authority: Any machine; reads published progress and serverTime.
+ * Repeat/JIP Behaviour: Repeat-safe estimate from current state; no timer is created here.
+ * Current Callers: Research status display and action descriptions.
+ * Result: Accounts for the side's research-speed bonus when the active row has progress fields.
  */
 
         params [["_sideKey", "NONE"], ["_activeRow", []]];

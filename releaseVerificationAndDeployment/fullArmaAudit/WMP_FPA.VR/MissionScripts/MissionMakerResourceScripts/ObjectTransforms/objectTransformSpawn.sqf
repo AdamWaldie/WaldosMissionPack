@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Spawns and transforms one validated object on the server.
+ * Locality and authority: Server validates the class and remote curator identity, creates the
+ * object, then delegates its transform to Waldo_fnc_ObjectTransformSet. Clients only forward.
+ * Repeat/JIP: Every accepted call spawns another object. It has no deduplication key; the
+ * spawned network object is visible to joining clients.
  *
  * Waldo_fnc_ObjectTransformSet performs position and orientation before optional scaling. Runtime
  * scaling normally converts the new grounded decorative object to a Simple Object. Currently called
@@ -20,6 +24,9 @@
  *
  * Example:
  * private _prop = ["Land_CampingChair_V2_F", [100, 100, 0], [0, 0, 90], "ATL", 1.5, "CAN_COLLIDE", true] call Waldo_fnc_ObjectTransformSpawn;
+ * Result: The server returns the spawned/transformed Object or objNull. A client call returns
+ * objNull before the server creates anything.
+ * Current callers: Mission scripts using Waldo_fnc_ObjectTransformSpawn and the full-pack audit station.
  */
 
 params [["_class", "", [""]], ["_position", [], [[]]], ["_angles", [0, 0, 0], [[]]], ["_mode", "ATL", [""]], ["_scale", 1, [0]], ["_placement", "CAN_COLLIDE", [""]], ["_asSimple", true, [false]]];

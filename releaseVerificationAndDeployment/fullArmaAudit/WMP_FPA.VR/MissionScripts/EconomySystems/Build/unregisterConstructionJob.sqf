@@ -1,14 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
- * Unregister construction job.
+ * Remove a completed or cancelled construction job from the published list.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; the list setter broadcasts the result.
+ * Repeat/JIP: Removing an already-absent ID leaves the list unchanged;
+ * joining clients receive the current list.
+ * Current Callers: EcoBuild_progressConstructionJobs.
  *
  * Arguments:
  * 0: _jobId <STRING> - job id (optional, default: "")
  *
  * Return Value:
- * Any - see function body
+ * Nothing.
+ * Result: Stores the active-job list without the given job ID.
  *
  * Example:
  * [_jobId] call Waldo_fnc_EcoBuild_unregisterConstructionJob;

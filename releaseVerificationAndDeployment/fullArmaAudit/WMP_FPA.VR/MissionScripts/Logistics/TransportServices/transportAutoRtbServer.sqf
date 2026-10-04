@@ -1,10 +1,10 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
  * Starts the automatic return-to-base leg after a destination worker has confirmed that the
  * transport is settled and contains no human occupant in any driver, commander, turret, FFV or
  * cargo seat. This wrapper makes RTB acceptance observable instead of fire-and-forget.
  *
- * Locality, authority, repeat and JIP behaviour:
+ * Locality and authority:
  * Server only. Calls must be server-local or originate from server owner 2. The completed request
  * ID and DISEMBARKING state are checked again immediately before issuing RTB, so a late worker cannot
  * replace a newer destination or manual order. Waldo_fnc_TransportRequestServer performs the actual
@@ -22,6 +22,7 @@
  *
  * Example:
  * ["RAVEN_1", 12] remoteExecCall ["Waldo_fnc_TransportAutoRtbServer", 2];
+ * Result: The server routes the named service home after the accepted report.
  */
 
 params [

@@ -7,8 +7,10 @@
  * clearing a group's Waldo_Headless_ExcludeGroup flag, or after manually returning a group to the
  * server, when a mission maker doesn't want to wait for the next natural rebalance trigger.
  *
- * Server-authoritative; self-forwards to the server when called from a client, matching
+ * Locality and authority: Server-authoritative; self-forwards to the server when called from a client, matching
  * Waldo_fnc_Jammer and the other public registration-style APIs.
+ * Repeat/JIP: Each call makes one new eligibility pass; already queued/owned groups stay put.
+ * There is no client UI state to replay to JIP.
  *
  * Arguments: None.
  *
@@ -17,6 +19,8 @@
  *
  * Example:
  * [] call Waldo_fnc_HeadlessForceRebalance;
+ * Result: The server returns the number of groups newly queued. A client call returns 0
+ * immediately after forwarding and cannot read that later count synchronously.
  *
  * Current callers: Waldo_fnc_ZenHeadlessControl (the "Headless Client - Force Rebalance Now" module),
  * mission scripts.

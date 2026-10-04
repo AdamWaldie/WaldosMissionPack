@@ -15,6 +15,10 @@
  * Return Value: BOOL - true when a valid system was accepted.
  * Current callers: gunship server controller, orbit and service state machines.
  * Example: ["spectre_1", "ON_STATION", "Spectre is ready."] call Waldo_fnc_GunshipSetState;
+ * Repeat/JIP: An identical silent transition is a no-op. State publication gives joining
+ * clients the current status, while feedback is sent only to intended current players.
+ * Result: The system records and publishes the new status, releases invalid control and sends
+ * any intended controller/side notice.
  */
 
 params ["_id", "_status", ["_message", "", [""]]];

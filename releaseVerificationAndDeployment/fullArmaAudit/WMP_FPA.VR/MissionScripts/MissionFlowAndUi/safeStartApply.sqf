@@ -19,6 +19,10 @@
  * [true] call Waldo_fnc_SafeStartApply;
  *
  * Current callers: SafeStart state broadcast, JIP replay and player respawn restoration.
+ * Locality and authority: Applies server-published SafeStart state on the player's client,
+ * including ACE safety on the local weapon. Repeated revisioned application reconciles the
+ * same protection; JIP receives current state rather than past UI notices.
+ * Result: Local player protections match the current SafeStart state.
  */
 
 if !(hasInterface) exitWith {};

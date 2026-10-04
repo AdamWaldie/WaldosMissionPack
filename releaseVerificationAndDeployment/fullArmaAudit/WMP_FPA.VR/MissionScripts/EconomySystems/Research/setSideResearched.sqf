@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Set side researched.
+ * Normalizes and publishes the completed technology names for one side.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _sideKey <ANY> - side key
+ * 0: _sideKey <STRING> - WEST/EAST/GUER/CIV side key
  * 1: _rows <ARRAY> - rows (optional, default: [])
  *
  * Return Value:
@@ -13,6 +13,10 @@
  *
  * Example:
  * [_sideKey, _rows] call Waldo_fnc_EcoResearch_setSideResearched;
+ * Locality/Authority: Economy authority; this function publishes the normalized list.
+ * Repeat/JIP Behaviour: Replaces side completion state and broadcasts it for JIP clients.
+ * Current Callers: Research completion, authoring and import paths.
+ * Result: Duplicate or blank names are excluded from the stored side list.
  */
 
         params ["_sideKey", ["_rows", []]];

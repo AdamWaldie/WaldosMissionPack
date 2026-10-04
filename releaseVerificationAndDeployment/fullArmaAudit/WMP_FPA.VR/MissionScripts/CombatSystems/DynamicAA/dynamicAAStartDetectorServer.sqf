@@ -20,6 +20,7 @@
  *
  * Example:
  * ["AA_NORTH"] remoteExecCall ["Waldo_fnc_DynamicAAStartDetectorServer", 2];
+ * Result: A registered AA system starts one server detector loop when not already running.
  */
 
 params [["_id", "", [""]]];

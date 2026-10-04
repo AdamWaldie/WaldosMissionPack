@@ -3,7 +3,7 @@
  * Pins a crewed vehicle server-side against automatic headless-client migration. The vehicle and
  * crew group receive the common Waldo_ServerOwnedFeature classification, and a crew group already
  * moved by an external HC system is immediately returned to owner 2. For real-time,
- * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes, Dynamic AA, AI convoys)
+ * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes and Dynamic AA)
  * an external headless rebalance racing WMP's own in-progress setup script - or simply moving a group
  * WMP expects to keep driving every frame - can corrupt that system's state. Confirmed live: ACE's
  * own ace_headless module (a required-mod feature, entirely separate from and uncoordinated with
@@ -50,8 +50,8 @@
  * Result: _aircraft and every current crew group are excluded from both WMP's native headless
  * rebalance and ACE's ace_headless module.
  *
- * Current callers: Waldo_fnc_GunshipRegister, Waldo_fnc_ParadropBuildFlightRoute,
- * Waldo_fnc_DynamicAACreate, Waldo_fnc_SimpleAiConvoy.
+ * Current callers: Waldo_fnc_GunshipRegister, Waldo_fnc_ParadropBuildFlightRoute and
+ * Waldo_fnc_DynamicAACreate.
  */
 
 params [["_vehicle", objNull, [objNull]]];
@@ -67,7 +67,12 @@ private _groups = [];
     _x setVariable ["Waldo_Headless_ExcludeGroup", true, true];
     _x setVariable ["acex_headless_blacklist", true, true];
     {_x setVariable ["acex_headless_blacklist", true, true]} forEach units _x;
-    if (groupOwner _x != 2) then {[_x, 2] call Waldo_fnc_HeadlessMigrateGroup};
+    private _currentOwner = groupOwner _x;
+    // Eden groups can briefly report owner 0 while the mission is still constructing network
+    // entities. That is not a remote owner and setGroupOwner 2 is rejected during this window.
+    // The exclusion flags above already prevent either HC distributor from adopting the group, so
+    // only reclaim it when another real network machine currently owns it.
+    if (_currentOwner > 2) then {[_x, 2] call Waldo_fnc_HeadlessMigrateGroup};
 } forEach _groups;
 if (!isNil "ace_headless_fnc_blacklist") then {
     // Use ACE's public API as well as its documented variable. Owner 2 makes the server-only intent

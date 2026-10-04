@@ -10,6 +10,9 @@
  * Return Value: DISPLAY - created settings display, or displayNull without a gameplay display.
  * Current caller: WMP Options self-interaction and QA capture.
  * Example: [] call Waldo_fnc_UiNotificationSettingsOpenLocal;
+ * Locality and authority: Creates a dialog on the requesting interface client only.
+ * Reopening reads current local settings; nothing is published to JIP clients.
+ * Result: The player can inspect and change notification theme, scale and motion.
  */
 
 disableSerialization;
@@ -76,32 +79,36 @@ private _motionY = _panelY + _panelH * 0.38;
 private _motionCombo = [_motionY] call _makeCombo;
 private _currentMotion = toUpperANSI (missionNamespace getVariable ["Waldo_UI_NotificationMotionLocal", profileNamespace getVariable ["Waldo_UI_NotificationMotion", "NORMAL"]]);
 {private _i = _motionCombo lbAdd (_x select 1); _motionCombo lbSetData [_i, _x select 0]; if ((_x select 0) isEqualTo _currentMotion) then {_motionCombo lbSetCurSel _i;};} forEach [["NORMAL", "Normal"], ["REDUCED", "Reduced"], ["OFF", "Off"]];
-private _previewBack = _display ctrlCreate ["RscText", -1];
-private _preview = _display ctrlCreate ["RscStructuredText", -1];
-_previewBack ctrlSetPosition [_panelX + _panelW * 0.055, _panelY + _panelH * 0.49, _panelW * 0.89, _panelH * 0.20];
-_preview ctrlSetPosition [_panelX + _panelW * 0.085, _panelY + _panelH * 0.515, _panelW * 0.83, _panelH * 0.15];
-_previewBack ctrlCommit 0;
-_preview ctrlCommit 0;
 _display setVariable ["Waldo_UI_NotificationThemeCombo", _themeCombo];
 _display setVariable ["Waldo_UI_NotificationSizeCombo", _sizeCombo];
 _display setVariable ["Waldo_UI_NotificationMotionCombo", _motionCombo];
-_display setVariable ["Waldo_UI_NotificationPreviewBack", _previewBack];
-_display setVariable ["Waldo_UI_NotificationPreview", _preview];
+_display setVariable ["Waldo_UI_NotificationPreviewBounds", [_panelX + _panelW * 0.055, _panelY + _panelH * 0.49, _panelW * 0.89, _panelH * 0.28]];
 private _refresh = {
     params ["_control"];
     private _d = ctrlParent _control;
-    private _combo = _d getVariable ["Waldo_UI_NotificationThemeCombo", controlNull];
-    private _id = _combo lbData (lbCurSel _combo);
-    private _theme = if (_id isEqualTo "FOLLOW_MISSION") then {[] call Waldo_fnc_UiTheme} else {[_id] call Waldo_fnc_UiTheme};
-    private _back = _d getVariable ["Waldo_UI_NotificationPreviewBack", controlNull];
-    private _preview = _d getVariable ["Waldo_UI_NotificationPreview", controlNull];
-    _back ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.01,0.02,0.03,0.98]]);
-    _preview ctrlSetStructuredText parseText format ["<t font='%1' size='0.72' color='%2'>%3WMP OPTIONS%4 // %5</t><br/><t font='%6' size='1.05' color='%7'>%8PREVIEW MESSAGE%9</t><br/><t font='%1' size='0.82' color='%10'>This is how notification copy and material colours will read.</t>", _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["sourceHex", _theme getOrDefault ["mutedHex", "#9FB3C8"]], _theme getOrDefault ["sourcePrefix", ""], _theme getOrDefault ["sourceSuffix", ""], _theme getOrDefault ["motif", "TACTICAL INTERFACE"], _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["accentHex", "#79C7FF"], _theme getOrDefault ["titlePrefix", ""], _theme getOrDefault ["titleSuffix", ""], _theme getOrDefault ["textHex", "#FFFFFF"]];
-    _preview ctrlCommit 0;
+    private _combo = _d getVariable "Waldo_UI_NotificationThemeCombo";
+    private _size = _d getVariable "Waldo_UI_NotificationSizeCombo";
+    private _motion = _d getVariable "Waldo_UI_NotificationMotionCombo";
+    private _missionTheme = ["FOLLOW_MISSION"] call Waldo_fnc_UiNotificationTheme;
+    _combo lbSetText [0, format ["Follow Mission (%1)", _missionTheme getOrDefault ["label", "Default"]]];
+    private _theme = [_combo lbData (lbCurSel _combo)] call Waldo_fnc_UiNotificationTheme;
+    {if (!isNull _x) then {ctrlDelete _x;};} forEach (_d getVariable ["Waldo_UI_NotificationPreviewControls", []]);
+    private _entry = [_d, _theme, ["PREVIEW MESSAGE", "Your notification style.", "INFO", "WMP OPTIONS"], "TOP_RIGHT", _size lbData (lbCurSel _size)] call Waldo_fnc_CreateUiNotificationCardLocal;
+    private _controls = _entry select 1;
+    _d setVariable ["Waldo_UI_NotificationPreviewControls", _controls];
+    {_x setVariable ["Waldo_UI_OwnStyle", true];} forEach _controls;
+    (_d getVariable "Waldo_UI_NotificationPreviewBounds") params ["_x", "_y", "_w", "_h"];
+    private _cardW = _entry select 4;
+    private _cardH = _entry select 5;
+    private _left = _x + ((_w - _cardW) / 2);
+    private _top = _y + ((_h - _cardH) / 2);
+    private _duration = [missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], _motion lbData (lbCurSel _motion)] call Waldo_fnc_UiNotificationMotionDuration;
+    // Match the real TOP_RIGHT entry direction and travel, without registering a live HUD card.
+    [_entry, _left, _top + (_cardH * 0.28), _cardW, 0] call Waldo_fnc_LayoutUiNotificationCardLocal;
+    [_entry, _left, _top, _cardW, _duration] call Waldo_fnc_LayoutUiNotificationCardLocal;
 };
-_themeCombo ctrlAddEventHandler ["LBSelChanged", {_this call ((ctrlParent (_this select 0)) getVariable "Waldo_UI_NotificationRefresh");}];
 _display setVariable ["Waldo_UI_NotificationRefresh", _refresh];
-[_themeCombo] call _refresh;
+{_x ctrlAddEventHandler ["LBSelChanged", {_this call ((ctrlParent (_this select 0)) getVariable "Waldo_UI_NotificationRefresh");}];} forEach [_themeCombo, _sizeCombo, _motionCombo];
 private _buttonY = _panelY + _panelH * 0.80;
 private _makeButton = {
     params ["_x", "_width", "_text"];
@@ -120,5 +127,4 @@ _defaults ctrlAddEventHandler ["ButtonClick", {private _d = ctrlParent (_this se
 _cancel ctrlAddEventHandler ["ButtonClick", {(ctrlParent (_this select 0)) closeDisplay 2;}];
 _apply ctrlAddEventHandler ["ButtonClick", {private _d = ctrlParent (_this select 0); private _t = _d getVariable "Waldo_UI_NotificationThemeCombo"; private _s = _d getVariable "Waldo_UI_NotificationSizeCombo"; private _m = _d getVariable "Waldo_UI_NotificationMotionCombo"; private _values = [_t lbData (lbCurSel _t), _s lbData (lbCurSel _s), _m lbData (lbCurSel _m), true]; _d closeDisplay 1; _values call Waldo_fnc_UiNotificationSettingsApplyLocal;}];
 [_display, true] call Waldo_fnc_UiThemeApplyDisplayLocal;
-[_themeCombo] call _refresh;
 _display

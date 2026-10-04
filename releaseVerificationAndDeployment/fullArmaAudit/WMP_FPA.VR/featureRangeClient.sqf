@@ -490,9 +490,6 @@ if (!isNull _coreConsole) then {
         params ["_target", "_actor"];
         [_actor] remoteExecCall ["Waldo_QA_fnc_spawnAARTargetServer", 2];
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_StartConvoy", "START / RESET CONVOY TEST", {
-        [] remoteExecCall ["Waldo_QA_fnc_startConvoyServer", 2];
-    }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_StartParadrop", "ACTIVATE PARADROP AIRCRAFT", {
         [] remoteExecCall ["Waldo_QA_fnc_activateDropAircraftServer", 2];
     }] call Waldo_QA_fnc_addAuditActionLocal;

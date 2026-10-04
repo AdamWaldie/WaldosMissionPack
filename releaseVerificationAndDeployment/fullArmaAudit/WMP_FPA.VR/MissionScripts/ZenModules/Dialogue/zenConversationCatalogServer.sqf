@@ -8,6 +8,7 @@
  * Arguments: requester OBJECT, request token STRING. Return Value: BOOL.
  * Current caller: ZEN Conversation Assign and Author clients.
  * Example: [player,"CATALOG_1"] remoteExecCall ["Waldo_fnc_ZenConversationCatalogServer",2];
+ * Result: The authorised curator receives the current conversation IDs and revision.
  */
 params [["_requester", objNull, [objNull]], ["_requestToken", "", [""]]];
 if (!isServer || {isNull _requester} || {_requestToken == ""}) exitWith {false};

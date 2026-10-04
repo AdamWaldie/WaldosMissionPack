@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines headless-client (HC) support defaults shared by every machine (server, players, and any
  * connected headless client itself all read the same SHARED config).
+ * Locality / Authority: SHARED defaults load on every machine. The headless service decides
+ * which machine owns an eligible AI group and performs the move through its own lifecycle.
+ * Repeat/JIP: The loader does not overwrite existing settings. A later headless client loads
+ * the same defaults, then registers through the headless service.
  *
  * Schema: each SHARED entry is [missionNamespace variable name, guarded default value].
  * Arguments: None.

@@ -33,6 +33,12 @@
  * ["COMMAND", "Move to the marked assembly area.", "INFO"] call Waldo_fnc_SendNotification;
  * ["FALL BACK", "Return to base.", "WARNING", west, 10] call Waldo_fnc_SendNotification;
  * ["DRIVER", "Your vehicle is ready.", "SUCCESS", _driver] call Waldo_fnc_SendNotification;
+ * Locality and authority: Server resolves the requested current audience; clients forward
+ * validated requests. Reusing a channel can replace local cards; transient notices are not
+ * replayed to joining clients.
+ * Example: ["COMMAND", "Move to the marked assembly area.", "INFO", west]
+ *   call Waldo_fnc_SendNotification;
+ * Result: Current players in the chosen audience receive one WMP notification.
  */
 params [
     ["_title", "NOTICE", [""]],

@@ -8,6 +8,12 @@
  *
  * Return Value:
  * Nothing
+ * Locality/Authority: Interface client; sends the acquisition request to the server.
+ * Repeat/JIP Behaviour: Repeated clicks are gated by the server's attempt state;
+ * a joining player sees the published state before attempting use.
+ * Current Callers: ACE and vanilla actions installed by MiniGameInteraction.
+ * Example: [_equipment] call Waldo_fnc_MiniGameInteractionActivate;
+ * Result: Requests a server-owned attempt; it does not open the challenge until accepted.
  */
 
 params [["_object", objNull, [objNull]]];

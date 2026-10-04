@@ -331,41 +331,6 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AI_ExcludedFactions` | Factions never altered. |
 | `Waldo_AI_ExcludedClasses` | Unit classes never altered. |
 | `Waldo_AI_ProfileDisplayNames` | Curator-facing names for the WMP profiles. |
-| `Waldo_ImprovedHelicopterLanding_Enable` | Enables AI-only landing correction. |
-| `Waldo_ImprovedHelicopterLanding_MinimumActivationDistance` | Minimum initial aircraft-to-waypoint distance in metres. |
-| `Waldo_ImprovedHelicopterLanding_TriggerDistance` | Distance at which approach control begins. |
-| `Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor` | Speed-sensitive approach trigger multiplier. |
-| `Waldo_ImprovedHelicopterLanding_MinimumApproachSpeed` | Minimum approach-entry speed in km/h outside the close descent envelope. |
-| `Waldo_ImprovedHelicopterLanding_TransitAltitude` | Nominal approach altitude in metres. |
-| `Waldo_ImprovedHelicopterLanding_GlideSlopeRatio` | Horizontal distance per metre of descent. |
-| `Waldo_ImprovedHelicopterLanding_TreeScanRadius` | Landing-site tree scan radius in metres. |
-| `Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer` | Clearance above detected canopy in metres. |
-| `Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight` | Maximum canopy-adjusted hover height. |
-| `Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance` | Final-distance window used for high-approach rejection. |
-| `Waldo_ImprovedHelicopterLanding_GoAroundHeight` | Excess height that triggers a go-around. |
-| `Waldo_ImprovedHelicopterLanding_GoAroundExitDistance` | Distance flown clear before re-approach. |
-| `Waldo_ImprovedHelicopterLanding_GoAroundSpeed` | Go-around target speed. |
-| `Waldo_ImprovedHelicopterLanding_MaximumGoArounds` | Maximum retries before returning control to vanilla AI. |
-| `Waldo_ImprovedHelicopterLanding_MaximumClimbRate` | Maximum commanded climb rate. |
-| `Waldo_ImprovedHelicopterLanding_MaximumDescentRate` | Maximum commanded descent rate. |
-| `Waldo_ImprovedHelicopterLanding_TouchdownRadius` | Acceptable horizontal touchdown error in metres. Default `5`; increasing it makes touchdown detection easier but less exact. |
-| `Waldo_ImprovedHelicopterLanding_FinalCommitDistance` | Distance inside which the final landing point is committed. |
-| `Waldo_ImprovedHelicopterLanding_ControlInterval` | Local control-loop interval in seconds. |
-| `Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds` | Seconds WMP holds the AI in its landed state before releasing control. Default `20` prevents the vanilla AI immediately taking off again. |
-| `Waldo_HelicopterDeceleration_Enable` | Enables optional AI cruise-braking climb correction. Default `false`; test required airframes first. |
-| `Waldo_HelicopterDeceleration_IncludeVTOL` | Also permits `VTOL_Base_F` aircraft. Default `false` because VTOL flight models vary substantially. |
-| `Waldo_HelicopterDeceleration_MinimumSpeed` | Minimum airspeed in km/h before a braking event can be detected. |
-| `Waldo_HelicopterDeceleration_MinimumAltitude` | Minimum AGL altitude for any correction. |
-| `Waldo_HelicopterDeceleration_MinimumSpeedLoss` | Minimum km/h lost during one sample. |
-| `Waldo_HelicopterDeceleration_MinimumAltitudeGain` | Minimum metres climbed during one sample. |
-| `Waldo_HelicopterDeceleration_MinimumNoseUp` | Minimum positive `vectorDir` Z component indicating nose-up attitude. |
-| `Waldo_HelicopterDeceleration_TerrainClearance` | Required clearance above terrain sampled 100, 300 and 500 metres ahead. |
-| `Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration` | Hard cap on downward acceleration requested by the impulse controller. |
-| `Waldo_HelicopterDeceleration_MaximumClimbRate` | Correction releases when vertical speed falls to this many metres/second. |
-| `Waldo_HelicopterDeceleration_SampleInterval` | Seconds between inexpensive flight-trend samples. |
-| `Waldo_HelicopterDeceleration_ControlInterval` | Seconds between impulses while correction is active. |
-| `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Hard timeout for one correction event. |
-| `Waldo_HelicopterDeceleration_Debug` | Adds acquire/release details to RPT while troubleshooting. |
 
 ## `airOperationsConfig.sqf`
 

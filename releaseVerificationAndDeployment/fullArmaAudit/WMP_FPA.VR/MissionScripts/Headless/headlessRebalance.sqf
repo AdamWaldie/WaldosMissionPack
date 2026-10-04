@@ -60,6 +60,8 @@
  *
  * Example:
  * [] call Waldo_fnc_HeadlessRebalance;
+ * Result: Returns the count newly queued for paced migration, or 0 when the start gate or
+ * connected-HC gate has not opened. The worker performs actual ownership changes later.
  *
  * Current callers: Waldo_fnc_HeadlessRegisterClient, Waldo_fnc_HeadlessReassignOnDisconnect.
  */

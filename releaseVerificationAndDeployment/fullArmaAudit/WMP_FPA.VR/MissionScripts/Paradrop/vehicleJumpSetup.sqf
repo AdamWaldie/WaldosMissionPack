@@ -20,6 +20,8 @@
  *
  * Example:
  * [this] call Waldo_fnc_VehicleJumpSetup;
+ * Result: The aircraft is marked as manually configured and gains static-line and HALO actions
+ * after local WMP initialization.
  */
 
 params [["_vehicle", objNull, [objNull]]];

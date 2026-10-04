@@ -6,6 +6,7 @@
  * Arguments: target <OBJECT>, logistics bearing <NUMBER> (180), distance <NUMBER> (4).
  * Return Value: <BOOL> setup handled. Current caller: Waldo_fnc_MHQSetup.
  * Example: [myMHQ, 180, 4] call Waldo_fnc_MHQSetupLocal;
+ * Result: This client sees deploy/tear-down actions and any enabled quartermaster actions.
  */
 params [
     ["_target", objNull, [objNull]],

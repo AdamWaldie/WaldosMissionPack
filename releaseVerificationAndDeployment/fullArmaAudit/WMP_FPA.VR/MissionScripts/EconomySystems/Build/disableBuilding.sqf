@@ -1,15 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Disable building.
+ * Manually disable a building that the caller is allowed to manage.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; operational state is broadcast.
+ * Repeat/JIP: Repeating this sets the same disabled state and refreshes
+ * detector visuals and marker; joining clients read published object state.
+ * Current Callers: EcoBuild_processBuildingManageRequest.
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
  * 1: _caller <OBJECT> - caller (optional, default: objNull)
  *
  * Return Value:
- * Any - see function body
+ * Nothing.
+ * Result: Sets manual-disabled and clears active detection when permitted;
+ * invalid objects and unauthorized callers cause no change.
  *
  * Example:
  * [_building, _caller] call Waldo_fnc_EcoBuild_disableBuilding;

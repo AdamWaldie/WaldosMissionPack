@@ -8,6 +8,7 @@
  * replaces the selected speaker/group snapshot entry.
  * Arguments: module position ARRAY, selected object OBJECT. Return Value: Nothing.
  * Current caller: ZEN "Conversation: Assign". Example: place directly on an NPC.
+ * Result: The curator receives a labelled catalogue selector for assigning an existing conversation.
  */
 params ["_modulePos", ["_target", objNull, [objNull]]];
 if (isNull _target || {!(_target isKindOf "CAManBase")}) exitWith {["CONVERSATION", "Place this module directly on an NPC.", "WARNING", "CONVERSATION_ZEN", 6] call Waldo_fnc_FeatureNotifyLocal};

@@ -25,8 +25,6 @@ This is the complete top-level index of mission systems currently supplied by Wa
 | [Explosive Wall Breaching](Explosive-Breaching) | Server-validated class profiles, explosive strengths, replacement sections and reset support | `MissionConfig\environmentConfig.sqf` and scripted calls |
 | [Object Scaling and Transforms](Object-Scaling) | Validated scaling, reset/copy/multiply, coordinate placement and tagged batches | Server limits in `MissionConfig\logisticsConfig.sqf`; scripted helpers or **Scale Object** in ZEN |
 | [AI Rebalance](Waldos-AI-Tweak) | Named skill profiles, filters, variance, restoration and AI-locality migration handling | `MissionConfig\aiConfig.sqf`; **AI Rebalance - Control** in ZEN |
-| [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | Exact-point vector approaches, flare, slope alignment, tree-canopy clearance, touchdown anchoring and bounded go-arounds for AI pilots | `MissionConfig\aiConfig.sqf`, per-aircraft profiles and event-driven locality handlers; intentionally no ZEN module |
-| [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional suppression of the vanilla AI zoom-climb during ordinary cruise braking, with landing priority and terrain guards | `MissionConfig\aiConfig.sqf`; disabled by default; intentionally no ZEN module |
 | [UI Visual Themes](UI-Visual-Themes) | Built-in visual-only styles spanning modern, historical, command-centre, industrial, intelligence, emergency, fantasy and minimal presentation | Global `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf`; live **UI QA - Set Visual Theme** selector |
 | [Field Resupply](Field-Resupply) | Finite hub stock, carrier allowances, deployed real-cargo crates and cargo-based salvage | `MissionConfig\logisticsConfig.sqf`; ZEN hub/carrier modules |
 | [Tactical Display](Tactical-Display) | Object-authenticated local tactical map with friendly and known-enemy filtering | `MissionConfig\interfaceConfig.sqf`; scripted or ZEN registration |
@@ -103,7 +101,6 @@ Runtime configuration is server-authoritative. Current settings are published fo
 
 ## AI, radio and mission-maker tools
 
-- [AI Convoy System](AI-Convoy-System)
 - [Map Location Tools](Map-Location-Tools) (helpers need repair before live mission use)
 - [ACE Limited Arsenal Exporter](ACE-Limited-Arsenal-Exporter)
 - [Vehicle Damage Monitor](Vehicle-Damage-Monitor)

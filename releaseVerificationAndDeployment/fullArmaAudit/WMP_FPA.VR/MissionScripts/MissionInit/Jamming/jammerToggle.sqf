@@ -3,6 +3,10 @@
  * Switches a registered jammer on or off without removing it, so a mission maker or curator can
  * flip a jammer's state from a trigger, script or Zeus module. Server-authoritative - calling on
  * a client forwards to the server, which updates and re-broadcasts the jammer registry.
+ * Locality and authority: Client calls forward to the server, which owns active/disabled state
+ * and publishes the revised registry.
+ * Repeat/JIP: A requested explicit state can be applied again; omitted state flips each time.
+ * Joining clients receive current state, not the old toggle request.
  *
  * Arguments:
  * 0: Reference <OBJECT or NUMBER> - the jammer object, or its jammer id (from Waldo_fnc_Jammer)
@@ -14,6 +18,8 @@
  * Example:
  * [myJammer, false] call Waldo_fnc_JammerToggle;   // switch a jammer object off
  * [3] call Waldo_fnc_JammerToggle;                 // flip jammer id 3 to its opposite state
+ * Current callers: mission-maker scripts and Waldo_fnc_ZenJammerToggle.
+ * Result: The specified jammer is active or inactive on all clients.
  */
 
 params [["_ref", objNull], ["_active", "TOGGLE"]];

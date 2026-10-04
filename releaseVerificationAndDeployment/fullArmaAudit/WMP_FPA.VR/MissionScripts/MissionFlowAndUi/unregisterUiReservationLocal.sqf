@@ -11,6 +11,9 @@
  *
  * Example: ["EW_STATUS"] call Waldo_fnc_UnregisterUiReservationLocal;
  * Current callers: available to specialist HUDs and plugins during teardown.
+ * Locality and authority: Removes one screen reservation on this interface client.
+ * Repeating removal is harmless; no server or JIP gameplay state changes.
+ * Result: WMP notification layout may reuse the freed screen region.
  */
 if (!hasInterface) exitWith {false};
 params [["_key", "", [""]], ["_hide", true, [true]]];

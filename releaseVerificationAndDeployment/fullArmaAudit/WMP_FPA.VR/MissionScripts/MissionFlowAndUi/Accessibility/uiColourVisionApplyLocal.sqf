@@ -13,6 +13,9 @@
  * Example:
  * ["TRITAN", true] call Waldo_fnc_UiColourVisionApplyLocal;
  * Current caller: UiColourVisionOpenLocal selection buttons.
+ * Locality and authority: Applies only the player's interface presentation choice. It is
+ * safe to select again; no gameplay or JIP server state changes.
+ * Result: WMP UI colours follow the selected local colour-vision profile.
  */
 
 if (!hasInterface) exitWith {false};

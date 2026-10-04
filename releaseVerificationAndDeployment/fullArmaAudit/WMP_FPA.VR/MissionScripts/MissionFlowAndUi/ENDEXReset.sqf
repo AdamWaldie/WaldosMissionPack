@@ -17,6 +17,7 @@
  *
  * Example:
  * [] call Waldo_fnc_ENDEXReset;
+ * Result: ENDEX protection and presentation are cleared for another mission phase.
  */
 params [["_applyLocal", false, [false]]];
 

@@ -7,6 +7,9 @@
  *
  * Example: [_display] call Waldo_fnc_MiniGameEquipmentBriefing;
  * Current caller: the interaction equipment profile before a procedure becomes operable.
+ * Locality and authority: Creates controls only in the active player's local procedure
+ * display. Repeating it replaces that display's briefing; no server or JIP state is involved.
+ * Result: The player sees the procedure's controls and objective before operating equipment.
  */
 disableSerialization;
 params [["_display", displayNull, [displayNull]]];

@@ -12,6 +12,10 @@
  * editor-placed aircraft that were never registered as a managed drop zone operation. A boarding
  * point created against a non-registered aircraft is not tracked for later cleanup, since there is
  * no Waldo_fnc_ParadropRemoveDropZone call for it - it is left on the map like any other placed object.
+ * Locality and authority: Server validates the curator and boarding request; selected player
+ * owners perform their own cargo-seat moves.
+ * Repeat/JIP: A boarding point's action is replaced when the same operation is set up again;
+ * this request is not itself replayed to joining clients.
  *
  * Arguments:
  * 0: operation ID <STRING> - a Waldo_fnc_ParadropCreateDropZone id, or a
@@ -33,6 +37,7 @@
  * Example:
  * ["DZ_ALPHA", "BOTH", units group player, getPosATL player, "Land_InfoStand_V1_F",
  *  "Board DZ ALPHA", player] remoteExecCall ["Waldo_fnc_ParadropEmbark", 2];
+ * Result: Selected players board as cargo and/or a named boarding point is placed.
  */
 
 params [

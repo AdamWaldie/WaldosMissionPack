@@ -18,6 +18,9 @@
  * [mapBoard] call Waldo_fnc_TacticalDisplayOpenLocal;
  *
  * Current caller: the local action installed by TacticalDisplaySetupLocal.
+ * Locality and authority: Opens the display on the requesting player's interface client.
+ * Reopening uses current board state; the UI itself is not replayed for JIP.
+ * Result: The player sees the Tactical Display for the selected board.
  */
 
 params [["_object", objNull, [objNull]]];

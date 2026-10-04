@@ -3,6 +3,10 @@
  * Zeus module handler: plants a signal tracker only on the object or unit directly under the
  * module, visible to a chosen side (Waldo_fnc_Tracker). Empty-ground placement is rejected before
  * opening the dialog, so a nearby unrelated entity can never be selected accidentally.
+ * Locality and authority: Curator interface gathers options; Waldo_fnc_Tracker performs the
+ * authoritative attachment. Empty-target placement is rejected locally.
+ * Repeat/JIP: Each placement is a separate request. Tracker state and map presentation follow
+ * the tracker feature's server and client replay path.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -15,6 +19,7 @@
  * [_modulePos, _objectPos] call Waldo_fnc_ZenTracker;
  *
  * Current caller: the ZEN "Tracker: Attach to Selected Object" module.
+ * Result: A labelled side-visible tracker is requested for the exact selected object.
  */
 
 if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};

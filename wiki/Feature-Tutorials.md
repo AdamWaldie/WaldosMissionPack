@@ -96,9 +96,6 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. The [Comp
 | Feature | Use it for |
 |---|---|
 | [Waldo's AI Tuning](Waldos-AI-Tweak) | Day/night AI behavior profiles |
-| [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
-| [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional cruise-only correction for helicopters that zoom-climb while braking |
-| [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
 | [Map Location Tools](Map-Location-Tools) | Intended location helpers; not ready for live missions in this version |
 | [Headless Client Support](Headless-Client-Support) | Optional AI distribution across connected headless clients; disabled by default |
 | [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional player-marker integration |

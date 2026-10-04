@@ -13,6 +13,7 @@
  * Return Value: Nothing; intended for spawned use because it waits for mission setup readiness.
  * Current callers: mission-maker starter-crate object init fields.
  * Example: [this, true, west, false] spawn Waldo_fnc_DoStarterCrate;
+ * Result: The starter crate is stocked and given its configured arsenal and local actions.
  */
 params["_target","_arsenal",["_crateSide",west],["_unrestrictedArsenal",false]];
 // Public editor call: every machine may execute an object's init field, but the server owns all

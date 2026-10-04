@@ -18,6 +18,8 @@
  *
  * Example:
  * [] spawn Waldo_fnc_HeadlessMigrationWorker;
+ * Result: One guarded server worker drains queued group migrations with a pause between moves.
+ * A second concurrent call exits without starting another worker.
  *
  * Current caller: Waldo_fnc_HeadlessRebalance.
  */

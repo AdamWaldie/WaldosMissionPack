@@ -1,7 +1,22 @@
 /*
+ * Author: WaldoTheWarfighter
+ * Purpose: Optional local map-marker overlay for players, AI and occupied vehicles.
+ * Locality and authority: Interface-client only. Creates local markers and does not change
+ * authoritative mission state or share markers with other clients.
+ * Repeat/JIP: Running it again terminates the previous local loop; ["stop"] stops it. Each
+ * joining client must start its own copy if the mission enables this optional integration.
+ * Arguments: Array of option Strings. Empty Array shows same-side players in multiplayer
+ * (and same-side AI in single-player); "players", "ais", "allsides", "all" and "stop" are supported.
+ * Return Value: No useful SQF result; execVM returns an Arma Script handle immediately.
+ * Current callers: Optional, commented launcher in ThirdPartyScriptInit.sqf.
+ * Example: 0 = ["players"] execVM "MissionScripts\ThirdPartyScripts\player_markers.sqf";
+ * Result: The executing client sees locally updated map markers for the selected units.
+ * Upstream credit: aeroson, a3-misc Dynamic Player Markers. Keep the original credit below.
+ */
+/*
     PLAYER MARKERS //// ====================================================================================
 
-    AUTHOR: aeroson - Updated & Modified by WaldoTheWarfighter
+    UPSTREAM CREDIT: aeroson - Updated & Modified by WaldoTheWarfighter
     NAME: player_markers.sqf
     VERSION: 2.7.1
     

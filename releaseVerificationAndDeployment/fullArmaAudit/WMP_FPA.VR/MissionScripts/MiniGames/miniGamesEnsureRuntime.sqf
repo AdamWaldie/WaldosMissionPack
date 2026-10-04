@@ -14,6 +14,7 @@
  * Current callers: MiniGamesRegisterTable, MiniGamesRegisterTableLocal, MiniGamesInitPlayerLocal,
  * MiniGamesRequestServer.
  * Example: [] call Waldo_fnc_MiniGamesEnsureRuntime;
+ * Result: The shared minigame functions are available once, without loading duplicates.
  */
 
 private _role = if (isServer) then {"SERVER"} else {if (hasInterface) then {"CLIENT"} else {"HEADLESS"}};

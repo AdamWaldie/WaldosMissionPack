@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official purchase action args.
+ * Builds a Purchase Terminal action definition for the shared object-action publisher.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
- * Locality / Authority: The catalogue UI runs on the interface client; purchase requests route once
+ * Locality/Authority: The catalogue UI runs on the interface client; purchase requests route once
  * to the server and retain the existing authoritative validation and transaction path.
- * Repeat / JIP Behaviour: Safe to regenerate during terminal action repair/JIP reconciliation; each
+ * Repeat/JIP Behaviour: Safe to regenerate during terminal action repair/JIP reconciliation; each
  * purchase interaction creates its existing unique request token.
  *
  * Arguments:
@@ -13,12 +13,13 @@
  * 1: _caller <ANY> - caller
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> action arguments consumed by the shared publisher.
  *
  * Current Callers: Economy purchase-terminal action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoBuy_getOfficialPurchaseActionArgs;
+ * Result: Returns a ready-to-install action; no purchase executes until a player selects it.
  */
 
         [

@@ -1,12 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Start research.
+ * Validates a side's research choice, spends its costs and begins the authoritative timer.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _sideKey <ANY> - side key
- * 1: _researchName <ANY> - research name
+ * 0: _sideKey <STRING> - side key (WEST/EAST/GUER/CIV)
+ * 1: _researchName <STRING> - technology name in the current catalog
  * 2: _caller <OBJECT> - caller (optional, default: objNull)
  *
  * Return Value:
@@ -14,6 +14,12 @@
  *
  * Example:
  * [_sideKey, _researchName, _caller] call Waldo_fnc_EcoResearch_startResearch;
+ * Locality/Authority: Economy authority only; client actions submit a validated request.
+ * Repeat/JIP Behaviour: A side cannot start a second concurrent technology. Active research
+ * state and completion are published to JIP clients.
+ * Current Callers: Research centre action and Economy start-research request handler.
+ * Result: Starts research only when command authority, requirements and resources permit it;
+ * otherwise the caller receives the relevant WMP notice.
  */
 
         params ["_sideKey", "_researchName", ["_caller", objNull]];

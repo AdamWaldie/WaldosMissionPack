@@ -18,6 +18,8 @@
  *     remoteExecCall ["Waldo_fnc_ZenSpawnCrateServer", 2];
  *
  * Current callers: the ZEN supply and medical crate module handlers.
+ * Result: One safely placed, stocked crate is created and registered with enabled logistics
+ * handling, or no crate is created when validation rejects the request.
  */
 
 params [
@@ -97,8 +99,12 @@ switch (_kind) do {
 if (!isNull _crate) then {
     // A crate spawned by WMP is always portable and occupies one ACE cargo
     // slot, regardless of its vehicle-class config default.
-    [_crate, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
-    [_crate, _kind] spawn Waldo_fnc_LogisticsRegisterSpawned;
+    // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+    // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+    [{
+        [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+        _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+    }, [_crate, _kind]] call CBA_fnc_execNextFrame;
     [_crate, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
     diag_log format ["[WMP ZEN] crate created kind=%1 crate=%2 actor=%3 owner=%4", _kind, netId _crate, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner];
 };

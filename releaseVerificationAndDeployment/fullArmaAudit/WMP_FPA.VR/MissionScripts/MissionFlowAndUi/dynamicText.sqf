@@ -16,6 +16,7 @@
  *
  * Example: ["Supplies ready", _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
  * Current callers: MHQ, logistics crates, quartermaster, vehicle camouflage and construction.
+ * Result: The selected player receives the requested WMP notification on its channel.
  */
 params ["_text", "_player", ["_title", "MISSION UPDATE", [""]]];
 if (_title isEqualTo "") then {_title = "MISSION UPDATE"};

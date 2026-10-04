@@ -10,6 +10,9 @@
  * Return Value: DISPLAY - created settings display, or displayNull without a gameplay display.
  * Current caller: WMP Options > WMP HUD self-interaction and QA capture.
  * Example: [] call Waldo_fnc_WmpHudSettingsOpenLocal;
+ * Locality and authority: Opens a settings dialog only on the requesting interface client.
+ * Reopening reads current local preferences; no server or JIP display state exists.
+ * Result: The player can change WMP HUD icon, label, scale and opacity settings.
  */
 
 disableSerialization;
@@ -71,14 +74,28 @@ private _refreshPreview = {
     private _scale = _d getVariable ["Waldo_WmpHud_ScaleCombo", controlNull];
     private _opacity = _d getVariable ["Waldo_WmpHud_OpacityCombo", controlNull];
     private _previewControl = _d getVariable ["Waldo_WmpHud_Preview", controlNull];
-    private _previewTheme = _d getVariable ["Waldo_WmpHud_PreviewTheme", createHashMap];
+    private _previewTheme = [] call Waldo_fnc_UiTheme;
     private _mode = _show lbData (lbCurSel _show);
     private _scaleId = _scale lbData (lbCurSel _scale);
     private _opacityId = _opacity lbData (lbCurSel _opacity);
-    private _copy = switch (_mode) do {case "ICONS": {"◇"}; case "NAMES": {"FRIENDLY ELEMENT  //  42 m"}; case "NONE": {"HUD HIDDEN BY PLAYER"}; default {"◇  FRIENDLY ELEMENT  //  42 m"};};
-    private _textSize = switch (_scaleId) do {case "SMALL": {0.88}; case "LARGE": {1.22}; default {1.05};};
-    _previewControl ctrlSetStructuredText parseText format ["<t align='center' font='%1' size='%2' color='%3'>%4</t>", _previewTheme getOrDefault ["fontBold", "RobotoCondensedBold"], _textSize, _previewTheme getOrDefault ["accentHex", "#79C7FF"], _copy];
-    _previewControl ctrlSetFade (switch (_opacityId) do {case "LOW": {0.45}; case "HIGH": {0}; default {0.18};});
+    private _preferences = [[_mode in ["BOTH", "ICONS"], _mode in ["BOTH", "NAMES"], _scaleId, _opacityId]] call Waldo_fnc_WmpHudPreferences;
+    private _icons = (_preferences get "showIcons") && {missionNamespace getVariable ["Waldo_WmpHud_ShowIcons", true]};
+    private _names = (_preferences get "showNames") && {missionNamespace getVariable ["Waldo_WmpHud_ShowNames", true]};
+    _mode = if (_icons) then {if (_names) then {"BOTH"} else {"ICONS"}} else {if (_names) then {"NAMES"} else {"NONE"}};
+    private _icon = missionNamespace getVariable ["Waldo_WmpHud_Icon", "\a3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"];
+    private _iconCopy = format ["<img image='%1'/>", _icon];
+    private _copy = switch (_mode) do {case "ICONS": {_iconCopy}; case "NAMES": {"FRIENDLY ELEMENT"}; case "NONE": {"HUD HIDDEN BY PLAYER"}; default {_iconCopy + "  FRIENDLY ELEMENT"};};
+    private _textSize = 1.05 * (_preferences get "scale");
+    private _colour = +(_previewTheme getOrDefault ["accentActive", [0.25, 0.85, 1, 1]]);
+    _colour set [3, 0.9];
+    private _configuredColour = missionNamespace getVariable ["Waldo_WmpHud_Colour", []];
+    if (_configuredColour isEqualType [] && {count _configuredColour == 4}) then {_colour = +_configuredColour;};
+    private _hex = "#";
+    private _digits = "0123456789ABCDEF";
+    {private _byte = round (((_x max 0) min 1) * 255); _hex = _hex + (_digits select [floor (_byte / 16), 1]) + (_digits select [_byte mod 16, 1]);} forEach (_colour select [0, 3]);
+    _previewControl ctrlSetStructuredText parseText format ["<t align='center' font='%1' size='%2' color='%3'>%4</t>", missionNamespace getVariable ["Waldo_WmpHud_Font", "PuristaBold"], _textSize, _hex, _copy];
+    _previewControl ctrlSetFade (1 - ((_colour select 3) * (_preferences get "opacity")));
+    _previewControl ctrlSetTooltip "Presentation sample. In-world size and fading also depend on mission settings and distance.";
     _previewControl ctrlCommit 0;
 };
 _display setVariable ["Waldo_WmpHud_RefreshPreview", _refreshPreview];

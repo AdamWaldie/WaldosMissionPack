@@ -18,6 +18,7 @@
  *     remoteExecCall ["Waldo_fnc_FeatureRuntimeApply", 2];
  *
  * Current caller: Waldo_fnc_FeatureRuntimeZen forwards validated ZEN runtime-control dialogs.
+ * Result: Accepted settings are applied on the server and published for joining clients.
  */
 
 params [
@@ -126,8 +127,12 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
-            [_hub, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
-            [_hub, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+            // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+            // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+            [{
+                [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+                _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+            }, [_hub, "CARGO"]] call CBA_fnc_execNextFrame;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};
@@ -348,6 +353,13 @@ switch (toUpperANSI _action) do {
     };
     case "AI_CONFIG": {
         _settings params ["_enable", "_mode", "_profile"];
+        if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+            [["Waldo_AIRebalance_Enable", false]] call _publishAll;
+            [] remoteExecCall ["Waldo_fnc_AIRebalanceStop", 0];
+            [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];
+            ["AI SKILL VALUES", "Waldos AI Tweaks is loaded and owns AI skill control.", "WARNING", "AI_RUNTIME"] call _reply;
+            false
+        };
         [
             ["Waldo_AIRebalance_Enable", _enable],
             ["Waldo_AIRebalance_Mode", _mode],

@@ -96,10 +96,7 @@
 **AI and Mission Tools**
 
 * [Waldo's AI Tuning](Waldos-AI-Tweak)
-* [Improved Helicopter Landings](Improved-AI-Helicopter-Landings)
-* [AI Helicopter Deceleration](AI-Helicopter-Deceleration)
 * [Headless Client Support](Headless-Client-Support)
-* [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
   * [ACE Arsenal Exporter](ACE-Limited-Arsenal-Exporter)

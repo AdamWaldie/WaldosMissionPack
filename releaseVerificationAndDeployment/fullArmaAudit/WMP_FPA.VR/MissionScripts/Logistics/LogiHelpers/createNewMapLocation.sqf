@@ -1,13 +1,17 @@
 /*
-    Script to create a new map location based on a game logic object, with a specified name and location type.
-
-    To use this, place down a logic module with a variable name, then execute this script in init.sqf
-    Usage: ["locationLogicObject", "New Location Name", "LocationType"] call Waldo_fnc_ReplaceMapLocationName;
-
-    Parameters:
-    0: OBJECT - The game logic object used as a reference point.
-    1: STRING - The name for the new location.
-    2: STRING - The type of the new location (e.g., "NameCity", "NameVillage", "NameCityCapital").
+ * Author: WaldoTheWarfighter
+ * Intended to create a named map location at a game logic's position.
+ * WARNING: This legacy helper is not safe for a live mission. It calls setType on an undefined
+ * `_editableLocation` rather than the created location and lacks a server/repeat guard. The
+ * example below documents the intended arguments; do not run it until the helper is repaired.
+ * Locality and authority: Currently unguarded on whichever machine calls it. A repeat call
+ * can create another location and does not provide a controlled JIP state replay.
+ * Arguments: 0: placed game logic <OBJECT>; 1: new name <STRING>;
+ *   2: CfgLocationTypes type <STRING> (for example "NameVillage").
+ * Return Value: No supported success value in the current implementation.
+ * Current callers: None in the pack; legacy mission-maker helper only.
+ * Example: [myLocationLogic, "New Village", "NameVillage"] call Waldo_fnc_CreateMapLocationName;
+ * Result: Intended to create a location, but currently unsafe and not supported for use.
 
      Below is a list of common location types you might use in scripting and mission design, as derived from the Arma 3 documentation NOT ALL OF THESE WILL WORK:
     

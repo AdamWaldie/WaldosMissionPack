@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: transient; missing sound IDs fail cleanly without blocking subtitles.
  * Arguments: speaker OBJECT, sound ID STRING. Return Value: BOOL.
  * Current caller: ConversationRunServer. Example: server remote execution to current nearby listeners.
+ * Result: Nearby receiving clients play the configured line audio when its sound ID exists.
  */
 params [["_speaker", objNull, [objNull]], ["_sound", "", [""]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

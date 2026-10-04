@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Can afford purchase for side.
+ * Checks whether a side has enough of every resource charged by an asset row.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -9,10 +9,15 @@
  * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when all required resource balances are sufficient.
  *
  * Example:
  * [_entry, _sideKey] call Waldo_fnc_EcoBuy_canAffordPurchaseForSide;
+ * Locality/Authority: Any machine can read published balances; server repeats the check
+ * before debiting resources.
+ * Repeat/JIP Behaviour: Pure read; no JIP side effect.
+ * Current Callers: Purchase status and server purchase validation.
+ * Result: Returns false at the first resource shortfall.
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];

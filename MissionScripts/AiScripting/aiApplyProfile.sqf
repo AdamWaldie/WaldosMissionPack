@@ -23,6 +23,7 @@
  */
 
 params [["_unit", objNull, [objNull]]];
+if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {false};
 if (isNull _unit || {!local _unit} || {isPlayer _unit}) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]) exitWith {false};
 if (_unit getVariable ["Waldo_AI_Exclude", false]) exitWith {false};

@@ -5,7 +5,8 @@
  * Repeat / JIP: Each request creates one world object; ACE source state and crate cargo replicate.
  * Arguments: target <OBJECT>, player <OBJECT>, type <STRING>, bearing <NUMBER> (90), distance <NUMBER> (2).
  * Return Value: <BOOL> spawned. Current caller: Waldo_fnc_LogisticsSpawner.
- * Example: [quartermaster, player, "Rearm", 90, 3] remoteExecCall ["Waldo_fnc_LogisticsSpawner", 2];
+ * Example: [quartermaster, player, "Rearm", 90, 3] remoteExecCall ["Waldo_fnc_QuartermasterExtendedSpawn", 2];
+ * Result: A permitted grenade, explosive, rearm or fuel issue is created beside the QM.
  */
 params [["_target", objNull, [objNull]], ["_player", objNull, [objNull]], ["_kind", "", [""]],
     ["_bearing", 90, [0]], ["_distance", 2, [0]]];
@@ -94,8 +95,6 @@ private _issueName = switch (_kind) do {
 // Keep the quartermaster issue identity visible after the object is spawned.
 _object setVariable ["ace_cargo_customName", _issueName, true];
 _object setVariable ["Waldo_QM_IssueName", _issueName, true];
-// QM issues are one ACE cargo slot each; fuel and rearm behaviour is separate.
-[_object, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
 if (_kind in ["Grenades", "Explosives"] || {_isRearm}) then {
     clearWeaponCargoGlobal _object;
     clearMagazineCargoGlobal _object;
@@ -136,7 +135,14 @@ if (_kind == "FuelJerrycan") then {
     [_object, (missionNamespace getVariable ["Waldo_QM_FuelJerrycan_Litres", 20]) max 1]
         remoteExecCall ["Waldo_fnc_QuartermasterMakeJerrycanLocal", 0, _object];
 };
-[_object, if (_isRearm) then {"REARM"} else {_kind}] spawn Waldo_fnc_LogisticsRegisterSpawned;
+// A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+// cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+// QM issues are one ACE cargo slot each, always drag/carryable regardless of mass; fuel and
+// rearm behaviour is separate. Both calls reject this request's remote context, so they run here.
+[{
+    [_this select 0, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+    _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+}, [_object, if (_isRearm) then {"REARM"} else {_kind}]] call CBA_fnc_execNextFrame;
 diag_log format ["[WMP QM] Extended issue kind=%1 name=%2 class=%3 player=%4",
     _kind, _issueName, _class, name _player];
 [format ["%1 ready for collection.", _issueName], _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;

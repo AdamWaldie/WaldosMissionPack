@@ -15,6 +15,7 @@
  * Return Value: BOOLEAN - true when ACE policy was applied; false when unavailable.
  * Current caller: Waldo_fnc_TreeFellingProcess.
  * Example: [_fallenTree, true] remoteExecCall ["Waldo_fnc_TreeFellingSetupFallenLocal", 0, _fallenTree];
+ * Result: Each recipient applies ACE Drag and the requested Carry state to that fallen object.
  */
 
 params [

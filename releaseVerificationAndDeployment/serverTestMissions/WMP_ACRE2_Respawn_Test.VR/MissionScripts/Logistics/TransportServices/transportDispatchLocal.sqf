@@ -4,19 +4,20 @@
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
  * Service helicopters use TR UNLOAD only when arriving for pickup or returning empty to base.
- * Passenger destinations use a MOVE route which the WMP improved-landing tracker recognises from
- * the transport's authoritative TO_DESTINATION state. This avoids both TR UNLOAD forcing players
+ * Passenger destinations use a MOVE route. This avoids both TR UNLOAD forcing players
  * out before touchdown and Arma's scripted LAND task surviving route replacement after touchdown.
- * Both paths retain the vehicle LAND fallback inside 300 metres. When WMP
- * improved landing owns final approach, that fallback waits instead of fighting the controller.
+ * Both paths use the native vehicle LAND command inside 300 metres.
  * After touchdown the server clears the completed route and permits normal AI engine idle-down;
  * Transport Services does not impose an engine-running or movement-suspension hold.
- * Ground services stall-detect (no progress for pathRetrySeconds) and reissue the same waypoint up
- * to pathRetryLimit times. The first such reissue also drops forceFollowRoad (config
+ * Ground and boat services stall-detect (no progress for pathRetrySeconds) and reissue a route up to
+ * pathRetryLimit times. A ground vehicle's first such reissue drops forceFollowRoad (config
  * avoidRoadObstacles, default true) if it was active, since a road-pinned AI driver cannot
  * manoeuvre around a parked vehicle, wreck or other obstruction blocking that exact road segment -
  * normal off-road pathfinding is the AI's own obstacle/vehicle avoidance and only runs once the
- * road pin is released.
+ * road pin is released. Every other reissue - including every boat reissue, since boats have no
+ * road pin to drop in the first place - deletes and recreates the waypoint at the same target
+ * instead of merely re-selecting the already-current one, which is a no-op for AI pathfinding and
+ * previously left a stalled boat idling silently for the rest of the travel timeout.
  * Locality and authority: runs only where the AI driver group is local; server request IDs remain authoritative.
  *
  * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap, the
@@ -26,6 +27,7 @@
  * Return Value: Boolean - true when dispatched on the owning machine.
  * Example: [_heli,"RAVEN_1",12,"PICKUP",_lz,_config] call Waldo_fnc_TransportDispatchLocal;
  * Current caller: Waldo_fnc_TransportRequestServer owner-targeted remote execution.
+ * Result: The transport group receives the requested route on its current owner.
  */
 params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", ["_landingPad", objNull, [objNull]], ["_retriesRemaining", 20, [0]]];
 if (isNull _vehicle || {isNull driver _vehicle}) exitWith {false};
@@ -68,9 +70,6 @@ units _group doFollow leader _group;
 _vehicle engineOn true;
 private _dispatchRoadRoute = false;
 if (_helicopter) then {
-    if (_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
-        [_vehicle, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
-    };
     _vehicle land "NONE";
     // Array form forces strict AGL terrain-following - see Waldo_fnc_TransportRegister's matching
     // comment for the long-route/elevation-change failure mode this avoids.
@@ -92,8 +91,7 @@ if (_helicopter) then {
 // cargo out as an engine waypoint side effect, bypassing WMP's forceDisembark option. A scripted
 // LAND waypoint avoids that side effect but can leave Arma's waypoint script holding the aircraft
 // after WMP deletes/replaces the landing waypoint. Destination therefore uses an ordinary MOVE
-// route; the improved-landing tracker recognises it only while this registered transport is in the
-// authoritative TO_DESTINATION state, so no general MOVE waypoint is reinterpreted as a landing.
+// route. The native LAND command below owns the final approach.
 private _waypoint = _group addWaypoint [_target, 0];
 private _destinationLanding = _helicopter && {toUpperANSI _phase == "DESTINATION"};
 private _waypointType = if (!_helicopter || {_destinationLanding}) then {"MOVE"} else {"TR UNLOAD"};
@@ -105,19 +103,10 @@ if (!_helicopter) then {
     _waypoint setWaypointCompletionRadius ((_config getOrDefault ["stopRadius", 12]) max 5);
 };
 _group setCurrentWaypoint _waypoint;
-// Only this exact WMP-created destination MOVE may be interpreted as a landing task. The old
-// state-only test meant any later Zeus MOVE waypoint could make a registered transport descend
-// aggressively while TO_DESTINATION was still replicated. Index, request and position together
-// distinguish our route from a curator replacement even when Arma reuses waypoint indices.
-if (_destinationLanding) then {
-    _vehicle setVariable ["Waldo_TransportService_LandingOrder", [_requestId, _waypoint select 1, +_target], true];
-} else {
-    _vehicle setVariable ["Waldo_TransportService_LandingOrder", [], true];
-};
 diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 waypoint=%6 type=%7 owner=%8", _id, _requestId, _phase, _target, _helicopter, _waypoint select 1, waypointType _waypoint, clientOwner];
 
-[_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute, _boat] spawn {
-    params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint", "_roadRoute", "_boat"];
+[_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute, _boat, _movementBehaviour] spawn {
+    params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint", "_roadRoute", "_boat", "_movementBehaviour"];
     private _group = group driver _vehicle;
     private _stale = {_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId};
     private _timeout = diag_tickTime + (missionNamespace getVariable ["Waldo_Transport_TravelTimeout", 900]);
@@ -134,9 +123,7 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             || {diag_tickTime >= _timeout}
         };
         if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {!isTouchingGround _vehicle} && {_vehicle distance2D _target <= 300}) then {
-            if !(_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
-                _vehicle land "LAND";
-            };
+            _vehicle land "LAND";
         };
         private _fallbackIssued = false;
         waitUntil {
@@ -145,7 +132,6 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             if (
                 !_touchdown
                 && {!_fallbackIssued}
-                && {!(_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
                 && {!isTouchingGround _vehicle}
                 && {_vehicle distance2D _target <= 300}
             ) then {
@@ -172,15 +158,32 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
                 // thing to give up is the road pin itself: dropping it lets normal terrain pathfinding
                 // route the driver around whatever it is stuck on instead of endlessly re-requesting
                 // the same blocked road segment.
+                private _droppedRoadPin = false;
                 if (_roadRoute && {_avoidRoadObstacles}) then {
                     driver _vehicle forceFollowRoad false;
                     _roadRoute = false;
+                    _droppedRoadPin = true;
+                };
+                // Re-selecting a waypoint that is already the group's current one is a no-op for AI
+                // pathfinding - the driver never replans a route it is already following. Boats have
+                // no road pin to drop at all, and a ground vehicle's later stalls have already used
+                // that opportunity up, so both need a genuine reroute: delete and recreate the
+                // waypoint at the same target, forcing the driver to compute a fresh path instead of
+                // silently idling (with a stale "reissued" log line) for the rest of the timeout.
+                if (!_droppedRoadPin) then {
+                    deleteWaypoint _waypoint;
+                    _waypoint = _group addWaypoint [_target, 0];
+                    _waypoint setWaypointType "MOVE";
+                    _waypoint setWaypointBehaviour _movementBehaviour;
+                    _waypoint setWaypointCombatMode "BLUE";
+                    _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
+                    _waypoint setWaypointCompletionRadius _stopRadius;
                 };
                 units _group doFollow leader _group;
                 _group setCurrentWaypoint _waypoint;
                 _retriesRemaining = _retriesRemaining - 1;
                 _lastProgress = diag_tickTime;
-                diag_log format ["[WMP TRANSPORT] Reissued %1 path service=%2 request=%3 remaining=%4 distance=%5 offRoad=%6", if (_boat) then {"boat"} else {"ground"}, _id, _requestId, _retriesRemaining, round _distance, !_roadRoute];
+                diag_log format ["[WMP TRANSPORT] Reissued %1 path service=%2 request=%3 remaining=%4 distance=%5 offRoad=%6 rerouted=%7", if (_boat) then {"boat"} else {"ground"}, _id, _requestId, _retriesRemaining, round _distance, !_roadRoute, !_droppedRoadPin];
             };
             call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_distance <= _stopRadius} || {diag_tickTime >= _timeout}
         };

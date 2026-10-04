@@ -10,6 +10,7 @@
  *   cargo forward/up vectors in vehicle model space <ARRAY> ([] each).
  * Return Value: <BOOL> handled. Current callers: physical attach/clear.
  * Example: [crate, truck, true, [0, -1, 1], [0, 1, 0], [0, 0, 1]] call Waldo_fnc_PhysicalCargoSeatsServer;
+ * Result: The server updates WMP-owned locks for seats intersecting this mounted cargo.
  */
 params [["_cargo", objNull, [objNull]], ["_vehicle", objNull, [objNull]],
     ["_add", true, [true]], ["_offset", [], [[]]],

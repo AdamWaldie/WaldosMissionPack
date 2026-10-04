@@ -22,6 +22,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Pylon tab's Add Pylon Row button).
+ * Locality and authority: Reads the curator's local editor controls without changing the
+ * vehicle. Repeated collection has no JIP side effect.
+ * Result: Returns one validated pylon row, or an empty row when the input is unusable.
  */
 
 params [["_disp", displayNull]];

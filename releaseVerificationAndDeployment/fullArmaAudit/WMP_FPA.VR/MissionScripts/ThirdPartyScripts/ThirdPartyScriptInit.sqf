@@ -4,13 +4,14 @@
  * Client support is configured separately in MissionConfig\headlessConfig.sqf; this file does not
  * enable it. The shipped calls remain commented out until a mission maker deliberately enables them.
  *
- * Locality and repeat/JIP behaviour: execute from init.sqf only when the optional local marker
- * overlay is required. The marker script manages its own local replacement/stop behaviour. No
- * authoritative server state or JIP replay is created here.
+ * Locality and authority: Execute on each interface client only when the optional local marker
+ * overlay is required. This commented launcher creates no authoritative server state.
+ * Repeat/JIP: The marker script replaces its prior local loop when started again. Enable this
+ * launcher in per-client setup for joining players; it has no public-state replay of its own.
  *
  * Arguments: None.
  * Return Value: Nothing.
- * Current callers: optional mission-maker call from init.sqf; disabled in the release template.
+ * Current callers: optional mission-maker call from initPlayerLocal.sqf; disabled in the release template.
  *
  * Example:
  * [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";

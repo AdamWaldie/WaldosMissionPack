@@ -138,10 +138,6 @@ _spawn set [2, _altitude];
 // its rotor lift only exists while simulation is live, so pausing simulation mid-setup and then
 // resuming it moments later left the rotor state uninitialised for that first stretch of live frames.
 private _aircraft = createVehicle [_class, _spawn, [], 0, "FLY"];
-// Paradrop owns this aircraft's cruise speed and altitude. The generic helicopter braking helper
-// must not countermand those orders; remember the prior opt-out so retained aircraft can restore it.
-_aircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", _aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false], true];
-_aircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 [_aircraft] call Waldo_fnc_HeadlessPinCrew;
 _aircraft setPosATL _spawn;
 _aircraft setDir _direction;

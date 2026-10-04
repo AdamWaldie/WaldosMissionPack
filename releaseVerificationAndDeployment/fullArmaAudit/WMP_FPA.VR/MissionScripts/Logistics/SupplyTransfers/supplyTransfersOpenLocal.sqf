@@ -7,6 +7,7 @@
  * Return Value: <DISPLAY> or displayNull.
  * Current callers: registered-crate and registered-vehicle ACE transfer actions.
  * Example: [myCrate] call Waldo_fnc_SupplyTransfersOpenLocal;
+ * Result: The player receives the transfer panel for the selected source.
  */
 params [["_source", objNull, [objNull]], ["_preferredDestination", objNull, [objNull]]];
 private _interaction = if (isNull _preferredDestination) then {_source} else {_preferredDestination};

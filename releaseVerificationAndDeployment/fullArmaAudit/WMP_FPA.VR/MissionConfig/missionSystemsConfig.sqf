@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines squad-rally, economy, minigame, corpse-trap, ACE logistics, diagnostics and safestart
  * defaults. Activation, event handlers, state mutation and safestart application remain in init.
+ * Locality / Authority: SHARED rows load on every machine. The server owns SERVER rows and
+ * publishes only those marked for clients. Feature scripts own their later actions.
+ * Repeat/JIP: Guarded defaults leave live values intact. Joining clients load SHARED rows
+ * and receive published server settings without restarting these systems.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
  * Arguments: None. Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.

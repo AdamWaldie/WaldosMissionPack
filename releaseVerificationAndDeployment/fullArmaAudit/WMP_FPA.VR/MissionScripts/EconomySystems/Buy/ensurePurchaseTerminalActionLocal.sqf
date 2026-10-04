@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Ensure purchase terminal action local.
+ * Installs or repairs the current Purchase action on one terminal for this client.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,15 @@
  * 0: _purchaseTerminal <OBJECT> - purchase terminal (optional, default: objNull)
  *
  * Return Value:
- * Nothing
+ * <NUMBER> local action ID, or -1 without an interface/valid terminal.
  *
  * Example:
  * [_purchaseTerminal] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;
+ * Locality/Authority: Interface client only; purchase requests route to server authority.
+ * Repeat/JIP Behaviour: Versioned action installation avoids stacking; JIP clients reconcile
+ * terminal actions from the published object registry.
+ * Current Callers: Economy local world-action reconciliation and terminal registration.
+ * Result: This client can open the terminal's Purchasing interaction.
  */
 
         params [["_purchaseTerminal", objNull]];

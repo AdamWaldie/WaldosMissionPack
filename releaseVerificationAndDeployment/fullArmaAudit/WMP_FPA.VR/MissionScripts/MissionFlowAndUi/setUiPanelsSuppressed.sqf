@@ -12,6 +12,9 @@
  *
  * Example: [true] call Waldo_fnc_SetUiPanelsSuppressed;
  * Current caller: SetupUiAcePriority ACE interaction open/close event handlers.
+ * Locality and authority: Hides only this client's WMP panel controls while ACE takes
+ * priority. Repeated calls reconcile local visibility; no server or JIP state changes.
+ * Result: WMP panels are hidden or restored around ACE interaction UI.
  */
 params [["_suppressed", false, [true]]];
 if (!hasInterface) exitWith {false};

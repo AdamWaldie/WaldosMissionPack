@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Stops WMP persistence loops without deleting any database records.
+ * Locality and authority: Server ends database and object-save work and broadcasts local-loop
+ * cleanup. A client forwards an administrative stop request to the server.
+ * Repeat/JIP: Repeating cleanup leaves stored records intact. The public active flag becomes
+ * false, so joining players do not restart the old save loop.
  *
  * Arguments:
  * 0: localOnly <BOOLEAN> - internal server broadcast flag
@@ -10,6 +14,9 @@
  *
  * Example:
  * [] call Waldo_fnc_PersistenceStop;
+ * Result: Saves registered objects once, stops the loops and marks persistence inactive.
+ * It does not delete INIDBI2 records or return a useful value.
+ * Current callers: Persistence ZEN runtime control and mission scripts stopping the service.
  */
 
 params [["_localOnly", false, [false]]];

@@ -1,16 +1,16 @@
 /*
-    Script to replace a map location name based on a nearby game logic object and specify the new location's type.
-
-
-    To use this, place down a logic module with a variable name, then execute this script in init.sqf
-
-
-    Usage: [locationLogic, "New Location Name", "LocationType"] call Waldo_fnc_Waldo_fnc_ReplaceMapLocationName;
-
-    Parameters:
-    0: OBJECT - The variable name of the game logic object used as a reference point.
-    1: STRING - The new name for the location.
-    2: STRING - The type of the new location (e.g., "NameCity", "NameVillage", "NameCityCapital").
+ * Author: WaldoTheWarfighter
+ * Intended to add an editable location at the map location nearest a placed game logic.
+ * WARNING: This legacy helper has no server/repeat guard, so an unguarded Eden Init call can
+ * make duplicate locations. It creates a new location rather than renaming the terrain original.
+ * Locality and authority: Runs wherever called and has no authoritative JIP replay. Use only
+ * in a controlled test until the lifecycle is repaired.
+ * Arguments: 0: placed game logic <OBJECT>; 1: replacement name <STRING>;
+ *   2: CfgLocationTypes type <STRING> (for example "NameVillage").
+ * Return Value: No supported success value in the current implementation.
+ * Current callers: None in the pack; legacy mission-maker helper only.
+ * Example: [myLocationLogic, "New Village", "NameVillage"] call Waldo_fnc_ReplaceMapLocationName;
+ * Result: Intended to add a new location near the logic; repeated calls may duplicate it.
 
     Below is a list of common location types you might use in scripting and mission design, as derived from the Arma 3 documentation NOT ALL OF THESE WILL WORK:
     

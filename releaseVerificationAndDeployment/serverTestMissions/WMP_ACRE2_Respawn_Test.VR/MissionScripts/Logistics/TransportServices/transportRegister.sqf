@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
  * Registers one already AI-crewed helicopter, ground vehicle or boat with the authoritative typed
  * transport service. An Eden vehicle init runs on every machine, but only the server mutates the
  * registry; every non-server copy deliberately does nothing. ZEN registration reaches
@@ -16,28 +16,27 @@
  * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
  *
  * Arguments:
- * 0: vehicle <OBJECT>
- * 1: service type <STRING> - HELICOPTER, GROUND or BOAT.
- * 2: service ID <STRING> - unique readable key; blank generates one.
- * 3: display name <STRING> - player-facing callsign/name; blank uses groupId.
- * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
- *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
- *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
- *    landingClearanceScale,
- *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
- *    avoidRoadObstacles (ground only; default true - once a route stalls with no progress for
- *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
- *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
- *    false to keep retrying the exact same road-locked path instead),
- *    waterSearchRadius (boat only; furthest a safe water service point may move from the clicked
- *    position), boatSpeedLimit (boat only),
- *    invulnerable (vehicle and original AI service crew; default false), and
- *    useImprovedLanding (helicopters only; default true). At destination, LAND may naturally idle
- *    the engine down while boarding/disembarking and never orders passengers out;
- *    destinationDwell triggers moveOut only when forceDisembark is true, and RTB cannot begin until
- *    every passenger is physically outside. minimumSeparation spaces active
- *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18, boats 25);
- *    prepared bases are checked only for physical overlap.
+ * 0: vehicle <OBJECT> - required existing AI-crewed vehicle (default objNull is rejected).
+ * 1: service type <STRING> - HELICOPTER, GROUND or BOAT (default GROUND).
+ * 2: service ID <STRING> - unique readable key; blank generates one (default "").
+ * 3: display name <STRING> - player-facing callsign/name; blank uses groupId (default "").
+ * 4: options <HASHMAP|ARRAY of [STRING key, value] rows> (default empty HashMap). Keys:
+ *    cruiseAltitude <NUMBER metres, 50>, stopRadius <NUMBER metres, 35 heli/12 other>,
+ *    boardingSeconds <NUMBER seconds, 300>, destinationDwell <NUMBER seconds, 45>,
+ *    allowedSides <ARRAY of SIDE, [side driver]>, allowedGroups <ARRAY of group IDs, []>,
+ *    leadersOnly <BOOL, false>, showMarker <BOOL, true>, repairAtBase <BOOL, false>,
+ *    refuelAtBase <BOOL, true>, forceDisembark <BOOL, false>, failSafeReset <BOOL, false>,
+ *    invulnerable <BOOL, false; vehicle/original AI crew only>,
+ *    speedMode <STRING, NORMAL ground/FULL other>, behaviour <STRING, CARELESS>,
+ *    landingSearchRadius <NUMBER metres, 500>, landingClearanceScale <NUMBER, 1.5>,
+ *    roadSearchRadius <NUMBER metres, 200>, waterSearchRadius <NUMBER metres, 300>,
+ *    minimumSeparation <NUMBER metres, 60 heli/18 ground/25 boat>,
+ *    groundSpeedLimit <NUMBER km/h, 60>, boatSpeedLimit <NUMBER km/h, 45>,
+ *    pathRetrySeconds <NUMBER seconds, 25>, pathRetryLimit <NUMBER whole retries, 3>,
+ *    avoidRoadObstacles <BOOL, true; ground only>.
+ *    With forceDisembark=false, destinationDwell never ejects a passenger. RTB waits until every
+ *    human is physically out. Prepared bases may be closer than minimumSeparation, but cannot
+ *    physically overlap.
  *
  * Return Value: Boolean - true when registered (or when a duplicate non-server Eden copy was ignored).
  *
@@ -133,8 +132,7 @@ private _config = createHashMapFromArray [
     ["boatSpeedLimit", (_optionMap getOrDefault ["boatSpeedLimit", missionNamespace getVariable ["Waldo_BoatTransport_DefaultSpeedLimit", 45]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
-    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
-    ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
+    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 // minimumSeparation protects active destinations and bulk landing slots. At a prepared base,
@@ -206,16 +204,6 @@ _vehicle lockDriver true;
 // intermittent stop/start hunting this was tuned to fix. Waldo_fnc_ParadropBuildFlightRoute already
 // established this exact fix for the same class of AI flight behaviour.
 if (_type == "HELICOPTER") then {_vehicle flyInHeight [_config get "cruiseAltitude", true]};
-// Pickup retains the original TR UNLOAD route. Destination uses LAND so waypoint behaviour cannot
-// bypass voluntary disembarkation; both types remain eligible for improved vector landing and the
-// direct transport LAND command remains a fallback if the controller cannot acquire.
-if (_type == "HELICOPTER") then {
-    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
-    // Transport's original LAND fallback begins inside 300 m. The global acceleration gate must
-    // not delay controller acquisition past that fallback; the controller itself supplies the
-    // minimum entry speed needed to avoid the former slow Little Bird approach.
-    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", _config get "useImprovedLanding", true];
-};
 missionNamespace setVariable [switch (_type) do {
     case "HELICOPTER": {"Waldo_HeliTransport_Available"};
     case "BOAT": {"Waldo_BoatTransport_Available"};

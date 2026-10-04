@@ -6,6 +6,10 @@
  * controlling player's client can react. Restores the AI when the drone leaves the field. Only the
  * server runs this so a drone is judged once, and it only does work when a UAV-jamming jammer is
  * actually placed. Player-controlled drones are handled client-side (Waldo_fnc_JammingUavClient).
+ * Locality and authority: Server-only loop owns the authoritative jammed flag and autonomous
+ * drone handling; player-client datalink presentation remains separate.
+ * Repeat/JIP: A running flag prevents duplicate server loops. Published drone state is current
+ * network state for joiners, not a replay of previous loop ticks.
  *
  * Arguments:
  * None
@@ -15,6 +19,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammingUavServer;
+ * Current caller: Waldo_fnc_JammingInit on the server.
+ * Result: Autonomous drones in a UAV-jamming field stop and resume when clear.
  */
 
 if !(isServer) exitWith {};

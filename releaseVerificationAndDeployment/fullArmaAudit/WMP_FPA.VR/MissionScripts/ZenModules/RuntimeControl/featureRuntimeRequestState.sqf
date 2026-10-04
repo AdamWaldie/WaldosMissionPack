@@ -3,12 +3,17 @@
  * Requests an ordered snapshot of network-safe runtime feature settings from the server.
  * Public variables remain useful for live updates; this handshake prevents a JIP machine from
  * activating against local defaults before the server's latest settings have arrived.
+ * Locality and authority: Clients and headless clients request state; the server assembles and
+ * returns the authoritative snapshot to the validated requesting owner.
+ * Repeat/JIP: The client uses bounded retries until the complete snapshot arrives. An in-flight
+ * flag prevents parallel local request loops during join.
  *
  * Arguments: None
  * Return Value: Boolean - true when requested/queued
  *
  * Example: [] call Waldo_fnc_FeatureRuntimeRequestState;
  * Current callers: init.sqf startup handshake on clients and headless clients.
+ * Result: A non-server starts or keeps one request loop; the server sends a full snapshot.
  */
 
 if !(isServer) exitWith {
@@ -82,16 +87,6 @@ private _names = [
         "Waldo_EmergencyDismount_ClearPositionRadius", "Waldo_EmergencyDismount_RequireClearExit",
         "Waldo_EmergencyDismount_UseEject", "Waldo_EmergencyDismount_RecoverUnconscious",
         "Waldo_AIRebalance_Enable", "Waldo_AIRebalance_Mode", "Waldo_AIRebalance_Profile",
-        "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
-        "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",
-        "Waldo_ImprovedHelicopterLanding_TransitAltitude", "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio",
-        "Waldo_ImprovedHelicopterLanding_TreeScanRadius", "Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer",
-        "Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight", "Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance",
-        "Waldo_ImprovedHelicopterLanding_GoAroundHeight", "Waldo_ImprovedHelicopterLanding_GoAroundExitDistance",
-        "Waldo_ImprovedHelicopterLanding_GoAroundSpeed", "Waldo_ImprovedHelicopterLanding_MaximumGoArounds",
-        "Waldo_ImprovedHelicopterLanding_MaximumClimbRate", "Waldo_ImprovedHelicopterLanding_MaximumDescentRate",
-        "Waldo_ImprovedHelicopterLanding_TouchdownRadius", "Waldo_ImprovedHelicopterLanding_FinalCommitDistance",
-        "Waldo_ImprovedHelicopterLanding_ControlInterval",
         "Waldo_Hazard_Enable", "Waldo_Breaching_Enable", "Waldo_FieldResupply_Enable",
         "Waldo_Gunship_Enable", "Waldo_Gunship_PublicSystems",
         "Waldo_DynamicAA_PublicSystems",

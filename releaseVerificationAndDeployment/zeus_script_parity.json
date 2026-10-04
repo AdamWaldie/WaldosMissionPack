@@ -88,14 +88,6 @@
   },
   {
     "category": "core",
-    "module": "Convoy - Create Moving Group",
-    "handler": "Waldo_fnc_ZenConvoyModule",
-    "script_api": "Waldo_fnc_SimpleAiConvoy",
-    "parity": "full",
-    "notes": "Speed, separation and push-through match the script API."
-  },
-  {
-    "category": "core",
     "module": "Respawn: Create Loadout Save Point",
     "handler": "Waldo_fnc_ZenLoadoutSaveModule",
     "script_api": "Waldo_fnc_ZenAddLoadoutSaveAction",

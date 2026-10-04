@@ -1,9 +1,15 @@
 /*
+ * Author: WaldoTheWarfighter
  * Removes one WMP notification channel without disturbing unrelated panels.
  * Queued requests for the same channel are also discarded.
  *
  * Arguments: [channel]
- * Return: BOOL - true when an active or queued notification was removed
+ * Return Value: <BOOL> true when an active or queued notification was removed.
+ * Locality and authority: Client-local UI cleanup; it never changes another player's
+ * channels or server state. Repeating dismissal is safe and requires no JIP replay.
+ * Current callers: feature UI teardown and WMP notification expiry/replace paths.
+ * Example: ["MISSION"] call Waldo_fnc_DismissUiNotification;
+ * Result: This client's active and queued MISSION cards are cleared.
  */
 if (!hasInterface) exitWith {false};
 params [["_channel", "MISSION", [""]]];

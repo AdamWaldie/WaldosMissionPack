@@ -69,7 +69,6 @@ Check both commented lines: the launcher in `initPlayerLocal.sqf` and the marker
 * [Headless Client Support](Headless-Client-Support): the native, opt-in replacement for the legacy headless-client script
 * [Mission Configuration Reference](Mission-Configuration-Reference): player-local setup in `initPlayerLocal.sqf`
 * [Waldos AI Tweak](Waldos-AI-Tweak): AI skill tuning that works alongside headless offloading
-* [AI Convoy System](AI-Convoy-System)
 
 <!-- WMP-WIKI-NAV -->
 ---

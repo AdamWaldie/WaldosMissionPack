@@ -21,6 +21,11 @@
  *
  * Current callers:
  * initServer.sqf, initPlayerLocal.sqf and explicit Economy composition/runtime activation paths.
+ * Locality/Authority: Server starts authoritative Economy state and loops; each interface
+ * client installs its own curator menus and local actions after the runtime snapshot.
+ * Repeat/JIP Behaviour: The per-machine initialized flag prevents duplicate bootstrap.
+ * Joining clients read the server-published purge/activation state before local setup.
+ * Result: Starts only the Economy services appropriate to this machine when enabled.
  */
 
 if (missionNamespace getVariable ["WaldoEcoCore_ModulePurgedForJIP", false]) exitWith {};

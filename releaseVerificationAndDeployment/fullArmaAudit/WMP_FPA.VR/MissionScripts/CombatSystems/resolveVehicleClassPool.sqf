@@ -28,6 +28,10 @@
  *     && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
  *     && {getNumber (configFile >> "CfgVehicles" >> _this >> "transportSoldier") > 0}
  * }] call Waldo_fnc_ResolveVehicleClassPool;
+ * Locality and authority: Reads loaded vehicle configuration on the caller and caches each
+ * named query there. No server mutation or JIP replay is needed; later joiners build a cache
+ * when they first request the same pool.
+ * Result: Returns public vehicle classnames and labels accepted by the supplied test.
  */
 params [["_cacheKey", "", [""]], ["_test", {false}, [{}]]];
 if (_cacheKey == "") exitWith {[]};

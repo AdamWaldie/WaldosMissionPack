@@ -17,6 +17,7 @@
  * Example:
  * ["diag_01"] call Waldo_fnc_RunDiagnosticsClient;
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics
+ * Result: The client reports its checks for the active diagnostic run to the server.
  */
 if (!hasInterface) exitWith {false};
 params [["_runId", "", [""]]];

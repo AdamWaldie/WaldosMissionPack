@@ -1,12 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Set research completed for side.
+ * Adds or removes one completed technology in a side's authoritative Research list.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _sideKey <ANY> - side key
- * 1: _researchName <ANY> - research name
+ * 0: _sideKey <STRING> - WEST/EAST/GUER/CIV side key
+ * 1: _researchName <STRING> - technology name
  * 2: _completed <BOOL> - completed (optional, default: true)
  *
  * Return Value:
@@ -14,6 +14,10 @@
  *
  * Example:
  * [_sideKey, _researchName, _completed] call Waldo_fnc_EcoResearch_setResearchCompletedForSide;
+ * Locality/Authority: Economy authority via the side-state setter; not a client UI operation.
+ * Repeat/JIP Behaviour: Membership update is repeat-safe; the side list is broadcast for JIP.
+ * Current Callers: Research progress/completion and Economy authoring operations.
+ * Result: The side's completed list gains or loses the technology name.
  */
 
         params ["_sideKey", "_researchName", ["_completed", true]];

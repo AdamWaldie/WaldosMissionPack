@@ -18,6 +18,7 @@
  * Return Value: Boolean - true when applied locally or forwarded to the current group owner.
  * Current caller: Waldo_fnc_TransportReportServer after pickup, destination and physical RTB.
  * Example: [_group, getPosATL _helicopter, _helicopter] call Waldo_fnc_TransportStopGroupLocal;
+ * Result: The transport group stops its current route on its current owner.
  */
 
 params [
@@ -37,11 +38,6 @@ for "_index" from ((count waypoints _group) - 1) to 0 step -1 do {
 doStop leader _group;
 
 if (!isNull _vehicle && {_vehicle isKindOf "Helicopter"}) then {
-    if (_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
-        // Touchdown is already complete. Preserve LAND while removing only the vector controller;
-        // restoring transit height or LAND NONE here creates an unnecessary post-arrival lift.
-        [_vehicle, true, "LAND"] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
-    };
     _vehicle land "LAND";
 };
 true

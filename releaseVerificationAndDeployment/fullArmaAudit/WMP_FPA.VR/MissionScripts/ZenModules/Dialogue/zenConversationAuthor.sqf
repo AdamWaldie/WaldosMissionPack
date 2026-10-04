@@ -9,6 +9,7 @@
  * Submission path: the opened editor calls Waldo_fnc_ZenConversationAuthorServer, which validates
  * and delegates safe registration to Waldo_fnc_ConversationCreateData.
  * Example: place in empty space to author for later assignment, or directly on an NPC to apply.
+ * Result: The Conversation Author display opens, optionally targeting the selected living NPC.
  */
 params ["_modulePos", ["_target", objNull, [objNull]]];
 if (!isNull _target && {!(_target isKindOf "CAManBase")}) then {

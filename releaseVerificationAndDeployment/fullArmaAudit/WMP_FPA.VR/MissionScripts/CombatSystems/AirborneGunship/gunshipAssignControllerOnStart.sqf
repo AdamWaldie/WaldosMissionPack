@@ -6,6 +6,10 @@
  * objects, and object init fields have no guaranteed order against each other - this waits (bounded)
  * for the named system to finish registering before assigning, so it works regardless of which
  * object's init field happens to run first.
+ * Locality and authority: Only the server's execution of the Eden init call assigns the
+ * controller; other machines return without changing the gunship registry.
+ * Repeat/JIP: The bounded wait resolves startup ordering once, then server-published system
+ * state carries the assignment to joining clients.
  *
  * Server-only work: it silently no-ops (returns false) on every non-server machine, so it is safe to
  * call directly from an object's own Eden init field with no isServer wrapper - exactly like
@@ -29,6 +33,7 @@
  * [this, "EXAMPLE_GUNSHIP"] call Waldo_fnc_GunshipAssignControllerOnStart;
  *
  * Current callers: Gunship Support Example (Full) composition, mission-maker setup.
+ * Result: Once the named system exists, the supplied unit becomes its standing controller.
  */
 
 params [

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize drop point type.
+ * Converts a delivery-point category to the supported display spelling.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * 0: _value <STRING> - value (optional, default: "Ground")
  *
  * Return Value:
- * Any - see function body
+ * <STRING> Naval, Air, Ground or Supply; unknown values become Ground.
  *
  * Example:
  * [_value] call Waldo_fnc_EcoBuy_normalizeDropPointType;
+ * Locality/Authority: Any machine; pure category normalization.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Delivery-point creation, filtering and curator controls.
+ * Result: Returns the canonical category name.
  */
 
         params [["_value", "Ground"]];

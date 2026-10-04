@@ -28,6 +28,10 @@ params [
     ["_mode", "DAY", [""]],
     ["_profile", "LINE", [""]]
 ];
+if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+    [] call Waldo_fnc_AIRebalanceStop;
+    false
+};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!isServer && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {
     [_mode, _profile] spawn {

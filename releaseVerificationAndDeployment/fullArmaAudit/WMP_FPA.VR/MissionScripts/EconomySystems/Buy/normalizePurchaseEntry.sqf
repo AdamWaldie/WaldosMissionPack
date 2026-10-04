@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize purchase entry.
+ * Normalizes one purchasable asset to the catalog's nine-field row.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> [name, description, costs, requirements, class, type, side, icon, colour].
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuy_normalizePurchaseEntry;
+ * Locality/Authority: Any machine; transforms data without changing the catalog.
+ * Repeat/JIP Behaviour: Deterministic for the same row; no JIP side effect.
+ * Current Callers: Purchase catalog normalization, import and curator form.
+ * Result: Missing/invalid optional fields receive safe defaults.
  */
 
         params [["_entry", []]];

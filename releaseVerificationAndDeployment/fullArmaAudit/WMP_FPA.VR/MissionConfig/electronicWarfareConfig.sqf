@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines server-authoritative electronic-warfare and jammer defaults. Every entry is published
  * once by initServer for current clients and JIP; later server/ZEN changes remain authoritative.
+ * Locality / Authority: The SERVER loader reads this file only on the server. Server-side
+ * electronic-warfare scripts own state changes. Client actions send requests to them.
+ * Repeat/JIP: Guarded defaults preserve current server values. Published rows reach joining
+ * clients. Editing this file does not create a jammer or replay object setup.
  *
  * Schema: SERVER entries are [missionNamespace variable name, guarded default, publish BOOL].
  * Arguments: None. Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
@@ -23,13 +27,14 @@
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enablement, player feedback, LOS/burn-through/destruction rules, player toggle,
  * disable challenge, engineer restriction and success result are intended scenario choices.
- * DisableResult is DISABLE (repairable/reactivatable disabled state) or DEACTIVATE (ordinary off).
+ * DisableResult is DISABLE (reactivatable disabled state) or DESTROY (destroy and deregister).
  * ChallengeDifficulty is easy, standard, hard or expert and ChallengeId must be a registered WMP
  * interaction-equipment procedure such as circuit.
  * ADVANCED TUNING - BurnThroughRef, Curve, ScanRange, ScanBearingArc and ScanDistanceBands define
  * signal/RDF maths. Curve is LINEAR unless an implementation-supported alternative is documented.
- * Distances are metres; bearing arc is total degrees; distance bands are ascending absolute metre
- * thresholds [near, medium, distant]. Keep GM overlay false outside diagnostics.
+ * BurnThroughRef is reference transmit power in mW. Distances are metres; bearing arc is total
+ * degrees; distance bands are ascending absolute metre thresholds [near, medium, distant]. Keep
+ * GM overlay false outside diagnostics.
  *
  * HOW TO READ THE DATA BELOW:
  * Every `server` row is `[variable name, default value, publish to clients/JIP]`. `true` in the
@@ -41,8 +46,8 @@
  * - Waldo_Jamming_Enable (MISSION MAKER): true runs EW support; a jammer object must still be registered/created.
  * - Waldo_Jamming_Notify (MISSION MAKER): true shows affected players continuous WMP interference feedback.
  * - Waldo_Jamming_LOS (MISSION MAKER): true lets terrain and objects reduce effective jammer signal.
- * - Waldo_Jamming_BurnThrough (MISSION MAKER): true lets radios very close to one another overcome interference.
- * - Waldo_Jamming_BurnThroughRef (ADVANCED): reference distance in metres used by burn-through calculations.
+ * - Waldo_Jamming_BurnThrough (MISSION MAKER): true lets higher-power radios reduce jammer reach.
+ * - Waldo_Jamming_BurnThroughRef (ADVANCED): reference transmit power in mW for burn-through.
  * - Waldo_Jamming_Curve (ADVANCED): LINEAR or INVSQ attenuation; retain LINEAR unless deliberately testing falloff.
  * - Waldo_Jamming_Destructible (MISSION MAKER): true stops a registered jammer when its emitter is destroyed.
  * - Waldo_Jamming_GmOverlay (ADVANCED): true draws curator diagnostics; keep false for ordinary missions.
@@ -54,7 +59,7 @@
  * - Waldo_Jamming_DisableChallengeId (MISSION MAKER): registered interaction-equipment ID, for example "circuit".
  * - Waldo_Jamming_DisableDifficulty (MISSION MAKER): easy, standard, hard or expert.
  * - Waldo_Jamming_DisableEngineerOnly (MISSION MAKER): false lets anyone try; true requires ACE engineer status.
- * - Waldo_Jamming_DisableResult (MISSION MAKER): DISABLE creates a repairable state; DEACTIVATE is an ordinary off state.
+ * - Waldo_Jamming_DisableResult (MISSION MAKER): DISABLE leaves a reactivatable field; DESTROY removes the emitter.
  *
  * BEGINNER EXAMPLE:
  * Keep the defaults below, place a suitable object in Eden, and put `[this] call Waldo_fnc_Jammer;`
@@ -69,8 +74,8 @@ createHashMapFromArray [
         ["Waldo_Jamming_Enable", true, true],       // BOOL: starts EW services; does not create a jammer.
         ["Waldo_Jamming_Notify", true, true],       // BOOL: show affected players WMP interference feedback.
         ["Waldo_Jamming_LOS", true, true],          // BOOL: terrain/objects reduce a jammer's effective signal.
-        ["Waldo_Jamming_BurnThrough", true, true],  // BOOL: very close radios may overcome interference.
-        ["Waldo_Jamming_BurnThroughRef", 500, true], // ADVANCED reference distance in metres.
+        ["Waldo_Jamming_BurnThrough", true, true],  // BOOL: higher-power radios shrink jammer reach.
+        ["Waldo_Jamming_BurnThroughRef", 500, true], // ADVANCED reference transmit power in mW.
         ["Waldo_Jamming_Curve", "LINEAR", true],   // ADVANCED supported attenuation curve ID.
         ["Waldo_Jamming_Destructible", true, true], // BOOL: destruction can stop registered jammer objects.
         ["Waldo_Jamming_GmOverlay", false, true],   // ADVANCED diagnostics only.
@@ -82,6 +87,6 @@ createHashMapFromArray [
         ["Waldo_Jamming_DisableChallengeId", "circuit", true], // STRING: registered interaction-equipment ID.
         ["Waldo_Jamming_DisableDifficulty", "standard", true], // STRING: easy, standard, hard or expert.
         ["Waldo_Jamming_DisableEngineerOnly", false, true], // false: anyone may try; true: only ACE engineers may try.
-        ["Waldo_Jamming_DisableResult", "DISABLE", true] // DISABLE or DEACTIVATE.
+        ["Waldo_Jamming_DisableResult", "DISABLE", true] // DISABLE or DESTROY.
     ]]
 ]

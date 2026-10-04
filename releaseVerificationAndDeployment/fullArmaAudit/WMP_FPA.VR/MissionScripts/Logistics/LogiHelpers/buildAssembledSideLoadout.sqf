@@ -25,6 +25,10 @@
  * private _loadout = [["West"] call Waldo_fnc_MissionSQMLookup] call Waldo_fnc_BuildAssembledSideLoadout;
  *
  * Current callers: Waldo_fnc_RespawnSeedSideBaseLoadout.
+ * Locality and authority: Reads the supplied pool and weapon config on the caller; it does
+ * not change a unit. Repeated calls may choose different valid kit elements and need no JIP
+ * replay. The caller applies a selected loadout on the relevant unit's owner.
+ * Result: Returns one internally compatible kit, or [] when the pool cannot form one.
  */
 params [["_pool", [], [[]]]];
 if (count _pool < 8) exitWith {[]};

@@ -4,6 +4,10 @@
  * a live aircraft. The action follows aircraft state, refuses full cargo compartments and uses
  * the caller supplied by addAction rather than assuming the global local player variable.
  * Run on every interface, normally through an object-keyed JIP remote execution.
+ * Locality/authority: each interface owns its addAction and local boarding request. The aircraft
+ * remains under its normal Arma owner; this call does not alter server-owned flight state.
+ * Repeat/JIP: reinstall replaces the previous local action. Eden Init runs on each interface;
+ * dynamically created boarding points need replay for joining clients.
  *
  * Arguments:
  * 0: boarding object <OBJECT>
@@ -18,6 +22,7 @@
  *
  * Example:
  * [this, aircraft, "ARGUS 1-4"] call Waldo_fnc_MoveInCargoPlane;
+ * Result: this object offers Board ARGUS 1-4 while the named aircraft has a free cargo seat.
  */
 
 params [

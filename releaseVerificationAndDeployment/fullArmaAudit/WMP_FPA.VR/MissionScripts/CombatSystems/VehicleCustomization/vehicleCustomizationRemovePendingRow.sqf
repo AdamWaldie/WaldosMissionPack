@@ -20,6 +20,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Remove Selected Pending Row button).
+ * Locality and authority: Removes a row only from the curator's local editor display.
+ * Repeating a removal of the same UID has no server or JIP effect.
+ * Result: The identified pending row is absent from the next list refresh.
  */
 
 params [["_disp", displayNull], ["_uid", ""]];

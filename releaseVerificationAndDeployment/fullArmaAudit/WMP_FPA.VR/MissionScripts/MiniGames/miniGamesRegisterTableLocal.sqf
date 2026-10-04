@@ -9,6 +9,7 @@
  * Return Value: Boolean - true when local presentation was installed.
  * Current callers: MiniGamesRegisterTable and server registration replay.
  * Example: [_table, _registration] call Waldo_fnc_MiniGamesRegisterTableLocal;
+ * Result: The receiving client has the table's current local interaction and display state.
  */
 
 params [["_table", objNull, [objNull]], ["_registration", [], [[]]]];

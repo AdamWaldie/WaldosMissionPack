@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Import purchase configuration.
+ * Imports a PURCHASE_V1 catalog through the authoritative catalog setter.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_payload] call Waldo_fnc_EcoBuy_importPurchaseConfiguration;
+ * Locality/Authority: Economy authority through EcoBuy_setPurchaseCatalog.
+ * Repeat/JIP Behaviour: Re-import replaces the published catalog for JIP clients.
+ * Current Callers: Economy Purchasing import handler.
+ * Result: Purchase definitions from the accepted payload replace current definitions.
  */
 
         params [["_payload", []]];

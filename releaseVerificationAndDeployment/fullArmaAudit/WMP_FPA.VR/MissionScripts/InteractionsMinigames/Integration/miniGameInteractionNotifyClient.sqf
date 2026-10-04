@@ -13,6 +13,9 @@
  *
  * Example: ["FIELD TERMINAL ACQUIRED", "OK", 4] call Waldo_fnc_MiniGameInteractionNotifyClient;
  * Current callers: interaction-equipment acquisition and terminal challenge result adapters.
+ * Locality/Authority: Interface client only; writes to its local WMP notice region.
+ * Repeat/JIP Behaviour: Each call shows or suppresses one local notice; nothing is replayed to JIP.
+ * Result: Returns true when displayed or deliberately suppressed, false without a usable interface.
  */
 if (!hasInterface) exitWith {false};
 params [["_message", "EQUIPMENT UNAVAILABLE", [""]], ["_severity", "WARN", [""]], ["_duration", 4, [0]]];

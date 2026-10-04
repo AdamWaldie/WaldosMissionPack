@@ -242,35 +242,6 @@ Waldo_QA_fnc_spawnConstructionVehicleServer = {
     _vehicle
 };
 
-Waldo_QA_fnc_startConvoyServer = {
-    if (!isServer) exitWith {};
-
-    private _oldGroup = missionNamespace getVariable ["Waldo_QA_ConvoyGroup", grpNull];
-    if (!isNull _oldGroup) then {
-        {
-            if (!isPlayer _x) then {deleteVehicle _x;};
-        } forEach (units _oldGroup);
-        deleteGroup _oldGroup;
-    };
-
-    private _convoyGroup = createGroup west;
-    {
-        _x params ["_variableName", "_position"];
-        private _vehicle = [_variableName, "B_MRAP_01_F", _position, 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
-        _vehicle setVelocity [0, 0, 0];
-        _vehicle setVectorUp (surfaceNormal _position);
-        private _driver = _convoyGroup createUnit ["B_Soldier_F", _position, [], 0, "NONE"];
-        _driver moveInDriver _vehicle;
-    } forEach [["qa_convoy_1", [28, 54, 0]], ["qa_convoy_2", [28, 70, 0]]];
-
-    private _waypoint = _convoyGroup addWaypoint [[28, 100, 0], 0];
-    _waypoint setWaypointType "MOVE";
-    missionNamespace setVariable ["Waldo_QA_ConvoyGroup", _convoyGroup, true];
-    [_convoyGroup, 15, 10, false] spawn Waldo_fnc_SimpleAiConvoy;
-    diag_log "[WMP QA] Manual convoy test started.";
-    ["Convoy test started. Both vehicles are now live and moving north."] remoteExec ["systemChat", 0];
-};
-
 Waldo_QA_fnc_resetEconomyFixturesServer = {
     if (!isServer) exitWith {};
     call Waldo_QA_fnc_refillEconomyServer;
@@ -529,11 +500,7 @@ missionNamespace setVariable ["Waldo_QA_ACRERackVehicle", _acreRackVehicle, true
 [] call Waldo_fnc_AARTrack;
 [objNull] call Waldo_QA_fnc_spawnAARTargetServer;
 
-{
-    _x params ["_variableName", "_position"];
-    [_variableName, "B_MRAP_01_F", _position, 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
-} forEach [["qa_convoy_1", [28, 54, 0]], ["qa_convoy_2", [28, 70, 0]]];
-["core", "MISSION FLOW / CONVOY", [0, 39, 0], "Loadout save, diagnostics, objectives, AAR, SafeStart and a manually started AI convoy."] call Waldo_QA_fnc_registerFeatureStationServer;
+["core", "MISSION FLOW", [0, 39, 0], "Loadout save, diagnostics, objectives, AAR and SafeStart."] call Waldo_QA_fnc_registerFeatureStationServer;
 
 // Dialogue gallery: immediately usable archetypes plus deliberately separate specific and advanced examples.
 private _dialogueGroup = createGroup [civilian, true];
@@ -616,7 +583,7 @@ private _transportHeli = ["qa_transport_heli", "B_Heli_Light_01_F", [270, 52, 0]
 private _transportGround = ["qa_transport_ground", "B_MRAP_01_F", [280, 52, 0], 180, true] call Waldo_QA_fnc_getFeatureObjectServer;
 if (crew _transportHeli isEqualTo []) then {createVehicleCrew _transportHeli};
 if (crew _transportGround isEqualTo []) then {createVehicleCrew _transportGround};
-[_transportHeli, "HELICOPTER", "QA_RAVEN", "QA Raven", createHashMapFromArray [["showMarker", true], ["cruiseAltitude", 80], ["boardingSeconds", 180], ["useImprovedLanding", true]]] call Waldo_fnc_TransportRegister;
+[_transportHeli, "HELICOPTER", "QA_RAVEN", "QA Raven", createHashMapFromArray [["showMarker", true], ["cruiseAltitude", 80], ["boardingSeconds", 180]]] call Waldo_fnc_TransportRegister;
 [_transportGround, "GROUND", "QA_TAXI", "QA Taxi", createHashMapFromArray [["showMarker", true], ["boardingSeconds", 180]]] call Waldo_fnc_TransportRegister;
 missionNamespace setVariable ["Waldo_QA_TransportVehicles", [_transportHeli, _transportGround], true];
 ["transport-services", "TRANSPORT SERVICES", [275, 40, 0], "Request each typed pool, select a destination, disembark and verify physical return-to-base."] call Waldo_QA_fnc_registerFeatureStationServer;

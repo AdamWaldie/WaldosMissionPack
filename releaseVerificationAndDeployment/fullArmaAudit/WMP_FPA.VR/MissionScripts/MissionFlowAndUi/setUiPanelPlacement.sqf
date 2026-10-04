@@ -1,9 +1,18 @@
 /*
+ * Author: WaldoTheWarfighter
  * Sets a mission-authored default placement for one WMP UI channel.
  * Call on the server with publish=true, or from initPlayerLocal for a local mission.
  *
- * Arguments: [channel, placement, allowLocalPlayerOverride, publish]
- * Return: validated placement
+ * Locality and authority: Normally called on the server with publication enabled; a local
+ * mission can set its own value. Reusing a channel replaces its entry, and published settings
+ * provide the current default to JIP clients.
+ * Arguments: 0: channel <STRING> ("MISSION"); 1: placement <STRING> ("TOP");
+ *   2: allow player override <BOOL> (false); 3: publish <BOOL> (isServer).
+ * Return Value: <STRING> validated placement; invalid choices become "TOP".
+ * Current callers: Mission-maker server UI configuration (see Custom UI Notifications wiki).
+ * Example: ["QUARTERMASTER", "TOP_RIGHT", true, true]
+ *   call Waldo_fnc_SetUiPanelPlacement;
+ * Result: QUARTERMASTER cards default to TOP_RIGHT, with local overrides allowed.
  */
 params [
     ["_channel", "MISSION", [""]],

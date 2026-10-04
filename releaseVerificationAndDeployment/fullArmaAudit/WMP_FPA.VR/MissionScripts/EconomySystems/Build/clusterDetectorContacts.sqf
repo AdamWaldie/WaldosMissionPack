@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Cluster detector contacts.
+ * Groups nearby detector contacts into map-display clusters.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
  * 0: _contacts <ARRAY> - contacts (optional, default: [])
- * 1: _radius <SCALAR> - radius (optional, default: 200)
+ * 1: _radius <NUMBER> - grouping radius in metres (optional, default: 200)
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> grouped contact rows.
  *
  * Example:
  * [_contacts, _radius] call Waldo_fnc_EcoBuild_clusterDetectorContacts;
+ * Locality/Authority: Any machine; pure clustering of supplied contact rows.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Authoritative detector scan before marker creation.
+ * Result: Nearby contacts share a cluster marker rather than one marker each.
  */
 
         params [["_contacts", []], ["_radius", 200]];

@@ -18,6 +18,11 @@
  *
  * Example:
  * [_vehicle] call Waldo_fnc_VVDPurgeVehicle;
+ * Locality and authority: Forwards to the vehicle owner when necessary, then deletes crew,
+ * attached decorations and hull where local. Repeating after deletion is harmless; removed
+ * objects are absent for JIP clients.
+ * Current caller: Waldo_fnc_VVDInit when replacing a prior depot vehicle.
+ * Result: The depot-spawned vehicle and its AI crew are removed on their owner.
  */
 
 params [["_veh", objNull]];

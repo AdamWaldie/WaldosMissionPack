@@ -24,6 +24,8 @@
  * [myCrate, -1, 2] call Waldo_fnc_SetCargoAttributes;
  * [myCrate, -1, 2, true, false] call Waldo_fnc_SetCargoAttributes;
  * [myCrate, nil, nil, true, false] call Waldo_fnc_SetCargoAttributes;
+ * Result: Submitted settings are coalesced for that object and applied through ACE's global
+ * handling/cargo setters, then replayed by ACE to joining clients.
  *
  */
 

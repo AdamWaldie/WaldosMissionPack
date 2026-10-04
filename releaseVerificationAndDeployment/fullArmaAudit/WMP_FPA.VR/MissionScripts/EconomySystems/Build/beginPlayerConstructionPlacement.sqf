@@ -1,8 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Begin player construction placement.
+ * Start the local placement preview for a chosen construction source and build.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Interface client only. The player aims and confirms locally;
+ * construction itself is requested from Economy authority later.
+ * Repeat/JIP: Starting again replaces the current local placement preview;
+ * there is no persistent JIP state until a site is confirmed.
+ * Current Callers: No direct in-pack caller; available to construction UI scripts.
  *
  * Arguments:
  * 0: _source <OBJECT> - source (optional, default: objNull)
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Nothing
+ * Result: Shows the placement controls and a preview when the source and
+ * definition are valid; otherwise leaves placement unchanged.
  *
  * Example:
  * [_source, _buildName] call Waldo_fnc_EcoBuild_beginPlayerConstructionPlacement;

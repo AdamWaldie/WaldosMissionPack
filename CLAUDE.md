@@ -1103,7 +1103,7 @@ against `ace_headless`'s own "Full Rebalance" behaviour, it moves every eligible
 with no settle-time grace period at all. Real-time, continuously-driven WMP systems -
 `Waldo_fnc_GunshipRegister`, the paradrop flight route builder (`Waldo_fnc_ParadropBuildFlightRoute`,
 covering both `Waldo_fnc_ParadropQuickFlightSetup` and `Waldo_fnc_ParadropCreateDropZone`),
-`Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` - therefore call
+and `Waldo_fnc_DynamicAACreate` - therefore call
 `Waldo_fnc_HeadlessPinCrew` on their own managed vehicle(s) by default, which sets both
 `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) and ACE's own
 `acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
@@ -1508,7 +1508,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionInit/Jamming/` — Localised radio jamming for ACRE2 & TFAR (registry, create/toggle/remove, per-mod engines, UAV jamming, shared factor helper, EW toolkit + feedback HUD)
 - `MissionInit/ElectronicWarfare/` — EMP burst (`Waldo_fnc_EMP`) and signal trackers / C-Track (`Waldo_fnc_Tracker`)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
-- `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
+- `AiScripting/` — AI skill-value adjustment and headless-locality adoption
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
@@ -1721,7 +1721,6 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Call Endex → `remoteExec ["Waldo_fnc_ENDEX", 0, true]`
 - Custom Mission End → `["end1"] remoteExec ["BIS_fnc_endMission", 0, true]`
 - Fortify Budget Manager → calls `Waldo_fnc_FortifyBudgetModule`
-- Spawn AI Convoy → calls `Waldo_fnc_ZenConvoyModule` (turns the nearest crewed land-vehicle group into a managed convoy via `Waldo_fnc_SimpleAiConvoy`)
 - Loadout Save Point → calls `Waldo_fnc_ZenLoadoutSaveModule`
 - Safestart - Activate → `[true] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Go Live (Lift) → `[false] remoteExec ["Waldo_fnc_SafeStart", 2]`

@@ -14,6 +14,11 @@
  *
  * Example:
  * [this] call Waldo_fnc_MiniGameEquipmentGallerySetup;
+ * Locality/Authority: Interface client only; installs ACE/vanilla actions locally.
+ * Repeat/JIP Behaviour: Intended for every client's object init; local action installation is
+ * repeat-safe, and a joining client installs its own action when the object initializes.
+ * Current Callers: Eden object init fields and the interaction-equipment QA mission.
+ * Result: The object opens the gallery through either interaction menu on this client.
  */
 
 params ["_target"];

@@ -33,7 +33,7 @@
  *    minimumSeparation <NUMBER metres, 60 heli/18 ground/25 boat>,
  *    groundSpeedLimit <NUMBER km/h, 60>, boatSpeedLimit <NUMBER km/h, 45>,
  *    pathRetrySeconds <NUMBER seconds, 25>, pathRetryLimit <NUMBER whole retries, 3>,
- *    avoidRoadObstacles <BOOL, true; ground only>, useImprovedLanding <BOOL, true; heli only>.
+ *    avoidRoadObstacles <BOOL, true; ground only>.
  *    With forceDisembark=false, destinationDwell never ejects a passenger. RTB waits until every
  *    human is physically out. Prepared bases may be closer than minimumSeparation, but cannot
  *    physically overlap.
@@ -132,8 +132,7 @@ private _config = createHashMapFromArray [
     ["boatSpeedLimit", (_optionMap getOrDefault ["boatSpeedLimit", missionNamespace getVariable ["Waldo_BoatTransport_DefaultSpeedLimit", 45]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
-    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
-    ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
+    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 // minimumSeparation protects active destinations and bulk landing slots. At a prepared base,
@@ -205,16 +204,6 @@ _vehicle lockDriver true;
 // intermittent stop/start hunting this was tuned to fix. Waldo_fnc_ParadropBuildFlightRoute already
 // established this exact fix for the same class of AI flight behaviour.
 if (_type == "HELICOPTER") then {_vehicle flyInHeight [_config get "cruiseAltitude", true]};
-// Pickup retains the original TR UNLOAD route. Destination uses LAND so waypoint behaviour cannot
-// bypass voluntary disembarkation; both types remain eligible for improved vector landing and the
-// direct transport LAND command remains a fallback if the controller cannot acquire.
-if (_type == "HELICOPTER") then {
-    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
-    // Transport's original LAND fallback begins inside 300 m. The global acceleration gate must
-    // not delay controller acquisition past that fallback; the controller itself supplies the
-    // minimum entry speed needed to avoid the former slow Little Bird approach.
-    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", _config get "useImprovedLanding", true];
-};
 missionNamespace setVariable [switch (_type) do {
     case "HELICOPTER": {"Waldo_HeliTransport_Available"};
     case "BOAT": {"Waldo_BoatTransport_Available"};

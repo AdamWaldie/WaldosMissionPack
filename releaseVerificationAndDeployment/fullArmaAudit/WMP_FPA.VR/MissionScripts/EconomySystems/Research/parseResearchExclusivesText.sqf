@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Parse research exclusives text.
+ * Parses curator-entered exclusive technology names into a normalized list.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -8,10 +8,14 @@
  * 0: _text <STRING> - text (optional, default: "")
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY of STRING> normalized names.
  *
  * Example:
  * [_text] call Waldo_fnc_EcoResearch_parseResearchExclusivesText;
+ * Locality/Authority: Curator interface client; pure text parsing.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect until a catalog update is submitted.
+ * Current Callers: Research editor form collection.
+ * Result: Returns the names used by Research entry normalization.
  */
 
         params [["_text", ""]];

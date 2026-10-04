@@ -210,8 +210,8 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertEqual(audit.count("private _deadline = diag_tickTime + 120;"), 2)
         self.assertIn("getAssignedCuratorUnit _curator", audit)
         self.assertIn("count allPlayers > 0", audit)
-        self.assertIn('["LANDED", "ANCHORED", "ABORTED"]', audit)
-        self.assertIn('in ["LANDED", "ANCHORED"]', audit)
+        self.assertNotIn("ImprovedHelicopterLanding", audit)
+        self.assertNotIn("HelicopterDeceleration", audit)
         self.assertIn("private _clientReadyDeadline = diag_tickTime + 300", server_init)
         self.assertIn('getVariable ["Waldo_QA_FeatureRangeClientReady", false]', server_init)
         self.assertLess(server_init.index("_clientReadyDeadline"), server_init.index("Waldo_fnc_RunDiagnostics"))
@@ -977,8 +977,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('sleep 4;', create)
         self.assertIn('[_aircraft, _route, false] call _applyCruiseOrders;', create)
         self.assertIn('if (_injectVelocity) then', create)
-        self.assertIn('Waldo_HelicopterDeceleration_Exclude', create + quick + remove)
-        self.assertIn('Waldo_Paradrop_HelicopterDecelerationExcludeBaseline', create + quick + remove)
+        self.assertNotIn('HelicopterDeceleration', create + quick + remove)
         self.assertIn('call Waldo_fnc_ParadropOperateDoor', create + quick)
         self.assertIn('animateDoor [_x, _phase]', operate_door)
         self.assertIn('class ParadropOperateDoor', functions)
@@ -1117,115 +1116,6 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("Waldo_QA_ControlConsole", controls)
         self.assertIn("Waldo_QA_CoreConsole", controls)
         self.assertIn("_forceVanilla", controls)
-
-    def test_improved_helicopter_landing_is_ai_only_event_driven_and_locality_safe(self):
-        root = ROOT / "MissionScripts" / "AiScripting"
-        init = (root / "improvedHelicopterLandingInit.sqf").read_text(encoding="utf-8")
-        tracker = (root / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
-        controller = (root / "improvedHelicopterLandingExecuteLocal.sqf").read_text(encoding="utf-8")
-        anchor = (root / "improvedHelicopterLandingAnchorLocal.sqf").read_text(encoding="utf-8")
-        restore = (root / "improvedHelicopterLandingRestoreLocal.sqf").read_text(encoding="utf-8")
-        self.assertIn('["Helicopter", "init"', init)
-        self.assertIn('addEventHandler ["Local"', init)
-        self.assertIn('getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]', init)
-        self.assertNotIn("allMissionObjects", init + tracker)
-        self.assertNotIn("ImprovedHelicopterLandingMonitor", init + tracker)
-        self.assertIn("!isPlayer _pilot", tracker)
-        self.assertIn("isNull (remoteControlled _pilot)", tracker)
-        self.assertIn('["LAND", "UNLOAD", "TR UNLOAD", "GETOUT"]', tracker)
-        self.assertIn('Waldo_TransportService_Registered', tracker)
-        self.assertIn('Waldo_TransportService_State', tracker)
-        self.assertIn('== "TO_DESTINATION"', tracker)
-        self.assertIn('!isTouchingGround _helicopter', tracker)
-        self.assertIn('"MinimumApproachSpeed", 55', tracker)
-        self.assertIn("private _approachReady", tracker)
-        self.assertIn('Waldo_ImprovedHelicopterLanding_ImmediateAcquisition', tracker)
-        self.assertIn('"MinimumApproachSpeed", 55', controller)
-        self.assertIn("max 50", tracker + controller)
-        self.assertIn("nearestTerrainObjects", controller)
-        self.assertIn("surfaceNormal", controller)
-        self.assertIn("setVectorDirAndUp", controller)
-        self.assertIn("MaximumClimbRate", controller)
-        self.assertIn("MaximumGoArounds", controller)
-        self.assertIn('"FinalCommitDistance", 75', controller)
-        self.assertIn("!_committedToTouchdown && {currentWaypoint _group != _expectedWaypoint}", controller)
-        self.assertIn("_liveScript != _expectedScript", controller)
-        self.assertIn("distance2D _targetPosition > 0.5", controller)
-        self.assertIn("(_targetDeltaX / _targetDeltaMagnitude) * _desiredSpeed", controller)
-        self.assertIn("private _desiredVelocityZ = if (_goAround) then {3}", controller)
-        self.assertIn("_atlAltitude <= 1", controller)
-        self.assertIn("_horizontalVelocity <= 2", controller)
-        self.assertIn('"Waldo_ImprovedHelicopterLanding_LastResult"', controller)
-        self.assertIn('disableAI "PATH"', controller)
-        self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true]', controller)
-        self.assertIn("spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal", controller)
-        self.assertIn('disableAI "MOVE"', anchor)
-        self.assertIn('flyInHeight 0', anchor)
-        self.assertIn('"LANDING_WAYPOINT_DELETED"', anchor)
-        self.assertIn('"LANDING_WAYPOINT_EDITED"', anchor)
-        self.assertIn('"ONWARD_WAYPOINT"', anchor)
-        self.assertIn('"TouchdownHoldSeconds", 8', anchor)
-        self.assertIn('enableAI "PATH"', restore)
-        self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", false, true]', restore)
-        zen_modules = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
-        self.assertNotIn("AI - Helicopter Landing Control", zen_modules)
-
-    def test_full_pack_audit_exercises_real_ai_landing_and_live_ui_themes(self):
-        audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
-        generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
-        server = (audit / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
-        client = (audit / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
-        self.assertIn('("ai-helicopter-landing", "AI HELICOPTER FLIGHT"', generator)
-        self.assertIn('("ui-theme-qa", "UI THEME QA"', generator)
-        self.assertIn('fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F"', generator)
-        self.assertIn('createVehicleCrew _helicopter', server)
-        self.assertIn('private _spawnAltitude = [30, 220] select _highApproach', server)
-        self.assertIn('private _spawnMode = "FLY"', server)
-        self.assertIn('private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -30, _spawnAltitude]', server)
-        self.assertIn('_helicopter enableSimulationGlobal true', server)
-        self.assertIn('{_x enableSimulationGlobal true} forEach crew _helicopter', server)
-        self.assertIn('_group setCurrentWaypoint _waypoint', server)
-        self.assertIn('_waypoint setWaypointType "SCRIPTED"', server)
-        self.assertIn('_waypoint setWaypointScript "A3\\functions_f\\waypoints\\fn_wpLand.sqf"', server)
-        self.assertIn('_waypoint setWaypointSpeed "NORMAL"', server)
-        self.assertNotIn("call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", server)
-        server_audit = (audit / "runServerAudit.sqf").read_text(encoding="utf-8")
-        staged_server_audit = (
-            ROOT
-            / "releaseVerificationAndDeployment"
-            / "fullArmaAudit"
-            / "FullArmaAudit.VR"
-            / "runServerAudit.sqf"
-        ).read_text(encoding="utf-8")
-        self.assertIn('"core/ai-helicopter/land-touchdown"', server_audit)
-        self.assertIn('Waldo_ImprovedHelicopterLanding_LastResult', server_audit)
-        self.assertIn('"core/ai-helicopter/land-touchdown"', staged_server_audit)
-        self.assertIn('fn_wpland.sqf', staged_server_audit)
-        self.assertIn("START NORMAL AI LANDING", client)
-        self.assertIn("START HIGH APPROACH / GO-AROUND", client)
-        for theme in (
-            '["DEFAULT", "DEFAULT"]',
-            '["WW2", "WW2"]',
-            '["VIETNAM", "VIETNAM"]',
-            '["SCIFI", "SCI-FI"]',
-            '["PARCHMENT", "PARCHMENT"]',
-            '["MINIMAL", "MINIMAL"]',
-            '["NAVAL", "NAVAL"]',
-            '["DESERT_STORM", "DESERT STORM"]',
-            '["INDUSTRIAL", "INDUSTRIAL"]',
-            '["EASTERN_BLOC", "EASTERN BLOC"]',
-            '["INTELLIGENCE", "INTELLIGENCE"]',
-            '["GRIMDARK", "GRIMDARK"]',
-            '["ATOMIC_AGE", "ATOMIC AGE"]',
-            '["WASTELAND", "WASTELAND"]',
-            '["PMC", "PMC"]',
-            '["RETRO_COMMAND", "RETRO COMMAND"]',
-            '["DIESELPUNK", "DIESELPUNK"]',
-            '["MERCENARY", "MERCENARY"]',
-            '["PROPAGANDA", "PROPAGANDA"]',
-            '["EMERGENCY", "EMERGENCY"]',
-        ):
-            self.assertIn(theme, client)
 
     def test_recovery_restore_requires_a_complete_clear_footprint(self):
         root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"

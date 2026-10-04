@@ -6,6 +6,7 @@
  * Arguments: success <BOOL>, source <OBJECT>, destination <OBJECT>, category <STRING>.
  * Return Value: Nothing. Current caller: RequestWithFeedbackServer.
  * Example: [true, boxA, boxB, "ITEM"] remoteExecCall ["Waldo_fnc_SupplyTransfersResultLocal", owner player];
+ * Result: The player sees a transfer outcome and the panel refreshes if it remains open.
  */
 params [["_ok", false, [false]], ["_source", objNull, [objNull]],
     ["_destination", objNull, [objNull]], ["_category", "", [""]]];

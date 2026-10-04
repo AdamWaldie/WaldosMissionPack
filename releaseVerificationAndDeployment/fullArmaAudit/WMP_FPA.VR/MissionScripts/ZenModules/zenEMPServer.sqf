@@ -2,12 +2,17 @@
  * Author: WaldoTheWarfighter
  * Authenticates a ZEN curator request before invoking the normal server-authoritative EMP API.
  * This protects the public ZEN path without changing mission-script uses of Waldo_fnc_EMP.
+ * Locality and authority: Server-only; checks that the remote owner is the supplied assigned
+ * curator before using the authoritative EMP API.
+ * Repeat/JIP: Each accepted call starts a separate pulse. The EMP feature manages its effect
+ * state for current and joining clients; this bridge installs no local handler.
  *
  * Arguments:
  * 0: position <ARRAY>; 1: radius <NUMBER>; 2: duration <NUMBER>; 3: requester <OBJECT>.
  * Return Value: BOOL - true when the server accepted the pulse.
  * Example: [[100,100,0],150,30,player] remoteExecCall ["Waldo_fnc_ZenEMPServer",2];
  * Current caller: Waldo_fnc_ZenEMP.
+ * Result: A bounded-radius, bounded-duration EMP starts at the submitted position.
  */
 params [["_position", [], [[]]], ["_radius", 150, [0]], ["_duration", 30, [0]], ["_requester", objNull, [objNull]]];
 if (!isServer) exitWith {false};
