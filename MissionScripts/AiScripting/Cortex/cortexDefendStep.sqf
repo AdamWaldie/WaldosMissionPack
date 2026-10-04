@@ -46,11 +46,11 @@ if (_target isEqualTo []) exitWith {false};
 _target params ["_spot", "_sector"];
 {
     private _position = _spot getPos [3 + _forEachIndex * 3, _sector + 90];
-    if (surfaceIsWater _position || {((surfaceNormal _position) select 2) < 0.5}) then {
+    if (surfaceIsWater _position || {((surfaceNormal _position) select 2) < 0.55}) then {
         private _distance=3+_forEachIndex*3;
         {
             private _alternative=_spot getPos [_distance*_x,_sector+90];
-            if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.5}) exitWith {_position=_alternative};
+            if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.55}) exitWith {_position=_alternative};
         } forEach [0.65,0.35,0];
     };
     _x setVariable ["Waldo_AIPass_DefendPos", [_position, _sector, "LINE"], true];

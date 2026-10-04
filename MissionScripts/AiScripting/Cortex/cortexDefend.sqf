@@ -68,10 +68,10 @@ private _taken = [];
 {
     private _offset = (_forEachIndex - (count _line - 1) / 2) * _spacing;
     private _slot=_centre getPos [_offset,_facing+90];
-    if (surfaceIsWater _slot || {((surfaceNormal _slot) select 2) < 0.5}) then {
+    if (surfaceIsWater _slot || {((surfaceNormal _slot) select 2) < 0.55}) then {
         {
             private _alternative=_centre getPos [_offset*_x,_facing+90];
-            if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.5}) exitWith {_slot=_alternative};
+            if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.55}) exitWith {_slot=_alternative};
         } forEach [0.75,0.5,0.25,0];
     };
     private _spot = ([_slot, _threat, 8, _taken] call Waldo_fnc_CortexFindCover) select 0;
@@ -86,7 +86,7 @@ private _rear=if (_rearRoute isEqualTo []) then {+_centre} else {+(_rearRoute se
 {
     private _offset=(_forEachIndex-(count _reserve-1)/2)*5;
     private _slot=_rear getPos [_offset,_facing+90];
-    if (surfaceIsWater _slot || {((surfaceNormal _slot) select 2) < 0.5}) then {_slot=+_rear};
+    if (surfaceIsWater _slot || {((surfaceNormal _slot) select 2) < 0.55}) then {_slot=+_rear};
     _x setVariable ["Waldo_AIPass_DefendPos", [_slot,_facing,"RESERVE"], true];
 } forEach _reserve;
 if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};

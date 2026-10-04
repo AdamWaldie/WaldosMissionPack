@@ -193,9 +193,9 @@ Feature cases: **62**. Required variant categories: **14**.
 
 ### CIVILIAN - Civilian danger response and external ownership
 
-**Expected:** Disabled civilians remain in place. Enabled ordinary civilians physically move away once, respect the cooldown and yield immediately to a later Zeus order. WebKnight custom actors, active IMS actors and Simple Civilian Behaviour civilians remain externally owned and receive no Cortex movement, animation or combat commands.
+**Expected:** Disabled civilians remain in place. Enabled ordinary civilians choose one finite dry, passable escape avenue, physically move away once, respect the cooldown and yield immediately to a later Zeus order. WebKnight custom actors, active IMS actors and Simple Civilian Behaviour civilians remain externally owned and receive no Cortex movement, animation or combat commands.
 
-**Automation and open work:** runReactions.sqf adds disabled refusal, enabled physical flight, cooldown refusal and physical Zeus replacement-order checks through the production reaction endpoint. Saved, unexecuted. Dependency-loaded WBK/IMS/Simple Civilian Behaviour, locality migration, JIP and real FiredNear/Hit event-delivery variants remain open.
+**Automation and open work:** runReactions.sqf adds disabled refusal, enabled physical flight, cooldown refusal and physical Zeus replacement-order checks through the production reaction endpoint. The endpoint now evaluates three separated headings through the same bounded infantry terrain selector and rechecks its single safe-position adjustment without adding a polling controller. Saved, unexecuted. Dependency-loaded WBK/IMS/Simple Civilian Behaviour, locality migration, JIP, uneven-terrain travel and real FiredNear/Hit event-delivery variants remain open.
 
 ### AT - Anti-armour and ammunition roles
 

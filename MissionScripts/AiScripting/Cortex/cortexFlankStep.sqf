@@ -391,10 +391,10 @@ private _issue = {
         private _depth = 0;
         if (_teams isNotEqualTo []) then {_lateral = _lateral + ([-8,8] select (_drill get "teamTurn"))};
         private _spot = (_point getPos [_lateral, _direction + 90]) getPos [_depth, _direction];
-        if (surfaceIsWater _spot || {((surfaceNormal _spot) select 2) < 0.5}) then {
+        if (surfaceIsWater _spot || {((surfaceNormal _spot) select 2) < 0.55}) then {
             {
                 private _alternative=(_point getPos [_lateral*_x,_direction+90]) getPos [_depth,_direction];
-                if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.5}) exitWith {
+                if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.55}) exitWith {
                     _spot=_alternative;
                 };
             } forEach [0.65,0.35,0];

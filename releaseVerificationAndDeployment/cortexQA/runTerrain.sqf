@@ -161,7 +161,7 @@ private _defenceArrived=[{
 },100] call _wait;
 ["TERRAIN-defence-physical-arrival",_defenceArrived,str (_defenders apply {getPosATL _x})] call _check;
 private _slots=_defenders apply {private _slot=_x getVariable ["Waldo_AIPass_DefendPos",[]]; if (_slot isEqualTo []) then {[0,0,0]} else {_slot select 0}};
-["TERRAIN-defence-slots-dry-passable",_slots findIf {surfaceIsWater _x || {((surfaceNormal _x) select 2) < 0.5}} < 0,str _slots] call _check;
+["TERRAIN-defence-slots-dry-passable",_slots findIf {surfaceIsWater _x || {((surfaceNormal _x) select 2) < 0.55}} < 0,str _slots] call _check;
 
 [_defenceGroup] call Waldo_fnc_CortexDefendRelease;
 missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];

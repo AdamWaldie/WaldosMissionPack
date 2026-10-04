@@ -483,7 +483,7 @@
       "id": "CIVILIAN",
       "title": "Civilian danger response and external ownership",
       "setup": "Use an ordinary unarmed civilian near a threat with reactions disabled and enabled, then replace the active flee order with a Zeus movement order. Repeat under supported WBK, IMS and Simple Civilian Behaviour dependencies when installed.",
-      "expected": "Disabled civilians remain in place. Enabled ordinary civilians physically move away once, respect the cooldown and yield immediately to a later Zeus order. WebKnight custom actors, active IMS actors and Simple Civilian Behaviour civilians remain externally owned and receive no Cortex movement, animation or combat commands.",
+      "expected": "Disabled civilians remain in place. Enabled ordinary civilians choose one finite dry, passable escape avenue, physically move away once, respect the cooldown and yield immediately to a later Zeus order. WebKnight custom actors, active IMS actors and Simple Civilian Behaviour civilians remain externally owned and receive no Cortex movement, animation or combat commands.",
       "settings": [
         "Waldo_AIPass_CivilianReaction_Enable",
         "Waldo_AIPass_CivilianReaction_Radius",
@@ -492,7 +492,7 @@
       ],
       "status": "implemented_partial",
       "live_evidence": [],
-      "automation": "runReactions.sqf adds disabled refusal, enabled physical flight, cooldown refusal and physical Zeus replacement-order checks through the production reaction endpoint. Saved, unexecuted. Dependency-loaded WBK/IMS/Simple Civilian Behaviour, locality migration, JIP and real FiredNear/Hit event-delivery variants remain open.",
+      "automation": "runReactions.sqf adds disabled refusal, enabled physical flight, cooldown refusal and physical Zeus replacement-order checks through the production reaction endpoint. The endpoint now evaluates three separated headings through the same bounded infantry terrain selector and rechecks its single safe-position adjustment without adding a polling controller. Saved, unexecuted. Dependency-loaded WBK/IMS/Simple Civilian Behaviour, locality migration, JIP, uneven-terrain travel and real FiredNear/Hit event-delivery variants remain open.",
       "executable_sources": [
         "runReactions.sqf"
       ],

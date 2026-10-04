@@ -99,7 +99,7 @@ for "_i" from 1 to 8 do {
                 private _other = (_x select 0) getVariable ["Waldo_AIPass_SupportLease",[]];
                 count _other == 6 && {(_other select 3) distance2D _centre < 109}
             } >= 0;
-            if (!_occupied && {!surfaceIsWater _centre} && {((surfaceNormal _centre) select 2) >= 0.5}) then {
+            if (!_occupied && {!surfaceIsWater _centre} && {((surfaceNormal _centre) select 2) >= 0.55}) then {
                 _rallyCandidates pushBack [_centre];
             };
         };
