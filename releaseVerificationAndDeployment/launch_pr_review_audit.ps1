@@ -23,7 +23,8 @@
  * CortexAudit: run the disposable Cortex owner, convoy, artillery and custom UI acceptance cases.
  * CortexFocus: optional focused batch; stateflows runs lifecycle and vehicle state handoffs together,
  *   airskills runs adaptive aircraft plus AI profile/crew-skill mechanics, and supportflows runs
- *   coordinated manoeuvre plus combined-arms composition in one launch.
+ *   coordinated manoeuvre plus combined-arms composition in one launch. terrain rejects VR and
+ *   dynamically finds measured relief for infantry, vehicle and defensive movement.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
  * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}. Both processes always
  * enable Arma's network log so every dedicated audit captures traffic alongside its RPT.
@@ -32,6 +33,7 @@
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Automated -CortexAudit -CortexFocus airskills -AuditTerrain Altis
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Automated -CortexAudit -CortexFocus coordinated -AuditTerrain Altis
+ * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Automated -CortexAudit -CortexFocus terrain -AuditTerrain Altis
  * Current callers: launch_full_arma_hosted_audit.ps1 and manual QA operators.
  #>
 param(
@@ -50,7 +52,7 @@ param(
     [ValidateRange(0, 2)]
     [int]$HeadlessClients = 0,
     [switch]$CortexAudit,
-    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "airskills", "supportflows", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "lighting", "performance", "performancecontact", "performancemixed", "coordinated", "coordinatedbounds", "coordinatedclean", "combinedarms", "lifecycle", "stateflows", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings")]
+    [ValidateSet("all", "features", "artillery", "convoy", "infantry", "combat", "mechanics", "airskills", "supportflows", "convoymatrix", "convoycolumn", "convoytracked", "convoydiagnostic", "convoyfollow", "gates", "gunnery", "convoyseats", "extensions", "landing", "cover", "avoidance", "crossing", "contact", "artillerysmoke", "scheduler", "profiles", "lighting", "performance", "performancecontact", "performancemixed", "coordinated", "coordinatedbounds", "coordinatedclean", "combinedarms", "lifecycle", "stateflows", "lambs", "aircraft", "deceleration", "reactions", "support", "airborne", "vehicles", "fire", "buildings", "terrain")]
     [string]$CortexFocus = "all",
     [ValidateSet("FLANK-NATIVE-FIRE","FLANK-YELLOW-NATIVE-FIRE","FLANK-YELLOW","FLANK-AWARE","ADVANCE-AWARE","FLANK","ADVANCE","ADVANCE-YELLOW","ADVANCE-CLOSE","ADVANCE-DISTANT","FLANK-ZEUS","ADVANCE-ZEUS","FLANK-ZEUS-ROE","FLANK-BLOCKED","ADVANCE-BLOCKED","FLANK-GRENADE","FLANK-ZEUS-CONSOLIDATE","ADVANCE-GRENADE")]
     [string]$CortexCombatCase = "",
@@ -87,6 +89,7 @@ if ($CortexAudit) {
         Add-Content -LiteralPath (Join-Path $missionRoot "auditPreInit.sqf") -Value ('missionNamespace setVariable ["Waldo_CortexQA_CombatCase","' + $CortexCombatCase + '"];')
     }
     Add-Content -LiteralPath (Join-Path $missionRoot "auditPreInit.sqf") -Value ('missionNamespace setVariable ["Waldo_CortexQA_Focus","' + $CortexFocus + '"];')
+    Add-Content -LiteralPath (Join-Path $missionRoot "auditPreInit.sqf") -Value ('missionNamespace setVariable ["Waldo_CortexQA_AuditTerrain","' + $AuditTerrain + '"];')
     $coverage = Get-Content -LiteralPath (Join-Path $PSScriptRoot "cortexQA/coverage.json") -Raw | ConvertFrom-Json
     $catalogue = @($coverage.cases | ForEach-Object {
         $case = $_
@@ -114,6 +117,7 @@ if ($CortexAudit) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runContact.sqf") -Destination (Join-Path $missionRoot "cortexQAContact.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runCrossing.sqf") -Destination (Join-Path $missionRoot "cortexQACrossing.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runCover.sqf") -Destination (Join-Path $missionRoot "cortexQACover.sqf")
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runTerrain.sqf") -Destination (Join-Path $missionRoot "cortexQATerrain.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runGates.sqf") -Destination (Join-Path $missionRoot "cortexQAGates.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runGunnery.sqf") -Destination (Join-Path $missionRoot "cortexQAGunnery.sqf")
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "cortexQA/runGuide.sqf") -Destination (Join-Path $missionRoot "cortexQAGuide.sqf")

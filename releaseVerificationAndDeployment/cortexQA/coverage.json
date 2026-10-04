@@ -13,9 +13,24 @@
     "JIP observer",
     "invalid or missing dependencies",
     "minimum/default/maximum settings where supported",
-    "Zeus interruption during each action phase, cleanup and physical replacement-order execution"
+    "Zeus interruption during each action phase, cleanup and physical replacement-order execution",
+    "measured hills, inclines and rough terrain with dry passable routes"
   ],
   "cases": [
+    {
+      "id": "TERRAIN",
+      "title": "Cross-cutting uneven-terrain movement",
+      "setup": "Launch the dedicated terrain focus on Altis. The fixture must dynamically find a dry 180 m sector with at least 7 m elevation relief and measurable surface roughness before creating infantry, wheeled-vehicle and defensive movement. VR and non-evaluative flat sectors fail the prerequisite.",
+      "expected": "The shared avenue selector rejects water and cliff-like samples for infantry and vehicles, both elements physically traverse the measured uneven sector, and a defence order physically occupies dry passable positions across the relief. A selected route, accepted order, elapsed timer or nominal non-VR world cannot pass by itself.",
+      "settings": [],
+      "status": "implemented_partial",
+      "live_evidence": [],
+      "automation": "runTerrain.sqf is a dedicated cross-cutting terrain prerequisite and physical diagnostic. It scans a bounded 7x7 set of sectors once, records measured relief and roughness, exercises the production avenue selector for infantry and vehicle mobility, requires physical movement, and verifies public defence placement. It deliberately rejects VR. Altis execution, headless ownership, Zeus interruption, tracked vehicles, larger formations and individual feature suites on varied terrain remain pending batched live acceptance.",
+      "executable_sources": [
+        "runTerrain.sqf"
+      ],
+      "production_sources": []
+    },
     {
       "id": "CORE",
       "title": "Master, exclusions and ownership",

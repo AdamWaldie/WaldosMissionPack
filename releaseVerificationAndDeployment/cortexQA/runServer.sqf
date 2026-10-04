@@ -5,7 +5,8 @@
  * Repeat/JIP: one run per machine; fresh fixtures are cleaned up, no production JIP replay.
  * Arguments: None. Waldo_CortexQA_Focus selects the staged batch; airskills runs aircraft and
  * AI-profile/vehicle-crew mechanics together, while supportflows runs coordinated manoeuvre plus
- * combined-arms composition in one process without unrelated feature suites.
+ * combined-arms composition in one process without unrelated feature suites. terrain runs a
+ * measured-relief prerequisite and physical infantry, vehicle and defence traversal batch.
  * Return: Nothing (scheduled script).
  * Current callers: staged audit continuation. Example: [] execVM "cortexQAServer.sqf";
  */
@@ -21,6 +22,7 @@ waitUntil {sleep 0.5; missionNamespace getVariable ["Waldo_CortexQA_GuideReady",
 private _check = {params ["_id","_ok",["_detail",""]]; diag_log format ["WMP CORTEX QA|%1|%2|%3",_id,["FAIL","PASS"] select _ok,_detail]; if (!_ok) then {_failures pushBack _id}; private _results = missionNamespace getVariable ["Waldo_CortexQA_Results",[]]; _results pushBack [_id,["FAIL","PASS"] select _ok]; missionNamespace setVariable ["Waldo_CortexQA_Results",_results,true]};
 private _wait = {params ["_condition",["_seconds",15]]; private _until = diag_tickTime + _seconds; waitUntil {sleep 0.2; call _condition || {diag_tickTime >= _until}}; call _condition};
 private _saved = createHashMapFromArray (([] call Waldo_fnc_CortexTuningSpec) apply {[_x select 0,missionNamespace getVariable [_x select 0,_x select 5]]});
+if (_focus == "terrain") then {[_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQATerrain.sqf"};
 private _group = grpNull;
 private _house = objNull;
 if (_focus in ["all","features","infantry"]) then {

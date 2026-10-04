@@ -1,5 +1,6 @@
 """Cortex operational regression contracts. Engine acceptance is in cortexQA, not simulated here."""
 from pathlib import Path
+import json
 import unittest
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / 'MissionScripts/AiScripting/Cortex'
@@ -705,11 +706,12 @@ class CortexOperations(unittest.TestCase):
         from check_cortex_coverage import audit,render_markdown
         data,errors,pending=audit(ROOT)
         self.assertEqual(errors,[])
-        self.assertEqual(len(data['cases']),61)
+        self.assertEqual(len(data['cases']),62)
         self.assertIn('LAMBS',pending)
         self.assertIn('COORD',pending)
         self.assertIn('COMBINED-ARMS',pending)
         self.assertIn('COMBINED-OPERATION',pending)
+        self.assertIn('TERRAIN',pending)
         production={
             path.relative_to(ROOT).as_posix()
             for path in (ROOT/'MissionScripts/AiScripting').rglob('*.sqf')
@@ -723,6 +725,7 @@ class CortexOperations(unittest.TestCase):
         self.assertEqual(report,(ROOT/'releaseVerificationAndDeployment/cortexQA/FEATURE_STATUS.md').read_text(encoding='utf-8'))
         for case in data['cases']:
             self.assertIn(f"| {case['id']} - {case['title']} |",report)
+
         combined=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCombinedArms.sqf').read_text()
         for marker in ['COMBINED-air-fixture-moving','COMBINED-natural-contact','COMBINED-opportunity-created','COMBINED-no-infantry-assembly',
                        'COMBINED-ground-route-preserved','COMBINED-ground-target-shared',
@@ -857,6 +860,30 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('player allowDamage false',guide)
         self.assertIn('player setCaptive true',guide)
         self.assertIn('addMissionEventHandler ["EntityRespawned"',guide)
+
+    def test_terrain_focus_requires_measured_relief_and_physical_travel(self):
+        launcher=(ROOT/'releaseVerificationAndDeployment/launch_pr_review_audit.ps1').read_text(encoding='utf-8')
+        server=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text(encoding='utf-8')
+        terrain=(ROOT/'releaseVerificationAndDeployment/cortexQA/runTerrain.sqf').read_text(encoding='utf-8')
+        self.assertIn('"buildings", "terrain"',launcher)
+        self.assertIn('Waldo_CortexQA_AuditTerrain',launcher)
+        self.assertIn('runTerrain.sqf") -Destination (Join-Path $missionRoot "cortexQATerrain.sqf")',launcher)
+        self.assertIn('if (_focus == "terrain")',server)
+        self.assertIn('cortexQATerrain.sqf',server)
+        self.assertIn('toLower worldName != "vr"',terrain)
+        self.assertIn('_relief >= 7',terrain)
+        self.assertIn('_roughness >= 0.025',terrain)
+        self.assertIn('surfaceIsWater _x',terrain)
+        self.assertIn('"INFANTRY"] call Waldo_fnc_CortexSelectAvenue',terrain)
+        self.assertIn('"VEHICLE"] call Waldo_fnc_CortexSelectAvenue',terrain)
+        self.assertIn('TERRAIN-infantry-physical-progress',terrain)
+        self.assertIn('TERRAIN-vehicle-physical-progress',terrain)
+        self.assertIn('TERRAIN-defence-physical-arrival',terrain)
+        coverage=json.loads((ROOT/'releaseVerificationAndDeployment/cortexQA/coverage.json').read_text(encoding='utf-8'))
+        terrain_case=next(case for case in coverage['cases'] if case['id']=='TERRAIN')
+        self.assertEqual(terrain_case['executable_sources'],['runTerrain.sqf'])
+        self.assertEqual(terrain_case['status'],'implemented_partial')
+        self.assertEqual(terrain_case['live_evidence'],[])
 
     def test_audit_visualisation_has_a_bounded_render_cost(self):
         guide=(ROOT/'releaseVerificationAndDeployment/cortexQA/runGuide.sqf').read_text(encoding='utf-8')
