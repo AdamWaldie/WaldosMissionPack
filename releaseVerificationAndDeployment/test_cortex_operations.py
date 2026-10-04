@@ -3123,7 +3123,6 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _handoverWaypoints=waypoints _handoverGroup',controller)
         self.assertIn('_handoverGroup setCurrentWaypoint _authoredWaypoint',controller)
         self.assertNotIn('_handoverGroup setCurrentWaypoint [_handoverGroup,_authoredWaypointOffset]',controller)
-        self.assertNotIn('_handoverGroup move _handoverPosition',controller)
         self.assertNotIn('(crew _aircraft) doFollow leader _handoverGroup',controller)
         self.assertNotIn('_handoverPilot commandMove _handoverPosition',controller)
         self.assertNotIn('_handoverPilot setDestination [_handoverPosition',controller)
@@ -3140,6 +3139,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_handoverGroup setBehaviourStrong _authoredBehaviour',controller)
         self.assertIn('_handoverGroup setSpeedMode _authoredSpeed',controller)
         self.assertIn('_handoverGroup setCombatMode _authoredCombatMode',controller)
+        self.assertIn('(_snapshot param [4,waypointType _authoredWaypoint]) == "MOVE"',controller)
+        self.assertIn('_handoverGroup move _handoverPosition',controller)
         self.assertNotIn('_handoverGroup setCombatMode "BLUE"',controller)
         # One native height hint at a real stage transition is permitted because Arma does not use
         # MOVE point Z as a dependable flight profile. Direct handover may clear that persistent

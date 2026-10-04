@@ -44,8 +44,9 @@
  * attack policy and selects the authenticated curator waypoint. One non-forced height request uses
  * the waypoint's AGL altitude when meaningful, or the live aircraft height for a normal ground-level
  * map click; this cancels the otherwise persistent Cortex flight-height hint without inventing a
- * route. It creates no timed guard, replacement route, pilot movement/behaviour order or delayed
- * semantic restoration.
+ * route. For an authenticated MOVE waypoint only, the group receives the same destination once
+ * after selection. This wakes native helicopter movement observed retaining the deleted Cortex leg;
+ * it creates no timed guard, replacement route, pilot order or delayed semantic restoration.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler,
@@ -138,6 +139,14 @@ private _finish={
                 if (_authoredBehaviour != "NO CHANGE") then {_handoverGroup setBehaviourStrong _authoredBehaviour};
                 if (_authoredSpeed != "UNCHANGED") then {_handoverGroup setSpeedMode _authoredSpeed};
                 if (_authoredCombatMode != "NO CHANGE") then {_handoverGroup setCombatMode _authoredCombatMode};
+                // Selecting the correct waypoint was insufficient in the live audit: the native
+                // helicopter kept climbing toward the deleted Cortex ingress and then hovered with
+                // MOVE displayed. Replay only the authenticated MOVE destination once. The Zeus
+                // waypoint remains authoritative and Cortex leaves no scheduled repair behind.
+                if ((_snapshot param [4,waypointType _authoredWaypoint]) == "MOVE"
+                    && {count _handoverPosition >= 2}) then {
+                    _handoverGroup move _handoverPosition;
+                };
             };
             _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",nil,true];
