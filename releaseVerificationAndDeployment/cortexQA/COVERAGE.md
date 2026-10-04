@@ -262,7 +262,7 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Vehicle yields inside the short corridor and resumes after clearance; disabled mode adds no WMP avoidance stop.
 
-**Automation and open work:** runConvoyAvoidance.sqf: physical yielding, walking clearance, resumed travel and no injury. Runtime 041548 failed stop/hold. Source now activates controller before observer delay and adds an occupied-corridor case plus minimum distance/stop diagnostics. Retest pending.
+**Automation and open work:** runConvoyAvoidance.sqf: physical yielding, walking clearance, resumed travel and no injury. Runtime 041548 failed stop/hold. Source now activates controller before observer delay and adds an occupied-corridor case plus minimum distance/stop diagnostics. VR retains deterministic coordinates; terrain worlds rotate the entire route over a measured dry three-lane corridor, require relief, reject unsafe surface normals and grades, and judge pedestrian clearance and resumed travel on the route axes. Retest pending.
 
 ### CNV-HALT - Convoy contact drills
 

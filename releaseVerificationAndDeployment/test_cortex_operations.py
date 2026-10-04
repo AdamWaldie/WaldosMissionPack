@@ -2616,6 +2616,24 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('CORTEX CONVOY STOPPED',text)
         self.assertLess(text.index('== "HALT"}) exitWith {true}'),text.index('CORTEX CONVOY STOPPED'))
 
+    def test_convoy_avoidance_audit_uses_route_relative_real_terrain_checks(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runConvoyAvoidance.sqf').read_text()
+        for marker in ['private _terrainReady=worldName == "VR"',
+                       'for "_heading" from 0 to 315 step 45',
+                       'forEach [-20,0,20]',
+                       'for "_along" from -110 to 650 step 25',
+                       '((surfaceNormal _sample) select 2) < 0.65',
+                       '_grade > 0.8',
+                       '_relief >= 15',
+                       'CNV-AVOID-terrain-scenario',
+                       'call _terrainPosition',
+                       'vectorDotProduct _terrainRight > 15',
+                       'vectorDotProduct _terrainForward > _pedestrianAlong+30']:
+            self.assertIn(marker,qa)
+        self.assertIn('No dry three-lane vehicle corridor',qa)
+        self.assertNotIn('getPosATL _man select 0 > 4215',qa)
+        self.assertNotIn('getPosATL _lead select 1 > _pedestrianY+30',qa)
+
     def test_remount_retries_physical_boarding_and_cancels_on_contact(self):
         restore=source('cortexRestoreCalm')
         tick=source('cortexGroupTick')

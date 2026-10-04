@@ -698,7 +698,7 @@
       "live_evidence": [
         "runtime-20260927-041548: stop/hold failed; pedestrian clearance, continuing travel and no injury passed."
       ],
-      "automation": "runConvoyAvoidance.sqf: physical yielding, walking clearance, resumed travel and no injury. Runtime 041548 failed stop/hold. Source now activates controller before observer delay and adds an occupied-corridor case plus minimum distance/stop diagnostics. Retest pending.",
+      "automation": "runConvoyAvoidance.sqf: physical yielding, walking clearance, resumed travel and no injury. Runtime 041548 failed stop/hold. Source now activates controller before observer delay and adds an occupied-corridor case plus minimum distance/stop diagnostics. VR retains deterministic coordinates; terrain worlds rotate the entire route over a measured dry three-lane corridor, require relief, reject unsafe surface normals and grades, and judge pedestrian clearance and resumed travel on the route axes. Retest pending.",
       "executable_sources": [
         "runConvoyAvoidance.sqf"
       ],
