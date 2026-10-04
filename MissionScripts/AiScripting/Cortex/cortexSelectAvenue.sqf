@@ -31,9 +31,11 @@
  * Return Value:
  * Array - selected ordered leg endpoints, or [] when no candidate is safe
  *
- * Current callers: Waldo_fnc_CortexFlankStart, Waldo_fnc_CortexAdvanceStart,
- * Waldo_fnc_CortexRetreat, Waldo_fnc_CortexSupportAssaultServer and
- * Waldo_fnc_CortexCombinedArmsLocal.
+ * Current callers: Waldo_fnc_CortexFlankStart, Waldo_fnc_CortexFlankStep,
+ * Waldo_fnc_CortexAdvanceStart, Waldo_fnc_CortexRetreat, Waldo_fnc_CortexGroupTick,
+ * Waldo_fnc_CortexSupportAssaultServer, Waldo_fnc_CortexSupportCoordinateStep,
+ * Waldo_fnc_CortexCombinedArmsLocal, Waldo_fnc_CortexVehicles and
+ * Waldo_fnc_CortexArtilleryScoot.
  *
  * Example:
  * private _legs = [_start, [[_goal],[_screen,_goal]], _enemyPos, [_baseOrigin], _target]
@@ -61,7 +63,7 @@ private _bestScore=1e12;
 {
     private _route=_x;
     private _valid=_route isNotEqualTo [] && {_route findIf {
-        count _x < 2 || {surfaceIsWater _x} || {_vehicleRoute && {((surfaceNormal _x) select 2) < _minimumSurfaceUp}}
+        count _x < 2 || {surfaceIsWater _x} || {((surfaceNormal _x) select 2) < _minimumSurfaceUp}
     } < 0};
     private _routeLength=0;
     private _hardScreen=0;

@@ -1017,6 +1017,10 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('call Waldo_fnc_CortexSelectAvenue',flank)
         self.assertIn('call Waldo_fnc_CortexSelectAvenue',retreat)
         self.assertIn('forEach [0, 30, -30, 60, -60]',retreat)
+        flank_step=source('cortexFlankStep')
+        self.assertIn('forEach [0.65,0.35,0]',flank_step)
+        self.assertIn('forEach [0,-15,15,-30,30]',flank_step)
+        self.assertIn('[_centroid,_assaultCandidates,_enemyPos] call Waldo_fnc_CortexSelectAvenue',flank_step)
 
     def test_multi_manoeuvre_audit_requires_real_drills_and_contact(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
@@ -2654,7 +2658,9 @@ class CortexOperations(unittest.TestCase):
         step=source('cortexFlankStep')
         hold=step[step.index('    case "HOLD":'):]
         self.assertNotIn('== "FLANK"',hold.split('private _assault =')[1].split('private _assaultDirection')[0])
-        self.assertIn('_enemyPos getPos [20, _assaultDirection]',hold)
+        self.assertIn('_enemyPos getPos [20,_crossingDirection]',hold)
+        self.assertIn('forEach [0,-15,15,-30,30]',hold)
+        self.assertIn('[_centroid,_assaultCandidates,_enemyPos] call Waldo_fnc_CortexSelectAvenue',hold)
         self.assertIn('["assaultObjective",+_enemyPos]',hold)
         self.assertIn('_drill get "assaultDirection"',step)
         self.assertIn('if (_assaulting && {!_assaultEnabled})',step)
@@ -2812,7 +2818,7 @@ class CortexOperations(unittest.TestCase):
 
     def test_assault_approach_leaves_margin_for_frag_exclusion(self):
         step=source('cortexFlankStep')
-        self.assertIn('_enemyPos getPos [20, _assaultDirection + 180]',step)
+        self.assertIn('_enemyPos getPos [20,_crossingDirection+180]',step)
         grenade=source('cortexThrowGrenade')
         self.assertIn('nearEntities ["CAManBase",12]',grenade)
 

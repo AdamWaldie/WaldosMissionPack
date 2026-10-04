@@ -3,7 +3,8 @@
  * Advances a running drill (flank or bounding advance) by one step: issue a bound, wait for arrival,
  * pause and overwatch, cross streets under smoke, and finish by holding the ground won or assaulting.
  *
- * Bounds: each member gets his own spot, spread across a shallow line facing the last known enemy position. Ordinary
+ * Bounds: each member gets his own spot, spread across a shallow line facing the last known enemy position. A slot on
+ * water or a cliff-like side slope contracts towards the bound centre rather than stranding that soldier. Ordinary
  * bounds, the final position and the assault position are snapped to cover facing the enemy
  * (Waldo_fnc_CortexFindCover); street crossings and the clearing rush are not. On movement bounds, final approaches and
  * street crossings, group-level RED pursuit is replaced by a finite YELLOW lease, but individual
@@ -389,6 +390,14 @@ private _issue = {
         private _depth = 0;
         if (_teams isNotEqualTo []) then {_lateral = _lateral + ([-8,8] select (_drill get "teamTurn"))};
         private _spot = (_point getPos [_lateral, _direction + 90]) getPos [_depth, _direction];
+        if (surfaceIsWater _spot || {((surfaceNormal _spot) select 2) < 0.5}) then {
+            {
+                private _alternative=(_point getPos [_lateral*_x,_direction+90]) getPos [_depth,_direction];
+                if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.5}) exitWith {
+                    _spot=_alternative;
+                };
+            } forEach [0.65,0.35,0];
+        };
         if (_kind in ["BOUND", "FINAL", "ASSAULT"]) then {
             private _cover = ([_spot, _enemyPos, 3, _spots, _group] call Waldo_fnc_CortexFindCover) select 0;
             // Cover may lie beyond the search radius on a large object. Preserve the formation slot.
@@ -692,11 +701,22 @@ switch (_drill get "stage") do {
                 && {(_state getOrDefault ["moraleState", "STEADY"]) == "STEADY"}
                 && {_centroid distance2D _enemyPos <= _assaultRange};
             private _assaultDirection = _centroid getDir _enemyPos;
-            private _clearPoint = _enemyPos getPos [20, _assaultDirection];
-            // Leave room for 3 m arrival tolerance and up to 2 m cover adjustment
-            // outside the grenade helper's 12 m friendly exclusion radius.
-            private _approachPoint = _enemyPos getPos [20, _assaultDirection + 180];
-            if (_assault && {!surfaceIsWater _clearPoint} && {!surfaceIsWater _approachPoint}) then {
+            private _assaultCandidates=[];
+            {
+                private _crossingDirection=_assaultDirection+_x;
+                // Leave room for 3 m arrival tolerance and up to 2 m cover adjustment
+                // outside the grenade helper's 12 m friendly exclusion radius.
+                private _approach=_enemyPos getPos [20,_crossingDirection+180];
+                private _clear=_enemyPos getPos [20,_crossingDirection];
+                _assaultCandidates pushBack [_approach,_clear];
+            } forEach [0,-15,15,-30,30];
+            private _assaultRoute=if (_assault) then {
+                [_centroid,_assaultCandidates,_enemyPos] call Waldo_fnc_CortexSelectAvenue
+            } else {[]};
+            if (_assaultRoute isNotEqualTo []) then {
+                private _approachPoint=+(_assaultRoute select 0);
+                private _clearPoint=+(_assaultRoute select 1);
+                _assaultDirection=_approachPoint getDir _clearPoint;
                 // Snapshot the reported objective. New reports must not drag this crossing
                 // behind the actors or reverse their frontage halfway through the assault.
                 _drill set ["assaulting", true];
