@@ -16,8 +16,8 @@
  * Withdraw: a vehicle that can still move but is at 50% damage or (if it carries a real weapon, not
  * just a horn or countermeasure launcher) has lost its weapons, with an enemy
  * within 800 m, fires its smoke launcher (Waldo_fnc_CortexFireCountermeasure). If the whole squad is
- * mounted, it withdraws 300 m away from the enemy (RETREAT phase, through an inserted waypoint). Each
- * vehicle withdraws once per engagement.
+ * mounted, it withdraws towards one of five terrain-checked points roughly 300 m away from the enemy
+ * (RETREAT phase, through an inserted waypoint). Each vehicle withdraws once per engagement.
  * Gunnery (Waldo_AIPass_VehicleGunnery_Enable): the AI gunner is pointed at the most dangerous
  * enemy seen in the last 15 s within 600 m: anti-tank infantry first, then armour, then anything
  * else, nearest first, held for 8 s. A fully mounted tank or APC that knows of an anti-tank soldier
@@ -110,6 +110,18 @@ if (_vehicles isEqualTo []) exitWith {_movementOwned};
 } forEach _vehicles;
 if (_enemies isEqualTo []) exitWith {_movementOwned};
 private _enemyPos = (_enemies select 0) select 1;
+private _selectVehicleEscape = {
+    params ["_vehicle","_threatPosition","_threatObject","_distance"];
+    private _origin=getPosATL _vehicle;
+    private _awayBearing=_threatPosition getDir _origin;
+    private _candidates=[];
+    {
+        _candidates pushBack [_origin getPos [_distance,_awayBearing+_x]];
+    } forEach [0,-25,25,-45,45];
+    private _selected=[_origin,_candidates,_threatPosition,[],_threatObject,"VEHICLE"]
+        call Waldo_fnc_CortexSelectAvenue;
+    if (_selected isEqualTo []) then {[]} else {_selected select ((count _selected)-1)}
+};
 private _withdrawn = _state getOrDefault ["withdrawn", []];
 {
     private _vehicle = _x;
@@ -180,8 +192,9 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
         _state set ["withdrawn", _withdrawn];
         [_vehicle] call Waldo_fnc_CortexFireCountermeasure;
         if ((units _group) findIf {alive _x && {vehicle _x == _x}} < 0) then {
-            private _away = (getPosATL _vehicle) getPos [300, _enemyPos getDir _vehicle];
-            if (!surfaceIsWater _away) then {
+            private _threat=(_enemies select 0) select 0;
+            private _away=[_vehicle,_enemyPos,_threat,300] call _selectVehicleEscape;
+            if (_away isNotEqualTo []) then {
                 [_group, _away, 40] call Waldo_fnc_CortexGroupMove;
                 _state set ["movementLease",["VEHICLE_WITHDRAW",time+120]];
                 private _origin = getPosATL _vehicle;
@@ -235,8 +248,10 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
             && {_vehicle isKindOf "Tank" || {_vehicle isKindOf "Wheeled_APC_F"}} && {canMove _vehicle}
             && {(units _group) findIf {alive _x && {vehicle _x == _x}} < 0} && {!([_state, "standoff"] call Waldo_fnc_CortexCooldown)}) then {
             private _atPos = (_enemies select _atIndex) select 1;
-            private _away = (getPosATL _vehicle) getPos [(_standoff - (_vehicle distance2D _atPos)) max 60, _atPos getDir _vehicle];
-            if (!surfaceIsWater _away) then {
+            private _atThreat=(_enemies select _atIndex) select 0;
+            private _away=[_vehicle,_atPos,_atThreat,(_standoff - (_vehicle distance2D _atPos)) max 60]
+                call _selectVehicleEscape;
+            if (_away isNotEqualTo []) then {
                 [_group, _away, 30] call Waldo_fnc_CortexGroupMove;
                 _state set ["movementLease",["VEHICLE_STANDOFF",time+60]];
                 _movementOwned = true;

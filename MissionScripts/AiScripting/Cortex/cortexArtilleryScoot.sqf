@@ -6,8 +6,10 @@
  * investigation, vehicle standoff or infantry manoeuvre from replacing the scoot waypoint.
  * Locality/authority: the server publishes the mission token; the current vehicle owner executes.
  * Repeat/JIP: the public token and deadline reject stale work and locality gain resumes a pending
- * request. The public purpose selects the owning support/counter-battery feature and live scoot
- * switch; closing either cancels the delayed relocation. The physical move is not replayed after completion.
+ * request. Six bounded candidate positions are scored once for usable vehicle slopes, dry ground,
+ * screening and roads; Arma remains responsible for the actual route. The public purpose selects the
+ * owning support/counter-battery feature and live scoot switch; closing either cancels the delayed
+ * relocation. The physical move is not replayed after completion.
  * Arguments: 0: battery <OBJECT>, default objNull; 1: mission token <STRING>, default "".
  * Return Value: Boolean - true when relocation started or remains pending.
  * Current callers: ArtilleryMissionStep and CortexLocality.
@@ -47,11 +49,13 @@ if (_busy) exitWith {
         true
     } else {call _clear; false}
 };
-private _spot = [];
+private _origin=getPosATL _battery;
+private _candidates=[];
 for "_attempt" from 0 to 5 do {
-    private _candidate = (getPosATL _battery) getPos [200 + random 150, random 360];
-    if (!surfaceIsWater _candidate) exitWith {_spot = _candidate};
+    _candidates pushBack [_origin getPos [200+random 150,random 360]];
 };
+private _selected=[_origin,_candidates,_origin,[],objNull,"VEHICLE"] call Waldo_fnc_CortexSelectAvenue;
+private _spot=if (_selected isEqualTo []) then {[]} else {_selected select ((count _selected)-1)};
 if (_spot isEqualTo []) exitWith {call _clear; false};
 [_group, _spot, 30] call Waldo_fnc_CortexGroupMove;
 _state set ["movementLease",["ARTILLERY_SCOOT",time+120]];

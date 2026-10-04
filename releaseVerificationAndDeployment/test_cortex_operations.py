@@ -1911,6 +1911,9 @@ class CortexOperations(unittest.TestCase):
                        '_state set ["retreatProgress",[time,0,0]]',
                        '["VEHICLE",_origin,_away,_enemyPos,serverTime,0,0]']:
             self.assertIn(marker,vehicles)
+        for terrain_marker in ['private _selectVehicleEscape = {','forEach [0,-25,25,-45,45]',
+                               'Waldo_fnc_CortexSelectAvenue','_threatObject,"VEHICLE"']:
+            self.assertIn(terrain_marker,vehicles)
         vehicle_resume=locality.split('== "VEHICLE"',1)[1]
         self.assertIn('CortexGroupMove',vehicle_resume)
         self.assertIn('["VEHICLE_WITHDRAW",time+((120-_elapsed) max 3)]',vehicle_resume)
@@ -2000,6 +2003,8 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_busy) exitWith {',scoot)
         self.assertIn('CBA_fnc_waitAndExecute',scoot)
         self.assertIn('_state set ["movementLease",["ARTILLERY_SCOOT",time+120]]',scoot)
+        self.assertIn('Waldo_fnc_CortexSelectAvenue',scoot)
+        self.assertIn('objNull,"VEHICLE"',scoot)
         self.assertIn('[_vehicle,_scootToken] call Waldo_fnc_CortexArtilleryScoot',locality)
         self.assertLess(locality.index('CortexRestoreCalm'),locality.index('CortexArtilleryScoot'))
         self.assertIn('if (!_groupMovementOwned && {!(_state getOrDefault ["responding", false])',tick)
