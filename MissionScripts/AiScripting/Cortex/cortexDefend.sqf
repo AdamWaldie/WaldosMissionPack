@@ -3,7 +3,8 @@
  * Orders an AI group to hold a defensive line facing a direction, with a rear reserve.
  *
  * About two thirds of the squad form a firing line across the facing
- * direction, spread over the given width. Each soldier's spot is snapped to cover facing the threat,
+ * direction, spread over the given width. Lateral slots contract towards the centre when the nominal
+ * point is water or a cliff-like side slope. Each soldier's spot is snapped to cover facing the threat,
  * and soldiers watch overlapping sectors (up to 30 degrees either side of the facing). The rest form a
  * reserve 40 m behind the centre; squads of three or fewer are all line. Soldiers hold with doStop
  * rather than a PATH lock, so they can still take cover and turn. The reserve is committed once
@@ -66,14 +67,27 @@ private _spacing = _width / ((count _line - 1) max 1);
 private _taken = [];
 {
     private _offset = (_forEachIndex - (count _line - 1) / 2) * _spacing;
-    private _spot = ([_centre getPos [_offset, _facing + 90], _threat, 8, _taken] call Waldo_fnc_CortexFindCover) select 0;
+    private _slot=_centre getPos [_offset,_facing+90];
+    if (surfaceIsWater _slot || {((surfaceNormal _slot) select 2) < 0.5}) then {
+        {
+            private _alternative=_centre getPos [_offset*_x,_facing+90];
+            if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.5}) exitWith {_slot=_alternative};
+        } forEach [0.75,0.5,0.25,0];
+    };
+    private _spot = ([_slot, _threat, 8, _taken] call Waldo_fnc_CortexFindCover) select 0;
     _taken pushBack _spot;
     private _sector = _facing + ((_forEachIndex / ((count _line - 1) max 1)) - 0.5) * 60;
     _x setVariable ["Waldo_AIPass_DefendPos", [_spot, _sector, "LINE"], true];
 } forEach _line;
-private _rear = _centre getPos [40, _facing + 180];
+private _rearCandidates=[];
+{_rearCandidates pushBack [_centre getPos [40,_facing+180+_x]]} forEach [0,-30,30,-60,60];
+private _rearRoute=[_centre,_rearCandidates,_threat] call Waldo_fnc_CortexSelectAvenue;
+private _rear=if (_rearRoute isEqualTo []) then {+_centre} else {+(_rearRoute select 0)};
 {
-    _x setVariable ["Waldo_AIPass_DefendPos", [_rear getPos [(_forEachIndex - (count _reserve - 1) / 2) * 5, _facing + 90], _facing, "RESERVE"], true];
+    private _offset=(_forEachIndex-(count _reserve-1)/2)*5;
+    private _slot=_rear getPos [_offset,_facing+90];
+    if (surfaceIsWater _slot || {((surfaceNormal _slot) select 2) < 0.5}) then {_slot=+_rear};
+    _x setVariable ["Waldo_AIPass_DefendPos", [_slot,_facing,"RESERVE"], true];
 } forEach _reserve;
 if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo []) then {[_group] call Waldo_fnc_CortexGarrisonRelease};
 _group setVariable ["Waldo_AIPass_Defend", [_centre, _facing, _width, count _units], true];

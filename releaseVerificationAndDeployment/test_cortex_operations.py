@@ -265,6 +265,12 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_job set ["deadline",(_job get "deadline") max (time+60)]',apply)
 
     def test_defence_recovery_uses_per_unit_physical_progress(self):
+        order=source('cortexDefend')
+        reserve=source('cortexDefendStep')
+        self.assertIn('forEach [0.75,0.5,0.25,0]',order)
+        self.assertIn('[_centre,_rearCandidates,_threat] call Waldo_fnc_CortexSelectAvenue',order)
+        self.assertIn('forEach [0.65,0.35,0]',reserve)
+        self.assertIn('surfaceNormal _position',reserve)
         text=source('cortexDefendApplyLocal')
         self.assertIn('_routes pushBack [_x,getPosATL _x,time,0]',text)
         self.assertIn('_unit distance2D _lastPosition >= 1',text)

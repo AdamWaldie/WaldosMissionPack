@@ -4,7 +4,9 @@
  *
  * Called from Waldo_fnc_CortexGroupTick while a defending group is in CONTACT. The reserve moves to
  * the line spot of a fallen soldier when a third of the line is lost, or to the line spot nearest an
- * enemy believed within 60 m of the line. It then holds there, watching the same sector.
+ * enemy believed within 60 m of the line. Each lateral reinforcement slot contracts towards that
+ * already validated line spot when rough terrain would otherwise strand a reserve soldier.
+ * It then holds there, watching the same sector.
  * Locality and authority: call where the group is local.
  *
  * Arguments:
@@ -44,6 +46,13 @@ if (_target isEqualTo []) exitWith {false};
 _target params ["_spot", "_sector"];
 {
     private _position = _spot getPos [3 + _forEachIndex * 3, _sector + 90];
+    if (surfaceIsWater _position || {((surfaceNormal _position) select 2) < 0.5}) then {
+        private _distance=3+_forEachIndex*3;
+        {
+            private _alternative=_spot getPos [_distance*_x,_sector+90];
+            if (!surfaceIsWater _alternative && {((surfaceNormal _alternative) select 2) >= 0.5}) exitWith {_position=_alternative};
+        } forEach [0.65,0.35,0];
+    };
     _x setVariable ["Waldo_AIPass_DefendPos", [_position, _sector, "LINE"], true];
     _x setVariable ["Waldo_AIPass_DefendHolding", false];
     _x doMove _position;
