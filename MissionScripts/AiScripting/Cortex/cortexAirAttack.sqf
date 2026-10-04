@@ -12,8 +12,11 @@
  * Cortex then releases the selected weapon only after live range, alignment, ammunition and seeker
  * checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
- * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes, then leaves the engine's attack
- * delegation enabled so ordinary combat and turret tracking continue. The real hostile remains the
+ * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
+ * fixed-wing ATTACK leg temporarily changes that same waypoint to a target-attached DESTROY order,
+ * joining the pilot's native attack manoeuvre to its fire-control solution instead of asking a MOVE
+ * pilot to honour a later asynchronous release. Egress, abort and Zeus interruption detach and
+ * delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
  * Each leg updates the one Cortex-owned native waypoint once. Progress is measured toward
@@ -256,6 +259,12 @@ if (_stage == "") then {
             private _guidedTarget=_aircraft getVariable ["Waldo_Cortex_AirAttackGuidanceTarget",objNull];
             if (_weapon == _guidedWeapon && {!isNull _projectile} && {!isNull _guidedTarget} && {alive _guidedTarget}) then {
                 _projectile setMissileTarget _guidedTarget;
+                // Air seekers track the object directly. Ground seekers also need one immutable
+                // aim point because several vanilla and modded AGMs accept fireAtTarget but launch
+                // without a usable object lock. This does not steer the round after release.
+                if (!(_guidedTarget isKindOf "Air")) then {
+                    _projectile setMissileTargetPos (aimPos _guidedTarget);
+                };
             };
         };
     }];
@@ -356,6 +365,17 @@ if (_commandedStage != _stage) then {
         _created setWaypointCompletionRadius ([450,220] select !_isPlane);
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
+    // During the delivery leg, let Arma's aircraft attack FSM own the final turn, dive and release
+    // against the real hostile. Keeping a MOVE leg while separately calling fireAtTarget caused
+    // accepted requests to execute after the aircraft had passed the only useful attack angle.
+    // Rotary-wing lateral passes retain their authored abeam MOVE geometry.
+    if (_isPlane && {_stage == "ATTACK"} && {!isNull _target}) then {
+        _ownedWaypoint setWaypointType "DESTROY";
+        _ownedWaypoint waypointAttachVehicle _target;
+    } else {
+        _ownedWaypoint waypointAttachVehicle objNull;
+        _ownedWaypoint setWaypointType "MOVE";
+    };
     _ownedWaypoint setWaypointPosition [_destination,0];
     _group setCurrentWaypoint _ownedWaypoint;
     _job set ["commandedStage",_stage];
@@ -534,8 +554,10 @@ private _stagePassed=_stageClosest <= _captureRadius && {_stageDistance >= _stag
 // Discovery can acquire a fast jet after it has already flown past the nominal ingress point.
 // Continue into the firing leg when that point is physically behind the jet; ordering a turn back
 // creates the observed pre-run loop and can never improve a fixed-wing attack solution.
-private _ingressBehind=_isPlane && {_stage == "INGRESS"} && {_stageDistance <= 2000}
-    && {(velocity _aircraft) vectorDotProduct (_destination vectorDiff getPosATL _aircraft) <= 0};
+private _ingressBehind=_isPlane && {_stage == "INGRESS"}
+    && {(velocity _aircraft) vectorDotProduct (_destination vectorDiff getPosATL _aircraft) <= 0}
+    && {_aircraft distance2D _target <= 9500}
+    && {(velocity _aircraft) vectorDotProduct ((getPosATL _target) vectorDiff getPosATL _aircraft) > 0};
 // A lateral helicopter ingress is complete when the live aircraft enters its turret's practical
 // engagement range. Native rotary-wing combat flight does not reliably capture an arbitrary offset
 // point while a gunner is tracking a contact; waiting for that coordinate caused useful flight and

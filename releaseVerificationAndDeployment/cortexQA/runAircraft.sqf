@@ -443,7 +443,10 @@ private _observedProfiles=createHashMap;
                 [_aircraft,_target,_projectile,_weapon,_ammo,_alignment] spawn {
                     params ["_aircraft","_target","_projectile","_weapon","_ammo","_alignment"];
                     private _closest=if (isNull _projectile) then {1e9} else {_projectile distance _target};
-                    private _deadline=serverTime+12;
+                    // High releases can remain in flight well after the finite controller has
+                    // begun egress. Keep the damageable target and sampler alive long enough to
+                    // observe the real impact instead of deleting both two seconds after release.
+                    private _deadline=serverTime+20;
                     while {!isNull _projectile && {alive _target} && {serverTime < _deadline}} do {
                         _closest=_closest min (_projectile distance _target);
                         sleep 0.05;
@@ -704,14 +707,28 @@ private _observedProfiles=createHashMap;
             && {selectMin _sampleAltitudes >= ([25,200] select _isPlaneClass)},
             str [selectMin _sampleAltitudes,selectMax _sampleAltitudes,_sampleStages]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] in ["COMPLETE","TARGET_DESTROYED"]},str _outcome] call _recordCheck;
-        sleep 2;
+        private _releaseWait=[4,20] select (_selectedWeaponClass in ["BOMB","GUIDED"]);
+        [{
+            !alive _target || {
+                count (_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]])
+                    >= (_aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0])
+            }
+        },_releaseWait] call _wait;
         private _releaseResults=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];
         private _weaponHits=_target getVariable ["Waldo_CortexQA_WeaponHits",0];
         private _attackStageShots=_aircraft getVariable ["Waldo_CortexQA_AttackStageShots",[]];
         [_id+"-actual-weapon-fire",_attackStageShots find "ATTACK" >= 0,
             str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_attackStageShots,_releaseResults]] call _recordCheck;
-        [_id+"-effective-release",_weaponHits > 0,
-            str [_weaponHits,_releaseResults,_aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
+        private _impactDistance=switch _selectedWeaponClass do {
+            case "GUN": {8};
+            case "GUIDED": {18};
+            default {30};
+        };
+        private _physicalImpact=damage _target > 0 || {!alive _target}
+            || {_releaseResults findIf {(_x param [4,1e9]) <= _impactDistance} >= 0};
+        [_id+"-effective-release",_physicalImpact,
+            str [_weaponHits,damage _target,_impactDistance,_releaseResults,
+                _aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
         [_id+"-target-destroyed",!_mustDestroy || {!alive _target},
             str [_mustDestroy,alive _target,damage _target,getAllHitPointsDamage _target,
                 _weaponHits,_releaseResults]] call _recordCheck;
