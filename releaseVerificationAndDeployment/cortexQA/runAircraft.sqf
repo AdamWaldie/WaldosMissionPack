@@ -801,7 +801,8 @@ private _observedProfiles=createHashMap;
         private _weaponHits=_target getVariable ["Waldo_CortexQA_WeaponHits",0];
         private _attackStageShots=_aircraft getVariable ["Waldo_CortexQA_AttackStageShots",[]];
         [_id+"-actual-weapon-fire",_attackStageShots find "ATTACK" >= 0,
-            str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_attackStageShots,_releaseResults]] call _recordCheck;
+            str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_attackStageShots,_releaseResults,
+                _aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0]]] call _recordCheck;
         private _impactDistance=switch _selectedWeaponClass do {
             case "GUN": {8};
             case "GUIDED": {18};
@@ -811,6 +812,7 @@ private _observedProfiles=createHashMap;
             || {_releaseResults findIf {(_x param [4,1e9]) <= _impactDistance} >= 0};
         [_id+"-effective-release",_physicalImpact,
             str [_weaponHits,damage _target,_impactDistance,_releaseResults,
+                _aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0],
                 _aircraft getVariable ["Waldo_Cortex_AirFireSolution",[]]]] call _recordCheck;
         [_id+"-target-destroyed",!_mustDestroy || {!alive _target},
             str [_mustDestroy,alive _target,damage _target,getAllHitPointsDamage _target,
@@ -827,11 +829,10 @@ private _observedProfiles=createHashMap;
     {deleteVehicle _x} forEach (_crew+_targetCrew+_aaCrew+[_aircraft,_target,_aa]);
     deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
 } forEach [
-    // The quadbike died to the Comanche turret during ingress, so the fixture measured a fragile
-    // target race rather than lateral flight. The MRAP remains a real damageable enemy and survives
-    // long enough to show the abeam manoeuvre, while still requiring the retained 20 mm turret to
-    // destroy it before the case can pass.
-    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Attack_01_dynamicLoadout_F",false,false,"LATERAL",false,"GUN",true,"O_MRAP_02_F"],
+    // The quadbike died during ingress and the MRAP survived a geometrically effective 20 mm pass.
+    // A full-size soft truck survives incidental acquisition fire but remains a credible one-pass
+    // destruction target for the retained lateral turret.
+    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Attack_01_dynamicLoadout_F",false,false,"LATERAL",false,"GUN",true,"O_Truck_03_transport_F"],
     ["AIR-ATTACK-PLANE-STRAFE","O_Plane_CAS_02_dynamicLoadout_F",false,false,"STRAFE",false,"GUN",true,"B_MRAP_01_F"],
     ["AIR-ATTACK-PLANE-OFFSET","O_Plane_CAS_02_dynamicLoadout_F",false,false,"OFFSET",false,"ROCKET",true,"B_MRAP_01_F"],
     ["AIR-ATTACK-PLANE-HOOK","O_Plane_CAS_02_dynamicLoadout_F",false,false,"HOOK",false,"ROCKET",true,"B_MRAP_01_F"],

@@ -12,17 +12,19 @@
  * Cortex then asks that operator to release the selected weapon only after live range, route,
  * ammunition and seeker checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
- * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
- * fixed-wing ground ATTACK leg retains the target-crossing MOVE route throughout delivery; the
- * selected operator receives repeated native fire-control requests inside a broad delivery basket;
- * independently aimed turrets retain native fire control. This keeps the aircraft on its useful
- * approach instead of replacing it with an unreliable spatial DESTROY search at the release point,
- * and lets the engine solve the aircraft's real muzzle, pylon and momentum rather than predicting
- * those from a generic weapon direction. Air intercepts attach immediately because the contact itself is
- * moving. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
+ * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. On
+ * fixed-wing ATTACK entry that same waypoint becomes a native DESTROY order attached to the real
+ * hostile. The ingress leg therefore establishes the chosen bearing and terrain-safe approach,
+ * while Arma's pilot and weapon FSM solve the final dive, turn, muzzle, pylon and release without a
+ * scheduler repeatedly steering or pressing the trigger. Rotorcraft and independently aimed
+ * turrets retain the bounded native fire request because their abeam and standoff attacks do not
+ * use a fixed-wing dive. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
- * Each leg updates the one Cortex-owned native waypoint once. Progress is measured toward
+ * Each leg updates the one Cortex-owned native waypoint once. A fixed-wing ATTACK also checks two
+ * short velocity-projected terrain samples; an imminent low clearance causes one recovery-height
+ * request and a finite abort. This is active-job safety, not a per-unit terrain-following loop.
+ * Progress is measured toward
  * that leg, so broad turns are accepted while hovering, local circles and repeated replans cannot keep
  * an attack alive. Non-progress in any phase aborts rather than fabricating a transition; a validly
  * released attack exits after a bounded weapon-class delivery: one bomb, a short guided/rocket
@@ -349,14 +351,33 @@ if (_targetUnavailable && {!(_job getOrDefault ["targetDestroyed",false])}) then
 };
 if (_targetUnavailable && {!(_job getOrDefault ["targetDestroyed",false])}) exitWith {["TARGET_LOST",true] call _finish};
 if ((getPosATL _aircraft select 2) < 25) exitWith {["GROUND_CLEARANCE"] call _finish};
-// A failed fixed-wing solution must never continue following the descending delivery leg into the
-// terrain. This is an abort, not a successful attack: delete the lease waypoint and return the
-// native route while the aircraft still has enough height to recover.
+// A failed fixed-wing solution must never continue into rising terrain. Current AGL alone only
+// catches a descent after the aircraft is already low, so sample the velocity-projected position at
+// 1.5 and 3 seconds. This runs only for an active fixed-wing ATTACK, costs two terrain lookups per
+// scheduler visit, and never steers a healthy run. An unsafe projection receives one recovery-height
+// hint before the lease is retired; no teleport, repeated correction or projectile manipulation is
+// used.
 private _currentAGL=(getPosATL _aircraft) select 2;
 private _verticalSpeed=(velocity _aircraft) select 2;
-if (_isPlane && {_stage == "ATTACK"} && {_currentAGL < 220} && {_verticalSpeed < -5}) exitWith {
+private _lookaheadClearances=[];
+if (_isPlane && {_stage == "ATTACK"}) then {
+    private _positionASL=getPosASL _aircraft;
+    private _currentVelocity=velocity _aircraft;
+    _lookaheadClearances=[1.5,3] apply {
+        private _futurePosition=_positionASL vectorAdd (_currentVelocity vectorMultiply _x);
+        (_futurePosition select 2)-(getTerrainHeightASL _futurePosition)
+    };
+};
+private _unsafeDelivery=_isPlane && {_stage == "ATTACK"} && {
+    (_currentAGL < 90 && {_verticalSpeed < -3})
+        || {_lookaheadClearances isNotEqualTo [] && {selectMin _lookaheadClearances < 120}}
+};
+if (_unsafeDelivery) exitWith {
+    private _safeRecoveryHeight=((_job getOrDefault ["stageAltitudes",[450,450,450]]) select 0) max 450;
+    _aircraft flyInHeight _safeRecoveryHeight;
     _job set ["releaseDetail",[
         "agl",_currentAGL,"verticalSpeed",_verticalSpeed,
+        "lookaheadClearances",_lookaheadClearances,"recoveryHeight",_safeRecoveryHeight,
         "position",getPosATL _aircraft,"velocity",velocity _aircraft
     ]];
     ["DELIVERY_SAFETY_FLOOR",true] call _finish
@@ -405,17 +426,20 @@ if (_commandedStage != _stage) then {
         _created setWaypointCompletionRadius ([450,220] select !_isPlane);
         _created
     } else {(waypoints _group) select _ownedWaypointIndex};
-    // A moving air contact is the route, so native pursuit begins with the intercept leg. Ground
-    // attacks retain the immutable target-crossing MOVE route until their live weapon basket is met;
-    // attaching DESTROY here made Arma fire guns and rockets several kilometres before roll-in.
-    if (_isPlane && {_stage == "ATTACK"} && {_job getOrDefault ["airToAir",false]} && {!isNull _target}) then {
+    _ownedWaypoint setWaypointPosition [_destination,0];
+    // Ingress establishes the planned bearing and terrain-safe corridor. Once a fixed-wing aircraft
+    // physically reaches ATTACK, attach this one lease-owned order to the real hostile and let the
+    // native pilot/weapon FSM solve the terminal manoeuvre and release. Repeated scripted trigger
+    // requests on a MOVE line produced accepted-but-missing rounds, late cannon fire and needless
+    // safety aborts. The order remains finite and is detached on egress or any Zeus handover.
+    private _nativePlaneTargeting=_isPlane && {_stage == "ATTACK"} && {!isNull _target};
+    if (_nativePlaneTargeting) then {
         _ownedWaypoint setWaypointType "DESTROY";
         _ownedWaypoint waypointAttachVehicle _target;
     } else {
         _ownedWaypoint waypointAttachVehicle objNull;
         _ownedWaypoint setWaypointType "MOVE";
     };
-    _ownedWaypoint setWaypointPosition [_destination,0];
     _group setCurrentWaypoint _ownedWaypoint;
     _job set ["commandedStage",_stage];
     _job set ["commandedDestination",+_destination];
@@ -553,18 +577,16 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // Keep ground delivery on the target-crossing MOVE leg. A DESTROY waypoint attached at the
-    // release basket proved engine-dependent: when attachment was rejected it became a spatial
-    // target search, stalled the run and emitted a warning every simulation tick. The release below
-    // hands only the compatible loaded station to its living operator at the measured solution.
-    // Arma's own CAS path repeatedly asks the living operator to fire at a revealed target during a
-    // bounded release window. That retains native muzzle, pylon and seeker logic. A scripted trigger
-    // press bypassed that solution and produced consistent long misses even on a correct flight path.
+    // Native fixed-wing delivery owns the terminal manoeuvre and release through the attached
+    // DESTROY order. Do not compete with that FSM by injecting fireAtTarget requests from the
+    // scheduler. Rotorcraft keep this bounded request path because a lateral or standoff turret can
+    // attack without forcing the pilot to turn the airframe onto the hostile.
+    private _nativePlaneDelivery=_isPlane && {!_airContact};
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
         && {serverTime < _requestAt+0.35};
-    if (_validSolution && {!_requestPending}
+    if (!_nativePlaneDelivery && {_validSolution} && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
         // One native request at a time. Repeating a rejected request after a short interval is
         // intentional: the operator may enter the engine's exact solution later in the same pass.
