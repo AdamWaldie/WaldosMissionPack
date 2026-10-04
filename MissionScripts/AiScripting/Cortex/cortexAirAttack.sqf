@@ -141,7 +141,7 @@ private _finish={
     };
     _aircraft setVariable ["Waldo_Cortex_AirAttackOutcome",[
         _reason,serverTime,_job getOrDefault ["pattern",""],_job getOrDefault ["shots",0],
-        _job getOrDefault ["releaseDetail",[]]
+        _job getOrDefault ["releaseDetail",[]],getPosATL _aircraft,velocity _aircraft
     ],true];
     // Prevent immediate rediscovery of the same known contact after a finite run. This is a short
     // re-attack interval, not a movement controller or Zeus order guard.
@@ -324,7 +324,12 @@ if (_targetUnavailable && {!(_job getOrDefault ["targetDestroyed",false])}) then
     // attack, without requiring the damage event and the ATTACK label to land on the same scheduler
     // tick. A target lost before real weapon fire remains a failed run.
     private _liveShots=_aircraft getVariable ["Waldo_Cortex_AirAttackShots",0];
-    if (_liveShots > 0) then {
+    // A present wreck is an unambiguous successful end condition even when another friendly
+    // weapon lands the final blow between scheduler ticks. Requiring this controller's Fired EH
+    // to win that race mislabeled a destroyed objective as TARGET_LOST and could strand the
+    // aircraft in ingress. A deleted/null contact remains ambiguous and still needs durable
+    // evidence that this aircraft physically fired before it is treated as destroyed.
+    if ((!isNull _target && {!alive _target}) || {_liveShots > 0}) then {
         _job set ["targetDestroyed",true];
         // A turret can validly destroy a contact while the pilot is still closing. Record that
         // physical fire as ATTACK before beginning egress so a real kill is not labelled TARGET_LOST.
@@ -347,7 +352,13 @@ if ((getPosATL _aircraft select 2) < 25) exitWith {["GROUND_CLEARANCE"] call _fi
 // A failed fixed-wing solution must never continue following the descending delivery leg into the
 // terrain. This is an abort, not a successful attack: delete the lease waypoint and return the
 // native route while the aircraft still has enough height to recover.
-if (_isPlane && {_stage == "ATTACK"} && {(getPosATL _aircraft select 2) < 220}) exitWith {
+private _currentAGL=(getPosATL _aircraft) select 2;
+private _verticalSpeed=(velocity _aircraft) select 2;
+if (_isPlane && {_stage == "ATTACK"} && {_currentAGL < 220} && {_verticalSpeed < -5}) exitWith {
+    _job set ["releaseDetail",[
+        "agl",_currentAGL,"verticalSpeed",_verticalSpeed,
+        "position",getPosATL _aircraft,"velocity",velocity _aircraft
+    ]];
     ["DELIVERY_SAFETY_FLOOR",true] call _finish
 };
 private _points=_job get "points";
@@ -512,15 +523,16 @@ if (_stage == "ATTACK") then {
     private _bombReleaseDistance=(vectorMagnitude _horizontalVelocity)*_fallTime;
     private _predictedBombImpact=(getPosATL _aircraft) vectorAdd (_horizontalVelocity vectorMultiply _fallTime);
     private _bombImpactError=_predictedBombImpact distance2D getPosATL _target;
-    private _bombWindow=_bombImpactError <= 140 && {_forwardAlignment >= 0.92};
+    private _bombWindow=_bombImpactError <= 45 && {_forwardAlignment >= 0.92};
     // A nose-mounted weapon needs forward closure. A retained lateral turret is specifically
     // selected to fire abeam, so forcing the helicopter nose onto the target defeats that pattern.
     private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
     private _fixedUnguided=_turret isEqualTo [-1] && {_weaponClass in ["GUN","ROCKET"]};
-    // Bohemia's native fire-control contract is doWatch, wait for a positive aimedAtTarget result,
-    // then fireAtTarget. Seeker weapons can legitimately report zero before launch, but fixed guns
-    // and rockets must demonstrate an engine solution before a release request is accepted.
-    private _minimumAim=[0,0.05] select _fixedUnguided;
+    // aimedAtTarget is useful telemetry but is not a reliable release gate for fixed-wing pilot
+    // stations: the vanilla CAS jet can hold a valid target-crossing line while this command remains
+    // zero. fireAtTarget already returns whether the engine accepted the request, so let that native
+    // boundary decide after the physical range, closure and route baskets below are satisfied.
+    private _minimumAim=0;
     // Fixed aircraft weapons are released through the real operator's fire-control state. The
     // vector returned by weaponDirection is not the launch vector of every aircraft muzzle or
     // pylon; the audit proved a nominally valid predicted solution could put an entire cannon burst
@@ -533,8 +545,7 @@ if (_stage == "ATTACK") then {
         && {_range >= _minimumRange} && {_range <= _maximumRange}
         && {_closing} && {_nativeFixedBasket}
         && {_bombWindow || {!_bomb && {!_fixedUnguided || {_forwardAlignment >= 0.94}}}}
-        && {!_bomb || {(getPosATL _aircraft select 2) >= 250}}
-        && {_aimed >= _minimumAim};
+        && {!_bomb || {(getPosATL _aircraft select 2) >= 250}};
     private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
         _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing,
         _horizontalRange,_bombReleaseDistance,_bombWindow,_muzzleSpeed,_launchAlignment,

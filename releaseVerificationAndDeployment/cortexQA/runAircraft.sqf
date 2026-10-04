@@ -827,7 +827,11 @@ private _observedProfiles=createHashMap;
     {deleteVehicle _x} forEach (_crew+_targetCrew+_aaCrew+[_aircraft,_target,_aa]);
     deleteGroup _group; deleteGroup _targetGroup; if (!isNull _aaGroup) then {deleteGroup _aaGroup};
 } forEach [
-    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Attack_01_dynamicLoadout_F",false,false,"LATERAL",false,"GUN",true,"O_Quadbike_01_F"],
+    // The quadbike died to the Comanche turret during ingress, so the fixture measured a fragile
+    // target race rather than lateral flight. The MRAP remains a real damageable enemy and survives
+    // long enough to show the abeam manoeuvre, while still requiring the retained 20 mm turret to
+    // destroy it before the case can pass.
+    ["AIR-ATTACK-HELI-LATERAL","B_Heli_Attack_01_dynamicLoadout_F",false,false,"LATERAL",false,"GUN",true,"O_MRAP_02_F"],
     ["AIR-ATTACK-PLANE-STRAFE","O_Plane_CAS_02_dynamicLoadout_F",false,false,"STRAFE",false,"GUN",true,"B_MRAP_01_F"],
     ["AIR-ATTACK-PLANE-OFFSET","O_Plane_CAS_02_dynamicLoadout_F",false,false,"OFFSET",false,"ROCKET",true,"B_MRAP_01_F"],
     ["AIR-ATTACK-PLANE-HOOK","O_Plane_CAS_02_dynamicLoadout_F",false,false,"HOOK",false,"ROCKET",true,"B_MRAP_01_F"],
