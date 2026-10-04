@@ -1113,11 +1113,16 @@ class CortexOperations(unittest.TestCase):
     def test_multi_manoeuvre_audit_uses_real_relief_outside_vr(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runMultiManoeuvre.sqf').read_text()
         for marker in ['private _terrainOrigin=[2200,1100,0]',
+                       'private _terrainHeading=0',
                        'private _terrainScenarioReady=worldName == "VR"',
-                       'for "_candidateX" from 3000 to (worldSize-3000) step 1200',
+                       'for "_heading" from 0 to 315 step 45',
+                       'forEach [-80,0,80,160]',
                        'for "_along" from 0 to 360 step 30',
-                       '((surfaceNormal _sample) select 2) < 0.55',
-                       '_relief >= 20 && {_relief <= 120}',
+                       'private _normal=(surfaceNormal _sample) select 2',
+                       '_normal < 0.55',
+                       '_grade > 0.7',
+                       '_relief >= 15 && {_relief <= 120}',
+                       '_x-2200,_y-1100] call _terrainWorld',
                        '-terrain-scenario',
                        'call _terrainPosition']:
             self.assertIn(marker,qa)

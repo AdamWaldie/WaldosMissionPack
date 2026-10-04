@@ -3,9 +3,10 @@
  * Measures two-squad flank and advance against a shared, naturally observed enemy squad.
  * Locality/authority: scheduled server owns disposable fixtures; no behaviour results are injected.
  * On VR the fixture retains its stable flat-range coordinates. On other worlds it performs one
- * bounded pre-case terrain scan and places the same fight on a dry, traversable 360 m corridor with
- * at least 20 m of relief. The physical drill checks therefore exercise slopes and rough ground
- * without adding terrain polling to production AI.
+ * bounded pre-case terrain scan and rotates the same fight onto a dry, traversable 360 m corridor
+ * with measured relief, cross-slope coverage and no infantry-scale grade above 0.7. The physical
+ * drill checks therefore exercise slopes and rough ground without adding terrain polling to
+ * production AI.
  * Repeat/JIP: fresh actors per case, public labels and targets for observers; caller restores settings.
  * Arguments: 0: check <CODE>; 1: phase <CODE>; 2: wait <CODE>, required callbacks.
  * Return: Nothing. Current caller: cortexQA/runServer.sqf.
@@ -14,43 +15,73 @@
 params ["_check","_phase","_wait"];
 private _terrainOrigin=[2200,1100,0];
 private _terrainRelief=0;
+private _terrainHeading=0;
+private _terrainMaximumGrade=0;
+private _terrainMinimumNormal=1;
 private _terrainScenarioReady=worldName == "VR";
+private _terrainWorld={
+    params ["_origin","_heading","_localX","_localY"];
+    _origin vectorAdd [
+        _localX*cos _heading+_localY*sin _heading,
+        -_localX*sin _heading+_localY*cos _heading,
+        0
+    ]
+};
 if (!_terrainScenarioReady) then {
     private _found=[];
-    for "_candidateX" from 3000 to (worldSize-3000) step 1200 do {
-        for "_candidateY" from 3000 to (worldSize-3400) step 1200 do {
-            private _heights=[];
-            private _usable=true;
-            for "_along" from 0 to 360 step 30 do {
-                private _sample=[_candidateX,_candidateY+_along,0];
-                if (surfaceIsWater _sample || {((surfaceNormal _sample) select 2) < 0.55}) exitWith {_usable=false};
-                _heights pushBack getTerrainHeightASL _sample;
-            };
-            {
-                private _edge=[_candidateX+_x,_candidateY+180,0];
-                if (surfaceIsWater _edge || {((surfaceNormal _edge) select 2) < 0.55}) then {_usable=false};
-            } forEach [-80,80];
-            if (_usable && {_heights isNotEqualTo []}) then {
-                private _relief=(selectMax _heights)-(selectMin _heights);
-                if (_relief >= 20 && {_relief <= 120}) exitWith {
-                    _found=[_candidateX,_candidateY,0];
-                    _terrainRelief=_relief;
+    private _margin=800 min ((worldSize-500)/2);
+    private _scanStep=600 max ((worldSize-2*_margin)/5);
+    for "_candidateX" from _margin to (worldSize-_margin) step _scanStep do {
+        for "_candidateY" from _margin to (worldSize-_margin) step _scanStep do {
+            for "_heading" from 0 to 315 step 45 do {
+                if (_found isEqualTo []) then {
+                    private _heights=[];
+                    private _usable=true;
+                    private _maximumGrade=0;
+                    private _minimumNormal=1;
+                    {
+                        private _lateral=_x;
+                        private _previousHeight=-1e9;
+                        for "_along" from 0 to 360 step 30 do {
+                            private _sample=[[_candidateX,_candidateY,0],_heading,_lateral,_along] call _terrainWorld;
+                            private _normal=(surfaceNormal _sample) select 2;
+                            if (surfaceIsWater _sample || {_normal < 0.55}) exitWith {_usable=false};
+                            private _height=getTerrainHeightASL _sample;
+                            if (_previousHeight > -1e8) then {
+                                private _grade=abs (_height-_previousHeight)/30;
+                                _maximumGrade=_maximumGrade max _grade;
+                                if (_grade > 0.7) then {_usable=false};
+                            };
+                            _minimumNormal=_minimumNormal min _normal;
+                            _previousHeight=_height;
+                            _heights pushBack _height;
+                        };
+                    } forEach [-80,0,80,160];
+                    if (_usable && {_heights isNotEqualTo []}) then {
+                        private _relief=(selectMax _heights)-(selectMin _heights);
+                        if (_relief >= 15 && {_relief <= 120}) then {
+                            _found=[_candidateX,_candidateY,0];
+                            _terrainHeading=_heading;
+                            _terrainRelief=_relief;
+                            _terrainMaximumGrade=_maximumGrade;
+                            _terrainMinimumNormal=_minimumNormal;
+                        };
+                    };
                 };
             };
         };
-        if (_found isNotEqualTo []) exitWith {};
     };
     if (_found isNotEqualTo []) then {_terrainOrigin=_found; _terrainScenarioReady=true};
 };
 private _terrainPosition={
     params ["_x","_y"];
-    _terrainOrigin vectorAdd [_x-2200,_y-1100,0]
+    [_terrainOrigin,_terrainHeading,_x-2200,_y-1100] call _terrainWorld
 };
 {
     private _mode=_x;
     private _prefix="MULTI-"+_mode;
     [_prefix+"-terrain-scenario",_terrainScenarioReady,
-        str [worldName,_terrainOrigin,_terrainRelief]] call _check;
+        str [worldName,_terrainOrigin,_terrainHeading,_terrainRelief,_terrainMaximumGrade,_terrainMinimumNormal]] call _check;
     private _savedNearRange=missionNamespace getVariable ["Waldo_AIPass_NearRange",900];
     private _savedFarRange=missionNamespace getVariable ["Waldo_AIPass_FarRange",2500];
     missionNamespace setVariable ["Waldo_AIPass_NearRange",5000];

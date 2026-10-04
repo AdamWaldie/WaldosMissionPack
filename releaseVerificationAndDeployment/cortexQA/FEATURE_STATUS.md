@@ -406,13 +406,13 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Both manoeuvre squads physically reach separate approach lanes while the base fires; no duplicate movement controller or cross-lane convergence. A blocked, depleted or Zeus-controlled team is released without cancelling unrelated squads.
 
-**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent before relying on natural detection. It measures per-member physical travel, final cohesion, actual covering shots and support-lane crossing while the other squad moves. Bounding requires two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.
+**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent before relying on natural detection. Outside VR a bounded one-time scan rotates the fight across eight headings and samples four parallel lanes, rejecting water, impassable surface normals and infantry grades above 0.7 while requiring measured relief. It measures per-member physical travel, final cohesion, actual covering shots and support-lane crossing while the other squad moves. Bounding requires two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.
 
 ### MULTI-BOUND - Squad and multi-squad bounding overwatch
 
 **Expected:** Mover and covering roles exchange only after physical arrival and readiness. Covering elements fire while movers advance; the formation closes up without every squad moving simultaneously or waiting forever.
 
-**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent, establish natural contact, and only then receive the physical MOVE objective that Cortex uses to start bounding. It measures per-member travel, final cohesion, actual covering shots and two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.
+**Automation and open work:** runMultiManoeuvre.sqf: additive two six-person squads face the shared opponent, establish natural contact, and only then receive the physical MOVE objective that Cortex uses to start bounding. Outside VR a bounded one-time scan rotates the fight across eight headings and samples four parallel lanes, rejecting water, impassable surface normals and infantry grades above 0.7 while requiring measured relief. It measures per-member travel, final cohesion, actual covering shots and two observed squad-role switches. Wired into all/coordinated focus. The corrected fixture is saved but unexecuted. Route complementarity, transitions, Zeus and owner variants remain open.
 
 ### MULTI-WITHDRAW - Multi-squad screened withdrawal
 
