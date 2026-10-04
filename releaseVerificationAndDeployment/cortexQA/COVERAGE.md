@@ -274,7 +274,7 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Cargo stays aboard during travel and unloads at valid halts; crew stay mounted; disabled unload preserves seating.
 
-**Automation and open work:** runConvoySeats.sqf SEATS-*: same-group and separate-group cargo, actual travel exits, manual unload and operating-crew retention. runServer.sqf CNV/AMB covers arrival, contact and HC cargo. Latest seat run pending; other variants remain outstanding. Added tracked escort repetition of the complete seat and two-HC sequence; this new variant is pending live execution.
+**Automation and open work:** runConvoySeats.sqf SEATS-*: same-group and separate-group cargo, actual travel exits, manual unload and operating-crew retention. runServer.sqf CNV/AMB covers arrival, contact and HC cargo. Wheeled and tracked variants repeat the complete seat and two-HC sequence. VR retains deterministic coordinates; terrain worlds rotate the full 2.5 km journey over a measured dry three-lane corridor with relief and reject unsafe surface normals and grades. Latest seat run pending; other variants remain outstanding.
 
 ### HEARING - Gunfire area reports
 

@@ -2634,6 +2634,22 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('getPosATL _man select 0 > 4215',qa)
         self.assertNotIn('getPosATL _lead select 1 > _pedestrianY+30',qa)
 
+    def test_convoy_seat_audit_runs_wheeled_and_tracked_cases_over_real_relief(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runConvoySeats.sqf').read_text()
+        for marker in ['private _terrainReady=worldName == "VR"',
+                       'for "_heading" from 0 to 315 step 45',
+                       'forEach [-20,0,20]',
+                       'for "_along" from -80 to 2500 step 50',
+                       '((surfaceNormal _sample) select 2) < 0.65',
+                       '_grade > 0.8',
+                       '_relief >= 40',
+                       'SEATS-terrain-scenario',
+                       'call _terrainPosition',
+                       '_v setDir _terrainHeading']:
+            self.assertIn(marker,qa)
+        self.assertIn('No dry three-lane 2.5 km corridor',qa)
+        self.assertIn('["TRACKED-","O_APC_Tracked_02_cannon_F"]',qa)
+
     def test_remount_retries_physical_boarding_and_cancels_on_contact(self):
         restore=source('cortexRestoreCalm')
         tick=source('cortexGroupTick')

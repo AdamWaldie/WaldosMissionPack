@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Tests wheeled and tracked escort retention for operating crew, same-group cargo and separate mounted squads.
+ * Tests wheeled and tracked escort retention for operating crew, same-group cargo and separate mounted
+ * squads. VR keeps a deterministic route; terrain worlds rotate the full 2.5 km journey onto a
+ * measured dry corridor so inclines and rough ground are present during travel and owner migration.
  * Locality/authority: scheduled server creates actors; production convoy workers own all commands.
  * Repeat/JIP: fresh case-labelled actors, public observer state; complete roster cleanup, including dismounts.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required audit callbacks.
@@ -8,6 +10,65 @@
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQASeats.sqf";
  */
 params ["_recordCheck","_phase","_wait"];
+private _terrainOrigin=[4000,2500,0];
+private _terrainHeading=0;
+private _terrainReady=worldName == "VR";
+private _terrainRelief=0;
+if (!_terrainReady) then {
+    private _bestScore=-1;
+    private _gridStep=(worldSize/10) max 900;
+    for "_gridX" from 2 to 8 do {
+        for "_gridY" from 2 to 8 do {
+            private _candidateOrigin=[_gridX*_gridStep,_gridY*_gridStep,0];
+            for "_heading" from 0 to 315 step 45 do {
+                private _forward=[sin _heading,cos _heading,0];
+                private _right=[cos _heading,-sin _heading,0];
+                private _safe=true;
+                private _heights=[];
+                {
+                    private _lane=_x;
+                    private _previous=[];
+                    private _previousHeight=0;
+                    for "_along" from -80 to 2500 step 50 do {
+                        private _sample=_candidateOrigin vectorAdd (_right vectorMultiply _lane)
+                            vectorAdd (_forward vectorMultiply _along);
+                        private _inside=(_sample select 0) > 300 && {(_sample select 1) > 300}
+                            && {(_sample select 0) < worldSize-300} && {(_sample select 1) < worldSize-300};
+                        private _height=getTerrainHeightASL _sample;
+                        if (!_inside || {surfaceIsWater _sample} || {((surfaceNormal _sample) select 2) < 0.65}) then {_safe=false};
+                        if (_previous isNotEqualTo []) then {
+                            private _grade=abs (_height-_previousHeight)/((_sample distance2D _previous) max 1);
+                            if (_grade > 0.8) then {_safe=false};
+                        };
+                        _heights pushBack _height;
+                        _previous=_sample;
+                        _previousHeight=_height;
+                    };
+                } forEach [-20,0,20];
+                private _relief=if (_heights isEqualTo []) then {0} else {(selectMax _heights)-(selectMin _heights)};
+                if (_safe && {_relief >= 40} && {_relief <= 260} && {_relief > _bestScore}) then {
+                    _bestScore=_relief;
+                    _terrainOrigin=_candidateOrigin;
+                    _terrainHeading=_heading;
+                    _terrainRelief=_relief;
+                    _terrainReady=true;
+                };
+            };
+        };
+    };
+};
+private _terrainForward=[sin _terrainHeading,cos _terrainHeading,0];
+private _terrainRight=[cos _terrainHeading,-sin _terrainHeading,0];
+private _terrainPosition={
+    params ["_local"];
+    _terrainOrigin vectorAdd (_terrainRight vectorMultiply ((_local select 0)-4000))
+        vectorAdd (_terrainForward vectorMultiply ((_local select 1)-2500))
+};
+["SEATS-terrain-scenario",_terrainReady,
+    format ["world=%1 origin=%2 heading=%3 relief=%4",worldName,_terrainOrigin,_terrainHeading,_terrainRelief]] call _recordCheck;
+if (!_terrainReady) then {
+    ["Convoy seats: no evaluative terrain","No dry three-lane 2.5 km corridor provided 40-260 m relief without unsafe slope or grade. Seat cases are skipped rather than falling back to flat geometry.",_terrainOrigin] call _phase;
+} else {
 {
 _x params ["_prefix","_leadClass"];
 private _check={params ["_id","_passed",["_detail",""]]; [_prefix+_id,_passed,_detail] call _recordCheck};
@@ -19,8 +80,8 @@ _cargoGroup setGroupIdGlobal ["QA SEATS separate cargo squad"];
 private _vehicles=[];
 private _crew=[];
 {
-    private _v=createVehicle [_x,[4000,2500-_forEachIndex*50,0],[],0,"NONE"];
-    _v setDir 0; createVehicleCrew _v;
+    private _v=createVehicle [_x,[[4000,2500-_forEachIndex*50,0]] call _terrainPosition,[],0,"NONE"];
+    _v setDir _terrainHeading; createVehicleCrew _v;
     private _old=group driver _v;
     _crew append (crew _v apply {[_x,_v]});
     (crew _v) joinSilent _convoy; deleteGroup _old;
@@ -31,7 +92,7 @@ private _passengers=[];
 {
     private _g=_x;
     for "_i" from 0 to 1 do {
-        private _u=_g createUnit ["O_Soldier_F",[4000,2430,0],[],0,"NONE"];
+        private _u=_g createUnit ["O_Soldier_F",[[4000,2430,0]] call _terrainPosition,[],0,"NONE"];
         // Intentional setup: physically mounted cargo with no orderGetIn repair by the test.
         // Production must adopt that actual seat, including a separate-group squad leader.
         _u moveInCargo _truck;
@@ -55,12 +116,12 @@ private _actors=(_crew apply {_x select 0})+_passengers;
 } forEach _actors;
 _convoy selectLeader driver (_vehicles select 0);
 {_x setCombatMode "BLUE"} forEach [_convoy,_cargoGroup];
-private _wp=_convoy addWaypoint [[4000,5000,0],0]; _wp setWaypointType "MOVE";
+private _wp=_convoy addWaypoint [[[4000,5000,0]] call _terrainPosition,0]; _wp setWaypointType "MOVE";
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors,true];
 missionNamespace setVariable ["Waldo_CortexQA_ConvoyVehicles",_vehicles,true];
 missionNamespace setVariable ["Waldo_CortexQA_SeatPhase","TRAVEL",true];
 ["SEATS-start",[_convoy,30,50,true] call Waldo_fnc_SimpleAiConvoy] call _check;
-["Convoy seat retention","Two operating vehicles carry both same-group cargo and a separate mounted squad. All labelled actors must stay aboard throughout travel. No test command repairs their seats after setup.",[4000,2475,0]] call _phase;
+["Convoy seat retention","Two operating vehicles carry both same-group cargo and a separate mounted squad over the measured terrain route. All labelled actors must stay aboard throughout travel. No test command repairs their seats after setup.",[[4000,2475,0]] call _terrainPosition] call _phase;
 private _start=getPosATL _truck;
 sleep 60;
 ["SEATS-real-travel",_truck distance2D _start > 150,str getPosATL _truck] call _check;
@@ -109,3 +170,4 @@ missionNamespace setVariable ["Waldo_CortexQA_Actors",[],true];
 missionNamespace setVariable ["Waldo_CortexQA_ConvoyVehicles",[],true];
 
 } forEach [["","O_MRAP_02_hmg_F"],["TRACKED-","O_APC_Tracked_02_cannon_F"]];
+};
