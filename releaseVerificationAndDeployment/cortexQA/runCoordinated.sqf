@@ -9,6 +9,8 @@
  * Optional responder owners use WMP migration before contact; return to server after release for
  * fresh ordinary waypoint commands. Fire posture, event sampling and movement execute on the
  * current owner, while public receipts let the server distinguish remote evidence from missing QA.
+ * Outside VR a bounded one-time scan rotates the complete platoon frontage, rally screens, objective
+ * and release routes onto a dry corridor with real relief and traversable infantry grades.
  * Repeat/JIP: fresh pinned groups and public destinations; caller restores tuning, actors cleaned here.
  * Arguments: check <CODE>, phase <CODE>, wait <CODE>; required callbacks.
  * 3: responderOwners <ARRAY of NUMBER>, default []; two HC owners for the migration variant.
@@ -22,6 +24,74 @@
  * Example: [_check,_phase,_wait] call compile preprocessFileLineNumbers "cortexQACoordinated.sqf";
  */
 params ["_check","_phase","_wait",["_responderOwners",[],[[]]],["_exposeDuringRally",false,[true]],["_localScreens",false,[true]]];
+private _terrainOrigin=[1500,1500,0];
+private _terrainHeading=0;
+private _terrainRelief=0;
+private _terrainMaximumGrade=0;
+private _terrainMinimumNormal=1;
+private _terrainScenarioReady=worldName == "VR";
+private _terrainWorld={
+    params ["_origin","_heading","_localX","_localY"];
+    _origin vectorAdd [
+        _localX*cos _heading+_localY*sin _heading,
+        -_localX*sin _heading+_localY*cos _heading,
+        0
+    ]
+};
+if (!_terrainScenarioReady) then {
+    private _found=[];
+    private _margin=1000 min ((worldSize-800)/2);
+    private _scanStep=700 max ((worldSize-2*_margin)/5);
+    for "_candidateX" from _margin to (worldSize-_margin) step _scanStep do {
+        for "_candidateY" from _margin to (worldSize-_margin) step _scanStep do {
+            for "_heading" from 0 to 315 step 45 do {
+                if (_found isEqualTo []) then {
+                    private _heights=[];
+                    private _usable=true;
+                    private _maximumGrade=0;
+                    private _minimumNormal=1;
+                    {
+                        private _lateral=_x;
+                        private _previousHeight=-1e9;
+                        for "_along" from -120 to 650 step 35 do {
+                            private _sample=[[_candidateX,_candidateY,0],_heading,_lateral,_along] call _terrainWorld;
+                            private _normal=(surfaceNormal _sample) select 2;
+                            if (surfaceIsWater _sample || {_normal < 0.55}) exitWith {_usable=false};
+                            private _height=getTerrainHeightASL _sample;
+                            if (_previousHeight > -1e8) then {
+                                private _grade=abs (_height-_previousHeight)/35;
+                                _maximumGrade=_maximumGrade max _grade;
+                                if (_grade > 0.7) then {_usable=false};
+                            };
+                            _minimumNormal=_minimumNormal min _normal;
+                            _previousHeight=_height;
+                            _heights pushBack _height;
+                        };
+                    } forEach [-220,-110,0,110,220];
+                    if (_usable && {_heights isNotEqualTo []}) then {
+                        private _relief=(selectMax _heights)-(selectMin _heights);
+                        if (_relief >= 20 && {_relief <= 180}) then {
+                            _found=[_candidateX,_candidateY,0];
+                            _terrainHeading=_heading;
+                            _terrainRelief=_relief;
+                            _terrainMaximumGrade=_maximumGrade;
+                            _terrainMinimumNormal=_minimumNormal;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    if (_found isNotEqualTo []) then {_terrainOrigin=_found; _terrainScenarioReady=true};
+};
+private _terrainPosition={
+    params ["_x","_y"];
+    [_terrainOrigin,_terrainHeading,_x-1500,_y-1500] call _terrainWorld
+};
+private _terrainForward=[sin _terrainHeading,cos _terrainHeading,0];
+private _terrainRight=[cos _terrainHeading,-sin _terrainHeading,0];
+["COORD-terrain-scenario",_terrainScenarioReady,
+    str [worldName,_terrainOrigin,_terrainHeading,_terrainRelief,_terrainMaximumGrade,_terrainMinimumNormal]] call _check;
 // FiredMan is local to the firing actor. Reinstall this repeat-safe sampler on the
 // current owner after every QA locality migration so server and HC cases measure the
 // same physical weapon events.
@@ -67,13 +137,15 @@ private _groups=[]; private _actors=[];
 // Build real view geometry before any soldier can acquire the enemy.
 // The requester stands beyond the screen; helpers rally behind it and must route around it.
 private _walls=[];
-private _screenCentres=if (_localScreens) then {[[1408,1410,0],[1608,1410,0]]} else {[[1500,1470,0]]};
+private _screenCentres=if (_localScreens) then {
+    [[1408,1410] call _terrainPosition,[1608,1410] call _terrainPosition]
+} else {[[1500,1470] call _terrainPosition]};
 private _screenHalfCount=if (_localScreens) then {4} else {24};
 {
     private _centre=_x;
     for "_i" from (-_screenHalfCount) to _screenHalfCount do {
-        private _wall=createVehicle ["Land_CncWall4_F",_centre vectorAdd [_i*4,0,0],[],0,"CAN_COLLIDE"];
-        _wall setDir 0;
+        private _wall=createVehicle ["Land_CncWall4_F",[_centre,_terrainHeading,_i*4,0] call _terrainWorld,[],0,"CAN_COLLIDE"];
+        _wall setDir _terrainHeading;
         _walls pushBack _wall;
     };
 } forEach _screenCentres;
@@ -98,12 +170,12 @@ private _makeUnit={
     _unit allowDamage false; _actors pushBack _unit; _unit
 };
 private _requester=[east] call _makeGroup;
-private _observer=[_requester,[1500,1500,0],"CONTACT / BASE OF FIRE"] call _makeUnit;
-_observer setDir 0; _observer disableAI "PATH";
+private _observer=[_requester,[1500,1500] call _terrainPosition,"CONTACT / BASE OF FIRE"] call _makeUnit;
+_observer setDir _terrainHeading; _observer disableAI "PATH";
 private _base=[_observer];
 for "_i" from 1 to 5 do {
-    private _unit=[_requester,[1485+_i*6,1500,0],format ["BASE OF FIRE / %1",_i+1]] call _makeUnit;
-    _unit setDir 0; _unit disableAI "PATH"; _base pushBack _unit;
+    private _unit=[_requester,[1485+_i*6,1500] call _terrainPosition,format ["BASE OF FIRE / %1",_i+1]] call _makeUnit;
+    _unit setDir _terrainHeading; _unit disableAI "PATH"; _base pushBack _unit;
 };
 private _baseOrigins=_base apply {getPosATL _x};
 private _helpers=[]; private _teams=[];
@@ -111,9 +183,9 @@ for "_team" from 0 to 1 do {
     private _group=[east] call _makeGroup;
     private _members=[];
     for "_i" from 0 to 5 do {
-        private _unit=[_group,[1400+_team*200+_i*3,1400,0],format ["ASSAULT TEAM %1 / %2",_team+1,_i+1]] call _makeUnit;
+        private _unit=[_group,[1400+_team*200+_i*3,1400] call _terrainPosition,format ["ASSAULT TEAM %1 / %2",_team+1,_i+1]] call _makeUnit;
         _members pushBack _unit; _helpers pushBack _unit;
-        _unit setVariable ["Waldo_CortexQA_Target",[1500,1420,0],true];
+        _unit setVariable ["Waldo_CortexQA_Target",[1500,1420] call _terrainPosition,true];
     };
     _teams pushBack _members;
 };
@@ -141,13 +213,13 @@ if (count _responderOwners == 2) then {
 };
 private _enemyGroup=[west] call _makeGroup;
 _enemyGroup setVariable ["Waldo_AIPass_Exclude",true,true];
-private _enemy=[_enemyGroup,[1500,1600,0],"OBSERVED OBJECTIVE"] call _makeUnit;
-_enemy setDir 180; _enemy disableAI "PATH";
+private _enemy=[_enemyGroup,[1500,1600] call _terrainPosition,"OBSERVED OBJECTIVE"] call _makeUnit;
+_enemy setDir (_terrainHeading+180); _enemy disableAI "PATH";
 // The observation stimulus is a visible standing sentry, not a prone target concealed
 // by its own profile. Restore normal stance before the combat movement phase.
 _enemy setUnitPos "UP";
 missionNamespace setVariable ["Waldo_CortexQA_Actors",_actors,true];
-["Coordinated assault: rally first","The base squad must see the opponent naturally. Two helper squads start behind a concrete screen; each must physically reach its own separate rear rally area. Coordinated assault is disabled during this stage.",[1500,1460,0]] call _phase;
+["Coordinated assault: rally first","The base squad must see the opponent naturally. Two helper squads start behind a concrete screen; each must physically reach its own separate rear rally area. Coordinated assault is disabled during this stage.",[1500,1460] call _terrainPosition] call _phase;
 private _blocked=_helpers findIf {
     private _rays=lineIntersectsSurfaces [eyePos _x,eyePos _enemy,_x,_enemy,true,-1,"VIEW","GEOM"];
     (_rays findIf {(_x select 2) in _walls || {(_x select 3) in _walls}}) < 0
@@ -171,7 +243,7 @@ if (_exposeDuringRally) then {
     _walls=[];
     // Establish an observation direction without injecting enemy knowledge.
     {if (local _x) then {_x doWatch (getPosATL _enemy)}} forEach _helpers;
-    ["Coordinated rally under observation","The screen has been removed after reservation. Helpers must naturally see the enemy and still finish the reserved rally. Contact must not silently cancel their movement.",[1500,1460,0]] call _phase;
+    ["Coordinated rally under observation","The screen has been removed after reservation. Helpers must naturally see the enemy and still finish the reserved rally. Contact must not silently cancel their movement.",[1500,1460] call _terrainPosition] call _phase;
     private _seen=[{(_teams findIf {leader (group (_x select 0)) knowsAbout _enemy < 1}) < 0},30] call _wait;
     ["COORD-contact-rally-natural-sight",_reserved && {_seen},str (_helpers apply {[netId _x,getDir _x,_x knowsAbout _enemy,_x targetKnowledge _enemy]})] call _check;
 };
@@ -231,7 +303,7 @@ _requester ignoreTarget [_enemy,true];
     ["Waldo_AIPass_FireControl_Enable",true],
     ["Waldo_AIPass_PostContact_LostSeconds",3]
 ]] call Waldo_fnc_CortexTuning;
-["Coordinated assault: contact-loss handoff","The rallied squads are ready while the known target is temporarily hidden by the engine. Cortex must pass CONTACT to SECURITY without discarding the prepared assault, then publish both squad roles. The same target is restored before movement is measured.",[1500,1525,0]] call _phase;
+["Coordinated assault: contact-loss handoff","The rallied squads are ready while the known target is temporarily hidden by the engine. Cortex must pass CONTACT to SECURITY without discarding the prepared assault, then publish both squad roles. The same target is restored before movement is measured.",[1500,1525] call _terrainPosition] call _phase;
 private _securityHandoff=[{_requester getVariable ["Waldo_AIPass_PublicPhase","NONE"] == "SECURITY"},20] call _wait;
 ["COORD-contact-loss-entered-security",_securityHandoff,str (_requester getVariable ["Waldo_Cortex_PhaseTransition",[]])] call _check;
 private _rolesDispatched=[{
@@ -258,7 +330,7 @@ private _combatReady=[{
     [_x getVariable ["Waldo_CortexQA_CombatModeReceipt",[]],groupOwner _x,combatMode _x]
 })] call _check;
 {_x setVariable ["Waldo_CortexQA_Target",getPosATL _enemy,true]} forEach _helpers;
-["Movement diagnostic: concurrent coordinated bounds","DIAGNOSTIC ONLY: invulnerable actors and a non-firing target. This does not validate combat effectiveness. Two squads may advance concurrently on separated lanes while the requester remains the base of fire. Inside each moving squad, one fire team bounds while the other covers, then follows. Watch role labels, actual shots and cyan trails. Both squads must travel at least 60 m and reach within 50 m of the objective. No lease or waypoint is injected by this test.",[1500,1550,0]] call _phase;
+["Movement diagnostic: concurrent coordinated bounds","DIAGNOSTIC ONLY: invulnerable actors and a non-firing target. This does not validate combat effectiveness. Two squads may advance concurrently on separated lanes while the requester remains the base of fire. Inside each moving squad, one fire team bounds while the other covers, then follows. Watch role labels, actual shots and cyan trails. Both squads must travel at least 60 m and reach within 50 m of the objective. No lease or waypoint is injected by this test.",[1500,1550] call _terrainPosition] call _phase;
 private _lastSample=-1;
 private _lastMovementDiagnostic=-1;
 private _lastSquad=-1;
@@ -462,11 +534,13 @@ private _viableCounts = [];
 ["COORD-two-viable-elements-advance",_rallied && {(_viableCounts findIf {_x < 4}) < 0},str _viableCounts] call _check;
 private _centres=_teams apply {
     private _team=_x;
-    private _sum=0; {_sum=_sum+(getPosATL _x select 0)} forEach _team; _sum/count _team
+    private _sum=[0,0,0]; {_sum=_sum vectorAdd getPosATL _x} forEach _team;
+    private _centre=_sum vectorMultiply (1/count _team);
+    (_centre vectorDiff getPosATL _enemy) vectorDotProduct _terrainRight
 };
 private _sideApproach=true;
 {if (_x distance2D (_origins select _forEachIndex) < 60) then {_sideApproach=false}} forEach _helpers;
-["COORD-opposite-objective-sides",_rallied && {_sideApproach} && {(_centres select 0)-1500 > 5 && {(_centres select 1)-1500 < -5} || {(_centres select 1)-1500 > 5 && {(_centres select 0)-1500 < -5}}},str _centres] call _check;
+["COORD-opposite-objective-sides",_rallied && {_sideApproach} && {(_centres select 0) > 5 && {(_centres select 1) < -5} || {(_centres select 1) > 5 && {(_centres select 0) < -5}}},str _centres] call _check;
 // Keep per-soldier arrival evidence separate from team geometry; an outside
 // soldier still fails the unchanged aggregate arrival requirement above.
 {
@@ -483,7 +557,7 @@ private _baseHeld=true;
     [format ["COORD-team-%1-actual-fire",_forEachIndex+1],(_x findIf {(_x getVariable ["Waldo_CortexQA_Shots",0]) > 0}) >= 0,str (_x apply {_x getVariable ["Waldo_CortexQA_Shots",0]})] call _check;
 } forEach _teams;
 [createHashMapFromArray [["Waldo_AIPass_CoordinatedAssault_Enable",false],["Waldo_AIPass_Reinforce_Enable",false]]] call Waldo_fnc_CortexTuning;
-["Coordinated assault: disable and hand back","Support is now disabled. Both squads must release their support assignments and temporary orders, then physically follow fresh ordinary movement orders. The cyan trails show real travel.",[1500,1580,0]] call _phase;
+["Coordinated assault: disable and hand back","Support is now disabled. Both squads must release their support assignments and temporary orders, then physically follow fresh ordinary movement orders. The cyan trails show real travel.",[1500,1580] call _terrainPosition] call _phase;
 private _released=[{
     _teams findIf {
         private _g=group (_x select 0);
@@ -546,7 +620,7 @@ private _zeusOrigins=_helpers apply {getPosATL _x};
 private _zeusDestinations=[];
 {
     private _g=group (_x select 0);
-    private _destination=(getPosATL leader _g) vectorAdd [0,100,0];
+    private _destination=(getPosATL leader _g) vectorAdd (_terrainForward vectorMultiply 100);
     private _wp=_g addWaypoint [_destination,0];
     _zeusDestinations pushBack _destination;
     _wp setWaypointType "MOVE"; _wp setWaypointCompletionRadius 5;
@@ -559,7 +633,7 @@ private _zeusDestinations=[];
         _x setVariable ["Waldo_CortexQA_Label",format ["%1 / ZEUS ORDER",groupId _g],true];
     } forEach _x;
 } forEach _teams;
-["Coordinated assault: Zeus replacement","Zeus now takes control of both squads. Each complete formation must make physical progress and at least four members plus the leader must reach the replacement order. Earlier failures remain recorded.",[1500,1680,0]] call _phase;
+["Coordinated assault: Zeus replacement","Zeus now takes control of both squads. Each complete formation must make physical progress and at least four members plus the leader must reach the replacement order. Earlier failures remain recorded.",[1500,1680] call _terrainPosition] call _phase;
 private _zeusTravel=[{
     private _okay=true;
     {
@@ -585,7 +659,7 @@ private _unopposedOrigins=_helpers apply {getPosATL _x};
 private _unopposedDestinations=[];
 {
     private _g=group (_x select 0);
-    private _destination=(getPosATL leader _g) vectorAdd [0,100,0];
+    private _destination=(getPosATL leader _g) vectorAdd (_terrainForward vectorMultiply 100);
     private _wp=_g addWaypoint [_destination,0];
     _unopposedDestinations pushBack _destination;
     _wp setWaypointType "MOVE";
@@ -598,7 +672,7 @@ private _unopposedDestinations=[];
         _x setVariable ["Waldo_CortexQA_Label",format ["%1 / UNOPPOSED ORDER",groupId _g],true];
     } forEach _x;
 } forEach _teams;
-["Handover without the test enemy","Earlier threatened-order results remain recorded. The fixture opponent has now been removed. Check whether the same soldiers follow a new ordinary waypoint without any AI feature, behaviour or position reset.",[1500,1680,0]] call _phase;
+["Handover without the test enemy","Earlier threatened-order results remain recorded. The fixture opponent has now been removed. Check whether the same soldiers follow a new ordinary waypoint without any AI feature, behaviour or position reset.",[1500,1680] call _terrainPosition] call _phase;
 private _unopposedTravel=[{
     private _okay=true;
     {

@@ -346,7 +346,7 @@ Feature cases: **63**. Required variant categories: **14**.
 
 **Expected:** Responders accept communicated contact and begin separated approaches from their live positions without an intermediate assembly or all-responder readiness gate; rejection, loss and disable release every affected lease independently.
 
-**Automation and open work:** runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, immediate live-position approaches, disabled hold, per-soldier physical advance and independent opposite-side geometry. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. The coordinatedbounds focus measures contact interruption, physical role exchange and inter/intra-squad covering fire. TARGET/AUTOTARGET/PATH restoration comparisons retain unchanged physical handover requirements; rebuilt live execution is pending.
+**Automation and open work:** runCoordinated.sqf: physical occlusion and tactical-range prerequisites, natural detection, immediate live-position approaches, disabled hold, per-soldier physical advance and independent opposite-side geometry. Outside VR a bounded one-time scan rotates the entire platoon frontage, screens, objective and handover routes across eight headings; five parallel lanes must remain dry, traversable and below grade 0.7 while the corridor provides at least 20 m of relief. Latest live arrival failed; owner, cancellation and restored-route variants remain outstanding. The coordinatedbounds focus measures contact interruption, physical role exchange and inter/intra-squad covering fire. TARGET/AUTOTARGET/PATH restoration comparisons retain unchanged physical handover requirements; rebuilt live execution is pending.
 
 ### STANCE - Cover stance
 

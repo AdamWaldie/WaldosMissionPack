@@ -456,8 +456,8 @@ class CortexOperations(unittest.TestCase):
 
     def test_coordinated_clean_approach_is_additive(self):
         qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text(encoding='utf-8')
-        self.assertIn('[[1408,1410,0],[1608,1410,0]]',qa)
-        self.assertIn('[[1500,1470,0]]',qa)
+        self.assertIn('[[1408,1410] call _terrainPosition,[1608,1410] call _terrainPosition]',qa)
+        self.assertIn('[[1500,1470] call _terrainPosition]',qa)
         self.assertIn('["_localScreens",false,[true]]',qa)
         runner=(ROOT/'releaseVerificationAndDeployment/cortexQA/runServer.sqf').read_text(encoding='utf-8')
         self.assertIn('if (_focus == "coordinatedbounds")',runner)
@@ -1133,6 +1133,27 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('if (_contact && {_mode == "BOUND"}) then {',qa)
         self.assertLess(qa.index('[_prefix+"-natural-contact"'),
                         qa.index('private _wp=_x addWaypoint'))
+
+    def test_coordinated_audit_rotates_full_platoon_geometry_onto_real_terrain(self):
+        qa=(ROOT/'releaseVerificationAndDeployment/cortexQA/runCoordinated.sqf').read_text()
+        for marker in ['private _terrainHeading=0',
+                       'private _terrainScenarioReady=worldName == "VR"',
+                       'for "_heading" from 0 to 315 step 45',
+                       'forEach [-220,-110,0,110,220]',
+                       'for "_along" from -120 to 650 step 35',
+                       '_normal < 0.55',
+                       '_grade > 0.7',
+                       '_relief >= 20 && {_relief <= 180}',
+                       'COORD-terrain-scenario',
+                       '_terrainForward vectorMultiply 100',
+                       'vectorDotProduct _terrainRight']:
+            self.assertIn(marker,qa)
+        for position in ['[1500,1500] call _terrainPosition',
+                         '[1500,1600] call _terrainPosition',
+                         '[1400+_team*200+_i*3,1400] call _terrainPosition']:
+            self.assertIn(position,qa)
+        self.assertIn('_wall setDir _terrainHeading',qa)
+        self.assertNotIn('vectorAdd [0,100,0]',qa)
 
     def test_bounding_advance_default_reacts_before_native_waypoint_is_consumed(self):
         config=(ROOT/'MissionConfig/aiConfig.sqf').read_text()
