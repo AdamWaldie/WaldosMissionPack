@@ -345,6 +345,34 @@ private _observedProfiles=createHashMap;
     // measured emergency turns rather than the authored attack. Helicopters retain the compact lane.
     private _aircraft=createVehicle [_class,[8200,[5000,3000] select _isPlaneClass,[180,900] select _isPlaneClass],[],0,"FLY"];
     _aircraft setDir 0; createVehicleCrew _aircraft; _aircraft allowDamage false;
+    // Give every weapon-specific case a deliberate, visible loadout. Dynamic-loadout defaults can
+    // expose only one missile or bomb, which tests a depleted editor preset instead of the finite
+    // multi-round attack contract. Use only magazines declared compatible by the aircraft's own
+    // pylon config; modded aircraft are never assigned a guessed classname.
+    private _auditPylonMagazine=switch _expectedWeaponClass do {
+        case "ROCKET": {"PylonRack_20Rnd_Rocket_03_HE_F"};
+        case "BOMB": {"PylonMissile_1Rnd_Bomb_03_F"};
+        case "GUIDED": {
+            ["PylonRack_1Rnd_Missile_AGM_01_F","PylonRack_1Rnd_Missile_AA_03_F"] select _airTarget
+        };
+        default {""};
+    };
+    private _auditPylonNeed=switch _expectedWeaponClass do {
+        case "BOMB": {2};
+        case "GUIDED": {3};
+        case "ROCKET": {4};
+        default {0};
+    };
+    private _auditPylonsConfigured=0;
+    if (_auditPylonMagazine != "") then {
+        {
+            if (_auditPylonsConfigured < _auditPylonNeed
+                && {_auditPylonMagazine in (_aircraft getCompatiblePylonMagazines (_x select 1))}) then {
+                _aircraft setPylonLoadout [_x select 0,_auditPylonMagazine,true,_x select 2];
+                _auditPylonsConfigured=_auditPylonsConfigured+1;
+            };
+        } forEach getAllPylonsInfo _aircraft;
+    };
     private _pilot=driver _aircraft;
     // Observe the aircraft's normal crew exactly as createVehicleCrew supplies it. The fixture must
     // never manufacture extra turret operators to make an unsuitable airframe appear attack-ready.
@@ -378,6 +406,8 @@ private _observedProfiles=createHashMap;
         _target engineOn false;
         _target setFuel 0;
         _target setVelocity [0,0,0];
+        _target setPosATL _targetPosition;
+        {doStop _x} forEach _targetCrew;
     };
     if (_airTarget) then {
         _target setDir 180;
@@ -473,8 +503,10 @@ private _observedProfiles=createHashMap;
     [_id+"-physical-plan-start",_started,str [
         _aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]],
         weapons _aircraft,_aircraft weaponsTurret [-1],magazinesAllTurrets _aircraft,
-        getPylonMagazines _aircraft
+        getPylonMagazines _aircraft,[_auditPylonMagazine,_auditPylonNeed,_auditPylonsConfigured]
     ]] call _recordCheck;
+    [_id+"-weapon-loadout-sufficient",_auditPylonNeed == 0 || {_auditPylonsConfigured >= _auditPylonNeed},
+        str [_auditPylonMagazine,_auditPylonNeed,_auditPylonsConfigured,getAllPylonsInfo _aircraft]] call _recordCheck;
     _aircraft setVariable ["Waldo_CortexQA_ProfileSamples",[],true];
     [_aircraft] spawn {
         params ["_sampleAircraft"];
@@ -512,6 +544,9 @@ private _observedProfiles=createHashMap;
     private _selectedWeaponClass=_initialPlan param [25,""];
     private _terrainLift=_initialPlan param [27,0];
     private _terrainClearanceMinimum=_initialPlan param [28,0];
+    private _terrainSampleCount=_initialPlan param [29,0];
+    private _terrainCorridor=_initialPlan param [30,0];
+    private _plannedTargetPosition=_initialPlan param [31,getPosATL _target];
     private _selectedOperator=if (_selectedTurret isEqualTo [-1]) then {driver _aircraft}
         else {_aircraft turretUnit _selectedTurret};
     if (_pattern != "") then {_observedProfiles set [_pattern,[_profilePoints,_profileAltitudes,_profileSpeeds]]};
@@ -525,11 +560,15 @@ private _observedProfiles=createHashMap;
         private _requiredTerrainClearance=[45,300] select _isPlaneClass;
         [_id+"-terrain-envelope",_terrainLift >= 0
             && {_terrainLift <= ([300,1200] select _isPlaneClass)}
-            && {_terrainClearanceMinimum >= _requiredTerrainClearance},
-            str [_terrainLift,_terrainClearanceMinimum,_requiredTerrainClearance,_profileAltitudes]] call _recordCheck;
+            && {_terrainClearanceMinimum >= _requiredTerrainClearance}
+            && {_terrainSampleCount >= 42}
+            && {_terrainCorridor >= ([75,200] select _isPlaneClass)},
+            str [_terrainLift,_terrainClearanceMinimum,_requiredTerrainClearance,_profileAltitudes,
+                _terrainSampleCount,_terrainCorridor]] call _recordCheck;
         // VR is the fast flat regression arm. A checked Altis launch must prove that its route is
         // genuinely non-flat; otherwise a green terrain-envelope result would merely repeat VR in
-        // a different world. Fourteen fixed samples mirror the production planner's bounded cost.
+        // a different world. Fourteen independent centreline samples provide a cheap scenario-relief
+        // assertion; the production plan above separately proves its wider adaptive corridor.
         private _terrainSamples=[];
         if (count _profilePoints == 3) then {
             for "_terrainLeg" from 0 to 1 do {
@@ -555,7 +594,7 @@ private _observedProfiles=createHashMap;
         _deliveryVector set [2,0];
         private _deliveryLength=vectorMagnitude _deliveryVector;
         private _deliveryDirection=if (_deliveryLength > 1) then {vectorNormalized _deliveryVector} else {[0,0,0]};
-        private _targetVector=(getPosATL _target) vectorDiff _deliveryStart;
+        private _targetVector=_plannedTargetPosition vectorDiff _deliveryStart;
         _targetVector set [2,0];
         private _targetAlong=_targetVector vectorDotProduct _deliveryDirection;
         private _crossTrack=abs ((_targetVector select 0)*(_deliveryDirection select 1)
@@ -565,7 +604,7 @@ private _observedProfiles=createHashMap;
         } else {90};
         private _angleValid=switch _selectedWeaponClass do {
             case "GUN";
-            case "ROCKET": {_descentAngle >= 5 && {_descentAngle <= 18}};
+            case "ROCKET": {_descentAngle >= 7 && {_descentAngle <= 18}};
             case "BOMB": {abs _descentAngle <= 4};
             case "GUIDED": {abs _descentAngle <= 8};
             default {false};
@@ -574,7 +613,10 @@ private _observedProfiles=createHashMap;
             && {_targetAlong > 0} && {_targetAlong < _deliveryLength}
             && {_angleValid} && {(_deliveryEnd select 2) >= 220},
             str [_selectedWeaponClass,_descentAngle,_crossTrack,_targetAlong,_deliveryLength,
-                _deliveryStart,_deliveryEnd,getPosATL _target]] call _recordCheck;
+                _deliveryStart,_deliveryEnd,_plannedTargetPosition,getPosATL _target,
+                _plannedTargetPosition distance2D _target]] call _recordCheck;
+        [_id+"-ground-target-stationary",_plannedTargetPosition distance2D _target <= 2,
+            str [_plannedTargetPosition,getPosATL _target,_plannedTargetPosition distance2D _target]] call _recordCheck;
     };
     private _weaponMatchesPattern=switch _pattern do {
         case "STRAFE";

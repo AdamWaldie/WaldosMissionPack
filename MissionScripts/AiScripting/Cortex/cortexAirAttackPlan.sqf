@@ -14,7 +14,7 @@
  * Locality/authority: read-only; called on the aircraft owner. It does not reveal enemies, add
  * waypoints, move the aircraft or change crew orders. Immutable magazine facts are cached locally.
  * Each pattern carries separate ingress/attack/egress height, speed, capture radius and minimum
- * firing-leg time. A bounded set of terrain samples is taken once while the plan is built. When
+ * firing-leg time. A bounded route corridor is sampled once while the plan is built. When
  * intervening relief intrudes into the platform's clearance envelope, the same lift is added to all
  * three stages so the attack angle remains intact without a per-frame terrain controller. STRAFE
  * dives and accelerates through; OFFSET remains oblique; HOOK crosses the
@@ -469,28 +469,28 @@ if (_isPlane) then {
             _attackMinimum=2;
         };
         case "OFFSET": {
-            // Build a shallow, continuous delivery slope. A 1.3 km climb followed by a dive made
-            // the nose cross the target while the aircraft's momentum still carried every rocket
-            // above it. This is the height needed for a five-to-seven degree fixed-rocket approach.
+            // Build a continuous nine-to-eleven degree delivery slope. The earlier five-degree
+            // profile left too little depression for fixed rockets even though the route crossed
+            // the target, while the old climb-then-dive profile made native flight overshoot.
             private _deliveryAltitude=320+random 60;
-            _stageAltitudes=[_deliveryAltitude+700,_deliveryAltitude,_altitude+750];
+            _stageAltitudes=[_deliveryAltitude+1200,_deliveryAltitude,_altitude+850];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[700,900,1200];
             _attackMinimum=3;
         };
         case "HOOK": {
             private _deliveryAltitude=340+random 60;
-            _stageAltitudes=[_deliveryAltitude+900,_deliveryAltitude,_altitude+850];
+            _stageAltitudes=[_deliveryAltitude+1500,_deliveryAltitude,_altitude+950];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[700,900,1250];
             _attackMinimum=3;
         };
         default {
-            // Preserve a roughly six-degree gun run while leaving a useful recovery margin. The
+            // Preserve a roughly nine-degree gun run while leaving a useful recovery margin. The
             // former 280-350 m endpoint repeatedly let natural flight dip through the 220 m abort
             // floor during a valid burst, splitting one pass into several rediscovered attacks.
             private _deliveryAltitude=400+random 80;
-            private _approachAltitude=_deliveryAltitude+650;
+            private _approachAltitude=_deliveryAltitude+1050;
             _stageAltitudes=[_approachAltitude,_deliveryAltitude,_altitude+700];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];
@@ -500,37 +500,37 @@ if (_isPlane) then {
 } else {
     switch _pattern do {
         case "INTERCEPT": {
-            _stageAltitudes=[_altitude,_altitude,_altitude+60];
+            _stageAltitudes=[_altitude,_altitude,_altitude+40];
             _stageSpeeds=[_speed,_speed+20,_speed+40];
             _captureRadii=[220,260,320];
             _attackMinimum=4;
         };
         case "STANDOFF": {
-            _stageAltitudes=[_altitude+100,_altitude,_altitude+240];
+            _stageAltitudes=[_altitude+70,_altitude,_altitude+100];
             _stageSpeeds=[_speed+20,_speed,_speed+70];
             _captureRadii=[300,350,500];
             _attackMinimum=3;
         };
         case "OFFSET": {
-            _stageAltitudes=[_altitude+120,(_altitude*0.55) max 55,_altitude+220];
+            _stageAltitudes=[_altitude+70,(_altitude*0.7) max 60,_altitude+100];
             _stageSpeeds=[_speed,_speed+20,_speed+50];
             _captureRadii=[280,320,480];
             _attackMinimum=4;
         };
         case "HOOK": {
-            _stageAltitudes=[_altitude+150,(_altitude*0.5) max 50,_altitude+280];
+            _stageAltitudes=[_altitude+80,(_altitude*0.65) max 55,_altitude+110];
             _stageSpeeds=[_speed,_speed+15,_speed+60];
             _captureRadii=[280,320,500];
             _attackMinimum=5;
         };
         case "LATERAL": {
-            _stageAltitudes=[_altitude+80,_altitude,_altitude+160];
+            _stageAltitudes=[_altitude+50,_altitude,_altitude+75];
             _stageSpeeds=[_speed,(_speed-15) max 70,_speed+45];
             _captureRadii=[350,400,550];
             _attackMinimum=4;
         };
         default {
-            _stageAltitudes=[_altitude+120,(_altitude*0.45) max 45,_altitude+260];
+            _stageAltitudes=[_altitude+70,(_altitude*0.7) max 55,_altitude+110];
             _stageSpeeds=[_speed,_speed+45,_speed+30];
             _captureRadii=[150,180,280];
             _attackMinimum=3;
@@ -539,11 +539,14 @@ if (_isPlane) then {
 };
 // MOVE points and flyInHeight are terrain-relative, but natural fixed-wing flight can still lag a
 // sharp ridge between distant waypoints. Sample each route leg once and compare the terrain with the
-// straight absolute-height profile the three stage heights describe. Lift the complete profile only
-// by the missing clearance. A fixed 14 samples per surface plan keeps this independent of unit count,
-// preserves the delivery angle and avoids an expensive terrain-following scheduler.
+// straight absolute-height profile the three stage heights describe. Samples follow three parallel
+// lines because native flight can cut either side of the nominal centreline on hills and during a
+// turn. Spacing is approximately 300 metres and is capped per leg, so rough terrain is represented
+// without creating a per-frame terrain controller or cost that scales with every AI unit.
 private _terrainLift=0;
 private _terrainClearanceMinimum=0;
+private _terrainSampleCount=0;
+private _terrainCorridor=[75,200] select _isPlane;
 if (!_airToAir) then {
     _terrainClearanceMinimum=1e6;
     private _minimumTerrainClearance=[45,300] select _isPlane;
@@ -556,14 +559,27 @@ if (!_airToAir) then {
         private _toTerrain=getTerrainHeightASL _toPoint;
         private _fromFlightASL=_fromTerrain+(_stageAltitudes select _legIndex);
         private _toFlightASL=_toTerrain+(_stageAltitudes select (_legIndex+1));
-        for "_sampleIndex" from 0 to 6 do {
-            private _fraction=_sampleIndex/6;
-            private _samplePoint=_fromPoint vectorAdd ((_toPoint vectorDiff _fromPoint) vectorMultiply _fraction);
-            private _terrainASL=getTerrainHeightASL _samplePoint;
+        private _legVector=_toPoint vectorDiff _fromPoint;
+        private _horizontalLeg=+_legVector;
+        _horizontalLeg set [2,0];
+        private _legLength=vectorMagnitude _horizontalLeg;
+        private _sampleSteps=((ceil (_legLength/300)) max 6) min 36;
+        private _legSide=if (_legLength > 1) then {
+            private _legDirection=vectorNormalized _horizontalLeg;
+            [-(_legDirection select 1),_legDirection select 0,0]
+        } else {[0,0,0]};
+        for "_sampleIndex" from 0 to _sampleSteps do {
+            private _fraction=_sampleIndex/_sampleSteps;
+            private _sampleCentre=_fromPoint vectorAdd (_legVector vectorMultiply _fraction);
             private _plannedASL=_fromFlightASL+((_toFlightASL-_fromFlightASL)*_fraction);
-            private _clearance=_plannedASL-_terrainASL;
-            _terrainClearanceMinimum=_terrainClearanceMinimum min _clearance;
-            _terrainLift=_terrainLift max (_minimumTerrainClearance-_clearance);
+            {
+                private _samplePoint=_sampleCentre vectorAdd (_legSide vectorMultiply _x);
+                private _terrainASL=getTerrainHeightASL _samplePoint;
+                private _clearance=_plannedASL-_terrainASL;
+                _terrainClearanceMinimum=_terrainClearanceMinimum min _clearance;
+                _terrainLift=_terrainLift max (_minimumTerrainClearance-_clearance);
+                _terrainSampleCount=_terrainSampleCount+1;
+            } forEach [-_terrainCorridor,0,_terrainCorridor];
         };
     };
     _terrainLift=(ceil (_terrainLift max 0)) min _terrainLiftLimit;
@@ -578,11 +594,13 @@ if (!_airToAir) then {
 } forEach [_ingress,_attack,_egress];
 createHashMapFromArray [
     ["token",format ["%1:%2:%3",netId _aircraft,round serverTime,round random 1e6]],
-    ["pattern",_pattern],["target",_target],["aaPositions",_aaPositions],["standoff",_standoff],
+    ["pattern",_pattern],["target",_target],["targetPosition",+_targetPos],
+    ["aaPositions",_aaPositions],["standoff",_standoff],
     ["points",[_ingress,_attack,_egress]],["altitude",_altitude],["speed",_speed],
     ["stageAltitudes",_stageAltitudes],["stageSpeeds",_stageSpeeds],
     ["captureRadii",_captureRadii],["attackMinimum",_attackMinimum],
     ["terrainLift",_terrainLift],["terrainClearanceMinimum",_terrainClearanceMinimum],
+    ["terrainSampleCount",_terrainSampleCount],["terrainCorridor",_terrainCorridor],
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
     ["lateralWeapon",_lateralWeapon],["lateralSimulation",_lateralSimulation],
     ["standoffWeapon",_standoffWeapon],["standoffSimulation",_standoffSimulation],

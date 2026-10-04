@@ -9,17 +9,16 @@
  * non-countermeasure shots and requests finite approach/departure countermeasures. Every pattern
  * uses a compatible loaded weapon and opens fire only inside a live range and alignment envelope.
  * On attack entry the selected living operator receives one native reveal/target instruction;
- * Cortex then releases the selected weapon only after live range, alignment, ammunition and seeker
- * checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
+ * Cortex then asks that operator to release the selected weapon only after live range, route,
+ * ammunition and seeker checks pass. This joins route geometry to the engine's weapon FSM instead of treating an ATTACK
  * label as an attack. The engine remains the flight controller; Cortex owns one named temporary
  * waypoint for the finite lease and one terrain-relative altitude hint when each leg changes. A
  * fixed-wing ground ATTACK leg retains the target-crossing MOVE route throughout delivery; the
- * selected operator releases a fixed forward weapon only when its launch vector, including aircraft
- * velocity, is inside the live weapon basket;
+ * selected operator receives repeated native fire-control requests inside a broad delivery basket;
  * independently aimed turrets retain native fire control. This keeps the aircraft on its useful
  * approach instead of replacing it with an unreliable spatial DESTROY search at the release point,
- * and prevents an asynchronous pilot request from releasing after the nose has left the measured
- * solution. Air intercepts attach immediately because the contact itself is
+ * and lets the engine solve the aircraft's real muzzle, pylon and momentum rather than predicting
+ * those from a generic weapon direction. Air intercepts attach immediately because the contact itself is
  * moving. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
@@ -257,6 +256,9 @@ if (_stage == "") then {
     _job set ["attackMinimum",_plan getOrDefault ["attackMinimum",2]];
     _job set ["terrainLift",_plan getOrDefault ["terrainLift",0]];
     _job set ["terrainClearanceMinimum",_plan getOrDefault ["terrainClearanceMinimum",0]];
+    _job set ["terrainSampleCount",_plan getOrDefault ["terrainSampleCount",0]];
+    _job set ["terrainCorridor",_plan getOrDefault ["terrainCorridor",0]];
+    _job set ["targetPosition",+(_plan getOrDefault ["targetPosition",getPosATL _target])];
     _job set ["type","AIR_ATTACK"]; _job set ["stage",""]; _job set ["deadline",serverTime+75]; _job set ["shots",0];
     _job set ["origin",getPosATL _aircraft]; _job set ["resumePosition",_resumePosition];
     _job set ["resumeWaypointIndex",_waypointIndex]; _job set ["routeSignature",_routeSignature];
@@ -439,6 +441,9 @@ if (_stage == "ATTACK") then {
         // the already selected hostile at attack entry, then let the retained operator and native
         // flight model solve the shot. This runs once and is cleared during every handover path.
         _group reveal [_fireTarget,4];
+        _aircraft doWatch _fireTarget;
+        _aircraft doTarget _fireTarget;
+        _operator doWatch _fireTarget;
         _operator doTarget _fireTarget;
         _job set ["targetCommanded",true];
     };
@@ -469,11 +474,12 @@ if (_stage == "ATTACK") then {
             && {(_x select 0) == _selectedMagazine || {(_x select 0) in compatibleMagazines _weapon}}
     } >= 0;
     private _envelope=switch _weaponClass do {
-        case "GUN": {if (_airContact) then {[100,2200,0.999]} else {[120,2200,0.9995]}};
-        // The release is immediate, so a three-degree rocket cone is both credible and usable on
-        // an engine-flown dive. The old sub-two-degree gate caused the HOOK pass to overfly without
-        // ever firing even though the planned delivery axis crossed the target.
-        case "ROCKET": {[500,3600,0.998]};
+        case "GUN": {if (_airContact) then {[100,2200,0.999]} else {[120,1400,0.9995]}};
+        // Native CAS opens fixed gun and rocket fire close to the aim point. A 3.6 km rocket basket
+        // let the engine accept a request while the aircraft was merely pointed into the broad
+        // target sector; real rounds then passed 500-950 metres away. Retain the long ingress but
+        // reserve release for the final 1.8 km of a measured delivery line.
+        case "ROCKET": {[400,1800,0.998]};
         // A guided seeker needs a clean forward launch sector, not a gun-quality boresight solution.
         // The Fired handler assigns the selected hostile to the real projectile after release.
         // Fixed forward weapons release synchronously below. Keep a clean seeker launch cone so the
@@ -507,20 +513,26 @@ if (_stage == "ATTACK") then {
     private _predictedBombImpact=(getPosATL _aircraft) vectorAdd (_horizontalVelocity vectorMultiply _fallTime);
     private _bombImpactError=_predictedBombImpact distance2D getPosATL _target;
     private _bombWindow=_bombImpactError <= 140 && {_forwardAlignment >= 0.92};
-    // aimedAtTarget is an engine fire-control hint. Some valid pilot pylons report zero until after
-    // release, so it must not veto an otherwise valid seeker launch. Loaded station, target
-    // assignment, range and forward geometry are the actual prerequisites.
-    private _minimumAim=0;
     // A nose-mounted weapon needs forward closure. A retained lateral turret is specifically
     // selected to fire abeam, so forcing the helicopter nose onto the target defeats that pattern.
     private _closing=_pattern == "LATERAL" || {_forwardAlignment > 0.35};
     private _fixedUnguided=_turret isEqualTo [-1] && {_weaponClass in ["GUN","ROCKET"]};
+    // Bohemia's native fire-control contract is doWatch, wait for a positive aimedAtTarget result,
+    // then fireAtTarget. Seeker weapons can legitimately report zero before launch, but fixed guns
+    // and rockets must demonstrate an engine solution before a release request is accepted.
+    private _minimumAim=[0,0.05] select _fixedUnguided;
+    // Fixed aircraft weapons are released through the real operator's fire-control state. The
+    // vector returned by weaponDirection is not the launch vector of every aircraft muzzle or
+    // pylon; the audit proved a nominally valid predicted solution could put an entire cannon burst
+    // more than 400 metres beyond the target. Keep only a broad airframe/route basket here, then let
+    // fireAtTarget solve the configured muzzle, aircraft momentum, seeker and burst mode.
+    private _nativeFixedBasket=!_fixedUnguided || {
+        _forwardAlignment >= ([0.985,0.975] select (_weaponClass == "ROCKET"))
+    };
     private _validSolution=_loaded && {!isNull _operator} && {alive _operator}
         && {_range >= _minimumRange} && {_range <= _maximumRange}
-        && {_closing} && {_bombWindow || {!_bomb && {
-            [_alignment >= _minimumAlignment,_launchAlignment >= ([0.992,0.975] select (_weaponClass == "ROCKET"))]
-                select _fixedUnguided
-        }}}
+        && {_closing} && {_nativeFixedBasket}
+        && {_bombWindow || {!_bomb && {!_fixedUnguided || {_forwardAlignment >= 0.94}}}}
         && {!_bomb || {(getPosATL _aircraft select 2) >= 250}}
         && {_aimed >= _minimumAim};
     private _solution=[_validSolution,_range,_alignment,_aimed,_weapon,_simulation,_loaded,
@@ -534,35 +546,19 @@ if (_stage == "ATTACK") then {
     // release basket proved engine-dependent: when attachment was rejected it became a spatial
     // target search, stalled the run and emitted a warning every simulation tick. The release below
     // hands only the compatible loaded station to its living operator at the measured solution.
-    // A fixed forward weapon must fire in that same simulation window: fireAtTarget is asynchronous
-    // and was observed to release rockets and bombs only after the nose had moved hundreds of metres
-    // off the solved line. A turret that can aim independently still uses native fireAtTarget.
+    // Arma's own CAS path repeatedly asks the living operator to fire at a revealed target during a
+    // bounded release window. That retains native muzzle, pylon and seeker logic. A scripted trigger
+    // press bypassed that solution and produced consistent long misses even on a correct flight path.
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
-        && {serverTime < _requestAt+4};
+        && {serverTime < _requestAt+0.35};
     if (_validSolution && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
-        // One station-specific request per bounded cycle is sufficient. Stacking doFire and
-        // commandTarget made the script compete with the pilot weapon FSM. forceWeaponFire acts on
-        // the current operator and selected muzzle; it does not steer the airframe or projectile.
-        private _fixedForward=_turret isEqualTo [-1];
-        private _fired=false;
-        if (_fixedForward) then {
-            private _weaponState=weaponState [_aircraft,_turret,_weapon];
-            private _muzzle=_weaponState param [1,_weapon,[""]];
-            private _mode=_weaponState param [2,"",[""]];
-            if (_muzzle == "") then {_muzzle=_weapon};
-            if (_mode == "") then {
-                private _modes=getArray (configFile >> "CfgWeapons" >> _weapon >> "modes");
-                if (_modes isNotEqualTo []) then {_mode=_modes select 0};
-            };
-            if (_mode == "this" || {_mode == ""}) then {_mode=_weapon};
-            _operator forceWeaponFire [_muzzle,_mode];
-            _fired=true;
-        } else {
-            _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
-        };
+        // One native request at a time. Repeating a rejected request after a short interval is
+        // intentional: the operator may enter the engine's exact solution later in the same pass.
+        // No request steers the aircraft and no projectile is corrected after launch.
+        private _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
         if (_fired) then {
             _job set ["fireRequestAt",serverTime];
             _job set ["fireRequestShotBaseline",_shots];
@@ -604,7 +600,9 @@ _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     _job getOrDefault ["selectedWeapon",""],_job getOrDefault ["selectedSimulation",""],
     _job getOrDefault ["selectedTurret",[]],_job getOrDefault ["selectedWeaponClass",""],
     _job getOrDefault ["selectedMagazine",""],
-    _job getOrDefault ["terrainLift",0],_job getOrDefault ["terrainClearanceMinimum",0]
+    _job getOrDefault ["terrainLift",0],_job getOrDefault ["terrainClearanceMinimum",0],
+    _job getOrDefault ["terrainSampleCount",0],_job getOrDefault ["terrainCorridor",0],
+    +(_job getOrDefault ["targetPosition",getPosATL _target])
 ],true];
 
 private _attackShots=_shots-(_job getOrDefault ["attackShotBaseline",0]);

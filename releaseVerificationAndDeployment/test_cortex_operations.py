@@ -2861,7 +2861,7 @@ class CortexOperations(unittest.TestCase):
                             'aimedAtTarget','fireAtTarget','NO_FIRE_SOLUTION','attackStartedAt',
                             'stageBestDistance','stageProgressAt','INGRESS_NONPROGRESS','ATTACK_NONPROGRESS',
                             'weaponDirection _weapon','Waldo_Cortex_AirFireSolution','private _validSolution=',
-                            '_range >= _minimumRange','_alignment >= _minimumAlignment']:
+                            '_range >= _minimumRange','private _nativeFixedBasket=']:
             self.assertIn(requirement,controller)
         self.assertNotIn('_pilot doMove _destination',controller)
         self.assertNotIn('_pilot commandMove _destination',controller)
@@ -2884,17 +2884,22 @@ class CortexOperations(unittest.TestCase):
             self.assertIn(profile,planner)
             self.assertIn(profile,controller)
         self.assertIn('private _deliveryAltitude=400+random 80',planner)
-        self.assertIn('private _approachAltitude=_deliveryAltitude+650',planner)
+        self.assertIn('private _approachAltitude=_deliveryAltitude+1050',planner)
         self.assertIn('vectorAdd (velocity _aircraft)',controller)
         self.assertIn('private _launchAlignment=',controller)
         self.assertIn('private _bombImpactError=',controller)
         self.assertIn('private _minimumTerrainClearance=[45,300] select _isPlane',planner)
         self.assertIn('for "_legIndex" from 0 to 1',planner)
-        self.assertIn('for "_sampleIndex" from 0 to 6',planner)
+        self.assertIn('private _sampleSteps=((ceil (_legLength/300)) max 6) min 36',planner)
+        self.assertIn('for "_sampleIndex" from 0 to _sampleSteps',planner)
+        self.assertIn('forEach [-_terrainCorridor,0,_terrainCorridor]',planner)
         self.assertIn('private _terrainASL=getTerrainHeightASL _samplePoint',planner)
         self.assertIn('_stageAltitudes=_stageAltitudes apply {_x+_terrainLift}',planner)
         self.assertIn('["terrainLift",_terrainLift]',planner)
         self.assertIn('["terrainClearanceMinimum",_terrainClearanceMinimum]',planner)
+        self.assertIn('["terrainSampleCount",_terrainSampleCount]',planner)
+        self.assertIn('["terrainCorridor",_terrainCorridor]',planner)
+        self.assertIn('["targetPosition",+_targetPos]',planner)
         self.assertIn('private _stagePassed=',controller)
         self.assertIn('private _ingressBehind=',controller)
         self.assertIn('vectorDotProduct (_destination vectorDiff getPosATL _aircraft)',controller)
@@ -2915,7 +2920,7 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('_operator commandTarget _target',controller)
         self.assertLess(
             controller.index('_operator doTarget _fireTarget'),
-            controller.index('private _fixedForward=_turret isEqualTo [-1]'),
+            controller.index('private _fixedUnguided=_turret isEqualTo [-1]'),
         )
         self.assertIn('_job getOrDefault ["releaseDetail",[]]',controller)
         self.assertIn('"vehicleOwner",owner _aircraft,"groupOwner",groupOwner _group',controller)
@@ -2924,9 +2929,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_pattern == "LATERAL" || {_forwardAlignment > 0.35}',controller)
         self.assertIn('_stage != "" || {[_group] call Waldo_fnc_CortexIsEligible}',controller)
         self.assertIn('_aircraft selectWeaponTurret [_weapon,_turret]',controller)
-        self.assertIn('private _weaponState=weaponState [_aircraft,_turret,_weapon]',controller)
-        self.assertIn('_operator forceWeaponFire [_muzzle,_mode]',controller)
-        self.assertIn('_fired=_aircraft fireAtTarget [_fireTarget,_weapon]',controller)
+        self.assertIn('_operator doWatch _fireTarget',controller)
+        self.assertIn('private _nativeFixedBasket=',controller)
+        self.assertIn('_aircraft doWatch _fireTarget',controller)
+        self.assertIn('private _fired=_aircraft fireAtTarget [_fireTarget,_weapon]',controller)
+        self.assertNotIn('forceWeaponFire',controller)
         self.assertIn('_projectile setMissileTarget [_guidedTarget,true]',controller)
         self.assertIn('_projectile setMissileTargetPos (aimPos _guidedTarget)',controller)
         self.assertIn('[1100,9000,0.97]',controller)
@@ -2963,6 +2970,11 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('private _physicalImpact=damage _target > 0',aircraft_qa)
         self.assertIn('private _terrainLift=_initialPlan param [27,0]',aircraft_qa)
         self.assertIn('private _terrainClearanceMinimum=_initialPlan param [28,0]',aircraft_qa)
+        self.assertIn('private _terrainSampleCount=_initialPlan param [29,0]',aircraft_qa)
+        self.assertIn('private _terrainCorridor=_initialPlan param [30,0]',aircraft_qa)
+        self.assertIn('private _plannedTargetPosition=_initialPlan param [31,getPosATL _target]',aircraft_qa)
+        self.assertIn('_id+"-ground-target-stationary"',aircraft_qa)
+        self.assertIn('_target setPosATL _targetPosition',aircraft_qa)
         self.assertIn('_id+"-terrain-envelope"',aircraft_qa)
         self.assertIn('_id+"-terrain-scenario-relief"',aircraft_qa)
         self.assertIn('worldName == "VR" || {_terrainRelief >= 30}',aircraft_qa)
@@ -3016,7 +3028,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('Waldo_Cortex_AirAttackGuidanceTarget',controller)
         self.assertIn('private _requestPending=',controller)
         self.assertEqual(controller.count('fireAtTarget [_fireTarget,_weapon]'),1)
-        self.assertEqual(controller.count('forceWeaponFire [_muzzle,_mode]'),1)
+        self.assertEqual(controller.count('forceWeaponFire'),0)
         discover=source('cortexDiscover')
         self.assertIn('!(_vehicle isKindOf "Plane") || {speed _vehicle >= 40}',discover)
         self.assertEqual(controller.count('addWaypoint [_destination,0]'),1)
