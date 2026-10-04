@@ -33,6 +33,8 @@
  * objects, Dynamic AA side/faction pools and jump-envelope classes are intended mission content.
  * Pool keys are WEST, EAST, INDEPENDENT and CIVILIAN; faction maps override selected side pools.
  * Dynamic AA pool keys are radarClasses, staticSitePools, mobileClasses and fighterClasses.
+ * A selected faction without an authored pool uses matching public AA classes from CfgVehicles;
+ * categories without a suitable match still use the selected side pool and are reported at creation.
  * ADVANCED TUNING - gunship monitor/service thresholds and Dynamic AA maximum bounds protect the
  * system from invalid or excessive runtime requests. Altitudes/radii are metres, intervals and
  * service duration are seconds, fuel/ammo/damage values are fractions 0-1, and -1 service cycles

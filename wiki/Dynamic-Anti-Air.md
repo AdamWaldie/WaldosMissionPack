@@ -61,7 +61,7 @@ they distinguish a dialog/payload problem from an aircraft altitude or AI-locali
 
 Each static site selects one configured site template. Mobile launchers and scrambled fighters are independently selected from the resolved side or faction pool, allowing repeated systems to use different valid assets. Fighters spawn outside the zone and engage the detected aircraft. Use **Dynamic AA - Remove Nearest** to remove or disable the nearest named system.
 
-The ZEN profile selector is populated from `Waldo_DynamicAA_FactionAssetPools`. Profiles are content catalogues, not allegiance restrictions. The default choice uses the operational side's `WEST`, `EAST` or `INDEPENDENT` fallback pool. Exact selectors combine valid classes from every configured side and faction pool and show both display name and classname.
+The ZEN profile selector includes authored entries from `Waldo_DynamicAA_FactionAssetPools` and factions found in the loaded modset. For an auto-detected faction, the server selects public AA-suitable classes whose `CfgVehicles` faction matches that choice. A category with no matching equipment uses the chosen operational side's pool; the creation notification identifies those fallback categories. If none of the requested weapon slots has faction equipment, creation is rejected instead of silently spawning an all-side-default site. The default profile uses the side pool. Equipment selection remains independent of crew allegiance. Exact selectors combine valid classes from configured pools and live discovery, showing both display name and classname.
 
 The generated system ID is an internal registry key used for replacement, cleanup and state publication; it is not an Arma object ID. Scripted setup still supplies an explicit stable ID, while the creation module hides this implementation detail.
 
@@ -112,7 +112,7 @@ Remove it with:
 | `radarPosition` / `radarPositions` | Position array or array of position arrays | generated | Optional authored radar position(s). When omitted, `radarCount` creates a server-generated layout around the centre. |
 | `radarCount` | Number, whole objects | `1` | Number of server-placed radar objects when authored radar positions are omitted |
 | `side` | Side | `east` | `west`, `east`, or `independent` |
-| `faction` | String | `""` | Optional content-profile key in `Waldo_DynamicAA_FactionAssetPools`; independent of `side` |
+| `faction` | String | `""` | Optional authored profile key or loaded `CfgFactionClasses` key; independent of `side` |
 | `radius` | Number, metres | `2000` | Horizontal detection radius in metres; altitude does not shrink this map circle |
 | `minimumAltitude` | Number, metres | `60` | Inclusive detection/engagement altitude floor in metres |
 | `maximumAltitude` | Number, metres | configured pack maximum | Inclusive detection/engagement altitude ceiling in metres |
@@ -220,7 +220,7 @@ Waldo_DynamicAA_FactionAssetPools set ["my_opfor_faction", createHashMapFromArra
 ]];
 ```
 
-Unavailable pool entries are discarded during resolution, with the selected side's vanilla assets used if an entire profile category becomes empty. Exact overrides remain strict and reject invalid classnames. `Land_Radar_F` and similar buildings remain uncrewed; radar vehicles and static radar weapons receive AI crew belonging to the operational side.
+Unavailable pool entries are discarded during resolution, with the selected side's pool used if an entire profile category becomes empty. A loaded faction without an authored profile is scanned for its own public AA-suitable radar, static weapon, mobile vehicle and fighter classes. Factions may lack one or more categories; creation feedback names any side-pool fallback that was actually requested. Exact overrides remain strict and reject invalid classnames. `Land_Radar_F` and similar buildings remain uncrewed; radar vehicles and static radar weapons receive AI crew belonging to the operational side.
 
 ## If the system does not activate
 
