@@ -26,6 +26,9 @@
  * hint (_report select 0);
  *
  * Current caller: the ZEN "Vehicle Customisation - Inspect" module (Zen_vehicleCustomizationInspectModule.sqf).
+ * Locality and authority: Read-only vehicle/config inspection on the requesting curator's
+ * client. Repeated calls read current state; no server mutation or JIP replay occurs.
+ * Result: Returns a report of the vehicle's current customisation choices.
  */
 
 params [["_vehicle", objNull, [objNull]]];

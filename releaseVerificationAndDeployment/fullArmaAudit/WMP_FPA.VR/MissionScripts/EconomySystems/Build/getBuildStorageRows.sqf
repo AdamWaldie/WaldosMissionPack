@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get build storage rows.
+ * Normalizes a build definition's resource-storage bonus rows.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> normalized [resource, capacity] rows.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getBuildStorageRows;
+ * Locality/Authority: Any machine; transforms catalog data only.
+ * Repeat/JIP Behaviour: Deterministic for the same entry; no JIP effect.
+ * Current Callers: Building effect and resource-capacity calculations.
+ * Result: A single legacy row is wrapped before normalizing all names and values.
  */
 
         params [["_entry", []]];

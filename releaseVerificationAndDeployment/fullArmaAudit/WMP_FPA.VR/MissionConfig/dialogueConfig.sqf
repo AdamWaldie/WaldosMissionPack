@@ -3,14 +3,18 @@
  * Defines guarded presentation and timing defaults for Simple Dialogue and Advanced Conversations.
  * It contains data only: the dialogue component self-bootstraps and individual NPCs are configured
  * from Eden init fields, scripts, triggers or ZEN rather than from mission init event scripts.
+ * Locality / Authority: SHARED timing and display defaults load on every machine. The SERVER
+ * conversation-definition list loads on the server. Dialogue functions handle NPC setup.
+ * Repeat/JIP: Guarded defaults preserve existing values. A joining client loads its SHARED
+ * defaults, while registered NPC state is supplied by the dialogue system.
  *
- * Schema: SHARED entries are [missionNamespace variable name, guarded default value].
+ * Schema: SHARED entries are [missionNamespace variable name, guarded default value]. SERVER
+ * entries are [name, guarded default, optional publish BOOL].
  * Arguments: None.
  * Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
- * Current caller: the WMP feature-config loader on every machine.
- *
  * Result: every registered NPC uses the retained timing and distance values without starting any
- * dialogue by itself. Current caller: Waldo_fnc_LoadFeatureConfigs in SHARED scope.
+ * dialogue by itself.
+ * Current caller: Waldo_fnc_LoadFeatureConfigs in SHARED and SERVER scopes.
  *
  * ACTIVATION MODEL: CALL-DRIVEN OBJECT SETUP OR ZEN. This file never registers an NPC.
  * EDIT FOR A NORMAL MISSION: normally nothing; adjust reading speed only for a known audience need.

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Spawn research center.
+ * Spawns and registers an interactive Research Center at a supplied map position.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
@@ -8,10 +8,15 @@
  * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
  *
  * Return Value:
- * Nothing
+ * <OBJECT> created centre on the authority machine; objNull when forwarded from a client.
  *
  * Example:
  * [_pos] call Waldo_fnc_EcoResearch_spawnResearchCenter;
+ * Locality/Authority: Server creates the object; client/ZEN calls forward their request there.
+ * Repeat/JIP Behaviour: Each call creates a new centre. Its public tag and registry let joining
+ * clients install local actions; do not call repeatedly for the same intended placement.
+ * Current Callers: Research ZEN placement and exported mission setup calls.
+ * Result: A registered Land_Research_HQ_F appears at the requested position.
  */
 
         params [["_pos", [0, 0, 0]]];

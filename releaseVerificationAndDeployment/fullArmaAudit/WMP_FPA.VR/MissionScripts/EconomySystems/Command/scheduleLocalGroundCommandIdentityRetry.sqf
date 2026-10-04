@@ -19,6 +19,9 @@
  *
  * Example:
  * [_epoch, _generation, diag_tickTime + 60] call Waldo_fnc_EcoCommand_scheduleLocalGroundCommandIdentityRetry;
+ * Locality/Authority: Interface client; queued callback only reads/publishes its local player identity.
+ * Repeat/JIP Behaviour: Epoch, generation and deadline reject stale retry chains.
+ * Result: Returns true for a live bounded retry, false for stale or invalid state.
  */
 
 params [

@@ -29,6 +29,7 @@
  * Return Value: Boolean - true when dispatched on the owning machine.
  * Example: [_heli,"RAVEN_1",12,"PICKUP",_lz,_config] call Waldo_fnc_TransportDispatchLocal;
  * Current caller: Waldo_fnc_TransportRequestServer owner-targeted remote execution.
+ * Result: The transport group receives the requested route on its current owner.
  */
 params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", ["_landingPad", objNull, [objNull]], ["_retriesRemaining", 20, [0]]];
 if (isNull _vehicle || {isNull driver _vehicle}) exitWith {false};
@@ -208,7 +209,10 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
     };
     if (call _stale) exitWith {diag_log format ["[WMP TRANSPORT] Superseded controller stopped service=%1 request=%2", _id, _requestId]};
     if (!local _group) exitWith {[_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group]};
-    private _arrived = alive _vehicle && {alive driver _vehicle} && {_vehicle distance2D _target <= (_stopRadius * (if (_helicopter) then {2} else {1}))};
+    // A timed-out helicopter can hover over the pad. Distance alone must not advance the
+    // passenger state to DISEMBARKING or report a completed pickup/RTB.
+    private _touchdown = !_helicopter || {isTouchingGround _vehicle || {(getPosATL _vehicle select 2) < 1.5}};
+    private _arrived = alive _vehicle && {alive driver _vehicle} && {_touchdown} && {_vehicle distance2D _target <= (_stopRadius * (if (_helicopter) then {2} else {1}))};
     [_id, _requestId, _phase, if (_arrived) then {"ARRIVED"} else {"FAILED"}] remoteExecCall ["Waldo_fnc_TransportReportServer", 2];
 };
 true

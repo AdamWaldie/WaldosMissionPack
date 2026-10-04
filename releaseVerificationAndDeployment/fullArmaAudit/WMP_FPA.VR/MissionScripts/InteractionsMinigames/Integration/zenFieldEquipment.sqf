@@ -6,15 +6,16 @@
  * preset. Custom code receives `[_target, _actor, _success, _result]`; `_target` is the selected
  * interaction object. The EOD mode uses the established bomb-defusal wrapper.
  *
- * Locality and repeat/JIP behaviour:
- * Interface-only dialog. It requires the object actually selected under the module and sends named
+ * Locality/Authority: Interface-only dialog. It requires the object actually selected under the module and sends named
  * data to the authenticated server runtime bridge. The server republishes repeat-safe setup to all
  * interface clients and JIP while retaining authoritative callbacks.
+ * Repeat/JIP Behaviour: The server replaces the object's previous definition and replays it to JIP clients.
  *
  * Arguments: 0 module position <ARRAY>; 1 selected object <OBJECT>.
  * Return Value: Nothing.
  * Current caller: Add WMP Field Equipment Interaction ZEN module.
  * Example: [_modulePos, _objectPos] call Waldo_fnc_ZenFieldEquipment;
+ * Result: Opens the labelled setup dialog and sends its settings for server validation.
  */
 params [["_modulePos", [], [[]]], ["_objectPos", objNull, [objNull]]];
 if (!hasInterface) exitWith {};

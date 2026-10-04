@@ -1,62 +1,31 @@
 /*
  * Author: WaldoTheWarfighter
- * Zeus Enhanced module that turns the nearest AI land-vehicle group into a
- * managed convoy using the pack's own Waldo_fnc_SimpleAiConvoy behaviour
- * (column formation, speed limiting, separation keeping, optional push-through).
- * The Zeus places the module on or near the lead vehicle of the convoy.
- * Locality and authority: Curator interface finds the nearest crewed land vehicle within 150 m;
- * the convoy behaviour is then configured through the selected group's normal AI path.
- * Repeat/JIP: Each placement opens a new dialog; the module installs no persistent local
- * handler of its own. Existing convoy setup determines repeat and JIP behaviour.
- *
- * Arguments:
- * 0: modulePos <POSITION> - where the Zeus dropped the module
- *
- * Return Value:
- * Nothing
- *
- * Example:
- * [_modulePos] call Waldo_fnc_ZenConvoyModule;
- * Current caller: ZEN "Spawn AI Convoy" module registration.
- * Result: The curator sees convoy speed and behaviour controls for the resolved AI group.
- *
- * Public: No
+ * Purpose: Configure WMP convoy control on a selected, crewed AI land vehicle.
+ * Locality/authority: curator opens the dialog locally; the server validates the request and controls AI.
+ * Repeat/JIP: each placement replaces the group's worker; JIP clients register their own module.
+ * Arguments: 0 module position <POSITION>; 1 selected object <OBJECT, default objNull>.
+ * Return Value: Nothing.
+ * Current callers: WMP AI & Combat ZEN palette registration.
+ * Example: [_modulePos, _object] call Waldo_fnc_ZenConvoyModule;
  */
-
-params ["_modulePos"];
-
-// Find the nearest crewed AI land vehicle to the module placement.
-private _vehicles = nearestObjects [_modulePos, ["LandVehicle"], 150];
-private _target = objNull;
-{
-    if (count (crew _x) > 0 && {!(_x isKindOf "Man")}) exitWith { _target = _x; };
-} forEach _vehicles;
-
-if (isNull _target) exitWith {
-    systemChat "[WMP] Spawn AI Convoy: no crewed land vehicle found within 150m of the module.";
+params ["_modulePos", ["_target", objNull]];
+if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {};
+if (isNull _target || {!(_target isKindOf "LandVehicle")} || {isNull driver _target} || {isPlayer driver _target}) exitWith {
+    ["CONVOY NOT CONFIGURED", "Select a crewed AI land vehicle for convoy control.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
 };
-
-private _group = group (effectiveCommander _target);
-if (isNull _group) then { _group = group (driver _target); };
-if (isNull _group) exitWith {
-    systemChat "[WMP] Spawn AI Convoy: could not resolve a group for the selected convoy vehicle.";
-};
-
+private _group = group driver _target;
+if (isNull _group) exitWith {};
 [
-    "Spawn AI Convoy",
+    "AI Convoy - Control",
     [
-        ["SLIDER", ["Max Speed (km/h)", "Top speed of the convoy lead vehicle."], [5, 120, 30, 0], false],
-        ["SLIDER", ["Separation (m)", "Target distance between vehicles."], [5, 100, 15, 0], false],
-        ["CHECKBOX", ["Push Through Contact", "If checked, the convoy keeps moving and only returns fire on the move."], true]
+        ["SLIDER", ["Maximum speed (km/h)", "Speed cap for the lead vehicle."], [5, 120, 30, 0], false],
+        ["SLIDER", ["Separation (m)", "Spacing requested between convoy vehicles."], [5, 100, 15, 0], false],
+        ["CHECKBOX", ["Push through contact", "Keep the group moving without unloading on contact."], true]
     ],
     {
-        params ["_args", "_group"];
-        _args params ["_speed", "_separation", "_pushThrough"];
-        _speed = round _speed;
-        _separation = round _separation;
-        private _owner = groupOwner _group;
-        [_group, _speed, _separation, _pushThrough] remoteExec ["Waldo_fnc_SimpleAiConvoy", _owner];
-        diag_log format ["[WMP ZEN] Convoy controller dispatched group=%1 owner=%2 speed=%3 separation=%4 pushThrough=%5", groupId _group, _owner, _speed, _separation, _pushThrough];
+        params ["_values", "_group"];
+        _values params ["_speed", "_separation", "_pushThrough"];
+        [_group, round _speed, round _separation, _pushThrough, player] remoteExecCall ["Waldo_fnc_SimpleAiConvoy", 2];
     },
     {},
     _group

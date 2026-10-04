@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Get research entry by name.
+ * Finds one technology row by name, ignoring letter case and surrounding whitespace.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _researchName <ANY> - research name
+ * 0: _researchName <STRING> - technology name
  * 1: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> matching technology row, or [] when absent.
  *
  * Example:
  * [_researchName, _catalog] call Waldo_fnc_EcoResearch_getResearchEntryByName;
+ * Locality/Authority: Any machine; reads the supplied or published catalog.
+ * Repeat/JIP Behaviour: Pure lookup; JIP uses its current published catalog.
+ * Current Callers: Research start, requirement and authoring helpers.
+ * Result: Returns a copy of the matching row, not the stored array itself.
  */
 
         params ["_researchName", ["_catalog", []]];

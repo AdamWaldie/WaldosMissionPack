@@ -1,8 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Start vehicle construction.
+ * Convert a registered construction vehicle into a timed building site.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; validates the vehicle and caller again.
+ * Repeat/JIP: Consuming a vehicle and creating a job must happen once per
+ * accepted request; resulting site and job state are networked.
+ * Current Callers: No direct in-pack caller; available to server-side
+ * construction workflows.
  *
  * Arguments:
  * 0: _vehicle <OBJECT> - vehicle (optional, default: objNull)
@@ -11,6 +15,7 @@
  *
  * Return Value:
  * Nothing
+ * Result: Charges costs and records a site/job only when all gates pass.
  *
  * Example:
  * [_vehicle, _caller, _buildName] call Waldo_fnc_EcoBuild_startVehicleConstruction;

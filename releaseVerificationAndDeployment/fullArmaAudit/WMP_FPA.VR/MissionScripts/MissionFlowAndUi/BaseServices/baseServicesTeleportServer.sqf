@@ -6,6 +6,7 @@
  * Arguments: player <OBJECT>, origin <OBJECT>, group ID <STRING>, destination <OBJECT>.
  * Return Value: <BOOL> request accepted. Current caller: local ACE Move to action.
  * Example: [player, baseRadio, "HQ", fobRadio] remoteExecCall ["Waldo_fnc_BaseServicesTeleportServer", 2];
+ * Result: A valid request starts destination-side travel on the player's owning client.
  */
 params [["_player", objNull, [objNull]], ["_origin", objNull, [objNull]], ["_id", "", [""]], ["_destination", objNull, [objNull]]];
 if (!isServer || {!(missionNamespace getVariable ["Waldo_BaseServices_Enable", false])}) exitWith {false};

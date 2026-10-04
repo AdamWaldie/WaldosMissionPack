@@ -31,6 +31,7 @@ private _lastSignature = [];
 while {
     alive _helicopter
     && {local _helicopter}
+    && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}
 } do {
     if (missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]) then {
         private _pilot = currentPilot _helicopter;

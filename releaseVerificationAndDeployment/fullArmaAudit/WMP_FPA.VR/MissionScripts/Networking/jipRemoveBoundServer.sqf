@@ -13,6 +13,7 @@
  * Return Value: BOOLEAN - true when a valid removal was issued.
  * Current caller: Waldo_fnc_EcoCore_clearZeusObjectAction.
  * Example: [_terminal, _jipId] call Waldo_fnc_JipRemoveBoundServer;
+ * Result: The named JIP entry is removed now and no longer belongs to the object's cleanup list.
  */
 
 params [

@@ -23,6 +23,7 @@
  * Current caller: init.sqf on every machine, including JIP and headless clients.
  */
 
+if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {false};
 if (missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_HandlerInstalledLocal", false]) exitWith {true};
 missionNamespace setVariable ["Waldo_ImprovedHelicopterLanding_HandlerInstalledLocal", true];
 

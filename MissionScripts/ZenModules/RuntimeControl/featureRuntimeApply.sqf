@@ -353,6 +353,13 @@ switch (toUpperANSI _action) do {
     };
     case "AI_CONFIG": {
         _settings params ["_enable", "_mode", "_profile"];
+        if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+            [["Waldo_AIRebalance_Enable", false]] call _publishAll;
+            [] remoteExecCall ["Waldo_fnc_AIRebalanceStop", 0];
+            [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];
+            ["AI SKILL VALUES", "Waldos AI Tweaks is loaded and owns AI skill control.", "WARNING", "AI_RUNTIME"] call _reply;
+            false
+        };
         [
             ["Waldo_AIRebalance_Enable", _enable],
             ["Waldo_AIRebalance_Mode", _mode],

@@ -14,6 +14,7 @@
  * Return Value: Boolean - true when this machine accepted the registration.
  * Current callers: Mission/composition object init fields and MiniGamesRegisterTableLocal replay.
  * Example: [this, createHashMapFromArray [["games", ["chess", "checkers"]]]] call Waldo_fnc_MiniGamesRegisterTable;
+ * Result: The table is registered on the server and its actions are set up for players.
  */
 
 params [

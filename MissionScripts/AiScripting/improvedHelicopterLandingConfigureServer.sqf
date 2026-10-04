@@ -21,6 +21,7 @@
  */
 
 params [["_settings", [], [[]]]];
+if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {false};
 if (!isServer) exitWith {[_settings] remoteExecCall ["Waldo_fnc_ImprovedHelicopterLandingConfigureServer", 2]; false};
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};

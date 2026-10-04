@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Validates curator requests and applies runtime feature configuration from ZEN.
+ * Purpose: Validates curator requests and applies runtime feature configuration from ZEN.
+ * Locality / Authority: Server owns the settings and spawned objects; remote
+ *   curator requests are checked before any state change.
+ * Repeat / JIP: Runtime settings are published for joining clients. A hub
+ *   spawn creates one new object per accepted request and registers its actions.
  *
  * Arguments:
  * 0: action <STRING>
@@ -14,6 +18,7 @@
  *     remoteExecCall ["Waldo_fnc_FeatureRuntimeApply", 2];
  *
  * Current caller: Waldo_fnc_FeatureRuntimeZen forwards validated ZEN runtime-control dialogs.
+ * Result: Accepted settings are applied on the server and published for joining clients.
  */
 
 params [
@@ -122,7 +127,12 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
-            [_hub, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
+            // A spawned child of a remote-executed request keeps isRemoteExecuted, which the server-only
+            // cargo/registration guards reject. Finish from CBA's server-local next frame instead.
+            [{
+                [_this select 0, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
+                _this spawn Waldo_fnc_LogisticsRegisterSpawned;
+            }, [_hub, "CARGO"]] call CBA_fnc_execNextFrame;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};
@@ -155,7 +165,7 @@ switch (toUpperANSI _action) do {
         _ok
     };
     case "CREATE_3D_MARKER": {
-        _settings params ["_id", "_anchor", "_text", "_icon", "_colour", "_sides", "_height", "_distance", "_size"];
+        _settings params ["_id", "_anchor", "_text", "_icon", "_colour", "_sides", "_aboveObject", "_extraHeight", "_distance", "_size"];
         // The client ID is only a correlation hint. Generate the registry key on the server so a
         // curator cannot accidentally overwrite a marker created by a script or another curator.
         _id = format ["WMP3D_ZEUS_%1_%2", _requestOwner, floor (diag_tickTime * 1000)];
@@ -181,34 +191,74 @@ switch (toUpperANSI _action) do {
         if !(_icon in _icons) then {_icon = _icons select 1};
         if !(_colour in _allowedColours) then {_colour = _allowedColours select 0};
         if !(_sides in _allowedSideSets) then {_sides = ["ALL"]};
+        if !(_aboveObject isEqualType true) then {_aboveObject = false};
+        if !(_extraHeight isEqualType 0) then {_extraHeight = 0};
+        if !(_distance isEqualType 0) then {_distance = 150};
+        if !(_size isEqualType 0) then {_size = 0.8};
         _text = [_text, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -_()/.:+"] call BIS_fnc_filterString;
         if (_text == "") then {_text = "POINT OF INTEREST"};
-        _height = (_height max 0) min 20;
+        _extraHeight = (_extraHeight max 0) min 20;
         _distance = (_distance max 10) min 2000;
         _size = (_size max 0.2) min 3;
+        private _objectHeight = 0;
+        if (_aboveObject && {_anchor isEqualType objNull} && {!isNull _anchor}) then {
+            private _bounds = boundingBoxReal _anchor;
+            if (count _bounds >= 2) then {
+                private _lower = _bounds select 0;
+                private _upper = _bounds select 1;
+                _objectHeight = ((_upper select 2) max (_lower select 2)) max 0;
+                _objectHeight = _objectHeight + 0.25;
+            };
+        };
         private _options = createHashMapFromArray [
             ["text", _text], ["icon", _icon], ["colour", _colour], ["sides", _sides],
-            ["offset", [0, 0, _height]], ["distance", _distance], ["width", _size], ["height", _size]
+            ["offset", [0, 0, _objectHeight + _extraHeight]], ["distance", _distance], ["width", _size], ["height", _size]
         ];
         private _result = [_id, _anchor, _options] call Waldo_fnc_Create3DMarker;
         ["3D MARKER", if (_result == "") then {"The marker request was rejected."} else {"The custom world marker is active."}, if (_result == "") then {"ERROR"} else {"SUCCESS"}, "ZEN_3D_MARKER"] call _reply;
         _result != ""
     };
+    case "REMOVE_3D_MARKER": {
+        _settings params [["_id", "", [""]]];
+        private _registry = missionNamespace getVariable ["Waldo_3DMarker_Registry", []];
+        private _exists = _id != "" && {_registry findIf {(_x param [0, ""]) isEqualTo _id} >= 0};
+        private _ok = _exists && {[_id] call Waldo_fnc_Remove3DMarker};
+        [
+            "3D MARKER",
+            if (_ok) then {"The selected custom world marker was removed."} else {"That marker no longer exists."},
+            if (_ok) then {"SUCCESS"} else {"WARNING"},
+            "ZEN_3D_MARKER_REMOVE"
+        ] call _reply;
+        _ok
+    };
     case "FIELD_EQUIPMENT": {
-        _settings params ["_object", "_mode", "_procedure", "_title", "_difficulty", "_outcome", "_repeat", "_retry", "_direct", "_detonate"];
+        _settings params ["_object", "_mode", "_procedure", "_title", "_difficulty", "_successPreset", "_successCode", "_failurePreset", "_failureCode", "_repeat", "_retry", "_direct", "_detonate"];
         private _validProcedures = ["wirecut", "minesweeper", "keypad", "lockpick", "circuit", "repair", "radiotune", "pressure", "sequence", "commandinput"];
+        private _validSuccessPresets = ["COMPLETE", "SHOW_ENABLE", "HIDE_DISABLE", "UNLOCK", "LOCK", "DESTROY", "DELETE", "NONE"];
+        private _validFailurePresets = ["NONE", "SHOW_ENABLE", "HIDE_DISABLE", "UNLOCK", "LOCK", "DESTROY", "DELETE"];
         _mode = toUpperANSI _mode;
         _procedure = toLowerANSI _procedure;
         _difficulty = toLowerANSI _difficulty;
-        _outcome = toUpperANSI _outcome;
+        _successPreset = toUpperANSI _successPreset;
+        _failurePreset = toUpperANSI _failurePreset;
         if (isNull _object || {_object isKindOf "Logic"}) exitWith {false};
         if !(_mode in ["STANDARD", "EOD"]) then {_mode = "STANDARD"};
         if !(_procedure in _validProcedures) then {_procedure = if (_mode == "EOD") then {"wirecut"} else {"circuit"}};
         if !(_difficulty in ["easy", "standard", "hard", "expert"]) then {_difficulty = "standard"};
-        if !(_outcome in ["COMPLETE", "ACTIVATE", "DEACTIVATE", "UNLOCK", "DESTROY", "DELETE"]) then {_outcome = "COMPLETE"};
+        if !(_successPreset in _validSuccessPresets) then {_successPreset = "COMPLETE"};
+        if !(_failurePreset in _validFailurePresets) then {_failurePreset = "NONE"};
+        if !(_successCode isEqualType "") then {_successCode = ""};
+        if !(_failureCode isEqualType "") then {_failureCode = ""};
+        _successCode = _successCode select [0, 4096];
+        _failureCode = _failureCode select [0, 4096];
         _title = [_title, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -_()/"] call BIS_fnc_filterString;
         if (_title == "") then {_title = if (_mode == "EOD") then {"Defuse Device"} else {"Operate Equipment"}};
-        [_object, _mode, _procedure, _title, _difficulty, _outcome, _repeat, _retry, _direct, _detonate]
+        _object setVariable ["Waldo_FieldEquipment_SuccessPreset", _successPreset];
+        _object setVariable ["Waldo_FieldEquipment_FailurePreset", _failurePreset];
+        _object setVariable ["Waldo_FieldEquipment_SuccessCode", if (_successCode == "") then {{}} else {compile _successCode}];
+        _object setVariable ["Waldo_FieldEquipment_FailureCode", if (_failureCode == "") then {{}} else {compile _failureCode}];
+        _object setVariable ["Waldo_FieldEquipment_ZenConfigured", true, true];
+        [_object, _mode, _procedure, _title, _difficulty, _repeat, _retry, _direct, _detonate]
             remoteExecCall ["Waldo_fnc_FieldEquipmentZenSetupLocal", 0, _object];
         ["FIELD EQUIPMENT", format ["%1 interaction added to the selected object.", if (_mode == "EOD") then {"EOD"} else {"Field Equipment"}], "SUCCESS", "FIELD_EQUIPMENT_ZEN"] call _reply;
         true
@@ -271,6 +321,7 @@ switch (toUpperANSI _action) do {
             ["Waldo_TreeFelling_HitCooldown", _cooldown max 0.1], ["Waldo_TreeFelling_ClearBushes", _clearBushes],
             ["Waldo_TreeFelling_BushRadius", _bushRadius max 0]
         ] call _publishAll;
+        missionNamespace setVariable ["Waldo_TreeFelling_ConfigEpoch", (missionNamespace getVariable ["Waldo_TreeFelling_ConfigEpoch", 0]) + 1, true];
         // See the listen-host note above TREATMENT_CONFIG's equivalent calls.
         if (_enable) then {
             [] remoteExecCall ["Waldo_fnc_TreeFellingInit", -2, "Waldo_TreeFelling_RuntimeInit"];
@@ -302,6 +353,13 @@ switch (toUpperANSI _action) do {
     };
     case "AI_CONFIG": {
         _settings params ["_enable", "_mode", "_profile"];
+        if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+            [["Waldo_AIRebalance_Enable", false]] call _publishAll;
+            [] remoteExecCall ["Waldo_fnc_AIRebalanceStop", 0];
+            [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];
+            ["AI SKILL VALUES", "Waldos AI Tweaks is loaded and owns AI skill control.", "WARNING", "AI_RUNTIME"] call _reply;
+            false
+        };
         [
             ["Waldo_AIRebalance_Enable", _enable],
             ["Waldo_AIRebalance_Mode", _mode],

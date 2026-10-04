@@ -9,6 +9,10 @@
  * Return Value: Boolean - true when a supported outcome was accepted.
  * Current caller: Waldo_fnc_FieldEquipmentZenSetupLocal standard-procedure callback.
  * Example: [_target, _actor, true, _result] call Waldo_fnc_FieldEquipmentOutcomeServer;
+ * Locality/Authority: Server only; presets and curator-authored callbacks never execute on clients.
+ * Repeat/JIP Behaviour: Invoked once per accepted interaction result; authoritative preset
+ * state is broadcast by the owning feature. No local UI is replayed.
+ * Result: Returns true after a supported preset, false for invalid/off-server requests.
  */
 params [["_target", objNull, [objNull]], ["_actor", objNull, [objNull]], ["_success", true, [true]], ["_result", [], [[]]]];
 // This function is an internal callback, not a public client request. Refuse non-server execution

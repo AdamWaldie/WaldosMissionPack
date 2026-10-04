@@ -8,6 +8,7 @@
  * Arguments: editor DISPLAY, format STRING CONFIG or SCRIPT. Return Value: BOOL.
  * Current callers: Conversation Author export buttons.
  * Example: [_display,"CONFIG"] call Waldo_fnc_ConversationAuthorExportLocal;
+ * Result: Valid draft code is shown for copying; the live NPC is not changed.
  */
 params [["_display", displayNull, [displayNull]], ["_format", "CONFIG", [""]]];
 if (isNull _display) exitWith {false};

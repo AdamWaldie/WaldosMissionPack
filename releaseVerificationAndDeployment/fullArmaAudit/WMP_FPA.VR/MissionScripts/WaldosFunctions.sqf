@@ -45,6 +45,10 @@ class CfgFunctions
             class JipRemoveBoundServer {
                 file = "MissionScripts\Networking\jipRemoveBoundServer.sqf";
             };
+            class ClientInitPhaseEnd {
+                file = "MissionScripts\Networking\clientInitPhaseEnd.sqf";
+                postInit = 1;
+            };
         };
         class BriefDocs 
         {
@@ -137,9 +141,7 @@ class CfgFunctions
         };
         class AI 
         {
-            class SimpleAiConvoy {
-                file =  "MissionScripts\AiScripting\simpleAiConvoy.sqf";
-            };
+            class SimpleAiConvoy {file = "MissionScripts\AiScripting\simpleAiConvoy.sqf";};
             class AITweak {
                 file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
             };
@@ -252,6 +254,12 @@ class CfgFunctions
             };
               class CleanupTransientUi {
                   file = "MissionScripts\MissionFlowAndUi\cleanupTransientUi.sqf";
+              };
+              class CreateUiNotificationCardLocal {
+                  file = "MissionScripts\MissionFlowAndUi\createUiNotificationCardLocal.sqf";
+              };
+              class LayoutUiNotificationCardLocal {
+                  file = "MissionScripts\MissionFlowAndUi\layoutUiNotificationCardLocal.sqf";
               };
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
@@ -550,6 +558,10 @@ class CfgFunctions
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
             };
+            class VehicleServicesConfigure {file = "MissionScripts\Logistics\VehicleServices\vehicleServicesConfigure.sqf";};
+            class VehicleServicesApplyServer {file = "MissionScripts\Logistics\VehicleServices\vehicleServicesApplyServer.sqf";};
+            class ZenVehicleServicesModule {file = "MissionScripts\ZenModules\zenVehicleServicesModule.sqf";};
+            class ZenVehicleServicesServer {file = "MissionScripts\ZenModules\zenVehicleServicesServer.sqf";};
             class LogisticsSpawner {
                 file = "MissionScripts\Logistics\Crates\LogiBoxes.sqf";
             };
@@ -605,6 +617,7 @@ class CfgFunctions
             class PhysicalCargoApplyLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoApplyLocal.sqf";};
             class PhysicalCargoClearServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoClearServer.sqf";};
             class PhysicalCargoRegister {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRegister.sqf";};
+            class PhysicalCargoIsEligible {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoIsEligible.sqf";};
             class PhysicalCargoSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatsServer.sqf";};
             class PhysicalCargoSeatLockLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatLockLocal.sqf";};
             class PhysicalCargoDiscoverSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoDiscoverSeatsServer.sqf";};
@@ -692,6 +705,7 @@ class CfgFunctions
             class ZenInitModules {
                 file = "MissionScripts\ZenModules\Zen_initModules.sqf";
             };
+            class ZenConvoyModule {file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";};
             class ZenServiceLogisticsModule {file = "MissionScripts\ZenModules\zenServiceLogisticsModule.sqf";};
             class ZenServiceLogisticsServer {file = "MissionScripts\ZenModules\zenServiceLogisticsServer.sqf";};
             class ZenMedicalSpawner {
@@ -708,9 +722,6 @@ class CfgFunctions
             };
             class ZenFortifyBudgetServer {
                 file = "MissionScripts\ZenModules\zenFortifyBudgetServer.sqf";
-            };
-            class ZenConvoyModule {
-                file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";
             };
             class ZenLoadoutSaveModule {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveModule.sqf";
@@ -889,6 +900,9 @@ class CfgFunctions
             };
             class CargoAttributesPrepareObject {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\cargoAttributesPrepareObject.sqf";
+            };
+            class LogisticsApplyAceHandling {
+                file = "MissionScripts\Logistics\Crates\logisticsApplyAceHandling.sqf";
             };
             class InitVehicles {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\VehicleInit.sqf";

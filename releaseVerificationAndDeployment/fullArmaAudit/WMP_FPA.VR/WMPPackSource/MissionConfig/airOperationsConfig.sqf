@@ -3,6 +3,10 @@
  * Defines airborne gunship, dynamic paradrop and Dynamic AA defaults. Shared airframe/chute pools
  * remain independent of operational side; shared AA pools feed curator selectors and server
  * validation, while server-only safety limits and jump envelopes remain authoritative.
+ * Locality / Authority: SHARED rows load on every machine. SERVER rows load on the server,
+ * which publishes only rows marked for publication and validates operational requests.
+ * Repeat/JIP: The loader preserves values already set. Joining clients load SHARED defaults
+ * and receive published SERVER settings. This file creates no aircraft or AA site.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
  * ALIASES entries are [scope, target name, source name] and copy only when target is undefined.
@@ -29,6 +33,8 @@
  * objects, Dynamic AA side/faction pools and jump-envelope classes are intended mission content.
  * Pool keys are WEST, EAST, INDEPENDENT and CIVILIAN; faction maps override selected side pools.
  * Dynamic AA pool keys are radarClasses, staticSitePools, mobileClasses and fighterClasses.
+ * A selected faction without an authored pool uses matching public AA classes from CfgVehicles;
+ * categories without a suitable match still use the selected side pool and are reported at creation.
  * ADVANCED TUNING - gunship monitor/service thresholds and Dynamic AA maximum bounds protect the
  * system from invalid or excessive runtime requests. Altitudes/radii are metres, intervals and
  * service duration are seconds, fuel/ammo/damage values are fractions 0-1, and -1 service cycles

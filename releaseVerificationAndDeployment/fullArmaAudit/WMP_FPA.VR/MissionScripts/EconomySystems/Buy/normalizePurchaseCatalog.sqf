@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize purchase catalog.
+ * Normalizes asset rows and removes blank or duplicate names from a purchase catalog.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * 0: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> normalized purchase rows.
  *
  * Example:
  * [_catalog] call Waldo_fnc_EcoBuy_normalizePurchaseCatalog;
+ * Locality/Authority: Any machine; transforms supplied data without publishing it.
+ * Repeat/JIP Behaviour: Deterministic for the same input; public state changes only via setter.
+ * Current Callers: EcoBuy_setPurchaseCatalog and Purchasing import.
+ * Result: Returns a catalog safe for authoritative publication.
  */
 
         params [["_catalog", []]];

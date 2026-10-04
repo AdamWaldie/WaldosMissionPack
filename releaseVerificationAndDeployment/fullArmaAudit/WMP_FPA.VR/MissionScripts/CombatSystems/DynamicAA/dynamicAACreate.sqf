@@ -36,7 +36,8 @@
  *      shutdownDifficulty <easy|standard|hard|expert>.
  *
  * Return Value:
- * Boolean - true when creation was accepted; false when id, centre, classes or authority are invalid.
+ * Boolean - server true when accepted or queued, false for invalid id, centre, classes or authority.
+ * A duplicate non-server Eden call returns true without creating anything.
  *
  * Example:
  * private _config = createHashMapFromArray [
@@ -138,6 +139,12 @@ private _radarAssignments = _config getOrDefault ["radarAssignments", []];
 private _staticAssignments = _config getOrDefault ["staticAssignments", []];
 private _mobileAssignments = _config getOrDefault ["mobileAssignments", []];
 private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
+private _factionKey = _config getOrDefault ["faction", ""];
+private _configuredFactionPools = missionNamespace getVariable ["Waldo_DynamicAA_FactionAssetPools", createHashMap];
+if (!(_factionKey isEqualType "") || {_factionKey != "" && {!(_factionKey in (keys _configuredFactionPools)) && {!isClass (configFile >> "CfgFactionClasses" >> _factionKey)}}}) exitWith {
+    ["Creation rejected: the selected equipment faction is not available on the server.", "ERROR"] call _reply;
+    false
+};
 private _pool = [_config, _side] call Waldo_fnc_DynamicAAResolveAssetPool;
 private _radarClasses = if (count _radarAssignments > 0) then {+_radarAssignments} else {
     if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]}
@@ -185,6 +192,20 @@ if (_invalidClass >= 0 || {_missingPool}) exitWith {
     private _reason = if (_invalidClass >= 0) then {format ["invalid classname %1", _classes select _invalidClass]} else {"a required asset pool is empty"};
     diag_log format ["[WMP DYNAMIC AA] '%1' rejected: %2.", _id, _reason];
     [format ["Creation rejected: %1.", _reason], "ERROR"] call _reply;
+    false
+};
+private _autoFaction = _factionKey != "" && {!(_factionKey in (keys _configuredFactionPools))};
+private _fallbackCategories = _pool getOrDefault ["fallbackCategories", []];
+private _explicitWeapons = count _staticAssignments > 0 || {count _mobileAssignments > 0} || {count _fighterAssignments > 0}
+    || {"staticClass" in (keys _config)} || {"staticClasses" in (keys _config)}
+    || {"mobileClass" in (keys _config)} || {"mobileClasses" in (keys _config)}
+    || {"fighterClass" in (keys _config)} || {"fighterClasses" in (keys _config)};
+private _requestedFactionWeapons = [];
+if (_staticSlotCount > 0) then {_requestedFactionWeapons pushBack "staticSitePools"};
+if (_mobileSlotCount > 0) then {_requestedFactionWeapons pushBack "mobileClasses"};
+if (_fighterCount > 0) then {_requestedFactionWeapons pushBack "fighterClasses"};
+if (_autoFaction && {!_explicitWeapons} && {!(_requestedFactionWeapons isEqualTo [])} && {_requestedFactionWeapons findIf {!(_x in _fallbackCategories)} < 0}) exitWith {
+    [format ["Creation rejected: faction %1 has no matching AA weapons for the requested static, mobile or fighter slots. Choose Exact mixed equipment or configure a faction pool.", _factionKey], "ERROR"] call _reply;
     false
 };
 
@@ -403,6 +424,8 @@ private _assignCrew = {
     // visible in Zeus as an Empty vehicle separated from its correctly sided crew, especially during
     // dedicated mission startup. Establish the same group/vehicle relationship Eden creates.
     _group addVehicle _vehicle;
+    _group setVariable ["Waldo_AI_ExternalControl", true, true];
+    _group setVariable ["Waldo_AI_PrecisionExclude", true, true];
     _groups pushBackUnique _group;
     if (_defence) then {
         // DynamicAACreate may still carry the curator's remoteExecutedOwner after a ZEN request.
@@ -429,6 +452,8 @@ private _spawnFailed = false;
         _vehicle setPosATL _position;
         _vehicle setDir _direction;
         _vehicle setVariable ["Waldo_DynamicAA_SystemId", _id, true];
+        _vehicle setVariable ["Waldo_AI_ExternalControl", true, true];
+        _vehicle setVariable ["Waldo_AI_PrecisionExclude", true, true];
         _objects pushBack _vehicle;
         if (_kind == "RADAR") then {
             _radars pushBack _vehicle;
@@ -523,10 +548,29 @@ if (_config getOrDefault ["shutdownInteraction", false]) then {
 [_id] remoteExecCall ["Waldo_fnc_DynamicAAStartDetectorServer", 2];
 [] call Waldo_fnc_DynamicAAPublishState;
 diag_log format [
-    "[WMP DYNAMIC AA] '%1' (%2) active: side=%3 crewSides=%4 detection=%5m engagement=%6m altitude=%7-%8m %9 assetPool=%10.",
+    "[WMP DYNAMIC AA] '%1' (%2) active: side=%3 crewSides=%4 detection=%5m engagement=%6m altitude=%7-%8m %9 assetPool=%10 plannedClasses=%11 fighterPool=%12 fallbackCategories=%13.",
     _displayName, _id, _side, _groups apply {side _x}, _radius, _engagementRadius,
     _minimumAltitude, _maximumAltitude, _config getOrDefault ["altitudeMode", "AUTO"],
-    _config get "resolvedAssetPool"
+    _config get "resolvedAssetPool", _assetPlan apply {_x select 1}, _fighterClasses,
+    _pool getOrDefault ["fallbackCategories", []]
 ];
-[format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
+private _usedFallbacks = (_pool getOrDefault ["fallbackCategories", []]) select {
+    switch (_x) do {
+        case "radarClasses": {count _radarAssignments == 0 && {!("radarClass" in (keys _config))} && {!("radarClasses" in (keys _config))}};
+        case "staticSitePools": {_staticSlotCount > 0 && {count _staticAssignments == 0} && {!("staticClass" in (keys _config))} && {!("staticClasses" in (keys _config))}};
+        case "mobileClasses": {_mobileSlotCount > 0 && {count _mobileAssignments == 0} && {!("mobileClass" in (keys _config))} && {!("mobileClasses" in (keys _config))}};
+        case "fighterClasses": {_fighterCount > 0 && {count _fighterAssignments == 0} && {!("fighterClass" in (keys _config))} && {!("fighterClasses" in (keys _config))}};
+        default {false};
+    }
+};
+private _fallbackNames = _usedFallbacks apply {
+    switch (_x) do {
+        case "radarClasses": {"radars"};
+        case "staticSitePools": {"static AA"};
+        case "mobileClasses": {"mobile AA"};
+        default {"fighters"};
+    }
+};
+private _fallbackNotice = if (_fallbackNames isEqualTo []) then {""} else {format [" Side-default equipment used for: %1.", _fallbackNames joinString ", "]};
+[format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave. Equipment profile: %6.%7", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount, _config get "resolvedAssetPool", _fallbackNotice], "SUCCESS"] call _reply;
 true

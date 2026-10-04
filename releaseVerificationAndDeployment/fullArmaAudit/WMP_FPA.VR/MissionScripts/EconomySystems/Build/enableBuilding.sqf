@@ -1,15 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Enable building.
+ * Re-enable a managed building after checking its upkeep resources.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Economy authority only; operational state is broadcast.
+ * Repeat/JIP: Repeating this rechecks upkeep and refreshes the marker;
+ * published object state supplies joining clients.
+ * Current Callers: EcoBuild_processBuildingManageRequest.
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
  * 1: _caller <OBJECT> - caller (optional, default: objNull)
  *
  * Return Value:
- * Any - see function body
+ * Nothing.
+ * Result: Clears manual-disabled and resumes operation only when the
+ * definition, caller permission and upkeep checks pass.
  *
  * Example:
  * [_building, _caller] call Waldo_fnc_EcoBuild_enableBuilding;

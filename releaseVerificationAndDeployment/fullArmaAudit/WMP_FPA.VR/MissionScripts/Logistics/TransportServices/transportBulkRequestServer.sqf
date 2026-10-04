@@ -18,6 +18,7 @@
  * ["PICKUP_ALL", "HELICOPTER", getPosATL player, player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2];
  * Current callers: WMP Transport > Fleet Controls.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
+ * Result: Eligible services of the chosen type receive the same validated fleet command.
  */
 params [
     ["_command", "", [""]], ["_type", "GROUND", [""]],

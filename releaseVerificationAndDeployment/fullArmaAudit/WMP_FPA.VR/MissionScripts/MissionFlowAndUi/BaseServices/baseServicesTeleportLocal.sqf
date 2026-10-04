@@ -10,6 +10,8 @@
  * Return Value: <BOOL> started. Current caller: Waldo_fnc_BaseServicesTeleportServer.
  * Example: [player, fobRadio, "TRAVEL", "Forward Base"]
  *     remoteExecCall ["Waldo_fnc_BaseServicesTeleportLocal", player];
+ * Result: The player travels to a checked clear point near the named destination with the
+ * configured fade presentation.
  */
 params [["_unit", objNull, [objNull]], ["_destination", objNull, [objNull]],
     ["_transition", "STANDARD", ["", []]], ["_destinationName", "Destination", [""]]];

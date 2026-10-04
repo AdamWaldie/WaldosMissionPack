@@ -7,6 +7,8 @@
  * Locality and authority:
  * Called once on the server by Waldo_fnc_EcoCore_applyMakerConfig. Public setup calls below remain
  * server-authoritative and publish their resulting state for connected players and JIP.
+ * Repeat/JIP: The ordinary server startup calls this once after presets/imports. Joining clients
+ * receive the resulting published Economy state. They do not rerun this authoring file.
  *
  * Arguments: None.
  * Return Value: Nothing; applies the enabled authoring calls by side effect.

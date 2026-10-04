@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get player purchase status.
+ * Reports why a player cannot buy a catalog entry at the given origin.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -10,10 +10,15 @@
  * 2: _origin <ARRAY> - origin (optional, default: [0, 0, 0])
  *
  * Return Value:
- * Any - see function body
+ * <STRING> status code; "ready" when all checks pass.
  *
  * Example:
  * [_sideKey, _entry, _origin] call Waldo_fnc_EcoBuy_getPlayerPurchaseStatus;
+ * Locality/Authority: Interface/authority query; reads published Economy state and local
+ * player command authority. Server validates again before purchase execution.
+ * Repeat/JIP Behaviour: Repeat-safe read; JIP sees current public catalog/resources.
+ * Current Callers: Purchase terminal action availability and player feedback.
+ * Result: Returns the first blocking status, including missing delivery point.
  */
 
         params [["_sideKey", "NONE"], ["_entry", []], ["_origin", [0, 0, 0]]];

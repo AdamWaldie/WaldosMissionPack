@@ -36,6 +36,7 @@ params [
 ];
 if (
     isNull _helicopter
+    || {isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")}
     || {!local _helicopter}
     || {!alive _helicopter}
     || {count _targetPosition < 2}
@@ -125,6 +126,7 @@ _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["ACTIVE"
 while {
     !_abort
     && {!_landed}
+    && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}
     && {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}
     && {(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision}
 } do {

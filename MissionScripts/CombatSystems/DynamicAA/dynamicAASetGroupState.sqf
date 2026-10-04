@@ -13,8 +13,10 @@
  *
  * Locality and authority:
  * The Dynamic AA server loop is authoritative. This function remotes the actual AI commands to the
- * current group owner, which also covers groups migrated to a headless client. It changes no public
- * mission state and is safe to call repeatedly on every detector pass.
+ * current group owner, which also covers groups migrated to a headless client. An owner-local target
+ * lease prevents repeated detector passes from reissuing the same doFire command. A forbidden ground
+ * command is cleared before the approved aircraft is reacquired, so the projectile gate does not
+ * leave the weapon controller stuck after blocking that command. It changes no public mission state.
  *
  * Arguments:
  * 0: group <GROUP>
@@ -80,10 +82,13 @@ private _knownTargets = (_group targets []) select {!isNull _x};
         // low aircraft and ground units after one eligible aircraft activated the site.
         _unit disableAI "AUTOTARGET";
         _unit enableAI "WEAPONAIM";
-        _unit enableAI "SUPPRESSION";
+        // Suppression can select terrain or a ground contact while an approved aircraft merely
+        // keeps the site open. Dynamic AA owns target choice, so suppressive fire stays disabled.
+        _unit disableAI "SUPPRESSION";
     } else {
         _unit doTarget objNull;
         _unit doWatch objNull;
+        _unit setVariable ["Waldo_DynamicAA_CommandedTargetLocal",nil];
         _unit disableAI "FIREWEAPON";
         if (_vehicle isKindOf "Air") then {
             // Keep MOVE and flight-control AI alive; only its ability to acquire/fire is suppressed.
@@ -110,7 +115,22 @@ if (_active) then {
     private _targetCount = count _eligibleTargets;
     if (_targetCount > 0) then {
         {
-            _x doTarget (_eligibleTargets select (_forEachIndex mod _targetCount));
+            private _approvedTarget=_eligibleTargets select (_forEachIndex mod _targetCount);
+            private _assigned=assignedTarget _x;
+            private _leased=_x getVariable ["Waldo_DynamicAA_CommandedTargetLocal",objNull];
+            if (_assigned != _approvedTarget || {_leased != _approvedTarget}) then {
+                _x doTarget objNull;
+                _x doWatch objNull;
+                _x doTarget _approvedTarget;
+                _x doFire _approvedTarget;
+                _x setVariable ["Waldo_DynamicAA_CommandedTargetLocal",_approvedTarget];
+            };
+        } forEach units _group;
+    } else {
+        {
+            _x doTarget objNull;
+            _x doWatch objNull;
+            _x setVariable ["Waldo_DynamicAA_CommandedTargetLocal",nil];
         } forEach units _group;
     };
 };

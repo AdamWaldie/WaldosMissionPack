@@ -5,23 +5,19 @@
 
 /*
  * Author: WaldoTheWarfighter
- * Virtual Vehicle Depot - opens the vehicle-selection GUI and spawns the chosen vehicle. Part of the
- * WIP Virtual Vehicle Depot; invoked by the depot spawner action created in VVDInit.sqf. Registered
- * as Waldo_fnc_VVDOpen.
- *
- * Arguments:
- * 0: _depotSpawnPoint <OBJECT> - the depot spawner the player interacted with
- * 1: _types <ARRAY> - allowed vehicle type filter
- * 2: _limitToSideVehicles <BOOL> - restrict to the player's side (optional, default: false)
- * 3: _removeUAVs <BOOL> - attempt to remove UAV crew/connection on spawn (optional, default: false)
- *
- * Return Value:
- * Nothing
- *
- * Example:
- * // invoked by the depot action created in VVDInit.sqf
+ * Opens the Virtual Vehicle Depot selection UI for one authorised player.
+ * Locality and authority: A direct interface-client call first requests the server-owned
+ * depot lock. Only the accepted player's client opens the GUI with the issued token and
+ * creates the selected vehicle. Closing releases the lock; JIP never reopens a prior GUI.
+ * Arguments: 0: depot spawn point <OBJECT>; 1: allowed types <ARRAY>;
+ *   2: limit to player's side <BOOL> (false); 3: remove UAV crew <BOOL> (false);
+ *   4: server-issued lock token <STRING> (empty for a direct request).
+ * Return Value: No supported value; the GUI and spawn workflow is asynchronous.
+ * Current callers: Waldo_fnc_VVDRequestOpenServer after lock acquisition and mission-maker
+ * direct calls that need the same server acquisition path.
+ * Example: [depotPad, ["Car"], true, false] call Waldo_fnc_VVDOpen;
+ * Result: The player may select an allowed vehicle once the depot is free and validated.
  */
-
 disableSerialization;
 params[
     "_depotSpawnPoint",

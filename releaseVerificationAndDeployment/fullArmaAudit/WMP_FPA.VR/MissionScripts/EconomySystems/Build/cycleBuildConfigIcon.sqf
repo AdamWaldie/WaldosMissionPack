@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Cycle build config icon.
+ * Advances the Construction editor's marker icon selector.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
- * 1: _delta <SCALAR> - delta (optional, default: 0)
+ * 0: _disp <DISPLAY> - editor display
+ * 1: _delta <NUMBER> - selector step (optional, default: 0)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp, _delta] call Waldo_fnc_EcoBuild_cycleBuildConfigIcon;
+ * Locality/Authority: Curator interface client; local preview only.
+ * Repeat/JIP Behaviour: Repeat calls advance selection; no JIP state until submission.
+ * Current Callers: Construction editor icon arrows.
+ * Result: Icon selection and preview move by the requested step.
  */
 
         params ["_disp", ["_delta", 0]];

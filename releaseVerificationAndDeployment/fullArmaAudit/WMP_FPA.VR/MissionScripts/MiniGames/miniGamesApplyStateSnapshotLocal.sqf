@@ -25,6 +25,7 @@
  * Example:
  * [_table, [["Waldo_MG_ChessBoard", _board]], 7, true]
  *     call Waldo_fnc_MiniGamesApplyStateSnapshotLocal;
+ * Result: The local table presentation reflects the accepted server snapshot and revision.
  */
 
 params [

@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies editor-provided scale variables to all matching mission objects exactly once per call.
+ * Locality and authority: The server scans and applies the tagged scales. A client forwards its
+ * request and receives 0 immediately, not the eventual server count.
+ * Repeat/JIP: Calling again scans again; it does not install a loop. Shared object scale state
+ * reaches JIP, and there is no separate client action to replay.
  *
  * The server scans authored mission objects and delegates each change to Waldo_fnc_ObjectScale.
  * Conversion is opt-in because Simple Objects lose simulation and interactions. This is currently
@@ -16,6 +20,8 @@
  *
  * Example:
  * ["Waldo_ObjectScale", true] call Waldo_fnc_ObjectScaleTagged;
+ * Result: The server returns the number of objects scaled during this scan.
+ * Current callers: Mission-maker startup scripts and the full-pack audit station.
  */
 
 params [

@@ -3,6 +3,10 @@
  * Defines the mission-facing ACRE2 communications and optional Babel settings. WMP loads this file
  * automatically during pre-init, server init and player-local init; do not duplicate these calls in
  * init.sqf. The server compiles one authoritative plan and clients apply only local carried radios.
+ * Locality / Authority: ACRE pre-init reads this data before radios are made unique. The server
+ * owns the validated plan. Each interface client applies its own carried-radio settings.
+ * Repeat/JIP: Reading this file starts no radio work. WMP reuses the server plan for joining
+ * players and reapplies the appropriate local radio state after join or respawn.
  *
  * Arguments: None.
  * Return Value: HASHMAP - configuration consumed by Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.

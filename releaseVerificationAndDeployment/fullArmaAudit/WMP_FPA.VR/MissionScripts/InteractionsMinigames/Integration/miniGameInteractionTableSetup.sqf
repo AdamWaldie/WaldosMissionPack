@@ -1,11 +1,22 @@
 /*
- * Adds an opt-in Field Equipment picker to a party table without joining its multiplayer
+ * Author: WaldoTheWarfighter
+ * Purpose: Adds an opt-in Field Equipment picker to a party table without joining its multiplayer
  * vote/ready state. Entries are ids or [id, config, presentation] rows. Empty
  * configs use the table's curated difficulty; explicit configs remain custom.
  *
  * Example:
  * [this, ["repair", "radiotune", ["circuit", [4,3,0], [["preset","generatorBreaker"]]]]]
  *     call Waldo_fnc_MiniGameInteractionTableSetup;
+ * Locality/Authority: Call on each machine from table init. Interface clients install actions;
+ * server publishes the table's procedure list.
+ * Repeat/JIP Behaviour: Repeated setup replaces local actions. JIP clients read published
+ * table entries and install their own interaction.
+ * Arguments: 0: table <OBJECT>, default objNull; 1: procedure IDs or
+ * [id, config, presentation] rows <ARRAY>, default all ten built-ins;
+ * 2: named picker options <ARRAY or HASHMAP>, default [].
+ * Return Value: <BOOL> true when configured, false for a null table.
+ * Current Callers: Eden table init fields and the field-equipment QA setup.
+ * Result: Players can open the local equipment picker from the table.
  */
 params [
     ["_table", objNull, [objNull]],

@@ -8,6 +8,7 @@
  * Return Value: Boolean - true when the map selector opened.
  * Example: ["REQUEST_PICKUP", "HELICOPTER", objNull] call Waldo_fnc_TransportOpenMapLocal;
  * Current callers: WMP transport ACE and vanilla self-actions.
+ * Result: The player can choose a map position for the requested transport operation.
  */
 params [["_action", "REQUEST_PICKUP", [""]], ["_type", "GROUND", [""]], ["_vehicle", objNull, [objNull]]];
 if !(hasInterface) exitWith {false};

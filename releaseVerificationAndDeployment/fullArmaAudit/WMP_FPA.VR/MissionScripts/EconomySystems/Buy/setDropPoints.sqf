@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Set drop points.
+ * Replaces and broadcasts the authoritative purchase delivery-point registry.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_rows] call Waldo_fnc_EcoBuy_setDropPoints;
+ * Locality/Authority: Economy authority only; clients read the published rows.
+ * Repeat/JIP Behaviour: Replacement is repeat-safe; JIP receives the latest registry.
+ * Current Callers: Drop-point create/delete and Economy setup/import paths.
+ * Result: Purchase delivery lookup uses the supplied rows.
  */
 
         params [["_rows", []]];

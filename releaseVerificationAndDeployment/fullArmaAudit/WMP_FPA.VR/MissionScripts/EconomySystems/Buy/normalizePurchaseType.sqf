@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize purchase type.
+ * Converts an asset category to the supported purchase spelling.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
@@ -8,10 +8,14 @@
  * 0: _value <STRING> - value (optional, default: "Ground")
  *
  * Return Value:
- * Any - see function body
+ * <STRING> Air, Ground, Supply or Naval; unknown values become Ground.
  *
  * Example:
  * [_value] call Waldo_fnc_EcoBuy_normalizePurchaseType;
+ * Locality/Authority: Any machine; pure category normalization.
+ * Repeat/JIP Behaviour: Stateless; no JIP effect.
+ * Current Callers: Purchase catalog normalization and curator selectors.
+ * Result: Returns the canonical purchase category.
  */
 
         params [["_value", "Ground"]];

@@ -12,6 +12,8 @@
  * Return Value: Nothing (scheduled tracker lifecycle).
  *
  * Example: [_helicopter] spawn Waldo_fnc_HelicopterDecelerationTrackLocal;
+ * Result: Samples only its local aircraft until an exit condition and starts a bounded
+ * correction when the cruise-braking predicate is met.
  * Current callers: Waldo_fnc_HelicopterDecelerationInit and its aircraft Local event handler.
  */
 
@@ -41,7 +43,7 @@ private _sampleInterval = (missionNamespace getVariable ["Waldo_HelicopterDecele
 private _lastSpeed = abs speed _aircraft;
 private _lastAltitude = (getPosASL _aircraft) select 2;
 
-while {alive _aircraft && {local _aircraft}} do {
+while {alive _aircraft && {local _aircraft} && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}} do {
     uiSleep _sampleInterval;
     private _speed = abs speed _aircraft;
     private _altitudeASL = (getPosASL _aircraft) select 2;

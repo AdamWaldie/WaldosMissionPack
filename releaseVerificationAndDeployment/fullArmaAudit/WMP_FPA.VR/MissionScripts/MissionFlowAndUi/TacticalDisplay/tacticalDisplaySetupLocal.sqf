@@ -18,6 +18,9 @@
  * [_board] call Waldo_fnc_TacticalDisplaySetupLocal;
  *
  * Current caller: TacticalDisplayRegister through an object-keyed JIP remote call.
+ * Locality and authority: Installs board actions on each interface client while the server
+ * owns registration. Repeated local setup avoids duplicates and object-keyed replay covers JIP.
+ * Result: The board offers its configured Tactical Display action to nearby players.
  */
 
 params [["_object", objNull, [objNull]]];

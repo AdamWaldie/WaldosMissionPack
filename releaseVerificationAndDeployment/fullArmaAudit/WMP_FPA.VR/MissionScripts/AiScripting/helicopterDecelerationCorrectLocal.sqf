@@ -7,6 +7,10 @@
  * Improved Helicopter Landing is authoritative. A supported landing order or active landing
  * controller cancels this correction before another impulse is applied. Terrain clearance, pilot,
  * damage, sling-load, locality and timeout checks also fail safe by releasing immediately.
+ * Locality and authority: Scheduled only on the current aircraft owner. It changes velocity
+ * only while that owner still controls an eligible AI helicopter.
+ * Repeat/JIP: A bounded correction exits on timeout or locality change. The owner-local
+ * tracker can start a new correction when needed; JIP clients do not gain flight authority.
  *
  * Arguments:
  * 0: aircraft <OBJECT>
@@ -17,6 +21,7 @@
  *
  * Example: [_helicopter, speed _helicopter, getPosASL _helicopter # 2, {false}]
  *     spawn Waldo_fnc_HelicopterDecelerationCorrectLocal;
+ * Result: Returns true after at least one bounded impulse, or false when no correction is applied.
  * Current caller: Waldo_fnc_HelicopterDecelerationTrackLocal.
  */
 
@@ -26,7 +31,7 @@ params [
     ["_detectedAltitude", 0, [0]],
     ["_isLandingOrder", {false}, [{}]]
 ];
-if (isNull _aircraft || {!local _aircraft} || {_aircraft getVariable ["Waldo_HelicopterDeceleration_Active", false]}) exitWith {false};
+if (isNull _aircraft || {!local _aircraft} || {isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")} || {_aircraft getVariable ["Waldo_HelicopterDeceleration_Active", false]}) exitWith {false};
 
 _aircraft setVariable ["Waldo_HelicopterDeceleration_Active", true, true];
 private _start = diag_tickTime;
@@ -46,7 +51,7 @@ private _terrainClear = true;
 _aircraft setVariable ["Waldo_HelicopterDeceleration_LastResult", ["ACTIVE", clientOwner, diag_tickTime, _detectedSpeed, _detectedAltitude], true];
 if (_debug) then {diag_log format ["[WMP AI DECEL] Acquired owner=%1 aircraft=%2 speed=%3 altitudeASL=%4", clientOwner, netId _aircraft, round _detectedSpeed, round _detectedAltitude]};
 
-while {_correcting && {diag_tickTime < _deadline}} do {
+while {_correcting && {diag_tickTime < _deadline} && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}} do {
     private _pilot = currentPilot _aircraft;
     private _pilotAwake = if (isNull _pilot) then {false} else {
         if (!isNil "ace_common_fnc_isAwake") then {[_pilot] call ace_common_fnc_isAwake} else {lifeState _pilot != "INCAPACITATED"}

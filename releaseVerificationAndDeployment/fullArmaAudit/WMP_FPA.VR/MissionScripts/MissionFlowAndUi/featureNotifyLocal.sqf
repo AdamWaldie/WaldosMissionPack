@@ -20,6 +20,11 @@
  *
  * Example:
  * ["HAZARDOUS AREA", "You have entered a hazardous zone.", "WARNING", "HAZARD_REACTOR", 6] call Waldo_fnc_FeatureNotifyLocal;
+ * Locality and authority: Displays one card on the receiving interface client. Server
+ * features target player owners; repeated channels coalesce through the shared UI queue.
+ * Transient feedback is not replayed to joining clients.
+ * Current callers: WMP feature systems for local status and action feedback.
+ * Result: The player sees the feature-labelled notification when UI space is available.
  */
 private _payloadValid = _this isEqualType []
     && {count _this >= 2}

@@ -57,12 +57,9 @@ the destination HC, reapplies the selected profile there, and sends an authentic
 server. This works even when WMP's own optional HC distributor is disabled. Pack diagnostics report
 `ai-headless-adoption` as an error if an HC owns ordinary AI without a matching verified adoption.
 
-The same diagnostics report includes `improved-helicopter-landing`. It shows active vector
-controllers and explicitly flags either a stale ground anchor or a controller that survived after
-separately spawned helicopters were grouped. Ordinary MOVE waypoints and multi-helicopter formation
-flight remain under Arma's own AI; WMP releases any previous landing controller before that flight.
-WMP-controlled Dynamic AA, Paradrop, Gunship, Transport and convoy groups remain server-owned;
-Dynamic AO is pinned only during creation and may move after its full setup completes.
+When the standalone Waldos AI Tweaks addon is loaded, WMP leaves skill control to the addon so two
+controllers cannot write the same unit skills. Dynamic AA, Dynamic AO, Paradrop, Gunship and
+Transport remain mission-pack systems with their existing authority boundaries.
 
 ## What the values control
 
@@ -119,7 +116,6 @@ Check that AI tuning is enabled and that the unit's side, faction and class pass
 
 - [Optional Feature Systems](Optional-Feature-Systems)
 - [Optional Feature Extensions](Optional-Feature-Extensions)
-- [AI Convoy System](AI-Convoy-System)
 
 <!-- WMP-WIKI-NAV -->
 ---

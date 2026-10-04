@@ -50,9 +50,15 @@ for "_i" from 1 to _count do {
     private _fighter = createVehicle [_fighterClass, _spawnPosition, [], 0, "FLY"];
     [_fighter] call Waldo_fnc_HeadlessPinCrew;
     _fighter setVariable ["Waldo_DynamicAA_SystemId", _id, true];
+    _fighter setVariable ["Waldo_AI_ExternalControl", true, true];
+    _fighter setVariable ["Waldo_AI_PrecisionExclude", true, true];
     _fighter setPosATL _spawnPosition;
     _fighter setDir (_spawn2D getDir _centre);
     _fighter flyInHeight _height;
+    // Explicit engineOn, same as Waldo_fnc_DynamicAOCreate's own air-patrol spawn: createVehicle's
+    // "FLY" special is not a reliable substitute for it, particularly for rotorLib-simulated
+    // helicopters, whose rotor RPM otherwise starts at 0 and the airframe drops before it spins up.
+    _fighter engineOn true;
     // Use the side-aware command directly. A config-side group followed by joinSilent briefly
     // exposed the wrong/unknown side and stale crew references on dedicated servers.
     private _group = _side createVehicleCrew _fighter;
@@ -65,6 +71,8 @@ for "_i" from 1 to _count do {
         deleteVehicle _fighter;
     } else {
         _group addVehicle _fighter;
+        _group setVariable ["Waldo_AI_ExternalControl", true, true];
+        _group setVariable ["Waldo_AI_PrecisionExclude", true, true];
         [_fighter] call Waldo_fnc_HeadlessPinCrew;
         private _waypoint = _group addWaypoint [_centre, 0];
         // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.

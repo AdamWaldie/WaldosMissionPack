@@ -16,6 +16,9 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity;
+ * Locality/Authority: Interface client owning the current player unit.
+ * Repeat/JIP Behaviour: Change-gated publication; JIP clients publish their own identity on entry.
+ * Result: Returns whether a valid local player identity was evaluated.
  */
 
     if (!hasInterface) exitWith {false};

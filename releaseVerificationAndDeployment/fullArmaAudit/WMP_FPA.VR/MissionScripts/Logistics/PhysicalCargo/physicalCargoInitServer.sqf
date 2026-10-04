@@ -14,6 +14,7 @@
  * Return Value: BOOLEAN - true when installed or already present.
  * Current caller: initServer.sqf after feature configuration.
  * Example: [] call Waldo_fnc_PhysicalCargoInitServer;
+ * Result: The server has the mount lifecycle handlers needed for cleanup and state replay.
  */
 if (!isServer) exitWith {false};
 if (missionNamespace getVariable ["Waldo_PhysicalCargo_ServerInstalled", false]) exitWith {true};

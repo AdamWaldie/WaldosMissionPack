@@ -8,6 +8,8 @@
  * Return Value: BOOL - true when one request was sent.
  * Current callers: TreeFellingInit action and optional IMS swing callback.
  * Example: [player, currentWeapon player, cursorObject] call Waldo_fnc_TreeFellingSwing;
+ * Result: Sends one server request and returns true for a valid cutting swing. Invalid swings
+ * return false without sending network traffic.
  */
 
 params [

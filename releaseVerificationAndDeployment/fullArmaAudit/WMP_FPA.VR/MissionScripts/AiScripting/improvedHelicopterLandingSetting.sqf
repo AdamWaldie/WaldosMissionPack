@@ -3,6 +3,10 @@
  * Resolves one improved-landing setting, allowing a helicopter-specific profile to override the
  * global mission value. Overrides use a HashMap stored as Waldo_ImprovedHelicopterLanding_Profile
  * on the aircraft and must match the fallback value's type.
+ * Locality and authority: Read-only lookup on the calling machine. The aircraft profile and
+ * mission setting determine the returned value; this helper does not mutate either.
+ * Repeat/JIP: Repeated calls resolve current values. Published profile/mission state is
+ * available to joining machines through its owning setup, not through this lookup.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -12,6 +16,8 @@
  * Return Value: ANY - validated object override, global setting or fallback.
  *
  * Example: [_helicopter, "TransitAltitude", 30] call Waldo_fnc_ImprovedHelicopterLandingSetting;
+ * Result: Returns a type-compatible aircraft override when present, otherwise the current
+ * mission-wide value or supplied fallback.
  * Current callers: improved landing waypoint tracker and vector controller.
  */
 

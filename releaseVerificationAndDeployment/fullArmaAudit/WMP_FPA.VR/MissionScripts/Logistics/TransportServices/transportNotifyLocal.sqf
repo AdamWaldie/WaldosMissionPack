@@ -10,6 +10,7 @@
  * Return Value: STRING token from Waldo_fnc_ShowUiNotification.
  * Example: ["HELICOPTER", "Raven One is inbound.", "INFO", "RAVEN_1"] call Waldo_fnc_TransportNotifyLocal;
  * Current callers: authoritative request/report functions through owner-targeted remote execution.
+ * Result: The intended player receives a transport notification in the shared WMP UI.
  */
 params [
     ["_type", "GROUND", [""]], ["_message", "", [""]], ["_state", "INFO", [""]],

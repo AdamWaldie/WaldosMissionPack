@@ -10,6 +10,9 @@
  *
  * Example: [] call Waldo_fnc_SetupUiAcePriority;
  * Current caller: initPlayerLocal.sqf after the local WMP interface is ready.
+ * Locality and authority: Installs ACE menu open/close listeners on each interface client.
+ * Repeated setup avoids duplicate handlers; joining clients install their own listeners.
+ * Result: ACE interaction UI takes priority over WMP panels while open.
  */
 if (!hasInterface) exitWith {false};
 if (uiNamespace getVariable ["Waldo_UI_AcePriorityInstalled", false]) exitWith {true};

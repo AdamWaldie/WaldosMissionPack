@@ -11,6 +11,9 @@
  *
  * Example: [] call Waldo_fnc_RestyleUiNotificationsLocal;
  * Current caller: UiThemeApplyLocal after local theme resolution.
+ * Locality and authority: Reapplies presentation only to this client's live cards.
+ * Repeating restyle does not change notification content or publish JIP state.
+ * Result: Existing cards match the player's current WMP theme and colour profile.
  */
 
 if (!hasInterface) exitWith {0};
@@ -26,6 +29,8 @@ private _registry = +(uiNamespace getVariable ["Waldo_UiPanelRegistry", []]);
 private _restyled = 0;
 {
     private _entry = _x;
+    private _previewThemeId = _entry param [17, ""];
+    private _theme = if (_previewThemeId isEqualTo "") then {[] call Waldo_fnc_UiNotificationTheme} else {[_previewThemeId] call Waldo_fnc_UiTheme};
     private _controls = _entry param [1, []];
     private _metadata = _entry param [14, []];
     if (count _controls >= 4 && {count _metadata >= 4}) then {

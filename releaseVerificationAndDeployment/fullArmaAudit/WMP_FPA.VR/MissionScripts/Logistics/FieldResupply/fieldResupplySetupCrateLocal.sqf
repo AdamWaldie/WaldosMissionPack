@@ -19,6 +19,9 @@
  * [_crate] call Waldo_fnc_FieldResupplySetupCrateLocal;
  *
  * Current caller: FieldResupplyServerHandle after a successful DEPLOY operation.
+ * Locality and authority: Installs ACE interactions on each interface client for the deployed
+ * crate. Repeating setup is guarded; JIP receives the object-scoped setup while it exists.
+ * Result: Players can use the deployed Field Resupply crate's local interactions.
  */
 
 params [["_crate", objNull, [objNull]]];

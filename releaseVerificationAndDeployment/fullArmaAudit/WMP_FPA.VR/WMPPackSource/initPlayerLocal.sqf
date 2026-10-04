@@ -16,7 +16,12 @@
  * Return Value: Nothing.
  * Current caller: Arma initPlayerLocal event script.
  * Example: Leave this file in the mission root; Arma calls it for each joining player.
+ * Result: Joining players receive their local UI/actions and respawn handling after server state.
  */
+
+// Every object Init field has run by now, so later client calls to Init-safe WMP creators forward
+// to the server again (see Waldo_fnc_ClientInitPhaseEnd; set here too in case postInit runs later).
+missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
 
 /*
 PLAYER-LOCAL STARTUP
@@ -25,6 +30,9 @@ not replace newer server values already received by a JIP player. Do not move se
 startup into this file: every player would create a competing copy.
 */
 if (hasInterface) then {
+    // OPTIONAL THIRD-PARTY PLAYER MARKERS: review the launcher before enabling it.
+    // [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
+
     // Register before any other player-local startup work. PreloadFinished is the engine event for
     // the mission preload screen actually ending; init/postInit completion and briefing state both
     // happen too early to prove that the player can see the scene. The same event also fires after

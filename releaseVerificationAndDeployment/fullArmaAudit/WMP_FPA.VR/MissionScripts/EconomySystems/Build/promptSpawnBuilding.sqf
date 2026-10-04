@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Prompt spawn building.
+ * Opens the curator prompt for placing a completed catalog building.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -8,10 +8,14 @@
  * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
  *
  * Return Value:
- * Any - see function body
+ * Nothing <NIL>.
  *
  * Example:
  * [_pos] call Waldo_fnc_EcoBuild_promptSpawnBuilding;
+ * Locality/Authority: Curator interface client; chosen placement executes on server authority.
+ * Repeat/JIP Behaviour: A fresh prompt is local; placed buildings are published for JIP.
+ * Current Callers: Construction building-placement ZEN module.
+ * Result: Shows valid buildings and owner-side choices for the proposed position.
  */
 
         params [["_pos", [0, 0, 0]]];

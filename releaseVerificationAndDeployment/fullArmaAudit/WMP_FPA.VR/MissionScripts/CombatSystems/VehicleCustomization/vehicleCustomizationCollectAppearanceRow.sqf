@@ -21,6 +21,9 @@
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
  * (Appearance tab's Add Appearance Row button).
+ * Locality and authority: Reads the curator's local editor controls; it does not change a
+ * vehicle until the pending rows are submitted. Repeated reads need no JIP replay.
+ * Result: Returns one validated appearance row, or an empty row when the input is unusable.
  */
 
 params [["_disp", displayNull]];

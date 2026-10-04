@@ -1,17 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Track building marker.
+ * Schedules movement/update tracking for a registered building marker.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _building <ANY> - building
+ * 0: _building <OBJECT> - registered building
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_building] call Waldo_fnc_EcoBuild_trackBuildingMarker;
+ * Locality/Authority: Economy authority only; maintains a global marker.
+ * Repeat/JIP Behaviour: Each call creates a marker and worker; call once per building.
+ * The global marker and published name are visible to JIP clients.
+ * Current Callers: Building marker creation and world-object maintenance.
+ * Result: Marker follows a movable building and is cleaned when the object is lost.
  */
 
         params ["_building"];

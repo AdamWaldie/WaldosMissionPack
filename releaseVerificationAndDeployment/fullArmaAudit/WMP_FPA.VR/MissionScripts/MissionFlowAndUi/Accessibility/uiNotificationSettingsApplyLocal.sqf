@@ -13,6 +13,9 @@
  * Return Value: BOOL - true when all choices were valid and applied.
  * Current caller: Notification UI Settings Apply button.
  * Example: ["GRIMDARK", "SMALL", "REDUCED", true] call Waldo_fnc_UiNotificationSettingsApplyLocal;
+ * Locality and authority: Applies theme, size and motion choices on the player's client.
+ * Repeated changes affect only local UI; JIP clients use their own preferences.
+ * Result: Current and future notifications use the selected local presentation.
  */
 
 if (!hasInterface) exitWith {false};

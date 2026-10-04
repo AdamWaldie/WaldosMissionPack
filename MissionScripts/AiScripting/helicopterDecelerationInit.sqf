@@ -20,6 +20,7 @@
  * Current caller: init.sqf on server, interface clients and headless clients after shared settings.
  */
 
+if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false]) exitWith {false};
 if (missionNamespace getVariable ["Waldo_HelicopterDeceleration_HandlerInstalledLocal", false]) exitWith {true};
 missionNamespace setVariable ["Waldo_HelicopterDeceleration_HandlerInstalledLocal", true];

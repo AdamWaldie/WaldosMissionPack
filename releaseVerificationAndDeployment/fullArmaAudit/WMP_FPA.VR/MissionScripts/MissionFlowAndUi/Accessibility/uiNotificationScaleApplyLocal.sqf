@@ -12,6 +12,9 @@
  * Current callers: compatibility scripts; the custom Notification UI screen uses the combined
  * settings apply function.
  * Example: ["SMALL", true] call Waldo_fnc_UiNotificationScaleApplyLocal;
+ * Locality and authority: Applies only the player's local notification size preference.
+ * Repeated calls replace presentation, not server gameplay or JIP state.
+ * Result: Subsequent WMP notifications use the selected local scale.
  */
 
 if (!hasInterface) exitWith {false};

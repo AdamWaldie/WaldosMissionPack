@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines persistence defaults shared by server authority and player-local capture/apply code.
  * The INIDBI2 dependency gate and all database activity remain in persistence lifecycle functions.
+ * Locality / Authority: SHARED defaults load everywhere. The server owns database reads and
+ * writes. Each interface client captures and applies its own player state when permitted.
+ * Repeat/JIP: The loader preserves values already present. Joining players load the same
+ * defaults, then wait for the persistence handshake before saving new state.
  *
  * Schema: each SHARED entry is [missionNamespace variable name, guarded default value].
  * Arguments: None.

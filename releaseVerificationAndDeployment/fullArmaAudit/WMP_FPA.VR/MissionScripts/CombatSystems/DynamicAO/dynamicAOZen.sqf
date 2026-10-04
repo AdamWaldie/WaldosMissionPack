@@ -16,6 +16,9 @@
  *
  * Example:
  * [_modulePos] call Waldo_fnc_DynamicAOZen;
+ * Locality and authority: Opens the creation dialog on the curator's interface client.
+ * Submission goes to the server for AO creation; a dialog is not replayed to JIP clients.
+ * Result: A curator can configure a new AO without typing raw classnames.
  */
 params [["_modulePos", [], [[]]]];
 if !(hasInterface) exitWith {false};

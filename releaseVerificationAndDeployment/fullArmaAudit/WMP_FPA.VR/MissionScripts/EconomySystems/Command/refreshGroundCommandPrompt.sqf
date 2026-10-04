@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Refresh ground command prompt.
+ * Refreshes the curator prompt's command list and button state.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - prompt display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoCommand_refreshGroundCommandPrompt;
+ * Locality/Authority: Curator interface client only; reads command state without changing it.
+ * Repeat/JIP Behaviour: Repeat-safe refresh of the same controls; no JIP UI state.
+ * Current Callers: Ground Command prompt setup and Promote/Remove button callbacks.
+ * Result: The list and available controls reflect current command membership.
  */
 
     params [["_disp", displayNull]];

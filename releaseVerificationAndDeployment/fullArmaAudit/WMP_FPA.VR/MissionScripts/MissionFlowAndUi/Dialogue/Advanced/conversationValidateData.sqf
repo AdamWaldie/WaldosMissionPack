@@ -7,6 +7,7 @@
  * Arguments: definition ARRAY [id, nodes, startNode]. Return Value: [valid BOOL, issues ARRAY,
  * warnings ARRAY]. Current callers: ConversationCreateData and Conversation Author UI.
  * Example: [["GREETING", [["START", [["Hello.", "", -1, -1, ""]], [], ""]], "START"]] call Waldo_fnc_ConversationValidateData;
+ * Result: Returns validity, errors and warnings without registering the definition.
  */
 params [["_definition", [], [[]]]];
 private _issues = [];

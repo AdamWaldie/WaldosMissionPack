@@ -4,6 +4,9 @@
  * Magazine ammunition, weapons, nested containers and item counts are preserved by restoring the
  * engine loadout structure instead of rebuilding cargo from backpackItems. Cleanup is repeat-safe
  * for the manual hold action and automatic landing watcher.
+ * Locality and authority: Runs where the jumping unit is local; it rejects a remote unit.
+ * Repeat/JIP: Saved state is cleared after restoration, so a second call returns false. The saved
+ * backpack belongs to the current jumper, not a public JIP replay.
  *
  * Arguments:
  * 0: jumping unit <OBJECT>
@@ -12,6 +15,7 @@
  *
  * Example: [player] call Waldo_fnc_ParadropRestoreBackpackLocal;
  * Current callers: ParaBackpack manual hold action and automatic landing watcher.
+ * Result: The jumper's saved backpack replaces the temporary chute and the restore action ends.
  */
 
 params [["_unit", objNull, [objNull]]];

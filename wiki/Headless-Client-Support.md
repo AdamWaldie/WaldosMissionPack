@@ -166,14 +166,14 @@ migration queue in the RPT.
 
 Headless clients receive ordinary eligible mission AI only. WMP state-machine assets that require
 continuous server-local control are never offloaded: Paradrop aircraft and jump groups, Airborne
-Gunships, Dynamic AA, Transport Services and WMP AI convoys stay on server owner `2`. Their
+Gunships, Dynamic AA and Transport Services stay on server owner `2`. Their
 registries, waypoint controllers, cleanup and live transitions are server-authoritative, so
 splitting crew ownership would create races and broken behaviour.
 
-All other AI-crewed helicopters also remain server-owned while improved helicopter landing is
-installed. Live dedicated testing showed a separate engine/locality failure: ACE Headless transferred
+All other AI-crewed helicopters also remain server-owned. Live dedicated testing showed an
+engine/locality failure: ACE Headless transferred
 fresh airborne helicopter groups successfully, but the aircraft lost stable flight and struck the
-terrain within three to four seconds, before WMP's landing controller had activated. WMP therefore
+terrain within three to four seconds. WMP therefore
 sets ACE's public `acex_headless_blacklist` on every non-UAV helicopter as it is created and rejects
 helicopter groups in its own automatic and manual migration paths. This does **not** disable WMP AI
 skill profiles for helicopter crew; it only keeps their flight simulation and AI ownership on the
@@ -254,11 +254,10 @@ rework deliberately reuses rather than duplicates:
 
 - **Redispatch** - a function checks `local _group`; if not local, it looks up the current
   `groupOwner _group` and `remoteExecCall`s itself there. Used by Dynamic AA
-  (`Waldo_fnc_DynamicAASetGroupState`), every "Local" function in `Logistics\TransportServices\`, and
-  the AI convoy ZEN module.
+  (`Waldo_fnc_DynamicAASetGroupState`) and every "Local" function in `Logistics\TransportServices\`.
 - **Adoption** - a per-unit engine `Local` event handler reapplies AI skill state whenever an
-  ordinary eligible unit's locality changes. Improved helicopter landing also retains its local
-  tracker guard, but automatic and manual HC distribution no longer migrate helicopters.
+  ordinary eligible unit's locality changes. Automatic and manual HC distribution do not migrate
+  helicopters because of the engine flight-locality failure described above.
 
 The one system found *not* to redispatch correctly, Dynamic AO's patrol-waypoint setup
 (`Waldo_fnc_DynamicAOAddPatrolWaypoints`), was fixed to match the same redispatch pattern as part of
@@ -275,7 +274,7 @@ expects to keep continuously driving.
 
 For that reason, `Waldo_fnc_GunshipRegister`, the shared paradrop flight-route builder
 (`Waldo_fnc_ParadropBuildFlightRoute`, used by both `Waldo_fnc_ParadropQuickFlightSetup` and
-`Waldo_fnc_ParadropCreateDropZone`), `Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` pin
+`Waldo_fnc_ParadropCreateDropZone`) and `Waldo_fnc_DynamicAACreate` pin
 their own managed vehicle(s) server-side by default via `Waldo_fnc_HeadlessPinCrew`. That call sets
 **both** `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) **and** ACE's own
 `acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group

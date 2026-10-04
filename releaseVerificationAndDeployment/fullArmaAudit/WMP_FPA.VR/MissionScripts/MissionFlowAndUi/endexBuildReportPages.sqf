@@ -12,6 +12,9 @@
  * Current caller: Waldo_fnc_ENDEX on each interface client.
  *
  * Example: private _pages = [] call Waldo_fnc_ENDEXBuildReportPages;
+ * Locality and authority: Builds report text on the player's interface client from current
+ * published mission data. Repeated builds are read-only; no JIP gameplay state is changed.
+ * Result: Returns ready-to-display ENDEX report pages from current mission records.
  */
 if (isNil {missionNamespace getVariable "Waldo_AAR_StartTime"}) exitWith {[]};
 private _elapsed = (time - (missionNamespace getVariable ["Waldo_AAR_StartTime", time])) max 0;

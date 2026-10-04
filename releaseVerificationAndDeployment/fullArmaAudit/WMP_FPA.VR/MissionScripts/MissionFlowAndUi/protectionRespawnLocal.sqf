@@ -20,6 +20,7 @@
  *
  * Example:
  * [_newUnit, _oldUnit] call Waldo_fnc_ProtectionRespawnLocal;
+ * Result: Active WMP safety protection is reconciled for the player's replacement unit.
  */
 
 params [

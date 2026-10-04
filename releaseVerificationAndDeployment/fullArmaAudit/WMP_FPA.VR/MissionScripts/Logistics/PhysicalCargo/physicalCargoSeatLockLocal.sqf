@@ -7,6 +7,7 @@
  * Return Value: <BOOL> whether the local engine command was applied.
  * Current caller: Waldo_fnc_PhysicalCargoSeatsServer via server remote execution.
  * Example: [truck, "TURRET", [1], true] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", truck];
+ * Result: The vehicle owner applies or releases only the specified verified seat lock.
  */
 params [["_vehicle", objNull, [objNull]], ["_kind", "", [""]],
     ["_key", -1, [-1, []]], ["_lock", false, [false]]];

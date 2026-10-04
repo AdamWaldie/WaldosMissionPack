@@ -35,6 +35,9 @@
  * hint ((cursorObject call Waldo_fnc_VehicleWeaponLoadoutInspect) select 2);
  *
  * Current caller: the ZEN "Vehicle Weapon Loadout - Inspect" module.
+ * Locality and authority: Read-only on the requesting curator's client. Each inspection reads
+ * current vehicle state; no server mutation or JIP replay occurs.
+ * Result: Returns a report and a paste-ready loadout call for the inspected vehicle.
  */
 
 params [["_vehicle", objNull, [objNull]]];

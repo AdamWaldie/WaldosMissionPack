@@ -125,6 +125,9 @@ if (_suite in ["all", "core"]) then {
     }] call Waldo_QA_fnc_case;
 
     ["core/ai-helicopter/land-touchdown", {
+        if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+            ["core/ai-helicopter/land-touchdown", !(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_HandlerInstalledLocal", false]), ["WAIT owns helicopter flight", missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_HandlerInstalledLocal", false]]] call Waldo_QA_fnc_assert;
+        };
         [objNull, false] call Waldo_QA_fnc_startImprovedLandingServer;
         private _helicopter = missionNamespace getVariable ["Waldo_QA_ImprovedLandingHelicopter", objNull];
         private _deadline = diag_tickTime + 60;

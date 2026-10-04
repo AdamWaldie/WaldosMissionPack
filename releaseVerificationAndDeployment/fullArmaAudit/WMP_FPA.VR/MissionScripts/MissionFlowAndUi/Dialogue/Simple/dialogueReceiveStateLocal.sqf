@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: removes stale local actions before applying current descriptors.
  * Arguments: 0 state version <NUMBER>; 1 descriptors <ARRAY>. Return Value: BOOL.
  * Current caller: DialoguePublishState. Example: server remote execution only.
+ * Result: This client removes stale actions and installs the current speaker actions.
  */
 params [["_version", -1, [0]], ["_snapshot", [], [[]]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

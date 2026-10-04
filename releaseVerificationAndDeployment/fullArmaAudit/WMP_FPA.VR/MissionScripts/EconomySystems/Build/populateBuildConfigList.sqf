@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Populate build config list.
+ * Rebuilds the curator Construction list from the current catalog.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - editor display
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuild_populateBuildConfigList;
+ * Locality/Authority: Curator interface client; reads catalog and updates local listbox.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP UI state.
+ * Current Callers: Construction editor open and catalog-change handlers.
+ * Result: Shows current definitions while retaining a valid selection.
  */
 
         params ["_disp"];

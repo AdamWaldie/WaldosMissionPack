@@ -10,6 +10,7 @@
  * Return Value: HASHMAP in the shared Waldo diagnostic feature-report schema.
  * Current callers: RunDiagnostics and RunDiagnosticsClient.
  * Example: call Waldo_fnc_DialogueGetDiagnostics;
+ * Result: Returns dialogue readiness and state details for the WMP diagnostics report.
  */
 private _checks = [];
 if (isServer) then {

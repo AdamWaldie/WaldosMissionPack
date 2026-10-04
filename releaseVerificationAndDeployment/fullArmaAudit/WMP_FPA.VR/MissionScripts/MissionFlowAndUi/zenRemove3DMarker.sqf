@@ -18,6 +18,7 @@
  * Current caller: Remove Custom 3D Marker ZEN module.
  *
  * Example: [_modulePos, _objectPos] call Waldo_fnc_ZenRemove3DMarker;
+ * Result: The curator can remove one chosen live WMP marker without deleting its anchor.
  */
 params [["_modulePos", [], [[]]], ["_objectPos", objNull, [objNull]]];
 if (!hasInterface) exitWith {};

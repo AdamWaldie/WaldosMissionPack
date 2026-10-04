@@ -5,6 +5,10 @@
  * One scheduled server loop is spawned per registered gunship by Waldo_fnc_GunshipRegister. It
  * restores controllers by UID after respawn, drives transit/RTB/service state, uses synchronized
  * serverTime for service progress and initiates automatic service when configured limits are met.
+ * Locality and authority: One scheduled server loop per active gunship; state changes and service
+ * decisions remain server-owned, with flight commands sent to the aircraft's owner.
+ * Repeat/JIP: GunshipRegister owns one monitor handle per ID. The loop reads current registry
+ * state, and GunshipPublishState supplies joining clients with the latest summary.
  *
  * Arguments:
  * 0: system ID <STRING>
@@ -14,6 +18,8 @@
  *
  * Example:
  * ["SPECTRE_1"] spawn Waldo_fnc_GunshipMonitor;
+ * Current caller: Waldo_fnc_GunshipRegister for each registered system.
+ * Result: The gunship advances between transit, orbit, RTB and service states until stopped.
  */
 
 params ["_id"];

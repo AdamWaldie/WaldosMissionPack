@@ -83,7 +83,7 @@ class items
         class Attributes
         {
             name="WMP_RavenOne";
-            init="[this, ""HELICOPTER"", ""RAVEN_1"", ""Raven One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true], [""cruiseAltitude"", 50], [""landingSearchRadius"", 500], [""landingClearanceScale"", 1.5], [""useImprovedLanding"", true]]] call Waldo_fnc_TransportRegister;";
+            init="[this, ""HELICOPTER"", ""RAVEN_1"", ""Raven One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true], [""cruiseAltitude"", 50], [""landingSearchRadius"", 500], [""landingClearanceScale"", 1.5]]] call Waldo_fnc_TransportRegister;";
         };
         id=1;
         type="B_Heli_Light_01_F";

@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Populate purchase config list.
+ * Rebuilds the curator Purchase list from the current catalog.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp] call Waldo_fnc_EcoBuy_populatePurchaseConfigList;
+ * Locality/Authority: Curator interface client; reads catalog and updates local listbox.
+ * Repeat/JIP Behaviour: Repeat-safe redraw; no JIP UI state.
+ * Current Callers: Purchase editor open and catalog-change handlers.
+ * Result: Shows current assets while retaining a valid selection.
  */
 
         params [["_disp", displayNull]];

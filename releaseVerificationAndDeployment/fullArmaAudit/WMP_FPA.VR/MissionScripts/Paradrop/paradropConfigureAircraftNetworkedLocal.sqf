@@ -8,11 +8,13 @@
  * requested invincibility state. The server attaches this combined replay to the aircraft object,
  * so Arma removes it automatically from the JIP queue when the aircraft is deleted.
  *
- * Locality, authority and repeat/JIP behaviour:
+ * Locality and authority:
  * Run on every machine. Interface clients reconcile local hold actions and ACE interactions; every
  * machine reconciles the damage handler so the current server, headless-client or player owner can
  * apply allowDamage. The server remains authoritative for the aircraft, route and published
- * configuration. Repeated calls are safe because both local reconcilers remove obsolete handlers.
+ * configuration.
+ * Repeat/JIP: The server sends one object-keyed JIP replay; local reconcilers remove obsolete
+ * handlers when the same aircraft is configured again.
  *
  * Arguments:
  * 0: aircraft network ID <STRING>
@@ -30,6 +32,8 @@
  * Example:
  * [netId _aircraft, [["staticJumpEnabled", true], ["staticMinimumAltitude", 180]]]
  *     call Waldo_fnc_ParadropConfigureAircraftNetworkedLocal;
+ * Result: A local resolution attempt is scheduled; once resolved, the aircraft gets local
+ * jump actions and owner-local invincibility handling.
  */
 params [
     ["_aircraftNetId", "", [""]],

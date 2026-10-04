@@ -6,6 +6,7 @@
  * Repeat/JIP behaviour: start/stop are idempotent; no persistent remote-execution entry is created.
  * Arguments: speaker, caller, speaking BOOL, gesture STRING. Return Value: BOOL.
  * Current callers: simple and advanced server workers. Example: server remote execution to owner speaker.
+ * Result: The speaker's owner starts or stops the requested talk gesture.
  */
 params [["_speaker", objNull, [objNull]], ["_caller", objNull, [objNull]], ["_speaking", false, [true]], ["_gesture", "", [""]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};

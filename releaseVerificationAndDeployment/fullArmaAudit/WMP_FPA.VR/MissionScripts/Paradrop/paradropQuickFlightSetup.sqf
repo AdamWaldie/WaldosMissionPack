@@ -137,10 +137,6 @@ if !(isServer) exitWith {
 // wherever its waypoint list happened to be cut off. Only the first arrival for this aircraft
 // actually builds the route.
 if (_aircraft getVariable ["Waldo_Paradrop_QuickSetupStarted", false]) exitWith {false};
-if (isNil {_aircraft getVariable "Waldo_Paradrop_HelicopterDecelerationExcludeBaseline"}) then {
-    _aircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", _aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false], true];
-};
-_aircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 // Resolve the authored target before the scheduled mission-init/pilot waits below. Eden object init
 // runs early enough for global markers created here to reach clients while their briefing map is
 // still open; doing this after WALDO_INIT_COMPLETE made pre-planned paradrop markers appear only

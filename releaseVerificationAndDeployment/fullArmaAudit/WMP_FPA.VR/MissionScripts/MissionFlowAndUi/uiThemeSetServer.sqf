@@ -12,6 +12,10 @@
  *
  * Example: ["WW2", true] remoteExecCall ["Waldo_fnc_UiThemeSetServer", 2];
  * Current caller: the ZEN UI QA theme module.
+ * Locality and authority: Server validates and publishes the global theme; interface
+ * clients apply presentation locally. Repeated selection replaces the current theme and
+ * JIP receives that published choice.
+ * Result: WMP UI uses the selected global theme, with optional curator preview.
  */
 
 params [["_themeId", "DEFAULT", [""]], ["_preview", true, [true]]];

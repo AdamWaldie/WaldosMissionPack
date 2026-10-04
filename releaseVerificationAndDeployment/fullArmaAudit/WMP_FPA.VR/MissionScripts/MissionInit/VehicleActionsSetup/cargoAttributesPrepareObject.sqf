@@ -11,6 +11,8 @@
  * Current callers: WMP crate registration, physical cargo, supply transfers and
  *   economy resource-case creation.
  * Example: [myCrate, "SUPPLY"] call Waldo_fnc_CargoAttributesPrepareObject;
+ * Result: An eligible portable object gains WMP's drag/carry choices and an ACE loading size
+ * only when its class and existing object settings do not already supply one.
  */
 params [["_object", objNull, [objNull]], ["_role", "CARGO", [""]]];
 if (!isServer || {isNull _object} || {_object getVariable ["Waldo_Logistics_StarterCrate", false]}

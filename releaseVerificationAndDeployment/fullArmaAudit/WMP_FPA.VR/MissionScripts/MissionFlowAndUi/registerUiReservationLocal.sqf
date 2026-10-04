@@ -16,6 +16,9 @@
  * Example: ["EW_STATUS", [_frame, _content], ["BOTTOM_RIGHT"], true] call Waldo_fnc_RegisterUiReservationLocal;
  * Current callers: SafeStart, electronic-warfare and hazardous-environment specialist HUD renderers;
  * available to plugins.
+ * Locality and authority: Reserves screen space only on the calling interface client.
+ * Reusing a reservation ID updates its local entry; no server/JIP gameplay state changes.
+ * Result: Notification layout avoids the reserved specialist UI region.
  */
 if (!hasInterface) exitWith {false};
 params [

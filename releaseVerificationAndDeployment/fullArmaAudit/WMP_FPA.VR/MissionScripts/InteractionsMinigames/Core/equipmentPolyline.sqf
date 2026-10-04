@@ -1,7 +1,17 @@
 /*
- * Draws a procedural polyline as small square controls. This deliberately avoids
+ * Author: WaldoTheWarfighter
+ * Purpose: Draws a procedural polyline as small square controls. This deliberately avoids
  * ctrlSetAngle, which does not rotate filled procedural controls in Arma.
- * Arguments: [display, pointsInGridCoordinates, colour, thicknessInGridCells, semanticLabel]
+ * Locality/Authority: Interface client only; creates local controls.
+ * Repeat/JIP Behaviour: Each call creates a new set of controls; nothing is replayed to JIP.
+ * Arguments: 0: display <DISPLAY>, default displayNull; 1: grid points <ARRAY>, default [];
+ * 2: RGBA colour <ARRAY>, default [0.8,0.8,0.8,1]; 3: grid-cell thickness <NUMBER>,
+ * default 0.18; 4: semantic label <STRING>, default "instrument line".
+ * Return Value: <ARRAY of CONTROL> generated line segments, or [] for invalid input.
+ * Current Callers: Wire-cut and circuit challenge displays.
+ * Example: [_display, [[2,2],[8,2]], [1,0,0,1], 0.18, "red wire"]
+ *          call Waldo_fnc_MiniGameEquipmentPolyline;
+ * Result: A visible line made of recorded equipment controls.
  */
 disableSerialization;
 params [

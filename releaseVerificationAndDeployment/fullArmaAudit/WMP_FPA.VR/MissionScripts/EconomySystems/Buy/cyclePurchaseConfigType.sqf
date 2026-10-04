@@ -1,18 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Cycle purchase config type.
+ * Advances the Purchase editor's asset category selector.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp (optional, default: displayNull)
- * 1: _delta <SCALAR> - delta (optional, default: 0)
+ * 0: _disp <DISPLAY> - editor display (optional, default: displayNull)
+ * 1: _delta <NUMBER> - selector step (optional, default: 0)
  *
  * Return Value:
  * Nothing
  *
  * Example:
  * [_disp, _delta] call Waldo_fnc_EcoBuy_cyclePurchaseConfigType;
+ * Locality/Authority: Curator interface client; local selection only.
+ * Repeat/JIP Behaviour: Repeat calls advance selection; no JIP state until submission.
+ * Current Callers: Purchase editor category arrows.
+ * Result: Selected category and preview are updated.
  */
 
         params [["_disp", displayNull], ["_delta", 0]];

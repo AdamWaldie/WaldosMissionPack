@@ -19,6 +19,7 @@
  * Return Value: BOOL - true when the client worker was accepted.
  * Current caller: Waldo_fnc_ACRE2RackApply (server).
  * Example: [_vehicle, _settings, _token] remoteExecCall ["Waldo_fnc_ACRE2RackClientApply", owner _player];
+ * Result: A valid worker starts client-local rack inspection and sends verified results to server.
  */
 params [
     ["_vehicle", objNull, [objNull]],

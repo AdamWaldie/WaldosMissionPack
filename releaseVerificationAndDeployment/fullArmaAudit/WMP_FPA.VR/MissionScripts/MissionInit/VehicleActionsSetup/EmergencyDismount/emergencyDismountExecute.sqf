@@ -22,6 +22,7 @@
  *
  * Example:
  * [player, vehicle player, false, [1, 0, 0], 2.4] spawn Waldo_fnc_EmergencyDismountExecute;
+ * Result: The occupant exits clear of the vehicle with flip-directed outward and upward motion.
  */
 
 params [

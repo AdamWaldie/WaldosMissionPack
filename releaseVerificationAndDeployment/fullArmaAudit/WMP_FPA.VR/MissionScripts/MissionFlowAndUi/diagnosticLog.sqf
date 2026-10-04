@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Writes one consistently framed WMP diagnostic line to the local RPT.
  * This helper does not change feature state or display player notifications.
  *
@@ -11,7 +12,13 @@
  * 5: Run ID <STRING> (optional, defaults to active run or ADHOC)
  * 6: Node <STRING> (optional, defaults to SERVER or CLIENT:<owner id>)
  *
- * Return: complete log line <STRING>
+ * Return Value: complete log line <STRING>.
+ * Locality and authority: Writes only the caller's RPT; it does not mutate feature state.
+ * Repeating the call logs another line, while JIP has no replayed diagnostic history.
+ * Current callers: RunDiagnostics, RunDiagnosticsClient and feature-specific report paths.
+ * Example: ["LOGISTICS", "SUPPLY", "INFO", "READY", "Crate registry loaded"]
+ *   call Waldo_fnc_DiagnosticLog;
+ * Result: The framed line is written to this machine's RPT and returned to the caller.
  */
 params [
     ["_area", "CORE", [""]],

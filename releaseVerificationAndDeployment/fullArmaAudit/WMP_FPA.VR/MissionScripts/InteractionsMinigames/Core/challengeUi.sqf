@@ -12,6 +12,10 @@
  *
  * Example: ["FIELD EQUIPMENT", "Complete the procedure", 60, _resolve] call Waldo_fnc_MiniGameChallengeUi;
  * Current callers: all ten interaction-equipment procedure openers.
+ * Locality/Authority: Interface client only; the supplied resolver handles the outcome.
+ * Repeat/JIP Behaviour: Each call builds a new local display. Display handlers and workers
+ * are removed on completion; no open UI is replayed to JIP clients.
+ * Result: Returns the created display, or displayNull when no interface is available.
  */
 disableSerialization;
 params [

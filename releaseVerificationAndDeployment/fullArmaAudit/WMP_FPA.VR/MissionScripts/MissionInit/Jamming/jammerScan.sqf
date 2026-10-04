@@ -6,6 +6,10 @@
  * prevent a player standing beside a very large jammer field being described as distant. Lets an EW team triangulate and
  * hunt a jammer by taking bearings from different spots. Purely a read-out - it changes nothing.
  * Exposed as an ACE self-interaction ("Scan for Radio Jammers") wired up in Waldo_fnc_JammingInit.
+ * Locality and authority: Interface-client only; reads published jammer state around the player
+ * and displays local direction-finding feedback without changing server state.
+ * Repeat/JIP: Each scan is a fresh read of current emitters. The scan action itself is installed
+ * by JammingInit for each player, including JIP.
  *
  * Arguments:
  * None
@@ -15,6 +19,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammerScan;
+ * Current caller: the ACE self-action installed by Waldo_fnc_JammingInit.
+ * Result: The operator receives an approximate bearing and distance band for a detected emitter.
  */
 
 if !(hasInterface) exitWith {};

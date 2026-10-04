@@ -6,6 +6,7 @@
  * Arguments: transfer display <DISPLAY>, mode <STRING> ADD|ADD_ALL|REMOVE|CLEAR|SEND (SEND).
  * Return Value: <BOOL> action accepted. Current caller: transfer-panel buttons.
  * Example: [_display, "ADD_ALL"] call Waldo_fnc_SupplyTransfersSubmitLocal;
+ * Result: The queue changes locally or one reviewed transfer is sent to the server.
  */
 params [["_display", displayNull, [displayNull]], ["_mode", "SEND", [""]]];
 if (isNull _display) exitWith {false};

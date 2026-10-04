@@ -75,6 +75,10 @@
  * Current callers: mission-maker vehicle init fields, the ZEN "Vehicle Weapon Loadout - Configure"
  * module (via Waldo_fnc_ZenVehicleWeaponLoadoutServer). See Waldo_fnc_VehicleWeaponLoadoutInspect for
  * the beginner-friendly way to discover exact classnames from an existing vehicle.
+ * Locality and authority: Server validates each requested row; locality-sensitive weapon,
+ * magazine and pylon operations execute on the vehicle or turret owner. Later calls may change
+ * the loadout again; the resulting vehicle state replicates to JIP clients.
+ * Result: Returns per-row success/details after applying accepted turret and pylon changes.
  */
 
 params [

@@ -17,6 +17,10 @@
  *
  * Example:
  * [_vehicle, ["repair", "standard"]] call Waldo_fnc_RecoveryInteractionSetup;
+ * Locality and authority: Installs the procedure action on each interface client for this
+ * registered vehicle. Completion requests a fresh server-side PACK validation; object-keyed
+ * JIP setup and repeat guards prevent duplicate actions.
+ * Result: Eligible players can start the recovery preparation procedure on this vehicle.
  */
 
 params [["_vehicle", objNull, [objNull]], ["_settings", [], [[]]]];

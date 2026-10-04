@@ -19,6 +19,7 @@
  * ["Raven One", "HELICOPTER", [west]] call Waldo_fnc_TransportNotifyLoss;
  *
  * Current caller: Waldo_fnc_TransportMonitorServer.
+ * Result: Players on the affected operational sides receive the service-loss message.
  */
 
 params [["_name", "", [""]], ["_type", "GROUND", [""]], ["_allowedSides", [], [[]]]];

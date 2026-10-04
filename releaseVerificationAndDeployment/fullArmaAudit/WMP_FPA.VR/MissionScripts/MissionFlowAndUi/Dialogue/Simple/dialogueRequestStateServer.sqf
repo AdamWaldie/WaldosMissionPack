@@ -4,6 +4,7 @@
  * Locality/authority: remote server endpoint. Repeat/JIP behaviour: safe to request repeatedly.
  * Arguments: 0 requester <OBJECT>. Return Value: BOOL.
  * Current caller: DialogueBootstrap on each interface client. Example: [player] remoteExecCall ["Waldo_fnc_DialogueRequestStateServer",2];
+ * Result: The requesting client receives the latest speaker-action snapshot.
  */
 params [["_requester", objNull, [objNull]]];
 if (!isServer || {isNull _requester}) exitWith {false};

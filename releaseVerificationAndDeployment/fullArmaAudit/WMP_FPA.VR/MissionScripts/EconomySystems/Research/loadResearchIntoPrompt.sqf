@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Load research into prompt.
+ * Loads a selected technology row into the curator's Research editor controls.
  *
  * Part of the Waldos Economy Systems suite (Research system).
  *
  * Arguments:
- * 0: _disp <ANY> - disp
+ * 0: _disp <DISPLAY> - Research editor display
  * 1: _index <SCALAR> - index (optional, default: -1)
  *
  * Return Value:
@@ -13,6 +13,10 @@
  *
  * Example:
  * [_disp, _index] call Waldo_fnc_EcoResearch_loadResearchIntoPrompt;
+ * Locality/Authority: Curator interface client only; edits local controls, not the catalog.
+ * Repeat/JIP Behaviour: Repeated selection replaces the form fields; no JIP UI replay.
+ * Current Callers: Research editor list selection.
+ * Result: Form fields and icon preview reflect the selected catalog row.
  */
 
         params ["_disp", ["_index", -1]];

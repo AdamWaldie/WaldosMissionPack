@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Set ground command UI ds.
+ * Validates and publishes the authoritative Ground Command identity list.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
@@ -12,6 +12,11 @@
  *
  * Example:
  * [_uids] call Waldo_fnc_EcoCommand_setGroundCommandUIDs;
+ * Locality/Authority: Economy authority machine only; writes missionNamespace public state.
+ * Repeat/JIP Behaviour: Normalizes keys and publishes updates for JIP clients; repeat input
+ * leaves the effective membership unchanged.
+ * Current Callers: Ground Command Promote, Remove and pruning helpers.
+ * Result: Invalid or duplicate entries are excluded from the stored list.
  */
 
     params [["_uids", []]];

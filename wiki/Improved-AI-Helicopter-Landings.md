@@ -1,5 +1,7 @@
 # Improved AI Helicopter Landings
 
+When [Waldos AI Tweaks](https://github.com/AdamWaldie/WaldosAITweaks) (WAIT) is loaded, WMP does not install or run this controller. WAIT owns helicopter landing control. Without WAIT, WMP's event-driven controller remains available for AI landing waypoints and registered helicopter taxis.
+
 > **Use this page when:** AI helicopters need reliable exact-point landings, slope handling, canopy clearance and a controlled go-around.
 
 Vanilla AI helicopters often land poorly on their own: overshooting the marked point, bouncing on a slope, or clipping a tree canopy on the way down. This system takes over final approach for an AI-piloted helicopter given a landing-type waypoint, and lands it precisely at the intended point instead.

@@ -329,8 +329,6 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AI_IncludedSides` | Optional side allowlist. |
 | `Waldo_AI_IncludedFactions` | Optional faction allowlist. |
 | `Waldo_AI_ExcludedFactions` | Factions never altered. |
-| `Waldo_AI_ExcludedClasses` | Unit classes never altered. |
-| `Waldo_AI_ProfileDisplayNames` | Curator-facing names for the WMP profiles. |
 | `Waldo_ImprovedHelicopterLanding_Enable` | Enables AI-only landing correction. |
 | `Waldo_ImprovedHelicopterLanding_MinimumActivationDistance` | Minimum initial aircraft-to-waypoint distance in metres. |
 | `Waldo_ImprovedHelicopterLanding_TriggerDistance` | Distance at which approach control begins. |
@@ -366,6 +364,8 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_HelicopterDeceleration_ControlInterval` | Seconds between impulses while correction is active. |
 | `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Hard timeout for one correction event. |
 | `Waldo_HelicopterDeceleration_Debug` | Adds acquire/release details to RPT while troubleshooting. |
+| `Waldo_AI_ExcludedClasses` | Unit classes never altered. |
+| `Waldo_AI_ProfileDisplayNames` | Curator-facing names for the WMP profiles. |
 
 ## `airOperationsConfig.sqf`
 

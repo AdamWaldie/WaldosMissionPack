@@ -18,6 +18,7 @@
  * Return Value: Nothing; defines runtime values/functions.
  * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
  * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
+ * Result: The lazy runtime receives common game configuration when a table is registered.
  */
 
 Waldo_MG_Games = [

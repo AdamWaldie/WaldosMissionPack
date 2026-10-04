@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Remove ground command.
+ * Removes a valid identity key from the authoritative Ground Command list.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
@@ -12,6 +12,10 @@
  *
  * Example:
  * [_uid] call Waldo_fnc_EcoCommand_removeGroundCommand;
+ * Locality/Authority: Economy authority machine only; curator UI sends a validated request.
+ * Repeat/JIP Behaviour: Removing an absent key is a no-op; changed list is published for JIP.
+ * Current Callers: Ground Command curator request handling.
+ * Result: The selected player no longer has Ground Command membership.
  */
 
     params [["_uid", ""]];

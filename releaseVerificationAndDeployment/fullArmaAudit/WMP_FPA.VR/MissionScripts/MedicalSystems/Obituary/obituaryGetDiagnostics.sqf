@@ -14,6 +14,8 @@
  * Arguments: None
  * Return Value: HashMap - the Waldo_fnc_DiagnosticFeatureReport shape for area "obituary"
  * Example: [] call Waldo_fnc_ObituaryGetDiagnostics;
+ * Result: Returns an obituary report containing dependency, ledger and interface-installation
+ * checks for the machine that called it.
  * Current callers: Waldo_fnc_RunDiagnostics, Waldo_fnc_RunDiagnosticsClient.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics
  */

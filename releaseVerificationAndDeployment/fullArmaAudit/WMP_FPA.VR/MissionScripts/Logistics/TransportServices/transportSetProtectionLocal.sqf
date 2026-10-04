@@ -14,6 +14,7 @@
  * Example: [this, true] call Waldo_fnc_TransportSetProtectionLocal;
  * Current callers: Waldo_fnc_TransportRegister and locality-change handling in the server monitor.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
+ * Result: The service vehicle's protected/unprotected state is applied on its owner.
  */
 params [["_vehicle", objNull, [objNull]], ["_enabled", false, [true]]];
 if (isNull _vehicle) exitWith {false};

@@ -18,6 +18,8 @@
  * Result: [["wirecut", ...], ["Control-wire isolation", ...], 5]
  *
  * Current callers: jammer, Dynamic AA, vehicle-recovery and tactical-display ZEN dialogs.
+ * Locality/Authority: Interface client; returns local ZEN selector data without changing state.
+ * Repeat/JIP Behaviour: Repeat calls rebuild the option list from the local registry; no JIP replay.
  */
 
 params [["_preferred", "circuit", [""]]];

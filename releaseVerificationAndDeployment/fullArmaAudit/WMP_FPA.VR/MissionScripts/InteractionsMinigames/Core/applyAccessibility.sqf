@@ -1,4 +1,15 @@
-/* Applies local, presentation-only accessibility settings to a completed equipment display. */
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Applies the client's accessibility colours and optional outlines to a field-equipment display.
+ * Locality/Authority: Interface client only; this changes local UI controls, not challenge state.
+ * Repeat/JIP Behaviour: The display's applied flag prevents duplicate outlines. A new display
+ * receives its own setup; a joining client builds its own UI when opening the challenge.
+ * Arguments: 0: equipment display <DISPLAY>, default displayNull.
+ * Return Value: Nothing <NIL>.
+ * Current Callers: MiniGameChallengeUI after it constructs the display.
+ * Example: [_display] call Waldo_fnc_MiniGameApplyAccessibility;
+ * Result: Stores display colours and adds outlines when enabled; ignores a null/already-set display.
+ */
 disableSerialization;
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display || {_display getVariable ["Waldo_IMG_AccessibilityApplied", false]}) exitWith {};

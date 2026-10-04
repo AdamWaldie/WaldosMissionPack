@@ -8,6 +8,7 @@
  * Return Value: Boolean.
  * Current callers: MiniGamesUnregisterTable locally and by targeted server notification.
  * Example: [_table] call Waldo_fnc_MiniGamesUnregisterTableLocal;
+ * Result: This client removes the table's local interaction and presentation state.
  */
 
 params [["_table", objNull, [objNull]]];

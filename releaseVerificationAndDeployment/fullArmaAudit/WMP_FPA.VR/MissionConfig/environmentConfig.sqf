@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter
  * Defines hazardous-environment, tree-felling and explosive-breaching defaults. Zone/object
  * registration and damage/replacement execution remain in their locality-aware feature scripts.
+ * Locality / Authority: The SHARED loader reads this data on every machine. Each feature
+ * applies its own object, damage and client-effect locality rules.
+ * Repeat/JIP: Guarded defaults keep any existing values. Joining machines load the same
+ * defaults. This file does not register hazard zones or install handlers itself.
  *
  * Schema: SHARED entries are [missionNamespace variable name, guarded default value].
  * Arguments: None. Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.

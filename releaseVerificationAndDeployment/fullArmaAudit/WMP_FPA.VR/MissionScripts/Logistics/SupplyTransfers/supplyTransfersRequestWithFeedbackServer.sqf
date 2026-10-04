@@ -8,6 +8,7 @@
  * Return Value: <BOOL> committed.
  * Current callers: transfer panel and direct ACE merge action.
  * Example: [player, boxA, boxB, "ALL", [], 1] remoteExecCall ["Waldo_fnc_SupplyTransfersRequestWithFeedbackServer", 2];
+ * Result: The server commits or rejects the transfer and sends the actor a local outcome.
  */
 params [["_player", objNull, [objNull]], ["_source", objNull, [objNull]],
     ["_destination", objNull, [objNull]], ["_category", "", [""]],

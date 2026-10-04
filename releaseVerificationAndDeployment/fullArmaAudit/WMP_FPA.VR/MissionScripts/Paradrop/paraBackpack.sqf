@@ -3,6 +3,9 @@
  * Saves the exact backpack portion of a local jumper's engine loadout, equips a selected steerable
  * parachute backpack, and installs both a manual action and automatic landing watcher. Repeated
  * calls before restoration never overwrite the original saved backpack.
+ * Locality and authority: Runs where the jumper is local; it rejects a remote unit.
+ * Repeat/JIP: Replaces its local hold action and watcher on repeat. A later JIP client does not
+ * inherit the jumper's saved backpack state; setup follows that client's own jump.
  *
  * Arguments:
  * 0: jumping unit <OBJECT>
@@ -16,6 +19,7 @@
  *
  * Example:
  * [player, "B_Parachute"] call Waldo_fnc_ParaBackpack;
+ * Result: The jumper wears the selected chute; the original backpack remains saved for landing.
  */
 
 params [

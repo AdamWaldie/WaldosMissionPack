@@ -6,6 +6,7 @@
  * Arguments: player <OBJECT>, service object <OBJECT>, service <STRING>.
  * Return Value: <BOOL> accepted. Current caller: local ACE base-service actions.
  * Example: [player, hqDesk, "SAVE"] remoteExecCall ["Waldo_fnc_BaseServicesUseServer", 2];
+ * Result: An authorised service request runs on the player's owner and reports its outcome.
  */
 params [["_player", objNull, [objNull]], ["_object", objNull, [objNull]], ["_service", "", [""]]];
 if (!isServer || {!(missionNamespace getVariable ["Waldo_BaseServices_Enable", false])}

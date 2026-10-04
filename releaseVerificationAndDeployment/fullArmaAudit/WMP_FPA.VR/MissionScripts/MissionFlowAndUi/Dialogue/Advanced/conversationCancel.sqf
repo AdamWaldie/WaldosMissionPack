@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: token-aware and idempotent. Arguments: speaker OBJECT, caller OBJECT,
  * optional session ID STRING and reason STRING. Return Value: BOOL.
  * Current callers: response-panel cancel/unload, scripts and ZEN. Example: [npc,player] remoteExecCall ["Waldo_fnc_ConversationCancel",2];
+ * Result: The matching active session closes without releasing a newer session's lock.
  */
 params [["_speaker", objNull, [objNull]], ["_caller", objNull, [objNull]], ["_sessionId", "", [""]], ["_reason", "CANCELLED", [""]]];
 if (!isServer || {isNull _speaker}) exitWith {false};

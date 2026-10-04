@@ -1,21 +1,36 @@
 /*
  * Author: WaldoTheWarfighter
- * Defines shared WMP mission configuration and starts systems whose state or behavior is consumed
- * on every machine. Guarded defaults preserve authoritative live changes for JIP clients.
+ * Starts WMP code that must exist on every machine: server, players and headless clients.
+ * Mission makers normally DO NOT enable features here. Edit the clearly named files inside
+ * MissionConfig instead. WMP loads their SHARED settings below without overwriting values that a
+ * server has already broadcast to a joining player.
  *
  * Arguments: None.
  * Return Value: Nothing; initializes shared mission state and schedules feature startup.
+ * Locality and authority: Runs on server, interface clients and headless clients. Shared config
+ * loading guards server-published values so joining players do not replace newer authority.
+ * Repeat/JIP: Arma calls this once per machine join. It does not replay local UI actions.
  *
  * Example: Arma executes init.sqf automatically during mission initialization.
+ * Result: Each machine has shared WMP config data before its dependent startup proceeds.
  * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
 
-//Lighting Setup Engine - Optional
+// Every object Init field has run by now, so later client calls to Init-safe WMP creators forward
+// to the server again (see Waldo_fnc_ClientInitPhaseEnd; set here too in case postInit runs later).
+missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];
+
+/* BEGINNER START HERE
+ * - A setting needed everywhere belongs in MissionConfig and is loaded here as SHARED data.
+ * - A server-owned system starts in initServer.sqf.
+ * - Player UI, local actions and personal state start in initPlayerLocal.sqf.
+ * - A custom call belongs here only when its documentation explicitly says "every machine".
+ * Never move a server or player-local activation here merely to make it run earlier: that creates
+ * duplicate authorities and JIP races.
+ */
+
+// OPTIONAL VISUAL EXPERIMENT: uncomment only if this mission wants the post-process effect.
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
-
-//Third Party Scripts (Look at mentioned file to enable
-//[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
-
 
 // Pure-data shared feature configs are synchronous and repeat-safe. Runtime authority remains below.
 ["SHARED"] call Waldo_fnc_LoadFeatureConfigs;
@@ -23,6 +38,12 @@ missionNamespace setVariable ["Waldo_SharedFeatureConfigReady", true];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+    // A hosted server is both the authoritative server and an interface client. It does not pass
+    // through FeatureRuntimeReceiveState during initial startup, so apply the authoritative shared
+    // theme locally here. Dedicated servers skip this presentation-only work.
+    if (hasInterface) then {
+        [missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], false] call Waldo_fnc_UiThemeApplyLocal;
+    };
 } else {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
@@ -35,6 +56,11 @@ if (isServer) then {
         || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
     };
     if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    // A joining headless client can later own mounted cargo. It needs the same
+    // ordered mount snapshot, but no ACE carry action or interface setup.
+    if (!isServer && {!hasInterface} && {missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]}) then {
+        [clientOwner] remoteExecCall ["Waldo_fnc_PhysicalCargoRequestStateServer", 2];
+    };
     if (missionNamespace getVariable ["Waldo_Breaching_Enable", false]) then {
         [] call Waldo_fnc_BreachingInit;
     };
@@ -48,10 +74,9 @@ run research at a Research Center, construct and upgrade buildings, and let play
 A trusted "Ground Command" controls spending. Everything is driven live from the Zeus menu
 "Waldos Economy Systems" - no editor work required beyond enabling it.
 
-Set the flag below to true to start the economy suite (runs on all machines; it self-branches
-between the server authority loops and the client Zeus menu). It is OFF by default so missions
-that do not use it pay no cost. You can also enable it without editing this file by dropping the
-"[WMP] Waldos Economy Systems" composition (its object boots the suite from its own init).
+Set `Waldo_Economy_Enable` in `MissionConfig\economyConfig.sqf`. It is OFF by default. Server and
+player startup are already routed through their correct init files; do not add another activation
+call here. A WMP economy composition may also supply mission setup where documented.
 
 To pre-configure the economy from the editor (a bundled LOW/MEDIUM/HIGH preset, a full exported
 config string, or commitment mode) without opening Zeus, see the "Waldos Economy Systems"
@@ -95,57 +120,55 @@ if (Waldo_CorpseTraps_Enable) then {
     [] call Waldo_fnc_CorpseTrapInit;
 };
 
-/*
-After-Action WIA listener (ACE)
-
-ACE raises "ace_unconscious" locally on the machine owning the unit, so it cannot be caught by the
-server-only EntityKilled handler in Waldo_fnc_AARTrack. This all-machines listener forwards each
-unit's first unconsciousness to the server (Waldo_fnc_AARWound) so the ENDEX debrief can show WIA
-per side. Counts each unit once. Silently absent if ACE medical is not loaded.
-*/
-if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
-    ["ace_unconscious", {
-        params ["_unit", "_state"];
-        if (_state && {local _unit} && {!(_unit getVariable ["Waldo_AAR_Wounded", false])}) then {
-            _unit setVariable ["Waldo_AAR_Wounded", true];
-            [[west, east, independent, civilian] find (side group _unit)] remoteExec ["Waldo_fnc_AARWound", 2];
-        };
-    }] call CBA_fnc_addEventHandler;
-};
-
 /*===========================================================================================================================*/
 
-/*
-AI Tweak setup
-These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
-Daytime Mission parameter - uncomment this for daytime AI values.
-*/
+/* AI SKILL VALUES
+ * Normal setup: MissionConfig\aiConfig.sqf.
+ * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
+ * Do not add another AITweak call here. This readiness-aware activation uses the settings received
+ * from server authority and applies the chosen baseline to local AI when locality changes.
+ */
 [] spawn {
     waitUntil {
         missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
         || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
     };
     if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+        diag_log "[WMP AI] Waldos AI Tweaks detected; WMP skill-value controller remains inactive.";
+    };
     if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
         [
             missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],
             missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
         ] call Waldo_fnc_AITweak;
     };
-    [] call Waldo_fnc_ImprovedHelicopterLandingInit;
 };
-// Nightime Mission - uncomment this for nightime AI values.
-//"NIGHT" call Waldo_fnc_AITweak;
+/*===========================================================================================================================*/
 
-
+/* HEADLESS CLIENT SUPPORT
+ * Detects whether this machine is a connected headless client and, if so, registers it with the
+ * server so eligible AI groups are distributed to it automatically - no per-feature mission-maker
+ * workaround needed. Has no effect on the server or on players. Gated on the same ordered
+ * feature-runtime snapshot handshake as AI skill values above, so a joining headless
+ * client never registers before it has a consistent runtime picture.
+ */
+[] spawn {
+    waitUntil {
+        missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+        || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+    };
+    if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    [] call Waldo_fnc_HeadlessDetectLocal;
+};
 /*===========================================================================================================================*/
 
 
 /*
-ACRE2 communications and Babel are authored in MissionConfig\acreConfig.sqf. CfgFunctions pre-init registers
-deterministic preset labels and Babel definitions; initServer.sqf publishes the authoritative plan;
-initPlayerLocal.sqf applies carried-radio state, CEOI and local language knowledge. Multiplayer
-init.sqf deliberately owns no ACRE defaults, waits or mutable authority.
+ACRE2 communications and Babel are authored only in MissionConfig\acreConfig.sqf. Do not call the
+radio setup from this file. Pre-init registers labels/languages, initServer publishes one plan, and
+initPlayerLocal applies each player's radios and CEOI after ACRE is ready. That separation prevents
+JIP clients from replacing the server plan or retuning somebody else's radios.
 */
 
 
@@ -211,13 +234,6 @@ call Waldo_fnc_InitVehicles;
 
 /*
 
-Briefing documents
-
-*/
-if (hasInterface) then {call Waldo_fnc_AddDocs};
-
-/*
-
 Sets team colour based on contents of role description.
 Colour selections are RED,BLUE,GREEN,YELLOW.
 Name Selections are ALPHA,BRAVO,CHARLIE,DELTA - which maps to colours as in colour selections.
@@ -235,12 +251,11 @@ if (hasInterface) then {call Waldo_fnc_SetTeamColour};
 /*
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
 
-When left with no parameters, as below, the script autogenerates the location based on the terrain name, and the mission title from the description.ext
-You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission.
+Player presentation; installed from initPlayerLocal.sqf, not here (this file also runs on the
+dedicated server, which has no display 46 to present anything on). Content and timing are mission
+settings in MissionConfig\interfaceConfig.sqf, not call-site parameters - see that file's
+Introduction Text setting-by-setting guide.
 */
-// Player presentation requires display 46. Running InfoText on a dedicated server
-// waits forever for a display that cannot exist and blocks WALDO_INIT_COMPLETE.
-if (hasInterface) then {["",""] call Waldo_fnc_InfoText};
 
 /*
 
@@ -248,7 +263,25 @@ waldos Init Completion flag
 
 ======DO NOT TOUCH!=====
 */
-sleep 10; // Buffer cycles for other inits to be completed - should not be removed
+// Was an unconditional `sleep 10;` ("buffer cycles for other inits to be completed"), not gated on
+// any actual check. Audited every WALDO_INIT_COMPLETE consumer in the pack: none of them actually
+// depend on this specific duration for correctness - the ones with a real data-readiness dependency
+// (starter/supply crates, limited arsenals) already double-check the broadcast
+// Logi_MissionScanComplete flag independently; Dynamic AA already has its own bounded queue/retry
+// worker; the rest (jamming HUD, safestart HUD) only use this flag as a presentation courtesy ("don't
+// draw over the intro"), not a safety dependency. A blind sleep with no check was strictly worse than
+// waiting on the real signal: it could still fire before the loadout scan finished on a slow server,
+// and it unconditionally cost ~10s even when the mission was ready in ~1s (confirmed against a real
+// playtest RPT). Bounded so a mission that somehow never completes the scan doesn't hang forever -
+// same 60s ceiling used for the WALDO_INIT_COMPLETE wait inside infoText.sqf.
+private _initCompleteScanDeadline = diag_tickTime + 60;
+waitUntil {
+    sleep 0.2;
+    missionNamespace getVariable ["Logi_MissionScanComplete", false] || {diag_tickTime >= _initCompleteScanDeadline}
+};
+if !(missionNamespace getVariable ["Logi_MissionScanComplete", false]) then {
+    diag_log "[WMP INIT] Logi_MissionScanComplete never became true within the timeout; setting WALDO_INIT_COMPLETE anyway.";
+};
 // A dedicated server has no local player. Waiting for one here prevented the pack's
 // completion flag and any post-start consumers from ever running on that machine.
 waitUntil {isDedicated || {!isNull player && {player == player}}};

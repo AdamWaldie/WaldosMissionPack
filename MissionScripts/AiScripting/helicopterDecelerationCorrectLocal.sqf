@@ -31,7 +31,7 @@ params [
     ["_detectedAltitude", 0, [0]],
     ["_isLandingOrder", {false}, [{}]]
 ];
-if (isNull _aircraft || {!local _aircraft} || {_aircraft getVariable ["Waldo_HelicopterDeceleration_Active", false]}) exitWith {false};
+if (isNull _aircraft || {!local _aircraft} || {isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")} || {_aircraft getVariable ["Waldo_HelicopterDeceleration_Active", false]}) exitWith {false};
 
 _aircraft setVariable ["Waldo_HelicopterDeceleration_Active", true, true];
 private _start = diag_tickTime;
@@ -51,7 +51,7 @@ private _terrainClear = true;
 _aircraft setVariable ["Waldo_HelicopterDeceleration_LastResult", ["ACTIVE", clientOwner, diag_tickTime, _detectedSpeed, _detectedAltitude], true];
 if (_debug) then {diag_log format ["[WMP AI DECEL] Acquired owner=%1 aircraft=%2 speed=%3 altitudeASL=%4", clientOwner, netId _aircraft, round _detectedSpeed, round _detectedAltitude]};
 
-while {_correcting && {diag_tickTime < _deadline}} do {
+while {_correcting && {diag_tickTime < _deadline} && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}} do {
     private _pilot = currentPilot _aircraft;
     private _pilotAwake = if (isNull _pilot) then {false} else {
         if (!isNil "ace_common_fnc_isAwake") then {[_pilot] call ace_common_fnc_isAwake} else {lifeState _pilot != "INCAPACITATED"}

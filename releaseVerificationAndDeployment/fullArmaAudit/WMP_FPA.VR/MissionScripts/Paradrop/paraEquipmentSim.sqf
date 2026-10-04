@@ -1,17 +1,21 @@
 /*
-This function run a para jump simulation on a given player. 
-
-Arguments:
-0: Player <OBJECT>
-1: whether the advanced simulation (lost items) is enabled
-Return Value:
-None
-
-Example:
-["unit"] call Waldo_fnc_paraEquipmentSim;
-
-Public: No
-*/
+ * Author: WaldoTheWarfighter
+ * Simulates loose headgear, eyewear and NVG equipment during a parachute jump. Basic mode may
+ * unassign items but leave them in inventory; advanced mode may unlink and lose them.
+ * Locality and authority: Called where the jumping unit is local, after an authorised jump.
+ * Repeat/JIP: Each call performs a fresh random equipment check; it installs no persistent
+ * action or JIP handler. Do not call repeatedly for a single jump.
+ *
+ * Arguments:
+ * 0: jumping unit <OBJECT> (default player)
+ * 1: advanced loss mode <BOOL> (default false)
+ *
+ * Return Value: Nothing useful; callers ignore the result.
+ * Current callers: Waldo_fnc_StaticJumpFunc and Waldo_fnc_HaloJumpFunc.
+ * Example:
+ * [player, false] call Waldo_fnc_paraEquipmentSim;
+ * Result: The jumper may receive a CBA equipment warning and lose or unassign loose items.
+ */
 
 params [
     ["_player", player],

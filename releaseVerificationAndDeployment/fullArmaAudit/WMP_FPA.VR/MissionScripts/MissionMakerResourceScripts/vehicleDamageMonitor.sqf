@@ -3,9 +3,13 @@
  * Debug helper that monitors the vehicle under the local cursor and reports total and named
  * hit-point damage until that vehicle is destroyed or removed.
  *
+ * Locality and authority: Local debug script. Reads cursorObject and writes a local hint.
+ * Repeat/JIP: Repeated calls try to stop the prior real_vicwatch handle; an undefined handle
+ * may cause a first-run error. No state is published or replayed to JIP.
  * Arguments: None; resolves `cursorObject` locally when executed.
  * Return Value: Script handle stored in `real_vicwatch`.
- * Example: execute this file locally from the debug console while aiming at a vehicle.
+ * Example: [] execVM "MissionScripts\MissionMakerResourceScripts\vehicleDamageMonitor.sqf";
+ * Result: The local hint updates with the targeted vehicle's named hit-point damage.
  * Current caller: manual mission-maker diagnostics only.
  */
 

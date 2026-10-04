@@ -64,10 +64,6 @@ if !(_id in keys _registry) exitWith {
         [_quickAircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
         _quickAircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
         _quickAircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
-        if (!_deleteAircraft) then {
-            _quickAircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", _quickAircraft getVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", false], true];
-            _quickAircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", nil, true];
-        };
     };
     if (_deleteAircraft && {!isNull _quickAircraft}) then {deleteVehicleCrew _quickAircraft; deleteVehicle _quickAircraft};
     private _quickFlightGroup = _quickState getOrDefault ["flightGroup", grpNull];
@@ -107,8 +103,6 @@ if (!_deleteAircraft && {!isNull _aircraft}) then {
     [_aircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
     _aircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
     _aircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
-    _aircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", _aircraft getVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", false], true];
-    _aircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", nil, true];
 };
 if (_deleteAircraft && {!isNull _aircraft}) then {deleteVehicleCrew _aircraft; deleteVehicle _aircraft};
 if (_deleteAircraft) then {

@@ -6,6 +6,10 @@
  * bar and concise operational guidance while active. Passing a factor of 0
  * hides it. Radio and UAV-link inputs are combined into one Electronic Warfare panel.
  * Called every tick by the watchers in Waldo_fnc_JammingInit.
+ * Locality and authority: Interface-client only; reads local EW factors and owns its controls
+ * and shared UI reservation without changing authoritative jammer state.
+ * Repeat/JIP: Reuses the same controls on refresh; hides them at factor 0. Joining players
+ * build their own display through local JammingInit watchers.
  *
  * Arguments:
  * 0: Factor <NUMBER> - current effect strength, 0..1 (0 hides the HUD)
@@ -21,6 +25,7 @@
  * [0.5, "UAV LINK DEGRADED", 5311, "DATALINK QUALITY REDUCED"] call Waldo_fnc_JammingHud;
  *
  * Current callers: JammingInit radio and UAV state watchers.
+ * Result: The radio/UAV status panel reflects the latest local interference strength.
  */
 
 if !(hasInterface) exitWith {};

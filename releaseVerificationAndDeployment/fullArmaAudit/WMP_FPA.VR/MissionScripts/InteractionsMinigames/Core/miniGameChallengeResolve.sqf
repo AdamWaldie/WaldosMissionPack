@@ -17,6 +17,11 @@
  *
  * Example:
  * [true, ["SUCCESS", ""], "Waldo_MG_Job_4"] call Waldo_fnc_MiniGameChallengeResolve;
+ * Locality/Authority: Interface client that owns the stored challenge job and callbacks.
+ * Repeat/JIP Behaviour: Removes the job before dispatch, so duplicate completions do not
+ * invoke callbacks twice. No finished job is replayed to JIP clients.
+ * Current Callers: The resolver callback created by MiniGameChallenge.
+ * Result: Invokes exactly one local success/failure callback when the job exists.
  */
 
 params [

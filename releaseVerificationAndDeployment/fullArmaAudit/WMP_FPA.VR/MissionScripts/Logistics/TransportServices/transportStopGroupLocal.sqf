@@ -2,8 +2,9 @@
  * Author: WaldoTheWarfighter, Val
  * Clears a completed WMP transport route and leaves its AI service vehicle stopped at the physical
  * pickup, destination or base position. Helicopters receive the ordinary engine LAND command and
- * are allowed to idle down naturally; this function does not manipulate engine state, repeatedly
- * force LAND, disable AI features or run a background grounded-hold worker.
+ * are allowed to idle down naturally. If WMP owns an improved landing approach, it releases that
+ * controller while preserving the grounded LAND order. This function does not repeatedly force
+ * LAND or run a background grounded-hold worker.
  *
  * Locality and authority: called by the authoritative server after a validated arrival, then routed
  * to the machine currently owning the AI group. It changes only local group/vehicle movement state.
@@ -18,6 +19,7 @@
  * Return Value: Boolean - true when applied locally or forwarded to the current group owner.
  * Current caller: Waldo_fnc_TransportReportServer after pickup, destination and physical RTB.
  * Example: [_group, getPosATL _helicopter, _helicopter] call Waldo_fnc_TransportStopGroupLocal;
+ * Result: The transport group stops its current route on its current owner.
  */
 
 params [

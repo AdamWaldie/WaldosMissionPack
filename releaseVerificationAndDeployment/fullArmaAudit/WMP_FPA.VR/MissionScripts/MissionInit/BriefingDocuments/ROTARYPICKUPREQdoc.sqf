@@ -10,6 +10,10 @@
  *
  * Example:
  * call Waldo_fnc_ROTARYPICKUPREQUEST;
+ * Locality and authority: Client-local diary record for the current player only.
+ * Repeat/JIP: Waldo_fnc_AddDocs guards repeat installation and runs for joining players.
+ * Current caller: Waldo_fnc_AddDocs during player-local briefing setup.
+ * Result: The player's Checklists diary subject gains the rotary pickup request format.
  */
 
 player createDiaryRecord["Radio Reports",

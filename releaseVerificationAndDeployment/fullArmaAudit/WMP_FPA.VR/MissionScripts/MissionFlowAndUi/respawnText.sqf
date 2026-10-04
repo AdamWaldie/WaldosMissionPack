@@ -11,6 +11,10 @@
  *
  * Example:
  * [] spawn Waldo_fnc_RespawnText;
+ * Locality and authority: Displays respawn information on the affected player's interface
+ * client. Repeating the call starts a new local presentation; nothing is JIP replayed.
+ * Current callers: player respawn presentation and mission-maker local scripts.
+ * Result: The respawned player sees the configured mission text.
  */
 
 private _timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; // Returns ingame time

@@ -2,6 +2,9 @@
  * Author: WaldoTheWarfighter
  * Loads and validates the optional INIDBI2 runtime used by WMP persistence.
  * The probe runs only on the server and supports alternate init paths and patch names.
+ * Locality and authority: Server-only read/probe of the optional INIDBI2 dependency.
+ * Repeat/JIP: Safe to check again. The probe does not save player or object state and has no
+ * client-local replay.
  *
  * Arguments:
  * None
@@ -11,6 +14,7 @@
  *
  * Example:
  * [] call Waldo_fnc_PersistenceDependencyAvailable;
+ * Result: Returns true when the server can use the configured INIDBI2 runtime, false otherwise.
  * Current callers: PersistenceInit, persistence ZEN controls, diagnostics and audit dependency tests.
  */
 

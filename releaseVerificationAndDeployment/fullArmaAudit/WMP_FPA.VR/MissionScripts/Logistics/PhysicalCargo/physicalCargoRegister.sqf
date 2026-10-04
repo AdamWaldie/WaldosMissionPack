@@ -35,7 +35,7 @@ if !(missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) exitWit
 if (_object getVariable ["Waldo_Logistics_StarterCrate", false]) exitWith {false};
 // Static weapons can flip carriers during attach. Vehicles/aircraft/boats are carriers,
 // not carryable props. Never publish ACE carryability for these selected ZEN targets.
-if (_object isKindOf "StaticWeapon" || {_object isKindOf "LandVehicle"}
+if (_object isKindOf "CAManBase" || {_object isKindOf "StaticWeapon"} || {_object isKindOf "LandVehicle"}
     || {_object isKindOf "Air"} || {_object isKindOf "Ship"}) exitWith {
     _object setVariable ["Waldo_PhysicalCargo_Eligible", false, true];
     false

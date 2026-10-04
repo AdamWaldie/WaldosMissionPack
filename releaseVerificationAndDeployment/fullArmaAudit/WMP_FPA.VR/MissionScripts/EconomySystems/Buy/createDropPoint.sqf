@@ -1,20 +1,25 @@
 /*
  * Author: WaldoTheWarfighter
- * Create drop point.
+ * Creates a side/type-specific purchase delivery point and its world anchor.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
  *
  * Arguments:
  * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
  * 1: _typeName <STRING> - type name (optional, default: "Ground")
- * 2: _dir <SCALAR> - dir (optional, default: 0)
+ * 2: _dir <NUMBER> - bearing in degrees (optional, default: 0)
  * 3: _sideKey <STRING> - side key (optional, default: "ANY")
  *
  * Return Value:
- * Nothing
+ * <STRING> new drop-point ID on authority; a client call forwards to the server.
  *
  * Example:
  * [_pos, _typeName, _dir, _sideKey] call Waldo_fnc_EcoBuy_createDropPoint;
+ * Locality/Authority: Server creates the point; client calls forward there.
+ * Repeat/JIP Behaviour: Each call creates a distinct ID; the updated registry is published
+ * for joining clients. Do not call twice for one intended point.
+ * Current Callers: Purchasing ZEN placement and exported mission setup calls.
+ * Result: The new point becomes available to matching-side purchases.
  */
 
         params [["_pos", [0, 0, 0]], ["_typeName", "Ground"], ["_dir", 0], ["_sideKey", "ANY"]];

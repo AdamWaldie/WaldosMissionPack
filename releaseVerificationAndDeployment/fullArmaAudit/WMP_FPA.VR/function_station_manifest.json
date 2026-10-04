@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1116,
+  "registeredFunctionCount": 1125,
   "runtimeFunctionCount": 383,
-  "functionCount": 1499,
+  "functionCount": 1508,
   "stations": [
     {
       "id": "control",
@@ -46,13 +46,13 @@
     },
     {
       "id": "ai",
-      "title": "AI / CONVOY",
+      "title": "AI SKILL VALUES",
       "position": [
         28,
         44,
         0
       ],
-      "description": "AI tuning, convoy and mission-maker helpers."
+      "description": "AI skill-value profiles and diagnostics."
     },
     {
       "id": "loadouts",
@@ -412,7 +412,7 @@
         40,
         0
       ],
-      "description": "Improved landing priority plus optional cruise-deceleration climb suppression."
+      "description": "Improved landing and optional cruise deceleration when WAIT is absent."
     },
     {
       "id": "ui-theme-qa",
@@ -571,6 +571,12 @@
     {
       "name": "Waldo_fnc_JipRemoveBoundServer",
       "file": "MissionScripts/Networking/jipRemoveBoundServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ClientInitPhaseEnd",
+      "file": "MissionScripts/Networking/clientInitPhaseEnd.sqf",
       "station": "control",
       "activation": "manual"
     },
@@ -1147,6 +1153,18 @@
     {
       "name": "Waldo_fnc_CleanupTransientUi",
       "file": "MissionScripts/MissionFlowAndUi/cleanupTransientUi.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CreateUiNotificationCardLocal",
+      "file": "MissionScripts/MissionFlowAndUi/createUiNotificationCardLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_LayoutUiNotificationCardLocal",
+      "file": "MissionScripts/MissionFlowAndUi/layoutUiNotificationCardLocal.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -1919,6 +1937,30 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_VehicleServicesConfigure",
+      "file": "MissionScripts/Logistics/VehicleServices/vehicleServicesConfigure.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleServicesApplyServer",
+      "file": "MissionScripts/Logistics/VehicleServices/vehicleServicesApplyServer.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenVehicleServicesModule",
+      "file": "MissionScripts/ZenModules/zenVehicleServicesModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenVehicleServicesServer",
+      "file": "MissionScripts/ZenModules/zenVehicleServicesServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_LogisticsSpawner",
       "file": "MissionScripts/Logistics/Crates/LogiBoxes.sqf",
       "station": "loadouts",
@@ -2125,6 +2167,12 @@
     {
       "name": "Waldo_fnc_PhysicalCargoRegister",
       "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRegister.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoIsEligible",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoIsEligible.sqf",
       "station": "physical-cargo",
       "activation": "manual"
     },
@@ -2435,6 +2483,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ZenConvoyModule",
+      "file": "MissionScripts/ZenModules/Zen_convoyModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ZenServiceLogisticsModule",
       "file": "MissionScripts/ZenModules/zenServiceLogisticsModule.sqf",
       "station": "zen",
@@ -2473,12 +2527,6 @@
     {
       "name": "Waldo_fnc_ZenFortifyBudgetServer",
       "file": "MissionScripts/ZenModules/zenFortifyBudgetServer.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenConvoyModule",
-      "file": "MissionScripts/ZenModules/Zen_convoyModule.sqf",
       "station": "zen",
       "activation": "manual"
     },
@@ -2900,6 +2948,12 @@
       "name": "Waldo_fnc_CargoAttributesPrepareObject",
       "file": "MissionScripts/MissionInit/VehicleActionsSetup/cargoAttributesPrepareObject.sqf",
       "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_LogisticsApplyAceHandling",
+      "file": "MissionScripts/Logistics/Crates/logisticsApplyAceHandling.sqf",
+      "station": "loadouts",
       "activation": "manual"
     },
     {

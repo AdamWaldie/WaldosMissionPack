@@ -122,7 +122,7 @@ if (Waldo_CorpseTraps_Enable) then {
 
 /*===========================================================================================================================*/
 
-/* AI REBALANCE, HELICOPTER LANDING AND DECELERATION
+/* AI SKILL VALUES AND HELICOPTER CONTROLLERS
  * Normal setup: MissionConfig\aiConfig.sqf.
  * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
  * Do not add another AITweak call here. This readiness-aware activation uses the settings received
@@ -134,6 +134,9 @@ if (Waldo_CorpseTraps_Enable) then {
         || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
     };
     if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+        diag_log "[WMP AI] Waldos AI Tweaks detected; WMP skill-value controller remains inactive.";
+    };
     if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
         [
             missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],
@@ -149,7 +152,7 @@ if (Waldo_CorpseTraps_Enable) then {
  * Detects whether this machine is a connected headless client and, if so, registers it with the
  * server so eligible AI groups are distributed to it automatically - no per-feature mission-maker
  * workaround needed. Has no effect on the server or on players. Gated on the same ordered
- * feature-runtime snapshot handshake as AI rebalance/helicopter landing above, so a joining headless
+ * feature-runtime snapshot handshake as AI skill values above, so a joining headless
  * client never registers before it has a consistent runtime picture.
  */
 [] spawn {

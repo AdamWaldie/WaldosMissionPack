@@ -1,5 +1,7 @@
 # AI Helicopter Deceleration
 
+When [Waldos AI Tweaks](https://github.com/AdamWaldie/WaldosAITweaks) (WAIT) is loaded, WMP does not install or run this controller. WAIT owns helicopter flight correction. Without WAIT, WMP's optional deceleration controller remains available and stays below improved landing in priority.
+
 > **Use this page when:** AI helicopters climb sharply while slowing down during ordinary cruise flight.
 
 Arma AI can trade forward speed for an unwanted zoom-climb while braking. This optional helper

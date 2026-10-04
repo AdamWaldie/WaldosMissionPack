@@ -7,6 +7,7 @@
  * Arguments: active BOOL, reason STRING, end time NUMBER, revision NUMBER.
  * Return Value: BOOL. Current caller: Waldo_fnc_SafeStartRequestStateServer.
  * Example: server-targeted remote execution only.
+ * Result: The receiving player's SafeStart state advances to the latest revision.
  */
 params [
     ["_active", false, [true]],

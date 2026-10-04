@@ -1,5 +1,7 @@
 # Helicopter, Ground and Boat Transport Services
 
+Registered helicopter taxis use WMP's improved landing controller for pickup, passenger destination and empty return when WAIT is absent and `useImprovedLanding` is enabled. When [Waldos AI Tweaks](https://github.com/AdamWaldie/WaldosAITweaks) is loaded, WMP stands down its helicopter controllers and WAIT may own the approach; Transport Services still issues its native `land "LAND"` fallback. A taxi reports arrival only after physical touchdown near the requested point.
+
 > **Use this page when:** you want reusable AI-crewed air, ground or water transports that players can call during a mission.
 
 WMP Transport Services manages helicopters, ground vehicles and boats in separate typed pools. A helicopter request can never reserve a ground vehicle or a boat, and two requests cannot reserve the same vehicle. The server owns registration, access rules, reservations, request IDs, requester identity, state and JIP-visible vehicle status. The machine currently owning the AI group performs movement, so server, headless-client and client-local AI are supported. Optional invulnerability covers only the vehicle and its original AI service crew; it is off by default and never protects passenger players.

@@ -94,7 +94,6 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 ### AI and mission-maker tools
 
 - [Waldo's AI Tuning](Waldos-AI-Tweak)
-- [AI Convoy System](AI-Convoy-System)
 - [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts)
 - [Coding and Documentation Standards](Coding-Standards)
 

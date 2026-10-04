@@ -3,7 +3,7 @@
  * Pins a crewed vehicle server-side against automatic headless-client migration. The vehicle and
  * crew group receive the common Waldo_ServerOwnedFeature classification, and a crew group already
  * moved by an external HC system is immediately returned to owner 2. For real-time,
- * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes, Dynamic AA, AI convoys)
+ * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes and Dynamic AA)
  * an external headless rebalance racing WMP's own in-progress setup script - or simply moving a group
  * WMP expects to keep driving every frame - can corrupt that system's state. Confirmed live: ACE's
  * own ace_headless module (a required-mod feature, entirely separate from and uncoordinated with
@@ -51,7 +51,7 @@
  * rebalance and ACE's ace_headless module.
  *
  * Current callers: Waldo_fnc_GunshipRegister, Waldo_fnc_ParadropBuildFlightRoute,
- * Waldo_fnc_DynamicAACreate, Waldo_fnc_SimpleAiConvoy.
+ * Waldo_fnc_DynamicAACreate and Waldo_fnc_SimpleAiConvoy.
  */
 
 params [["_vehicle", objNull, [objNull]]];

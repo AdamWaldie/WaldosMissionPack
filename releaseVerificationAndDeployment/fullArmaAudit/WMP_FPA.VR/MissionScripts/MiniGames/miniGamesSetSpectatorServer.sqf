@@ -23,6 +23,7 @@
  *
  * Example:
  * [_table, player, true] remoteExecCall ["Waldo_fnc_MiniGamesSetSpectatorServer", 2];
+ * Result: The server records the player's spectator choice for this table.
  */
 
 params [

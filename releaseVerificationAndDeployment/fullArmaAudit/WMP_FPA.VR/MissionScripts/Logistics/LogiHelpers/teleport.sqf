@@ -1,20 +1,20 @@
-/* This teleports a target to a given marker or any other kind of object.
-Z will always be 0 for MARKER, LOCATION and TASK.
- *
-Parameters:
-0: Object <OBJECT>
-1: Label text <STRING>
-2: Destination <MARKER/OBJECT/LOCATION/GROUP/TASK>
-
-
-Examples:
-[this,"Teleport - Airfield", Airstrip] call Waldo_fnc_Teleport  <- Arma 3 Map Location (Predefined)
-[this,"Teleport - Base", MyBase] call Waldo_fnc_Teleport  <- Object
-[this,"Teleport - Bart", "FOB_Bart"] call Waldo_fnc_Teleport <- Arma 3 Map Location (Predefined)
-[this,"Teleport - Base", "respawn_west"] call Waldo_fnc_Teleport <- Marker variable name
- *
-Public: Yes
-*/
+/*
+ * Author: WaldoTheWarfighter
+ * Adds one vanilla scroll-wheel teleport action to an interaction object. It sends the player to
+ * a fixed offset near a named destination with the built-in fade. It does not search for safe ground.
+ * Locality/authority: call on each interface client; the local addAction moves that player only.
+ * Repeat/JIP: this helper has no duplicate guard or JIP replay. An Eden Init runs for each client;
+ * a runtime-created object needs explicit setup for joining clients.
+ * Arguments:
+ * 0: interaction object <OBJECT> - object receiving the action (required).
+ * 1: label <STRING> - player-facing action text (default "Teleport").
+ * 2: destination <OBJECT|STRING|LOCATION|GROUP|TASK> - named marker string or existing world
+ *    reference (default: interaction object). Marker, Location and Task heights resolve to zero.
+ * Return Value: NUMBER - local addAction ID.
+ * Current callers: mission-maker Eden object Init fields and scripted local setup.
+ * Example: [this, "Teleport to base", "respawn_west"] call Waldo_fnc_Teleport;
+ * Result: the player can use a green action to travel near the respawn_west marker.
+ */
 
 params [
     ["_object", objNull, [objNull]],

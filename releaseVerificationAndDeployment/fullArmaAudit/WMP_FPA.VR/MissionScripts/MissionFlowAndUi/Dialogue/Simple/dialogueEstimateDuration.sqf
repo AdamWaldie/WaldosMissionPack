@@ -5,6 +5,7 @@
  * Repeat/JIP behaviour: deterministic for the same text/settings.
  * Arguments: 0 text <STRING>; 1 override seconds <NUMBER> (default -1). Return Value: NUMBER seconds.
  * Current callers: simple and advanced server playback. Example: ["Wait, please!", -1] call Waldo_fnc_DialogueEstimateDuration;
+ * Result: Returns the requested override or a readable duration estimated from the line.
  */
 params [["_text", "", [""]], ["_override", -1, [0]]];
 private _minimum = missionNamespace getVariable ["Waldo_Dialogue_MinimumLineSeconds", 1.5];

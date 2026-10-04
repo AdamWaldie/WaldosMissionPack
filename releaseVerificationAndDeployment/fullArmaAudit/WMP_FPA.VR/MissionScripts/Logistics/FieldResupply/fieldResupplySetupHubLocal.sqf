@@ -18,7 +18,11 @@
  * [_hub] remoteExecCall ["Waldo_fnc_FieldResupplySetupHubLocal", -2, "FieldHub_Main"];
  *
  * Current caller: FieldResupplyRegisterHub through a hub-lifetime-bound JIP remote call.
- * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply
+ * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Field-Resupply
+ * Locality and authority: Installs ACE actions on each interface client for this registered
+ * hub. The server validates refill requests; repeated local setup avoids duplicate actions,
+ * and object-bound JIP replay covers late joiners.
+ * Result: Eligible carriers can inspect and refill at this hub.
  */
 
 params [["_hub", objNull, [objNull]]];

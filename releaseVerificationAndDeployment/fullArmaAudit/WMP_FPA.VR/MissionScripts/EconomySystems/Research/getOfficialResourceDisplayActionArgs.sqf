@@ -1,11 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Get official resource display action args.
+ * Builds the ACE/Zeus action arguments for a Research Center's resource display.
  *
  * Part of the Waldos Economy Systems suite (Research system).
- * Locality / Authority: Builds interface-client action arguments; any selected research request is
+ * Locality/Authority: Builds interface-client action arguments; any selected research request is
  * submitted directly to the existing authoritative server processor.
- * Repeat / JIP Behaviour: Safe to recreate during local action repair and JIP registry reconciliation;
+ * Repeat/JIP Behaviour: Safe to recreate during local action repair and JIP registry reconciliation;
  * request tokens preserve duplicate handling.
  *
  * Arguments:
@@ -13,12 +13,13 @@
  * 1: _caller <ANY> - caller
  *
  * Return Value:
- * Any - see function body
+ * <ARRAY> action arguments for the shared object-action publisher.
  *
  * Current Callers: Economy research-centre action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoResearch_getOfficialResourceDisplayActionArgs;
+ * Result: Returns a ready-to-install action definition, without executing a Research request.
  */
 
         [

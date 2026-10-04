@@ -27,6 +27,7 @@
  *
  * Example:
  * [] call Waldo_fnc_KillHotkeyInit;
+ * Result: One local administrative kill-hotkey handler is available when enabled.
  */
 
 if !(hasInterface) exitWith {false};

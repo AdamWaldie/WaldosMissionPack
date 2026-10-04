@@ -11,6 +11,9 @@
  *
  * Example: [true, "Weapons safe"] call Waldo_fnc_SafeStartHud;
  * Current callers: the local SafeStart state service and Waldo_fnc_SafeStartAcknowledgeLocal.
+ * Locality and authority: Shows or hides only this player's SafeStart panel. Repeat calls
+ * reconcile local presentation; joining players read current protection state separately.
+ * Result: The player's SafeStart panel reflects the active state and notice text.
  */
 if (!hasInterface) exitWith {false};
 params [['_enabled', true, [true]], ['_content', '', ['']]];

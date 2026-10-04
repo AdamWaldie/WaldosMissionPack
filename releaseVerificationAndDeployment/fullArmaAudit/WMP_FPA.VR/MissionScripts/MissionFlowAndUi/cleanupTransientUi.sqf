@@ -7,6 +7,10 @@
  * Arguments: None
  * Return Value: Boolean - true after local cleanup
  * Example: [] call Waldo_fnc_CleanupTransientUi;
+ * Locality and authority: Clears only this interface client's temporary WMP displays and
+ * handlers. Repeating cleanup is safe; joining clients start with their own clean UI.
+ * Current callers: Waldo_fnc_ClearUiPanels and client display lifecycle cleanup.
+ * Result: Transient WMP controls are removed without changing mission state.
  */
 if (!hasInterface) exitWith {false};
 

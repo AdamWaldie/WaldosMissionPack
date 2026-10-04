@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get player upgrade status.
+ * Classifies whether the local player can upgrade one building to the target entry.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _targetEntry <ARRAY> - target entry (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * <STRING> status code; "upgrade" when all gates pass.
  *
  * Example:
  * [_building, _targetEntry] call Waldo_fnc_EcoBuild_getPlayerUpgradeStatus;
+ * Locality/Authority: Interface/authority read; server validates again before starting the job.
+ * Repeat/JIP Behaviour: Repeat-safe read of public building/resource state.
+ * Current Callers: Building upgrade action and detail UI.
+ * Result: Returns the first reason an upgrade cannot begin.
  */
 
         params [["_building", objNull], ["_targetEntry", []]];

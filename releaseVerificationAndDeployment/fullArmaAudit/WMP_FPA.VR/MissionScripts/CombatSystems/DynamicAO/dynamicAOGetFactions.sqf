@@ -16,6 +16,9 @@
  *
  * Example:
  * [[east, independent]] call Waldo_fnc_DynamicAOGetFactions;
+ * Locality and authority: Reads immutable loaded-faction config on the caller. Results are
+ * cached locally, so repeated calls need neither server authority nor JIP replay.
+ * Result: Returns selectable factions for the requested sides.
  */
 params [["_allowedSides", [west, east, independent], [[]]]];
 [_allowedSides] call Waldo_fnc_ResolveFactionCatalog

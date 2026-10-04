@@ -1,14 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Normalize build catalog.
+ * Clean a build-definition list and remove duplicate definition names.
  *
- * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Pure helper; authority uses the result before publishing, while
+ * client prompts use it only for local editing.
+ * Repeat/JIP: Deterministic and safe to call again on received catalog state.
+ * Current Callers: EcoBuild_promptBuildConfig, EcoBuild_setBuildCatalog
+ * and EcoBuild_setBuildCatalogLocal.
  *
  * Arguments:
  * 0: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Any - see function body
+ * ARRAY - valid normalized entries, first case-insensitive name wins.
+ * Result: Invalid entries and duplicate names are omitted.
  *
  * Example:
  * [_catalog] call Waldo_fnc_EcoBuild_normalizeBuildCatalog;

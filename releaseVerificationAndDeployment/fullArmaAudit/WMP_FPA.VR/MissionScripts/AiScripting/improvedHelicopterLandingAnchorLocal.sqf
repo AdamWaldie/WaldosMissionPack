@@ -5,6 +5,10 @@
  * waypoint, but releases for a moved, deleted or retyped landing waypoint, a valid onward
  * waypoint after the settling delay, Zeus/player pilot takeover, locality migration, feature
  * disablement or loss of a usable AI pilot. This function is scheduled and locality-safe.
+ * Locality and authority: Runs only on the current helicopter owner and releases control when
+ * that locality or the owning landing order changes.
+ * Repeat/JIP: The control revision binds the anchor to one approach. A new owner can start its
+ * own tracker; joining clients do not run a competing anchor for this aircraft.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -19,6 +23,8 @@
  * Return Value: BOOL - true after the local ground-anchor lifecycle ends.
  *
  * Example: [_helicopter, _group, _position, "SCRIPTED", 1, _script, 2, 4] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
+ * Result: Maintains a landed aircraft at its touchdown position until an order or ownership
+ * change releases it, then returns true at the end of that local lifecycle.
  * Current caller: ImprovedHelicopterLandingExecuteLocal after a validated touchdown.
  */
 
@@ -63,7 +69,7 @@ private _pilot = currentPilot _helicopter;
 if (!isNull _pilot) then {_pilot disableAI "FSM";};
 if (_normalisedType == "GETOUT") then {_helicopter engineOn false;};
 
-while {!_release} do {
+while {!_release && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}} do {
     if (!alive _helicopter || {!local _helicopter}) exitWith {
         _release = true;
         _releaseReason = "LOCALITY_OR_DESTRUCTION";

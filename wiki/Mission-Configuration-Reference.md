@@ -353,15 +353,11 @@ JIP. See [UI Visual Themes](UI-Visual-Themes).
 
 ### Improved AI Helicopter Landings
 
-`Waldo_ImprovedHelicopterLanding_Enable` controls the AI-only exact landing system. The remaining `Waldo_ImprovedHelicopterLanding_*` values tune activation range, glideslope, canopy clearance, collective limits, touchdown tolerance, final-approach commitment and go-around policy. `FinalCommitDistance` prevents vanilla LAND-waypoint completion from cancelling a flare already in progress. Event-driven class-init and `Local` handlers cover editor, Zeus and migrated helicopters on their current owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
+`Waldo_ImprovedHelicopterLanding_Enable` and the related settings in `MissionConfig\aiConfig.sqf` tune WMP's exact AI landing controller. It covers registered helicopter taxis as well as normal landing waypoints. When WAIT is loaded, WMP does not start or drive this controller; WAIT owns the approach. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
 
 ### AI Helicopter Deceleration
 
-`Waldo_HelicopterDeceleration_Enable` controls the separate cruise-braking climb helper and defaults
-to `false`. It applies bounded local impulses only when an AI aircraft is losing speed, gaining
-height and pitching up above the configured terrain-clearance envelope. Supported landing orders
-always reserve the aircraft for Improved Landing, so the two controllers cannot compete. VTOL
-support has a separate opt-in. See [AI Helicopter Deceleration](AI-Helicopter-Deceleration).
+`Waldo_HelicopterDeceleration_Enable` controls WMP's optional cruise-braking correction and defaults to `false`. Improved landing takes priority. When WAIT is loaded, WMP does not start or drive deceleration correction. See [AI Helicopter Deceleration](AI-Helicopter-Deceleration).
 
 ### Zeus Enhanced Modules
 

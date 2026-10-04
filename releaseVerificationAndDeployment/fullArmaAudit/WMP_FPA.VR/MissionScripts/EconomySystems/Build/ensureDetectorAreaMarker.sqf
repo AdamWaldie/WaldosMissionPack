@@ -1,18 +1,23 @@
 /*
  * Author: WaldoTheWarfighter
- * Ensure detector area marker.
+ * Creates or updates a detector building's global area marker.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
  * Arguments:
  * 0: _building <OBJECT> - building (optional, default: objNull)
- * 1: _range <SCALAR> - range (optional, default: 0)
+ * 1: _range <NUMBER> - radius in metres (optional, default: 0)
  *
  * Return Value:
- * Nothing
+ * <STRING> marker name, or "" for an invalid building/range.
  *
  * Example:
  * [_building, _range] call Waldo_fnc_EcoBuild_ensureDetectorAreaMarker;
+ * Locality/Authority: Call on Economy authority; this helper itself has no authority guard.
+ * Repeat/JIP Behaviour: Reuses the building's marker name on later calls; global marker
+ * and published object tag are available to JIP.
+ * Current Callers: Detector building scan/visual maintenance.
+ * Result: Marker shape, size, colour and position match the detector area.
  */
 
         params [["_building", objNull], ["_range", 0]];

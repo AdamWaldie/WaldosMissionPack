@@ -1,8 +1,15 @@
 /*
  * Author: WaldoTheWarfighter
  * Stops every airborne-gunship system and optionally deletes system-spawned aircraft.
+ * Locality and authority: Server-only; remote requests require an assigned curator. Each system
+ * is removed through GunshipDestroy, including owner-local control cleanup.
+ * Repeat/JIP: A second stop sees no registered systems. The disabled feature flag and cleared
+ * system list are public current state for joiners.
  * Arguments: 0: delete spawned aircraft <BOOLEAN>
  * Return Value: Number removed
+ * Current callers: gunship runtime-control ZEN module and mission-maker cleanup scripts.
+ * Example: [true] call Waldo_fnc_GunshipStop;
+ * Result: All registered systems stop; only WMP-spawned aircraft are deleted when requested.
  */
 
 params [["_deleteSpawned", false, [false]]];

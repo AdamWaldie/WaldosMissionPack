@@ -10,6 +10,8 @@
  * Return Value: BOOL - true when the current target can be submitted as a cutting/brush target.
  * Current callers: TreeFellingInit addAction condition and TreeFellingSwing.
  * Example: [cursorObject, player] call Waldo_fnc_TreeFellingCanTargetLocal;
+ * Result: Returns true for a nearby configured tree or brush target, otherwise false. A repeat
+ * check of the same target can use the client-local cached model result.
  */
 params [
     ["_target", cursorObject, [objNull]],

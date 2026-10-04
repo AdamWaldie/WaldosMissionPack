@@ -13,10 +13,10 @@ curator-authenticated server rule as the larger runtime systems.
 
 These modules allow users to:
 * Spawn a Logistics System Supply & Medical Crate to Zeus specification
-* Turn a crewed AI land-vehicle group into a managed [AI Convoy](AI-Convoy-System)
 * Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
+* Control an [AI convoy](AI-Convoy-System) when WAIT is absent
 * Generate and clean up complete randomized [Dynamic AOs](Dynamic-AO-Generation)
 * Create and remove routed [Dynamic Paradrop](Paradrop#dynamic-drop-zone-operations) operations
 * Scale the nearest object through a validated server request
@@ -64,10 +64,6 @@ The following modules are under **WMP Logistics**:
 ## Fortify Budget Module
 
 This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup), or ACE Fortify being active. It allows for the alteration of the fortify budget in zeus, without the need for manual scripting.
-
-## AI Convoy Module
-
-Under **WMP AI & Combat**, **Convoy - Create Moving Group** turns the nearest crewed AI land-vehicle group within 150 m of the module into a managed convoy. Place the module on or near the lead vehicle. The dialog sets max speed, target separation and whether the convoy pushes through contact (keeps moving and only returns fire on the move) instead of stopping to engage. It calls the same [AI Convoy System](AI-Convoy-System) behaviour (`Waldo_fnc_SimpleAiConvoy`) available to scripts, dispatched to whichever machine currently owns the selected group. See [AI Convoy System](AI-Convoy-System) for the full parameter reference and the manual-stop script pattern.
 
 ## ENDEX Module
 
@@ -187,10 +183,6 @@ These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig
 ## Headless Client
 
 When `Waldo_Headless_Enable` is true, the separate **WMP Headless Client** category provides debug overlay, forced rebalance and manual handoff controls. The overlay labels each AI group with its live owner and unit count: server, named HC, unexpected owner or a red registry mismatch. The confirmation also reports connected HCs, managed groups and mismatches. See [Headless Client Support](Headless-Client-Support).
-
-## AI Helicopter Landing
-
-[Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) intentionally has no ZEN module: it is a per-aircraft profile applied through `MissionConfig\aiConfig.sqf` and event-driven locality handlers, not a placeable or runtime-toggled system.
 
 ## Transport Services
 

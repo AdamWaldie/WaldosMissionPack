@@ -14,6 +14,11 @@
  *
  * Example:
  * call Waldo_fnc_AddDocs;
+ * Locality and authority: Interface-client only; it writes diary records for the current player.
+ * Repeat/JIP: Tracks the player object so repeated setup does not duplicate records. Joining
+ * players receive their own records through player-local initialization.
+ * Current caller: initPlayerLocal.sqf after the local player is available.
+ * Result: The player's map diary gains WMP report formats, checklists and support-call references.
  */
 
 if (!hasInterface || {isNull player}) exitWith {false};

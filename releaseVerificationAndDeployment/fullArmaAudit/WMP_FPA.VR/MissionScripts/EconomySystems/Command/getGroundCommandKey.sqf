@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get ground command key.
+ * Resolves a player's stable Ground Command key from published identity or UID/owner fallback.
  *
  * Part of the Waldos Economy Systems suite (Ground Command system).
  *
@@ -8,10 +8,14 @@
  * 0: _unit <OBJECT> - unit (optional, default: objNull)
  *
  * Return Value:
- * Any - see function body
+ * <STRING> UID/owner key, local fallback key, or "" for an unavailable/remote identity.
  *
  * Example:
  * [_unit] call Waldo_fnc_EcoCommand_getGroundCommandKey;
+ * Locality/Authority: Any machine; a client cannot derive another player's unpublished key.
+ * Repeat/JIP Behaviour: Read-only; JIP clients use the published unit identity when present.
+ * Current Callers: Ground Command membership checks, identity publication and pruning.
+ * Result: Returns the key used to compare a unit with the Ground Command list.
  */
 
     params [["_unit", objNull]];

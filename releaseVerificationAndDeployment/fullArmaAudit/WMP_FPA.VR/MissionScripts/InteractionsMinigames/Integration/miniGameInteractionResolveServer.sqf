@@ -3,6 +3,16 @@
  * Server authority for interaction completion. Accepts only the current attempt and its owner,
  * publishes terminal state before events/callbacks, and guarantees exactly-once resolution.
  * Existing callbacks keep [_object, _actor, _success] and receive the result array as argument 4.
+ * Locality/Authority: Server only; validates current attempt ID and actor before mutation.
+ * Repeat/JIP Behaviour: A terminal attempt resolves once; published state/result reach JIP clients.
+ * Arguments: 0: target <OBJECT>, default objNull; 1: actor <OBJECT>, default objNull;
+ * 2: success <BOOL>, default false; 3: attempt ID <STRING>, default "";
+ * 4: outcome code <STRING>, default "FAILURE"; 5: reason <STRING>, default "".
+ * Return Value: <BOOL> true for an accepted resolution, false when stale/invalid/off-server.
+ * Current Callers: MiniGameInteractionStartClient after its owner-local challenge completes.
+ * Example: [_device, _player, true, _attemptId, "SUCCESS", ""]
+ *          remoteExecCall ["Waldo_fnc_MiniGameInteractionResolveServer", 2];
+ * Result: Publishes the terminal result, releases the attempt and runs the server callback once.
  */
 
 params [

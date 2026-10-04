@@ -10,6 +10,10 @@
  *
  * Client-local. Works for Task Force Radio (legacy) and TFAR (task_force_radio / tfar_core).
  * The loop uses the current player each tick, so it survives respawns automatically.
+ * Locality and authority: Interface-client only; changes TFAR variables for the current local
+ * player from the server-published jammer registry.
+ * Repeat/JIP: One running flag prevents duplicate loops. It reads the current player each tick
+ * after respawn, while joining clients start their own loop.
  *
  * Arguments:
  * None
@@ -19,6 +23,8 @@
  *
  * Example:
  * [] call Waldo_fnc_JammingTfarLoop;
+ * Current caller: Waldo_fnc_JammingInit when TFAR is loaded.
+ * Result: Affected TFAR links weaken in a field and recover when the player leaves it.
  */
 
 if !(hasInterface) exitWith {};

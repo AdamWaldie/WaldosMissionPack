@@ -30,6 +30,9 @@
  * Example:
  * private _built = [donorVehicle, targetVehicle] call Waldo_fnc_VehicleWeaponLoadoutCopyBuildRows;
  * _built params ["_rows", "_copiedTurretPaths", "_copiedPylonIndices"];
+ * Locality and authority: Pure read/build helper on the calling machine; it never mutates the
+ * source or target. Repeating it reads current loadouts and needs no JIP replay.
+ * Result: Produces apply-ready rows and the matched turret/pylon identifiers.
  */
 
 params [

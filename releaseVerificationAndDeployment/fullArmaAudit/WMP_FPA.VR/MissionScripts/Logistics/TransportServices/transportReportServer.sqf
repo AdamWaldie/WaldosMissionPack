@@ -30,6 +30,10 @@
  *
  * Example:
  * ["RAVEN_1", 12, "PICKUP", "ARRIVED"] remoteExecCall ["Waldo_fnc_TransportReportServer", 2];
+ * Locality and authority: Accepts owner reports on the server and checks the service's live
+ * request token before state changes. Repeated or stale reports cannot advance the service;
+ * published transport state provides the result to joining clients.
+ * Result: The server advances the matching transport service to its next phase.
  */
 params ["_id", "_requestId", "_phase", "_result"];
 if (!isServer) exitWith {false};

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Can player view upgrade.
+ * Checks whether a friendly building has an upgrade target visible to a unit.
  *
  * Part of the Waldos Economy Systems suite (Build system).
  *
@@ -9,10 +9,14 @@
  * 1: _unit <OBJECT> - unit (optional, default: objNull)
  *
  * Return Value:
- * Any - see function body
+ * <BOOL> true when a valid friendly upgrade target exists.
  *
  * Example:
  * [_building, _unit] call Waldo_fnc_EcoBuild_canPlayerViewUpgrade;
+ * Locality/Authority: Any machine; read-only building/side visibility check.
+ * Repeat/JIP Behaviour: Repeat-safe read of public ownership/definition.
+ * Current Callers: EcoBuild_startBuildingUpgrade server-side eligibility gate.
+ * Result: Hides upgrade controls on enemy or terminal-tier buildings.
  */
 
         params [["_building", objNull], ["_unit", objNull]];

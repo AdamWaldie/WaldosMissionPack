@@ -32,6 +32,8 @@
  *
  * Example:
  * [player] call Waldo_fnc_AceSetNameRespawnBindingRepair;
+ * Result: An affected ACE Respawn callback is safe on this local player and later respawns;
+ * an already fixed ACE installation is left unchanged.
  */
 
 params [["_unit", player, [objNull]]];

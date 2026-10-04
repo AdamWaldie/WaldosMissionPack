@@ -69,7 +69,7 @@ private _pilot = currentPilot _helicopter;
 if (!isNull _pilot) then {_pilot disableAI "FSM";};
 if (_normalisedType == "GETOUT") then {_helicopter engineOn false;};
 
-while {!_release} do {
+while {!_release && {!(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main"))}} do {
     if (!alive _helicopter || {!local _helicopter}) exitWith {
         _release = true;
         _releaseReason = "LOCALITY_OR_DESTRUCTION";
