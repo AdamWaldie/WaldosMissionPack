@@ -409,3 +409,26 @@ that finite defensive lease so independent WMP flight controllers cannot cancel 
 
 Static validation passes all 642 repository tests and all 1,276 SQF files. The rebuilt focused air
 batch remains required; none of the new physical behavior is claimed accepted yet.
+
+## 4 October: uneven terrain and finite fixed-wing delivery
+
+The flat VR range could not show whether infantry avenues, vehicle routes or defensive positions
+remain usable on real ground. The additive `terrain` focus now refuses VR, searches bounded dry
+sectors for at least seven metres of relief and measurable roughness, and exercises the production
+avenue selector for infantry and vehicles. It requires physical movement and terrain-aware defence
+occupation. This is queued for the next batched non-VR launch and is not yet live acceptance.
+
+The completed `runtime-20261004-083928` air batch recorded 35 server findings. Every fixed-wing
+surface profile reached ATTACK but released no weapon. The guided case exposed a loaded, aligned,
+terrain-clear firing solution before the engine rejected `fireAtTarget` for the pilot-operated fixed
+weapon; the moving air-to-air intercept did release a real missile. The production controller now
+retains the same range, angle, alignment, terrain and ballistic gates but asks the actual pilot to
+release a fixed surface weapon. Independently aimed turrets keep their native request path, and a
+real `Fired` event remains the only proof of release.
+
+A fixed-wing pass also measures signed progress along its immutable delivery axis. Once it has
+crossed 350 metres beyond the target without releasing, it records `DELIVERY_MISSED` and proceeds to
+egress instead of circling the attack endpoint. The audit treats the weapon result as failed while
+separately requiring a finite, non-circular egress. Static validation passes all 247 focused Cortex
+tests and all 1,279 SQF files. Physical release, impact, safe terrain clearance and handover remain
+queued for the next rebuilt batch.

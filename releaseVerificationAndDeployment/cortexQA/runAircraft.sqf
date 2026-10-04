@@ -766,7 +766,8 @@ private _observedProfiles=createHashMap;
         private _ended=if (!_started) then {false} else {
             [{(_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]]) param [0,""] in [
                 "COMPLETE","TARGET_DESTROYED","TARGET_LOST","STUCK","STAGE_TIMEOUT","GROUND_CLEARANCE",
-                "INGRESS_NONPROGRESS","ATTACK_NONPROGRESS","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION","NO_PLAN"
+                "INGRESS_NONPROGRESS","ATTACK_NONPROGRESS","EGRESS_NONPROGRESS","NO_FIRE_SOLUTION","NO_PLAN",
+                "DELIVERY_MISSED"
             ]},210] call _wait
         };
         private _outcome=_aircraft getVariable ["Waldo_Cortex_AirAttackOutcome",[]];
@@ -820,6 +821,45 @@ private _observedProfiles=createHashMap;
             && {_airTarget || {_pathTravel < 300 || {_netTravel/_pathTravel >= 0.35}}},
             str [_longestIdle,_motionFloor,_pathTravel,_netTravel,
                 if (_pathTravel > 0) then {_netTravel/_pathTravel} else {1}]] call _recordCheck;
+        // A failed fixed-wing delivery is still a failed weapon case, but it must be a finite pass.
+        // Once the aircraft crosses the target, production should transition to EGRESS and continue
+        // away from the objective. This separate contingency check prevents a no-fire result from
+        // spending the rest of its time circling the attack endpoint and obscuring the root failure.
+        if (_isPlaneClass && {!_airTarget} && {count _profilePoints == 3}) then {
+            private _deliveryOrigin=+(_profilePoints select 0);
+            private _deliveryAxis=_plannedTargetPosition vectorDiff _deliveryOrigin;
+            _deliveryAxis set [2,0];
+            private _postPassPositions=[];
+            if (vectorMagnitude _deliveryAxis > 1) then {
+                _deliveryAxis=vectorNormalized _deliveryAxis;
+                private _crossed=false;
+                {
+                    private _relative=_x vectorDiff _plannedTargetPosition;
+                    _relative set [2,0];
+                    if (!_crossed && {_relative vectorDotProduct _deliveryAxis >= 350}) then {
+                        _crossed=true;
+                    };
+                    if (_crossed) then {_postPassPositions pushBack _x};
+                } forEach _samplePositions;
+            };
+            private _postPassTravel=0;
+            for "_postIndex" from 1 to (count _postPassPositions-1) do {
+                _postPassTravel=_postPassTravel+((_postPassPositions select (_postIndex-1))
+                    distance2D (_postPassPositions select _postIndex));
+            };
+            private _postPassNet=if (count _postPassPositions >= 2) then {
+                (_postPassPositions select 0) distance2D (_postPassPositions select (count _postPassPositions-1))
+            } else {0};
+            private _missed=_outcome param [0,""] == "DELIVERY_MISSED";
+            [_id+"-missed-pass-egresses-without-circle",!_missed || {
+                    count _postPassPositions >= 2
+                    && {"EGRESS" in _physicalTransitions}
+                    && {_postPassTravel < 300 || {_postPassNet/_postPassTravel >= 0.5}}
+                },
+                str [_outcome,count _postPassPositions,_postPassTravel,_postPassNet,
+                    if (_postPassTravel > 0) then {_postPassNet/_postPassTravel} else {1},
+                    _physicalTransitions]] call _recordCheck;
+        };
         [_id+"-safe-flight-envelope",_sampleAltitudes isNotEqualTo []
             && {selectMin _sampleAltitudes >= ([25,200] select _isPlaneClass)},
             str [selectMin _sampleAltitudes,selectMax _sampleAltitudes,_sampleStages]] call _recordCheck;

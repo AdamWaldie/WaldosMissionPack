@@ -19,8 +19,12 @@
  * rate. The alignment derives from current aircraft/target geometry and runs only while the sampled
  * line remains clear of terrain; it never moves the aircraft position or corrects a projectile. Bomb
  * release uses a short config-driven ballistic integration instead of a fixed angle or height. Native
- * fireAtTarget still owns the real muzzle, configured weapon and release. Rotorcraft and independently aimed
- * turrets retain the bounded native fire request because their abeam and standoff attacks do not
+ * fireAtTarget still owns independently aimed turret release. A pilot-operated fixed-wing surface
+ * weapon uses one bounded forceWeaponFire request only after those same physical gates pass; this
+ * follows the engine's aircraft-operator contract and leaves the real configured muzzle, mode and
+ * projectile physics intact. A pass which physically crosses the target without releasing proceeds
+ * to egress instead of circling back around an unreachable delivery point. Rotorcraft and independently
+ * aimed turrets retain the bounded native fire request because their abeam and standoff attacks do not
  * use a fixed-wing dive. Egress, abort and Zeus interruption detach and delete the order. The real hostile remains the
  * fire-control, guidance and damage/result target; Cortex does not insert a friendly laser proxy
  * that can invalidate native seeker guidance.
@@ -60,8 +64,12 @@ private _finish={
     params ["_reason",["_resume",false]];
     // A kill completes the weapon phase, not the flight lease. Preserve that semantic result after
     // the aircraft has flown its real egress instead of ending control over the target wreck.
-    if (_reason == "COMPLETE" && {_job getOrDefault ["targetDestroyed",false]}) then {
-        _reason="TARGET_DESTROYED";
+    if (_reason == "COMPLETE") then {
+        if (_job getOrDefault ["targetDestroyed",false]) then {
+            _reason="TARGET_DESTROYED";
+        } else {
+            if (_job getOrDefault ["deliveryMissed",false]) then {_reason="DELIVERY_MISSED"};
+        };
     };
     private _finishGroup=group driver _aircraft;
     if (!isNull _finishGroup && {"token" in _job}) then {[_finishGroup,_job,"ENDED",_reason] call Waldo_fnc_CortexDrillSetStage};
@@ -415,6 +423,26 @@ private _stageClosest=(_job getOrDefault [_closestKey,_stageDistance]) min _stag
 _job set [_closestKey,_stageClosest];
 private _shots=_aircraft getVariable ["Waldo_Cortex_AirAttackShots",0];
 _job set ["shots",_shots];
+// Surface profiles deliberately place the ATTACK waypoint beyond the objective so native flight
+// remains smooth through release. Measure the aircraft against that immutable delivery axis as
+// well as against the waypoint: once a plane has crossed the objective it has missed this pass and
+// must egress. Chasing the endpoint after the useful basket has closed caused the repeated circles
+// seen in the live audit. This is two vector operations for an active attack only.
+private _deliveryAlong=-1e10;
+private _deliveryPassed=false;
+if (_isPlane && {_stage == "ATTACK"} && {!(_job getOrDefault ["airToAir",false])}) then {
+    private _plannedTarget=+(_job getOrDefault ["targetPosition",getPosATL _target]);
+    private _deliveryOrigin=+(_points select 0);
+    private _deliveryAxis=_plannedTarget vectorDiff _deliveryOrigin;
+    _deliveryAxis set [2,0];
+    if (vectorMagnitude _deliveryAxis > 1) then {
+        _deliveryAxis=vectorNormalized _deliveryAxis;
+        private _relativeToTarget=(getPosATL _aircraft) vectorDiff _plannedTarget;
+        _relativeToTarget set [2,0];
+        _deliveryAlong=_relativeToTarget vectorDotProduct _deliveryAxis;
+        _deliveryPassed=_deliveryAlong >= 350;
+    };
+};
 private _stageAltitudes=_job getOrDefault ["stageAltitudes",[_job get "altitude",_job get "altitude",_job get "altitude"]];
 private _stageSpeeds=_job getOrDefault ["stageSpeeds",[_job get "speed",_job get "speed",_job get "speed"]];
 // A durable named waypoint is cheaper and smoother than restarting the engine flight planner on
@@ -663,12 +691,16 @@ if (_stage == "ATTACK") then {
         _weaponClass,_envelope,_deliveryAngle,_forwardAlignment,_minimumAim,_closing,
         _horizontalRange,_bombReleaseDistance,_bombWindow,_muzzleSpeed,_launchAlignment,
         _predictedBombImpact,_bombImpactError,_job getOrDefault ["deliveryAssistSamples",[]],
-        _job getOrDefault ["deliveryAssistActive",false],_deliveryTerrainClear];
+        _job getOrDefault ["deliveryAssistActive",false],_deliveryTerrainClear,
+        _deliveryAlong,_deliveryPassed];
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // fireAtTarget owns the actual configured muzzle and release for every platform. The bounded
-    // basket above decides when Cortex may ask; the engine may still reject the request.
+    // Turrets use fireAtTarget after their operator has tracked the hostile. Pilot-controlled
+    // fixed-wing surface weapons are different: fireAtTarget does not aim them and returned false
+    // through every valid live-audit basket. Once the physical route, terrain and release checks
+    // above pass, ask the actual pilot to fire the selected configured mode. The Fired handler is
+    // still the sole proof of release; no projectile is created, steered or corrected here.
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
@@ -678,7 +710,22 @@ if (_stage == "ATTACK") then {
         // One native request at a time. Repeating a rejected request after a short interval is
         // intentional: the operator may enter the engine's exact solution later in the same pass.
         // No request steers the aircraft and no projectile is corrected after launch.
-        private _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
+        private _pilotSurfaceRelease=_isPlane && {!_airContact} && {_turret isEqualTo [-1]};
+        private _fired=false;
+        if (_pilotSurfaceRelease) then {
+            private _modes=getArray (configFile >> "CfgWeapons" >> _weapon >> "modes");
+            private _mode=_modes param [0,_weapon];
+            if (_mode == "this") then {_mode=_weapon};
+            _operator forceWeaponFire [_weapon,_mode];
+            _fired=true;
+            _job set ["releaseDetail",["PILOT_FIXED",_weapon,_mode,_range,_forwardAlignment,
+                _deliveryAlong,_deliveryTerrainClear]];
+        } else {
+            _fired=_aircraft fireAtTarget [_fireTarget,_weapon];
+            if (_fired) then {
+                _job set ["releaseDetail",["NATIVE_TURRET",_weapon,_range,_alignment,_aimed]];
+            };
+        };
         if (_fired) then {
             _job set ["fireRequestAt",serverTime];
             _job set ["fireRequestShotBaseline",_shots];
@@ -826,6 +873,24 @@ switch _stage do {
         private _deliveryComplete=_attackShots >= _desiredShots
             || {_attackShots > 0 && {!(_job getOrDefault ["deliveryLoaded",true])}}
             || {_attackShots > 0 && {serverTime >= (_job getOrDefault ["firstAttackShotAt",serverTime])+_deliveryWindow}};
+        // The delivery waypoint lies beyond the objective by design. A plane which has crossed the
+        // target without a real Fired event has missed this run; start a normal egress immediately
+        // rather than allowing the MOVE waypoint and combat FSM to circle for another pass.
+        if (_attackShots <= 0 && {_deliveryPassed}) then {
+            _job set ["deliveryMissed",true];
+            [_group,_job,"EGRESS","DELIVERY_WINDOW_PASSED"] call Waldo_fnc_CortexDrillSetStage;
+            _stage="EGRESS";
+            _job set ["commandedStage",""];
+            _job set ["egressStartPosition",getPosATL _aircraft];
+            _job set ["egressStartedAt",serverTime];
+            _job set ["deadline",serverTime+75];
+            private _publishedPlan=_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]];
+            if (_publishedPlan isNotEqualTo []) then {
+                _publishedPlan set [2,"EGRESS"];
+                _publishedPlan set [4,_points select 2];
+                _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",_publishedPlan,true];
+            };
+        };
         if (_attackShots > 0 && {_attackDwell >= (_job getOrDefault ["attackMinimum",2])}
             && {_deliveryComplete}) then {
             [_group,_job,"EGRESS","ACTUAL_FIRE"] call Waldo_fnc_CortexDrillSetStage;
