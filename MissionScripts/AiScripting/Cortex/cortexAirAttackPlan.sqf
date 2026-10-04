@@ -469,28 +469,28 @@ if (_isPlane) then {
             _attackMinimum=2;
         };
         case "OFFSET": {
-            // Build a continuous nine-to-eleven degree delivery slope. The earlier five-degree
-            // profile left too little depression for fixed rockets even though the route crossed
-            // the target, while the old climb-then-dive profile made native flight overshoot.
-            private _deliveryAltitude=320+random 60;
-            _stageAltitudes=[_deliveryAltitude+1200,_deliveryAltitude,_altitude+850];
+            // Complete the descent before the final rocket basket. A steep 1.2 km drop across one
+            // leg made native pilots dive at more than 130 m/s and was unsafe even in flat VR;
+            // rolling terrain only amplifies that failure. This shallow line preserves a useful
+            // depression angle while leaving at least 600 m AGL at the far-side pullout point.
+            private _deliveryAltitude=620+random 80;
+            _stageAltitudes=[_deliveryAltitude+650,_deliveryAltitude,_altitude+900];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[700,900,1200];
             _attackMinimum=3;
         };
         case "HOOK": {
-            private _deliveryAltitude=340+random 60;
-            _stageAltitudes=[_deliveryAltitude+1500,_deliveryAltitude,_altitude+950];
+            private _deliveryAltitude=650+random 90;
+            _stageAltitudes=[_deliveryAltitude+750,_deliveryAltitude,_altitude+1000];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[700,900,1250];
             _attackMinimum=3;
         };
         default {
-            // Preserve a roughly nine-degree gun run while leaving a useful recovery margin. The
-            // former 280-350 m endpoint repeatedly let natural flight dip through the 220 m abort
-            // floor during a valid burst, splitting one pass into several rediscovered attacks.
-            private _deliveryAltitude=400+random 80;
-            private _approachAltitude=_deliveryAltitude+1050;
+            // Guns use a shallow, stable pass rather than a terminal dive. Native aircraft need
+            // time to align and fire; terrain sampling can lift this complete corridor as one unit.
+            private _deliveryAltitude=600+random 100;
+            private _approachAltitude=_deliveryAltitude+550;
             _stageAltitudes=[_approachAltitude,_deliveryAltitude,_altitude+700];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];

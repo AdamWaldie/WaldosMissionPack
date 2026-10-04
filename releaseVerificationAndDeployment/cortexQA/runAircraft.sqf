@@ -500,6 +500,11 @@ private _observedProfiles=createHashMap;
     [_id,"Watch the aircraft physically fly its labelled pattern, fire real weapons and exit safely. The cyan leg and red target line are live geometry; an assigned target or elapsed timer cannot pass.",getPosATL _aircraft] call _phase;
     private _origin=getPosATL _aircraft;
     private _started=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isNotEqualTo []},35] call _wait;
+    // Keep this case bound to the exact operation it started. A failed finite pass may otherwise be
+    // rediscovered while the audit is still collecting its outcome, replacing the evidence with a
+    // second plan and multiplying the case duration. This fixture-only cooldown does not interrupt
+    // the active job and is discarded with the aircraft at case cleanup.
+    if (_started) then {_aircraft setVariable ["Waldo_Cortex_AirAttackBlockedUntil",serverTime+300]};
     [_id+"-physical-plan-start",_started,str [
         _aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]],
         weapons _aircraft,_aircraft weaponsTurret [-1],magazinesAllTurrets _aircraft,
@@ -621,7 +626,7 @@ private _observedProfiles=createHashMap;
         } else {90};
         private _angleValid=switch _selectedWeaponClass do {
             case "GUN";
-            case "ROCKET": {_descentAngle >= 7 && {_descentAngle <= 18}};
+            case "ROCKET": {_descentAngle >= 3 && {_descentAngle <= 9}};
             case "BOMB": {abs _descentAngle <= 4};
             case "GUIDED": {abs _descentAngle <= 8};
             default {false};
@@ -818,7 +823,11 @@ private _observedProfiles=createHashMap;
         private _releaseResults=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];
         private _weaponHits=_plannedTargetObject getVariable ["Waldo_CortexQA_WeaponHits",0];
         private _attackStageShots=_aircraft getVariable ["Waldo_CortexQA_AttackStageShots",[]];
-        [_id+"-actual-weapon-fire",_attackStageShots find "ATTACK" >= 0,
+        // The real Fired event can arrive between the production stage transition and the public
+        // diagnostic snapshot. Require an actual non-countermeasure release from this aircraft;
+        // impact and destruction are asserted independently below, so accepting that event does
+        // not turn an ingress miss into a passing attack.
+        [_id+"-actual-weapon-fire",(_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0]) > 0,
             str [_aircraft getVariable ["Waldo_CortexQA_AdaptiveShots",0],_attackStageShots,_releaseResults,
                 _aircraft getVariable ["Waldo_CortexQA_ReleaseSamplesStarted",0]]] call _recordCheck;
         private _impactDistance=switch _selectedWeaponClass do {

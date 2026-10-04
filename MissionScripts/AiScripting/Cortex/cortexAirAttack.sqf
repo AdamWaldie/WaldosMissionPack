@@ -481,9 +481,6 @@ if (_stage == "ATTACK") then {
         _aircraft doTarget _fireTarget;
         _operator doWatch _fireTarget;
         _operator doTarget _fireTarget;
-        // One native fire order activates the retained pilot/gunner weapon FSM. The scheduler does
-        // not repeat it and never supplies a fixed firing vector or corrects a projectile.
-        if (_isPlane) then {_operator doFire _fireTarget};
         _job set ["targetCommanded",true];
     };
     private _range=_aircraft distance _target;
@@ -581,16 +578,17 @@ if (_stage == "ATTACK") then {
     _job set ["fireSolution",_solution];
     _job set ["deliveryLoaded",_loaded];
     _aircraft setVariable ["Waldo_Cortex_AirFireSolution",_solution,true];
-    // Native fixed-wing delivery owns release through the one doFire order while the authored MOVE
-    // leg preserves the chosen attack slope. Do not compete with that FSM by injecting fireAtTarget
-    // requests from the scheduler. Rotorcraft keep this bounded request path because a lateral or
-    // standoff turret can attack without forcing the pilot to turn the airframe onto the hostile.
-    private _nativePlaneDelivery=_isPlane && {!_airContact};
+    // Request release only while the live aircraft is inside the measured basket. doFire at attack
+    // entry proved inert for fixed-wing surface weapons, while a DESTROY waypoint discarded the
+    // authored delivery line. fireAtTarget is the engine boundary used by native/ZEN CAS: it asks
+    // the selected operator to release the configured weapon without steering the airframe or
+    // correcting the projectile. Requests remain rate-limited and stop as soon as the finite salvo
+    // is complete, so the scheduler cannot become a second flight controller.
     private _requestAt=_job getOrDefault ["fireRequestAt",-1];
     private _requestShotBaseline=_job getOrDefault ["fireRequestShotBaseline",-1];
     private _requestPending=_requestAt >= 0 && {_shots <= _requestShotBaseline}
         && {serverTime < _requestAt+0.35};
-    if (!_nativePlaneDelivery && {_validSolution} && {!_requestPending}
+    if (_validSolution && {!_requestPending}
         && {serverTime >= (_job getOrDefault ["nextWeaponFire",0])}) then {
         // One native request at a time. Repeating a rejected request after a short interval is
         // intentional: the operator may enter the engine's exact solution later in the same pass.

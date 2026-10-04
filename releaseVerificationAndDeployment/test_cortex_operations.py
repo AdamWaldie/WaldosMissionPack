@@ -2883,8 +2883,10 @@ class CortexOperations(unittest.TestCase):
         for profile in ['stageAltitudes','stageSpeeds','captureRadii','attackMinimum']:
             self.assertIn(profile,planner)
             self.assertIn(profile,controller)
-        self.assertIn('private _deliveryAltitude=400+random 80',planner)
-        self.assertIn('private _approachAltitude=_deliveryAltitude+1050',planner)
+        self.assertIn('private _deliveryAltitude=600+random 100',planner)
+        self.assertIn('private _deliveryAltitude=620+random 80',planner)
+        self.assertIn('private _deliveryAltitude=650+random 90',planner)
+        self.assertIn('private _approachAltitude=_deliveryAltitude+550',planner)
         self.assertIn('vectorAdd (velocity _aircraft)',controller)
         self.assertIn('private _launchAlignment=',controller)
         self.assertIn('private _bombImpactError=',controller)
@@ -2920,7 +2922,7 @@ class CortexOperations(unittest.TestCase):
         self.assertIn('_x doTarget objNull',controller)
         self.assertIn('_x doWatch objNull',controller)
         self.assertIn('_group reveal [_fireTarget,4]',controller)
-        self.assertIn('if (_isPlane) then {_operator doFire _fireTarget}',controller)
+        self.assertNotIn('_operator doFire _fireTarget',controller)
         self.assertNotIn('_operator doFire _target',controller)
         self.assertNotIn('_operator commandTarget _target',controller)
         self.assertLess(
@@ -2941,8 +2943,8 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('&& {_aimed >= _minimumAim}',controller)
         self.assertIn('_aircraft doWatch _fireTarget',controller)
         self.assertIn('private _fired=_aircraft fireAtTarget [_fireTarget,_weapon]',controller)
-        self.assertIn('private _nativePlaneDelivery=_isPlane && {!_airContact};',controller)
-        self.assertIn('if (!_nativePlaneDelivery && {_validSolution}',controller)
+        self.assertNotIn('private _nativePlaneDelivery=',controller)
+        self.assertIn('if (_validSolution && {!_requestPending}',controller)
         self.assertNotIn('forceWeaponFire',controller)
         self.assertIn('_projectile setMissileTarget [_guidedTarget,true]',controller)
         self.assertIn('_projectile setMissileTargetPos (aimPos _guidedTarget)',controller)
@@ -3171,7 +3173,8 @@ class CortexOperations(unittest.TestCase):
                       '-physical-profile-change','AIR-ATTACK-distinct-fixed-wing-profiles',
                      '-continuous-useful-flight',
                      '-visible-countermeasures','-safe-crew-egress','CortexZeusMark',
-                     'Waldo_CortexQA_AttackStageShots','_attackStageShots find "ATTACK" >= 0',
+                     'Waldo_CortexQA_AttackStageShots','Waldo_CortexQA_AdaptiveShots",0]) > 0',
+                     'Waldo_Cortex_AirAttackBlockedUntil",serverTime+300',
                      '-zeus-snapshot-exact','-zeus-replacement-travel','-no-old-plan-resurrection','-explicit-state-flow',
                      '-explicit-interruption-transition','-pilot-features-restored','-lateral-capable-turret','setVelocityModelSpace']:
             self.assertIn(item,text)
