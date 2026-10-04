@@ -16,7 +16,9 @@
  * Each pattern carries separate ingress/attack/egress height, speed, capture radius and minimum
  * firing-leg time. A bounded route corridor is sampled once while the plan is built. When
  * intervening relief intrudes into the platform's clearance envelope, the same lift is added to all
- * three stages so the attack angle remains intact without a per-frame terrain controller. STRAFE
+ * three stages so the attack angle remains intact without a per-frame terrain controller. A route
+ * requiring more than the bounded platform lift is refused so native control remains authoritative;
+ * a knowingly unsafe clamped plan is never returned. STRAFE
  * dives and accelerates through; OFFSET remains oblique; HOOK crosses the
  * target axis on a climbing exit; LATERAL stays abeam long enough for its retained turret; STANDOFF
  * uses a stable release leg and accelerates away. Repeat/JIP: safe to repeat. Each result is a new
@@ -544,9 +546,11 @@ if (_isPlane) then {
 // turn. Spacing is approximately 300 metres and is capped per leg, so rough terrain is represented
 // without creating a per-frame terrain controller or cost that scales with every AI unit.
 private _terrainLift=0;
+private _terrainRequiredLift=0;
 private _terrainClearanceMinimum=0;
 private _terrainSampleCount=0;
 private _terrainCorridor=[75,200] select _isPlane;
+private _terrainViable=true;
 if (!_airToAir) then {
     _terrainClearanceMinimum=1e6;
     private _minimumTerrainClearance=[45,300] select _isPlane;
@@ -582,12 +586,18 @@ if (!_airToAir) then {
             } forEach [-_terrainCorridor,0,_terrainCorridor];
         };
     };
-    _terrainLift=(ceil (_terrainLift max 0)) min _terrainLiftLimit;
-    if (_terrainLift > 0) then {
+    _terrainRequiredLift=ceil (_terrainLift max 0);
+    _terrainViable=_terrainRequiredLift <= _terrainLiftLimit;
+    _terrainLift=_terrainRequiredLift min _terrainLiftLimit;
+    if (_terrainViable && {_terrainLift > 0}) then {
         _stageAltitudes=_stageAltitudes apply {_x+_terrainLift};
         _terrainClearanceMinimum=_terrainClearanceMinimum+_terrainLift;
     };
 };
+// The engine keeps its ordinary combat task when Cortex cannot form a safe bounded corridor. This
+// is preferable to returning a route which the planner has already measured below clearance and
+// relying on the emergency ground-proximity abort after committing the aircraft to the run.
+if (!_terrainViable) exitWith {createHashMap};
 {
     private _pointValue=_x;
     _pointValue set [2,_stageAltitudes select _forEachIndex];
@@ -600,6 +610,7 @@ createHashMapFromArray [
     ["stageAltitudes",_stageAltitudes],["stageSpeeds",_stageSpeeds],
     ["captureRadii",_captureRadii],["attackMinimum",_attackMinimum],
     ["terrainLift",_terrainLift],["terrainClearanceMinimum",_terrainClearanceMinimum],
+    ["terrainRequiredLift",_terrainRequiredLift],["terrainViable",_terrainViable],
     ["terrainSampleCount",_terrainSampleCount],["terrainCorridor",_terrainCorridor],
     ["lateralTurret",_lateralTurret],["lateralTurretPath",_lateralTurretPath],
     ["lateralWeapon",_lateralWeapon],["lateralSimulation",_lateralSimulation],

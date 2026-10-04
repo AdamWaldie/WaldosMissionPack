@@ -419,6 +419,10 @@ avenue selector for infantry and vehicles. It requires physical movement and ter
 occupation. The shared selector now reuses its bounded 20-metre fire-lane samples for water,
 steepness, cumulative relief and road scoring; the former three interior terrain checks could miss
 a narrow ridge, ditch or water strip on a long leg. No extra loop or background worker was added.
+Aircraft planning now retains the uncapped lift requirement as diagnostics and refuses a Cortex run
+when that requirement exceeds the bounded platform correction. Native control remains untouched in
+that case; the planner no longer returns a route it has already measured below safe clearance and
+waits for the emergency proximity abort after committing the aircraft.
 This is queued for the next batched non-VR launch and is not yet live acceptance.
 
 The completed `runtime-20261004-083928` air batch recorded 35 server findings. Every fixed-wing

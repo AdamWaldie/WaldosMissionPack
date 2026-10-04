@@ -572,6 +572,8 @@ private _observedProfiles=createHashMap;
     private _terrainSampleCount=_initialPlan param [29,0];
     private _terrainCorridor=_initialPlan param [30,0];
     private _plannedTargetPosition=_initialPlan param [31,getPosATL _target];
+    private _terrainRequiredLift=_initialPlan param [32,0];
+    private _terrainViable=_initialPlan param [33,false];
     private _selectedOperator=if (_selectedTurret isEqualTo [-1]) then {driver _aircraft}
         else {_aircraft turretUnit _selectedTurret};
     if (_pattern != "") then {_observedProfiles set [_pattern,[_profilePoints,_profileAltitudes,_profileSpeeds]]};
@@ -585,10 +587,12 @@ private _observedProfiles=createHashMap;
         private _requiredTerrainClearance=[45,300] select _isPlaneClass;
         [_id+"-terrain-envelope",_terrainLift >= 0
             && {_terrainLift <= ([300,1200] select _isPlaneClass)}
+            && {_terrainRequiredLift == _terrainLift}
+            && {_terrainViable}
             && {_terrainClearanceMinimum >= _requiredTerrainClearance}
             && {_terrainSampleCount >= 42}
             && {_terrainCorridor >= ([75,200] select _isPlaneClass)},
-            str [_terrainLift,_terrainClearanceMinimum,_requiredTerrainClearance,_profileAltitudes,
+            str [_terrainLift,_terrainRequiredLift,_terrainViable,_terrainClearanceMinimum,_requiredTerrainClearance,_profileAltitudes,
                 _terrainSampleCount,_terrainCorridor]] call _recordCheck;
         // VR is the fast flat regression arm. A checked Altis launch must prove that its route is
         // genuinely non-flat; otherwise a green terrain-envelope result would merely repeat VR in

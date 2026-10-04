@@ -281,6 +281,8 @@ if (_stage == "") then {
     _job set ["terrainClearanceMinimum",_plan getOrDefault ["terrainClearanceMinimum",0]];
     _job set ["terrainSampleCount",_plan getOrDefault ["terrainSampleCount",0]];
     _job set ["terrainCorridor",_plan getOrDefault ["terrainCorridor",0]];
+    _job set ["terrainRequiredLift",_plan getOrDefault ["terrainRequiredLift",0]];
+    _job set ["terrainViable",_plan getOrDefault ["terrainViable",true]];
     _job set ["targetPosition",+(_plan getOrDefault ["targetPosition",getPosATL _target])];
     _job set ["type","AIR_ATTACK"]; _job set ["stage",""]; _job set ["deadline",serverTime+75]; _job set ["shots",0];
     _job set ["origin",getPosATL _aircraft]; _job set ["resumePosition",_resumePosition];
@@ -671,14 +673,14 @@ if (_stage == "ATTACK") then {
     private _fixedUnguided=_turret isEqualTo [-1] && {_weaponClass in ["GUN","ROCKET"]};
     // aimedAtTarget is useful telemetry but is not a reliable release gate for fixed-wing pilot
     // stations: the vanilla CAS jet can hold a valid target-crossing line while this command remains
-    // zero. fireAtTarget already returns whether the engine accepted the request, so let that native
-    // boundary decide after the physical range, closure and route baskets below are satisfied.
+    // zero. Release remains behind the physical range, closure and route baskets below; the operator
+    // command only replaces the final API which cannot aim a pilot-fixed aircraft station.
     private _minimumAim=0;
     // Fixed aircraft weapons are released through the real operator's fire-control state. The
     // vector returned by weaponDirection is not the launch vector of every aircraft muzzle or
     // pylon; the audit proved a nominally valid predicted solution could put an entire cannon burst
     // more than 400 metres beyond the target. Keep only a broad airframe/route basket here, then let
-    // fireAtTarget solve the configured muzzle, aircraft momentum, seeker and burst mode.
+    // the selected operator release use the configured muzzle, aircraft momentum, seeker and mode.
     private _nativeFixedBasket=!_fixedUnguided || {
         _forwardAlignment >= ([0.985,0.975] select (_weaponClass == "ROCKET"))
     };
@@ -769,7 +771,8 @@ _aircraft setVariable ["Waldo_Cortex_AirAttackPlan",[
     _job getOrDefault ["selectedMagazine",""],
     _job getOrDefault ["terrainLift",0],_job getOrDefault ["terrainClearanceMinimum",0],
     _job getOrDefault ["terrainSampleCount",0],_job getOrDefault ["terrainCorridor",0],
-    +(_job getOrDefault ["targetPosition",getPosATL _target])
+    +(_job getOrDefault ["targetPosition",getPosATL _target]),
+    _job getOrDefault ["terrainRequiredLift",0],_job getOrDefault ["terrainViable",true]
 ],true];
 
 private _attackShots=_shots-(_job getOrDefault ["attackShotBaseline",0]);
