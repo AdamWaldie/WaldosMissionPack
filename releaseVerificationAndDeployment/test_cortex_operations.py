@@ -555,10 +555,17 @@ class CortexOperations(unittest.TestCase):
         self.assertNotIn('private _rank = ceil (_forEachIndex / 2)',step)
 
     def test_support_reserves_separate_rally_areas_in_durable_leases(self):
+        server = source('cortexSupportServer')
         step = source('cortexSupportStep')
+        self.assertIn('forEach [[80,0],[80,-30],[80,30],[80,-60],[80,60],[60,0],[100,0]]', server)
+        self.assertIn('[_requesterPosition,_rallyCandidates,_enemy] call Waldo_fnc_CortexSelectAvenue', server)
+        self.assertIn('["enemy",+_enemy]', server)
         self.assertIn('for "_slot" from 0 to 5 do', step)
         self.assertIn('(_other select 3) distance2D _centre < 109', step)
         self.assertIn('!surfaceIsWater _centre', step)
+        self.assertIn('((surfaceNormal _centre) select 2) >= 0.5', step)
+        self.assertIn('getPosATL leader _helper,_rallyCandidates', step)
+        self.assertIn('call Waldo_fnc_CortexSelectAvenue', step)
         self.assertIn('if (_rally isNotEqualTo []) then {', step)
         self.assertIn('_job get "expiry",_rally,_job get "at"', step)
         self.assertNotIn('_job get "expiry",+(_job get "rally")', step)

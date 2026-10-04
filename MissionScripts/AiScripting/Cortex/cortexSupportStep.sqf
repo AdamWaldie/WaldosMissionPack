@@ -2,7 +2,9 @@
  * Author: WaldoTheWarfighter
  * Maintains at most six reserved responders and examines at most eight candidates per request step.
  * Assigns each responder a distinct optional 45 m rally area, with at least 110 m between centres.
- * Six bounded candidate areas lie behind the requester; the nearest unused dry area is chosen.
+ * Six bounded candidate areas lie behind the requester. Occupied areas are excluded, then the
+ * shared avenue selector chooses a dry, usable endpoint and rejects a cliff-like or unnecessarily
+ * rough route from the responder; distance remains part of the selector score.
  * An acknowledged responder may transition directly into a coordinated approach without waiting
  * for physical rally arrival; the rally remains a fallback while no approach has been dispatched.
  * Every reservation and revalidation requires three combat-effective dismounts, preventing an
@@ -87,7 +89,7 @@ for "_i" from 1 to 8 do {
         // The request rally is an area anchor, never a common squad destination.
         // Reserve the footprint in the lease so migration preserves the same area.
         private _rally = [];
-        private _bestDistance = 1e9;
+        private _rallyCandidates=[];
         private _axis = _job get "rallyDirection";
         for "_slot" from 0 to 5 do {
             private _row = floor (_slot / 2);
@@ -97,10 +99,14 @@ for "_i" from 1 to 8 do {
                 private _other = (_x select 0) getVariable ["Waldo_AIPass_SupportLease",[]];
                 count _other == 6 && {(_other select 3) distance2D _centre < 109}
             } >= 0;
-            private _distance = leader _helper distance2D _centre;
-            if (!_occupied && {!surfaceIsWater _centre} && {_distance < _bestDistance}) then {
-                _rally = _centre; _bestDistance = _distance;
+            if (!_occupied && {!surfaceIsWater _centre} && {((surfaceNormal _centre) select 2) >= 0.5}) then {
+                _rallyCandidates pushBack [_centre];
             };
+        };
+        if (_rallyCandidates isNotEqualTo []) then {
+            private _selected=[getPosATL leader _helper,_rallyCandidates,
+                _job getOrDefault ["enemy",getPosATL leader _requester]] call Waldo_fnc_CortexSelectAvenue;
+            if (_selected isNotEqualTo []) then {_rally=+(_selected select 0)};
         };
         if (_rally isNotEqualTo []) then {
             private _token = format ["%1:%2",_job get "serial",_cursor];

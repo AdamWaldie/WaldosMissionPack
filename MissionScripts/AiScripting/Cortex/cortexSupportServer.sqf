@@ -10,6 +10,9 @@
  * responder is useful only when it shares at least one enabled mode with the requester. Coordinated
  * assault retains two manoeuvre slots when ordinary reinforcement count is zero, so an unrelated
  * tuning value cannot silently disable the separately enabled coordinated feature.
+ * The rally anchor is selected once from seven bounded points behind the requester. Water,
+ * cliff-like endpoints and unnecessarily rough approaches are rejected before responders reserve
+ * their individual rally areas; the engine remains responsible for local pathfinding.
  * Publishes a compact ACTIVE request state on the requester. SupportStep replaces it with
  * NO_RESPONDER when every bounded candidate is exhausted, allowing one owner-side delayed retry.
  * Repeat/JIP: unique tokens, shared deadlines and owner acknowledgements retire stale assignments.
@@ -48,11 +51,22 @@ private _candidates = [];
     _candidates pushBack [leader _x distance2D leader _requester,_forEachIndex,_x];
 }} forEach allGroups;
 _candidates sort true;
+private _requesterPosition=getPosATL leader _requester;
+private _rallyDirection=_requesterPosition getDir _enemy;
+private _rallyCandidates=[];
+{
+    _x params ["_distance","_offset"];
+    _rallyCandidates pushBack [_requesterPosition getPos [_distance,_rallyDirection+180+_offset]];
+} forEach [[80,0],[80,-30],[80,30],[80,-60],[80,60],[60,0],[100,0]];
+private _rallyRoute=[_requesterPosition,_rallyCandidates,_enemy] call Waldo_fnc_CortexSelectAvenue;
+// The requester's occupied position is a safe last anchor. Individual responders still receive
+// separated areas behind it, and SupportStep terrain-checks their actual destination routes.
+private _rally=if (_rallyRoute isEqualTo []) then {+_requesterPosition} else {+(_rallyRoute select 0)};
 private _serial = (missionNamespace getVariable ["Waldo_AIPass_SupportSerial",0])+1;
 missionNamespace setVariable ["Waldo_AIPass_SupportSerial",_serial];
 private _job = createHashMapFromArray [["requester",_requester],["key",_key],["serial",_serial],["at",_at],["maximum",_maximum min 6],
-    ["rallyDirection",(getPosATL leader _requester) getDir _enemy],
-    ["expiry",serverTime+300],["rally",(getPosATL leader _requester) getPos [80,_enemy getDir leader _requester]],
+    ["rallyDirection",_rallyDirection],["enemy",+_enemy],
+    ["expiry",serverTime+300],["rally",_rally],
     ["candidates",_candidates],["cursor",0],["leases",[]]];
 // Publish only this request's bounded responder index. Requester owners consume it
 // without scanning allGroups on every contact tick.
