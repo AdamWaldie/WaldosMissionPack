@@ -55,6 +55,13 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\nato\o_antiair.paa"
 ] call zen_custom_modules_fnc_register;
 
+if !(isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) then {
+    ["WMP AI & Combat", "AI Convoy - Control",
+        {params ["_modulePos", ["_object", objNull]]; [_modulePos, _object] call Waldo_fnc_ZenConvoyModule;},
+        "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+};
+
 ["WMP Vehicle Customisation", "Vehicle Customisation - Editor",
     {
         params ["_modulePos", ["_objectPos", objNull]];
@@ -335,7 +342,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 47];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 47 + (if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) then {0} else {1})];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 47], clientOwner];
 

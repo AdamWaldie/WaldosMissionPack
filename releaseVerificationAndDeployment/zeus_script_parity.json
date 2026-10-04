@@ -1,6 +1,14 @@
 [
   {
     "category": "core",
+    "module": "AI Convoy - Control",
+    "handler": "Waldo_fnc_ZenConvoyModule",
+    "script_api": "Waldo_fnc_SimpleAiConvoy",
+    "parity": "full",
+    "notes": "The selected AI land-vehicle group receives the same speed, separation and push-through settings through a curator-authenticated server call when WAIT is absent."
+  },
+  {
+    "category": "core",
     "module": "ACE Vehicle Services - Configure",
     "handler": "Waldo_fnc_ZenVehicleServicesModule",
     "via": "Waldo_fnc_ZenVehicleServicesServer",

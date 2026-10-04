@@ -50,8 +50,8 @@
  * Result: _aircraft and every current crew group are excluded from both WMP's native headless
  * rebalance and ACE's ace_headless module.
  *
- * Current callers: Waldo_fnc_GunshipRegister, Waldo_fnc_ParadropBuildFlightRoute and
- * Waldo_fnc_DynamicAACreate.
+ * Current callers: Waldo_fnc_GunshipRegister, Waldo_fnc_ParadropBuildFlightRoute,
+ * Waldo_fnc_DynamicAACreate and Waldo_fnc_SimpleAiConvoy.
  */
 
 params [["_vehicle", objNull, [objNull]]];

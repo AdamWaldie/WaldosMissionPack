@@ -27,6 +27,7 @@ This is the complete top-level index of mission systems currently supplied by Wa
 | [AI Rebalance](Waldos-AI-Tweak) | Named skill profiles, filters, variance, restoration and AI-locality migration handling | `MissionConfig\aiConfig.sqf`; **AI Rebalance - Control** in ZEN |
 | [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | Exact-point approaches, flare, slope alignment, canopy clearance and bounded go-arounds when WAIT is absent | `MissionConfig\aiConfig.sqf`; per-aircraft profiles and locality handlers |
 | [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional cruise-braking climb correction when WAIT is absent | `MissionConfig\aiConfig.sqf`; disabled by default |
+| [AI Convoy System](AI-Convoy-System) | Speed, spacing and stalled-follower control when WAIT is absent | Server script call or **AI Convoy - Control** Zeus module |
 | [UI Visual Themes](UI-Visual-Themes) | Built-in visual-only styles spanning modern, historical, command-centre, industrial, intelligence, emergency, fantasy and minimal presentation | Global `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf`; live **UI QA - Set Visual Theme** selector |
 | [Field Resupply](Field-Resupply) | Finite hub stock, carrier allowances, deployed real-cargo crates and cargo-based salvage | `MissionConfig\logisticsConfig.sqf`; ZEN hub/carrier modules |
 | [Tactical Display](Tactical-Display) | Object-authenticated local tactical map with friendly and known-enemy filtering | `MissionConfig\interfaceConfig.sqf`; scripted or ZEN registration |

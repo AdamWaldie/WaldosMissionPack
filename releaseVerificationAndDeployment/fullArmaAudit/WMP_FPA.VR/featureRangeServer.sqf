@@ -479,6 +479,34 @@ Waldo_QA_fnc_activateDropAircraftServer = {
 ["vvd", "ISOLATED VEHICLE DEPOT", [-105, 38, 0], "Vehicle spawning and deletion lane, isolated from every other audit vehicle."] call Waldo_QA_fnc_registerFeatureStationServer;
 
 // Core mission-flow fixtures: loadout save, SafeStart controls, objectives, AAR and an opt-in convoy.
+Waldo_QA_fnc_startConvoyServer = {
+    if (!isServer) exitWith {};
+    if (isClass (configFile >> "CfgPatches" >> "Waldo_AI_Tweaks_Main")) exitWith {
+        diag_log "[WMP QA] WAIT owns convoy control; WMP convoy test skipped.";
+        ["WAIT is loaded; WMP convoy control is inactive."] remoteExecCall ["systemChat", 0];
+    };
+    private _oldGroup = missionNamespace getVariable ["Waldo_QA_ConvoyGroup", grpNull];
+    if (!isNull _oldGroup) then {
+        terminate (_oldGroup getVariable ["Waldo_Convoy_Worker", scriptNull]);
+        {if (!isPlayer _x) then {deleteVehicle _x}} forEach units _oldGroup;
+        deleteGroup _oldGroup;
+    };
+    private _group = createGroup west;
+    {
+        _x params ["_name", "_position"];
+        private _vehicle = [_name, "B_MRAP_01_F", _position, 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
+        _vehicle enableSimulationGlobal true;
+        _vehicle setVelocity [0, 0, 0];
+        private _driver = _group createUnit ["B_Soldier_F", _position, [], 0, "NONE"];
+        _driver moveInDriver _vehicle;
+    } forEach [["qa_convoy_1", [28, 54, 0]], ["qa_convoy_2", [28, 70, 0]]];
+    private _waypoint = _group addWaypoint [[28, 100, 0], 0];
+    _waypoint setWaypointType "MOVE";
+    missionNamespace setVariable ["Waldo_QA_ConvoyGroup", _group, true];
+    [_group, 15, 10, false] call Waldo_fnc_SimpleAiConvoy;
+    diag_log "[WMP QA] WMP convoy test started.";
+    ["Convoy test started. Observe both moving vehicles and their spacing."] remoteExecCall ["systemChat", 0];
+};
 private _loadoutCrate = ["qa_loadout_save", "Box_NATO_Equip_F", [2, 45, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 missionNamespace setVariable ["Waldo_QA_LoadoutSave", _loadoutCrate, true];
 private _supplyCrate = ["qa_supply_crate", "B_supplyCrate_F", [-14, 48, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;

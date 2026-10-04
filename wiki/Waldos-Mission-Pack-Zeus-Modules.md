@@ -16,6 +16,7 @@ These modules allow users to:
 * Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
+* Control an [AI convoy](AI-Convoy-System) when WAIT is absent
 * Generate and clean up complete randomized [Dynamic AOs](Dynamic-AO-Generation)
 * Create and remove routed [Dynamic Paradrop](Paradrop#dynamic-drop-zone-operations) operations
 * Scale the nearest object through a validated server request

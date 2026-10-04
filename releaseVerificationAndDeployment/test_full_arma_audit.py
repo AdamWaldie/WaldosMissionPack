@@ -2861,7 +2861,7 @@ class FullAuditTests(unittest.TestCase):
             / "FullArmaAudit.VR"
             / "runClientAudit.sqf"
         ).read_text(encoding="utf-8")
-        self.assertIn('_coreCount == 52 && {_economyCount == 19}', client_audit)
+        self.assertIn('_coreCount in [52, 53] && {_economyCount == 19}', client_audit)
 
     def test_party_actions_are_ace_first_with_vanilla_fallback(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
@@ -3564,7 +3564,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('MISMATCH', overlay)
         self.assertIn('ownership mismatches:', toggle)
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf").read_text(encoding="utf-8")
-        self.assertIn("[47, 49, 50, 52]", diagnostics)
+        self.assertIn("[47, 48, 49, 50, 51, 52, 53]", diagnostics)
 
     def test_manual_headless_handoff_can_target_one_live_hc(self):
         module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_headlessManualHandoffModule.sqf").read_text(encoding="utf-8")
@@ -3983,10 +3983,10 @@ class FullAuditTests(unittest.TestCase):
             "improvedHelicopterLandingConfigureServer.sqf",
         )
         ai_root = ROOT / "MissionScripts" / "AiScripting"
-        self.assertFalse((ai_root / "simpleAiConvoy.sqf").exists())
+        self.assertTrue((ai_root / "simpleAiConvoy.sqf").exists())
         for name in controller_files:
             self.assertTrue((ai_root / name).exists(), name)
-        self.assertFalse((ROOT / "MissionScripts" / "ZenModules" / "Zen_convoyModule.sqf").exists())
+        self.assertTrue((ROOT / "MissionScripts" / "ZenModules" / "Zen_convoyModule.sqf").exists())
 
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
@@ -4002,7 +4002,14 @@ class FullAuditTests(unittest.TestCase):
             path.read_text(encoding="utf-8")
             for path in (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR").glob("*.sqf")
         )
-        self.assertNotIn("SimpleAiConvoy", functions + zen + transport + paradrop + audit)
+        self.assertIn("SimpleAiConvoy", functions)
+        self.assertIn("ZenConvoyModule", functions + zen)
+        self.assertIn('CfgPatches" >> "Waldo_AI_Tweaks_Main', zen)
+        self.assertIn('CfgPatches" >> "Waldo_AI_Tweaks_Main', (ai_root / "simpleAiConvoy.sqf").read_text(encoding="utf-8"))
+        feature_server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
+        feature_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
+        self.assertIn("Waldo_QA_fnc_startConvoyServer", feature_server + feature_client)
+        self.assertIn("Waldo_fnc_SimpleAiConvoy", feature_server)
         self.assertIn("ImprovedHelicopterLandingInit", functions)
         self.assertIn("HelicopterDecelerationInit", functions)
         self.assertIn("Waldo_TransportService_LandingOrder", transport)

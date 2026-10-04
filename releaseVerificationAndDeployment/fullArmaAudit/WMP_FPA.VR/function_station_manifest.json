@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1123,
+  "registeredFunctionCount": 1125,
   "runtimeFunctionCount": 383,
-  "functionCount": 1506,
+  "functionCount": 1508,
   "stations": [
     {
       "id": "control",
@@ -836,6 +836,12 @@
       "name": "Waldo_fnc_ACRE2RackHardwareServer",
       "file": "MissionScripts/MissionInit/ACRE2/acre2RackHardwareServer.sqf",
       "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SimpleAiConvoy",
+      "file": "MissionScripts/AiScripting/simpleAiConvoy.sqf",
+      "station": "ai",
       "activation": "manual"
     },
     {
@@ -2473,6 +2479,12 @@
     {
       "name": "Waldo_fnc_ZenInitModules",
       "file": "MissionScripts/ZenModules/Zen_initModules.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConvoyModule",
+      "file": "MissionScripts/ZenModules/Zen_convoyModule.sqf",
       "station": "zen",
       "activation": "manual"
     },

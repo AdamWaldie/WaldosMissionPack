@@ -141,6 +141,7 @@ class CfgFunctions
         };
         class AI 
         {
+            class SimpleAiConvoy {file = "MissionScripts\AiScripting\simpleAiConvoy.sqf";};
             class AITweak {
                 file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
             };
@@ -704,6 +705,7 @@ class CfgFunctions
             class ZenInitModules {
                 file = "MissionScripts\ZenModules\Zen_initModules.sqf";
             };
+            class ZenConvoyModule {file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";};
             class ZenServiceLogisticsModule {file = "MissionScripts\ZenModules\zenServiceLogisticsModule.sqf";};
             class ZenServiceLogisticsServer {file = "MissionScripts\ZenModules\zenServiceLogisticsServer.sqf";};
             class ZenMedicalSpawner {
