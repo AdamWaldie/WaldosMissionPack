@@ -17,7 +17,8 @@
  * Restart and ownership adoption cannot replay cancelled orders; tracked aircraft handlers are removed.
  * Public support request/responder state, delayed artillery-relocation tokens and attack-run
  * presentation state are invalidated. An active aircraft lease restores its recorded native group
- * attack policy and removes its firing-solution telemetry before the job is discarded.
+ * attack policy, deletes its finite native guidance target and named movement waypoint, and removes
+ * its firing-solution telemetry and re-attack cooldown before the job is discarded.
  * Vehicle safe-stop handshakes restore their prior forced speed before their tokens are cleared.
  * Owner-local missile-warning generations are advanced before handlers are removed; an
  * old CBA callback cannot become valid again after a quick restart.
@@ -68,12 +69,16 @@ if (isServer) then {
         _x setVariable ["Waldo_Cortex_ArtilleryScootDeadline",nil,true];
         _x setVariable ["Waldo_Cortex_ArtilleryScootPurpose",nil,true];
         if (_x isKindOf "Air") then {
+            private _guidanceTarget=_x getVariable ["Waldo_Cortex_AirAttackGuidanceTarget",objNull];
+            if (!isNull _guidanceTarget) then {deleteVehicle _guidanceTarget};
             _x setVariable ["Waldo_Cortex_AttackFlarePhase",nil,true];
             _x setVariable ["Waldo_Cortex_AttackFlareCooldown",nil,true];
             _x setVariable ["Waldo_Cortex_AirAttackPlan",nil,true];
             _x setVariable ["Waldo_Cortex_AirFireSolution",nil,true];
             _x setVariable ["Waldo_Cortex_AirAttackTarget",nil];
             _x setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",nil];
+            _x setVariable ["Waldo_Cortex_AirAttackGuidanceTarget",nil];
+            _x setVariable ["Waldo_Cortex_AirAttackBlockedUntil",nil];
         };
     } forEach vehicles;
     [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
@@ -155,17 +160,28 @@ private _jobs = (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + (miss
     private _state=_x select 2;
     private _flareAircraft=_state getOrDefault ["aircraft",objNull];
     if (!isNull _flareAircraft) then {
+        private _guidanceTarget=_flareAircraft getVariable ["Waldo_Cortex_AirAttackGuidanceTarget",objNull];
+        if (!isNull _guidanceTarget) then {deleteVehicle _guidanceTarget};
         _flareAircraft setVariable ["Waldo_Cortex_AttackFlareJob",nil];
         _flareAircraft setVariable ["Waldo_Cortex_AirAttackJob",nil];
         _flareAircraft setVariable ["Waldo_Cortex_AirAttackToken",nil];
         _flareAircraft setVariable ["Waldo_Cortex_AirAttackTarget",nil];
         _flareAircraft setVariable ["Waldo_Cortex_AirAttackGuidedWeapon",nil];
+        _flareAircraft setVariable ["Waldo_Cortex_AirAttackGuidanceTarget",nil];
+        _flareAircraft setVariable ["Waldo_Cortex_AirAttackBlockedUntil",nil];
         private _airHandler=_state getOrDefault ["firedHandler",-1];
         if (_airHandler >= 0 && {local _flareAircraft}) then {_flareAircraft removeEventHandler ["Fired",_airHandler]};
         if (local _flareAircraft) then {
             _flareAircraft limitSpeed -1;
             private _airGroup=group driver _flareAircraft;
             if (!isNull _airGroup) then {
+                private _ownedWaypointName=_state getOrDefault ["ownedWaypointName",""];
+                private _ownedWaypointIndex=(waypoints _airGroup) findIf {
+                    _ownedWaypointName != "" && {waypointName _x == _ownedWaypointName}
+                };
+                if (_ownedWaypointIndex >= 0) then {
+                    deleteWaypoint ((waypoints _airGroup) select _ownedWaypointIndex);
+                };
                 _airGroup enableAttack (_state getOrDefault ["previousAttackEnabled",true]);
             };
         };

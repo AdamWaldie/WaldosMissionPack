@@ -506,6 +506,34 @@ private _observedProfiles=createHashMap;
         && {count (_profileAltitudes arrayIntersect _profileAltitudes) > 1
             || {count (_profileSpeeds arrayIntersect _profileSpeeds) > 1}},
         str [_pattern,_profileAltitudes,_profileSpeeds,_profileRadii,_profileDwell,_profilePoints]] call _recordCheck;
+    if (_isPlaneClass && {!_airTarget} && {count _profilePoints == 3}) then {
+        private _deliveryStart=+(_profilePoints select 0);
+        private _deliveryEnd=+(_profilePoints select 1);
+        private _deliveryVector=_deliveryEnd vectorDiff _deliveryStart;
+        _deliveryVector set [2,0];
+        private _deliveryLength=vectorMagnitude _deliveryVector;
+        private _deliveryDirection=if (_deliveryLength > 1) then {vectorNormalized _deliveryVector} else {[0,0,0]};
+        private _targetVector=(getPosATL _target) vectorDiff _deliveryStart;
+        _targetVector set [2,0];
+        private _targetAlong=_targetVector vectorDotProduct _deliveryDirection;
+        private _crossTrack=abs ((_targetVector select 0)*(_deliveryDirection select 1)
+            -(_targetVector select 1)*(_deliveryDirection select 0));
+        private _descentAngle=if (_deliveryLength > 1) then {
+            atan (((_deliveryStart select 2)-(_deliveryEnd select 2))/_deliveryLength)
+        } else {90};
+        private _angleValid=switch _selectedWeaponClass do {
+            case "GUN";
+            case "ROCKET": {_descentAngle >= 5 && {_descentAngle <= 18}};
+            case "BOMB": {abs _descentAngle <= 4};
+            case "GUIDED": {abs _descentAngle <= 8};
+            default {false};
+        };
+        [_id+"-delivery-axis-crosses-target",_deliveryLength >= 3000 && {_crossTrack <= 75}
+            && {_targetAlong > 0} && {_targetAlong < _deliveryLength}
+            && {_angleValid} && {(_deliveryEnd select 2) >= 140},
+            str [_selectedWeaponClass,_descentAngle,_crossTrack,_targetAlong,_deliveryLength,
+                _deliveryStart,_deliveryEnd,getPosATL _target]] call _recordCheck;
+    };
     private _weaponMatchesPattern=switch _pattern do {
         case "STRAFE";
         case "LATERAL": {_selectedWeaponClass == "GUN"};
@@ -567,6 +595,11 @@ private _observedProfiles=createHashMap;
             && {_zeusSnapshot param [2,""] == "AWARE"}
             && {_zeusSnapshot param [3,""] == "FULL"},
             str [_replacement,_replacementWaypoint,_group getVariable ["Waldo_AIPass_ZeusHold",[]],_zeusSnapshot]] call _recordCheck;
+        // Remove the fixture contact after Zeus takes over. The handover case measures whether
+        // Cortex leaves the selected waypoint cleanly; retaining a known hostile instead measures
+        // vanilla combat discretion and can make a correct release orbit away from the MOVE order.
+        {deleteVehicle _x} forEach _targetCrew;
+        deleteVehicle _target;
         private _released=[{(_aircraft getVariable ["Waldo_Cortex_AirAttackPlan",[]]) isEqualTo []},10] call _wait;
         private _handoverResult=_aircraft getVariable ["Waldo_Cortex_AirHandoverResult",[]];
         private _immediateHandover=(_aircraft getVariable ["Waldo_Cortex_AirHandoverLease",[]]) isEqualTo []
@@ -664,6 +697,9 @@ private _observedProfiles=createHashMap;
             && {_pathTravel < 300 || {_netTravel/_pathTravel >= 0.35}},
             str [_longestIdle,_motionFloor,_pathTravel,_netTravel,
                 if (_pathTravel > 0) then {_netTravel/_pathTravel} else {1}]] call _recordCheck;
+        [_id+"-safe-flight-envelope",_sampleAltitudes isNotEqualTo []
+            && {selectMin _sampleAltitudes >= ([25,120] select _isPlaneClass)},
+            str [selectMin _sampleAltitudes,selectMax _sampleAltitudes,_sampleStages]] call _recordCheck;
         [_id+"-finite-completion",_ended && {_outcome param [0,""] in ["COMPLETE","TARGET_DESTROYED"]},str _outcome] call _recordCheck;
         sleep 2;
         private _releaseResults=_aircraft getVariable ["Waldo_CortexQA_ReleaseResults",[]];

@@ -338,8 +338,11 @@ private _altitude=if (_airToAir) then {
     else {((_targetHeight+80+random 420) max 80) min 900}
 } else {
     if (_isPlane) then {
-        if (_pattern == "BOMB") then {2200+random 2400}
-        else {if (_aaPositions isNotEqualTo [] || {_pattern == "STANDOFF"}) then {1600+random 1800} else {800+random 900}}
+        // These are practical delivery heights, not cruise bands. The old 2.2-4.6 km bomb
+        // profile and 0.8-1.7 km gun profile made the jet spend the entire finite lease descending,
+        // then release from a shallow or already-past angle. Variation remains sampled once.
+        if (_pattern == "BOMB") then {950+random 500}
+        else {if (_aaPositions isNotEqualTo [] || {_pattern == "STANDOFF"}) then {1300+random 900} else {850+random 450}}
     } else {
         if (_aaPositions isNotEqualTo [] || {_pattern == "STANDOFF"}) then {120+random 380} else {50+random 220}
     }
@@ -350,7 +353,21 @@ private _speed=if (_airToAir) then {
     if (_isPlane) then {480+random 170}
     else {if (_pattern == "LATERAL") then {110+random 55} else {if (_pattern == "STANDOFF") then {90+random 50} else {170+random 80}}}
 };
-private _point={params ["_along","_lateral"]; private _p=_targetPos vectorAdd (_axis vectorMultiply _along); _p=_p vectorAdd (_sideVector vectorMultiply _lateral); _p set [2,_altitude]; _p};
+// OFFSET and HOOK change the attack bearing around the target. They do not offset the firing leg
+// itself: a laterally displaced endpoint made the aircraft fly beside the target and guaranteed
+// that fixed guns and rockets would miss. Once rolled in, every fixed-wing delivery leg is a
+// straight line through the aim point. HOOK uses a larger bearing change and exits across the far
+// side; OFFSET uses a shallower oblique pass.
+private _deliveryAxis=+_axis;
+if (_isPlane && {_pattern in ["OFFSET","HOOK"]}) then {
+    private _bearingAngle=[22,38] select (_pattern == "HOOK");
+    _deliveryAxis=vectorNormalized (
+        (_axis vectorMultiply cos _bearingAngle)
+        vectorAdd (_sideVector vectorMultiply sin _bearingAngle)
+    );
+};
+private _deliverySide=[-(_deliveryAxis select 1),_deliveryAxis select 0,0];
+private _point={params ["_along","_lateral"]; private _p=_targetPos vectorAdd (_deliveryAxis vectorMultiply _along); _p=_p vectorAdd (_deliverySide vectorMultiply _lateral); _p set [2,_altitude]; _p};
 private _ingress=[];
 private _attack=[];
 private _egress=[];
@@ -373,31 +390,31 @@ switch _pattern do {
         _egress set [2,_altitude];
     };
     case "STANDOFF": {
-        // Guided standoff uses a long, stable inbound leg to a release basket and then turns away.
-        // It never commands a close target overflight: the shot itself ends the firing leg.
+        // Guided standoff still needs a line through the target. The shot ends the firing leg well
+        // before overflight, after which the egress turns away from the threat.
         if (_isPlane) then {
-            _ingress=[-10000,2200] call _point;
-            _attack=[-5500,400] call _point;
-            _egress=[-9500,-3500] call _point
+            _ingress=[-11000,0] call _point;
+            _attack=[1800,0] call _point;
+            _egress=[-8500,-4500] call _point
         }
-        else {_ingress=[-2600,800] call _point; _attack=[-1400,350] call _point; _egress=[-2600,-900] call _point};
+        else {_ingress=[-3000,0] call _point; _attack=[650,0] call _point; _egress=[-2400,-1200] call _point};
     };
     case "STRAFE": {
-        if (_isPlane) then {_ingress=[-7000,600] call _point; _attack=[2200,0] call _point; _egress=[8000,1400] call _point}
+        if (_isPlane) then {_ingress=[-6500,0] call _point; _attack=[900,0] call _point; _egress=[7500,1200] call _point}
         else {_ingress=[-1900,250] call _point; _attack=[550,0] call _point; _egress=[2200,500] call _point};
     };
     case "OFFSET": {
-        if (_isPlane) then {_ingress=[-8000,2600] call _point; _attack=[2200,350] call _point; _egress=[8500,3200] call _point}
+        if (_isPlane) then {_ingress=[-7000,0] call _point; _attack=[1000,0] call _point; _egress=[8000,2400] call _point}
         else {_ingress=[-2200,750] call _point; _attack=[650,200] call _point; _egress=[2500,900] call _point};
     };
     case "HOOK": {
-        if (_isPlane) then {_ingress=[-8500,3000] call _point; _attack=[2300,400] call _point; _egress=[8000,-3800] call _point}
+        if (_isPlane) then {_ingress=[-7800,0] call _point; _attack=[1200,0] call _point; _egress=[6500,-4800] call _point}
         else {_ingress=[-2300,900] call _point; _attack=[700,220] call _point; _egress=[2200,-1100] call _point};
     };
     case "BOMB": {
-        _ingress=[-11000,1200] call _point;
-        _attack=[3800,0] call _point;
-        _egress=[11000,3500] call _point;
+        _ingress=[-8500,0] call _point;
+        _attack=[3500,0] call _point;
+        _egress=[10500,3000] call _point;
     };
     // Remain on one side of the target and translate along the attack axis. This keeps the target
     // abeam throughout the firing leg instead of crossing its position and becoming a nose-on pass.
@@ -415,7 +432,7 @@ switch _pattern do {
 if (!_airToAir) then {
     private _toIngress=_ingress vectorDiff _airPos;
     private _toAttack=_attack vectorDiff _airPos;
-    private _forwardIngress=(_toIngress vectorDotProduct _axis) >= 100;
+    private _forwardIngress=(_toIngress vectorDotProduct _deliveryAxis) >= 100;
     if (!_forwardIngress && {vectorMagnitude _toAttack > 200}) then {
         private _setupDistance=((vectorMagnitude _toAttack)*0.45)
             max ([800,300] select !_isPlane) min ([1800,800] select !_isPlane);
@@ -436,30 +453,34 @@ if (_isPlane) then {
             _attackMinimum=3;
         };
         case "STANDOFF": {
-            _stageAltitudes=[_altitude+600,_altitude,_altitude+1000];
+            _stageAltitudes=[_altitude+250,_altitude,_altitude+700];
             _stageSpeeds=[_speed,_speed+30,_speed+120];
             _captureRadii=[750,900,1200];
         };
         case "BOMB": {
-            _stageAltitudes=[_altitude+800,_altitude,_altitude+1200];
-            _stageSpeeds=[_speed,_speed+50,_speed+140];
+            // Keep the bomb run nearly level. The live ballistic basket decides release distance;
+            // a multi-kilometre scripted dive merely delays the engine and ruins the approach.
+            _stageAltitudes=[_altitude+100,_altitude,_altitude+650];
+            _stageSpeeds=[_speed,_speed+20,_speed+120];
             _captureRadii=[900,1100,1400];
             _attackMinimum=2;
         };
         case "OFFSET": {
-            _stageAltitudes=[_altitude+500,(_altitude*0.55) max 550,_altitude+900];
+            _stageAltitudes=[(_altitude+300) min 1650,150+random 55,_altitude+750];
             _stageSpeeds=[_speed,_speed+40,_speed+80];
             _captureRadii=[700,900,1200];
             _attackMinimum=3;
         };
         case "HOOK": {
-            _stageAltitudes=[_altitude+600,(_altitude*0.5) max 500,_altitude+1000];
+            _stageAltitudes=[(_altitude+400) min 1800,170+random 60,_altitude+850];
             _stageSpeeds=[_speed,_speed+30,_speed+100];
             _captureRadii=[700,900,1250];
             _attackMinimum=3;
         };
         default {
-            _stageAltitudes=[_altitude+450,(_altitude*0.5) max 450,_altitude+900];
+            // A ten-to-fifteen degree delivery path gives guns a useful depression angle while the
+            // 140 m endpoint remains beyond the target and is never treated as a release point.
+            _stageAltitudes=[(_altitude+300) min 1600,140+random 45,_altitude+700];
             _stageSpeeds=[_speed,_speed+80,_speed+60];
             _captureRadii=[650,850,1200];
             _attackMinimum=2;
