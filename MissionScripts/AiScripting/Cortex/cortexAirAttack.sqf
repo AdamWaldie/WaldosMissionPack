@@ -37,8 +37,11 @@
  * changed curator waypoint end the lease immediately. Cleanup deletes only that named temporary
  * waypoint. A successful run hands the aircraft back toward its unchanged original waypoint.
  * During direct Zeus handover, cleanup clears this attack's target commands, restores the native
- * attack policy, selects the authenticated curator waypoint and returns immediately. It creates no
- * timed guard, replacement route, pilot movement/behaviour order or delayed semantic restoration.
+ * attack policy and selects the authenticated curator waypoint. One non-forced height request uses
+ * the waypoint's AGL altitude when meaningful, or the live aircraft height for a normal ground-level
+ * map click; this cancels the otherwise persistent Cortex flight-height hint without inventing a
+ * route. It creates no timed guard, replacement route, pilot movement/behaviour order or delayed
+ * semantic restoration.
  * Locality/authority: aircraft owner only. Public summary/outcome arrays support Zeus diagnostics;
  * movement commands and Fired handlers remain owner-local.
  * Repeat/JIP: one job per aircraft. Cleanup removes the owned handler,
@@ -107,6 +110,19 @@ private _finish={
                 [_handoverGroup,_snapshot param [5,currentWaypoint _handoverGroup]]
             };
             if ((_authoredWaypoint select 1) >= 0) then {
+                // flyInHeight persists after its owning MOVE waypoint is deleted. The completed
+                // handover audit showed the helicopter still climbing to Cortex's old hint, then
+                // hovering despite facing Zeus' selected MOVE point. Replace that stale hint once
+                // with curator altitude when the waypoint carries one; ordinary 2D map clicks retain
+                // the aircraft's live AGL. `false` preserves native collision avoidance and this
+                // does not move, accelerate or continuously supervise the aircraft.
+                private _handoverHeight=if (count _handoverPosition >= 3
+                    && {(_handoverPosition select 2) >= 20}) then {
+                    _handoverPosition select 2
+                } else {
+                    ((getPosATL _aircraft) select 2) max 30
+                };
+                _aircraft flyInHeight [_handoverHeight,false];
                 _handoverGroup setCurrentWaypoint _authoredWaypoint;
                 private _authoredBehaviour=_snapshot param [2,waypointBehaviour _authoredWaypoint];
                 private _authoredSpeed=_snapshot param [3,waypointSpeed _authoredWaypoint];
@@ -115,10 +131,6 @@ private _finish={
                 if (_authoredSpeed != "UNCHANGED") then {_handoverGroup setSpeedMode _authoredSpeed};
                 if (_authoredCombatMode != "NO CHANGE") then {_handoverGroup setCombatMode _authoredCombatMode};
             };
-            // Do not add a flight-height order during handover. The selected waypoint is already the
-            // complete curator instruction, and even a one-time flyInHeight issued after it can make
-            // a helicopter brake into a hover before following the new route. Zeus owns the next
-            // altitude and movement decision exactly as authored.
             _aircraft setVariable ["Waldo_Cortex_AirHandoverLease",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverRecovery",nil,true];
             _aircraft setVariable ["Waldo_Cortex_AirHandoverResult",[

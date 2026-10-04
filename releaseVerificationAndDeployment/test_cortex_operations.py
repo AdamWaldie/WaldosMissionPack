@@ -3034,8 +3034,10 @@ class CortexOperations(unittest.TestCase):
         # hint once from Zeus' selected destination, but must never become a polling controller.
         self.assertEqual(controller.count('_aircraft flyInHeight (_stageAltitudes select _stageIndex)'),1)
         handover=controller.split('if (_reason in ["CONTROL_RELEASED","AUTHORED_ROUTE_CHANGED"]) then {',1)[1].split('};\n        if (_resume)',1)[0]
-        self.assertEqual(handover.count('_aircraft flyInHeight'),0)
-        self.assertNotIn('_aircraft flyInHeight ([((_handoverPosition select 2)',handover)
+        self.assertEqual(handover.count('_aircraft flyInHeight'),1)
+        self.assertIn('private _handoverHeight=if (count _handoverPosition >= 3',handover)
+        self.assertIn('_aircraft flyInHeight [_handoverHeight,false]',handover)
+        self.assertNotIn('_aircraft flyInHeight [_handoverHeight,true]',handover)
         self.assertIn('"ZEUS_IMMEDIATE_HANDOVER"',controller)
         self.assertNotIn('_handoverPilot doMove _handoverPosition',controller)
         self.assertNotIn('"FORCE_REPLAN"',controller)
