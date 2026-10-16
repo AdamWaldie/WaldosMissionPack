@@ -1,7 +1,20 @@
 name: SQFValidation
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   validate:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the source code
@@ -50,6 +63,8 @@ jobs:
       run: python3 -m unittest -v test_performance_audit.py
       
   lint:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the source code

@@ -144,3 +144,9 @@ VR mission documented in
   Test the documented 4:3, 16:10, 16:9, and ultrawide configurations.
 - Agent-driven launches write a disposable mission into the installed Arma
   directory and open a desktop application, so obtain the required permission.
+
+## GitHub Actions usage
+
+- Batch related locally validated changes into coherent push checkpoints; do not push every small commit or continuation. Diagnose failed checks before rerunning them.
+- Main and ready PRs run full validation. Drafts use local gates or deliberate manual dispatch; do not mark a PR ready merely to trigger CI. Preserve release gates and required ready-for-review validation.
+- Scope validation concurrency by workflow and PR/ref; cancel superseded validation and keep job timeouts. Do not hide failures with skip-ci messages.
